@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"log"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 )
@@ -30,8 +31,9 @@ func (tns type_names) String() string {
 }
 
 type cpp_visitor struct {
-	outFile *os.File
-	indent  int
+	inputName string
+	outFile   *os.File
+	indent    int
 }
 
 func (v cpp_visitor) Indent() string {
@@ -49,7 +51,15 @@ func (v cpp_visitor) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
 	case *ast.File:
 		fmt.Printf("// ## %s %v\n", v.Indent(), reflect.TypeOf(n))
-		file, err := os.Create(n.Name.Name + ".go.cpp") // For read access.
+		var outName = "out/" + v.inputName + ".cpp"
+		var outDir = path.Dir(outName)
+
+		errDir := os.MkdirAll(outDir, os.ModePerm)
+		if errDir != nil {
+			log.Fatal(errDir)
+		}
+
+		file, err := os.Create(outName)
 		v.outFile = file
 		if err != nil {
 			log.Fatal(err)
@@ -85,9 +95,10 @@ func (v cpp_visitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func main() {
-	fset := token.NewFileSet() // positions are relative to fset
+	fset := token.NewFileSet()
+	var inputName string = "tests/HelloWorld.go"
 
-	f, err := parser.ParseFile(fset, "tests/HelloWorld.go", nil, 0)
+	f, err := parser.ParseFile(fset, inputName, nil, 0)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -95,6 +106,8 @@ func main() {
 
 	ast.Print(fset, f)
 
+	var cv cpp_visitor
+	cv.inputName = inputName
 	fmt.Printf("\n=====\n")
-	ast.Walk(new(cpp_visitor), f)
+	ast.Walk(cv, f)
 }

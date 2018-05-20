@@ -104,7 +104,23 @@ func main() {
 		return
 	}
 
+	pkgs, errPkg := parser.ParseDir(fset, "F:/Dev/Golang/src/fmt", nil, 0)
+	if errPkg != nil {
+		fmt.Println(errPkg)
+		return
+	}
+
 	ast.Print(fset, f)
+
+	for pkg, v := range pkgs {
+		for file, _ := range v.Files {
+			fmt.Printf("%v -> %v\n", pkg, file)
+		}
+	}
+
+	for _, u := range f.Unresolved {
+		fmt.Printf("%v unresolved\n", u.Name)
+	}
 
 	var cv cpp_visitor
 	cv.inputName = inputName

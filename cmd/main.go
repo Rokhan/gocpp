@@ -9,18 +9,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"time"
 )
-
-type visitor int
-
-func (v visitor) Visit(n ast.Node) ast.Visitor {
-	if n == nil {
-		return nil
-	}
-	fmt.Printf("%s%T -> %v\n", strings.Repeat("  ", int(v)), n, n)
-	return v + 1
-}
 
 type type_name struct {
 	name    []string
@@ -96,9 +85,6 @@ func (v cpp_visitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func main() {
-	fmt.Printf("Hello, world.\n")
-	time.Sleep(100 * time.Millisecond)
-
 	fset := token.NewFileSet() // positions are relative to fset
 
 	f, err := parser.ParseFile(fset, "tests/HelloWorld.go", nil, 0)
@@ -108,39 +94,6 @@ func main() {
 	}
 
 	ast.Print(fset, f)
-	fmt.Printf("\n=====\n")
-
-	// Print the imports from the file's AST.
-	for _, s := range f.Imports {
-		fmt.Printf("%v, %v\n", s.Path.Value, s.Path.Kind)
-	}
-
-	for _, dec := range f.Decls {
-		switch v := dec.(type) {
-		case *ast.BadDecl:
-			//fmt.Println("%T", v)
-			fmt.Printf("%v\n", reflect.TypeOf(v))
-			//fmt.Println("BadDecl")
-		case *ast.FuncDecl:
-			//fmt.Println("%T", v)
-			fmt.Printf("%v\n", reflect.TypeOf(v))
-			fmt.Printf("Name: %v\n", v.Name)
-			fmt.Printf("Body: %v\n", v.Body)
-			//fmt.Println("FuncDecl")
-		case *ast.GenDecl:
-			//fmt.Println("%T", v)
-			fmt.Printf("%v\n", reflect.TypeOf(v))
-			fmt.Printf("Specs: %v\n", v.Specs)
-			//fmt.Println("GenDecl")
-
-		}
-		//fmt.Println(dec.Pos())
-		//fmt.Println(dec.End())
-	}
-
-	fmt.Printf("\n=====\n")
-	var v visitor
-	ast.Walk(v, f)
 
 	fmt.Printf("\n=====\n")
 	ast.Walk(new(cpp_visitor), f)

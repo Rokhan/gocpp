@@ -39,3 +39,10 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# =========================
+#  Project specific rules  
+# =========================
+
+# Local test ouputs
+out/*

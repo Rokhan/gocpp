@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+var stdTypeMapping = map[string]string{
+	"string": "std::string",
+}
+
 type typeName struct {
 	name    []string
 	typeStr string
@@ -21,7 +25,7 @@ type typeName struct {
 type typeNames []typeName
 
 func (tn typeName) String() string {
-	return fmt.Sprintf("%v %v", tn.typeStr, strings.Join(tn.name, "."))
+	return fmt.Sprintf("%v %v", stdTypeMapping[tn.typeStr], strings.Join(tn.name, "."))
 }
 
 func (tns typeNames) String() string {
@@ -34,68 +38,146 @@ func (tns typeNames) String() string {
 
 type cppVisitor struct {
 	inputName string
-	outFile   *os.File
-	out       *bufio.Writer
+
 	astIndent int
-	outIndent int
-	nodes     *list.List
+
+	makeOutFile *os.File
+	makeOut     *bufio.Writer
+
+	cppOutFile *os.File
+	cppOut     *bufio.Writer
+	cppIndent  int
+
+	hppOutFile *os.File
+	hppOut     *bufio.Writer
+	hppIndent  int
+
+	nodes *list.List
 }
 
 func (cv *cppVisitor) Indent() string {
 	return strings.Repeat("  ", cv.astIndent)
 }
 
-func (cv *cppVisitor) OutIndent() string {
-	return strings.Repeat("    ", cv.outIndent)
+func (cv *cppVisitor) CppIndent() string {
+	return strings.Repeat("    ", cv.cppIndent)
 }
 
 const dbgPrefix string = "         "
 const rawPrefix string = "//RAW_AST"
 
-func buildHeader(out *bufio.Writer) {
+func printCppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
-	fmt.Fprintf(out, "#include <string>\n")
-	fmt.Fprintf(out, "#include <iostream>\n")
-	fmt.Fprintf(out, "\n")
-	fmt.Fprintf(out, "using namespace std;\n")
-	fmt.Fprintf(out, "\n")
+	fmt.Fprintf(cv.cppOut, "#include <string>\n")
+	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.inputName)
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "\n")
 
-	//temporary dummy implementations
-	fmt.Fprintf(out, "namespace fmt\n")
-	fmt.Fprintf(out, "{\n")
-	fmt.Fprintf(out, "    void Printf(const string& str)\n")
-	fmt.Fprintf(out, "    {\n")
-	fmt.Fprintf(out, "        cout << str;\n")
-	fmt.Fprintf(out, "    }\n")
-	fmt.Fprintf(out, "}\n")
-	fmt.Fprintf(out, "\n")
+	//temporary cv.dummy implementations
+	fmt.Fprintf(cv.cppOut, "namespace fmt\n")
+	fmt.Fprintf(cv.cppOut, "{\n")
+	fmt.Fprintf(cv.cppOut, "    void Printf(const std::string& str)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
+	fmt.Fprintf(cv.cppOut, "}\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+
+	// Put everything generated in "golang" namespace
+	fmt.Fprintf(cv.cppOut, "namespace golang\n")
+	fmt.Fprintf(cv.cppOut, "{\n")
+	cv.cppIndent++
+}
+
+func printCppOutro(cv *cppVisitor) {
+	// Close golang namespace
+	cv.cppIndent--
+	fmt.Fprintf(cv.cppOut, "}\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+
+	// TODO: manage main parameters
+	fmt.Fprintf(cv.cppOut, "int main()")
+	fmt.Fprintf(cv.cppOut, "{\n")
+	fmt.Fprintf(cv.cppOut, "    golang::main();\n")
+	fmt.Fprintf(cv.cppOut, "    return 0;\n")
+	fmt.Fprintf(cv.cppOut, "}\n")
+}
+
+func printHppIntro(cv *cppVisitor) {
+	//temporarily blindly add "includes" and "using"
+	fmt.Fprintf(cv.hppOut, "#pragma once\n")
+	fmt.Fprintf(cv.hppOut, "\n")
+	fmt.Fprintf(cv.hppOut, "#include <string>\n")
+	fmt.Fprintf(cv.hppOut, "\n")
+
+	// Put everything generated in "golang" namespace
+	fmt.Fprintf(cv.hppOut, "namespace golang\n")
+	fmt.Fprintf(cv.hppOut, "{\n")
+	cv.hppIndent++
+}
+
+func printHppOutro(cv *cppVisitor) {
+	// Close golang namespace
+	cv.hppIndent--
+	fmt.Fprintf(cv.hppOut, "}\n")
+	fmt.Fprintf(cv.hppOut, "\n")
+}
+
+func createOutputExt(name string, ext string) *os.File {
+	var outName = name + "." + ext
+	return createOutput(outName)
+}
+
+func createOutput(name string) *os.File {
+	var outName = "out/" + name
+	var outDir = path.Dir(outName)
+
+	errDir := os.MkdirAll(outDir, os.ModePerm)
+	if errDir != nil {
+		log.Fatal(errDir)
+	}
+
+	file, err := os.Create(outName)
+	if err != nil {
+		log.Fatal(err)
+		panic("cannot create output file")
+	}
+
+	return file
+}
+
+func (cv *cppVisitor) Init() {
+	cv.makeOutFile = createOutput("Makefile")
+	cv.makeOut = bufio.NewWriter(cv.makeOutFile)
+
+	fmt.Fprintf(cv.makeOut, "all:\n")
 }
 
 // Start reading node
 func (cv *cppVisitor) VisitStart(node ast.Node) {
 	switch n := node.(type) {
+	case *ast.Package:
+		//TODO
+
 	case *ast.File:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
-		var outName = "out/" + cv.inputName + ".cpp"
-		var outDir = path.Dir(outName)
 
-		errDir := os.MkdirAll(outDir, os.ModePerm)
-		if errDir != nil {
-			log.Fatal(errDir)
-		}
+		cv.cppOutFile = createOutputExt(cv.inputName, "cpp")
+		cv.cppOut = bufio.NewWriter(cv.cppOutFile)
 
-		file, err := os.Create(outName)
-		cv.outFile = file
-		if err != nil {
-			log.Fatal(err)
-		}
+		cv.hppOutFile = createOutputExt(cv.inputName, "h")
+		cv.hppOut = bufio.NewWriter(cv.hppOutFile)
 
-		cv.out = bufio.NewWriter(cv.outFile)
+		printCppIntro(cv)
+		printHppIntro(cv)
 
-		buildHeader(cv.out)
+		fmt.Fprintf(cv.makeOut, "\t g++ -I. %s.cpp -o %s.exe\n", cv.inputName, cv.inputName)
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
 		//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
+
 	case *ast.BadDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
@@ -113,23 +195,24 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 			params = append(params, param)
 		}
 
-		fmt.Fprintf(cv.out, "void %s(%s)\n", n.Name.Name, params)
+		fmt.Fprintf(cv.cppOut, "%svoid %s(%s)\n", cv.CppIndent(), n.Name.Name, params)
+		fmt.Fprintf(cv.hppOut, "%svoid %s(%s);\n", cv.CppIndent(), n.Name.Name, params)
 
 	case *ast.BlockStmt:
-		fmt.Fprintf(cv.out, "{\n")
-		cv.outIndent++
+		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
+		cv.cppIndent++
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.out, "%s", cv.OutIndent())
+		fmt.Fprintf(cv.cppOut, "%s", cv.CppIndent())
 
 	case *ast.CallExpr:
-		fmt.Fprintf(cv.out, "%v(", convertExpr(n.Fun))
+		fmt.Fprintf(cv.cppOut, "%v(", convertExpr(n.Fun))
 		var sep = ""
 		for _, arg := range n.Args {
-			fmt.Fprintf(cv.out, "%s%s", sep, convertExpr(arg))
+			fmt.Fprintf(cv.cppOut, "%s%s", sep, convertExpr(arg))
 			sep = ", "
 		}
-		fmt.Fprintf(cv.out, ")")
+		fmt.Fprintf(cv.cppOut, ")")
 
 	case *ast.BasicLit:
 
@@ -175,24 +258,29 @@ func convertExpr(node ast.Expr) string {
 func (cv *cppVisitor) VisitEnd(node ast.Node) {
 	switch n := node.(type) {
 	case *ast.File:
+		printCppOutro(cv)
+		printHppOutro(cv)
+
 		//fmt.Printf("\n=====\n")
 		//fmt.Printf("%v\n", cv.inputName)
-		//fmt.Printf("%v\n", cv.out)
-		//fmt.Printf("%v\n", cv.outFile)
-		cv.out.Flush()
+		//fmt.Printf("%v\n", cv.cppOut)
+		//fmt.Printf("%v\n", cv.cppOutFile)
+		cv.cppOut.Flush()
+		cv.hppOut.Flush()
+		cv.makeOut.Flush()
 
 	case *ast.BadDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
 	case *ast.FuncDecl:
-		fmt.Fprintf(cv.out, "\n")
+		fmt.Fprintf(cv.cppOut, "\n")
 
 	case *ast.BlockStmt:
-		fmt.Fprintf(cv.out, "}\n")
-		cv.outIndent--
+		cv.cppIndent--
+		fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.out, ";\n")
+		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.CallExpr:
 
@@ -253,6 +341,7 @@ func main() {
 	}
 
 	var cv *cppVisitor = new(cppVisitor)
+	cv.Init()
 	cv.inputName = inputName
 	cv.nodes = new(list.List)
 

@@ -7,10 +7,22 @@ import (
 
 func main() {
 	fmt.Printf("Hello, world.\n")
-	helloFunc("Hello", "world")
+	var hello = "Hello"
+	var world = "World"
+	helloFunc(hello, world, "!")
 	//time.Sleep(100 * time.Millisecond)
+
+	var a = 5
+	var b = 8 + 7
+	fmt.Printf("result = %d\n", a*b+4)
+	fmt.Printf("\n")
+	printN("zzz", 3)
 }
 
-func helloFunc(str1 string, str2 string) {
-	fmt.Printf(str1 + ", " + str2 + ".\n")
+func helloFunc(str1 string, str2 string, str3 string) {
+	fmt.Printf(str1 + ", " + str2 + str3)
+}
+
+func printN(str1 string, n int) {
+	fmt.Printf(str1+"%d\n", n)
 }

@@ -16,6 +16,7 @@ import (
 
 var stdTypeMapping = map[string]string{
 	"string": "std::string",
+	"int":    "int",
 }
 
 type typeName struct {
@@ -75,12 +76,21 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 
-	//temporary cv.dummy implementations
+	//temporary dummy/mock implementations
 	fmt.Fprintf(cv.cppOut, "namespace fmt\n")
 	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "    void Printf(const std::string& str)\n")
+	fmt.Fprintf(cv.cppOut, "    // Temporary mock implementations\n")
+	fmt.Fprintf(cv.cppOut, "    template<typename T>\n")
+	fmt.Fprintf(cv.cppOut, "    void Printf(const T& str)\n")
 	fmt.Fprintf(cv.cppOut, "    {\n")
 	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "    template<typename T, typename... Args>\n")
+	fmt.Fprintf(cv.cppOut, "    void Printf(const T& str, Args&&... args)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
+	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
 	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "}\n")
 	fmt.Fprintf(cv.cppOut, "\n")
@@ -155,6 +165,10 @@ func (cv *cppVisitor) Init() {
 	fmt.Fprintf(cv.makeOut, "all:\n")
 }
 
+func (cv *cppVisitor) cppPrintf(format string, a ...interface{}) (n int, err error) {
+	return fmt.Fprintf(cv.cppOut, "%s"+format, append([]interface{}{cv.CppIndent()}, a...)...)
+}
+
 // Start reading node
 func (cv *cppVisitor) VisitStart(node ast.Node) {
 	switch n := node.(type) {
@@ -202,6 +216,9 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
 		cv.cppIndent++
 
+	case *ast.DeclStmt:
+		cv.cppPrintf("%s", convertDecl(n.Decl))
+
 	case *ast.ExprStmt:
 		fmt.Fprintf(cv.cppOut, "%s", cv.CppIndent())
 
@@ -234,11 +251,55 @@ func convertToken(t token.Token) string {
 	case token.QUO:
 		return "/"
 	default:
-		return "!!ERROR!!"
+		return "!!TOKEN_ERROR!!"
 	}
 }
 
+func convertDecl(decl ast.Decl) string {
+	switch d := decl.(type) {
+	case *ast.GenDecl:
+		return convertSpecs(d.Specs)
+
+	case *ast.FuncDecl:
+		panic("convertDecl[FuncDecl] Not implemented")
+
+	case *ast.BadDecl:
+		panic("convertDecl[BadDecl] Not implemented")
+
+	default:
+		panic("convertDecl, unknown subtype")
+	}
+}
+
+func convertSpecs(specs []ast.Spec) string {
+	var result string
+
+	for _, spec := range specs {
+		switch s := spec.(type) {
+		case *ast.TypeSpec:
+			result += convertExpr(s.Type) + " " + s.Name.Name + ";\n"
+
+		case *ast.ValueSpec:
+			for i := range s.Names {
+				result += convertExpr(s.Type) + " " + s.Names[i].Name + " = " + convertExpr(s.Values[i]) + ";\n"
+			}
+
+		case *ast.ImportSpec:
+			panic("convertSpecs[ImportSpec] Not implemented")
+
+		default:
+			panic("convertSpecs, unknown subtype")
+		}
+	}
+
+	return result
+}
+
 func convertExpr(node ast.Expr) string {
+	if node == nil {
+		return "auto"
+	}
+
 	switch n := node.(type) {
 	case *ast.BasicLit:
 		return n.Value
@@ -250,7 +311,7 @@ func convertExpr(node ast.Expr) string {
 		return convertExpr(n.X) + "::" + convertExpr(n.Sel)
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
-		return "!!ERROR!!"
+		return "!!EXPR_ERROR!! [" + reflect.TypeOf(node).Name() + "]"
 	}
 }
 

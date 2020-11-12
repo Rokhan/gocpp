@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"container/list"
 	"fmt"
 	"go/ast"
@@ -199,18 +200,20 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), n.Name)
 		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), n.Body)
-		params := typeNames{}
-		for _, field := range n.Type.Params.List {
-			var param typeName
-			for _, name := range field.Names {
-				param.name = append(param.name, name.Name)
-			}
-			param.typeStr = fmt.Sprintf("%v", field.Type)
-			params = append(params, param)
+		params := readFields(n.Type.Params)
+		results := readFields(n.Type.Results)
+		var resultType string
+		switch len(results) {
+		case 0:
+			resultType = "void"
+		case 1:
+			resultType = results[0].typeStr
+		default:
+			panic("multiple return type not managed")
 		}
 
-		fmt.Fprintf(cv.cppOut, "%svoid %s(%s)\n", cv.CppIndent(), n.Name.Name, params)
-		fmt.Fprintf(cv.hppOut, "%svoid %s(%s);\n", cv.CppIndent(), n.Name.Name, params)
+		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, n.Name.Name, params)
+		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, n.Name.Name, params)
 
 	case *ast.BlockStmt:
 		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
@@ -220,24 +223,36 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		cv.cppPrintf("%s", convertDecl(n.Decl))
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.cppOut, "%s", cv.CppIndent())
+		fmt.Fprintf(cv.cppOut, "%s%s", cv.CppIndent(), convertExpr(n.X))
+
+	case *ast.ReturnStmt:
+		fmt.Fprintf(cv.cppOut, "%sreturn %s;\n", cv.CppIndent(), convertExprs(n.Results))
 
 	case *ast.CallExpr:
-		fmt.Fprintf(cv.cppOut, "%v(", convertExpr(n.Fun))
-		var sep = ""
-		for _, arg := range n.Args {
-			fmt.Fprintf(cv.cppOut, "%s%s", sep, convertExpr(arg))
-			sep = ", "
-		}
-		fmt.Fprintf(cv.cppOut, ")")
-
 	case *ast.BasicLit:
+		// Manage recursiveley, not by visitor
 
 	case *ast.GenDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 		fmt.Printf("%s %s  -> Specs: %v\n", dbgPrefix, cv.Indent(), n.Specs)
 	default:
 	}
+}
+
+func readFields(fields *ast.FieldList) (params typeNames) {
+	if fields == nil {
+		return
+	}
+
+	for _, field := range fields.List {
+		var param typeName
+		for _, name := range field.Names {
+			param.name = append(param.name, name.Name)
+		}
+		param.typeStr = fmt.Sprintf("%v", field.Type)
+		params = append(params, param)
+	}
+	return
 }
 
 func convertToken(t token.Token) string {
@@ -305,14 +320,33 @@ func convertExpr(node ast.Expr) string {
 		return n.Value
 	case *ast.BinaryExpr:
 		return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
+	case *ast.CallExpr:
+		buf := new(bytes.Buffer)
+		fmt.Fprintf(buf, "%v(", convertExpr(n.Fun))
+		var sep = ""
+		for _, arg := range n.Args {
+			fmt.Fprintf(buf, "%s%s", sep, convertExpr(arg))
+			sep = ", "
+		}
+		fmt.Fprintf(buf, ")")
+		return buf.String()
+
 	case *ast.Ident:
 		return n.Name
 	case *ast.SelectorExpr:
 		return convertExpr(n.X) + "::" + convertExpr(n.Sel)
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
-		return "!!EXPR_ERROR!! [" + reflect.TypeOf(node).Name() + "]"
+		return fmt.Sprintf("!!EXPR_ERROR!! [%v]", reflect.TypeOf(node))
 	}
+}
+
+func convertExprs(exprs []ast.Expr) string {
+	var strs []string
+	for _, expr := range exprs {
+		strs = append(strs, convertExpr(expr))
+	}
+	return strings.Join(strs, ", ")
 }
 
 // End of node visit
@@ -344,8 +378,8 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.CallExpr:
-
 	case *ast.BasicLit:
+		// Manage recursiveley, not by visitor
 
 	case *ast.GenDecl:
 

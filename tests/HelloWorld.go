@@ -16,7 +16,11 @@ func main() {
 	var b = 8 + 7
 	fmt.Printf("result = %d\n", a*b+4)
 	fmt.Printf("\n")
-	printN("zzz", 3)
+	printN("zzz", square(3))
+}
+
+func square(num int) int {
+	return num * num
 }
 
 func helloFunc(str1 string, str2 string, str3 string) {

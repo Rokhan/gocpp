@@ -16,7 +16,9 @@ func main() {
 	var b = 8 + 7
 	fmt.Printf("result = %d\n", a*b+4)
 	fmt.Printf("\n")
-	printN("zzz", square(3))
+	printN("zzz1", square(3))
+	var n = square(2)
+	printN("zzz2", n)
 }
 
 func square(num int) int {

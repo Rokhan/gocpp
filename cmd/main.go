@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"container/list"
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -230,7 +231,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 
 	case *ast.CallExpr:
 	case *ast.BasicLit:
-		// Manage recursiveley, not by visitor
+		// Managed recursiveley, not by visitor
 
 	case *ast.GenDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
@@ -379,7 +380,7 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 
 	case *ast.CallExpr:
 	case *ast.BasicLit:
-		// Manage recursiveley, not by visitor
+		// Managed recursiveley, not by visitor
 
 	case *ast.GenDecl:
 
@@ -408,36 +409,42 @@ func (cv *cppVisitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func main() {
-	fset := token.NewFileSet()
-	var inputName string = "tests/HelloWorld.go"
 
-	f, err := parser.ParseFile(fset, inputName, nil, 0)
+	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse")
+	parseFmtDir := flag.Bool("parseFmt", true, "temporary test parameter")
+
+	flag.Parse()
+	fset := token.NewFileSet()
+
+	f, err := parser.ParseFile(fset, *inputName, nil, 0)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	pkgs, errPkg := parser.ParseDir(fset, "F:/Dev/Golang/src/fmt", nil, 0)
-	if errPkg != nil {
-		fmt.Println(errPkg)
-		return
-	}
-
-	ast.Print(fset, f)
-
-	for pkg, v := range pkgs {
-		for file := range v.Files {
-			fmt.Printf("%v -> %v\n", pkg, file)
+	if *parseFmtDir {
+		pkgs, errPkg := parser.ParseDir(fset, "F:/Dev/Golang/src/fmt", nil, 0)
+		if errPkg != nil {
+			fmt.Println(errPkg)
+			return
 		}
-	}
 
-	for _, u := range f.Unresolved {
-		fmt.Printf("%v unresolved\n", u.Name)
+		ast.Print(fset, f)
+
+		for pkg, v := range pkgs {
+			for file := range v.Files {
+				fmt.Printf("%v -> %v\n", pkg, file)
+			}
+		}
+
+		for _, u := range f.Unresolved {
+			fmt.Printf("%v unresolved\n", u.Name)
+		}
 	}
 
 	var cv *cppVisitor = new(cppVisitor)
 	cv.Init()
-	cv.inputName = inputName
+	cv.inputName = *inputName
 	cv.nodes = new(list.List)
 
 	fmt.Printf("\n=====\n")

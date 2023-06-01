@@ -17,8 +17,33 @@ import (
 )
 
 var stdTypeMapping = map[string]string{
-	"string": "std::string",
-	"int":    "int",
+	"string":     "std::string",
+	"int":        "int",
+	"uint64":     "uint64_t",
+	"complex128": "gocpp::complex128",
+}
+
+var stdFuncMapping = map[string]string{
+	"cmplx::Sqrt": "std::sqrt",
+	"math::Pi":    "M_PI",
+}
+
+func GetCppType(goType string) string {
+	val, ok := stdTypeMapping[goType]
+	if ok {
+		return val
+	} else {
+		return goType
+	}
+}
+
+func GetCppFunc(goType string) string {
+	val, ok := stdFuncMapping[goType]
+	if ok {
+		return val
+	} else {
+		return goType
+	}
 }
 
 type typeName struct {
@@ -73,9 +98,33 @@ func printCppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
 	fmt.Fprintf(cv.cppOut, "#include <string>\n")
 	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
+	fmt.Fprintf(cv.cppOut, "#include <complex>\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.inputName)
 	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "namespace cmplx = std;\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+
+	//compat library, should be put in separate file
+	fmt.Fprintf(cv.cppOut, "namespace gocpp\n")
+	fmt.Fprintf(cv.cppOut, "{\n")
+	fmt.Fprintf(cv.cppOut, "	struct complex128 : std::complex<double>\n")
+	fmt.Fprintf(cv.cppOut, "	{\n")
+	fmt.Fprintf(cv.cppOut, "		using std::complex<double>::complex;\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "		complex128(const std::complex<double>& c) : complex(c) {}\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "		std::complex<double>& base() { return *this; }\n")
+	fmt.Fprintf(cv.cppOut, "		const std::complex<double>& base() const { return *this; }\n")
+	fmt.Fprintf(cv.cppOut, "	};\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };\n")
+	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };\n")
+	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };\n")
+	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };\n")
+	fmt.Fprintf(cv.cppOut, "}\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 
 	//temporary dummy/mock implementations
@@ -93,6 +142,13 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "    {\n")
 	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
 	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "    template<typename... Args>\n")
+	fmt.Fprintf(cv.cppOut, "    void Println(Args&&... args)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << \"\\n\";\n")
 	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "}\n")
 	fmt.Fprintf(cv.cppOut, "\n")
@@ -189,6 +245,10 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		printCppIntro(cv)
 		printHppIntro(cv)
 
+		for _, decl := range n.Decls {
+			cv.convertDecls(decl)
+		}
+
 		fmt.Fprintf(cv.makeOut, "\t g++ -I. %s.cpp -o %s.exe\n", cv.inputName, cv.inputName)
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
@@ -198,44 +258,29 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
 	case *ast.FuncDecl:
-		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
-		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), n.Name)
-		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), n.Body)
-		params := readFields(n.Type.Params)
-		results := readFields(n.Type.Results)
-		var resultType string
-		switch len(results) {
-		case 0:
-			resultType = "void"
-		case 1:
-			resultType = results[0].typeStr
-		default:
-			panic("multiple return type not managed")
-		}
-
-		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, n.Name.Name, params)
-		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, n.Name.Name, params)
+		// Managed recursiveley, not by visitor
 
 	case *ast.BlockStmt:
-		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
-		cv.cppIndent++
+		// Managed recursiveley, not by visitor
 
 	case *ast.DeclStmt:
-		cv.cppPrintf("%s", convertDecl(n.Decl))
+		// Managed recursiveley, not by visitor
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s", cv.CppIndent(), convertExpr(n.X))
+		// Managed recursiveley, not by visitor
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%sreturn %s;\n", cv.CppIndent(), convertExprs(n.Results))
+		// Managed recursiveley, not by visitor
 
 	case *ast.CallExpr:
 	case *ast.BasicLit:
 		// Managed recursiveley, not by visitor
 
 	case *ast.GenDecl:
+		// Managed recursiveley, not by visitor
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 		fmt.Printf("%s %s  -> Specs: %v\n", dbgPrefix, cv.Indent(), n.Specs)
+
 	default:
 	}
 }
@@ -266,42 +311,97 @@ func convertToken(t token.Token) string {
 		return "*"
 	case token.QUO:
 		return "/"
+	case token.SHL:
+		return "<<"
+	case token.SHR:
+		return ">>"
 	default:
 		return "!!TOKEN_ERROR!!"
 	}
 }
 
-func convertDecl(decl ast.Decl) string {
+func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		return convertSpecs(d.Specs)
+		for _, declItem := range convertSpecs(d.Specs) {
+			cv.cppPrintf("%s;\n", declItem)
+		}
 
 	case *ast.FuncDecl:
-		panic("convertDecl[FuncDecl] Not implemented")
+		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(d))
+		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), d.Name)
+		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), d.Body)
+		params := readFields(d.Type.Params)
+		results := readFields(d.Type.Results)
+		var resultType string
+		switch len(results) {
+		case 0:
+			resultType = "void"
+		case 1:
+			resultType = results[0].typeStr
+		default:
+			panic("multiple return type not managed")
+		}
+
+		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
+		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
+
+		cv.convertBlockStmt(d.Body)
+		fmt.Fprintf(cv.cppOut, "\n")
 
 	case *ast.BadDecl:
-		panic("convertDecl[BadDecl] Not implemented")
+		panic("convertDecls[BadDecl] Not implemented")
 
 	default:
-		panic("convertDecl, unknown subtype")
+		panic("convertDecls, unknown subtype")
 	}
 }
 
-func convertSpecs(specs []ast.Spec) string {
-	var result string
+func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt) {
+	fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
+	cv.cppIndent++
+
+	for _, stmt := range block.List {
+		cv.convertStmt(stmt)
+	}
+
+	cv.cppIndent--
+	fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
+}
+
+func (cv *cppVisitor) convertStmt(stmt ast.Stmt) {
+	switch s := stmt.(type) {
+	case *ast.BlockStmt:
+		cv.convertBlockStmt(s)
+
+	case *ast.DeclStmt:
+		cv.convertDecls(s.Decl)
+
+	case *ast.ExprStmt:
+		fmt.Fprintf(cv.cppOut, "%s%s", cv.CppIndent(), convertExpr(s.X))
+		fmt.Fprintf(cv.cppOut, ";\n")
+
+	case *ast.ReturnStmt:
+		fmt.Fprintf(cv.cppOut, "%sreturn %s;\n", cv.CppIndent(), convertExprs(s.Results))
+
+	}
+}
+
+func convertSpecs(specs []ast.Spec) []string {
+	var result []string
 
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
-			result += convertExpr(s.Type) + " " + s.Name.Name + ";\n"
+			result = append(result, convertExpr(s.Type)+" "+s.Name.Name)
 
 		case *ast.ValueSpec:
 			for i := range s.Names {
-				result += convertExpr(s.Type) + " " + s.Names[i].Name + " = " + convertExpr(s.Values[i]) + ";\n"
+				result = append(result, convertTypeExpr(s.Type)+" "+s.Names[i].Name+" = "+convertExpr(s.Values[i]))
 			}
 
 		case *ast.ImportSpec:
-			panic("convertSpecs[ImportSpec] Not implemented")
+			result = append(result, "// convertSpecs[ImportSpec] Not implemented => "+s.Path.Value)
 
 		default:
 			panic("convertSpecs, unknown subtype")
@@ -311,6 +411,20 @@ func convertSpecs(specs []ast.Spec) string {
 	return result
 }
 
+func convertTypeExpr(node ast.Expr) string {
+	if node == nil {
+		return "auto"
+	}
+
+	switch n := node.(type) {
+	case *ast.Ident:
+		return GetCppType(n.Name)
+
+	default:
+		return fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node))
+	}
+}
+
 func convertExpr(node ast.Expr) string {
 	if node == nil {
 		return "auto"
@@ -318,9 +432,26 @@ func convertExpr(node ast.Expr) string {
 
 	switch n := node.(type) {
 	case *ast.BasicLit:
-		return n.Value
+		if n.Kind == token.IMAG {
+			return "gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")"
+		} else {
+			return n.Value
+		}
+
+	case *ast.UnaryExpr:
+		return convertToken(n.Op) + " " + convertExpr(n.X)
+
 	case *ast.BinaryExpr:
 		return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
+		// import "go/type"
+		//xType := types.ExprString(n.X)
+		//yType := types.ExprString(n.Y)
+		//if xType == yType {
+		//	return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
+		//} else {
+		//	return ...
+		//}
+
 	case *ast.CallExpr:
 		buf := new(bytes.Buffer)
 		fmt.Fprintf(buf, "%v(", convertExpr(n.Fun))
@@ -334,8 +465,10 @@ func convertExpr(node ast.Expr) string {
 
 	case *ast.Ident:
 		return n.Name
+
 	case *ast.SelectorExpr:
-		return convertExpr(n.X) + "::" + convertExpr(n.Sel)
+		return GetCppFunc(convertExpr(n.X) + "::" + convertExpr(n.Sel))
+
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
 		return fmt.Sprintf("!!EXPR_ERROR!! [%v]", reflect.TypeOf(node))
@@ -369,14 +502,13 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
 	case *ast.FuncDecl:
-		fmt.Fprintf(cv.cppOut, "\n")
+		// Managed recursiveley, not by visitor
 
 	case *ast.BlockStmt:
-		cv.cppIndent--
-		fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
+		// Managed recursiveley, not by visitor
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.cppOut, ";\n")
+		// Managed recursiveley, not by visitor
 
 	case *ast.CallExpr:
 	case *ast.BasicLit:

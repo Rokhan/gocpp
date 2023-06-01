@@ -10,10 +10,14 @@ OUT_EXE_TEST_FILES=$(addprefix out/,$(EXE_TEST_FILES))
 HPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.h)
 OUT_HPP_TEST_FILES=$(addprefix out/,$(HPP_TEST_FILES))
 
-all : header allexe
+all : result-header allexe
+	dos2unix results.md
 
-header:
-	echo "| file | cpp generate | cpp compilation | run | result diff |" > results.md
+result-header:
+	echo "# Results on test directory" > results.md
+	echo >> results.md
+	echo "| file | cpp generate | cpp compilation | run | result diff |" >> results.md
+	echo "| ---- | ------------ | --------------- | --- | ----------- |" >> results.md
 
 allcpp: $(OUT_CPP_TEST_FILES)
 	echo $(OUT_CPP_TEST_FILES)

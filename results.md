@@ -7,8 +7,8 @@
 | /TourOfGo/basics/constants.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/exported-names.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/functions.go | ✔️ | ✔️ | ✔️ | todo |
-| /TourOfGo/basics/functions-continued.go | ✔️ | ❌ | ❌ | todo |
-| /TourOfGo/basics/imports.go | ✔️ | ❌ | ❌ | todo |
+| /TourOfGo/basics/functions-continued.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/basics/imports.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/multiple-results.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/basics/named-results.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/basics/numeric-constants.go | ✔️ | ❌ | ❌ | todo |

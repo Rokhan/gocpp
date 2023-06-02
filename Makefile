@@ -4,15 +4,22 @@ GO_TEST_FILES=$(wildcard tests/*.go tests/*/*/*.go)
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.cpp)
 OUT_CPP_TEST_FILES=$(addprefix out/,$(CPP_TEST_FILES))
 
+HPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.h)
+OUT_HPP_TEST_FILES=$(addprefix out/,$(HPP_TEST_FILES))
+
 EXE_TEST_FILES=$(GO_TEST_FILES:.go=.go.exe)
 OUT_EXE_TEST_FILES=$(addprefix out/,$(EXE_TEST_FILES))
 
-HPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.h)
-OUT_HPP_TEST_FILES=$(addprefix out/,$(HPP_TEST_FILES))
+LOG_TEST_FILES=$(GO_TEST_FILES:.go=.go.exe.log) $(GO_TEST_FILES:.go=.go.cpp.log)
+OUT_LOG_TEST_FILES=$(addprefix out/,$(LOG_TEST_FILES))
 
 all : result-header allexe
 	dos2unix results.md
 
+## ------------------------------------------------------ ##
+##  Building stop at first error (as usual in Makefile)   ##
+##  To generate full report just use "make -k"            ##
+## ------------------------------------------------------ ##
 result-header:
 	echo "# Results on test directory" > results.md
 	echo >> results.md
@@ -37,19 +44,19 @@ $(OUT_EXE_TEST_FILES): out/%.go.exe : %.go
 	@echo "    $$$@"
 	echo -n "| $$$< " >> results.md
 	go run ./cmd/main.go -parseFmt=false -input $< > $@".log" \
-		&& echo -n "| ✔️ " >> results.md \
-		|| echo -n "| ❌ " >> results.md
+		&&  echo -n "| ✔️ " >> results.md \
+		|| (echo    "| ❌ | ❌ | ❌ | todo |" >> results.md && false)
 
 	(cd out && make) \
-		&& echo -n "| ✔️ " >> results.md \
-		|| echo -n "| ❌ " >> results.md
+		&&  echo -n "| ✔️ " >> results.md \
+		|| (echo    "| ❌ | ❌ | todo |" >> results.md && false)
 
-	out/$*.go.exe \
-		&& echo -n "| ✔️ " >> results.md \
-		|| echo -n "| ❌ " >> results.md
+	(out/$*.go.exe) \
+		&&  echo -n "| ✔️ " >> results.md \
+		|| (echo    "| ❌ | todo |" >> results.md && false)
 
 	echo "| todo |" >> results.md
 
 clean:
-	rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES)
+	rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES) $(OUT_LOG_TEST_FILES)
 	rm -f results.md

@@ -25,6 +25,7 @@ var stdTypeMapping = map[string]string{
 
 var stdFuncMapping = map[string]string{
 	"cmplx::Sqrt": "std::sqrt",
+	"math::Sqrt":  "std::sqrt",
 	"math::Pi":    "M_PI",
 }
 
@@ -47,19 +48,24 @@ func GetCppFunc(goType string) string {
 }
 
 type typeName struct {
-	name    []string
+	names   []string
 	typeStr string
 }
 type typeNames []typeName
 
-func (tn typeName) String() string {
-	return fmt.Sprintf("%v %v", stdTypeMapping[tn.typeStr], strings.Join(tn.name, "."))
+func (tn typeName) ParamDecl() []string {
+	var strs []string
+	for _, name := range tn.names {
+		strs = append(strs, fmt.Sprintf("%v %v", stdTypeMapping[tn.typeStr], name))
+	}
+
+	return strs
 }
 
 func (tns typeNames) String() string {
 	var strs []string
 	for _, tn := range tns {
-		strs = append(strs, tn.String())
+		strs = append(strs, tn.ParamDecl()...)
 	}
 	return strings.Join(strs, ", ")
 }
@@ -293,7 +299,7 @@ func readFields(fields *ast.FieldList) (params typeNames) {
 	for _, field := range fields.List {
 		var param typeName
 		for _, name := range field.Names {
-			param.name = append(param.name, name.Name)
+			param.names = append(param.names, name.Name)
 		}
 		param.typeStr = fmt.Sprintf("%v", field.Type)
 		params = append(params, param)

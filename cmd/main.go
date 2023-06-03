@@ -102,9 +102,10 @@ const rawPrefix string = "//RAW_AST"
 
 func printCppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
-	fmt.Fprintf(cv.cppOut, "#include <string>\n")
-	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
 	fmt.Fprintf(cv.cppOut, "#include <complex>\n")
+	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
+	fmt.Fprintf(cv.cppOut, "#include <string>\n")
+	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.inputName)
 	fmt.Fprintf(cv.cppOut, "\n")
@@ -263,24 +264,14 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 	case *ast.BadDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
+	// Managed recursiveley, not by visitor
 	case *ast.FuncDecl:
-		// Managed recursiveley, not by visitor
-
 	case *ast.BlockStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.DeclStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.ExprStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.ReturnStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.CallExpr:
 	case *ast.BasicLit:
-		// Managed recursiveley, not by visitor
 
 	case *ast.GenDecl:
 		// Managed recursiveley, not by visitor
@@ -344,9 +335,13 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		case 0:
 			resultType = "void"
 		case 1:
-			resultType = results[0].typeStr
+			resultType = GetCppType(results[0].typeStr)
 		default:
-			panic("multiple return type not managed")
+			var types []string
+			for _, result := range results {
+				types = append(types, GetCppType(result.typeStr))
+			}
+			resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
 		}
 
 		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
@@ -359,7 +354,7 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		panic("convertDecls[BadDecl] Not implemented")
 
 	default:
-		panic("convertDecls, unknown subtype")
+		panic("convertDecls, unmanaged subtype")
 	}
 }
 
@@ -375,6 +370,39 @@ func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt) {
 	fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
 }
 
+func convertReturnExprs(exprs []ast.Expr) string {
+	switch len(exprs) {
+	case 0:
+		return "return"
+	case 1:
+		return fmt.Sprintf("return %s", convertExprs(exprs))
+	default:
+		return fmt.Sprintf("return {%s}", convertExprs(exprs))
+	}
+}
+
+func convertAssignRightExprs(exprs []ast.Expr) string {
+	switch len(exprs) {
+	case 0:
+		return ""
+	case 1:
+		return convertExprs(exprs)
+	default:
+		return fmt.Sprintf("std::tuple{%s}", convertExprs(exprs))
+	}
+}
+
+func convertAssignExprs(lhs []ast.Expr, rhs []ast.Expr) string {
+	switch len(lhs) {
+	case 0:
+		panic("convertReturnExprs, len(exprs) == 0")
+	case 1:
+		return fmt.Sprintf("auto %s = %s", convertExprs(lhs), convertAssignRightExprs(rhs))
+	default:
+		return fmt.Sprintf("auto [%s] = %s", convertExprs(lhs), convertAssignRightExprs(rhs))
+	}
+}
+
 func (cv *cppVisitor) convertStmt(stmt ast.Stmt) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
@@ -388,7 +416,13 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt) {
 		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%sreturn %s;\n", cv.CppIndent(), convertExprs(s.Results))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results))
+
+	case *ast.AssignStmt:
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s.Lhs, s.Rhs))
+
+	default:
+		panic(fmt.Sprintf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s)))
 
 	}
 }
@@ -410,7 +444,7 @@ func convertSpecs(specs []ast.Spec) []string {
 			result = append(result, "// convertSpecs[ImportSpec] Not implemented => "+s.Path.Value)
 
 		default:
-			panic("convertSpecs, unknown subtype")
+			panic(fmt.Sprintf("convertSpecs, unmanaged type [%v]", reflect.TypeOf(s)))
 		}
 	}
 
@@ -507,19 +541,12 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 	case *ast.BadDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
+	// Managed recursiveley, not by visitor
 	case *ast.FuncDecl:
-		// Managed recursiveley, not by visitor
-
 	case *ast.BlockStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.ExprStmt:
-		// Managed recursiveley, not by visitor
-
 	case *ast.CallExpr:
 	case *ast.BasicLit:
-		// Managed recursiveley, not by visitor
-
 	case *ast.GenDecl:
 
 	default:

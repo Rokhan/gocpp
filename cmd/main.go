@@ -29,6 +29,11 @@ var stdFuncMapping = map[string]string{
 	"math::Pi":    "M_PI",
 }
 
+func Panicf(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	panic(msg)
+}
+
 func GetCppType(goType string) string {
 	val, ok := stdTypeMapping[goType]
 	if ok {
@@ -51,6 +56,7 @@ type typeName struct {
 	names   []string
 	typeStr string
 }
+
 type typeNames []typeName
 
 func (tn typeName) ParamDecl() []string {
@@ -137,17 +143,34 @@ func printCppIntro(cv *cppVisitor) {
 	//temporary dummy/mock implementations
 	fmt.Fprintf(cv.cppOut, "namespace fmt\n")
 	fmt.Fprintf(cv.cppOut, "{\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "template<typename... Ts>\n")
+	fmt.Fprintf(cv.cppOut, "std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)\n")
+	fmt.Fprintf(cv.cppOut, "{\n")
+	fmt.Fprintf(cv.cppOut, "	std::apply\n")
+	fmt.Fprintf(cv.cppOut, "	(\n")
+	fmt.Fprintf(cv.cppOut, "		[&os](Ts const&... tupleArgs)\n")
+	fmt.Fprintf(cv.cppOut, "		{\n")
+	fmt.Fprintf(cv.cppOut, "			os << '[';\n")
+	fmt.Fprintf(cv.cppOut, "			std::size_t n{0};\n")
+	fmt.Fprintf(cv.cppOut, "			((os << tupleArgs << (++n != sizeof...(Ts) ? \", \" : \"\")), ...);\n")
+	fmt.Fprintf(cv.cppOut, "			os << ']';\n")
+	fmt.Fprintf(cv.cppOut, "		}, theTuple\n")
+	fmt.Fprintf(cv.cppOut, "	);\n")
+	fmt.Fprintf(cv.cppOut, "	return os;\n")
+	fmt.Fprintf(cv.cppOut, "}\n")
+	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "    // Temporary mock implementations\n")
 	fmt.Fprintf(cv.cppOut, "    template<typename T>\n")
-	fmt.Fprintf(cv.cppOut, "    void Printf(const T& str)\n")
+	fmt.Fprintf(cv.cppOut, "    void Printf(const T& value)\n")
 	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << value;\n")
 	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "    template<typename T, typename... Args>\n")
-	fmt.Fprintf(cv.cppOut, "    void Printf(const T& str, Args&&... args)\n")
+	fmt.Fprintf(cv.cppOut, "    void Printf(const T& value, Args&&... args)\n")
 	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << str;\n")
+	fmt.Fprintf(cv.cppOut, "        Printf(value);\n")
 	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
 	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "\n")
@@ -329,17 +352,36 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), d.Name)
 		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), d.Body)
 		params := readFields(d.Type.Params)
-		results := readFields(d.Type.Results)
+		goResults := readFields(d.Type.Results)
+
+		var outNames []string
+		var outTypes []string
+		var useNamedResults = true
+		for _, result := range goResults {
+			if result.names == nil {
+				useNamedResults = false
+				outTypes = append(outTypes, result.typeStr)
+			}
+			for _, name := range result.names {
+				outNames = append(outNames, name)
+				outTypes = append(outTypes, result.typeStr)
+			}
+		}
+
+		if !useNamedResults {
+			outNames = nil
+		}
+
 		var resultType string
-		switch len(results) {
+		switch len(outTypes) {
 		case 0:
 			resultType = "void"
 		case 1:
-			resultType = GetCppType(results[0].typeStr)
+			resultType = GetCppType(outTypes[0])
 		default:
 			var types []string
-			for _, result := range results {
-				types = append(types, GetCppType(result.typeStr))
+			for _, outType := range outTypes {
+				types = append(types, GetCppType(outType))
 			}
 			resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
 		}
@@ -347,7 +389,7 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
 
-		cv.convertBlockStmt(d.Body)
+		cv.convertBlockStmt(d.Body, outNames, outTypes)
 		fmt.Fprintf(cv.cppOut, "\n")
 
 	case *ast.BadDecl:
@@ -358,22 +400,37 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	}
 }
 
-func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt) {
+func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, outNames, outTypes []string) {
 	fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
 	cv.cppIndent++
 
+	for i := range outNames {
+		fmt.Fprintf(cv.cppOut, "%s%s %s;\n", cv.CppIndent(), GetCppType(outTypes[i]), outNames[i])
+	}
+
 	for _, stmt := range block.List {
-		cv.convertStmt(stmt)
+		cv.convertStmt(stmt, outNames, outTypes)
 	}
 
 	cv.cppIndent--
 	fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
 }
 
-func convertReturnExprs(exprs []ast.Expr) string {
+func convertReturnExprs(exprs []ast.Expr, outNames []string) string {
 	switch len(exprs) {
 	case 0:
-		return "return"
+		if outNames != nil {
+			switch len(outNames) {
+			case 0:
+				panic("convertReturnExprs, len(outNames) == 0")
+			case 1:
+				return fmt.Sprintf("return %s", outNames[0])
+			default:
+				return fmt.Sprintf("return {%s}", strings.Join(outNames, ", "))
+			}
+		} else {
+			return "return"
+		}
 	case 1:
 		return fmt.Sprintf("return %s", convertExprs(exprs))
 	default:
@@ -392,21 +449,36 @@ func convertAssignRightExprs(exprs []ast.Expr) string {
 	}
 }
 
-func convertAssignExprs(lhs []ast.Expr, rhs []ast.Expr) string {
-	switch len(lhs) {
-	case 0:
-		panic("convertReturnExprs, len(exprs) == 0")
-	case 1:
-		return fmt.Sprintf("auto %s = %s", convertExprs(lhs), convertAssignRightExprs(rhs))
+func convertAssignExprs(stmt *ast.AssignStmt) string {
+	switch stmt.Tok {
+	case token.DEFINE:
+		switch len(stmt.Lhs) {
+		case 0:
+			panic("convertAssignExprs, len(exprs) == 0")
+		case 1:
+			return fmt.Sprintf("auto %s = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+		default:
+			return fmt.Sprintf("auto [%s] = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+		}
+	case token.ASSIGN:
+		switch len(stmt.Lhs) {
+		case 0:
+			panic("convertAssignExprs, len(exprs) == 0")
+		case 1:
+			return fmt.Sprintf("%s = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+		default:
+			return fmt.Sprintf("std::tie(%s) = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+		}
 	default:
-		return fmt.Sprintf("auto [%s] = %s", convertExprs(lhs), convertAssignRightExprs(rhs))
+		Panicf("convertAssignExprs, unmanaged token: %s", stmt.Tok)
 	}
+	panic("convertAssignExprs, unmanaged case")
 }
 
-func (cv *cppVisitor) convertStmt(stmt ast.Stmt) {
+func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []string) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		cv.convertBlockStmt(s)
+		cv.convertBlockStmt(s, outNames, outTypes)
 
 	case *ast.DeclStmt:
 		cv.convertDecls(s.Decl)
@@ -416,14 +488,13 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt) {
 		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results, outNames))
 
 	case *ast.AssignStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s.Lhs, s.Rhs))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s))
 
 	default:
-		panic(fmt.Sprintf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s)))
-
+		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
 	}
 }
 
@@ -444,7 +515,7 @@ func convertSpecs(specs []ast.Spec) []string {
 			result = append(result, "// convertSpecs[ImportSpec] Not implemented => "+s.Path.Value)
 
 		default:
-			panic(fmt.Sprintf("convertSpecs, unmanaged type [%v]", reflect.TypeOf(s)))
+			Panicf("convertSpecs, unmanaged type [%v]", reflect.TypeOf(s))
 		}
 	}
 

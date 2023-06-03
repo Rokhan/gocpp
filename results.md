@@ -10,7 +10,7 @@
 | /TourOfGo/basics/functions-continued.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/imports.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/multiple-results.go | ✔️ | ✔️ | ✔️ | todo |
-| /TourOfGo/basics/named-results.go | ✔️ | ❌ | ❌ | todo |
+| /TourOfGo/basics/named-results.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/basics/numeric-constants.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/basics/packages.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/basics/short-variable-declarations.go | ✔️ | ✔️ | ✔️ | todo |

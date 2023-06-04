@@ -22,14 +22,17 @@ var stdTypeMapping = map[string]string{
 	"uint64":     "uint64_t",
 	"complex128": "gocpp::complex128",
 	"float64":    "float",
+	"uint":       "unsigned int",
 }
 
-// Temporary mappings while 'import' isn't implemented
 var stdFuncMapping = map[string]string{
-	"cmplx::Sqrt": "std::sqrt",
-	"math::Sqrt":  "std::sqrt",
-	"math::Pi":    "M_PI",
-	"rand::Intn":  "gocpp::Intn",
+	// Temporary mappings while 'import' isn't implemented
+	"fmt::Printf":  "mocklib::Printf",
+	"fmt::Println": "mocklib::Println",
+	"rand::Intn":   "mocklib::Intn",
+	"cmplx::Sqrt":  "std::sqrt",
+	"math::Sqrt":   "std::sqrt",
+	"math::Pi":     "M_PI",
 	// type conversions
 	"float64": "float",
 }
@@ -82,7 +85,8 @@ func (tns typeNames) String() string {
 }
 
 type cppVisitor struct {
-	inputName string
+	inputName     string
+	supportHeader string
 
 	astIndent int
 
@@ -119,78 +123,8 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.inputName)
+	fmt.Fprintf(cv.cppOut, "#include \"%s\"\n", cv.supportHeader)
 	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "namespace cmplx = std;\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-
-	//compat library, should be put in separate file
-	fmt.Fprintf(cv.cppOut, "namespace gocpp\n")
-	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "	struct complex128 : std::complex<double>\n")
-	fmt.Fprintf(cv.cppOut, "	{\n")
-	fmt.Fprintf(cv.cppOut, "		using std::complex<double>::complex;\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "		complex128(const std::complex<double>& c) : complex(c) {}\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "		std::complex<double>& base() { return *this; }\n")
-	fmt.Fprintf(cv.cppOut, "		const std::complex<double>& base() const { return *this; }\n")
-	fmt.Fprintf(cv.cppOut, "	};\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };\n")
-	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };\n")
-	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };\n")
-	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "    int Intn(int n)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        return rand() %% n;\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "}\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-
-	//temporary dummy/mock implementations
-	fmt.Fprintf(cv.cppOut, "namespace fmt\n")
-	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "    template<typename... Ts>\n")
-	fmt.Fprintf(cv.cppOut, "    std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::apply\n")
-	fmt.Fprintf(cv.cppOut, "        (\n")
-	fmt.Fprintf(cv.cppOut, "            [&os](Ts const&... tupleArgs)\n")
-	fmt.Fprintf(cv.cppOut, "            {\n")
-	fmt.Fprintf(cv.cppOut, "                os << '[';\n")
-	fmt.Fprintf(cv.cppOut, "                std::size_t n{0};\n")
-	fmt.Fprintf(cv.cppOut, "                ((os << tupleArgs << (++n != sizeof...(Ts) ? \", \" : \"\")), ...);\n")
-	fmt.Fprintf(cv.cppOut, "                os << ']';\n")
-	fmt.Fprintf(cv.cppOut, "            }, theTuple\n")
-	fmt.Fprintf(cv.cppOut, "        );\n")
-	fmt.Fprintf(cv.cppOut, "        return os;\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "    // Temporary mock implementations\n")
-	fmt.Fprintf(cv.cppOut, "    template<typename T>\n")
-	fmt.Fprintf(cv.cppOut, "    void Printf(const T& value)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << value;\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "    template<typename T, typename... Args>\n")
-	fmt.Fprintf(cv.cppOut, "    void Printf(const T& value, Args&&... args)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        Printf(value);\n")
-	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "    template<typename... Args>\n")
-	fmt.Fprintf(cv.cppOut, "    void Println(Args&&... args)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        Printf(std::forward<Args>(args)...);\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << \"\\n\";\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "}\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 
 	// Put everything generated in "golang" namespace
@@ -218,6 +152,7 @@ func printHppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.hppOut, "#pragma once\n")
 	fmt.Fprintf(cv.hppOut, "\n")
 	fmt.Fprintf(cv.hppOut, "#include <string>\n")
+	fmt.Fprintf(cv.hppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.hppOut, "\n")
 
 	// Put everything generated in "golang" namespace
@@ -289,7 +224,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 			cv.convertDecls(decl)
 		}
 
-		fmt.Fprintf(cv.makeOut, "\t g++ -I. %s.cpp -o %s.exe\n", cv.inputName, cv.inputName)
+		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o %s.exe\n", cv.inputName, cv.inputName)
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
 		//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
@@ -694,6 +629,7 @@ func main() {
 
 	var cv *cppVisitor = new(cppVisitor)
 	cv.Init()
+	cv.supportHeader = "gocpp/support.h"
 	cv.inputName = *inputName
 	cv.nodes = new(list.List)
 

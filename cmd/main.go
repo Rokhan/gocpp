@@ -21,12 +21,17 @@ var stdTypeMapping = map[string]string{
 	"int":        "int",
 	"uint64":     "uint64_t",
 	"complex128": "gocpp::complex128",
+	"float64":    "float",
 }
 
+// Temporary mappings while 'import' isn't implemented
 var stdFuncMapping = map[string]string{
 	"cmplx::Sqrt": "std::sqrt",
 	"math::Sqrt":  "std::sqrt",
 	"math::Pi":    "M_PI",
+	"rand::Intn":  "gocpp::Intn",
+	// type conversions
+	"float64": "float",
 }
 
 func Panicf(format string, a ...interface{}) {
@@ -137,6 +142,11 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };\n")
 	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };\n")
 	fmt.Fprintf(cv.cppOut, "	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };\n")
+	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cppOut, "    int Intn(int n)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        return rand() %% n;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "}\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 
@@ -144,21 +154,21 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "namespace fmt\n")
 	fmt.Fprintf(cv.cppOut, "{\n")
 	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "template<typename... Ts>\n")
-	fmt.Fprintf(cv.cppOut, "std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)\n")
-	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "	std::apply\n")
-	fmt.Fprintf(cv.cppOut, "	(\n")
-	fmt.Fprintf(cv.cppOut, "		[&os](Ts const&... tupleArgs)\n")
-	fmt.Fprintf(cv.cppOut, "		{\n")
-	fmt.Fprintf(cv.cppOut, "			os << '[';\n")
-	fmt.Fprintf(cv.cppOut, "			std::size_t n{0};\n")
-	fmt.Fprintf(cv.cppOut, "			((os << tupleArgs << (++n != sizeof...(Ts) ? \", \" : \"\")), ...);\n")
-	fmt.Fprintf(cv.cppOut, "			os << ']';\n")
-	fmt.Fprintf(cv.cppOut, "		}, theTuple\n")
-	fmt.Fprintf(cv.cppOut, "	);\n")
-	fmt.Fprintf(cv.cppOut, "	return os;\n")
-	fmt.Fprintf(cv.cppOut, "}\n")
+	fmt.Fprintf(cv.cppOut, "    template<typename... Ts>\n")
+	fmt.Fprintf(cv.cppOut, "    std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        std::apply\n")
+	fmt.Fprintf(cv.cppOut, "        (\n")
+	fmt.Fprintf(cv.cppOut, "            [&os](Ts const&... tupleArgs)\n")
+	fmt.Fprintf(cv.cppOut, "            {\n")
+	fmt.Fprintf(cv.cppOut, "                os << '[';\n")
+	fmt.Fprintf(cv.cppOut, "                std::size_t n{0};\n")
+	fmt.Fprintf(cv.cppOut, "                ((os << tupleArgs << (++n != sizeof...(Ts) ? \", \" : \"\")), ...);\n")
+	fmt.Fprintf(cv.cppOut, "                os << ']';\n")
+	fmt.Fprintf(cv.cppOut, "            }, theTuple\n")
+	fmt.Fprintf(cv.cppOut, "        );\n")
+	fmt.Fprintf(cv.cppOut, "        return os;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "    // Temporary mock implementations\n")
 	fmt.Fprintf(cv.cppOut, "    template<typename T>\n")
@@ -504,11 +514,15 @@ func convertSpecs(specs []ast.Spec) []string {
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
-			result = append(result, convertExpr(s.Type)+" "+s.Name.Name)
+			result = append(result, fmt.Sprintf("%s %s", convertExpr(s.Type), s.Name.Name))
 
 		case *ast.ValueSpec:
 			for i := range s.Names {
-				result = append(result, convertTypeExpr(s.Type)+" "+s.Names[i].Name+" = "+convertExpr(s.Values[i]))
+				if len(s.Values) == 0 {
+					result = append(result, fmt.Sprintf("%s %s", convertTypeExpr(s.Type), s.Names[i].Name))
+				} else {
+					result = append(result, fmt.Sprintf("%s %s = %s", convertTypeExpr(s.Type), s.Names[i].Name, convertExpr(s.Values[i])))
+				}
 			}
 
 		case *ast.ImportSpec:
@@ -575,7 +589,7 @@ func convertExpr(node ast.Expr) string {
 		return buf.String()
 
 	case *ast.Ident:
-		return n.Name
+		return GetCppFunc(n.Name)
 
 	case *ast.SelectorExpr:
 		return GetCppFunc(convertExpr(n.X) + "::" + convertExpr(n.Sel))

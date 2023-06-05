@@ -28,10 +28,10 @@
 | /TourOfGo/concurrency/mutex-counter.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/concurrency/range-and-close.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/concurrency/select.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/defer.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/defer-multi.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/flowcontrol/defer.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/flowcontrol/defer-multi.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/exercise-loops-and-functions.go | ✔️ | ✔️ | ✔️ | todo |
-| /TourOfGo/flowcontrol/for.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/flowcontrol/for.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/for-continued.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/flowcontrol/forever.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/flowcontrol/for-is-gos-while.go | ❌ | ❌ | ❌ | todo |
@@ -68,10 +68,10 @@
 | /TourOfGo/methods/type-switches.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/append.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/array.go | ✔️ | ❌ | ❌ | todo |
-| /TourOfGo/moretypes/exercise-fibonacci-closure.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/moretypes/exercise-fibonacci-closure.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/exercise-maps.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/exercise-slices.go | ✔️ | ❌ | ❌ | todo |
-| /TourOfGo/moretypes/function-closures.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/moretypes/function-closures.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/function-values.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/making-slices.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/map-literals.go | ✔️ | ❌ | ❌ | todo |
@@ -86,7 +86,7 @@
 | /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/slice-literals.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/slices.go | ✔️ | ❌ | ❌ | todo |
-| /TourOfGo/moretypes/slices-of-slice.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/moretypes/slices-of-slice.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/slices-pointers.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/struct-fields.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | todo |

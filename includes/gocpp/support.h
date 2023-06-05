@@ -1,7 +1,9 @@
 #include <complex>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <vector>
 
 // Support types implementations
 namespace gocpp
@@ -20,6 +22,18 @@ namespace gocpp
 	inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
 	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
 	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
+
+    struct Defer : std::vector<std::function<void()>>
+    {
+        ~Defer()
+        {
+            while(!empty())
+            {
+                back()();
+                pop_back();
+            }
+        }
+    };
 }
 
 // temporary mock implementations

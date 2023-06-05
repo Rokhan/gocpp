@@ -35,6 +35,7 @@ var stdFuncMapping = map[string]string{
 	"math::Pi":     "M_PI",
 	// type conversions
 	"float64": "float",
+	"uint":    "(unsigned int)",
 }
 
 func Panicf(format string, a ...interface{}) {
@@ -280,8 +281,12 @@ func convertToken(t token.Token) string {
 		return "<<"
 	case token.SHR:
 		return ">>"
+	case token.LSS:
+		return "<"
+	case token.GTR:
+		return ">"
 	default:
-		return "!!TOKEN_ERROR!!"
+		return fmt.Sprintf("[[TOKEN_ERROR: '%v' ]]", t)
 	}
 }
 
@@ -334,7 +339,7 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
 
-		cv.convertBlockStmt(d.Body, outNames, outTypes)
+		cv.convertBlockStmt(d.Body, outNames, outTypes, true)
 		fmt.Fprintf(cv.cppOut, "\n")
 
 	case *ast.BadDecl:
@@ -345,9 +350,13 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	}
 }
 
-func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, outNames, outTypes []string) {
+func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, outNames, outTypes []string, isFunc bool) {
 	fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
 	cv.cppIndent++
+
+	if isFunc {
+		fmt.Fprintf(cv.cppOut, "%sgocpp::Defer defer;\n", cv.CppIndent())
+	}
 
 	for i := range outNames {
 		fmt.Fprintf(cv.cppOut, "%s%s %s;\n", cv.CppIndent(), GetCppType(outTypes[i]), outNames[i])
@@ -414,16 +423,34 @@ func convertAssignExprs(stmt *ast.AssignStmt) string {
 		default:
 			return fmt.Sprintf("std::tie(%s) = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
 		}
+
+	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN,
+		token.QUO_ASSIGN, token.REM_ASSIGN, token.AND_ASSIGN,
+		token.OR_ASSIGN, token.XOR_ASSIGN, token.SHL_ASSIGN,
+		token.SHR_ASSIGN, token.AND_NOT_ASSIGN:
+		{
+			switch len(stmt.Lhs) {
+			case 0:
+				panic("convertAssignExprs, len(exprs) == 0")
+			case 1:
+				return fmt.Sprintf("%s %s %s", convertExprs(stmt.Lhs), stmt.Tok, convertAssignRightExprs(stmt.Rhs))
+			default:
+				panic("convertAssignExprs, len(exprs) != 1")
+			}
+		}
+
 	default:
 		Panicf("convertAssignExprs, unmanaged token: %s", stmt.Tok)
 	}
+
+	// should be unreacheable
 	panic("convertAssignExprs, unmanaged case")
 }
 
 func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []string) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		cv.convertBlockStmt(s, outNames, outTypes)
+		cv.convertBlockStmt(s, outNames, outTypes, false)
 
 	case *ast.DeclStmt:
 		cv.convertDecls(s.Decl)
@@ -438,9 +465,52 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 	case *ast.AssignStmt:
 		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s))
 
+	case *ast.DeferStmt:
+		fmt.Fprintf(cv.cppOut, "%sdefer.push_back([=]{ %s; });\n", cv.CppIndent(), convertExpr(s.Call))
+
+	case *ast.ForStmt:
+		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond), inlineStmt(s.Post))
+		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+
 	default:
 		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
 	}
+}
+
+func inlineStmt(stmt ast.Stmt) (result string) {
+	switch s := stmt.(type) {
+	case *ast.DeclStmt:
+		switch d := s.Decl.(type) {
+		case *ast.GenDecl:
+			for _, declItem := range convertSpecs(d.Specs) {
+				result += fmt.Sprintf("%s,", declItem)
+			}
+		default:
+			panic("convertDecls, unmanaged subtype")
+		}
+
+	case *ast.ExprStmt:
+		return convertExpr(s.X)
+
+	case *ast.IncDecStmt:
+		switch s.Tok {
+		case token.INC:
+			return fmt.Sprintf("%s++", convertExpr(s.X))
+		case token.DEC:
+			return fmt.Sprintf("%s--", convertExpr(s.X))
+		default:
+			Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
+		}
+
+	case *ast.AssignStmt:
+		return convertAssignExprs(s)
+
+	default:
+		Panicf("inlineStmt, unmanaged token [%v]", reflect.TypeOf(s))
+	}
+
+	// should be unreacheable
+	panic("convertStmt, unmanaged case")
 }
 
 func convertSpecs(specs []ast.Spec) []string {

@@ -32,9 +32,9 @@
 | /TourOfGo/flowcontrol/defer-multi.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/exercise-loops-and-functions.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/for.go | ✔️ | ✔️ | ✔️ | todo |
-| /TourOfGo/flowcontrol/for-continued.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/forever.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/for-is-gos-while.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/flowcontrol/for-continued.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/flowcontrol/forever.go | ✔️ | ✔️ | ➖ | todo |
+| /TourOfGo/flowcontrol/for-is-gos-while.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/if.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/flowcontrol/if-and-else.go | ❌ | ❌ | ❌ | todo |
 | /TourOfGo/flowcontrol/if-with-a-short-statement.go | ❌ | ❌ | ❌ | todo |

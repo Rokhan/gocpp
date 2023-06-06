@@ -54,9 +54,13 @@ $(OUT_EXE_TEST_FILES): out/%.go.exe : %.go
 		&&  echo -n "| ✔️ " >> results.md \
 		|| (echo    "| ❌ | ❌ | todo |" >> results.md && false)
 
-	(out/$*.go.exe) \
-		&&  echo -n "| ✔️ " >> results.md \
-		|| (echo    "| ❌ | todo |" >> results.md && false)
+	if head -1 $< | grep -q "no-run"; then \
+		echo -n "| ➖ " >> results.md; \
+	else \
+		(out/$*.go.exe) \
+			&&  echo -n "| ✔️ " >> results.md \
+			|| (echo    "| ❌ | todo |" >> results.md && false) \
+	fi
 
 	echo "| todo |" >> results.md
 

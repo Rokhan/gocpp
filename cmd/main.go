@@ -479,6 +479,9 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 
 func inlineStmt(stmt ast.Stmt) (result string) {
 	switch s := stmt.(type) {
+	case nil:
+		return
+
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
 		case *ast.GenDecl:
@@ -557,7 +560,7 @@ func convertTypeExpr(node ast.Expr) string {
 
 func convertExpr(node ast.Expr) string {
 	if node == nil {
-		return "auto"
+		return ""
 	}
 
 	switch n := node.(type) {

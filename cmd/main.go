@@ -29,8 +29,11 @@ var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
 	"fmt::Printf":  "mocklib::Printf",
 	"fmt::Println": "mocklib::Println",
+	"fmt::Sprint":  "mocklib::Sprint",
+	"fmt::Sprintf": "mocklib::Sprintf",
 	"rand::Intn":   "mocklib::Intn",
 	"cmplx::Sqrt":  "std::sqrt",
+	"math::Pow":    "std::pow",
 	"math::Sqrt":   "std::sqrt",
 	"math::Pi":     "M_PI",
 	// type conversions
@@ -471,6 +474,14 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond), inlineStmt(s.Post))
 		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+
+	case *ast.IfStmt:
+		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond))
+		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+		if s.Else != nil {
+			fmt.Fprintf(cv.cppOut, "%selse\n", cv.CppIndent())
+			cv.convertStmt(s.Else, outNames, outTypes)
+		}
 
 	default:
 		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))

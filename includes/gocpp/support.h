@@ -66,6 +66,7 @@ namespace mocklib
         std::cout << value << " ";
     }
 
+    // No real formatting at the moment
     template<typename T, typename... Args>
     void Printf(const T& value, Args&&... args)
     {
@@ -78,5 +79,30 @@ namespace mocklib
     {
         Printf(std::forward<Args>(args)...);
         std::cout << "\n";
+    }    
+
+    template<typename T>
+    std::string Sprint(const T& value)
+    {
+        std::stringstream sstr;
+        sstr << value << " ";
+        return sstr.str();
+    }
+
+    template<typename T>
+    std::string Sprintf(const T& value)
+    {
+        std::stringstream sstr;
+        sstr << value << " ";
+        return sstr.str();
+    }
+
+    // No real formatting at the moment
+    template<typename T, typename... Args>
+    std::string Sprintf(const T& value, Args&&... args)
+    {
+        auto result = Sprintf(value);
+        result += Printf(std::forward<Args>(args)...);
+        return result;
     }
 }

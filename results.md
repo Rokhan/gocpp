@@ -38,9 +38,10 @@
 | /TourOfGo/flowcontrol/if.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/if-and-else.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/flowcontrol/if-with-a-short-statement.go | ✔️ | ✔️ | ✔️ | todo |
-| /TourOfGo/flowcontrol/switch.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/switch-evaluation-order.go | ❌ | ❌ | ❌ | todo |
-| /TourOfGo/flowcontrol/switch-with-no-condition.go | ❌ | ❌ | ❌ | todo |
+| /TourOfGo/flowcontrol/switch.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ | todo |
+| /TourOfGo/flowcontrol/switch-with-no-condition.go | ✔️ | ✔️ | ✔️ | todo |
 | /TourOfGo/methods/empty-interface.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/methods/errors.go | ✔️ | ❌ | ❌ | todo |
 | /TourOfGo/methods/exercise-errors.go | ✔️ | ❌ | ❌ | todo |

@@ -57,10 +57,12 @@ $(OUT_EXE_TEST_FILES): out/%.go.exe : %.go
 	if head -1 $< | grep -q "no-run"; then \
 		echo -n "| ➖ " >> results.md; \
 	else \
+		tput setaf 2; \
 		(out/$*.go.exe) \
 			&&  echo -n "| ✔️ " >> results.md \
-			|| (echo    "| ❌ | todo |" >> results.md && false) \
-	fi
+			|| (echo    "| ❌ | todo |" >> results.md && false); \
+		tput sgr0 ;\
+	fi	
 
 	echo "| todo |" >> results.md
 

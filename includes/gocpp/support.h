@@ -1,4 +1,5 @@
 #include <complex>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -34,15 +35,37 @@ namespace gocpp
             }
         }
     };
+    
+    struct GoPanic : std::runtime_error 
+    {
+        GoPanic(const std::string& message) : runtime_error(message)
+        {
+        }
+    };
+
+    void panic(const std::string& message)
+    {
+        throw new GoPanic(message);
+    }
 }
 
 // temporary mock implementations
 namespace mocklib
 {
+    struct Date
+    {        
+        static Date Now() { return Date{}; };
+        static int  Weekday() { return Saturday; };
+        static int Hour() { return 17; };
+        static const int Saturday = 6;
+    };
+
     inline int Intn(int n)
     {
         return rand() % n;
     }
+
+    const char* const GOOS = "undefined";
 
     template<typename... Ts>
     std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)
@@ -58,6 +81,12 @@ namespace mocklib
             }, theTuple
         );
         return os;
+    }
+
+    template<typename T>
+    void Print(const T& value)
+    {
+        std::cout << value << " ";
     }
 
     template<typename T>

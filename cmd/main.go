@@ -25,17 +25,32 @@ var stdTypeMapping = map[string]string{
 	"uint":       "unsigned int",
 }
 
+var nameSpaces = map[string]struct{}{
+	"cmplx":   {},
+	"fmt":     {},
+	"math":    {},
+	"rand":    {},
+	"runtime": {},
+	"time":    {},
+}
+
 var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
-	"fmt::Printf":  "mocklib::Printf",
-	"fmt::Println": "mocklib::Println",
-	"fmt::Sprint":  "mocklib::Sprint",
-	"fmt::Sprintf": "mocklib::Sprintf",
-	"rand::Intn":   "mocklib::Intn",
-	"cmplx::Sqrt":  "std::sqrt",
-	"math::Pow":    "std::pow",
-	"math::Sqrt":   "std::sqrt",
-	"math::Pi":     "M_PI",
+	"fmt::Print":     "mocklib::Print",
+	"fmt::Printf":    "mocklib::Printf",
+	"fmt::Println":   "mocklib::Println",
+	"fmt::Sprint":    "mocklib::Sprint",
+	"fmt::Sprintf":   "mocklib::Sprintf",
+	"rand::Intn":     "mocklib::Intn",
+	"runtime::GOOS":  "mocklib::GOOS",
+	"cmplx::Sqrt":    "std::sqrt",
+	"math::Pow":      "std::pow",
+	"math::Sqrt":     "std::sqrt",
+	"math::Pi":       "M_PI",
+	"time::Now":      "mocklib::Date::Now",
+	"time::Saturday": "mocklib::Date::Saturday",
+	// Predefined functions
+	"panic": "gocpp::GoPanic",
 	// type conversions
 	"float64": "float",
 	"uint":    "(unsigned int)",
@@ -92,7 +107,8 @@ type cppVisitor struct {
 	inputName     string
 	supportHeader string
 
-	astIndent int
+	astIndent       int
+	currentSwitchId *list.List
 
 	makeOutFile *os.File
 	makeOut     *bufio.Writer
@@ -280,6 +296,8 @@ func convertToken(t token.Token) string {
 		return "*"
 	case token.QUO:
 		return "/"
+	case token.REM:
+		return "%"
 	case token.SHL:
 		return "<<"
 	case token.SHR:
@@ -483,6 +501,85 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 			cv.convertStmt(s.Else, outNames, outTypes)
 		}
 
+	case *ast.SwitchStmt:
+		fmt.Fprintf(cv.cppOut, "%s//Go switch emulation\n", cv.CppIndent())
+		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
+		cv.cppIndent++
+
+		if s.Init != nil {
+			fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), inlineStmt(s.Init))
+		}
+
+		conditionVarName := "conditionId"
+		inputVarName := ""
+		if s.Tag != nil {
+			inputVarName = "condition"
+			fmt.Fprintf(cv.cppOut, "%sauto %s = %s;\n", cv.CppIndent(), inputVarName, convertExpr(s.Tag))
+		}
+
+		fmt.Fprintf(cv.cppOut, "%sint %s = 0;\n", cv.CppIndent(), conditionVarName)
+		se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
+		cv.extractCaseExpr(s.Body, &se)
+		fmt.Fprintf(cv.cppOut, "%sswitch(%s)\n", cv.CppIndent(), conditionVarName)
+
+		cv.currentSwitchId.PushBack(0)
+		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+
+		cv.cppIndent--
+		fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
+
+	case *ast.CaseClause:
+		if s.List == nil {
+			fmt.Fprintf(cv.cppOut, "%sdefault:\n", cv.CppIndent())
+		} else {
+			for range s.List {
+				id := cv.currentSwitchId.Back().Value.(int)
+				fmt.Fprintf(cv.cppOut, "%scase %d:\n", cv.CppIndent(), id)
+				cv.currentSwitchId.Back().Value = id + 1
+			}
+		}
+
+		cv.cppIndent++
+		for _, stmt := range s.Body {
+			cv.convertStmt(stmt, outNames, outTypes)
+		}
+		fmt.Fprintf(cv.cppOut, "%sbreak;\n", cv.CppIndent())
+		cv.cppIndent--
+
+	default:
+		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
+	}
+}
+
+type switchEnvName struct {
+	inputVarName     string
+	conditionVarName string
+	prefix           string
+	withCondition    bool
+}
+
+func (cv *cppVisitor) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
+	switch s := stmt.(type) {
+	case *ast.BlockStmt:
+		cv.currentSwitchId.PushBack(0)
+		for _, stmt := range s.List {
+			cv.extractCaseExpr(stmt, se)
+		}
+		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+
+	case *ast.CaseClause:
+		for _, expr := range s.List {
+			id := cv.currentSwitchId.Back().Value.(int)
+			if se.withCondition {
+				fmt.Fprintf(cv.cppOut, "%s%sif(%s == %s) { %s = %d; }\n", cv.CppIndent(), se.prefix, se.inputVarName, convertExpr(expr), se.conditionVarName, id)
+			} else {
+				fmt.Fprintf(cv.cppOut, "%s%sif(%s) { %s = %d; }\n", cv.CppIndent(), se.prefix, convertExpr(expr), se.conditionVarName, id)
+			}
+			cv.currentSwitchId.Back().Value = id + 1
+		}
+		se.prefix = "else "
+
 	default:
 		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
 	}
@@ -585,6 +682,9 @@ func convertExpr(node ast.Expr) string {
 	case *ast.UnaryExpr:
 		return convertToken(n.Op) + " " + convertExpr(n.X)
 
+	case *ast.ParenExpr:
+		return "(" + convertExpr(n.X) + ")"
+
 	case *ast.BinaryExpr:
 		return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
 		// import "go/type"
@@ -611,11 +711,30 @@ func convertExpr(node ast.Expr) string {
 		return GetCppFunc(n.Name)
 
 	case *ast.SelectorExpr:
-		return GetCppFunc(convertExpr(n.X) + "::" + convertExpr(n.Sel))
+		var sep string
+		if isNameSpace(n.X) {
+			sep = "::"
+		} else {
+			sep = "."
+		}
+		return GetCppFunc(convertExpr(n.X) + sep + convertExpr(n.Sel))
 
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
 		return fmt.Sprintf("!!EXPR_ERROR!! [%v]", reflect.TypeOf(node))
+	}
+}
+
+func isNameSpace(expr ast.Expr) bool {
+
+	switch n := expr.(type) {
+	case *ast.Ident:
+		if _, ok := nameSpaces[n.Name]; ok {
+			return true
+		}
+		return false
+	default:
+		return false
 	}
 }
 
@@ -716,6 +835,7 @@ func main() {
 	cv.supportHeader = "gocpp/support.h"
 	cv.inputName = *inputName
 	cv.nodes = new(list.List)
+	cv.currentSwitchId = new(list.List)
 
 	fmt.Printf("\n=====\n")
 	ast.Walk(cv, f)

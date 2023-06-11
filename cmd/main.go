@@ -113,6 +113,8 @@ type cppVisitor struct {
 	makeOutFile *os.File
 	makeOut     *bufio.Writer
 
+	binOutDir  string
+	cppOutDir  string
 	cppOutFile *os.File
 	cppOut     *bufio.Writer
 	cppIndent  int
@@ -188,13 +190,13 @@ func printHppOutro(cv *cppVisitor) {
 	fmt.Fprintf(cv.hppOut, "\n")
 }
 
-func createOutputExt(name string, ext string) *os.File {
+func createOutputExt(outdir, name, ext string) *os.File {
 	var outName = name + "." + ext
-	return createOutput(outName)
+	return createOutput(outdir, outName)
 }
 
-func createOutput(name string) *os.File {
-	var outName = "out/" + name
+func createOutput(outdir, name string) *os.File {
+	var outName = outdir + "/" + name
 	var outDir = path.Dir(outName)
 
 	errDir := os.MkdirAll(outDir, os.ModePerm)
@@ -212,7 +214,9 @@ func createOutput(name string) *os.File {
 }
 
 func (cv *cppVisitor) Init() {
-	cv.makeOutFile = createOutput("Makefile")
+	cv.nodes = new(list.List)
+	cv.currentSwitchId = new(list.List)
+	cv.makeOutFile = createOutput(cv.cppOutDir, "Makefile")
 	cv.makeOut = bufio.NewWriter(cv.makeOutFile)
 
 	fmt.Fprintf(cv.makeOut, "all:\n")
@@ -231,10 +235,10 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 	case *ast.File:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
-		cv.cppOutFile = createOutputExt(cv.inputName, "cpp")
+		cv.cppOutFile = createOutputExt(cv.cppOutDir, cv.inputName, "cpp")
 		cv.cppOut = bufio.NewWriter(cv.cppOutFile)
 
-		cv.hppOutFile = createOutputExt(cv.inputName, "h")
+		cv.hppOutFile = createOutputExt(cv.cppOutDir, cv.inputName, "h")
 		cv.hppOut = bufio.NewWriter(cv.hppOutFile)
 
 		printCppIntro(cv)
@@ -244,7 +248,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 			cv.convertDecls(decl)
 		}
 
-		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o %s.exe\n", cv.inputName, cv.inputName)
+		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.inputName, cv.binOutDir, cv.inputName)
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
 		//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
@@ -800,8 +804,10 @@ func main() {
 
 	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse")
 	parseFmtDir := flag.Bool("parseFmt", true, "temporary test parameter")
-
+	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
+	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	flag.Parse()
+
 	fset := token.NewFileSet()
 
 	f, err := parser.ParseFile(fset, *inputName, nil, 0)
@@ -831,11 +837,11 @@ func main() {
 	}
 
 	var cv *cppVisitor = new(cppVisitor)
-	cv.Init()
+	cv.binOutDir = *binOutDir
+	cv.cppOutDir = *cppOutDir
 	cv.supportHeader = "gocpp/support.h"
 	cv.inputName = *inputName
-	cv.nodes = new(list.List)
-	cv.currentSwitchId = new(list.List)
+	cv.Init()
 
 	fmt.Printf("\n=====\n")
 	ast.Walk(cv, f)

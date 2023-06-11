@@ -83,30 +83,74 @@ namespace mocklib
         return os;
     }
 
+    void PrintToVect(std::vector<std::string>&);
+
+    template<typename T>
+    void PrintToVect(std::vector<std::string>& out, const T& value);
+
+    template<typename T, typename... Args>
+    void PrintToVect(std::vector<std::string>& out, const T& value, Args&&... args);
+
+    void Print(const Date& value)
+    {
+        std::cout << "[DATE]";
+    }
+
+    void Print(bool value)
+    {
+        std::cout << std::boolalpha << value;
+    }
+
     template<typename T>
     void Print(const T& value)
     {
-        std::cout << value << " ";
+        std::cout << value;
+    }
+
+    template<typename T, typename... Args>
+    void Print(const T& value, Args&&... args)
+    {
+        Print(value);
+        Print(" ");
+        Print(std::forward<Args>(args)...);
     }
 
     template<typename T>
     void Printf(const T& value)
     {
-        std::cout << value << " ";
+        std::cout << value;
     }
 
-    // No real formatting at the moment
-    template<typename T, typename... Args>
-    void Printf(const T& value, Args&&... args)
+    // No real formatting at the moment, just replace %v
+    template<typename... Args>
+    void Printf(const std::string& format, Args&&... args)
     {
-        Printf(value);
-        Printf(std::forward<Args>(args)...);
+        std::vector<std::string> arguments;
+        PrintToVect(arguments, std::forward<Args>(args)...);
+
+        int lastPos = 0;
+        int i = 0;
+        for(int pos = format.find("%v"); pos != std::string::npos; pos = format.find("%v", lastPos+1), ++i)
+        {
+            Print(format.substr(lastPos, pos));
+            Print(arguments[i]);
+            lastPos = pos;
+        }
+
+        // Printing end of format string
+        Print(format.substr(lastPos, std::string::npos));
+
+        // Printing unused parameters
+        for(; i<arguments.size(); ++i )
+        {
+            Print(arguments[i]);
+        }
     }
 
     template<typename... Args>
     void Println(Args&&... args)
     {
-        Printf(std::forward<Args>(args)...);
+        Print(std::forward<Args>(args)...);
         std::cout << "\n";
     }    
 
@@ -114,7 +158,7 @@ namespace mocklib
     std::string Sprint(const T& value)
     {
         std::stringstream sstr;
-        sstr << value << " ";
+        sstr << value;
         return sstr.str();
     }
 
@@ -122,7 +166,7 @@ namespace mocklib
     std::string Sprintf(const T& value)
     {
         std::stringstream sstr;
-        sstr << value << " ";
+        sstr << value;
         return sstr.str();
     }
 
@@ -131,7 +175,23 @@ namespace mocklib
     std::string Sprintf(const T& value, Args&&... args)
     {
         auto result = Sprintf(value);
+        result += Printf(" ");
         result += Printf(std::forward<Args>(args)...);
         return result;
+    }    
+
+    void PrintToVect(std::vector<std::string>&) { }
+
+    template<typename T>
+    void PrintToVect(std::vector<std::string>& out, const T& value)
+    {
+        out.push_back(Sprint(value));
     }
+
+    template<typename T, typename... Args>
+    void PrintToVect(std::vector<std::string>& out, const T& value, Args&&... args)
+    {
+        out.push_back(Sprint(value));
+        PrintToVect(out, std::forward<Args>(args)...);
+    }    
 }

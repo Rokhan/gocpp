@@ -1,6 +1,7 @@
 
 GO_TEST_FILES=$(wildcard tests/*.go tests/*/*/*.go)
 OUTDIR=out
+LOGDIR=log
 
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.cpp)
 OUT_CPP_TEST_FILES=$(addprefix $(OUTDIR)/,$(CPP_TEST_FILES))
@@ -9,10 +10,7 @@ HPP_TEST_FILES=$(GO_TEST_FILES:.go=.go.h)
 OUT_HPP_TEST_FILES=$(addprefix $(OUTDIR)/,$(HPP_TEST_FILES))
 
 EXE_TEST_FILES=$(GO_TEST_FILES:.go=.go.exe)
-OUT_EXE_TEST_FILES=$(addprefix $(OUTDIR)/,$(EXE_TEST_FILES))
-
-LOG_TEST_FILES=$(GO_TEST_FILES:.go=.go.exe.log) $(GO_TEST_FILES:.go=.go.cpp.log)
-OUT_LOG_TEST_FILES=$(addprefix $(OUTDIR)/,$(LOG_TEST_FILES))
+OUT_EXE_TEST_FILES=$(addprefix $(LOGDIR)/,$(EXE_TEST_FILES))
 
 all : result-header allexe
 	dos2unix results.md
@@ -35,37 +33,48 @@ allexe: $(OUT_EXE_TEST_FILES)
 
 flow: $(filter $(OUTDIR)/tests/TourOfGo/flowcontrol/%,$(OUT_EXE_TEST_FILES))
 
-$(OUT_CPP_TEST_FILES): out/%.go.cpp : %.go
+basics: $(filter $(OUTDIR)/tests/TourOfGo/basics/%,$(OUT_EXE_TEST_FILES))
+
+$(OUT_CPP_TEST_FILES): $(OUTDIR)/%.go.cpp : %.go
 	@echo "    $$$<" $<
 	@echo "    $$$@" $@
-	go run ./cmd/main.go -parseFmt=false -input $< > $@".log"
-	(cd out && make) 
-	out/$*.go.exe
+	go run ./cmd/main.go -parseFmt=false -binOutDir=$(LOGDIR) -input $< > $@".log"
+	(cd $(OUTDIR) && make) 
+	$(LOGDIR)/$*.go.exe
 
-$(OUT_EXE_TEST_FILES): out/%.go.exe : %.go
+$(OUT_EXE_TEST_FILES): $(LOGDIR)/%.go.exe : %.go
 	@echo "    $$$<"
 	@echo "    $$$@"
-	echo -n "| $$$< " >> results.md
-	go run ./cmd/main.go -parseFmt=false -input $< > $@".log" \
+	echo -n "| $$$< " >> results.md	
+	mkdir -p $$(dirname $(LOGDIR)/$*)
+	go run ./cmd/main.go -parseFmt=false -binOutDir=$(LOGDIR) -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> results.md \
-		|| (echo    "| ❌ | ❌ | ❌ | todo |" >> results.md && false)
+		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> results.md && false)
 
-	(cd out && make) \
+	(cd $(OUTDIR) && make) \
 		&&  echo -n "| ✔️ " >> results.md \
-		|| (echo    "| ❌ | ❌ | todo |" >> results.md && false)
+		|| (echo    "| ❌ | ❌ | ❌ |" >> results.md && false)
 
 	if head -1 $< | grep -q "no-run"; then \
 		echo -n "| ➖ " >> results.md; \
 	else \
+		go run $< > $(LOGDIR)/$*.go.out.txt; \
 		tput setaf 2; \
-		(out/$*.go.exe) \
+		($(LOGDIR)/$*.go.exe | tee $(LOGDIR)/$*.cpp.out.txt) \
 			&&  echo -n "| ✔️ " >> results.md \
-			|| (echo    "| ❌ | todo |" >> results.md && false); \
+			|| (echo    "| ❌ | ❌ |" >> results.md && false); \
 		tput sgr0 ;\
 	fi	
 
-	echo "| todo |" >> results.md
+	if head -1 $< | grep -q "no-run"; then \
+		echo    "| ➖ | " >> results.md; \
+	else \
+		(diff -q $(LOGDIR)/$*.cpp.out.txt $(LOGDIR)/$*.go.out.txt) \
+			&&  echo    "| ✔️ |" >> results.md \
+			|| (echo    "| ❌ |" >> results.md && false); \
+	fi
 
 clean:
+	rm -rf $(LOGDIR)
 	rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES) $(OUT_LOG_TEST_FILES)
 	rm -f results.md

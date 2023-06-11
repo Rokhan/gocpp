@@ -45,5 +45,5 @@ $RECYCLE.BIN/
 # =========================
 
 # Local test ouputs
-out/
+generated/
 log/

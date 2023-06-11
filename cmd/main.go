@@ -104,6 +104,7 @@ func (tns typeNames) String() string {
 }
 
 type cppVisitor struct {
+	baseName      string
 	inputName     string
 	supportHeader string
 
@@ -144,7 +145,7 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "#include <string>\n")
 	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.inputName)
+	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.baseName)
 	fmt.Fprintf(cv.cppOut, "#include \"%s\"\n", cv.supportHeader)
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "\n")
@@ -235,10 +236,10 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 	case *ast.File:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
-		cv.cppOutFile = createOutputExt(cv.cppOutDir, cv.inputName, "cpp")
+		cv.cppOutFile = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
 		cv.cppOut = bufio.NewWriter(cv.cppOutFile)
 
-		cv.hppOutFile = createOutputExt(cv.cppOutDir, cv.inputName, "h")
+		cv.hppOutFile = createOutputExt(cv.cppOutDir, cv.baseName, "h")
 		cv.hppOut = bufio.NewWriter(cv.hppOutFile)
 
 		printCppIntro(cv)
@@ -248,7 +249,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 			cv.convertDecls(decl)
 		}
 
-		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.inputName, cv.binOutDir, cv.inputName)
+		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
 		//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
@@ -315,6 +316,16 @@ func convertToken(t token.Token) string {
 	}
 }
 
+type stmtEnv struct {
+	outNames []string
+	outTypes []string
+}
+
+type blockEnv struct {
+	stmtEnv
+	isFunc bool
+}
+
 func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	switch d := decl.(type) {
 	case *ast.GenDecl:
@@ -364,7 +375,7 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
 
-		cv.convertBlockStmt(d.Body, outNames, outTypes, true)
+		cv.convertBlockStmt(d.Body, blockEnv{stmtEnv{outNames, outTypes}, true})
 		fmt.Fprintf(cv.cppOut, "\n")
 
 	case *ast.BadDecl:
@@ -375,20 +386,20 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	}
 }
 
-func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, outNames, outTypes []string, isFunc bool) {
+func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, env blockEnv) {
 	fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
 	cv.cppIndent++
 
-	if isFunc {
+	if env.isFunc {
 		fmt.Fprintf(cv.cppOut, "%sgocpp::Defer defer;\n", cv.CppIndent())
 	}
 
-	for i := range outNames {
-		fmt.Fprintf(cv.cppOut, "%s%s %s;\n", cv.CppIndent(), GetCppType(outTypes[i]), outNames[i])
+	for i := range env.outNames {
+		fmt.Fprintf(cv.cppOut, "%s%s %s;\n", cv.CppIndent(), GetCppType(env.outTypes[i]), env.outNames[i])
 	}
 
 	for _, stmt := range block.List {
-		cv.convertStmt(stmt, outNames, outTypes)
+		cv.convertStmt(stmt, env.stmtEnv)
 	}
 
 	cv.cppIndent--
@@ -472,10 +483,10 @@ func convertAssignExprs(stmt *ast.AssignStmt) string {
 	panic("convertAssignExprs, unmanaged case")
 }
 
-func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []string) {
+func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		cv.convertBlockStmt(s, outNames, outTypes, false)
+		cv.convertBlockStmt(s, blockEnv{env, false})
 
 	case *ast.DeclStmt:
 		cv.convertDecls(s.Decl)
@@ -485,7 +496,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results, outNames))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results, env.outNames))
 
 	case *ast.AssignStmt:
 		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s))
@@ -495,14 +506,14 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond), inlineStmt(s.Post))
-		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.IfStmt:
 		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond))
-		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		if s.Else != nil {
 			fmt.Fprintf(cv.cppOut, "%selse\n", cv.CppIndent())
-			cv.convertStmt(s.Else, outNames, outTypes)
+			cv.convertStmt(s.Else, env)
 		}
 
 	case *ast.SwitchStmt:
@@ -527,7 +538,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 		fmt.Fprintf(cv.cppOut, "%sswitch(%s)\n", cv.CppIndent(), conditionVarName)
 
 		cv.currentSwitchId.PushBack(0)
-		cv.convertBlockStmt(s.Body, outNames, outTypes, false)
+		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
 		cv.cppIndent--
@@ -546,7 +557,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, outNames []string, outTypes []s
 
 		cv.cppIndent++
 		for _, stmt := range s.Body {
-			cv.convertStmt(stmt, outNames, outTypes)
+			cv.convertStmt(stmt, env)
 		}
 		fmt.Fprintf(cv.cppOut, "%sbreak;\n", cv.CppIndent())
 		cv.cppIndent--
@@ -841,6 +852,7 @@ func main() {
 	cv.cppOutDir = *cppOutDir
 	cv.supportHeader = "gocpp/support.h"
 	cv.inputName = *inputName
+	cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
 	cv.Init()
 
 	fmt.Printf("\n=====\n")

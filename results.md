@@ -12,7 +12,7 @@
 | /TourOfGo/basics/multiple-results.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/basics/named-results.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/basics/numeric-constants.go | ✔️ | ✔️ | ✔️ | ❌ |
-| /TourOfGo/basics/packages.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/basics/packages.go | ✔️ | ✔️ | ✔️ | ➖ | 
 | /TourOfGo/basics/short-variable-declarations.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/basics/type-conversions.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/basics/type-inference.go | ✔️ | ✔️ | ✔️ | ❌ |
@@ -40,8 +40,8 @@
 | /TourOfGo/flowcontrol/if-with-a-short-statement.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/flowcontrol/switch.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ | ❌ |
-| /TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ | ✔️ |
-| /TourOfGo/flowcontrol/switch-with-no-condition.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ | ➖ | 
+| /TourOfGo/flowcontrol/switch-with-no-condition.go | ✔️ | ✔️ | ✔️ | ➖ | 
 | /TourOfGo/methods/empty-interface.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/errors.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/exercise-errors.go | ✔️ | ❌ | ❌ | ❌ |

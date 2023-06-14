@@ -51,6 +51,7 @@ var stdFuncMapping = map[string]string{
 	"time::Saturday": "mocklib::Date::Saturday",
 	// Predefined functions
 	"panic": "gocpp::GoPanic",
+	"nil":   "nullptr",
 	// type conversions
 	"float64": "float",
 	"uint":    "(unsigned int)",
@@ -89,7 +90,7 @@ type typeNames []typeName
 func (tn typeName) ParamDecl() []string {
 	var strs []string
 	for _, name := range tn.names {
-		strs = append(strs, fmt.Sprintf("%v %v", stdTypeMapping[tn.typeStr], name))
+		strs = append(strs, fmt.Sprintf("%v %v", GetCppType(tn.typeStr), name))
 	}
 
 	return strs
@@ -144,6 +145,7 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
 	fmt.Fprintf(cv.cppOut, "#include <string>\n")
 	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
+	fmt.Fprintf(cv.cppOut, "#include <vector>\n")
 	fmt.Fprintf(cv.cppOut, "\n")
 	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.baseName)
 	fmt.Fprintf(cv.cppOut, "#include \"%s\"\n", cv.supportHeader)
@@ -163,10 +165,18 @@ func printCppOutro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "\n")
 
 	// TODO: manage main parameters
-	fmt.Fprintf(cv.cppOut, "int main()")
+	fmt.Fprintf(cv.cppOut, "int main()\n")
 	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "    golang::main();\n")
-	fmt.Fprintf(cv.cppOut, "    return 0;\n")
+	fmt.Fprintf(cv.cppOut, "    try\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        golang::main();\n")
+	fmt.Fprintf(cv.cppOut, "        return 0;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
+	fmt.Fprintf(cv.cppOut, "    catch(const gocpp::GoPanic& ex)\n")
+	fmt.Fprintf(cv.cppOut, "    {\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
+	fmt.Fprintf(cv.cppOut, "        return -1;\n")
+	fmt.Fprintf(cv.cppOut, "    }\n")
 	fmt.Fprintf(cv.cppOut, "}\n")
 }
 
@@ -176,6 +186,10 @@ func printHppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.hppOut, "\n")
 	fmt.Fprintf(cv.hppOut, "#include <string>\n")
 	fmt.Fprintf(cv.hppOut, "#include <tuple>\n")
+	fmt.Fprintf(cv.hppOut, "#include <vector>\n")
+	fmt.Fprintf(cv.hppOut, "\n")
+	// TODO : make forward declaration header
+	fmt.Fprintf(cv.hppOut, "#include \"%s\"\n", cv.supportHeader)
 	fmt.Fprintf(cv.hppOut, "\n")
 
 	// Put everything generated in "golang" namespace
@@ -285,7 +299,7 @@ func readFields(fields *ast.FieldList) (params typeNames) {
 		for _, name := range field.Names {
 			param.names = append(param.names, name.Name)
 		}
-		param.typeStr = fmt.Sprintf("%v", field.Type)
+		param.typeStr = fmt.Sprintf("%v", convertParamTypeExpr(field.Type))
 		params = append(params, param)
 	}
 	return
@@ -293,6 +307,7 @@ func readFields(fields *ast.FieldList) (params typeNames) {
 
 func convertToken(t token.Token) string {
 	switch t {
+	// basic arithmetic operators
 	case token.ADD:
 		return "+"
 	case token.SUB:
@@ -303,10 +318,14 @@ func convertToken(t token.Token) string {
 		return "/"
 	case token.REM:
 		return "%"
+	// bit rotations
 	case token.SHL:
 		return "<<"
 	case token.SHR:
 		return ">>"
+	// comparisons
+	case token.EQL:
+		return "=="
 	case token.LSS:
 		return "<"
 	case token.GTR:
@@ -676,8 +695,36 @@ func convertTypeExpr(node ast.Expr) string {
 	case *ast.Ident:
 		return GetCppType(n.Name)
 
+	case *ast.ArrayType:
+		if n.Len == nil {
+			return fmt.Sprintf("gocpp::slice<%s>", convertTypeExpr(n.Elt))
+		} else {
+			return fmt.Sprintf("gocpp::array<%s, %s>", convertTypeExpr(n.Elt), convertExpr(n.Len))
+		}
+
 	default:
 		return fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node))
+	}
+}
+
+func convertParamTypeExpr(node ast.Expr) string {
+	if node == nil {
+		panic("node is nil")
+	}
+
+	switch n := node.(type) {
+	case *ast.Ident:
+		return GetCppType(n.Name)
+
+	case *ast.ArrayType:
+		if n.Len == nil {
+			return fmt.Sprintf("gocpp::slice<%s>&", convertParamTypeExpr(n.Elt))
+		} else {
+			return fmt.Sprintf("gocpp::array<%s, %s>&", convertParamTypeExpr(n.Elt), convertExpr(n.Len))
+		}
+
+	default:
+		return fmt.Sprintf("!!PARAM_TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node))
 	}
 }
 
@@ -693,6 +740,18 @@ func convertExpr(node ast.Expr) string {
 		} else {
 			return n.Value
 		}
+
+	case *ast.CompositeLit:
+		// ignore 'n.Incomplete' at the moment
+		buf := new(bytes.Buffer)
+		fmt.Fprintf(buf, "%s {", convertTypeExpr(n.Type))
+		var sep = ""
+		for _, elt := range n.Elts {
+			fmt.Fprintf(buf, "%s%s", sep, convertExpr(elt))
+			sep = ", "
+		}
+		fmt.Fprintf(buf, "}")
+		return buf.String()
 
 	case *ast.UnaryExpr:
 		return convertToken(n.Op) + " " + convertExpr(n.X)
@@ -725,6 +784,9 @@ func convertExpr(node ast.Expr) string {
 	case *ast.Ident:
 		return GetCppFunc(n.Name)
 
+	case *ast.IndexExpr:
+		return fmt.Sprintf("%s[%s]", convertExpr(n.X), convertExpr(n.Index))
+
 	case *ast.SelectorExpr:
 		var sep string
 		if isNameSpace(n.X) {
@@ -733,6 +795,17 @@ func convertExpr(node ast.Expr) string {
 			sep = "."
 		}
 		return GetCppFunc(convertExpr(n.X) + sep + convertExpr(n.Sel))
+
+	case *ast.SliceExpr:
+		if n.Slice3 {
+			panic("TODO: 3 value slice not implemented")
+		} else if n.Low == nil {
+			return fmt.Sprintf("%s.make_slice(0, %s)", convertExpr(n.X), convertExpr(n.High))
+		} else if n.High == nil {
+			return fmt.Sprintf("%s.make_slice(%s)", convertExpr(n.X), convertExpr(n.Low))
+		} else {
+			return fmt.Sprintf("%s.make_slice(%s, %s)", convertExpr(n.X), convertExpr(n.Low), convertExpr(n.High))
+		}
 
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))

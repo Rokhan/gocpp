@@ -67,8 +67,8 @@
 | /TourOfGo/methods/stringer.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/type-assertions.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/type-switches.go | ❌ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/append.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/array.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/append.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/moretypes/array.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/exercise-fibonacci-closure.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/exercise-maps.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/exercise-slices.go | ✔️ | ❌ | ❌ | ❌ |
@@ -86,9 +86,9 @@
 | /TourOfGo/moretypes/slice-bounds.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/slice-literals.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/slices.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/slices.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slices-of-slice.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/slices-pointers.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/struct-fields.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |

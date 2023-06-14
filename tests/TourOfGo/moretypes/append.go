@@ -19,8 +19,16 @@ func main() {
 	// We can add more than one element at a time.
 	s = append(s, 2, 3, 4)
 	printSlice(s)
+
+	appendValue(s, 17)
+	printSlice(s)
 }
 
 func printSlice(s []int) {
-	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+	fmt.Printf("## len=%v cap=%v %v\n", len(s), cap(s), s)
+	//fmt.Printf("-- len=%d cap=%d %v\n", len(s), cap(s), s)
+}
+
+func appendValue(s []int, value int) {
+	s = append(s, value)
 }

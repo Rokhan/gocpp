@@ -1,7 +1,10 @@
+#pragma once
+
 #include <complex>
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -9,6 +12,14 @@
 // Support types implementations
 namespace gocpp
 {
+	// TODO : make forward declaration header for types
+
+    template<typename T> struct array_base;
+    template<typename T, int N> struct array;
+    template<typename T> struct slice;
+    struct complex128;
+    struct Defer;
+
 	struct complex128 : std::complex<double>
 	{
 		using std::complex<double>::complex;
@@ -43,9 +54,162 @@ namespace gocpp
         }
     };
 
-    void panic(const std::string& message)
+    [[noreturn]] void panic(const std::string& message)
     {
-        throw new GoPanic(message);
+        throw GoPanic(message);
+    }
+
+    template<typename T>
+    struct array_base
+    {
+        // TODO : other constructors
+
+        template <typename, int> friend class array;
+        template <typename> friend class slice;
+
+        size_t size() const
+        {
+            if(mArray)
+            {
+                return mArray->size();
+            }
+
+            return 0;
+        }
+
+        const T& operator[](size_t i) const
+        {
+            if(mArray)
+            {
+                return mArray->at(i);
+            }
+
+            panic("Cannot access item of an empty array");
+        }
+
+        T& operator[](size_t i)
+        {
+            if(mArray)
+            {
+                return mArray->at(i);
+            }
+
+            panic("Cannot access item of an empty array");
+        }
+
+        gocpp::slice<T> make_slice(int low);
+        gocpp::slice<T> make_slice(int low, int high);
+
+    protected:    
+        std::shared_ptr<std::vector<T>> mArray;
+    };
+
+    template<typename T, int N>
+    struct array : array_base<T>
+    {
+        array()
+        {
+            this->mArray = std::make_shared<std::vector<T>>(N);
+        }
+
+        array(std::initializer_list<T> list)
+        {
+            this->mArray = std::make_shared<std::vector<T>>(list.begin(), list.end());
+        }
+
+        // TODO : other constructors
+    };
+
+    template<typename T>
+    struct slice : array_base<T>
+    {
+        slice()
+        {
+            this->mArray = std::make_shared<std::vector<T>>();
+        }
+        
+        slice(array_base<T>& a, int low, int high)
+        {
+            if(low > high)
+            {
+                panic("slice: low > high");
+            }
+
+            if(a.size() < low)
+            {
+                panic("slice: low > size");
+            }
+
+            if(a.size() < high)
+            {
+                panic("slice: high > size");
+            }
+
+            this->mArray = a.mArray;
+            start = low;
+            end = high;
+        }
+
+        // TODO : other constructors
+
+        // Fix this, not efficient
+        template<typename ...Args>
+        friend inline slice<T> append(slice<T> input, T value, Args... moreValues)
+        {
+            input = append(input, value);
+            return append(input, moreValues...);
+        }
+
+        friend inline slice<T> append(slice<T> input, T value)
+        {
+            if(input.end == input.mArray->size())
+            {
+                input.mArray->push_back(value);
+                ++input.end;
+                return input;                
+            }
+            
+            if(input.end < input.mArray->size())
+            {
+                (*input.mArray)[input.end] = value;
+                ++input.end;
+                return input;                
+            }
+
+            panic("invalid slice");
+        }
+        
+        friend inline size_t len(slice<T> input)
+        {
+            return input.end - input.start;
+        }
+
+        friend inline size_t cap(slice<T> input)
+        {
+            if(input.mArray)
+            {
+                return input.mArray->capacity();
+            }
+
+            return 0;
+        }
+
+    //private:    
+        // [start, end[
+        int start = 0;
+        int end = 0;
+    };
+    
+    template<typename T>
+    gocpp::slice<T> array_base<T>::make_slice(int low)
+    {
+        return slice(*this, low, this->size());
+    }
+
+    template<typename T>
+    gocpp::slice<T> array_base<T>::make_slice(int low, int high)
+    {
+        return slice(*this, low, high);
     }
 }
 
@@ -80,6 +244,74 @@ namespace mocklib
                 os << ']';
             }, theTuple
         );
+        return os;
+    }
+
+    template<typename T, int N>
+    std::ostream& operator<<(std::ostream& os, gocpp::array<T, N> const& array)
+    {
+        os << '[';
+        for(int i=0; i< array.size(); ++i)
+        {
+            if(i == 0)
+                os << array[i];
+            else
+                os << " " << array[i];
+        }
+        os << ']';
+        return os;
+    }
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, std::initializer_list<T> const& array)
+    {
+        os << '[';
+        int i = 0;
+        for(const T& item : array)
+        {
+            if(i == 0)
+                os << item;
+            else
+                os << " " << item;
+
+            i++;
+        }
+        os << ']';
+        return os;
+    }
+
+    // /* 
+    // ** Should replace the two previous template but this create ambiguous overload because
+    // ** the template match nasic_string too
+    // */
+    //
+    // template<typename T, template<typename U> class IndexedContainer>
+    // std::ostream& operator<<(std::ostream& os, IndexedContainer<T> const& array)
+    // {
+    //     os << '[';
+    //     for(int i=0; i< array.size(); ++i)
+    //     {
+    //         if(i == 0)
+    //             os << array[i];
+    //         else
+    //             os << " " << array[i];
+    //     }
+    //     os << ']';
+    //     return os;
+    // }
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
+    {
+        os << '[';
+        for(int i=slice.start; i< slice.end; ++i)
+        {
+            if(i == slice.start)
+                os << slice[i];
+            else
+                os << " " << slice[i];
+        }
+        os << ']';
         return os;
     }
 
@@ -128,17 +360,17 @@ namespace mocklib
         std::vector<std::string> arguments;
         PrintToVect(arguments, std::forward<Args>(args)...);
 
-        int lastPos = 0;
+        int lastPos = -2;
         int i = 0;
         for(int pos = format.find("%v"); pos != std::string::npos; pos = format.find("%v", lastPos+1), ++i)
         {
-            Print(format.substr(lastPos, pos));
+            Print(format.substr(lastPos+2, pos-lastPos-2));
             Print(arguments[i]);
             lastPos = pos;
         }
 
         // Printing end of format string
-        Print(format.substr(lastPos, std::string::npos));
+        Print(format.substr(lastPos+2, std::string::npos));
 
         // Printing unused parameters
         for(; i<arguments.size(); ++i )

@@ -83,12 +83,12 @@
 | /TourOfGo/moretypes/pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/range.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/range-continued.go | ❌ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/slice-bounds.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/slice-bounds.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/slice-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/slices.go | ✔️ | ✔️ | ✔️ | ✔️ |
-| /TourOfGo/moretypes/slices-of-slice.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/moretypes/slices-of-slice.go | ✔️ | ✔️ | ✔️ | ✔️ |
+| /TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/struct-fields.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |

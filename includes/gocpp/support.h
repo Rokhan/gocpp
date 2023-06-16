@@ -127,6 +127,13 @@ namespace gocpp
         {
             this->mArray = std::make_shared<std::vector<T>>();
         }
+
+        slice(std::initializer_list<T> list)
+        {
+            this->mArray = std::make_shared<std::vector<T>>(list.begin(), list.end());
+            start = 0;
+            end = this->size();
+        }
         
         slice(array_base<T>& a, int low, int high)
         {
@@ -151,6 +158,17 @@ namespace gocpp
         }
 
         // TODO : other constructors
+
+
+        const T& operator[](size_t i) const
+        {
+            return array_base<T>::operator[](i + start);
+        }
+
+        T& operator[](size_t i)
+        {
+            return array_base<T>::operator[](i + start);
+        }
 
         // Fix this, not efficient
         template<typename ...Args>
@@ -304,9 +322,9 @@ namespace mocklib
     std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
     {
         os << '[';
-        for(int i=slice.start; i< slice.end; ++i)
+        for(int i=0; i< slice.end - slice.start; ++i)
         {
-            if(i == slice.start)
+            if(i == 0)
                 os << slice[i];
             else
                 os << " " << slice[i];
@@ -425,5 +443,19 @@ namespace mocklib
     {
         out.push_back(Sprint(value));
         PrintToVect(out, std::forward<Args>(args)...);
-    }    
+    }
+
+    template<typename IdxContainerType>
+    std::string StringsJoin(IdxContainerType vect, const std::string& sep)
+    {
+        std::stringstream sstr;
+        for(int i=0; i< vect.size(); ++i)
+        {
+            if(i == 0)
+                sstr << vect[i];
+            else
+                sstr << sep << vect[i];
+        }
+        return sstr.str();
+    }
 }

@@ -32,6 +32,7 @@ var nameSpaces = map[string]struct{}{
 	"rand":    {},
 	"runtime": {},
 	"time":    {},
+	"strings": {},
 }
 
 var stdFuncMapping = map[string]string{
@@ -49,6 +50,7 @@ var stdFuncMapping = map[string]string{
 	"math::Pi":       "M_PI",
 	"time::Now":      "mocklib::Date::Now",
 	"time::Saturday": "mocklib::Date::Saturday",
+	"strings::Join":  "mocklib::StringsJoin",
 	// Predefined functions
 	"panic": "gocpp::GoPanic",
 	"nil":   "nullptr",
@@ -551,7 +553,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 			fmt.Fprintf(cv.cppOut, "%sauto %s = %s;\n", cv.CppIndent(), inputVarName, convertExpr(s.Tag))
 		}
 
-		fmt.Fprintf(cv.cppOut, "%sint %s = 0;\n", cv.CppIndent(), conditionVarName)
+		fmt.Fprintf(cv.cppOut, "%sint %s = -1;\n", cv.CppIndent(), conditionVarName)
 		se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
 		cv.extractCaseExpr(s.Body, &se)
 		fmt.Fprintf(cv.cppOut, "%sswitch(%s)\n", cv.CppIndent(), conditionVarName)

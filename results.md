@@ -70,7 +70,7 @@
 | /TourOfGo/moretypes/append.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/array.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/exercise-fibonacci-closure.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/exercise-maps.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/exercise-maps.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/exercise-slices.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/function-closures.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/function-values.go | ✔️ | ❌ | ❌ | ❌ |

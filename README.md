@@ -5,4 +5,4 @@ Nothing really useful at the moment in this project.
 
 go run .\cmd\main.go
 
-Use command "make clean && make -k" to build [results.md](./results.md)
+Use command "make clean && make -j8 -k; make doc" to build [results.md](./results.md)

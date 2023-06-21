@@ -144,6 +144,7 @@ const rawPrefix string = "//RAW_AST"
 func printCppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
 	fmt.Fprintf(cv.cppOut, "#include <complex>\n")
+	fmt.Fprintf(cv.cppOut, "#include <functional>\n")
 	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
 	fmt.Fprintf(cv.cppOut, "#include <string>\n")
 	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
@@ -186,6 +187,7 @@ func printHppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
 	fmt.Fprintf(cv.hppOut, "#pragma once\n")
 	fmt.Fprintf(cv.hppOut, "\n")
+	fmt.Fprintf(cv.hppOut, "#include <functional>\n")
 	fmt.Fprintf(cv.hppOut, "#include <string>\n")
 	fmt.Fprintf(cv.hppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.hppOut, "#include <vector>\n")
@@ -291,7 +293,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 	}
 }
 
-func readFields(fields *ast.FieldList) (params typeNames) {
+func (cv *cppVisitor) readFields(fields *ast.FieldList) (params typeNames) {
 	if fields == nil {
 		return
 	}
@@ -301,7 +303,7 @@ func readFields(fields *ast.FieldList) (params typeNames) {
 		for _, name := range field.Names {
 			param.names = append(param.names, name.Name)
 		}
-		param.typeStr = fmt.Sprintf("%v", convertParamTypeExpr(field.Type))
+		param.typeStr = fmt.Sprintf("%v", cv.convertParamTypeExpr(field.Type))
 		params = append(params, param)
 	}
 	return
@@ -350,7 +352,7 @@ type blockEnv struct {
 func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		for _, declItem := range convertSpecs(d.Specs) {
+		for _, declItem := range cv.convertSpecs(d.Specs) {
 			cv.cppPrintf("%s;\n", declItem)
 		}
 
@@ -358,40 +360,10 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(d))
 		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), d.Name)
 		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), d.Body)
-		params := readFields(d.Type.Params)
-		goResults := readFields(d.Type.Results)
 
-		var outNames []string
-		var outTypes []string
-		var useNamedResults = true
-		for _, result := range goResults {
-			if result.names == nil {
-				useNamedResults = false
-				outTypes = append(outTypes, result.typeStr)
-			}
-			for _, name := range result.names {
-				outNames = append(outNames, name)
-				outTypes = append(outTypes, result.typeStr)
-			}
-		}
-
-		if !useNamedResults {
-			outNames = nil
-		}
-
-		var resultType string
-		switch len(outTypes) {
-		case 0:
-			resultType = "void"
-		case 1:
-			resultType = GetCppType(outTypes[0])
-		default:
-			var types []string
-			for _, outType := range outTypes {
-				types = append(types, GetCppType(outType))
-			}
-			resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
-		}
+		params := cv.readFields(d.Type.Params)
+		outNames, outTypes := cv.getResultInfos(d.Type)
+		resultType := buildOutType(outTypes)
 
 		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
@@ -427,7 +399,7 @@ func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, env blockEnv) {
 	fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
 }
 
-func convertReturnExprs(exprs []ast.Expr, outNames []string) string {
+func (cv *cppVisitor) convertReturnExprs(exprs []ast.Expr, outNames []string) string {
 	switch len(exprs) {
 	case 0:
 		if outNames != nil {
@@ -443,42 +415,42 @@ func convertReturnExprs(exprs []ast.Expr, outNames []string) string {
 			return "return"
 		}
 	case 1:
-		return fmt.Sprintf("return %s", convertExprs(exprs))
+		return fmt.Sprintf("return %s", cv.convertExprs(exprs))
 	default:
-		return fmt.Sprintf("return {%s}", convertExprs(exprs))
+		return fmt.Sprintf("return {%s}", cv.convertExprs(exprs))
 	}
 }
 
-func convertAssignRightExprs(exprs []ast.Expr) string {
+func (cv *cppVisitor) convertAssignRightExprs(exprs []ast.Expr) string {
 	switch len(exprs) {
 	case 0:
 		return ""
 	case 1:
-		return convertExprs(exprs)
+		return cv.convertExprs(exprs)
 	default:
-		return fmt.Sprintf("std::tuple{%s}", convertExprs(exprs))
+		return fmt.Sprintf("std::tuple{%s}", cv.convertExprs(exprs))
 	}
 }
 
-func convertAssignExprs(stmt *ast.AssignStmt) string {
+func (cv *cppVisitor) convertAssignExprs(stmt *ast.AssignStmt) string {
 	switch stmt.Tok {
 	case token.DEFINE:
 		switch len(stmt.Lhs) {
 		case 0:
 			panic("convertAssignExprs, len(exprs) == 0")
 		case 1:
-			return fmt.Sprintf("auto %s = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+			return fmt.Sprintf("auto %s = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
 		default:
-			return fmt.Sprintf("auto [%s] = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+			return fmt.Sprintf("auto [%s] = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
 		}
 	case token.ASSIGN:
 		switch len(stmt.Lhs) {
 		case 0:
 			panic("convertAssignExprs, len(exprs) == 0")
 		case 1:
-			return fmt.Sprintf("%s = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+			return fmt.Sprintf("%s = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
 		default:
-			return fmt.Sprintf("std::tie(%s) = %s", convertExprs(stmt.Lhs), convertAssignRightExprs(stmt.Rhs))
+			return fmt.Sprintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
 		}
 
 	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN,
@@ -490,7 +462,7 @@ func convertAssignExprs(stmt *ast.AssignStmt) string {
 			case 0:
 				panic("convertAssignExprs, len(exprs) == 0")
 			case 1:
-				return fmt.Sprintf("%s %s %s", convertExprs(stmt.Lhs), stmt.Tok, convertAssignRightExprs(stmt.Rhs))
+				return fmt.Sprintf("%s %s %s", cv.convertExprs(stmt.Lhs), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))
 			default:
 				panic("convertAssignExprs, len(exprs) != 1")
 			}
@@ -513,24 +485,24 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		cv.convertDecls(s.Decl)
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s", cv.CppIndent(), convertExpr(s.X))
+		fmt.Fprintf(cv.cppOut, "%s%s", cv.CppIndent(), cv.convertExpr(s.X))
 		fmt.Fprintf(cv.cppOut, ";\n")
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertReturnExprs(s.Results, env.outNames))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertReturnExprs(s.Results, env.outNames))
 
 	case *ast.AssignStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), convertAssignExprs(s))
+		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertAssignExprs(s))
 
 	case *ast.DeferStmt:
-		fmt.Fprintf(cv.cppOut, "%sdefer.push_back([=]{ %s; });\n", cv.CppIndent(), convertExpr(s.Call))
+		fmt.Fprintf(cv.cppOut, "%sdefer.push_back([=]{ %s; });\n", cv.CppIndent(), cv.convertExpr(s.Call))
 
 	case *ast.ForStmt:
-		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond), inlineStmt(s.Post))
+		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.IfStmt:
-		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), inlineStmt(s.Init), convertExpr(s.Cond))
+		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		if s.Else != nil {
 			fmt.Fprintf(cv.cppOut, "%selse\n", cv.CppIndent())
@@ -543,14 +515,14 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		cv.cppIndent++
 
 		if s.Init != nil {
-			fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), inlineStmt(s.Init))
+			fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.inlineStmt(s.Init))
 		}
 
 		conditionVarName := "conditionId"
 		inputVarName := ""
 		if s.Tag != nil {
 			inputVarName = "condition"
-			fmt.Fprintf(cv.cppOut, "%sauto %s = %s;\n", cv.CppIndent(), inputVarName, convertExpr(s.Tag))
+			fmt.Fprintf(cv.cppOut, "%sauto %s = %s;\n", cv.CppIndent(), inputVarName, cv.convertExpr(s.Tag))
 		}
 
 		fmt.Fprintf(cv.cppOut, "%sint %s = -1;\n", cv.CppIndent(), conditionVarName)
@@ -608,9 +580,9 @@ func (cv *cppVisitor) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		for _, expr := range s.List {
 			id := cv.currentSwitchId.Back().Value.(int)
 			if se.withCondition {
-				fmt.Fprintf(cv.cppOut, "%s%sif(%s == %s) { %s = %d; }\n", cv.CppIndent(), se.prefix, se.inputVarName, convertExpr(expr), se.conditionVarName, id)
+				fmt.Fprintf(cv.cppOut, "%s%sif(%s == %s) { %s = %d; }\n", cv.CppIndent(), se.prefix, se.inputVarName, cv.convertExpr(expr), se.conditionVarName, id)
 			} else {
-				fmt.Fprintf(cv.cppOut, "%s%sif(%s) { %s = %d; }\n", cv.CppIndent(), se.prefix, convertExpr(expr), se.conditionVarName, id)
+				fmt.Fprintf(cv.cppOut, "%s%sif(%s) { %s = %d; }\n", cv.CppIndent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
 			}
 			cv.currentSwitchId.Back().Value = id + 1
 		}
@@ -621,7 +593,7 @@ func (cv *cppVisitor) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 	}
 }
 
-func inlineStmt(stmt ast.Stmt) (result string) {
+func (cv *cppVisitor) inlineStmt(stmt ast.Stmt) (result string) {
 	switch s := stmt.(type) {
 	case nil:
 		return
@@ -629,7 +601,7 @@ func inlineStmt(stmt ast.Stmt) (result string) {
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
 		case *ast.GenDecl:
-			for _, declItem := range convertSpecs(d.Specs) {
+			for _, declItem := range cv.convertSpecs(d.Specs) {
 				result += fmt.Sprintf("%s,", declItem)
 			}
 		default:
@@ -637,20 +609,20 @@ func inlineStmt(stmt ast.Stmt) (result string) {
 		}
 
 	case *ast.ExprStmt:
-		return convertExpr(s.X)
+		return cv.convertExpr(s.X)
 
 	case *ast.IncDecStmt:
 		switch s.Tok {
 		case token.INC:
-			return fmt.Sprintf("%s++", convertExpr(s.X))
+			return fmt.Sprintf("%s++", cv.convertExpr(s.X))
 		case token.DEC:
-			return fmt.Sprintf("%s--", convertExpr(s.X))
+			return fmt.Sprintf("%s--", cv.convertExpr(s.X))
 		default:
 			Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
 		}
 
 	case *ast.AssignStmt:
-		return convertAssignExprs(s)
+		return cv.convertAssignExprs(s)
 
 	default:
 		Panicf("inlineStmt, unmanaged token [%v]", reflect.TypeOf(s))
@@ -660,20 +632,59 @@ func inlineStmt(stmt ast.Stmt) (result string) {
 	panic("convertStmt, unmanaged case")
 }
 
-func convertSpecs(specs []ast.Spec) []string {
+func (cv *cppVisitor) getResultInfos(funcType *ast.FuncType) (outNames, outTypes []string) {
+	goResults := cv.readFields(funcType.Results)
+
+	var useNamedResults = true
+	for _, result := range goResults {
+		if result.names == nil {
+			useNamedResults = false
+			outTypes = append(outTypes, result.typeStr)
+		}
+		for _, name := range result.names {
+			outNames = append(outNames, name)
+			outTypes = append(outTypes, result.typeStr)
+		}
+	}
+
+	if !useNamedResults {
+		outNames = nil
+	}
+
+	return
+}
+
+func buildOutType(outTypes []string) string {
+	var resultType string
+	switch len(outTypes) {
+	case 0:
+		resultType = "void"
+	case 1:
+		resultType = GetCppType(outTypes[0])
+	default:
+		var types []string
+		for _, outType := range outTypes {
+			types = append(types, GetCppType(outType))
+		}
+		resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
+	}
+	return resultType
+}
+
+func (cv *cppVisitor) convertSpecs(specs []ast.Spec) []string {
 	var result []string
 
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
-			result = append(result, fmt.Sprintf("%s %s", convertExpr(s.Type), s.Name.Name))
+			result = append(result, fmt.Sprintf("%s %s", cv.convertExpr(s.Type), s.Name.Name))
 
 		case *ast.ValueSpec:
 			for i := range s.Names {
 				if len(s.Values) == 0 {
-					result = append(result, fmt.Sprintf("%s %s", convertTypeExpr(s.Type), s.Names[i].Name))
+					result = append(result, fmt.Sprintf("%s %s", cv.convertTypeExpr(s.Type), s.Names[i].Name))
 				} else {
-					result = append(result, fmt.Sprintf("%s %s = %s", convertTypeExpr(s.Type), s.Names[i].Name, convertExpr(s.Values[i])))
+					result = append(result, fmt.Sprintf("%s %s = %s", cv.convertTypeExpr(s.Type), s.Names[i].Name, cv.convertExpr(s.Values[i])))
 				}
 			}
 
@@ -688,7 +699,7 @@ func convertSpecs(specs []ast.Spec) []string {
 	return result
 }
 
-func convertTypeExpr(node ast.Expr) string {
+func (cv *cppVisitor) convertTypeExpr(node ast.Expr) string {
 	if node == nil {
 		return "auto"
 	}
@@ -699,9 +710,9 @@ func convertTypeExpr(node ast.Expr) string {
 
 	case *ast.ArrayType:
 		if n.Len == nil {
-			return fmt.Sprintf("gocpp::slice<%s>", convertTypeExpr(n.Elt))
+			return fmt.Sprintf("gocpp::slice<%s>", cv.convertTypeExpr(n.Elt))
 		} else {
-			return fmt.Sprintf("gocpp::array<%s, %s>", convertTypeExpr(n.Elt), convertExpr(n.Len))
+			return fmt.Sprintf("gocpp::array<%s, %s>", cv.convertTypeExpr(n.Elt), cv.convertExpr(n.Len))
 		}
 
 	default:
@@ -709,7 +720,7 @@ func convertTypeExpr(node ast.Expr) string {
 	}
 }
 
-func convertParamTypeExpr(node ast.Expr) string {
+func (cv *cppVisitor) convertParamTypeExpr(node ast.Expr) string {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -720,17 +731,23 @@ func convertParamTypeExpr(node ast.Expr) string {
 
 	case *ast.ArrayType:
 		if n.Len == nil {
-			return fmt.Sprintf("gocpp::slice<%s>&", convertParamTypeExpr(n.Elt))
+			return fmt.Sprintf("gocpp::slice<%s>&", cv.convertParamTypeExpr(n.Elt))
 		} else {
-			return fmt.Sprintf("gocpp::array<%s, %s>&", convertParamTypeExpr(n.Elt), convertExpr(n.Len))
+			return fmt.Sprintf("gocpp::array<%s, %s>&", cv.convertParamTypeExpr(n.Elt), cv.convertExpr(n.Len))
 		}
+
+	case *ast.FuncType:
+		params := cv.readFields(n.Params)
+		_, outTypes := cv.getResultInfos(n)
+		resultType := buildOutType(outTypes)
+		return fmt.Sprintf("std::function<%s (%s)>", resultType, params)
 
 	default:
 		return fmt.Sprintf("!!PARAM_TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node))
 	}
 }
 
-func convertExpr(node ast.Expr) string {
+func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	if node == nil {
 		return ""
 	}
@@ -746,38 +763,58 @@ func convertExpr(node ast.Expr) string {
 	case *ast.CompositeLit:
 		// ignore 'n.Incomplete' at the moment
 		buf := new(bytes.Buffer)
-		fmt.Fprintf(buf, "%s {", convertTypeExpr(n.Type))
+		fmt.Fprintf(buf, "%s {", cv.convertTypeExpr(n.Type))
 		var sep = ""
 		for _, elt := range n.Elts {
-			fmt.Fprintf(buf, "%s%s", sep, convertExpr(elt))
+			fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(elt))
 			sep = ", "
 		}
 		fmt.Fprintf(buf, "}")
 		return buf.String()
 
+	case *ast.FuncLit:
+		buf := new(bytes.Buffer)
+		bufio := bufio.NewWriter(buf)
+		previousOut := cv.cppOut
+		defer func() { cv.cppOut = previousOut }()
+		cv.cppOut = bufio
+
+		params := cv.readFields(n.Type.Params)
+		outNames, outTypes := cv.getResultInfos(n.Type)
+		resultType := buildOutType(outTypes)
+
+		fmt.Fprintf(bufio, "[=](%s) mutable -> %s\n", params, resultType)
+
+		cv.astIndent++
+		cv.convertBlockStmt(n.Body, blockEnv{stmtEnv{outNames, outTypes}, true})
+		cv.astIndent--
+
+		bufio.Flush()
+		return buf.String()
+
 	case *ast.UnaryExpr:
-		return convertToken(n.Op) + " " + convertExpr(n.X)
+		return convertToken(n.Op) + " " + cv.convertExpr(n.X)
 
 	case *ast.ParenExpr:
-		return "(" + convertExpr(n.X) + ")"
+		return "(" + cv.convertExpr(n.X) + ")"
 
 	case *ast.BinaryExpr:
-		return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
+		return cv.convertExpr(n.X) + " " + convertToken(n.Op) + " " + cv.convertExpr(n.Y)
 		// import "go/type"
 		//xType := types.ExprString(n.X)
 		//yType := types.ExprString(n.Y)
 		//if xType == yType {
-		//	return convertExpr(n.X) + " " + convertToken(n.Op) + " " + convertExpr(n.Y)
+		//	return cv.convertExpr(n.X) + " " + convertToken(n.Op) + " " + cv.convertExpr(n.Y)
 		//} else {
 		//	return ...
 		//}
 
 	case *ast.CallExpr:
 		buf := new(bytes.Buffer)
-		fmt.Fprintf(buf, "%v(", convertExpr(n.Fun))
+		fmt.Fprintf(buf, "%v(", cv.convertExpr(n.Fun))
 		var sep = ""
 		for _, arg := range n.Args {
-			fmt.Fprintf(buf, "%s%s", sep, convertExpr(arg))
+			fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(arg))
 			sep = ", "
 		}
 		fmt.Fprintf(buf, ")")
@@ -787,7 +824,7 @@ func convertExpr(node ast.Expr) string {
 		return GetCppFunc(n.Name)
 
 	case *ast.IndexExpr:
-		return fmt.Sprintf("%s[%s]", convertExpr(n.X), convertExpr(n.Index))
+		return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 
 	case *ast.SelectorExpr:
 		var sep string
@@ -796,17 +833,17 @@ func convertExpr(node ast.Expr) string {
 		} else {
 			sep = "."
 		}
-		return GetCppFunc(convertExpr(n.X) + sep + convertExpr(n.Sel))
+		return GetCppFunc(cv.convertExpr(n.X) + sep + cv.convertExpr(n.Sel))
 
 	case *ast.SliceExpr:
 		if n.Slice3 {
 			panic("TODO: 3 value slice not implemented")
 		} else if n.Low == nil {
-			return fmt.Sprintf("%s.make_slice(0, %s)", convertExpr(n.X), convertExpr(n.High))
+			return fmt.Sprintf("%s.make_slice(0, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High))
 		} else if n.High == nil {
-			return fmt.Sprintf("%s.make_slice(%s)", convertExpr(n.X), convertExpr(n.Low))
+			return fmt.Sprintf("%s.make_slice(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Low))
 		} else {
-			return fmt.Sprintf("%s.make_slice(%s, %s)", convertExpr(n.X), convertExpr(n.Low), convertExpr(n.High))
+			return fmt.Sprintf("%s.make_slice(%s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High))
 		}
 
 	default:
@@ -828,10 +865,10 @@ func isNameSpace(expr ast.Expr) bool {
 	}
 }
 
-func convertExprs(exprs []ast.Expr) string {
+func (cv *cppVisitor) convertExprs(exprs []ast.Expr) string {
 	var strs []string
 	for _, expr := range exprs {
-		strs = append(strs, convertExpr(expr))
+		strs = append(strs, cv.convertExpr(expr))
 	}
 	return strings.Join(strs, ", ")
 }

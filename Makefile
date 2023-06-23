@@ -42,18 +42,18 @@ basics: $(filter $(LOGDIR)/tests/TourOfGo/basics/%, $(OUT_EXE_TEST_FILES))
 
 moretypes: $(filter $(LOGDIR)/tests/TourOfGo/moretypes/%, $(OUT_EXE_TEST_FILES))
 
-$(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go
+$(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go includes/gocpp/support.h
 	@echo "    $$$<" $<
 	@echo "    $$$@" $@
 	go run ./cmd/main.go -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $@".log"
 	(cd $(OUTDIR) && make) 
 	$(LOGDIR)/$*.go.exe
 
-$(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go
+$(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go includes/gocpp/support.h
 	@echo "    $$$<"
 	@echo "    $$$@"
 	
-	mkdir -p $$(dirname $(LOGDIR)/$*)
+	mkdir -p $$(dirname $(LOGDIR)/$*) || true
 
 	echo -n "| $$$< " > $(LOGDIR)/$*.md
 
@@ -85,6 +85,6 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go
 	fi
 
 clean:
-	rm -rf $(LOGDIR)
+	rm -rf $(LOGDIR) $(OUTDIR)
 	@rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES)
 	rm -f results.md

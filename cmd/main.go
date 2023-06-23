@@ -52,7 +52,8 @@ var stdFuncMapping = map[string]string{
 	"time::Saturday": "mocklib::Date::Saturday",
 	"strings::Join":  "mocklib::StringsJoin",
 	// Predefined functions
-	"panic": "gocpp::GoPanic",
+	"make":  "gocpp::make",
+	"panic": "gocpp::panic",
 	"nil":   "nullptr",
 	// type conversions
 	"float64": "float",
@@ -114,6 +115,7 @@ type cppVisitor struct {
 	astIndent       int
 	currentSwitchId *list.List
 
+	genMakeFile bool
 	makeOutFile *os.File
 	makeOut     *bufio.Writer
 
@@ -235,10 +237,12 @@ func createOutput(outdir, name string) *os.File {
 func (cv *cppVisitor) Init() {
 	cv.nodes = new(list.List)
 	cv.currentSwitchId = new(list.List)
-	cv.makeOutFile = createOutput(cv.cppOutDir, "Makefile")
-	cv.makeOut = bufio.NewWriter(cv.makeOutFile)
+	if cv.genMakeFile {
+		cv.makeOutFile = createOutput(cv.cppOutDir, "Makefile")
+		cv.makeOut = bufio.NewWriter(cv.makeOutFile)
 
-	fmt.Fprintf(cv.makeOut, "all:\n")
+		fmt.Fprintf(cv.makeOut, "all:\n")
+	}
 }
 
 func (cv *cppVisitor) cppPrintf(format string, a ...interface{}) (n int, err error) {
@@ -267,7 +271,9 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 			cv.convertDecls(decl)
 		}
 
-		fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
+		if cv.genMakeFile {
+			fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
+		}
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
 		//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
@@ -501,6 +507,16 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
+	case *ast.RangeStmt:
+		if s.Key != nil && s.Value != nil && s.Tok == token.DEFINE {
+			fmt.Fprintf(cv.cppOut, "%sfor(auto [%s, %s] : %s)\n", cv.CppIndent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
+			fmt.Fprintf(cv.cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.CppIndent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+		} else {
+			panic("Unmanaged case of '*ast.RangeStmt'")
+		}
+		cv.convertBlockStmt(s.Body, blockEnv{env, false})
+
 	case *ast.IfStmt:
 		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
@@ -709,14 +725,18 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) string {
 		return GetCppType(n.Name)
 
 	case *ast.ArrayType:
-		if n.Len == nil {
-			return fmt.Sprintf("gocpp::slice<%s>", cv.convertTypeExpr(n.Elt))
-		} else {
-			return fmt.Sprintf("gocpp::array<%s, %s>", cv.convertTypeExpr(n.Elt), cv.convertExpr(n.Len))
-		}
+		return cv.convertArrayTypeExpr(n)
 
 	default:
 		return fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node))
+	}
+}
+
+func (cv *cppVisitor) convertArrayTypeExpr(node *ast.ArrayType) string {
+	if node.Len == nil {
+		return fmt.Sprintf("gocpp::slice<%s>", cv.convertTypeExpr(node.Elt))
+	} else {
+		return fmt.Sprintf("gocpp::array<%s, %s>", cv.convertTypeExpr(node.Elt), cv.convertExpr(node.Len))
 	}
 }
 
@@ -753,6 +773,10 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	}
 
 	switch n := node.(type) {
+	case *ast.ArrayType:
+		// Type used as parameter, we use a dummy tag value that is used only for its type
+		return fmt.Sprintf("gocpp::Tag<%s>()", cv.convertArrayTypeExpr(n))
+
 	case *ast.BasicLit:
 		if n.Kind == token.IMAG {
 			return "gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")"
@@ -886,7 +910,9 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 		//fmt.Printf("%v\n", cv.cppOutFile)
 		cv.cppOut.Flush()
 		cv.hppOut.Flush()
-		cv.makeOut.Flush()
+		if cv.genMakeFile {
+			cv.makeOut.Flush()
+		}
 
 	case *ast.BadDecl:
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
@@ -929,6 +955,7 @@ func main() {
 	parseFmtDir := flag.Bool("parseFmt", true, "temporary test parameter")
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
+	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
 	flag.Parse()
 
 	fset := token.NewFileSet()
@@ -960,6 +987,7 @@ func main() {
 	}
 
 	var cv *cppVisitor = new(cppVisitor)
+	cv.genMakeFile = *genMakeFile
 	cv.binOutDir = *binOutDir
 	cv.cppOutDir = *cppOutDir
 	cv.supportHeader = "gocpp/support.h"

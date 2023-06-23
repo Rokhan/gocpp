@@ -23,7 +23,7 @@
 | /TourOfGo/concurrency/channels.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/concurrency/default-selection.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ❌ | ❌ | ❌ | ❌ |
-| /TourOfGo/concurrency/exercise-web-crawler.go | ❌ | ❌ | ❌ | ❌ |
+| /TourOfGo/concurrency/exercise-web-crawler.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/concurrency/goroutines.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/concurrency/mutex-counter.go | ❌ | ❌ | ❌ | ❌ |
 | /TourOfGo/concurrency/range-and-close.go | ❌ | ❌ | ❌ | ❌ |
@@ -48,7 +48,7 @@
 | /TourOfGo/methods/exercise-images.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/exercise-reader.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/exercise-rot-reader.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/methods/exercise-stringer.go | ❌ | ❌ | ❌ | ❌ |
+| /TourOfGo/methods/exercise-stringer.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/images.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/indirection.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/methods/indirection-values.go | ✔️ | ❌ | ❌ | ❌ |
@@ -81,8 +81,8 @@
 | /TourOfGo/moretypes/mutating-maps.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/nil-slices.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/pointers.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/range.go | ❌ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/range-continued.go | ❌ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/range.go | ✔️ | ✔️ | ✔️ | ✔️ |
+| /TourOfGo/moretypes/range-continued.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slice-bounds.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/slice-literals.go | ✔️ | ❌ | ❌ | ❌ |

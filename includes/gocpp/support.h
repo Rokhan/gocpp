@@ -35,6 +35,8 @@ namespace gocpp
 	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
 	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
 
+    template<typename T> struct Tag {};
+
     struct Defer : std::vector<std::function<void()>>
     {
         ~Defer()
@@ -62,7 +64,20 @@ namespace gocpp
     template<typename T>
     struct array_base
     {
-        // TODO : other constructors
+        using vect_iterator = typename std::vector<T>::iterator;
+        using const_vect_iterator = typename std::vector<T>::iterator;
+
+        // (index, value) iterator
+        struct range_iterator
+        {
+            size_t index;
+            vect_iterator iter;
+
+            bool operator != (const range_iterator & other) const { return iter != other.iter; }
+            void operator ++ () { ++index; ++iter; }
+            range_iterator operator + (int n) { return {index + n, iter + n}; }
+            auto operator * () const { return std::tie(index, *iter); }
+        };
 
         template <typename, int> friend class array;
         template <typename> friend class slice;
@@ -96,6 +111,47 @@ namespace gocpp
 
             panic("Cannot access item of an empty array");
         }
+        
+        range_iterator begin()
+        {
+            if(mArray)
+            {
+                return {0 , mArray->begin()};
+            }
+
+            return range_iterator();
+        }
+
+        // const_iterator begin() const
+        // {
+        //     if(mArray)
+        //     {
+        //         return mArray->begin();
+        //     }
+
+        //     return const_iterator();
+        // }
+
+        range_iterator end()
+        {
+            if(mArray)
+            {
+                return mArray->end();
+            }
+
+            return range_iterator();
+        }
+
+        // const_iterator end() const
+        // {
+        //     if(mArray)
+        //     {
+        //         return mArray->end();
+        //     }
+
+        //     return const_iterator();
+        // }
+
 
         gocpp::slice<T> make_slice(int low);
         gocpp::slice<T> make_slice(int low, int high);
@@ -123,18 +179,29 @@ namespace gocpp
     template<typename T>
     struct slice : array_base<T>
     {
+        using typename array_base<T>::range_iterator;
+
         slice()
         {
             this->mArray = std::make_shared<std::vector<T>>();
+            mStart = 0;
+            mEnd = this->size();
+        }
+
+        slice(int n)
+        {
+            this->mArray = std::make_shared<std::vector<T>>(n);
+            mStart = 0;
+            mEnd = this->size();
         }
 
         slice(std::initializer_list<T> list)
         {
             this->mArray = std::make_shared<std::vector<T>>(list.begin(), list.end());
-            start = 0;
-            end = this->size();
+            mStart = 0;
+            mEnd = this->size();
         }
-        
+
         slice(array_base<T>& a, int low, int high)
         {
             if(low > high)
@@ -153,21 +220,40 @@ namespace gocpp
             }
 
             this->mArray = a.mArray;
-            start = low;
-            end = high;
+            mStart = low;
+            mEnd = high;
         }
 
         // TODO : other constructors
 
+        range_iterator begin()
+        {
+            return array_base<T>::begin() + mStart;
+        }
+
+        // const_iterator begin() const
+        // {
+        //     return array_base<T>::begin() + mStart;
+        // }
+
+        range_iterator end()
+        {
+            return array_base<T>::begin() + mEnd;
+        }
+
+        // const_iterator end() const
+        // {
+        //     return array_base<T>::begin() + mEnd;
+        // }
 
         const T& operator[](size_t i) const
         {
-            return array_base<T>::operator[](i + start);
+            return array_base<T>::operator[](i + mStart);
         }
 
         T& operator[](size_t i)
         {
-            return array_base<T>::operator[](i + start);
+            return array_base<T>::operator[](i + mStart);
         }
 
         // Fix this, not efficient
@@ -180,17 +266,17 @@ namespace gocpp
 
         friend inline slice<T> append(slice<T> input, T value)
         {
-            if(input.end == input.mArray->size())
+            if(input.mEnd == input.mArray->size())
             {
                 input.mArray->push_back(value);
-                ++input.end;
+                ++input.mEnd;
                 return input;                
             }
             
-            if(input.end < input.mArray->size())
+            if(input.mEnd < input.mArray->size())
             {
-                (*input.mArray)[input.end] = value;
-                ++input.end;
+                (*input.mArray)[input.mEnd] = value;
+                ++input.mEnd;
                 return input;                
             }
 
@@ -199,7 +285,7 @@ namespace gocpp
         
         friend inline size_t len(slice<T> input)
         {
-            return input.end - input.start;
+            return input.mEnd - input.mStart;
         }
 
         friend inline size_t cap(slice<T> input)
@@ -213,9 +299,9 @@ namespace gocpp
         }
 
     //private:    
-        // [start, end[
-        int start = 0;
-        int end = 0;
+        // [mStart, mEnd[
+        int mStart = 0;
+        int mEnd = 0;
     };
     
     template<typename T>
@@ -228,6 +314,12 @@ namespace gocpp
     gocpp::slice<T> array_base<T>::make_slice(int low, int high)
     {
         return slice(*this, low, high);
+    }
+    
+    template<typename T>
+    slice<T> make(Tag<slice<T>>, int n)
+    {
+        return slice<T>(n);
     }
 }
 
@@ -322,7 +414,7 @@ namespace mocklib
     std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
     {
         os << '[';
-        for(int i=0; i< slice.end - slice.start; ++i)
+        for(int i=0; i< slice.mEnd - slice.mStart; ++i)
         {
             if(i == 0)
                 os << slice[i];

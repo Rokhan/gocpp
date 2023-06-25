@@ -39,7 +39,7 @@
 | /TourOfGo/flowcontrol/if-and-else.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/flowcontrol/if-with-a-short-statement.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/flowcontrol/switch.go | ✔️ | ✔️ | ✔️ | ❌ |
-| /TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ | ❌ |
+| /TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ | ➖ | 
 | /TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ | ➖ | 
 | /TourOfGo/flowcontrol/switch-with-no-condition.go | ✔️ | ✔️ | ✔️ | ➖ | 
 | /TourOfGo/methods/empty-interface.go | ✔️ | ❌ | ❌ | ❌ |
@@ -85,11 +85,11 @@
 | /TourOfGo/moretypes/range-continued.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slice-bounds.go | ✔️ | ✔️ | ✔️ | ❌ |
 | /TourOfGo/moretypes/slice-len-cap.go | ✔️ | ✔️ | ✔️ | ❌ |
-| /TourOfGo/moretypes/slice-literals.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/slice-literals.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slices.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slices-of-slice.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ | ✔️ |
-| /TourOfGo/moretypes/struct-fields.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/struct-fields.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/structs.go | ✔️ | ❌ | ❌ | ❌ |

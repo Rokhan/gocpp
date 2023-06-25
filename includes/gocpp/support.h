@@ -48,7 +48,14 @@ namespace gocpp
             }
         }
     };
-    
+
+
+    template <typename T,typename=size_t>
+    class IsGoStruct: public std::false_type { };
+
+    template <typename T>
+    class IsGoStruct<T,decltype(sizeof(T::isGoStruct))>: public std::true_type { };
+
     struct GoPanic : std::runtime_error 
     {
         GoPanic(const std::string& message) : runtime_error(message)
@@ -64,8 +71,9 @@ namespace gocpp
     template<typename T>
     struct array_base
     {
-        using vect_iterator = typename std::vector<T>::iterator;
-        using const_vect_iterator = typename std::vector<T>::iterator;
+        using store_type = std::vector<T>;
+        using vect_iterator = typename store_type::iterator;
+        using const_vect_iterator = typename store_type::iterator;
 
         // (index, value) iterator
         struct range_iterator
@@ -92,7 +100,7 @@ namespace gocpp
             return 0;
         }
 
-        const T& operator[](size_t i) const
+        typename store_type::const_reference operator[](size_t i) const
         {
             if(mArray)
             {
@@ -102,7 +110,7 @@ namespace gocpp
             panic("Cannot access item of an empty array");
         }
 
-        T& operator[](size_t i)
+        typename store_type::reference operator[](size_t i)
         {
             if(mArray)
             {
@@ -157,20 +165,22 @@ namespace gocpp
         gocpp::slice<T> make_slice(int low, int high);
 
     protected:    
-        std::shared_ptr<std::vector<T>> mArray;
+        std::shared_ptr<store_type> mArray;
     };
 
     template<typename T, int N>
     struct array : array_base<T>
     {
+        using typename array_base<T>::store_type;
+
         array()
         {
-            this->mArray = std::make_shared<std::vector<T>>(N);
+            this->mArray = std::make_shared<store_type>(N);
         }
 
         array(std::initializer_list<T> list)
         {
-            this->mArray = std::make_shared<std::vector<T>>(list.begin(), list.end());
+            this->mArray = std::make_shared<store_type>(list.begin(), list.end());
         }
 
         // TODO : other constructors
@@ -179,25 +189,26 @@ namespace gocpp
     template<typename T>
     struct slice : array_base<T>
     {
+        using typename array_base<T>::store_type;
         using typename array_base<T>::range_iterator;
 
         slice()
         {
-            this->mArray = std::make_shared<std::vector<T>>();
+            this->mArray = std::make_shared<store_type>();
             mStart = 0;
             mEnd = this->size();
         }
 
         slice(int n)
         {
-            this->mArray = std::make_shared<std::vector<T>>(n);
+            this->mArray = std::make_shared<store_type>(n);
             mStart = 0;
             mEnd = this->size();
         }
 
         slice(std::initializer_list<T> list)
         {
-            this->mArray = std::make_shared<std::vector<T>>(list.begin(), list.end());
+            this->mArray = std::make_shared<store_type>(list.begin(), list.end());
             mStart = 0;
             mEnd = this->size();
         }
@@ -246,12 +257,12 @@ namespace gocpp
         //     return array_base<T>::begin() + mEnd;
         // }
 
-        const T& operator[](size_t i) const
+        typename store_type::const_reference operator[](size_t i) const
         {
             return array_base<T>::operator[](i + mStart);
         }
 
-        T& operator[](size_t i)
+        typename store_type::reference operator[](size_t i)
         {
             return array_base<T>::operator[](i + mStart);
         }
@@ -392,7 +403,7 @@ namespace mocklib
 
     // /* 
     // ** Should replace the two previous template but this create ambiguous overload because
-    // ** the template match nasic_string too
+    // ** the template match basic_string too
     // */
     //
     // template<typename T, template<typename U> class IndexedContainer>
@@ -411,7 +422,7 @@ namespace mocklib
     // }
 
     template<typename T>
-    std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
+    std::ostream& PrintSliceTo(std::false_type, std::ostream& os, gocpp::slice<T> const& slice)
     {
         os << '[';
         for(int i=0; i< slice.mEnd - slice.mStart; ++i)
@@ -423,6 +434,27 @@ namespace mocklib
         }
         os << ']';
         return os;
+    }
+        
+    template<typename T>
+    std::ostream& PrintSliceTo(std::true_type, std::ostream& os, gocpp::slice<T> const& slice)
+    {
+        os << '[';
+        for(int i=0; i< slice.mEnd - slice.mStart; ++i)
+        {
+            if(i == 0)
+                slice[i].PrintTo(os);
+            else
+                slice[i].PrintTo(os << " ");
+        }
+        os << ']';
+        return os;
+    }
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
+    {
+        return PrintSliceTo<T>(gocpp::IsGoStruct<T>(), os, slice);
     }
 
     void PrintToVect(std::vector<std::string>&);

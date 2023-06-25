@@ -1,0 +1,55 @@
+#include <complex>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "tests/TourOfGo/flowcontrol/switch-with-no-condition.h"
+#include "gocpp/support.h"
+
+
+namespace golang
+{
+    // convertSpecs[ImportSpec] Not implemented => "fmt";
+    // convertSpecs[ImportSpec] Not implemented => "time";
+    void main()
+    {
+        gocpp::Defer defer;
+        auto t = mocklib::Date::Now();
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(t.Hour() < 12) { conditionId = 0; }
+            else if(t.Hour() < 17) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    mocklib::Println("Good morning!");
+                    break;
+                case 1:
+                    mocklib::Println("Good afternoon.");
+                    break;
+                default:
+                    mocklib::Println("Good evening.");
+                    break;
+            }
+        }
+    }
+
+}
+
+int main()
+{
+    try
+    {
+        std::cout << std::boolalpha;
+        golang::main();
+        return 0;
+    }
+    catch(const gocpp::GoPanic& ex)
+    {
+        std::cout << "Panic: " << ex.what() << std::endl;
+        return -1;
+    }
+}

@@ -1,0 +1,40 @@
+#include <complex>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "tests/TourOfGo/basics/zero.h"
+#include "gocpp/support.h"
+
+
+namespace golang
+{
+    // convertSpecs[ImportSpec] Not implemented => "fmt";
+    void main()
+    {
+        gocpp::Defer defer;
+        int i;
+        float f;
+        bool b;
+        std::string s;
+        mocklib::Printf("%v %v %v %q\n", i, f, b, s);
+    }
+
+}
+
+int main()
+{
+    try
+    {
+        std::cout << std::boolalpha;
+        golang::main();
+        return 0;
+    }
+    catch(const gocpp::GoPanic& ex)
+    {
+        std::cout << "Panic: " << ex.what() << std::endl;
+        return -1;
+    }
+}

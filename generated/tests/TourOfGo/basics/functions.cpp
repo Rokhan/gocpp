@@ -1,0 +1,42 @@
+#include <complex>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "tests/TourOfGo/basics/functions.h"
+#include "gocpp/support.h"
+
+
+namespace golang
+{
+    // convertSpecs[ImportSpec] Not implemented => "fmt";
+    int add(int x, int y)
+    {
+        gocpp::Defer defer;
+        return x + y;
+    }
+
+    void main()
+    {
+        gocpp::Defer defer;
+        mocklib::Println(add(42, 13));
+    }
+
+}
+
+int main()
+{
+    try
+    {
+        std::cout << std::boolalpha;
+        golang::main();
+        return 0;
+    }
+    catch(const gocpp::GoPanic& ex)
+    {
+        std::cout << "Panic: " << ex.what() << std::endl;
+        return -1;
+    }
+}

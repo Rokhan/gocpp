@@ -1,0 +1,97 @@
+#include <complex>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "tests/TourOfGo/flowcontrol/switch-numeric.h"
+#include "gocpp/support.h"
+
+
+namespace golang
+{
+    // convertSpecs[ImportSpec] Not implemented => "fmt";
+    // convertSpecs[ImportSpec] Not implemented => "time";
+    void main()
+    {
+        gocpp::Defer defer;
+        mocklib::Print("Roman Time");
+        auto hour = 1 + (mocklib::Date::Now().Hour() % 12);
+        //Go switch emulation
+        {
+            auto condition = hour;
+            int conditionId = -1;
+            if(condition == 1) { conditionId = 0; }
+            else if(condition == 2) { conditionId = 1; }
+            else if(condition == 3) { conditionId = 2; }
+            else if(condition == 4) { conditionId = 3; }
+            else if(condition == 5) { conditionId = 4; }
+            else if(condition == 6) { conditionId = 5; }
+            else if(condition == 7) { conditionId = 6; }
+            else if(condition == 8) { conditionId = 7; }
+            else if(condition == 9) { conditionId = 8; }
+            else if(condition == 10) { conditionId = 9; }
+            else if(condition == 11) { conditionId = 10; }
+            else if(condition == 12) { conditionId = 11; }
+            switch(conditionId)
+            {
+                case 0:
+                    mocklib::Println("I");
+                    break;
+                case 1:
+                    mocklib::Println("II");
+                    break;
+                case 2:
+                    mocklib::Println("III");
+                    break;
+                case 3:
+                    mocklib::Println("IV");
+                    break;
+                case 4:
+                    mocklib::Println("V");
+                    break;
+                case 5:
+                    mocklib::Println("VI");
+                    break;
+                case 6:
+                    mocklib::Println("VII");
+                    break;
+                case 7:
+                    mocklib::Println("VIII");
+                    break;
+                case 8:
+                    mocklib::Println("IX");
+                    break;
+                case 9:
+                    mocklib::Println("X");
+                    break;
+                case 10:
+                    mocklib::Println("XI");
+                    break;
+                case 11:
+                    mocklib::Println("XII");
+                    break;
+                default:
+                    gocpp::panic("Should not happen");
+                    break;
+            }
+        }
+    }
+
+}
+
+int main()
+{
+    try
+    {
+        std::cout << std::boolalpha;
+        golang::main();
+        return 0;
+    }
+    catch(const gocpp::GoPanic& ex)
+    {
+        std::cout << "Panic: " << ex.what() << std::endl;
+        return -1;
+    }
+}

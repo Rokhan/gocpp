@@ -758,7 +758,7 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) (typeStr string, typeD
 		return fmt.Sprintf("%s %s", cv.convertFuncTypeExpr(n), node.Name.Name), nil
 
 	case *ast.StructType:
-		return cv.convertStructTypeExpr(n, node.Name.Name), nil
+		return cv.convertStructTypeExpr(n, node.Name.Name, true), nil
 
 	default:
 		return fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node)), nil
@@ -782,7 +782,7 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) (typeStr string, typeDefs [
 
 	case *ast.StructType:
 		name := cv.GenerateId()
-		typeDefs = append(typeDefs, cv.convertStructTypeExpr(n, name))
+		typeDefs = append(typeDefs, cv.convertStructTypeExpr(n, name, false))
 		return name, typeDefs
 
 	default:
@@ -807,7 +807,7 @@ func (cv *cppVisitor) convertFuncTypeExpr(node *ast.FuncType) string {
 	return fmt.Sprintf("std::function<%s (%s)>", resultType, params)
 }
 
-func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName string) string {
+func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName string, withStreamOperator bool) string {
 	buf := new(bytes.Buffer)
 
 	fmt.Fprintf(buf, "struct %[1]s\n", structName)
@@ -826,12 +826,12 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 	fmt.Fprintf(buf, "\n")
 	fmt.Fprintf(buf, "%sstd::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
 	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    auto sep = \"\";\n", cv.CppIndent())
 	fmt.Fprintf(buf, "%s    os << '{';\n", cv.CppIndent())
+	sep := ""
 	for _, field := range fields {
 		for _, name := range field.names {
-			fmt.Fprintf(buf, "%s    os << sep << std::boolalpha << %s;\n", cv.CppIndent(), name)
-			fmt.Fprintf(buf, "%s    sep = \" \";\n", cv.CppIndent())
+			fmt.Fprintf(buf, "%s    os << \"%s\" << %s;\n", cv.CppIndent(), sep, name)
+			sep = " "
 		}
 	}
 	fmt.Fprintf(buf, "%s    os << '}';\n", cv.CppIndent())
@@ -840,6 +840,14 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 
 	cv.cppIndent--
 	fmt.Fprintf(buf, "%s};", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	if withStreamOperator {
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)
+		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "\n")
+	}
 	return buf.String()
 }
 

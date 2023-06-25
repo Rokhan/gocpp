@@ -92,6 +92,6 @@
 | /TourOfGo/moretypes/struct-fields.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | /TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |
-| /TourOfGo/moretypes/structs.go | ✔️ | ❌ | ❌ | ❌ |
+| /TourOfGo/moretypes/structs.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/welcome/hello.go | ✔️ | ✔️ | ✔️ | ✔️ |
 | /TourOfGo/welcome/sandbox.go | ✔️ | ✔️ | ✔️ | ❌ |

@@ -33,28 +33,32 @@ var nameSpaces = map[string]struct{}{
 	"runtime": {},
 	"time":    {},
 	"strings": {},
+	"wc":      {},
 }
 
 var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
-	"fmt::Print":     "mocklib::Print",
-	"fmt::Printf":    "mocklib::Printf",
-	"fmt::Println":   "mocklib::Println",
-	"fmt::Sprint":    "mocklib::Sprint",
-	"fmt::Sprintf":   "mocklib::Sprintf",
-	"rand::Intn":     "mocklib::Intn",
-	"runtime::GOOS":  "mocklib::GOOS",
-	"cmplx::Sqrt":    "std::sqrt",
-	"math::Pow":      "std::pow",
-	"math::Sqrt":     "std::sqrt",
-	"math::Pi":       "M_PI",
-	"time::Now":      "mocklib::Date::Now",
-	"time::Saturday": "mocklib::Date::Saturday",
-	"strings::Join":  "mocklib::StringsJoin",
+	"fmt::Print":      "mocklib::Print",
+	"fmt::Printf":     "mocklib::Printf",
+	"fmt::Println":    "mocklib::Println",
+	"fmt::Sprint":     "mocklib::Sprint",
+	"fmt::Sprintf":    "mocklib::Sprintf",
+	"rand::Intn":      "mocklib::Intn",
+	"runtime::GOOS":   "mocklib::GOOS",
+	"cmplx::Sqrt":     "std::sqrt",
+	"math::Pow":       "std::pow",
+	"math::Sqrt":      "std::sqrt",
+	"math::Pi":        "M_PI",
+	"time::Now":       "mocklib::Date::Now",
+	"time::Saturday":  "mocklib::Date::Saturday",
+	"strings::Join":   "mocklib::StringsJoin",
+	"strings::Fields": "mocklib::StringsFields",
+	"wc::Test":        "mocklib::wcTest",
 	// Predefined functions
-	"make":  "gocpp::make",
-	"panic": "gocpp::panic",
-	"nil":   "nullptr",
+	"delete": "remove",
+	"make":   "gocpp::make",
+	"panic":  "gocpp::panic",
+	"nil":    "nullptr",
 	// type conversions
 	"float64": "float",
 	"uint":    "(unsigned int)",
@@ -159,6 +163,8 @@ func printCppIntro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "#include <complex>\n")
 	fmt.Fprintf(cv.cppOut, "#include <functional>\n")
 	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
+	fmt.Fprintf(cv.cppOut, "#include <iomanip>\n")
+	fmt.Fprintf(cv.cppOut, "#include <map>\n")
 	fmt.Fprintf(cv.cppOut, "#include <string>\n")
 	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
 	fmt.Fprintf(cv.cppOut, "#include <vector>\n")
@@ -185,7 +191,7 @@ func printCppOutro(cv *cppVisitor) {
 	fmt.Fprintf(cv.cppOut, "{\n")
 	fmt.Fprintf(cv.cppOut, "    try\n")
 	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << std::boolalpha;\n")
+	fmt.Fprintf(cv.cppOut, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
 	fmt.Fprintf(cv.cppOut, "        golang::main();\n")
 	fmt.Fprintf(cv.cppOut, "        return 0;\n")
 	fmt.Fprintf(cv.cppOut, "    }\n")
@@ -505,6 +511,9 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 	case *ast.ExprStmt:
 		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertExpr(s.X))
 
+	case *ast.IncDecStmt:
+		fmt.Fprintf(cv.cppOut, "%s%s%s;\n", cv.CppIndent(), cv.convertExpr(s.X), s.Tok)
+
 	case *ast.ReturnStmt:
 		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertReturnExprs(s.Results, env.outNames))
 
@@ -761,7 +770,7 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) (typeStr string, typeD
 		return cv.convertStructTypeExpr(n, node.Name.Name, true), nil
 
 	default:
-		return fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node)), nil
+		return fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v]", reflect.TypeOf(node)), nil
 	}
 }
 
@@ -779,6 +788,9 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) (typeStr string, typeDefs [
 
 	case *ast.FuncType:
 		return cv.convertFuncTypeExpr(n), nil
+
+	case *ast.MapType:
+		return cv.convertMapTypeExpr(n)
 
 	case *ast.StructType:
 		name := cv.GenerateId()
@@ -807,6 +819,12 @@ func (cv *cppVisitor) convertFuncTypeExpr(node *ast.FuncType) string {
 	return fmt.Sprintf("std::function<%s (%s)>", resultType, params)
 }
 
+func (cv *cppVisitor) convertMapTypeExpr(node *ast.MapType) (typeStr string, typeDefs []string) {
+	key, keyDefs := cv.convertTypeExpr(node.Key)
+	value, valueDefs := cv.convertTypeExpr(node.Value)
+	return fmt.Sprintf("gocpp::map<%s,%s>", key, value), append(keyDefs, valueDefs...)
+}
+
 func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName string, withStreamOperator bool) string {
 	buf := new(bytes.Buffer)
 
@@ -822,7 +840,7 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 	}
 
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%sconst bool isGoStruct = true;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%susing isGoStruct = void;\n", cv.CppIndent())
 	fmt.Fprintf(buf, "\n")
 	fmt.Fprintf(buf, "%sstd::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
 	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
@@ -839,14 +857,13 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 	fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
 
 	cv.cppIndent--
-	fmt.Fprintf(buf, "%s};", cv.CppIndent())
-	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s};\n", cv.CppIndent())
 	if withStreamOperator {
+		fmt.Fprintf(buf, "\n")
 		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)
 		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
 		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
 		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
-		fmt.Fprintf(buf, "\n")
 	}
 	return buf.String()
 }
@@ -859,7 +876,6 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 
 	switch n := node.(type) {
 	case *ast.ArrayType:
-
 		arrayType, typeDefs := cv.convertArrayTypeExpr(n)
 		// TODO: typeDefs should be and output of convertExpr
 		// HACK: cv.cppOut shouldn't be used here
@@ -869,6 +885,17 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
 		return fmt.Sprintf("gocpp::Tag<%s>()", arrayType)
+
+	case *ast.MapType:
+		mapType, mapDefs := cv.convertMapTypeExpr(n)
+		// TODO: mapDefs should be and output of convertExpr
+		// HACK: cv.cppOut shouldn't be used here
+		for _, def := range mapDefs {
+			fmt.Fprintf(cv.cppOut, "%s%s\n", cv.CppIndent(), def)
+		}
+
+		// Type used as parameter, we use a dummy tag value that is used only for its type
+		return fmt.Sprintf("gocpp::Tag<%s>()", mapType)
 
 	case *ast.BasicLit:
 		if n.Kind == token.IMAG {
@@ -927,6 +954,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 
 	case *ast.ParenExpr:
 		return "(" + cv.convertExpr(n.X) + ")"
+
+	case *ast.KeyValueExpr:
+		return fmt.Sprintf("{ %s, %s }", cv.convertExpr(n.Key), cv.convertExpr(n.Value))
 
 	case *ast.BinaryExpr:
 		return cv.convertExpr(n.X) + " " + convertToken(n.Op) + " " + cv.convertExpr(n.Y)

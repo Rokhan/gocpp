@@ -4,8 +4,8 @@
 | ---- | ------------ | --------------- | --- | ----------- |
 | HelloWorld.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/HelloWorld.cpp)) | ❌ |
 | TourOfGo/basics/basic-types.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/basic-types.cpp)) | ❌ |
-| TourOfGo/basics/constants.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/constants.cpp)) | ✔️ |
-| TourOfGo/basics/exported-names.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/basics/constants.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/constants.cpp)) | ❌ |
+| TourOfGo/basics/exported-names.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/exported-names.cpp)) | ❌ |
 | TourOfGo/basics/functions.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions.cpp)) | ✔️ |
 | TourOfGo/basics/functions-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions-continued.cpp)) | ✔️ |
 | TourOfGo/basics/imports.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/imports.cpp)) | ❌ |
@@ -37,7 +37,7 @@
 | TourOfGo/flowcontrol/for-is-gos-while.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/for-is-gos-while.cpp)) | ✔️ |
 | TourOfGo/flowcontrol/if.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/if.cpp)) | ❌ |
 | TourOfGo/flowcontrol/if-and-else.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/if-and-else.cpp)) | ❌ |
-| TourOfGo/flowcontrol/if-with-a-short-statement.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/if-with-a-short-statement.cpp)) | ✔️ |
+| TourOfGo/flowcontrol/if-with-a-short-statement.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/if-with-a-short-statement.cpp)) | ❌ |
 | TourOfGo/flowcontrol/switch.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch.cpp)) | ❌ |
 | TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-evaluation-order.cpp)) | ➖ | 
 | TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-numeric.cpp)) | ➖ | 
@@ -70,15 +70,15 @@
 | TourOfGo/moretypes/append.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/append.cpp)) | ❌ |
 | TourOfGo/moretypes/array.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/array.cpp)) | ✔️ |
 | TourOfGo/moretypes/exercise-fibonacci-closure.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-fibonacci-closure.cpp)) | ✔️ |
-| TourOfGo/moretypes/exercise-maps.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/exercise-maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-maps.cpp)) | ✔️ |
 | TourOfGo/moretypes/exercise-slices.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/function-closures.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/function-values.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/making-slices.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/map-literals.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/map-literals-continued.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/maps.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/mutating-maps.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/map-literals.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals.cpp)) | ✔️ |
+| TourOfGo/moretypes/map-literals-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals-continued.cpp)) | ✔️ |
+| TourOfGo/moretypes/maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/maps.cpp)) | ✔️ |
+| TourOfGo/moretypes/mutating-maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/mutating-maps.cpp)) | ❌ |
 | TourOfGo/moretypes/nil-slices.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/range.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range.cpp)) | ✔️ |

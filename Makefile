@@ -52,8 +52,8 @@ $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES)
 	$(LOGDIR)/$*.go.exe
 
 $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES)
-	echo "    $< "
-	echo "    $@ "
+	@echo "    $< "
+	@echo "    $@ "
 	
 	mkdir -p $$(dirname $(LOGDIR)/$*) || true
 
@@ -74,8 +74,9 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES)
 		tput setaf 2; \
 		(set -o pipefail; $(LOGDIR)/$*.exe | tee $(LOGDIR)/$*.cpp.out.txt) \
 			&&  echo -n "| ✔️ ([cpp]($(OUTDIR)/$*.cpp)) " >> $(LOGDIR)/$*.md \
-			|| (echo    "| ❌ | ❌ |" >> $(LOGDIR)/$*.md && false); \
+			|| (echo    "| ❌ | ❌ |" >> $(LOGDIR)/$*.md && false); status=$$?;\
 		tput sgr0 ;\
+		(exit $$status);\
 	fi	
 
 	if head -1 $< | grep -q -E "no-run|no-diff"; then \

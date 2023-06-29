@@ -4,15 +4,17 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 // Support types implementations
 namespace gocpp
 {
-	// TODO : make forward declaration header for types
+    // TODO : make forward declaration header for types
 
     template<typename T> struct array_base;
     template<typename T, int N> struct array;
@@ -20,20 +22,20 @@ namespace gocpp
     struct complex128;
     struct Defer;
 
-	struct complex128 : std::complex<double>
-	{
-		using std::complex<double>::complex;
+    struct complex128 : std::complex<double>
+    {
+        using std::complex<double>::complex;
 
-		inline complex128(const std::complex<double>& c) : complex(c) {}
+        inline complex128(const std::complex<double>& c) : complex(c) {}
 
-		inline std::complex<double>& base() { return *this; }
-		inline const std::complex<double>& base() const { return *this; }
-	};
+        inline std::complex<double>& base() { return *this; }
+        inline const std::complex<double>& base() const { return *this; }
+    };
 
-	inline static complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };
-	inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
-	inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
-	inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
+    inline static complex128 operator+(int i, complex128 c) { return double(i) + c.base(); };
+    inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
+    inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
+    inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
 
     template<typename T> struct Tag {};
 
@@ -49,12 +51,17 @@ namespace gocpp
         }
     };
 
+    template<typename T>
+    struct CheckType
+    {
+        using type = void;
+    };
 
-    template <typename T,typename=size_t>
-    class IsGoStruct: public std::false_type { };
+    template <typename T, typename = void>
+    class IsGoStruct : public std::false_type { };
 
     template <typename T>
-    class IsGoStruct<T,decltype(sizeof(T::isGoStruct))>: public std::true_type { };
+    class IsGoStruct<T,typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
 
     struct GoPanic : std::runtime_error 
     {
@@ -315,6 +322,51 @@ namespace gocpp
         int mEnd = 0;
     };
     
+
+    template<typename V>
+    struct map_value : public std::tuple<typename std::add_lvalue_reference<V>::type, bool>
+    {
+        using std::tuple<typename std::add_lvalue_reference<V>::type, bool>::tuple;
+        using val_ref = typename std::add_lvalue_reference<V>::type;
+
+        val_ref operator= (const V& value)
+        {
+            return std::get<0>(*this) = value;
+        }
+
+        operator val_ref(){ return std::get<0>(*this); }
+
+        template <std::size_t Index>
+        std::tuple_element_t<Index, map_value> &get()
+        {
+            return std::get<Index>(*this);
+        }
+    };
+
+    template <typename K, typename V>
+    struct map : std::map<K, V>
+    {
+        using std::map<K, V>::map;
+        
+        map_value<V> operator[](const K& key)
+        {
+            auto it = this->find(key);
+            if( it != this->end())
+            {
+                return {it->second, true};
+            }
+
+            // FIXME: Not equivalent to go maps.
+            // Value are inserted only when explicitly assigned in golang
+            return {std::map<K, V>::operator[](key), false};
+        }
+
+        friend inline void remove(map<K, V>& input, const K& key)
+        {
+            input.erase(key);
+        }
+    };
+
     template<typename T>
     gocpp::slice<T> array_base<T>::make_slice(int low)
     {
@@ -332,6 +384,34 @@ namespace gocpp
     {
         return slice<T>(n);
     }
+
+    template<typename K, typename V>
+    gocpp::map<K, V> make(Tag<gocpp::map<K, V>>)
+    {
+        return gocpp::map<K, V>();
+    }
+}
+
+namespace std
+{
+    template <typename V>
+    struct tuple_size<gocpp::map_value<V>>
+    {
+        static constexpr size_t value = 2;
+    };
+
+    // TODO: use the base std::tuple ?
+    template <typename V>
+    struct tuple_element<0, gocpp::map_value<V>>
+    {
+        using type = typename std::add_lvalue_reference<V>::type;
+    };
+
+    template <typename V>
+    struct tuple_element<1, gocpp::map_value<V>>
+    {
+        using type = bool;
+    };
 }
 
 // temporary mock implementations
@@ -472,7 +552,26 @@ namespace mocklib
 
     void Print(bool value)
     {
-        std::cout << std::boolalpha << value;
+        std::cout << value;
+    }
+
+    template<typename K, typename V>
+    void Print(const gocpp::map<K, V>& value)
+    {
+        std::cout << "map[";
+        auto sep = "";
+        for(auto kv : value)
+        {
+            std::cout << sep << kv.first << ":" << kv.second;
+            sep = " ";
+        }
+        std::cout << "]";
+    }
+
+    template<typename V>
+    void Print(const gocpp::map_value<V>& value)
+    {
+        std::cout << std::get<0>(value);
     }
 
     template<typename T>
@@ -581,5 +680,41 @@ namespace mocklib
                 sstr << sep << vect[i];
         }
         return sstr.str();
+    }
+
+    gocpp::slice<std::string> StringsFields(const std::string& strList)
+    {
+        gocpp::slice<std::string> strings;
+        std::istringstream iss(strList);
+        std::string elt;
+        while (getline(iss, elt, ' '))
+        {
+            strings = append(strings, elt);
+        }
+        return strings;
+    }
+
+    template<typename Func>
+    void wcSingleTest(const Func& func, const std::string& input)
+    {
+        std::cout << "PASS" << std::endl;
+        std::cout << " f(\"" << input << "\") = \n";
+        std::cout << "  map[string]int{";
+        auto sep = "";
+        for(auto kv : func(input))
+        {
+            std::cout << sep << '"' << kv.first << '"' << ":" << kv.second;
+            sep = ", ";
+        }
+        std::cout << "}" << std::endl;
+    }
+
+    template<typename Func>
+    void wcTest(const Func& func)
+    {
+        wcSingleTest(func, "I am learning Go!");
+        wcSingleTest(func, "The quick brown fox jumped over the lazy dog.");
+        wcSingleTest(func, "I ate a donut. Then I ate another donut.");
+        wcSingleTest(func, "A man a plan a canal panama.");
     }
 }

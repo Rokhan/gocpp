@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -17,7 +19,7 @@ namespace golang
         float Lat;
         float Long;
 
-        const bool isGoStruct = true;
+        using isGoStruct = void;
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -28,17 +30,17 @@ namespace golang
             return os;
         }
     };
+
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {
         return value.PrintTo(os);
     }
-
 ;
-    !!TYPE_EXPR_ERROR!! [*ast.MapType] m;
+    gocpp::map<std::string,Vertex> m;
     void main()
     {
         gocpp::Defer defer;
-        m = gocpp::make(!!EXPR_ERROR!! [*ast.MapType]);
+        m = gocpp::make(gocpp::Tag<gocpp::map<std::string,Vertex>>());
         m["Bell Labs"] = Vertex {40.68433, - 74.39967};
         mocklib::Println(m["Bell Labs"]);
     }
@@ -49,7 +51,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -29,7 +31,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

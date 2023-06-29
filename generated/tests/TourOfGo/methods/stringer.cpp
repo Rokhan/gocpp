@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -17,7 +19,7 @@ namespace golang
         std::string Name;
         int Age;
 
-        const bool isGoStruct = true;
+        using isGoStruct = void;
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -28,11 +30,11 @@ namespace golang
             return os;
         }
     };
+
     std::ostream& operator<<(std::ostream& os, const Person& value)
     {
         return value.PrintTo(os);
     }
-
 ;
     std::string String()
     {
@@ -54,7 +56,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

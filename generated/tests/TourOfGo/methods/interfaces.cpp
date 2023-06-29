@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -13,7 +15,7 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    !!TYPE_EXPR_ERROR!! [*ast.TypeSpec];
+    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
     void main()
     {
         gocpp::Defer defer;
@@ -42,7 +44,7 @@ namespace golang
         float X;
         float Y;
 
-        const bool isGoStruct = true;
+        using isGoStruct = void;
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -53,11 +55,11 @@ namespace golang
             return os;
         }
     };
+
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {
         return value.PrintTo(os);
     }
-
 ;
     float Abs()
     {
@@ -71,7 +73,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

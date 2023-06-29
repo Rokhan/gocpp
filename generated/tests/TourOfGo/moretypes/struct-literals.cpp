@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -17,7 +19,7 @@ namespace golang
         int X;
         int Y;
 
-        const bool isGoStruct = true;
+        using isGoStruct = void;
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -28,14 +30,14 @@ namespace golang
             return os;
         }
     };
+
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {
         return value.PrintTo(os);
     }
-
 ;
     auto v1 = Vertex {1, 2};
-    auto v2 = Vertex {!!EXPR_ERROR!! [*ast.KeyValueExpr]};
+    auto v2 = Vertex {{ X, 1 }};
     auto v3 = Vertex {};
     auto p = [[TOKEN_ERROR: '&' ]] Vertex {1, 2};
     void main()
@@ -50,7 +52,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

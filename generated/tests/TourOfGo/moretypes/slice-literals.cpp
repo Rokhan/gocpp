@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -24,7 +26,7 @@ namespace golang
             int i;
             bool b;
 
-            const bool isGoStruct = true;
+            using isGoStruct = void;
 
             std::ostream& PrintTo(std::ostream& os) const
             {
@@ -46,7 +48,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

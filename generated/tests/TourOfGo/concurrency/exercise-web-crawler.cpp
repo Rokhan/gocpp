@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -12,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    !!TYPE_EXPR_ERROR!! [*ast.TypeSpec];
+    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
     void Crawl(std::string url, int depth, Fetcher fetcher)
     {
         gocpp::Defer defer;
@@ -40,13 +42,13 @@ namespace golang
         Crawl("https://golang.org/", 4, fetcher);
     }
 
-    !!TYPE_EXPR_ERROR!! [*ast.TypeSpec];
+    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
     struct fakeResult
     {
         std::string body;
         gocpp::slice<std::string> urls;
 
-        const bool isGoStruct = true;
+        using isGoStruct = void;
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -57,11 +59,11 @@ namespace golang
             return os;
         }
     };
+
     std::ostream& operator<<(std::ostream& os, const fakeResult& value)
     {
         return value.PrintTo(os);
     }
-
 ;
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(std::string url)
     {
@@ -73,14 +75,14 @@ namespace golang
         return {"", nullptr, fmt::Errorf("not found: %s", url)};
     }
 
-    auto fetcher = fakeFetcher {!!EXPR_ERROR!! [*ast.KeyValueExpr], !!EXPR_ERROR!! [*ast.KeyValueExpr], !!EXPR_ERROR!! [*ast.KeyValueExpr], !!EXPR_ERROR!! [*ast.KeyValueExpr]};
+    auto fetcher = fakeFetcher {{ "https://golang.org/", [[TOKEN_ERROR: '&' ]] fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", [[TOKEN_ERROR: '&' ]] fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", [[TOKEN_ERROR: '&' ]] fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", [[TOKEN_ERROR: '&' ]] fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};
 }
 
 int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

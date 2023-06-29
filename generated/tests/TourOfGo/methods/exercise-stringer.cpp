@@ -1,6 +1,8 @@
 #include <complex>
 #include <functional>
 #include <iostream>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -16,7 +18,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto hosts = !!TYPE_EXPR_ERROR!! [*ast.MapType] {!!EXPR_ERROR!! [*ast.KeyValueExpr], !!EXPR_ERROR!! [*ast.KeyValueExpr]};
+        auto hosts = gocpp::map<std::string,IPAddr> {{ "loopback", {127, 0, 0, 1} }, { "googleDNS", {8, 8, 8, 8} }};
         for(auto [name, ip] : hosts)
         {
             mocklib::Printf("%v: %v\n", name, ip);
@@ -29,7 +31,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha;
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
         golang::main();
         return 0;
     }

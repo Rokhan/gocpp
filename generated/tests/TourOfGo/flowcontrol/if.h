@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    std::string sqrt(float x);
+    std::string sqrt(double x);
     void main();
 }
 

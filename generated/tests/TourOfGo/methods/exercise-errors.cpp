@@ -14,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    std::tuple<float, error> Sqrt(float x)
+    std::tuple<double, error> Sqrt(double x)
     {
         gocpp::Defer defer;
         return {0, nullptr};

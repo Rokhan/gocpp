@@ -28,21 +28,21 @@ namespace golang
         mocklib::Println(a.Abs());
     }
 
-    float MyFloat;
-    float Abs()
+    double MyFloat;
+    double Abs()
     {
         gocpp::Defer defer;
         if(; f < 0)
         {
-            return float(- f);
+            return double(- f);
         }
-        return float(f);
+        return double(f);
     }
 
     struct Vertex
     {
-        float X;
-        float Y;
+        double X;
+        double Y;
 
         using isGoStruct = void;
 
@@ -61,7 +61,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    float Abs()
+    double Abs()
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);

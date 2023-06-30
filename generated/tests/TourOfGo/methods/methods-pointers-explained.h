@@ -9,8 +9,8 @@
 
 namespace golang
 {
-    float Abs(Vertex v);
-    void Scale(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, float f);
+    double Abs(Vertex v);
+    void Scale(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, double f);
     void main();
 }
 

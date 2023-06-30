@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    gocpp::slice<gocpp::slice<uint8>> Pic(int dx, int dy);
+    gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy);
     void main();
 }
 

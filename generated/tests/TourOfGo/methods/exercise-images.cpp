@@ -36,7 +36,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto m = Image {};
-        pic.ShowImage(m);
+        pic::ShowImage(m);
     }
 
 }

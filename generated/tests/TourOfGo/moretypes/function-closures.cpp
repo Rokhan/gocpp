@@ -14,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    std::function<int ()> adder()
+    std::function<int (int)> adder()
     {
         gocpp::Defer defer;
         auto sum = 0;

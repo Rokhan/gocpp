@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    std::tuple<float, error> Sqrt(float x);
+    std::tuple<double, error> Sqrt(double x);
     void main();
 }
 

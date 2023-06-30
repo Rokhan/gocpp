@@ -20,7 +20,7 @@ namespace golang
         gocpp::Defer defer;
         int x = 3;
         int y = 4;
-        float f = std::sqrt(float(x * x + y * y));
+        double f = std::sqrt(double(x * x + y * y));
         unsigned int z = (unsigned int)(f);
         mocklib::Println(x, y, z);
     }

@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    std::function<int ()> adder();
+    std::function<int (int)> adder();
     void main();
 }
 

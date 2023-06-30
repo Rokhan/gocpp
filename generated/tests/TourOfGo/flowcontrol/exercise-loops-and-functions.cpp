@@ -14,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    float Sqrt(float x)
+    double Sqrt(double x)
     {
         gocpp::Defer defer;
     }

@@ -17,8 +17,8 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     struct Vertex
     {
-        float X;
-        float Y;
+        double X;
+        double Y;
 
         using isGoStruct = void;
 
@@ -37,7 +37,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    float Abs(Vertex v)
+    double Abs(Vertex v)
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);

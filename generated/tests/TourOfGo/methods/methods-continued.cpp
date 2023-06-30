@@ -15,15 +15,15 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    float MyFloat;
-    float Abs()
+    double MyFloat;
+    double Abs()
     {
         gocpp::Defer defer;
         if(; f < 0)
         {
-            return float(- f);
+            return double(- f);
         }
-        return float(f);
+        return double(f);
     }
 
     void main()

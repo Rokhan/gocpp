@@ -42,7 +42,7 @@ namespace golang
         mocklib::Println(t.S);
     }
 
-    float F;
+    double F;
     void M()
     {
         gocpp::Defer defer;

@@ -16,8 +16,8 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     struct Vertex
     {
-        float X;
-        float Y;
+        double X;
+        double Y;
 
         using isGoStruct = void;
 
@@ -36,14 +36,14 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void Scale(float f)
+    void Scale(double f)
     {
         gocpp::Defer defer;
         v.X = v.X * f;
         v.Y = v.Y * f;
     }
 
-    void ScaleFunc(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, float f)
+    void ScaleFunc(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, double f)
     {
         gocpp::Defer defer;
         v.X = v.X * f;

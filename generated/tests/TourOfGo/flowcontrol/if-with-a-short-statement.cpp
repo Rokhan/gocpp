@@ -15,10 +15,10 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    float pow(float x, float n, float lim)
+    double pow(double x, double n, double lim)
     {
         gocpp::Defer defer;
-        if(auto v = std::pow(x, n); v < lim)
+        if(auto v = mocklib::Pow(x, n); v < lim)
         {
             return v;
         }

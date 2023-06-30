@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    float pow(float x, float n, float lim);
+    double pow(double x, double n, double lim);
     void main();
 }
 

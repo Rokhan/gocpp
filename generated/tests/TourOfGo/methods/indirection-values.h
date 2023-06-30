@@ -9,8 +9,8 @@
 
 namespace golang
 {
-    float Abs();
-    float AbsFunc(Vertex v);
+    double Abs();
+    double AbsFunc(Vertex v);
     void main();
 }
 

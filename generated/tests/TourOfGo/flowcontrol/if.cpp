@@ -15,7 +15,7 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    std::string sqrt(float x)
+    std::string sqrt(double x)
     {
         gocpp::Defer defer;
         if(; x < 0)

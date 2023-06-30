@@ -18,7 +18,7 @@ namespace golang
     {
         gocpp::Defer defer;
         int i;
-        float f;
+        double f;
         bool b;
         std::string s;
         mocklib::Printf("%v %v %v %q\n", i, f, b, s);

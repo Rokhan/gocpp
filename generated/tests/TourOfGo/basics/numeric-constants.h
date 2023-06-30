@@ -10,7 +10,7 @@
 namespace golang
 {
     int needInt(int x);
-    float needFloat(float x);
+    double needFloat(double x);
     void main();
 }
 

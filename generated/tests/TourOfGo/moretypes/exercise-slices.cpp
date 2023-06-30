@@ -14,16 +14,16 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
-    gocpp::slice<gocpp::slice<uint8>> Pic(int dx, int dy)
+    gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)
     {
         gocpp::Defer defer;
-        auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8>>>(), dx);
+        auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8_t>>>(), dx);
         for(auto i = 0; i < dx; i++)
         {
-            result[i] = gocpp::make(gocpp::Tag<gocpp::slice<uint8>>(), dy);
+            result[i] = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), dy);
             for(auto j = 0; j < dy; j++)
             {
-                result[i][j] = uint8((i / 2 + j / 2) * (i / 2 - j / 2));
+                result[i][j] = uint8_t((i / 2 + j / 2) * (i / 2 - j / 2));
             }
         }
         return result;
@@ -32,7 +32,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        pic.Show(Pic);
+        mocklib::picShow(Pic);
     }
 
 }

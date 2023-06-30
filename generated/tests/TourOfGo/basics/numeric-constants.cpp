@@ -22,7 +22,7 @@ namespace golang
         return x * 10 + 1;
     }
 
-    float needFloat(float x)
+    double needFloat(double x)
     {
         gocpp::Defer defer;
         return x * 0.1;

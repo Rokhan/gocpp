@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    float Abs();
+    double Abs();
     void main();
 }
 

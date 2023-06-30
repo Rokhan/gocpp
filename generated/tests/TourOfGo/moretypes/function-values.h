@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    float compute(std::function<float ()> fn);
+    double compute(std::function<double (double, double)> fn);
     void main();
 }
 

@@ -9,7 +9,7 @@
 
 namespace golang
 {
-    float Abs(Vertex v);
+    double Abs(Vertex v);
     void main();
 }
 

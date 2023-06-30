@@ -15,7 +15,7 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    float compute(std::function<float ()> fn)
+    double compute(std::function<double (double, double)> fn)
     {
         gocpp::Defer defer;
         return fn(3, 4);
@@ -24,7 +24,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto hypot = [=](float x, float y) mutable -> float
+        auto hypot = [=](double x, double y) mutable -> double
         {
             gocpp::Defer defer;
             return std::sqrt(x * x + y * y);
@@ -32,7 +32,7 @@ namespace golang
 ;
         mocklib::Println(hypot(5, 12));
         mocklib::Println(compute(hypot));
-        mocklib::Println(compute(std::pow));
+        mocklib::Println(compute(mocklib::Pow));
     }
 
 }

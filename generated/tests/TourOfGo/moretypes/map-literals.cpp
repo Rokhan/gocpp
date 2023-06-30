@@ -16,8 +16,8 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     struct Vertex
     {
-        float Lat;
-        float Long;
+        double Lat;
+        double Long;
 
         using isGoStruct = void;
 

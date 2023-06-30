@@ -9,8 +9,8 @@
 
 namespace golang
 {
-    float Abs();
-    void Scale(float f);
+    double Abs();
+    void Scale(double f);
     void main();
 }
 

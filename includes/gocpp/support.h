@@ -213,6 +213,14 @@ namespace gocpp
             mEnd = this->size();
         }
 
+        slice(int n, int r)
+        {
+            this->mArray = std::make_shared<store_type>(n);
+            this->mArray->reserve(r);
+            mStart = 0;
+            mEnd = this->size();
+        }
+
         slice(std::initializer_list<T> list)
         {
             this->mArray = std::make_shared<store_type>(list.begin(), list.end());
@@ -323,6 +331,12 @@ namespace gocpp
     };
     
 
+    template<typename T>
+    bool operator==(slice<T> s, nullptr_t) { return len(s) == 0; }
+    
+    template<typename T>
+    bool operator==(nullptr_t, slice<T> s) { return len(s) == 0; }
+
     template<typename V>
     struct map_value : public std::tuple<typename std::add_lvalue_reference<V>::type, bool>
     {
@@ -383,6 +397,12 @@ namespace gocpp
     slice<T> make(Tag<slice<T>>, int n)
     {
         return slice<T>(n);
+    }
+
+    template<typename T>
+    slice<T> make(Tag<slice<T>>, int n, int r)
+    {
+        return slice<T>(n, r);
     }
 
     template<typename K, typename V>
@@ -716,5 +736,13 @@ namespace mocklib
         wcSingleTest(func, "The quick brown fox jumped over the lazy dog.");
         wcSingleTest(func, "I ate a donut. Then I ate another donut.");
         wcSingleTest(func, "A man a plan a canal panama.");
+    }
+
+    template<typename T>
+    void picShow(const T& func){ /* Just a mock */ }
+    
+    double Pow(double value, double exp)
+    {  
+        return std::pow(value, exp);
     }
 }

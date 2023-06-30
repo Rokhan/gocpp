@@ -71,15 +71,15 @@
 | TourOfGo/moretypes/array.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/array.cpp)) | ✔️ |
 | TourOfGo/moretypes/exercise-fibonacci-closure.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-fibonacci-closure.cpp)) | ✔️ |
 | TourOfGo/moretypes/exercise-maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-maps.cpp)) | ✔️ |
-| TourOfGo/moretypes/exercise-slices.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/function-closures.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/function-values.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/moretypes/making-slices.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/exercise-slices.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-slices.cpp)) | ❌ |
+| TourOfGo/moretypes/function-closures.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/function-closures.cpp)) | ✔️ |
+| TourOfGo/moretypes/function-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/function-values.cpp)) | ❌ |
+| TourOfGo/moretypes/making-slices.go | ✔️ | ✔️ | ❌ | ❌ |
 | TourOfGo/moretypes/map-literals.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals.cpp)) | ✔️ |
 | TourOfGo/moretypes/map-literals-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/map-literals-continued.cpp)) | ✔️ |
 | TourOfGo/moretypes/maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/maps.cpp)) | ✔️ |
 | TourOfGo/moretypes/mutating-maps.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/mutating-maps.cpp)) | ❌ |
-| TourOfGo/moretypes/nil-slices.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/nil-slices.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/nil-slices.cpp)) | ✔️ |
 | TourOfGo/moretypes/pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/range.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range.cpp)) | ✔️ |
 | TourOfGo/moretypes/range-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range-continued.cpp)) | ✔️ |

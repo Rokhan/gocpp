@@ -19,9 +19,14 @@ import (
 var stdTypeMapping = map[string]string{
 	"string":     "std::string",
 	"int":        "int",
+	"uint8":      "uint8_t",
+	"uint16":     "uint16_t",
+	"uint32":     "uint32_t",
 	"uint64":     "uint64_t",
 	"complex128": "gocpp::complex128",
-	"float64":    "float",
+	"float":      "double",
+	"float32":    "float",
+	"float64":    "double",
 	"uint":       "unsigned int",
 }
 
@@ -29,6 +34,7 @@ var nameSpaces = map[string]struct{}{
 	"cmplx":   {},
 	"fmt":     {},
 	"math":    {},
+	"pic":     {},
 	"rand":    {},
 	"runtime": {},
 	"time":    {},
@@ -46,9 +52,10 @@ var stdFuncMapping = map[string]string{
 	"rand::Intn":      "mocklib::Intn",
 	"runtime::GOOS":   "mocklib::GOOS",
 	"cmplx::Sqrt":     "std::sqrt",
-	"math::Pow":       "std::pow",
+	"math::Pow":       "mocklib::Pow",
 	"math::Sqrt":      "std::sqrt",
 	"math::Pi":        "M_PI",
+	"pic::Show":       "mocklib::picShow",
 	"time::Now":       "mocklib::Date::Now",
 	"time::Saturday":  "mocklib::Date::Saturday",
 	"strings::Join":   "mocklib::StringsJoin",
@@ -60,8 +67,14 @@ var stdFuncMapping = map[string]string{
 	"panic":  "gocpp::panic",
 	"nil":    "nullptr",
 	// type conversions
-	"float64": "float",
+	"float":   "double",
+	"float32": "float",
+	"float64": "double",
 	"uint":    "(unsigned int)",
+	"uint8":   "uint8_t",
+	"uint16":  "uint16_t",
+	"uint32":  "uint32_t",
+	"uint64":  "uint64_t",
 }
 
 func Panicf(format string, a ...interface{}) {
@@ -97,8 +110,13 @@ type typeNames []typeName
 
 func (tn typeName) ParamDecl() []string {
 	var strs []string
-	for _, name := range tn.names {
-		strs = append(strs, fmt.Sprintf("%v %v", GetCppType(tn.typeStr), name))
+
+	if len(tn.names) != 0 {
+		for _, name := range tn.names {
+			strs = append(strs, fmt.Sprintf("%v %v", GetCppType(tn.typeStr), name))
+		}
+	} else {
+		strs = append(strs, fmt.Sprintf("%v", GetCppType(tn.typeStr)))
 	}
 
 	return strs

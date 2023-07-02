@@ -168,8 +168,8 @@ namespace gocpp
         // }
 
 
-        gocpp::slice<T> make_slice(int low);
-        gocpp::slice<T> make_slice(int low, int high);
+        gocpp::slice<T> make_slice(size_t low);
+        gocpp::slice<T> make_slice(size_t low, size_t high);
 
     protected:    
         std::shared_ptr<store_type> mArray;
@@ -324,6 +324,9 @@ namespace gocpp
             return 0;
         }
 
+        gocpp::slice<T> make_slice(size_t low);
+        gocpp::slice<T> make_slice(size_t low, size_t high);
+
     //private:    
         // [mStart, mEnd[
         int mStart = 0;
@@ -381,18 +384,59 @@ namespace gocpp
         }
     };
 
+    // FIXME: golang permit to access all element between size and capacity    
     template<typename T>
-    gocpp::slice<T> array_base<T>::make_slice(int low)
+    gocpp::slice<T> array_base<T>::make_slice(size_t low)
     {
+        if(!this->mArray || low > this->size())
+        {
+            return {};
+        }
+
         return slice(*this, low, this->size());
     }
 
+    // FIXME: golang permit to access all element between size and capacity    
     template<typename T>
-    gocpp::slice<T> array_base<T>::make_slice(int low, int high)
+    gocpp::slice<T> array_base<T>::make_slice(size_t low, size_t high)
     {
+        if(!this->mArray || low > this->size())
+        {
+            return {};
+        }
+
+        high = std::min(high, this->size());
         return slice(*this, low, high);
     }
     
+    // FIXME: golang permit to access all element between size and capacity    
+    template<typename T>
+    gocpp::slice<T> slice<T>::make_slice(size_t low)
+    {
+        low = low + this->mStart;
+        if(!this->mArray || low >= this->size())
+        {
+            return {};
+        }
+
+        return slice(*this, low, this->size());
+    }
+
+    // FIXME: golang permit to access all element between size and capacity    
+    template<typename T>
+    gocpp::slice<T> slice<T>::make_slice(size_t low, size_t high)
+    {
+        low = low + this->mStart;
+        high = high + this->mStart;
+        if(!this->mArray || low >= this->size())
+        {
+            return {};
+        }
+
+        high = std::min(high, this->size());
+        return slice(*this, low, high);
+    }
+
     template<typename T>
     slice<T> make(Tag<slice<T>>, int n)
     {

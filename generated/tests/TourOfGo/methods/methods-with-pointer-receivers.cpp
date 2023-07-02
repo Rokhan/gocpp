@@ -53,7 +53,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto v = [[TOKEN_ERROR: '&' ]] Vertex {3, 4};
+        auto v = & Vertex {3, 4};
         mocklib::Printf("Before scaling: %+v, Abs: %v\n", v, v.Abs());
         v.Scale(5);
         mocklib::Printf("After scaling: %+v, Abs: %v\n", v, v.Abs());

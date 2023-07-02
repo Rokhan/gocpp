@@ -53,7 +53,7 @@ namespace golang
     {
         gocpp::Defer defer;
         I i;
-        i = [[TOKEN_ERROR: '&' ]] T {"Hello"};
+        i = & T {"Hello"};
         describe(i);
         i.M();
         i = F(M_PI);

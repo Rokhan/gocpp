@@ -55,9 +55,9 @@ namespace golang
         auto v = Vertex {3, 4};
         mocklib::Println(v.Abs());
         mocklib::Println(AbsFunc(v));
-        auto p = [[TOKEN_ERROR: '&' ]] Vertex {4, 3};
+        auto p = & Vertex {4, 3};
         mocklib::Println(p.Abs());
-        mocklib::Println(AbsFunc(!!EXPR_ERROR!! [*ast.StarExpr]));
+        mocklib::Println(AbsFunc(*p));
     }
 
 }

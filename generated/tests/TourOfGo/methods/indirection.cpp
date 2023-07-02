@@ -55,8 +55,8 @@ namespace golang
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
         v.Scale(2);
-        ScaleFunc([[TOKEN_ERROR: '&' ]] v, 10);
-        auto p = [[TOKEN_ERROR: '&' ]] Vertex {4, 3};
+        ScaleFunc(& v, 10);
+        auto p = & Vertex {4, 3};
         p.Scale(3);
         ScaleFunc(p, 8);
         mocklib::Println(v, p);

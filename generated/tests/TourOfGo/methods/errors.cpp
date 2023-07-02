@@ -46,7 +46,7 @@ namespace golang
     error run()
     {
         gocpp::Defer defer;
-        return [[TOKEN_ERROR: '&' ]] MyError {mocklib::Date::Now(), "it didn't work"};
+        return & MyError {mocklib::Date::Now(), "it didn't work"};
     }
 
     void main()

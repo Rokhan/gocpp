@@ -21,16 +21,20 @@ namespace golang
         printSlice("a", a);
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, 5);
         printSlice("b", b);
-        auto c = b.make_slice(0, 2);
-        printSlice("c", c);
-        auto d = c.make_slice(2, 5);
-        printSlice("d", d);
+        auto bc = b.make_slice(0, 2);
+        printSlice("bc", bc);
+        auto bd = b.make_slice(2, 5);
+        printSlice("bd", bd);
+        auto ac = a.make_slice(0, 2);
+        printSlice("bc", ac);
+        auto ad = a.make_slice(2, 5);
+        printSlice("bd", ad);
     }
 
     void printSlice(std::string s, gocpp::slice<int> x)
     {
         gocpp::Defer defer;
-        mocklib::Printf("%s len=%d cap=%d %v\n", s, len(x), cap(x), x);
+        mocklib::Printf("%v len=%v cap=%v %v\n", s, len(x), cap(x), x);
     }
 
 }

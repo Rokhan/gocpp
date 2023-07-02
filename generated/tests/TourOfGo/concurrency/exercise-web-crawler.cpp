@@ -75,7 +75,7 @@ namespace golang
         return {"", nullptr, fmt::Errorf("not found: %s", url)};
     }
 
-    auto fetcher = fakeFetcher {{ "https://golang.org/", [[TOKEN_ERROR: '&' ]] fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", [[TOKEN_ERROR: '&' ]] fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", [[TOKEN_ERROR: '&' ]] fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", [[TOKEN_ERROR: '&' ]] fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};
+    auto fetcher = fakeFetcher {{ "https://golang.org/", & fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", & fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", & fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", & fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};
 }
 
 int main()

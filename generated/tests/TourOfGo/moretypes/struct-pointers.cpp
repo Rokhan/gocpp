@@ -40,7 +40,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {1, 2};
-        auto p = [[TOKEN_ERROR: '&' ]] v;
+        auto p = & v;
         p.X = 1e9;
         mocklib::Println(v);
     }

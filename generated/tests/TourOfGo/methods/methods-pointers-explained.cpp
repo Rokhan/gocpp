@@ -54,7 +54,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
-        Scale([[TOKEN_ERROR: '&' ]] v, 10);
+        Scale(& v, 10);
         mocklib::Println(Abs(v));
     }
 

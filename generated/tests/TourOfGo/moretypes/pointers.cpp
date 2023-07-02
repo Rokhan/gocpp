@@ -18,12 +18,12 @@ namespace golang
     {
         gocpp::Defer defer;
         auto [i, j] = std::tuple{42, 2701};
-        auto p = [[TOKEN_ERROR: '&' ]] i;
-        mocklib::Println(!!EXPR_ERROR!! [*ast.StarExpr]);
-        !!EXPR_ERROR!! [*ast.StarExpr] = 21;
+        auto p = & i;
+        mocklib::Println(*p);
+        *p = 21;
         mocklib::Println(i);
-        p = [[TOKEN_ERROR: '&' ]] j;
-        !!EXPR_ERROR!! [*ast.StarExpr] = !!EXPR_ERROR!! [*ast.StarExpr] / 37;
+        p = & j;
+        *p = *p / 37;
         mocklib::Println(j);
     }
 

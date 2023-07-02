@@ -41,7 +41,7 @@ namespace golang
         gocpp::Defer defer;
         auto s = strings::NewReader("Lbh penpxrq gur pbqr!");
         auto r = rot13Reader {s};
-        io.Copy(os.Stdout, [[TOKEN_ERROR: '&' ]] r);
+        io.Copy(os.Stdout, & r);
     }
 
 }

@@ -39,7 +39,7 @@ namespace golang
     auto v1 = Vertex {1, 2};
     auto v2 = Vertex {{ X, 1 }};
     auto v3 = Vertex {};
-    auto p = [[TOKEN_ERROR: '&' ]] Vertex {1, 2};
+    auto p = & Vertex {1, 2};
     void main()
     {
         gocpp::Defer defer;

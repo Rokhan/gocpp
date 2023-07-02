@@ -54,7 +54,7 @@ namespace golang
         i = t;
         describe(i);
         i.M();
-        i = [[TOKEN_ERROR: '&' ]] T {"hello"};
+        i = & T {"hello"};
         describe(i);
         i.M();
     }

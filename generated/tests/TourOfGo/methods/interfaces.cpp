@@ -23,7 +23,7 @@ namespace golang
         auto f = MyFloat(- math::Sqrt2);
         auto v = Vertex {3, 4};
         a = f;
-        a = [[TOKEN_ERROR: '&' ]] v;
+        a = & v;
         a = v;
         mocklib::Println(a.Abs());
     }

@@ -364,6 +364,13 @@ func convertToken(t token.Token) string {
 		return "/"
 	case token.REM:
 		return "%"
+	// boolean operators
+	case token.AND:
+		return "&"
+	case token.OR:
+		return "|"
+	case token.XOR:
+		return "^"
 	// bit rotations
 	case token.SHL:
 		return "<<"
@@ -1023,6 +1030,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 		} else {
 			return fmt.Sprintf("%s.make_slice(%s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High))
 		}
+
+	case *ast.StarExpr:
+		return fmt.Sprintf("*%s", cv.convertExpr(n.X))
 
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))

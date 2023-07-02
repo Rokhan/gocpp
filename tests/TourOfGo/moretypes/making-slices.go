@@ -11,14 +11,20 @@ func main() {
 	b := make([]int, 0, 5)
 	printSlice("b", b)
 
-	c := b[:2]
-	printSlice("c", c)
+	bc := b[:2]
+	printSlice("bc", bc)
 
-	d := c[2:5]
-	printSlice("d", d)
+	bd := b[2:5]
+	printSlice("bd", bd)
+
+	ac := a[:2]
+	printSlice("bc", ac)
+
+	ad := a[2:5]
+	printSlice("bd", ad)
 }
 
 func printSlice(s string, x []int) {
-	fmt.Printf("%s len=%d cap=%d %v\n",
-		s, len(x), cap(x), x)
+	// fmt.Printf("%s len=%d cap=%d %v\n", s, len(x), cap(x), x)
+	fmt.Printf("%v len=%v cap=%v %v\n", s, len(x), cap(x), x)
 }

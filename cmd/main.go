@@ -799,6 +799,17 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) (typeStr string, typeD
 	}
 }
 
+func isMapType(node ast.Expr) bool {
+	switch n := node.(type) {
+	case *ast.MapType:
+		_ = n
+		return true
+
+	default:
+		return false
+	}
+}
+
 func (cv *cppVisitor) convertTypeExpr(node ast.Expr) (typeStr string, typeDefs []string) {
 	if node == nil {
 		panic("node is nil")
@@ -867,6 +878,13 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 	fmt.Fprintf(buf, "\n")
 	fmt.Fprintf(buf, "%susing isGoStruct = void;\n", cv.CppIndent())
 	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%sstatic %[2]s Init(void (init)(%[2]s&))\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    %s value;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    init(value);\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    return value;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
 	fmt.Fprintf(buf, "%sstd::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
 	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
 	fmt.Fprintf(buf, "%s    os << '{';\n", cv.CppIndent())
@@ -932,6 +950,7 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	case *ast.CompositeLit:
 		// ignore 'n.Incomplete' at the moment
 		buf := new(bytes.Buffer)
+		var litType string
 		if n.Type != nil {
 
 			arrayType, typeDefs := cv.convertTypeExpr(n.Type)
@@ -941,17 +960,30 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 				fmt.Fprintf(cv.cppOut, "%s%s\n", cv.CppIndent(), def)
 			}
 
-			fmt.Fprintf(buf, "%s {", arrayType)
-		} else {
-			fmt.Fprintf(buf, "{")
+			litType = arrayType
 		}
 
-		var sep = ""
-		for _, elt := range n.Elts {
-			fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(elt))
-			sep = ", "
+		var isKvInit bool
+		if len(n.Elts) != 0 {
+			_, isKvInit = n.Elts[0].(*ast.KeyValueExpr)
 		}
-		fmt.Fprintf(buf, "}")
+
+		if isKvInit && !isMapType(n.Type) {
+			fmt.Fprintf(buf, "%s::Init([](%s& x) { ", litType, litType)
+			for _, elt := range n.Elts {
+				kv := elt.(*ast.KeyValueExpr)
+				fmt.Fprintf(buf, "x.%s = %s; ", kv.Key, cv.convertExpr(kv.Value))
+			}
+			fmt.Fprintf(buf, "})")
+		} else {
+			fmt.Fprintf(buf, "%s {", litType)
+			var sep = ""
+			for _, elt := range n.Elts {
+				fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(elt))
+				sep = ", "
+			}
+			fmt.Fprintf(buf, "}")
+		}
 		return buf.String()
 
 	case *ast.FuncLit:

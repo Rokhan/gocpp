@@ -90,6 +90,7 @@
 | TourOfGo/moretypes/slices-of-slice.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slices-of-slice.cpp)) | ✔️ |
 | TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slices-pointers.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-fields.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields.cpp)) | ✔️ |
+| TourOfGo/moretypes/struct-fields-initializer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields-initializer.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/structs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs.cpp)) | ✔️ |

@@ -21,6 +21,13 @@ namespace golang
 
         using isGoStruct = void;
 
+        static Person Init(void (init)(Person&))
+        {
+            Person value;
+            init(value);
+            return value;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

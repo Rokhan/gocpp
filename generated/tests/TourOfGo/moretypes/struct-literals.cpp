@@ -21,6 +21,13 @@ namespace golang
 
         using isGoStruct = void;
 
+        static Vertex Init(void (init)(Vertex&))
+        {
+            Vertex value;
+            init(value);
+            return value;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -37,7 +44,7 @@ namespace golang
     }
 ;
     auto v1 = Vertex {1, 2};
-    auto v2 = Vertex {{ X, 1 }};
+    auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};
     auto p = & Vertex {1, 2};
     void main()

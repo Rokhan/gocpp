@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/methods/indirection.h"
+#include "tests/TourOfGo/moretypes/struct-fields-initializer.h"
 #include "gocpp/support.h"
 
 
@@ -16,8 +16,9 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     struct Vertex
     {
-        double X;
-        double Y;
+        int X;
+        int Y;
+        int Z;
 
         using isGoStruct = void;
 
@@ -33,6 +34,7 @@ namespace golang
             os << '{';
             os << "" << X;
             os << " " << Y;
+            os << " " << Z;
             os << '}';
             return os;
         }
@@ -43,30 +45,44 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void Scale(double f)
+    struct Segment
     {
-        gocpp::Defer defer;
-        v.X = v.X * f;
-        v.Y = v.Y * f;
-    }
+        Vertex Start;
+        Vertex End;
 
-    void ScaleFunc(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, double f)
+        using isGoStruct = void;
+
+        static Segment Init(void (init)(Segment&))
+        {
+            Segment value;
+            init(value);
+            return value;
+        }
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << "" << Start;
+            os << " " << End;
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const Segment& value)
     {
-        gocpp::Defer defer;
-        v.X = v.X * f;
-        v.Y = v.Y * f;
+        return value.PrintTo(os);
     }
-
+;
+    auto v1 = Vertex {1, 2, 3};
+    auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
+    auto v3 = Vertex {};
+    auto v4 = Vertex::Init([](Vertex& x) { x.X = 1; x.Z = 3; });
+    auto s1 = Segment::Init([](Segment& x) { x.Start = Vertex::Init([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
     void main()
     {
         gocpp::Defer defer;
-        auto v = Vertex {3, 4};
-        v.Scale(2);
-        ScaleFunc(& v, 10);
-        auto p = & Vertex {4, 3};
-        p.Scale(3);
-        ScaleFunc(p, 8);
-        mocklib::Println(v, p);
+        mocklib::Println(v1, v2, v3, v4, s1);
     }
 
 }

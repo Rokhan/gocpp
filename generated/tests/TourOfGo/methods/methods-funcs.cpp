@@ -22,6 +22,13 @@ namespace golang
 
         using isGoStruct = void;
 
+        static Vertex Init(void (init)(Vertex&))
+        {
+            Vertex value;
+            init(value);
+            return value;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

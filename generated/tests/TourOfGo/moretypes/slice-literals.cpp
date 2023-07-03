@@ -28,6 +28,13 @@ namespace golang
 
             using isGoStruct = void;
 
+            static gocpp_id_0 Init(void (init)(gocpp_id_0&))
+            {
+                gocpp_id_0 value;
+                init(value);
+                return value;
+            }
+
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
@@ -38,7 +45,7 @@ namespace golang
             }
         };
 
-        auto s = gocpp::slice<gocpp_id_0> {{2, true}, {3, false}, {5, true}, {7, true}, {11, false}, {13, true}};
+        auto s = gocpp::slice<gocpp_id_0> { {2, true},  {3, false},  {5, true},  {7, true},  {11, false},  {13, true}};
         mocklib::Println(s);
     }
 

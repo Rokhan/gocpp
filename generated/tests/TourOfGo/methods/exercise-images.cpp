@@ -19,6 +19,13 @@ namespace golang
 
         using isGoStruct = void;
 
+        static Image Init(void (init)(Image&))
+        {
+            Image value;
+            init(value);
+            return value;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

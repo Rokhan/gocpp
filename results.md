@@ -56,9 +56,9 @@
 | TourOfGo/methods/interfaces-are-satisfied-implicitly.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/interface-values.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/interface-values-with-nil.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/methods.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/methods-continued.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/methods-funcs.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/methods.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods.cpp)) | ❌ |
+| TourOfGo/methods/methods-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-continued.cpp)) | ❌ |
+| TourOfGo/methods/methods-funcs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-funcs.cpp)) | ❌ |
 | TourOfGo/methods/methods-pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/methods-pointers-explained.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/methods-with-pointer-receivers.go | ✔️ | ❌ | ❌ | ❌ |
@@ -91,7 +91,7 @@
 | TourOfGo/moretypes/slices-pointers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slices-pointers.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-fields.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-fields-initializer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields-initializer.cpp)) | ✔️ |
-| TourOfGo/moretypes/struct-literals.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/struct-literals.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-literals.cpp)) | ❌ |
 | TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/structs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs.cpp)) | ✔️ |
 | TourOfGo/welcome/hello.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/hello.cpp)) | ✔️ |

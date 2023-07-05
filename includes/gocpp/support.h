@@ -484,17 +484,19 @@ namespace mocklib
     struct Date
     {        
         static Date Now() { return Date{}; };
-        static int  Weekday() { return Saturday; };
-        static int Hour() { return 17; };
         static const int Saturday = 6;
     };
+
+    inline int Weekday(const Date&) { return Date::Saturday; };
+    inline int Hour(const Date&) { return 17; };
 
     inline int Intn(int n)
     {
         return rand() % n;
     }
 
-    const char* const GOOS = "undefined";
+    inline const char* const GOOS = "undefined";
+    inline const double Sqrt2 = std::sqrt(2.0);
 
     template<typename... Ts>
     std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)

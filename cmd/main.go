@@ -54,6 +54,7 @@ var stdFuncMapping = map[string]string{
 	"cmplx::Sqrt":     "std::sqrt",
 	"math::Pow":       "mocklib::Pow",
 	"math::Sqrt":      "std::sqrt",
+	"math::Sqrt2":     "mocklib::Sqrt2",
 	"math::Pi":        "M_PI",
 	"pic::Show":       "mocklib::picShow",
 	"time::Now":       "mocklib::Date::Now",
@@ -165,6 +166,10 @@ func (cv *cppVisitor) Indent() string {
 
 func (cv *cppVisitor) CppIndent() string {
 	return strings.Repeat("    ", cv.cppIndent)
+}
+
+func (cv *cppVisitor) HppIndent() string {
+	return strings.Repeat("    ", cv.hppIndent)
 }
 
 func (cv *cppVisitor) GenerateId() (id string) {
@@ -410,7 +415,8 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 		fmt.Printf("%s %s  -> Name: %v\n", dbgPrefix, cv.Indent(), d.Name)
 		fmt.Printf("%s %s  -> Body: %v\n", dbgPrefix, cv.Indent(), d.Body)
 
-		params := cv.readFields(d.Type.Params)
+		params := cv.readFields(d.Recv)
+		params = append(params, cv.readFields(d.Type.Params)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
 		resultType := buildOutType(outTypes)
 
@@ -782,7 +788,12 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) (typeStr string, typeD
 
 	switch n := node.Type.(type) {
 	case *ast.Ident:
-		return fmt.Sprintf("%s %s", GetCppType(n.Name), node.Name.Name), nil
+		usingDec := fmt.Sprintf("using %s = %s", node.Name.Name, GetCppType(n.Name))
+		// TODO: return type value instead of wtiting in header directly
+		fmt.Fprintf(cv.hppOut, "%s%s;\n", cv.HppIndent(), usingDec)
+		// Commented output in cpp as we only need one declaration
+		// TODO : manage go private/public rule to chose where to put definition
+		return fmt.Sprintf("// %s", usingDec), nil
 
 	case *ast.ArrayType:
 		typeStr, typeDefs := cv.convertArrayTypeExpr(n)
@@ -792,6 +803,8 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) (typeStr string, typeD
 		return fmt.Sprintf("%s %s", cv.convertFuncTypeExpr(n), node.Name.Name), nil
 
 	case *ast.StructType:
+		// TODO: return type value instead of wtiting in header directly
+		fmt.Fprintf(cv.hppOut, "%sstruct %s;\n", cv.HppIndent(), node.Name.Name)
 		return cv.convertStructTypeExpr(n, node.Name.Name, true), nil
 
 	default:
@@ -825,8 +838,16 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) (typeStr string, typeDefs [
 	case *ast.FuncType:
 		return cv.convertFuncTypeExpr(n), nil
 
+	// TODO
+	//case *ast.InterfaceType:
+	//	return "std::any", nil
+
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n)
+
+	case *ast.StarExpr:
+		typeStr, defs := cv.convertTypeExpr(n.X)
+		return typeStr + "*", defs
 
 	case *ast.StructType:
 		name := cv.GenerateId()
@@ -1007,7 +1028,15 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 		return buf.String()
 
 	case *ast.UnaryExpr:
-		return convertToken(n.Op) + " " + cv.convertExpr(n.X)
+		_, isCompositeLit := n.X.(*ast.CompositeLit)
+
+		switch {
+		case n.Op == token.AND && isCompositeLit:
+			// FIME : create a kind a smart pointer instead of this.
+			return "new " + cv.convertExpr(n.X)
+		default:
+			return convertToken(n.Op) + " " + cv.convertExpr(n.X)
+		}
 
 	case *ast.ParenExpr:
 		return "(" + cv.convertExpr(n.X) + ")"
@@ -1028,8 +1057,20 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 
 	case *ast.CallExpr:
 		buf := new(bytes.Buffer)
-		fmt.Fprintf(buf, "%v(", cv.convertExpr(n.Fun))
+
 		var sep = ""
+		switch fun := n.Fun.(type) {
+		case *ast.SelectorExpr:
+			if isNameSpace(fun.X) {
+				fmt.Fprintf(buf, "%v(", GetCppFunc(cv.convertExpr(fun.X)+"::"+cv.convertExpr(fun.Sel)))
+			} else {
+				fmt.Fprintf(buf, "%v(%v", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
+				sep = ", "
+			}
+		default:
+			fmt.Fprintf(buf, "%v(", cv.convertExpr(n.Fun))
+		}
+
 		for _, arg := range n.Args {
 			fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(arg))
 			sep = ", "

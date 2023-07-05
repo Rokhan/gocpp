@@ -9,8 +9,9 @@
 
 namespace golang
 {
-    void Scale(double f);
-    double Abs();
+    struct Vertex;
+    void Scale(Vertex* v, double f);
+    double Abs(Vertex* v);
     void main();
 }
 

@@ -15,8 +15,8 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math";
-    double MyFloat;
-    double Abs()
+    // using MyFloat = double;
+    double Abs(MyFloat f)
     {
         gocpp::Defer defer;
         if(; f < 0)
@@ -29,8 +29,8 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto f = MyFloat(- math::Sqrt2);
-        mocklib::Println(f.Abs());
+        auto f = MyFloat(- mocklib::Sqrt2);
+        mocklib::Println(Abs(f));
     }
 
 }

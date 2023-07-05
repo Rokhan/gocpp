@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct MyReader;
     void main();
 }
 

@@ -43,7 +43,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    std::string String()
+    std::string String(Person p)
     {
         gocpp::Defer defer;
         return mocklib::Sprintf("%v (%v years)", p.Name, p.Age);

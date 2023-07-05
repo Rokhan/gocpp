@@ -22,7 +22,7 @@ namespace golang
         {
             return;
         }
-        auto [body, urls, err] = fetcher.Fetch(url);
+        auto [body, urls, err] = Fetch(fetcher, url);
         if(; err [[TOKEN_ERROR: '!=' ]] nullptr)
         {
             mocklib::Println(err);
@@ -72,7 +72,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(fakeFetcher f, std::string url)
     {
         gocpp::Defer defer;
         if(auto [res, ok] = f[url]; ok)
@@ -82,7 +82,7 @@ namespace golang
         return {"", nullptr, fmt::Errorf("not found: %s", url)};
     }
 
-    auto fetcher = fakeFetcher::Init([](fakeFetcher& x) { x.&{%!s(token.Pos=1169) STRING "https://golang.org/"} = & fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}}; x.&{%!s(token.Pos=1320) STRING "https://golang.org/pkg/"} = & fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}}; x.&{%!s(token.Pos=1519) STRING "https://golang.org/pkg/fmt/"} = & fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; x.&{%!s(token.Pos=1658) STRING "https://golang.org/pkg/os/"} = & fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; });
+    auto fetcher = fakeFetcher::Init([](fakeFetcher& x) { x.&{%!s(token.Pos=1169) STRING "https://golang.org/"} = new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}}; x.&{%!s(token.Pos=1320) STRING "https://golang.org/pkg/"} = new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}}; x.&{%!s(token.Pos=1519) STRING "https://golang.org/pkg/fmt/"} = new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; x.&{%!s(token.Pos=1658) STRING "https://golang.org/pkg/os/"} = new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; });
 }
 
 int main()

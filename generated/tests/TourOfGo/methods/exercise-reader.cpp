@@ -42,7 +42,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        reader.Validate(MyReader {});
+        Validate(reader, MyReader {});
     }
 
 }

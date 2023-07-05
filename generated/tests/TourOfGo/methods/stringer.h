@@ -9,7 +9,8 @@
 
 namespace golang
 {
-    std::string String();
+    struct Person;
+    std::string String(Person p);
     void main();
 }
 

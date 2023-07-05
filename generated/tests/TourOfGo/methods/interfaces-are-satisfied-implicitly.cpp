@@ -42,7 +42,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void M()
+    void M(T t)
     {
         gocpp::Defer defer;
         mocklib::Println(t.S);
@@ -52,7 +52,7 @@ namespace golang
     {
         gocpp::Defer defer;
         I i = T {"hello"};
-        i.M();
+        M(i);
     }
 
 }

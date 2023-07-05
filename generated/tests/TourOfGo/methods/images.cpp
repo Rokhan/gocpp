@@ -18,9 +18,9 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto m = image.NewRGBA(image.Rect(0, 0, 100, 100));
-        mocklib::Println(m.Bounds());
-        mocklib::Println(m.At(0, 0).RGBA());
+        auto m = NewRGBA(image, Rect(image, 0, 0, 100, 100));
+        mocklib::Println(Bounds(m));
+        mocklib::Println(RGBA(At(m, 0, 0)));
     }
 
 }

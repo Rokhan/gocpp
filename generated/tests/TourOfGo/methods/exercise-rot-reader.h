@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct rot13Reader;
     void main();
 }
 

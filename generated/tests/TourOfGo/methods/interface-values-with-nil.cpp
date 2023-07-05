@@ -42,7 +42,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void M()
+    void M(T* t)
     {
         gocpp::Defer defer;
         if(; t == nullptr)
@@ -57,13 +57,13 @@ namespace golang
     {
         gocpp::Defer defer;
         I i;
-        !!TYPE_EXPR_ERROR!! [*ast.StarExpr] t;
+        T* t;
         i = t;
         describe(i);
-        i.M();
-        i = & T {"hello"};
+        M(i);
+        i = new T {"hello"};
         describe(i);
-        i.M();
+        M(i);
     }
 
     void describe(I i)

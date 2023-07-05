@@ -46,7 +46,7 @@ namespace golang
     auto v1 = Vertex {1, 2};
     auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};
-    auto p = & Vertex {1, 2};
+    auto p = new Vertex {1, 2};
     void main()
     {
         gocpp::Defer defer;

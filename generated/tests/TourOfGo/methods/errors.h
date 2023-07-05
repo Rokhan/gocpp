@@ -9,7 +9,8 @@
 
 namespace golang
 {
-    std::string Error();
+    struct MyError;
+    std::string Error(MyError* e);
     error run();
     void main();
 }

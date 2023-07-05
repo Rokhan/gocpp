@@ -9,7 +9,8 @@
 
 namespace golang
 {
-    void M();
+    struct T;
+    void M(T t);
     void main();
 }
 

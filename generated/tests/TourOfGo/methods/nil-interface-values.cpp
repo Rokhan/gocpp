@@ -20,7 +20,7 @@ namespace golang
         gocpp::Defer defer;
         I i;
         describe(i);
-        i.M();
+        M(i);
     }
 
     void describe(I i)

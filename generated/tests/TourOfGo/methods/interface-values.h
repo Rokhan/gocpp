@@ -9,8 +9,10 @@
 
 namespace golang
 {
-    void M();
-    void M();
+    struct T;
+    void M(T* t);
+    using F = double;
+    void M(F f);
     void main();
     void describe(I i);
 }

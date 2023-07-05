@@ -44,7 +44,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    double Abs()
+    double Abs(Vertex v)
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);
@@ -54,7 +54,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
-        mocklib::Println(v.Abs());
+        mocklib::Println(Abs(v));
     }
 
 }

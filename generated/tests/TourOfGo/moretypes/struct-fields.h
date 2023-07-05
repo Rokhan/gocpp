@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct Vertex;
     void main();
 }
 

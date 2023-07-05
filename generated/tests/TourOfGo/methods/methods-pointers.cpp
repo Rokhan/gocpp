@@ -44,13 +44,13 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    double Abs()
+    double Abs(Vertex v)
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    void Scale(double f)
+    void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
         v.X = v.X * f;
@@ -61,8 +61,8 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
-        v.Scale(10);
-        mocklib::Println(v.Abs());
+        Scale(v, 10);
+        mocklib::Println(Abs(v));
     }
 
 }

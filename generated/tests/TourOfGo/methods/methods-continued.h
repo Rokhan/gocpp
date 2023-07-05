@@ -9,7 +9,8 @@
 
 namespace golang
 {
-    double Abs();
+    using MyFloat = double;
+    double Abs(MyFloat f);
     void main();
 }
 

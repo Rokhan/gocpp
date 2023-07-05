@@ -20,16 +20,16 @@ namespace golang
     {
         gocpp::Defer defer;
         Abser a;
-        auto f = MyFloat(- math::Sqrt2);
+        auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
         a = f;
         a = & v;
         a = v;
-        mocklib::Println(a.Abs());
+        mocklib::Println(Abs(a));
     }
 
-    double MyFloat;
-    double Abs()
+    // using MyFloat = double;
+    double Abs(MyFloat f)
     {
         gocpp::Defer defer;
         if(; f < 0)
@@ -68,7 +68,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    double Abs()
+    double Abs(Vertex* v)
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);

@@ -11,6 +11,7 @@ namespace golang
 {
     void Crawl(std::string url, int depth, Fetcher fetcher);
     void main();
-    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(std::string url);
+    struct fakeResult;
+    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(fakeFetcher f, std::string url);
 }
 

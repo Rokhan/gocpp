@@ -9,6 +9,8 @@
 
 namespace golang
 {
+    struct Vertex;
+    struct Segment;
     void main();
 }
 

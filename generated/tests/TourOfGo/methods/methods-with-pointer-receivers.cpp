@@ -44,14 +44,14 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void Scale(double f)
+    void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
         v.X = v.X * f;
         v.Y = v.Y * f;
     }
 
-    double Abs()
+    double Abs(Vertex* v)
     {
         gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);
@@ -60,10 +60,10 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto v = & Vertex {3, 4};
-        mocklib::Printf("Before scaling: %+v, Abs: %v\n", v, v.Abs());
-        v.Scale(5);
-        mocklib::Printf("After scaling: %+v, Abs: %v\n", v, v.Abs());
+        auto v = new Vertex {3, 4};
+        mocklib::Printf("Before scaling: %+v, Abs: %v\n", v, Abs(v));
+        Scale(v, 5);
+        mocklib::Printf("After scaling: %+v, Abs: %v\n", v, Abs(v));
     }
 
 }

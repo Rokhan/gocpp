@@ -43,14 +43,14 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    void M()
+    void M(T* t)
     {
         gocpp::Defer defer;
         mocklib::Println(t.S);
     }
 
-    double F;
-    void M()
+    // using F = double;
+    void M(F f)
     {
         gocpp::Defer defer;
         mocklib::Println(f);
@@ -60,12 +60,12 @@ namespace golang
     {
         gocpp::Defer defer;
         I i;
-        i = & T {"Hello"};
+        i = new T {"Hello"};
         describe(i);
-        i.M();
+        M(i);
         i = F(M_PI);
         describe(i);
-        i.M();
+        M(i);
     }
 
     void describe(I i)

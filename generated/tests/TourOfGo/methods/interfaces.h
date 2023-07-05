@@ -10,7 +10,9 @@
 namespace golang
 {
     void main();
-    double Abs();
-    double Abs();
+    using MyFloat = double;
+    double Abs(MyFloat f);
+    struct Vertex;
+    double Abs(Vertex* v);
 }
 

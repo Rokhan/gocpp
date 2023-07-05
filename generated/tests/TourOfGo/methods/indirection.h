@@ -9,8 +9,9 @@
 
 namespace golang
 {
-    void Scale(double f);
-    void ScaleFunc(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, double f);
+    struct Vertex;
+    void Scale(Vertex* v, double f);
+    void ScaleFunc(Vertex* v, double f);
     void main();
 }
 

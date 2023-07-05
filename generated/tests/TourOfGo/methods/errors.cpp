@@ -44,7 +44,7 @@ namespace golang
         return value.PrintTo(os);
     }
 ;
-    std::string Error()
+    std::string Error(MyError* e)
     {
         gocpp::Defer defer;
         return mocklib::Sprintf("at %v, %s", e.When, e.What);
@@ -53,7 +53,7 @@ namespace golang
     error run()
     {
         gocpp::Defer defer;
-        return & MyError {mocklib::Date::Now(), "it didn't work"};
+        return new MyError {mocklib::Date::Now(), "it didn't work"};
     }
 
     void main()

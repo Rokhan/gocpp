@@ -19,7 +19,7 @@ namespace golang
     {
         gocpp::Defer defer;
         mocklib::Print("Roman Time");
-        auto hour = 1 + (mocklib::Date::Now().Hour() % 12);
+        auto hour = 1 + (Hour(mocklib::Date::Now()) % 12);
         //Go switch emulation
         {
             auto condition = hour;

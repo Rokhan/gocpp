@@ -50,7 +50,7 @@ namespace golang
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    void Scale(!!TYPE_EXPR_ERROR!! [*ast.StarExpr] v, double f)
+    void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
         v.X = v.X * f;

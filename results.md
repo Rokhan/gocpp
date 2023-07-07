@@ -60,11 +60,11 @@
 | TourOfGo/methods/methods-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-continued.cpp)) | ❌ |
 | TourOfGo/methods/methods-funcs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-funcs.cpp)) | ❌ |
 | TourOfGo/methods/methods-pointers.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/methods-pointers-explained.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/methods-with-pointer-receivers.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/methods-pointers-explained.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-pointers-explained.cpp)) | ❌ |
+| TourOfGo/methods/methods-with-pointer-receivers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-with-pointer-receivers.cpp)) | ❌ |
 | TourOfGo/methods/nil-interface-values.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/reader.go | ❌ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/stringer.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/stringer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/stringer.cpp)) | ❌ |
 | TourOfGo/methods/type-assertions.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/type-switches.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/moretypes/append.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/append.cpp)) | ❌ |

@@ -714,8 +714,8 @@ namespace mocklib
     std::string Sprintf(const T& value, Args&&... args)
     {
         auto result = Sprintf(value);
-        result += Printf(" ");
-        result += Printf(std::forward<Args>(args)...);
+        result += Sprintf(" ");
+        result += Sprintf(std::forward<Args>(args)...);
         return result;
     }    
 

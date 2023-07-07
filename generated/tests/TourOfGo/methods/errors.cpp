@@ -47,7 +47,7 @@ namespace golang
     std::string Error(MyError* e)
     {
         gocpp::Defer defer;
-        return mocklib::Sprintf("at %v, %s", e.When, e.What);
+        return mocklib::Sprintf("at %v, %s", e->When, e->What);
     }
 
     error run()

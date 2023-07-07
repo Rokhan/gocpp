@@ -50,7 +50,7 @@ namespace golang
             mocklib::Println("<nil>");
             return;
         }
-        mocklib::Println(t.S);
+        mocklib::Println(t->S);
     }
 
     void main()

@@ -71,7 +71,7 @@ namespace golang
     double Abs(Vertex* v)
     {
         gocpp::Defer defer;
-        return std::sqrt(v.X * v.X + v.Y * v.Y);
+        return std::sqrt(v->X * v->X + v->Y * v->Y);
     }
 
 }

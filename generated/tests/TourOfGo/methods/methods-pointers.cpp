@@ -53,8 +53,8 @@ namespace golang
     void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
-        v.X = v.X * f;
-        v.Y = v.Y * f;
+        v->X = v->X * f;
+        v->Y = v->Y * f;
     }
 
     void main()

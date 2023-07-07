@@ -47,14 +47,14 @@ namespace golang
     void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
-        v.X = v.X * f;
-        v.Y = v.Y * f;
+        v->X = v->X * f;
+        v->Y = v->Y * f;
     }
 
     double Abs(Vertex* v)
     {
         gocpp::Defer defer;
-        return std::sqrt(v.X * v.X + v.Y * v.Y);
+        return std::sqrt(v->X * v->X + v->Y * v->Y);
     }
 
     void main()

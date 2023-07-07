@@ -46,7 +46,7 @@ namespace golang
     void M(T* t)
     {
         gocpp::Defer defer;
-        mocklib::Println(t.S);
+        mocklib::Println(t->S);
     }
 
     // using F = double;

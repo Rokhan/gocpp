@@ -19,7 +19,7 @@ namespace golang
     {
         gocpp::Defer defer;
         mocklib::Println("When's Saturday?");
-        auto today = Weekday(mocklib::Date::Now());
+        auto today = Weekday(gocpp::recv(mocklib::Date::Now()));
         //Go switch emulation
         {
             auto condition = mocklib::Date::Saturday;

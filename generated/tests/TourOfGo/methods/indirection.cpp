@@ -42,6 +42,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;
@@ -60,10 +61,10 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
-        Scale(v, 2);
+        Scale(gocpp::recv(v), 2);
         ScaleFunc(& v, 10);
         auto p = new Vertex {4, 3};
-        Scale(p, 3);
+        Scale(gocpp::recv(p), 3);
         ScaleFunc(p, 8);
         mocklib::Println(v, p);
     }

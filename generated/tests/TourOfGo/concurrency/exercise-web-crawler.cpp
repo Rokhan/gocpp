@@ -22,7 +22,7 @@ namespace golang
         {
             return;
         }
-        auto [body, urls, err] = Fetch(fetcher, url);
+        auto [body, urls, err] = Fetch(gocpp::recv(fetcher), url);
         if(; err != nullptr)
         {
             mocklib::Println(err);
@@ -71,6 +71,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(fakeFetcher f, std::string url)
     {
         gocpp::Defer defer;

@@ -42,12 +42,13 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     void main()
     {
         gocpp::Defer defer;
         auto s = strings::NewReader("Lbh penpxrq gur pbqr!");
         auto r = rot13Reader {s};
-        Copy(io, os.Stdout, & r);
+        Copy(gocpp::recv(io), os.Stdout, & r);
     }
 
 }

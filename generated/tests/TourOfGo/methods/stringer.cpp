@@ -42,6 +42,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     std::string String(Person p)
     {
         gocpp::Defer defer;

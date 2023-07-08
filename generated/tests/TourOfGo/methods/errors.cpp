@@ -43,6 +43,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     std::string Error(MyError* e)
     {
         gocpp::Defer defer;

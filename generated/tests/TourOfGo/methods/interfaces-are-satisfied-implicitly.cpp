@@ -41,6 +41,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     void M(T t)
     {
         gocpp::Defer defer;
@@ -51,7 +52,7 @@ namespace golang
     {
         gocpp::Defer defer;
         I i = T {"hello"};
-        M(i);
+        M(gocpp::recv(i));
     }
 
 }

@@ -43,6 +43,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     double Abs(Vertex v)
     {
         gocpp::Defer defer;

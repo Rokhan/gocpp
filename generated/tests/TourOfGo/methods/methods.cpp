@@ -43,6 +43,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     double Abs(Vertex v)
     {
         gocpp::Defer defer;
@@ -53,7 +54,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto v = Vertex {3, 4};
-        mocklib::Println(Abs(v));
+        mocklib::Println(Abs(gocpp::recv(v)));
     }
 
 }

@@ -42,6 +42,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     gocpp::map<std::string,Vertex> m;
     void main()
     {

@@ -22,8 +22,8 @@ namespace golang
         //Go switch emulation
         {
             int conditionId = -1;
-            if(Hour(t) < 12) { conditionId = 0; }
-            else if(Hour(t) < 17) { conditionId = 1; }
+            if(Hour(gocpp::recv(t)) < 12) { conditionId = 0; }
+            else if(Hour(gocpp::recv(t)) < 17) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

@@ -25,7 +25,7 @@ namespace golang
         a = f;
         a = & v;
         a = v;
-        mocklib::Println(Abs(a));
+        mocklib::Println(Abs(gocpp::recv(a)));
     }
 
     // using MyFloat = double;
@@ -67,6 +67,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     double Abs(Vertex* v)
     {
         gocpp::Defer defer;

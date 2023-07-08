@@ -30,7 +30,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto f = MyFloat(- mocklib::Sqrt2);
-        mocklib::Println(Abs(f));
+        mocklib::Println(Abs(gocpp::recv(f)));
     }
 
 }

@@ -42,6 +42,7 @@ namespace golang
     {
         return value.PrintTo(os);
     }
+
     void M(T* t)
     {
         gocpp::Defer defer;
@@ -61,10 +62,10 @@ namespace golang
         I i;
         i = new T {"Hello"};
         describe(i);
-        M(i);
+        M(gocpp::recv(i));
         i = F(M_PI);
         describe(i);
-        M(i);
+        M(gocpp::recv(i));
     }
 
     void describe(I i)

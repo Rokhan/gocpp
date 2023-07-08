@@ -949,6 +949,7 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
 		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
 		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "\n")
 	}
 	return buf.String()
 }
@@ -1087,7 +1088,7 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 			if isNameSpace(fun.X) {
 				fmt.Fprintf(buf, "%v(", GetCppFunc(cv.convertExpr(fun.X)+"::"+cv.convertExpr(fun.Sel)))
 			} else {
-				fmt.Fprintf(buf, "%v(%v", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
+				fmt.Fprintf(buf, "%v(gocpp::recv(%v)", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				sep = ", "
 			}
 		default:

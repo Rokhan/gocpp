@@ -75,6 +75,39 @@ namespace gocpp
         throw GoPanic(message);
     }
 
+
+    // Receiver adapter for method calls
+    template <typename T>
+    struct PtrRecv
+    {        
+        T* ptr;
+
+        PtrRecv(T* t) : ptr(t) {}
+
+        operator T&() const { return *ptr; }
+        operator T*() { return ptr; }
+        operator const T*() const { return ptr; }
+    };
+
+    template <typename T>
+    struct ObjRecv
+    {        
+        T obj;
+
+        ObjRecv(const T& t) : obj(t) {}
+
+        operator const T&() const { return obj; }
+        operator T*() { return &obj; }
+        operator const T*() const { return &obj; }
+    };
+
+    template <typename T>
+    PtrRecv<T> recv(T* t) { return PtrRecv<T>(t); }
+    
+    template <typename T>
+    ObjRecv<T> recv(const T& t) { return ObjRecv<T>(t); }
+
+
     template<typename T>
     struct array_base
     {

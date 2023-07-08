@@ -44,7 +44,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     struct Segment
     {
         Vertex Start;
@@ -73,7 +72,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     auto v1 = Vertex {1, 2, 3};
     auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};

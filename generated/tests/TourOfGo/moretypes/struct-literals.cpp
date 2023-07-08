@@ -42,7 +42,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     auto v1 = Vertex {1, 2};
     auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};

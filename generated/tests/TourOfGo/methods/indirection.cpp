@@ -42,7 +42,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     void Scale(Vertex* v, double f)
     {
         gocpp::Defer defer;

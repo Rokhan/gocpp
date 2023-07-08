@@ -42,7 +42,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     void main()
     {
         gocpp::Defer defer;

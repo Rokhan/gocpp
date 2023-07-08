@@ -18,12 +18,12 @@ namespace golang
     void Crawl(std::string url, int depth, Fetcher fetcher)
     {
         gocpp::Defer defer;
-        if(; depth [[TOKEN_ERROR: '<=' ]] 0)
+        if(; depth <= 0)
         {
             return;
         }
         auto [body, urls, err] = Fetch(fetcher, url);
-        if(; err [[TOKEN_ERROR: '!=' ]] nullptr)
+        if(; err != nullptr)
         {
             mocklib::Println(err);
             return;
@@ -71,7 +71,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(fakeFetcher f, std::string url)
     {
         gocpp::Defer defer;

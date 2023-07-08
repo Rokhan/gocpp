@@ -43,7 +43,6 @@ namespace golang
     {
         return value.PrintTo(os);
     }
-;
     std::string Error(MyError* e)
     {
         gocpp::Defer defer;
@@ -59,7 +58,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        if(auto err = run(); err [[TOKEN_ERROR: '!=' ]] nullptr)
+        if(auto err = run(); err != nullptr)
         {
             mocklib::Println(err);
         }

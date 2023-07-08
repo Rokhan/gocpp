@@ -398,38 +398,9 @@ func (cv *cppVisitor) readFields(fields *ast.FieldList) (params typeNames) {
 
 func convertToken(t token.Token) string {
 	switch t {
-	// basic arithmetic operators
-	case token.ADD:
-		return "+"
-	case token.SUB:
-		return "-"
-	case token.MUL:
-		return "*"
-	case token.QUO:
-		return "/"
-	case token.REM:
-		return "%"
-	// boolean operators
-	case token.AND:
-		return "&"
-	case token.OR:
-		return "|"
-	case token.XOR:
-		return "^"
-	// bit rotations
-	case token.SHL:
-		return "<<"
-	case token.SHR:
-		return ">>"
-	// comparisons
-	case token.EQL:
-		return "=="
-	case token.LSS:
-		return "<"
-	case token.GTR:
-		return ">"
+	// TODO: implement specific conversion need here if needed
 	default:
-		return fmt.Sprintf("[[TOKEN_ERROR: '%v' ]]", t)
+		return fmt.Sprintf("%v", t)
 	}
 }
 
@@ -446,8 +417,8 @@ type blockEnv struct {
 func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		for _, declItem := range cv.convertSpecs(d.Specs) {
-			cv.cppPrintf("%s;\n", declItem)
+		for _, declItem := range cv.convertSpecs(d.Specs, ";\n") {
+			cv.cppPrintf("%s", declItem)
 		}
 
 	case *ast.FuncDecl:
@@ -712,7 +683,7 @@ func (cv *cppVisitor) inlineStmt(stmt ast.Stmt) (result string) {
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
 		case *ast.GenDecl:
-			for _, declItem := range cv.convertSpecs(d.Specs) {
+			for _, declItem := range cv.convertSpecs(d.Specs, "") {
 				result += fmt.Sprintf("%s,", declItem)
 			}
 		default:
@@ -782,13 +753,13 @@ func buildOutType(outTypes []string) string {
 	return resultType
 }
 
-func (cv *cppVisitor) convertSpecs(specs []ast.Spec) []string {
+func (cv *cppVisitor) convertSpecs(specs []ast.Spec, end string) []string {
 	var result []string
 
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
-			t := cv.convertTypeSpec(s)
+			t := cv.convertTypeSpec(s, end)
 			result = append(result, t.defs...)
 			result = append(result, t.str)
 
@@ -796,9 +767,9 @@ func (cv *cppVisitor) convertSpecs(specs []ast.Spec) []string {
 			if s.Type == nil {
 				for i := range s.Names {
 					if len(s.Values) == 0 {
-						result = append(result, fmt.Sprintf("auto %s", s.Names[i].Name))
+						result = append(result, fmt.Sprintf("auto %s%s", s.Names[i].Name, end))
 					} else {
-						result = append(result, fmt.Sprintf("auto %s = %s", s.Names[i].Name, cv.convertExpr(s.Values[i])))
+						result = append(result, fmt.Sprintf("auto %s = %s%s", s.Names[i].Name, cv.convertExpr(s.Values[i]), end))
 					}
 				}
 			} else {
@@ -807,15 +778,15 @@ func (cv *cppVisitor) convertSpecs(specs []ast.Spec) []string {
 					result = append(result, t.defs...)
 
 					if len(s.Values) == 0 {
-						result = append(result, fmt.Sprintf("%s %s", t.str, s.Names[i].Name))
+						result = append(result, fmt.Sprintf("%s %s%s", t.str, s.Names[i].Name, end))
 					} else {
-						result = append(result, fmt.Sprintf("%s %s = %s", t.str, s.Names[i].Name, cv.convertExpr(s.Values[i])))
+						result = append(result, fmt.Sprintf("%s %s = %s%s", t.str, s.Names[i].Name, cv.convertExpr(s.Values[i]), end))
 					}
 				}
 			}
 
 		case *ast.ImportSpec:
-			result = append(result, "// convertSpecs[ImportSpec] Not implemented => "+s.Path.Value)
+			result = append(result, fmt.Sprintf("// convertSpecs[ImportSpec] Not implemented => %s%s", s.Path.Value, end))
 
 		default:
 			Panicf("convertSpecs, unmanaged type [%v]", reflect.TypeOf(s))
@@ -831,7 +802,7 @@ type cppType struct {
 	isPtr bool     // is type a pointer ?
 }
 
-func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) cppType {
+func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -840,25 +811,25 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec) cppType {
 	case *ast.Ident:
 		usingDec := fmt.Sprintf("using %s = %s", node.Name.Name, GetCppType(n.Name))
 		// TODO: return type value instead of wtiting in header directly
-		fmt.Fprintf(cv.hppOut, "%s%s;\n", cv.HppIndent(), usingDec)
+		fmt.Fprintf(cv.hppOut, "%s%s%s", cv.HppIndent(), usingDec, end)
 		// Commented output in cpp as we only need one declaration
 		// TODO : manage go private/public rule to chose where to put definition
-		return cppType{fmt.Sprintf("// %s", usingDec), nil, false}
+		return cppType{fmt.Sprintf("// %s%s", usingDec, end), nil, false}
 
 	case *ast.ArrayType:
 		t := cv.convertArrayTypeExpr(n)
-		return cppType{fmt.Sprintf("%s %s", t.str, node.Name.Name), t.defs, false}
+		return cppType{fmt.Sprintf("%s %s%s", t.str, node.Name.Name, end), t.defs, false}
 
 	case *ast.FuncType:
-		return cppType{fmt.Sprintf("%s %s", cv.convertFuncTypeExpr(n), node.Name.Name), nil, false}
+		return cppType{fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), node.Name.Name, end), nil, false}
 
 	case *ast.StructType:
 		// TODO: return type value instead of wtiting in header directly
-		fmt.Fprintf(cv.hppOut, "%sstruct %s;\n", cv.HppIndent(), node.Name.Name)
+		fmt.Fprintf(cv.hppOut, "%sstruct %s%s", cv.HppIndent(), node.Name.Name, end)
 		return cppType{cv.convertStructTypeExpr(n, node.Name.Name, true), nil, false}
 
 	default:
-		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v]", reflect.TypeOf(node)), nil, false}
+		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v];\n", reflect.TypeOf(node)), nil, false}
 	}
 }
 

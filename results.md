@@ -53,16 +53,18 @@
 | TourOfGo/methods/indirection.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
 | TourOfGo/methods/indirection-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ❌ |
 | TourOfGo/methods/interfaces.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/interfaces-are-satisfied-implicitly.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/interface-values.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/interface-values-with-nil.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/interfaces-are-satisfied-implicitly.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.cpp)) | ✔️ |
+| TourOfGo/methods/interfaces-ordered.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |
+| TourOfGo/methods/interface-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values.cpp)) | ❌ |
+| TourOfGo/methods/interface-values-with-nil.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-nil.cpp)) | ❌ |
+| TourOfGo/methods/interface-values-with-unitialized.go | ✔️ | ✔️ | ❌ | ❌ |
 | TourOfGo/methods/methods.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods.cpp)) | ❌ |
 | TourOfGo/methods/methods-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-continued.cpp)) | ❌ |
 | TourOfGo/methods/methods-funcs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-funcs.cpp)) | ❌ |
 | TourOfGo/methods/methods-pointers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-pointers.cpp)) | ❌ |
 | TourOfGo/methods/methods-pointers-explained.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-pointers-explained.cpp)) | ❌ |
 | TourOfGo/methods/methods-with-pointer-receivers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-with-pointer-receivers.cpp)) | ❌ |
-| TourOfGo/methods/nil-interface-values.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/nil-interface-values.go | ✔️ | ✔️ | ➖ | ➖ | 
 | TourOfGo/methods/reader.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/stringer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/stringer.cpp)) | ❌ |
 | TourOfGo/methods/type-assertions.go | ✔️ | ❌ | ❌ | ❌ |

@@ -23,7 +23,7 @@ func (t *T) M() {
 func main() {
 	var i I
 
-	var t *T = nil
+	var t *T
 	i = t
 	describe(i)
 	i.M()

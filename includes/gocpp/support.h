@@ -22,6 +22,14 @@ namespace gocpp
     struct complex128;
     struct Defer;
 
+    template <typename T>
+    struct ptr
+    {
+        void reset(T* p) { ptr = p; }
+        T* get() { return ptr; }
+        T* ptr = nullptr;
+    };
+
     struct complex128 : std::complex<double>
     {
         using std::complex<double>::complex;
@@ -77,14 +85,14 @@ namespace gocpp
 
 
     // Receiver adapter for method calls
-    template <typename T>
+    template <typename T, bool IgnoreInterface = false>
     struct PtrRecv
     {        
         T* ptr;
 
         PtrRecv(T* t) : ptr(t) {}
 
-        operator T&() const { return *ptr; }
+        operator const T&() const { return *ptr; }
         operator T*() { return ptr; }
         operator const T*() const { return ptr; }
     };

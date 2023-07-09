@@ -46,3 +46,6 @@ $RECYCLE.BIN/
 
 # Local test ouputs
 log/
+
+# dev temp dir
+.tmp/

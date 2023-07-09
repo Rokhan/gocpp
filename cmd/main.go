@@ -396,6 +396,26 @@ func (cv *cppVisitor) readFields(fields *ast.FieldList) (params typeNames) {
 	return
 }
 
+type method struct {
+	name   string
+	result string
+	params string
+}
+
+func (cv *cppVisitor) readMethods(fields *ast.FieldList) (methods []method) {
+	if fields == nil {
+		return
+	}
+
+	for _, field := range fields.List {
+		for _, name := range field.Names {
+			outPrm, inPrm := cv.convertMethodExpr(field.Type)
+			methods = append(methods, method{name.Name, outPrm, inPrm})
+		}
+	}
+	return
+}
+
 func convertToken(t token.Token) string {
 	switch t {
 	// TODO: implement specific conversion need here if needed
@@ -828,8 +848,13 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
 		fmt.Fprintf(cv.hppOut, "%sstruct %s%s", cv.HppIndent(), node.Name.Name, end)
 		return cppType{cv.convertStructTypeExpr(n, node.Name.Name, true), nil, false}
 
+	case *ast.InterfaceType:
+		// TODO: return type value instead of wtiting in header directly
+		fmt.Fprintf(cv.hppOut, "%sstruct %s%s", cv.HppIndent(), node.Name.Name, end)
+		return cppType{cv.convertInterfaceTypeExpr(n, node.Name.Name, true), nil, false}
+
 	default:
-		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v];\n", reflect.TypeOf(node)), nil, false}
+		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v];\n", reflect.TypeOf(n)), nil, false}
 	}
 }
 
@@ -877,6 +902,23 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) cppType {
 
 	default:
 		return cppType{fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node)), nil, false}
+	}
+}
+
+func (cv *cppVisitor) convertMethodExpr(node ast.Expr) (string, string) {
+	if node == nil {
+		panic("node is nil")
+	}
+
+	switch n := node.(type) {
+	case *ast.FuncType:
+		params := cv.readFields(n.Params)
+		_, outTypes := cv.getResultInfos(n)
+		resultType := buildOutType(outTypes)
+		return resultType, params.String()
+
+	default:
+		panic(fmt.Sprintf("Not a function type %v", n))
 	}
 }
 
@@ -943,6 +985,109 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName str
 
 	cv.cppIndent--
 	fmt.Fprintf(buf, "%s};\n", cv.CppIndent())
+	if withStreamOperator {
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)
+		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "\n")
+	}
+	return buf.String()
+}
+
+func (cv *cppVisitor) convertInterfaceTypeExpr(node *ast.InterfaceType, structName string, withStreamOperator bool) string {
+	buf := new(bytes.Buffer)
+	methods := cv.readMethods(node.Methods)
+
+	fmt.Fprintf(buf, "struct %s\n", structName)
+	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    %s(){}\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s& operator=(%[2]s& i) = default;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s& operator=(const %[2]s& i) = default;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    %s(T& ref)\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    %s(const T& ref)\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    %s(T* ptr)\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, gocpp::ptr<T>>(ptr));\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    using isGoStruct = void;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    std::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        return os;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    struct I%s\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	cv.cppIndent++
+	for _, method := range methods {
+		fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;\n", cv.CppIndent(), method.result, method.name, method.params)
+	}
+	cv.cppIndent--
+	fmt.Fprintf(buf, "%s    };\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    template<typename T, typename StoreT>\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    struct %[2]sImpl : I%[2]s\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	// ** Maybe be needed if we decide to store values insstead of pointer at some point **
+	// fmt.Fprintf(buf, "%s        //%sImpl(T& ref)\n", cv.CppIndent(), structName)
+	// fmt.Fprintf(buf, "%s        //{\n", cv.CppIndent())
+	// fmt.Fprintf(buf, "%s        //    value = &ref;\n", cv.CppIndent())
+	// fmt.Fprintf(buf, "%s        //}\n", cv.CppIndent())
+	// fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s        explicit %sImpl(T* ptr)\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s        {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s            value.reset(ptr);\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        }\n", cv.CppIndent())
+	cv.cppIndent++
+	for _, method := range methods {
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%s    %s v%s(%s) override\n", cv.CppIndent(), method.result, method.name, method.params)
+		fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, true>(value.get()));\n", cv.CppIndent(), method.name)
+		fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	}
+	cv.cppIndent--
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s        StoreT value;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    };\n", cv.CppIndent())
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    std::shared_ptr<I%s> value;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s};\n", cv.CppIndent())
+
+	for _, method := range methods {
+		endParams := ""
+		if method.params != "" {
+			endParams = fmt.Sprintf(", %s", method.params)
+		}
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<%s, false>& self%s)\n", cv.CppIndent(), method.result, method.name, structName, endParams)
+		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", cv.CppIndent(), method.name, method.params)
+		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<%s>& self%s)\n", cv.CppIndent(), method.result, method.name, structName, endParams)
+		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", cv.CppIndent(), method.name, method.params)
+		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+	}
+
 	if withStreamOperator {
 		fmt.Fprintf(buf, "\n")
 		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)

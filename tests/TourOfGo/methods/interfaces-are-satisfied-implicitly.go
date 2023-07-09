@@ -21,4 +21,8 @@ func (t T) M() {
 func main() {
 	var i I = T{"hello"}
 	i.M()
+
+	t := T{"hello"}
+	var j I = t
+	j.M()
 }

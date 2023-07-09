@@ -14,7 +14,78 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
+    struct I
+    {
+        I(){}
+        I(I& i) = default;
+        I(const I& i) = default;
+        I& operator=(I& i) = default;
+        I& operator=(const I& i) = default;
+
+        template<typename T>
+        I(T& ref)
+        {
+            value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        I(const T& ref)
+        {
+            value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        I(T* ptr)
+        {
+            value.reset(new IImpl<T, gocpp::ptr<T>>(ptr));
+        }
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            return os;
+        }
+
+        struct II
+        {
+            virtual void vM() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct IImpl : II
+        {
+            explicit IImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vM() override
+            {
+                return M(gocpp::PtrRecv<T, true>(value.get()));
+            }
+
+            StoreT value;
+        };
+
+        std::shared_ptr<II> value;
+    };
+
+    void M(const gocpp::PtrRecv<I, false>& self)
+    {
+        return self.ptr->value->vM();
+    }
+
+    void M(const gocpp::ObjRecv<I>& self)
+    {
+        return self.obj.value->vM();
+    }
+
+    std::ostream& operator<<(std::ostream& os, const I& value)
+    {
+        return value.PrintTo(os);
+    }
+
     void main()
     {
         gocpp::Defer defer;

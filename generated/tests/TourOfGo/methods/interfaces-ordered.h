@@ -9,10 +9,11 @@
 
 namespace golang
 {
-    struct I;
-    struct T;
-    void M(T* t);
+    struct Abser;
+    struct Vertex;
+    using MyFloat = double;
     void main();
-    void describe(I i);
+    double Abs(MyFloat f);
+    double Abs(Vertex* v);
 }
 

@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/methods/interfaces.h"
+#include "tests/TourOfGo/methods/interfaces-ordered.h"
 #include "gocpp/support.h"
 
 
@@ -87,29 +87,6 @@ namespace golang
         return value.PrintTo(os);
     }
 
-    void main()
-    {
-        gocpp::Defer defer;
-        Abser a;
-        auto f = MyFloat(- mocklib::Sqrt2);
-        auto v = Vertex {3, 4};
-        a = f;
-        a = & v;
-        a = v;
-        mocklib::Println(Abs(gocpp::recv(a)));
-    }
-
-    // using MyFloat = double;
-    double Abs(MyFloat f)
-    {
-        gocpp::Defer defer;
-        if(; f < 0)
-        {
-            return double(- f);
-        }
-        return double(f);
-    }
-
     struct Vertex
     {
         double X;
@@ -137,6 +114,29 @@ namespace golang
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {
         return value.PrintTo(os);
+    }
+
+    // using MyFloat = double;
+    void main()
+    {
+        gocpp::Defer defer;
+        Abser a;
+        auto f = MyFloat(- mocklib::Sqrt2);
+        auto v = Vertex {3, 4};
+        a = f;
+        mocklib::Println(Abs(gocpp::recv(a)));
+        a = & v;
+        mocklib::Println(Abs(gocpp::recv(a)));
+    }
+
+    double Abs(MyFloat f)
+    {
+        gocpp::Defer defer;
+        if(; f < 0)
+        {
+            return double(- f);
+        }
+        return double(f);
     }
 
     double Abs(Vertex* v)

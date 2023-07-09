@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.h"
+#include "tests/TourOfGo/methods/interface-values-with-unitialized.h"
 #include "gocpp/support.h"
 
 
@@ -113,20 +113,34 @@ namespace golang
         return value.PrintTo(os);
     }
 
-    void M(T t)
+    void M(T* t)
     {
         gocpp::Defer defer;
-        mocklib::Println(t.S);
+        if(; t == nullptr)
+        {
+            mocklib::Println("<nil>");
+            return;
+        }
+        mocklib::Println(t->S);
     }
 
     void main()
     {
         gocpp::Defer defer;
-        I i = T {"hello"};
+        I i;
+        T* t;
+        i = t;
+        describe(i);
         M(gocpp::recv(i));
-        auto t = T {"hello"};
-        I j = t;
-        M(gocpp::recv(j));
+        i = new T {"hello"};
+        describe(i);
+        M(gocpp::recv(i));
+    }
+
+    void describe(I i)
+    {
+        gocpp::Defer defer;
+        mocklib::Printf("(%v, %T)\n", i, i);
     }
 
 }

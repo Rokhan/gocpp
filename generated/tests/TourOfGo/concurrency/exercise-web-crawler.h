@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct Fetcher;
     void Crawl(std::string url, int depth, Fetcher fetcher);
     void main();
     struct fakeResult;

@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct Abser;
     void main();
     using MyFloat = double;
     double Abs(MyFloat f);

@@ -14,7 +14,78 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
+    struct Fetcher
+    {
+        Fetcher(){}
+        Fetcher(Fetcher& i) = default;
+        Fetcher(const Fetcher& i) = default;
+        Fetcher& operator=(Fetcher& i) = default;
+        Fetcher& operator=(const Fetcher& i) = default;
+
+        template<typename T>
+        Fetcher(T& ref)
+        {
+            value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        Fetcher(const T& ref)
+        {
+            value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        Fetcher(T* ptr)
+        {
+            value.reset(new FetcherImpl<T, gocpp::ptr<T>>(ptr));
+        }
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            return os;
+        }
+
+        struct IFetcher
+        {
+            virtual std::tuple<std::string, gocpp::slice<std::string>, error> vFetch(std::string url) = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct FetcherImpl : IFetcher
+        {
+            explicit FetcherImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<std::string, gocpp::slice<std::string>, error> vFetch(std::string url) override
+            {
+                return Fetch(gocpp::PtrRecv<T, true>(value.get()));
+            }
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IFetcher> value;
+    };
+
+    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+    {
+        return self.ptr->value->vFetch(std::string url);
+    }
+
+    std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
+    {
+        return self.obj.value->vFetch(std::string url);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const Fetcher& value)
+    {
+        return value.PrintTo(os);
+    }
+
     void Crawl(std::string url, int depth, Fetcher fetcher)
     {
         gocpp::Defer defer;
@@ -42,7 +113,7 @@ namespace golang
         Crawl("https://golang.org/", 4, fetcher);
     }
 
-    !!TYPE_SPEC_ERROR!! [*ast.TypeSpec];
+    !!TYPE_SPEC_ERROR!! [*ast.MapType];
     struct fakeResult
     {
         std::string body;

@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct I;
     void main();
     void describe(I i);
 }

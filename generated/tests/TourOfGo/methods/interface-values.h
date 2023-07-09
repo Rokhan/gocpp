@@ -9,6 +9,7 @@
 
 namespace golang
 {
+    struct I;
     struct T;
     void M(T* t);
     using F = double;

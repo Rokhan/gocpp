@@ -130,6 +130,12 @@ func (tns typeNames) String() string {
 	return strings.Join(strs, ", ")
 }
 
+type outFile struct {
+	file   *os.File
+	out    *bufio.Writer
+	indent int
+}
+
 type cppVisitor struct {
 	baseName      string
 	inputName     string
@@ -149,27 +155,18 @@ type cppVisitor struct {
 	astIndent   int
 
 	// Cpp files parameters
-	cppOutDir  string
-	cppOutFile *os.File
-	cppOut     *bufio.Writer
-	cppIndent  int
-
-	// Hpp files parameters
-	hppOutFile *os.File
-	hppOut     *bufio.Writer
-	hppIndent  int
+	cppOutDir string
+	cpp       outFile
+	hpp       outFile
+	fwd       outFile
 }
 
 func (cv *cppVisitor) Indent() string {
 	return strings.Repeat("  ", cv.astIndent)
 }
 
-func (cv *cppVisitor) CppIndent() string {
-	return strings.Repeat("    ", cv.cppIndent)
-}
-
-func (cv *cppVisitor) HppIndent() string {
-	return strings.Repeat("    ", cv.hppIndent)
+func (of *outFile) Indent() string {
+	return strings.Repeat("    ", of.indent)
 }
 
 func (cv *cppVisitor) GenerateId() (id string) {
@@ -183,73 +180,90 @@ const rawPrefix string = "//RAW_AST"
 
 func printCppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
-	fmt.Fprintf(cv.cppOut, "#include <complex>\n")
-	fmt.Fprintf(cv.cppOut, "#include <functional>\n")
-	fmt.Fprintf(cv.cppOut, "#include <iostream>\n")
-	fmt.Fprintf(cv.cppOut, "#include <iomanip>\n")
-	fmt.Fprintf(cv.cppOut, "#include <map>\n")
-	fmt.Fprintf(cv.cppOut, "#include <string>\n")
-	fmt.Fprintf(cv.cppOut, "#include <tuple>\n")
-	fmt.Fprintf(cv.cppOut, "#include <vector>\n")
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "#include \"%s.h\"\n", cv.baseName)
-	fmt.Fprintf(cv.cppOut, "#include \"%s\"\n", cv.supportHeader)
-	fmt.Fprintf(cv.cppOut, "\n")
-	fmt.Fprintf(cv.cppOut, "\n")
+	fmt.Fprintf(cv.cpp.out, "#include <complex>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <functional>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <iostream>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <iomanip>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <map>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <string>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <tuple>\n")
+	fmt.Fprintf(cv.cpp.out, "#include <vector>\n")
+	fmt.Fprintf(cv.cpp.out, "\n")
+	fmt.Fprintf(cv.cpp.out, "#include \"%s.h\"\n", cv.baseName)
+	fmt.Fprintf(cv.cpp.out, "#include \"%s\"\n", cv.supportHeader)
+	fmt.Fprintf(cv.cpp.out, "\n")
+	fmt.Fprintf(cv.cpp.out, "\n")
 
 	// Put everything generated in "golang" namespace
-	fmt.Fprintf(cv.cppOut, "namespace golang\n")
-	fmt.Fprintf(cv.cppOut, "{\n")
-	cv.cppIndent++
+	fmt.Fprintf(cv.cpp.out, "namespace golang\n")
+	fmt.Fprintf(cv.cpp.out, "{\n")
+	cv.cpp.indent++
 }
 
 func printCppOutro(cv *cppVisitor) {
 	// Close golang namespace
-	cv.cppIndent--
-	fmt.Fprintf(cv.cppOut, "}\n")
-	fmt.Fprintf(cv.cppOut, "\n")
+	cv.cpp.indent--
+	fmt.Fprintf(cv.cpp.out, "}\n")
+	fmt.Fprintf(cv.cpp.out, "\n")
 
 	// TODO: manage main parameters
-	fmt.Fprintf(cv.cppOut, "int main()\n")
-	fmt.Fprintf(cv.cppOut, "{\n")
-	fmt.Fprintf(cv.cppOut, "    try\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
-	fmt.Fprintf(cv.cppOut, "        golang::main();\n")
-	fmt.Fprintf(cv.cppOut, "        return 0;\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "    catch(const gocpp::GoPanic& ex)\n")
-	fmt.Fprintf(cv.cppOut, "    {\n")
-	fmt.Fprintf(cv.cppOut, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
-	fmt.Fprintf(cv.cppOut, "        return -1;\n")
-	fmt.Fprintf(cv.cppOut, "    }\n")
-	fmt.Fprintf(cv.cppOut, "}\n")
+	fmt.Fprintf(cv.cpp.out, "int main()\n")
+	fmt.Fprintf(cv.cpp.out, "{\n")
+	fmt.Fprintf(cv.cpp.out, "    try\n")
+	fmt.Fprintf(cv.cpp.out, "    {\n")
+	fmt.Fprintf(cv.cpp.out, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
+	fmt.Fprintf(cv.cpp.out, "        golang::main();\n")
+	fmt.Fprintf(cv.cpp.out, "        return 0;\n")
+	fmt.Fprintf(cv.cpp.out, "    }\n")
+	fmt.Fprintf(cv.cpp.out, "    catch(const gocpp::GoPanic& ex)\n")
+	fmt.Fprintf(cv.cpp.out, "    {\n")
+	fmt.Fprintf(cv.cpp.out, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
+	fmt.Fprintf(cv.cpp.out, "        return -1;\n")
+	fmt.Fprintf(cv.cpp.out, "    }\n")
+	fmt.Fprintf(cv.cpp.out, "}\n")
 }
 
 func printHppIntro(cv *cppVisitor) {
 	//temporarily blindly add "includes" and "using"
-	fmt.Fprintf(cv.hppOut, "#pragma once\n")
-	fmt.Fprintf(cv.hppOut, "\n")
-	fmt.Fprintf(cv.hppOut, "#include <functional>\n")
-	fmt.Fprintf(cv.hppOut, "#include <string>\n")
-	fmt.Fprintf(cv.hppOut, "#include <tuple>\n")
-	fmt.Fprintf(cv.hppOut, "#include <vector>\n")
-	fmt.Fprintf(cv.hppOut, "\n")
-	// TODO : make forward declaration header
-	fmt.Fprintf(cv.hppOut, "#include \"%s\"\n", cv.supportHeader)
-	fmt.Fprintf(cv.hppOut, "\n")
+	fmt.Fprintf(cv.hpp.out, "#pragma once\n")
+	fmt.Fprintf(cv.hpp.out, "\n")
+	fmt.Fprintf(cv.hpp.out, "#include <functional>\n")
+	fmt.Fprintf(cv.hpp.out, "#include <string>\n")
+	fmt.Fprintf(cv.hpp.out, "#include <tuple>\n")
+	fmt.Fprintf(cv.hpp.out, "#include <vector>\n")
+	fmt.Fprintf(cv.hpp.out, "\n")
+	fmt.Fprintf(cv.hpp.out, "#include \"%s.fwd.h\"\n", cv.baseName)
+	fmt.Fprintf(cv.hpp.out, "#include \"%s\"\n", cv.supportHeader)
+	fmt.Fprintf(cv.hpp.out, "\n")
 
 	// Put everything generated in "golang" namespace
-	fmt.Fprintf(cv.hppOut, "namespace golang\n")
-	fmt.Fprintf(cv.hppOut, "{\n")
-	cv.hppIndent++
+	fmt.Fprintf(cv.hpp.out, "namespace golang\n")
+	fmt.Fprintf(cv.hpp.out, "{\n")
+	cv.hpp.indent++
 }
 
 func printHppOutro(cv *cppVisitor) {
 	// Close golang namespace
-	cv.hppIndent--
-	fmt.Fprintf(cv.hppOut, "}\n")
-	fmt.Fprintf(cv.hppOut, "\n")
+	cv.hpp.indent--
+	fmt.Fprintf(cv.hpp.out, "}\n")
+	fmt.Fprintf(cv.hpp.out, "\n")
+}
+
+func printFwdIntro(cv *cppVisitor) {
+	fmt.Fprintf(cv.fwd.out, "#pragma once\n")
+	fmt.Fprintf(cv.fwd.out, "\n")
+
+	// Put everything generated in "golang" namespace
+	fmt.Fprintf(cv.fwd.out, "namespace golang\n")
+	fmt.Fprintf(cv.fwd.out, "{\n")
+	cv.fwd.indent++
+}
+
+func printFwdOutro(cv *cppVisitor) {
+	// Close golang namespace
+	cv.fwd.indent--
+	fmt.Fprintf(cv.fwd.out, "}\n")
+	fmt.Fprintf(cv.fwd.out, "\n")
 }
 
 func createOutputExt(outdir, name, ext string) *os.File {
@@ -324,7 +338,7 @@ func (cv *cppVisitor) IsPtr(name string) bool {
 }
 
 func (cv *cppVisitor) cppPrintf(format string, a ...interface{}) (n int, err error) {
-	return fmt.Fprintf(cv.cppOut, "%s"+format, append([]interface{}{cv.CppIndent()}, a...)...)
+	return fmt.Fprintf(cv.cpp.out, "%s"+format, append([]interface{}{cv.cpp.Indent()}, a...)...)
 }
 
 // Start reading node
@@ -337,14 +351,18 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		cv.startScope()
 		fmt.Printf("%s %s %v\n", dbgPrefix, cv.Indent(), reflect.TypeOf(n))
 
-		cv.cppOutFile = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
-		cv.cppOut = bufio.NewWriter(cv.cppOutFile)
+		cv.cpp.file = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
+		cv.cpp.out = bufio.NewWriter(cv.cpp.file)
 
-		cv.hppOutFile = createOutputExt(cv.cppOutDir, cv.baseName, "h")
-		cv.hppOut = bufio.NewWriter(cv.hppOutFile)
+		cv.hpp.file = createOutputExt(cv.cppOutDir, cv.baseName, "h")
+		cv.hpp.out = bufio.NewWriter(cv.hpp.file)
+
+		cv.fwd.file = createOutputExt(cv.cppOutDir, cv.baseName, "fwd.h")
+		cv.fwd.out = bufio.NewWriter(cv.fwd.file)
 
 		printCppIntro(cv)
 		printHppIntro(cv)
+		printFwdIntro(cv)
 
 		for _, decl := range n.Decls {
 			cv.convertDecls(decl)
@@ -453,11 +471,11 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 
 		cv.DeclareVars(params)
 
-		fmt.Fprintf(cv.cppOut, "%s%s %s(%s)\n", cv.CppIndent(), resultType, d.Name.Name, params)
-		fmt.Fprintf(cv.hppOut, "%s%s %s(%s);\n", cv.CppIndent(), resultType, d.Name.Name, params)
+		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
+		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
 
 		cv.convertBlockStmt(d.Body, blockEnv{stmtEnv{outNames, outTypes}, true})
-		fmt.Fprintf(cv.cppOut, "\n")
+		fmt.Fprintf(cv.cpp.out, "\n")
 
 	case *ast.BadDecl:
 		panic("convertDecls[BadDecl] Not implemented")
@@ -469,23 +487,23 @@ func (cv *cppVisitor) convertDecls(decl ast.Decl) {
 
 func (cv *cppVisitor) convertBlockStmt(block *ast.BlockStmt, env blockEnv) {
 	cv.startScope()
-	fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
-	cv.cppIndent++
+	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
+	cv.cpp.indent++
 
 	if env.isFunc {
-		fmt.Fprintf(cv.cppOut, "%sgocpp::Defer defer;\n", cv.CppIndent())
+		fmt.Fprintf(cv.cpp.out, "%sgocpp::Defer defer;\n", cv.cpp.Indent())
 	}
 
 	for i := range env.outNames {
-		fmt.Fprintf(cv.cppOut, "%s%s %s;\n", cv.CppIndent(), GetCppType(env.outTypes[i]), env.outNames[i])
+		fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppType(env.outTypes[i]), env.outNames[i])
 	}
 
 	for _, stmt := range block.List {
 		cv.convertStmt(stmt, env.stmtEnv)
 	}
 
-	cv.cppIndent--
-	fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
+	cv.cpp.indent--
+	fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 	cv.endScope()
 }
 
@@ -575,87 +593,87 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		cv.convertDecls(s.Decl)
 
 	case *ast.ExprStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertExpr(s.X))
+		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X))
 
 	case *ast.IncDecStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s%s;\n", cv.CppIndent(), cv.convertExpr(s.X), s.Tok)
+		fmt.Fprintf(cv.cpp.out, "%s%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X), s.Tok)
 
 	case *ast.ReturnStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertReturnExprs(s.Results, env.outNames))
+		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertReturnExprs(s.Results, env.outNames))
 
 	case *ast.AssignStmt:
-		fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.convertAssignExprs(s))
+		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertAssignExprs(s))
 
 	case *ast.DeferStmt:
-		fmt.Fprintf(cv.cppOut, "%sdefer.push_back([=]{ %s; });\n", cv.CppIndent(), cv.convertExpr(s.Call))
+		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.ForStmt:
-		fmt.Fprintf(cv.cppOut, "%sfor(%s; %s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
+		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.RangeStmt:
 		if s.Key != nil && s.Value != nil && s.Tok == token.DEFINE {
-			fmt.Fprintf(cv.cppOut, "%sfor(auto [%s, %s] : %s)\n", cv.CppIndent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			fmt.Fprintf(cv.cpp.out, "%sfor(auto [%s, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
-			fmt.Fprintf(cv.cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.CppIndent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+			fmt.Fprintf(cv.cpp.out, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
 		} else {
 			panic("Unmanaged case of '*ast.RangeStmt'")
 		}
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.IfStmt:
-		fmt.Fprintf(cv.cppOut, "%sif(%s; %s)\n", cv.CppIndent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
+		fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		if s.Else != nil {
-			fmt.Fprintf(cv.cppOut, "%selse\n", cv.CppIndent())
+			fmt.Fprintf(cv.cpp.out, "%selse\n", cv.cpp.Indent())
 			cv.convertStmt(s.Else, env)
 		}
 
 	case *ast.SwitchStmt:
-		fmt.Fprintf(cv.cppOut, "%s//Go switch emulation\n", cv.CppIndent())
-		fmt.Fprintf(cv.cppOut, "%s{\n", cv.CppIndent())
-		cv.cppIndent++
+		fmt.Fprintf(cv.cpp.out, "%s//Go switch emulation\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
+		cv.cpp.indent++
 
 		if s.Init != nil {
-			fmt.Fprintf(cv.cppOut, "%s%s;\n", cv.CppIndent(), cv.inlineStmt(s.Init))
+			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init))
 		}
 
 		conditionVarName := "conditionId"
 		inputVarName := ""
 		if s.Tag != nil {
 			inputVarName = "condition"
-			fmt.Fprintf(cv.cppOut, "%sauto %s = %s;\n", cv.CppIndent(), inputVarName, cv.convertExpr(s.Tag))
+			fmt.Fprintf(cv.cpp.out, "%sauto %s = %s;\n", cv.cpp.Indent(), inputVarName, cv.convertExpr(s.Tag))
 		}
 
-		fmt.Fprintf(cv.cppOut, "%sint %s = -1;\n", cv.CppIndent(), conditionVarName)
+		fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
 		se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
 		cv.extractCaseExpr(s.Body, &se)
-		fmt.Fprintf(cv.cppOut, "%sswitch(%s)\n", cv.CppIndent(), conditionVarName)
+		fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
 		cv.currentSwitchId.PushBack(0)
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
-		cv.cppIndent--
-		fmt.Fprintf(cv.cppOut, "%s}\n", cv.CppIndent())
+		cv.cpp.indent--
+		fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 
 	case *ast.CaseClause:
 		if s.List == nil {
-			fmt.Fprintf(cv.cppOut, "%sdefault:\n", cv.CppIndent())
+			fmt.Fprintf(cv.cpp.out, "%sdefault:\n", cv.cpp.Indent())
 		} else {
 			for range s.List {
 				id := cv.currentSwitchId.Back().Value.(int)
-				fmt.Fprintf(cv.cppOut, "%scase %d:\n", cv.CppIndent(), id)
+				fmt.Fprintf(cv.cpp.out, "%scase %d:\n", cv.cpp.Indent(), id)
 				cv.currentSwitchId.Back().Value = id + 1
 			}
 		}
 
-		cv.cppIndent++
+		cv.cpp.indent++
 		for _, stmt := range s.Body {
 			cv.convertStmt(stmt, env)
 		}
-		fmt.Fprintf(cv.cppOut, "%sbreak;\n", cv.CppIndent())
-		cv.cppIndent--
+		fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		cv.cpp.indent--
 
 	default:
 		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
@@ -682,9 +700,9 @@ func (cv *cppVisitor) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		for _, expr := range s.List {
 			id := cv.currentSwitchId.Back().Value.(int)
 			if se.withCondition {
-				fmt.Fprintf(cv.cppOut, "%s%sif(%s == %s) { %s = %d; }\n", cv.CppIndent(), se.prefix, se.inputVarName, cv.convertExpr(expr), se.conditionVarName, id)
+				fmt.Fprintf(cv.cpp.out, "%s%sif(%s == %s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, se.inputVarName, cv.convertExpr(expr), se.conditionVarName, id)
 			} else {
-				fmt.Fprintf(cv.cppOut, "%s%sif(%s) { %s = %d; }\n", cv.CppIndent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
+				fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
 			}
 			cv.currentSwitchId.Back().Value = id + 1
 		}
@@ -831,7 +849,7 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
 	case *ast.Ident:
 		usingDec := fmt.Sprintf("using %s = %s", node.Name.Name, GetCppType(n.Name))
 		// TODO: return type value instead of wtiting in header directly
-		fmt.Fprintf(cv.hppOut, "%s%s%s", cv.HppIndent(), usingDec, end)
+		fmt.Fprintf(cv.hpp.out, "%s%s%s", cv.hpp.Indent(), usingDec, end)
 		// Commented output in cpp as we only need one declaration
 		// TODO : manage go private/public rule to chose where to put definition
 		return cppType{fmt.Sprintf("// %s%s", usingDec, end), nil, false}
@@ -845,12 +863,12 @@ func (cv *cppVisitor) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
 
 	case *ast.StructType:
 		// TODO: return type value instead of wtiting in header directly
-		fmt.Fprintf(cv.hppOut, "%sstruct %s%s", cv.HppIndent(), node.Name.Name, end)
-		return cppType{cv.convertStructTypeExpr(n, node.Name.Name, true), nil, false}
+		fmt.Fprintf(cv.hpp.out, "%sstruct %s%s", cv.hpp.Indent(), node.Name.Name, end)
+		return cppType{cv.convertStructTypeExpr(n, genStructParam{node.Name.Name, all, with}), nil, false}
 
 	case *ast.InterfaceType:
 		// TODO: return type value instead of wtiting in header directly
-		fmt.Fprintf(cv.hppOut, "%sstruct %s%s", cv.HppIndent(), node.Name.Name, end)
+		fmt.Fprintf(cv.hpp.out, "%sstruct %s%s", cv.hpp.Indent(), node.Name.Name, end)
 		return cppType{cv.convertInterfaceTypeExpr(n, node.Name.Name, true), nil, false}
 
 	default:
@@ -897,7 +915,7 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) cppType {
 
 	case *ast.StructType:
 		name := cv.GenerateId()
-		t := cv.convertStructTypeExpr(n, name, false)
+		t := cv.convertStructTypeExpr(n, genStructParam{name, all, without})
 		return cppType{name, []string{t}, false}
 
 	default:
@@ -945,52 +963,73 @@ func (cv *cppVisitor) convertMapTypeExpr(node *ast.MapType) cppType {
 	return cppType{fmt.Sprintf("gocpp::map<%s,%s>", key.str, value.str), append(key.defs, value.defs...), false}
 }
 
-func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, structName string, withStreamOperator bool) string {
+type GenOutputType int
+
+const (
+	decl   GenOutputType = 0
+	implem GenOutputType = 1
+	all    GenOutputType = 2
+)
+
+type StreamOp int
+
+const (
+	without StreamOp = 0
+	with    StreamOp = 1
+)
+
+type genStructParam struct {
+	name     string
+	output   GenOutputType
+	streamOp StreamOp
+}
+
+func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, param genStructParam) string {
 	buf := new(bytes.Buffer)
 
-	fmt.Fprintf(buf, "struct %[1]s\n", structName)
-	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
+	fmt.Fprintf(buf, "struct %[1]s\n", param.name)
+	fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
 
-	cv.cppIndent++
+	cv.cpp.indent++
 	fields := cv.readFields(node.Fields)
 	for _, field := range fields {
 		for _, name := range field.names {
-			fmt.Fprintf(buf, "%s%s %s;\n", cv.CppIndent(), field.Type.str, name)
+			fmt.Fprintf(buf, "%s%s %s;\n", cv.cpp.Indent(), field.Type.str, name)
 		}
 	}
 
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%susing isGoStruct = void;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%susing isGoStruct = void;\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%sstatic %[2]s Init(void (init)(%[2]s&))\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    %s value;\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    init(value);\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    return value;\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%sstatic %[2]s Init(void (init)(%[2]s&))\n", cv.cpp.Indent(), param.name)
+	fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    %s value;\n", cv.cpp.Indent(), param.name)
+	fmt.Fprintf(buf, "%s    init(value);\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    return value;\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%sstd::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    os << '{';\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%sstd::ostream& PrintTo(std::ostream& os) const\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    os << '{';\n", cv.cpp.Indent())
 	sep := ""
 	for _, field := range fields {
 		for _, name := range field.names {
-			fmt.Fprintf(buf, "%s    os << \"%s\" << %s;\n", cv.CppIndent(), sep, name)
+			fmt.Fprintf(buf, "%s    os << \"%s\" << %s;\n", cv.cpp.Indent(), sep, name)
 			sep = " "
 		}
 	}
-	fmt.Fprintf(buf, "%s    os << '}';\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    return os;\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    os << '}';\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    return os;\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 
-	cv.cppIndent--
-	fmt.Fprintf(buf, "%s};\n", cv.CppIndent())
-	if withStreamOperator {
+	cv.cpp.indent--
+	fmt.Fprintf(buf, "%s};\n", cv.cpp.Indent())
+	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)
-		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.cpp.Indent(), param.name)
+		fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 		fmt.Fprintf(buf, "\n")
 	}
 	return buf.String()
@@ -1001,75 +1040,75 @@ func (cv *cppVisitor) convertInterfaceTypeExpr(node *ast.InterfaceType, structNa
 	methods := cv.readMethods(node.Methods)
 
 	fmt.Fprintf(buf, "struct %s\n", structName)
-	fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    %s(){}\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    %[2]s& operator=(%[2]s& i) = default;\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    %[2]s& operator=(const %[2]s& i) = default;\n", cv.CppIndent(), structName)
+	fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    %s(){}\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s& operator=(%[2]s& i) = default;\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    %[2]s& operator=(const %[2]s& i) = default;\n", cv.cpp.Indent(), structName)
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    %s(T& ref)\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    %s(T& ref)\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    %s(const T& ref)\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    %s(const T& ref)\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    %s(T* ptr)\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, gocpp::ptr<T>>(ptr));\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    template<typename T>\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    %s(T* ptr)\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, gocpp::ptr<T>>(ptr));\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    }\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    using isGoStruct = void;\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    using isGoStruct = void;\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    std::ostream& PrintTo(std::ostream& os) const\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s        return os;\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    std::ostream& PrintTo(std::ostream& os) const\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s        return os;\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    }\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    struct I%s\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-	cv.cppIndent++
+	fmt.Fprintf(buf, "%s    struct I%s\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+	cv.cpp.indent++
 	for _, method := range methods {
-		fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;\n", cv.CppIndent(), method.result, method.name, method.params)
+		fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;\n", cv.cpp.Indent(), method.result, method.name, method.params)
 	}
-	cv.cppIndent--
-	fmt.Fprintf(buf, "%s    };\n", cv.CppIndent())
+	cv.cpp.indent--
+	fmt.Fprintf(buf, "%s    };\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    template<typename T, typename StoreT>\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    struct %[2]sImpl : I%[2]s\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    template<typename T, typename StoreT>\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    struct %[2]sImpl : I%[2]s\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
 	// ** Maybe be needed if we decide to store values insstead of pointer at some point **
-	// fmt.Fprintf(buf, "%s        //%sImpl(T& ref)\n", cv.CppIndent(), structName)
-	// fmt.Fprintf(buf, "%s        //{\n", cv.CppIndent())
-	// fmt.Fprintf(buf, "%s        //    value = &ref;\n", cv.CppIndent())
-	// fmt.Fprintf(buf, "%s        //}\n", cv.CppIndent())
+	// fmt.Fprintf(buf, "%s        //%sImpl(T& ref)\n", cv.cpp.Indent(), structName)
+	// fmt.Fprintf(buf, "%s        //{\n", cv.cpp.Indent())
+	// fmt.Fprintf(buf, "%s        //    value = &ref;\n", cv.cpp.Indent())
+	// fmt.Fprintf(buf, "%s        //}\n", cv.cpp.Indent())
 	// fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s        explicit %sImpl(T* ptr)\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s        {\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s            value.reset(ptr);\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s        }\n", cv.CppIndent())
-	cv.cppIndent++
+	fmt.Fprintf(buf, "%s        explicit %sImpl(T* ptr)\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s        {\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s            value.reset(ptr);\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s        }\n", cv.cpp.Indent())
+	cv.cpp.indent++
 	for _, method := range methods {
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s    %s v%s(%s) override\n", cv.CppIndent(), method.result, method.name, method.params)
-		fmt.Fprintf(buf, "%s    {\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, true>(value.get()));\n", cv.CppIndent(), method.name)
-		fmt.Fprintf(buf, "%s    }\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s    %s v%s(%s) override\n", cv.cpp.Indent(), method.result, method.name, method.params)
+		fmt.Fprintf(buf, "%s    {\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, true>(value.get()));\n", cv.cpp.Indent(), method.name)
+		fmt.Fprintf(buf, "%s    }\n", cv.cpp.Indent())
 	}
-	cv.cppIndent--
+	cv.cpp.indent--
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s        StoreT value;\n", cv.CppIndent())
-	fmt.Fprintf(buf, "%s    };\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s        StoreT value;\n", cv.cpp.Indent())
+	fmt.Fprintf(buf, "%s    };\n", cv.cpp.Indent())
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%s    std::shared_ptr<I%s> value;\n", cv.CppIndent(), structName)
-	fmt.Fprintf(buf, "%s};\n", cv.CppIndent())
+	fmt.Fprintf(buf, "%s    std::shared_ptr<I%s> value;\n", cv.cpp.Indent(), structName)
+	fmt.Fprintf(buf, "%s};\n", cv.cpp.Indent())
 
 	for _, method := range methods {
 		endParams := ""
@@ -1077,23 +1116,23 @@ func (cv *cppVisitor) convertInterfaceTypeExpr(node *ast.InterfaceType, structNa
 			endParams = fmt.Sprintf(", %s", method.params)
 		}
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<%s, false>& self%s)\n", cv.CppIndent(), method.result, method.name, structName, endParams)
-		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", cv.CppIndent(), method.name, method.params)
-		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<%s, false>& self%s)\n", cv.cpp.Indent(), method.result, method.name, structName, endParams)
+		fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", cv.cpp.Indent(), method.name, method.params)
+		fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<%s>& self%s)\n", cv.CppIndent(), method.result, method.name, structName, endParams)
-		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", cv.CppIndent(), method.name, method.params)
-		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<%s>& self%s)\n", cv.cpp.Indent(), method.result, method.name, structName, endParams)
+		fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", cv.cpp.Indent(), method.name, method.params)
+		fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 	}
 
 	if withStreamOperator {
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.CppIndent(), structName)
-		fmt.Fprintf(buf, "%s{\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.CppIndent())
-		fmt.Fprintf(buf, "%s}\n", cv.CppIndent())
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)\n", cv.cpp.Indent(), structName)
+		fmt.Fprintf(buf, "%s{\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", cv.cpp.Indent())
+		fmt.Fprintf(buf, "%s}\n", cv.cpp.Indent())
 		fmt.Fprintf(buf, "\n")
 	}
 	return buf.String()
@@ -1109,9 +1148,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	case *ast.ArrayType:
 		array := cv.convertArrayTypeExpr(n)
 		// TODO: typeDefs should be and output of convertExpr
-		// HACK: cv.cppOut shouldn't be used here
+		// HACK: cv.cpp.out shouldn't be used here
 		for _, def := range array.defs {
-			fmt.Fprintf(cv.cppOut, "%s%s\n", cv.CppIndent(), def)
+			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), def)
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
@@ -1120,9 +1159,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	case *ast.MapType:
 		mapType := cv.convertMapTypeExpr(n)
 		// TODO: mapDefs should be and output of convertExpr
-		// HACK: cv.cppOut shouldn't be used here
+		// HACK: cv.cpp.out shouldn't be used here
 		for _, def := range mapType.defs {
-			fmt.Fprintf(cv.cppOut, "%s%s\n", cv.CppIndent(), def)
+			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), def)
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
@@ -1143,9 +1182,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 
 			array := cv.convertTypeExpr(n.Type)
 			// TODO: typeDefs should be and output of convertExpr
-			// HACK: cv.cppOut shouldn't be used here
+			// HACK: cv.cpp.out shouldn't be used here
 			for _, def := range array.defs {
-				fmt.Fprintf(cv.cppOut, "%s%s\n", cv.CppIndent(), def)
+				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), def)
 			}
 
 			litType = array.str
@@ -1177,9 +1216,9 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 	case *ast.FuncLit:
 		buf := new(bytes.Buffer)
 		bufio := bufio.NewWriter(buf)
-		previousOut := cv.cppOut
-		defer func() { cv.cppOut = previousOut }()
-		cv.cppOut = bufio
+		previousOut := cv.cpp.out
+		defer func() { cv.cpp.out = previousOut }()
+		cv.cpp.out = bufio
 
 		params := cv.readFields(n.Type.Params)
 		outNames, outTypes := cv.getResultInfos(n.Type)
@@ -1313,13 +1352,11 @@ func (cv *cppVisitor) VisitEnd(node ast.Node) {
 	case *ast.File:
 		printCppOutro(cv)
 		printHppOutro(cv)
+		printFwdOutro(cv)
 
-		//fmt.Printf("\n=====\n")
-		//fmt.Printf("%v\n", cv.inputName)
-		//fmt.Printf("%v\n", cv.cppOut)
-		//fmt.Printf("%v\n", cv.cppOutFile)
-		cv.cppOut.Flush()
-		cv.hppOut.Flush()
+		cv.cpp.out.Flush()
+		cv.hpp.out.Flush()
+		cv.fwd.out.Flush()
 		if cv.genMakeFile {
 			cv.makeOut.Flush()
 		}

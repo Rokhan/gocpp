@@ -52,12 +52,12 @@
 | TourOfGo/methods/images.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/indirection.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
 | TourOfGo/methods/indirection-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ❌ |
-| TourOfGo/methods/interfaces.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/interfaces.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ❌ |
 | TourOfGo/methods/interfaces-are-satisfied-implicitly.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.cpp)) | ✔️ |
 | TourOfGo/methods/interfaces-ordered.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |
 | TourOfGo/methods/interface-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values.cpp)) | ❌ |
 | TourOfGo/methods/interface-values-with-nil.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-nil.cpp)) | ❌ |
-| TourOfGo/methods/interface-values-with-unitialized.go | ✔️ | ✔️ | ❌ | ❌ |
+| TourOfGo/methods/interface-values-with-unitialized.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-unitialized.cpp)) | ❌ |
 | TourOfGo/methods/methods.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods.cpp)) | ❌ |
 | TourOfGo/methods/methods-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-continued.cpp)) | ❌ |
 | TourOfGo/methods/methods-funcs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-funcs.cpp)) | ❌ |

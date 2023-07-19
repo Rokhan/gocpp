@@ -110,29 +110,22 @@ namespace golang
         return double(f);
     }
 
-    struct Vertex
+    
+    Vertex Vertex::Init(void (init)(Vertex&))
     {
-        double X;
-        double Y;
+        Vertex value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static Vertex Init(void (init)(Vertex&))
-        {
-            Vertex value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << X;
-            os << " " << Y;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& Vertex::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << X;
+        os << " " << Y;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {

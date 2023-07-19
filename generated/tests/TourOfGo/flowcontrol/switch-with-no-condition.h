@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/flowcontrol/switch-with-no-condition.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

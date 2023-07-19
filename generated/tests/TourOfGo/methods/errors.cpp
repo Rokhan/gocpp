@@ -15,29 +15,22 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "time";
-    struct MyError
+    
+    MyError MyError::Init(void (init)(MyError&))
     {
-        !!TYPE_EXPR_ERROR!! [*ast.SelectorExpr] When;
-        std::string What;
+        MyError value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static MyError Init(void (init)(MyError&))
-        {
-            MyError value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << When;
-            os << " " << What;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& MyError::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << When;
+        os << " " << What;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const MyError& value)
     {

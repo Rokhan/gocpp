@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/methods/nil-interface-values.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

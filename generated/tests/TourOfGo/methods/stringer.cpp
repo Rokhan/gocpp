@@ -14,29 +14,22 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    struct Person
+    
+    Person Person::Init(void (init)(Person&))
     {
-        std::string Name;
-        int Age;
+        Person value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static Person Init(void (init)(Person&))
-        {
-            Person value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << Name;
-            os << " " << Age;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& Person::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Name;
+        os << " " << Age;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Person& value)
     {

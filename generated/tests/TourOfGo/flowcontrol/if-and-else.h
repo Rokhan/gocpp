@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/flowcontrol/if-and-else.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

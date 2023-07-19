@@ -87,27 +87,21 @@ namespace golang
         return value.PrintTo(os);
     }
 
-    struct T
+    
+    T T::Init(void (init)(T&))
     {
-        std::string S;
+        T value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static T Init(void (init)(T&))
-        {
-            T value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << S;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& T::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << S;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const T& value)
     {

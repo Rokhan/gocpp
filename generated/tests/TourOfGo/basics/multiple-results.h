@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/basics/multiple-results.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

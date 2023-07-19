@@ -114,29 +114,22 @@ namespace golang
     }
 
     !!TYPE_SPEC_ERROR!! [*ast.MapType];
-    struct fakeResult
+    
+    fakeResult fakeResult::Init(void (init)(fakeResult&))
     {
-        std::string body;
-        gocpp::slice<std::string> urls;
+        fakeResult value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static fakeResult Init(void (init)(fakeResult&))
-        {
-            fakeResult value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << body;
-            os << " " << urls;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& fakeResult::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << body;
+        os << " " << urls;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const fakeResult& value)
     {

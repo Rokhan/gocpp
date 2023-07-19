@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/flowcontrol/exercise-loops-and-functions.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

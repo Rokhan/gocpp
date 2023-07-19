@@ -14,25 +14,20 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/reader";
-    struct MyReader
+    
+    MyReader MyReader::Init(void (init)(MyReader&))
     {
+        MyReader value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static MyReader Init(void (init)(MyReader&))
-        {
-            MyReader value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& MyReader::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const MyReader& value)
     {

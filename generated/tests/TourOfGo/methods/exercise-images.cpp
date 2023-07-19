@@ -14,25 +14,20 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
-    struct Image
+    
+    Image Image::Init(void (init)(Image&))
     {
+        Image value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static Image Init(void (init)(Image&))
-        {
-            Image value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& Image::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Image& value)
     {

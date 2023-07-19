@@ -14,60 +14,45 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    struct Vertex
+    
+    Vertex Vertex::Init(void (init)(Vertex&))
     {
-        int X;
-        int Y;
-        int Z;
+        Vertex value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static Vertex Init(void (init)(Vertex&))
-        {
-            Vertex value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << X;
-            os << " " << Y;
-            os << " " << Z;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& Vertex::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << X;
+        os << " " << Y;
+        os << " " << Z;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Vertex& value)
     {
         return value.PrintTo(os);
     }
 
-    struct Segment
+    
+    Segment Segment::Init(void (init)(Segment&))
     {
-        Vertex Start;
-        Vertex End;
+        Segment value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static Segment Init(void (init)(Segment&))
-        {
-            Segment value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << Start;
-            os << " " << End;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& Segment::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Start;
+        os << " " << End;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Segment& value)
     {

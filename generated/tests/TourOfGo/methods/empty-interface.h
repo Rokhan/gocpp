@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include "tests/TourOfGo/methods/empty-interface.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

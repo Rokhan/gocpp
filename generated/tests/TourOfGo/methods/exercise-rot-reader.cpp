@@ -16,27 +16,21 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "io";
     // convertSpecs[ImportSpec] Not implemented => "os";
     // convertSpecs[ImportSpec] Not implemented => "strings";
-    struct rot13Reader
+    
+    rot13Reader rot13Reader::Init(void (init)(rot13Reader&))
     {
-        !!TYPE_EXPR_ERROR!! [*ast.SelectorExpr] r;
+        rot13Reader value;
+        init(value);
+        return value;
+    }
 
-        using isGoStruct = void;
-
-        static rot13Reader Init(void (init)(rot13Reader&))
-        {
-            rot13Reader value;
-            init(value);
-            return value;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << r;
-            os << '}';
-            return os;
-        }
-    };
+    std::ostream& rot13Reader::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << r;
+        os << '}';
+        return os;
+    }
 
     std::ostream& operator<<(std::ostream& os, const rot13Reader& value)
     {

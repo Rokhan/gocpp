@@ -19,7 +19,7 @@ namespace golang
     double Abs(MyFloat f)
     {
         gocpp::Defer defer;
-        if(; f < 0)
+        if(f < 0)
         {
             return double(- f);
         }

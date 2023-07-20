@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/moretypes/nil-slices.h"
+#include "tests/TourOfGo/flowcontrol/for-break-continue.h"
 #include "gocpp/support.h"
 
 
@@ -17,12 +17,26 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp::slice<int> s;
-        mocklib::Println(s, len(s), cap(s));
-        if(s == nullptr)
+        auto sum = 0;
+        for(auto i = 0; i < 10; i++)
         {
-            mocklib::Println("nil!");
+            if(i % 2 == 0)
+            {
+                continue;
+            }
+            sum += i;
         }
+        mocklib::Println(sum);
+        sum = 0;
+        for(auto i = 0; i < 10; i++)
+        {
+            if(i == 5)
+            {
+                break;
+            }
+            sum += i;
+        }
+        mocklib::Println(sum);
     }
 
 }

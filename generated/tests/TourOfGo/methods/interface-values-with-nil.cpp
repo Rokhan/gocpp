@@ -110,7 +110,7 @@ namespace golang
     void M(T* t)
     {
         gocpp::Defer defer;
-        if(; t == nullptr)
+        if(t == nullptr)
         {
             mocklib::Println("<nil>");
             return;

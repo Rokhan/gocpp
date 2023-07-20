@@ -89,12 +89,12 @@ namespace golang
     void Crawl(std::string url, int depth, Fetcher fetcher)
     {
         gocpp::Defer defer;
-        if(; depth <= 0)
+        if(depth <= 0)
         {
             return;
         }
         auto [body, urls, err] = Fetch(gocpp::recv(fetcher), url);
-        if(; err != nullptr)
+        if(err != nullptr)
         {
             mocklib::Println(err);
             return;

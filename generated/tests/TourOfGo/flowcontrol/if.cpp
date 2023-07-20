@@ -18,7 +18,7 @@ namespace golang
     std::string sqrt(double x)
     {
         gocpp::Defer defer;
-        if(; x < 0)
+        if(x < 0)
         {
             return sqrt(- x) + "i";
         }

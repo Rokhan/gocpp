@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/methods/reader.fwd.h"
+#include "tests/TourOfGo/flowcontrol/for-break-continue.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

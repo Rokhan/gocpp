@@ -611,6 +611,16 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
+	case *ast.BranchStmt:
+		switch s.Tok {
+		case token.BREAK:
+			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		case token.CONTINUE:
+			fmt.Fprintf(cv.cpp.out, "%scontinue;\n", cv.cpp.Indent())
+		default:
+			Panicf("convertStmt, unmanaged BranchStmt [%v]", s.Tok)
+		}
+
 	case *ast.RangeStmt:
 		if s.Key != nil && s.Value != nil && s.Tok == token.DEFINE {
 			fmt.Fprintf(cv.cpp.out, "%sfor(auto [%s, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
@@ -622,7 +632,12 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.IfStmt:
-		fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
+		if s.Init != nil {
+			fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
+		} else {
+			fmt.Fprintf(cv.cpp.out, "%sif(%s)\n", cv.cpp.Indent(), cv.convertExpr(s.Cond))
+		}
+
 		cv.convertBlockStmt(s.Body, blockEnv{env, false})
 		if s.Else != nil {
 			fmt.Fprintf(cv.cpp.out, "%selse\n", cv.cpp.Indent())

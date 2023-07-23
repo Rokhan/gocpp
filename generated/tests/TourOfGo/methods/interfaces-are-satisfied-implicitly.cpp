@@ -14,62 +14,35 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    struct I
+    
+    template<typename T>
+    I::I(T& ref)
     {
-        I(){}
-        I(I& i) = default;
-        I(const I& i) = default;
-        I& operator=(I& i) = default;
-        I& operator=(const I& i) = default;
+        value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
 
-        template<typename T>
-        I(T& ref)
-        {
-            value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
-        }
+    template<typename T>
+    I::I(const T& ref)
+    {
+        value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
 
-        template<typename T>
-        I(const T& ref)
-        {
-            value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
-        }
+    template<typename T>
+    I::I(T* ptr)
+    {
+        value.reset(new IImpl<T, gocpp::ptr<T>>(ptr));
+    }
 
-        template<typename T>
-        I(T* ptr)
-        {
-            value.reset(new IImpl<T, gocpp::ptr<T>>(ptr));
-        }
+    std::ostream& I::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
 
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            return os;
-        }
-
-        struct II
-        {
-            virtual void vM() = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct IImpl : II
-        {
-            explicit IImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            void vM() override
-            {
-                return M(gocpp::PtrRecv<T, true>(value.get()));
-            }
-
-            StoreT value;
-        };
-
-        std::shared_ptr<II> value;
-    };
+    template<typename T, typename StoreT>
+    void I::IImpl<T, StoreT>::vM()
+    {
+        return M(gocpp::PtrRecv<T, true>(value.get()));
+    }
 
     void M(const gocpp::PtrRecv<I, false>& self)
     {

@@ -2,6 +2,7 @@
 
 namespace golang
 {
+    struct I;
     struct T;
 }
 

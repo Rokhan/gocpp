@@ -2,6 +2,7 @@
 
 namespace golang
 {
+    struct Fetcher;
     struct fakeResult;
 }
 

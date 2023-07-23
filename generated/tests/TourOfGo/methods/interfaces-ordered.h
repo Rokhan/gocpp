@@ -10,7 +10,52 @@
 
 namespace golang
 {
-    struct Abser;
+    struct Abser
+    {
+        Abser(){}
+        Abser(Abser& i) = default;
+        Abser(const Abser& i) = default;
+        Abser& operator=(Abser& i) = default;
+        Abser& operator=(const Abser& i) = default;
+
+        template<typename T>
+        Abser(T& ref);
+
+        template<typename T>
+        Abser(const T& ref);
+
+        template<typename T>
+        Abser(T* ptr);
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IAbser
+        {
+            virtual double vAbs() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct AbserImpl : IAbser
+        {
+            explicit AbserImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            double vAbs() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IAbser> value;
+    };
+
+    double Abs(const gocpp::PtrRecv<Abser, false>& self);
+    double Abs(const gocpp::ObjRecv<Abser>& self);
+
+    std::ostream& operator<<(std::ostream& os, const Abser& value);
     struct Vertex
     {
         double X;

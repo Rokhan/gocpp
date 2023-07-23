@@ -14,62 +14,35 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    struct Fetcher
+    
+    template<typename T>
+    Fetcher::Fetcher(T& ref)
     {
-        Fetcher(){}
-        Fetcher(Fetcher& i) = default;
-        Fetcher(const Fetcher& i) = default;
-        Fetcher& operator=(Fetcher& i) = default;
-        Fetcher& operator=(const Fetcher& i) = default;
+        value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
 
-        template<typename T>
-        Fetcher(T& ref)
-        {
-            value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
-        }
+    template<typename T>
+    Fetcher::Fetcher(const T& ref)
+    {
+        value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
 
-        template<typename T>
-        Fetcher(const T& ref)
-        {
-            value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
-        }
+    template<typename T>
+    Fetcher::Fetcher(T* ptr)
+    {
+        value.reset(new FetcherImpl<T, gocpp::ptr<T>>(ptr));
+    }
 
-        template<typename T>
-        Fetcher(T* ptr)
-        {
-            value.reset(new FetcherImpl<T, gocpp::ptr<T>>(ptr));
-        }
+    std::ostream& Fetcher::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
 
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            return os;
-        }
-
-        struct IFetcher
-        {
-            virtual std::tuple<std::string, gocpp::slice<std::string>, error> vFetch(std::string url) = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct FetcherImpl : IFetcher
-        {
-            explicit FetcherImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<std::string, gocpp::slice<std::string>, error> vFetch(std::string url) override
-            {
-                return Fetch(gocpp::PtrRecv<T, true>(value.get()));
-            }
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IFetcher> value;
-    };
+    template<typename T, typename StoreT>
+    std::tuple<std::string, gocpp::slice<std::string>, error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
+    {
+        return Fetch(gocpp::PtrRecv<T, true>(value.get()));
+    }
 
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
     {

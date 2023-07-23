@@ -2,6 +2,7 @@
 
 namespace golang
 {
+    struct Abser;
     struct Vertex;
 }
 

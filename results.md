@@ -9,6 +9,7 @@
 | TourOfGo/basics/functions.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions.cpp)) | ✔️ |
 | TourOfGo/basics/functions-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions-continued.cpp)) | ✔️ |
 | TourOfGo/basics/imports.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/imports.cpp)) | ❌ |
+| TourOfGo/basics/iota.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/basics/multiple-results.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/multiple-results.cpp)) | ✔️ |
 | TourOfGo/basics/named-results.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/named-results.cpp)) | ❌ |
 | TourOfGo/basics/numeric-constants.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/numeric-constants.cpp)) | ❌ |

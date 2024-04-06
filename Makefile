@@ -28,7 +28,7 @@ doc:
 	echo >> results.md
 	echo "| file | cpp generate | cpp compilation | run | result diff |" >> results.md
 	echo "| ---- | ------------ | --------------- | --- | ----------- |" >> results.md
-	cat $(OUT_MD_TEST_FILES) >> results.md
+	cat $(OUT_MD_TEST_FILES) | sort -t. -k 1d,1 >> results.md
 	dos2unix results.md
 
 allcpp: $(OUT_CPP_TEST_FILES)

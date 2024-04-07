@@ -101,7 +101,7 @@ namespace golang
         i = new T {"Hello"};
         describe(i);
         M(gocpp::recv(i));
-        i = F(M_PI);
+        i = F(mocklib::Pi);
         describe(i);
         M(gocpp::recv(i));
     }

@@ -18,7 +18,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        mocklib::Println(M_PI);
+        mocklib::Println(std::numbers::pi);
     }
 
 }

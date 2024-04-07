@@ -25,8 +25,8 @@
 | TourOfGo/concurrency/default-selection.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-web-crawler.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/concurrency/goroutines.go | ❌ | ❌ | ❌ | ❌ |
-| TourOfGo/concurrency/mutex-counter.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/concurrency/goroutines.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
+| TourOfGo/concurrency/mutex-counter.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/range-and-close.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/select.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/flowcontrol/defer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/defer.cpp)) | ✔️ |
@@ -60,7 +60,7 @@
 | TourOfGo/methods/interfaces-ordered.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |
 | TourOfGo/methods/interface-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values.cpp)) | ❌ |
 | TourOfGo/methods/interface-values-with-nil.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-nil.cpp)) | ❌ |
-| TourOfGo/methods/interface-values-with-unitialized.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-unitialized.cpp)) | ❌ |
+| TourOfGo/methods/interface-values-with-unitialized.go | ✔️ | ✔️ | ❌ | ❌ |
 | TourOfGo/methods/methods.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods.cpp)) | ❌ |
 | TourOfGo/methods/methods-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-continued.cpp)) | ❌ |
 | TourOfGo/methods/methods-funcs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/methods-funcs.cpp)) | ❌ |

@@ -66,7 +66,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES)
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
-	(cd $(OUTDIR) && g++ -I. -I../includes $*.cpp -o ../$(LOGDIR)/$*.exe) \
+	(cd $(OUTDIR) && g++ -std=c++20 -I. -I../includes -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.exe) \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

@@ -44,29 +44,43 @@ var nameSpaces = map[string]struct{}{
 
 var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
-	"fmt::Print":      "mocklib::Print",
-	"fmt::Printf":     "mocklib::Printf",
-	"fmt::Println":    "mocklib::Println",
-	"fmt::Sprint":     "mocklib::Sprint",
-	"fmt::Sprintf":    "mocklib::Sprintf",
-	"rand::Intn":      "mocklib::Intn",
-	"runtime::GOOS":   "mocklib::GOOS",
-	"cmplx::Sqrt":     "std::sqrt",
-	"math::Pow":       "mocklib::Pow",
-	"math::Sqrt":      "std::sqrt",
-	"math::Sqrt2":     "mocklib::Sqrt2",
-	"math::Pi":        "M_PI",
-	"pic::Show":       "mocklib::picShow",
-	"time::Now":       "mocklib::Date::Now",
-	"time::Saturday":  "mocklib::Date::Saturday",
+	// fmt
+	"fmt::Print":   "mocklib::Print",
+	"fmt::Printf":  "mocklib::Printf",
+	"fmt::Println": "mocklib::Println",
+	"fmt::Sprint":  "mocklib::Sprint",
+	"fmt::Sprintf": "mocklib::Sprintf",
+	// rand
+	"rand::Intn": "mocklib::Intn",
+	// runtime
+	"runtime::GOOS": "mocklib::GOOS",
+	// cmplx
+	"cmplx::Sqrt": "std::sqrt",
+	// math
+	"math::Pow":   "mocklib::Pow",
+	"math::Sqrt":  "std::sqrt",
+	"math::Sqrt2": "mocklib::Sqrt2",
+	"math::Pi":    "mocklib::Pi",
+	// pic
+	"pic::Show": "mocklib::picShow",
+	// time
+	"time::Now":         "mocklib::Date::Now",
+	"time::Saturday":    "mocklib::Date::Saturday",
+	"time::Sleep":       "mocklib::Sleep",
+	"time::Second":      "mocklib::Second",
+	"time::Millisecond": "mocklib::Millisecond",
+	// strings
 	"strings::Join":   "mocklib::StringsJoin",
 	"strings::Fields": "mocklib::StringsFields",
-	"wc::Test":        "mocklib::wcTest",
+	// wc
+	"wc::Test": "mocklib::wcTest",
+
 	// Predefined functions
 	"delete": "remove",
 	"make":   "gocpp::make",
 	"panic":  "gocpp::panic",
 	"nil":    "nullptr",
+
 	// type conversions
 	"float":   "double",
 	"float32": "float",
@@ -369,7 +383,7 @@ func (cv *cppVisitor) VisitStart(node ast.Node) {
 		}
 
 		if cv.genMakeFile {
-			fmt.Fprintf(cv.makeOut, "\t g++ -I. -I../includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
+			fmt.Fprintf(cv.makeOut, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
 		}
 
 		//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
@@ -606,6 +620,9 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 
 	case *ast.DeferStmt:
 		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
+
+	case *ast.GoStmt:
+		fmt.Fprintf(cv.cpp.out, "%sgocpp::global_pool().enqueue_detach([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))

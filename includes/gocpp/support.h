@@ -6,10 +6,13 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include "thread_pool/thread_pool.h"
 
 // Support types implementations
 namespace gocpp
@@ -21,6 +24,12 @@ namespace gocpp
     template<typename T> struct slice;
     struct complex128;
     struct Defer;
+
+    inline dp::thread_pool<>& global_pool()
+    {
+        static dp::thread_pool pool(std::thread::hardware_concurrency());
+        return pool;
+    }
 
     template <typename T>
     struct ptr
@@ -522,23 +531,47 @@ namespace std
 // temporary mock implementations
 namespace mocklib
 {
+    // mock "time" types and functions
     struct Date
-    {        
+    {
         static Date Now() { return Date{}; };
         static const int Saturday = 6;
     };
 
-    inline int Weekday(const Date&) { return Date::Saturday; };
-    inline int Hour(const Date&) { return 17; };
+    inline int Weekday(const Date &) { return Date::Saturday; };
+    inline int Hour(const Date &) { return 17; };
 
+    const long Nanosecond = 1;
+    const long Microsecond = 1000 * Nanosecond;
+    const long Millisecond = 1000 * Microsecond;
+    const long Second = 1000 * Millisecond;
+    const long Minute = 60 * Second;
+    // const long Hour         = 60 * Minute;
+
+    inline void Sleep(long duration_ns)
+    {
+        std::this_thread::sleep_for(std::chrono::nanoseconds(duration_ns));
+    }
+
+    // mock "rand" types and functions
     inline int Intn(int n)
     {
         return rand() % n;
     }
 
-    inline const char* const GOOS = "undefined";
-    inline const double Sqrt2 = std::sqrt(2.0);
+    // mock "runtime" types and functions
+    inline const char *const GOOS = "undefined";
 
+    // mock "math" types and functions
+    inline const double Sqrt2 = std::sqrt(2.0);
+    inline const double Pi = std::numbers::pi;
+
+    double Pow(double value, double exp)
+    {
+        return std::pow(value, exp);
+    }
+
+    // internals: operators for tupples/ostream/slices
     template<typename... Ts>
     std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)
     {
@@ -827,9 +860,4 @@ namespace mocklib
 
     template<typename T>
     void picShow(const T& func){ /* Just a mock */ }
-    
-    double Pow(double value, double exp)
-    {  
-        return std::pow(value, exp);
-    }
 }

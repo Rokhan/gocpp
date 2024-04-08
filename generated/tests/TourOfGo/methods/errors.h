@@ -12,7 +12,7 @@ namespace golang
 {
     struct MyError
     {
-        !!TYPE_EXPR_ERROR!! [*ast.SelectorExpr] When;
+        time::Time When;
         std::string What;
 
         using isGoStruct = void;

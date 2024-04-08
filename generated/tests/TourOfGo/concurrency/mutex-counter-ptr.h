@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/concurrency/mutex-counter.fwd.h"
+#include "tests/TourOfGo/concurrency/mutex-counter-ptr.fwd.h"
 #include "gocpp/support.h"
 
 namespace golang

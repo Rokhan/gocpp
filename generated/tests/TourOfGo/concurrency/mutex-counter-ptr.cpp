@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/concurrency/mutex-counter.h"
+#include "tests/TourOfGo/concurrency/mutex-counter-ptr.h"
 #include "gocpp/support.h"
 
 
@@ -57,7 +57,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto c = SafeCounter::Init([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
+        auto c = new SafeCounter::Init([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
         for(auto i = 0; i < 1000; i++)
         {
             gocpp::global_pool().enqueue_detach([=]{ Inc(gocpp::recv(c), "somekey"); });

@@ -12,7 +12,7 @@ namespace golang
 {
     struct rot13Reader
     {
-        !!TYPE_EXPR_ERROR!! [*ast.SelectorExpr] r;
+        io::Reader r;
 
         using isGoStruct = void;
 

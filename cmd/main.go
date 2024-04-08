@@ -1008,7 +1008,7 @@ func (cv *cppVisitor) convertFuncTypeExpr(node *ast.FuncType) string {
 func (cv *cppVisitor) convertMapTypeExpr(node *ast.MapType) cppType {
 	key := cv.convertTypeExpr(node.Key)
 	value := cv.convertTypeExpr(node.Value)
-	return cppType{fmt.Sprintf("gocpp::map<%s,%s>", key.str, value.str), append(key.defs, value.defs...), false}
+	return cppType{fmt.Sprintf("gocpp::map<%s, %s>", key.str, value.str), append(key.defs, value.defs...), false}
 }
 
 type GenOutputType int

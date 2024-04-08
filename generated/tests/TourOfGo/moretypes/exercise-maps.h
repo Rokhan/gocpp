@@ -10,7 +10,7 @@
 
 namespace golang
 {
-    gocpp::map<std::string,int> WordCount(std::string s);
+    gocpp::map<std::string, int> WordCount(std::string s);
     void main();
 }
 

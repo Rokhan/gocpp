@@ -18,7 +18,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto hosts = gocpp::map<std::string,IPAddr> {{ "loopback",  {127, 0, 0, 1} }, { "googleDNS",  {8, 8, 8, 8} }};
+        auto hosts = gocpp::map<std::string, IPAddr> {{ "loopback",  {127, 0, 0, 1} }, { "googleDNS",  {8, 8, 8, 8} }};
         for(auto [name, ip] : hosts)
         {
             mocklib::Printf("%v: %v\n", name, ip);

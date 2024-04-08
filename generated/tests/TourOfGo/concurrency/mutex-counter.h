@@ -13,7 +13,7 @@ namespace golang
     struct SafeCounter
     {
         !!TYPE_EXPR_ERROR!! [*ast.SelectorExpr] mu;
-        gocpp::map<std::string,int> v;
+        gocpp::map<std::string, int> v;
 
         using isGoStruct = void;
 

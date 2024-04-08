@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto m = gocpp::make(gocpp::Tag<gocpp::map<std::string,int>>());
+        auto m = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
         m["Answer"] = 42;
         mocklib::Println("The value:", m["Answer"]);
         m["Answer"] = 48;

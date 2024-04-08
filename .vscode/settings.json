@@ -48,6 +48,25 @@
         "ctime": "cpp",
         "iomanip": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "algorithm": "cpp",
+        "atomic": "cpp",
+        "barrier": "cpp",
+        "bit": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "condition_variable": "cpp",
+        "deque": "cpp",
+        "future": "cpp",
+        "iterator": "cpp",
+        "mutex": "cpp",
+        "numbers": "cpp",
+        "optional": "cpp",
+        "ratio": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     }
 }

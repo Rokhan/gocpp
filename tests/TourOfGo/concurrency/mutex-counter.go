@@ -33,9 +33,11 @@ func (c *SafeCounter) Value(key string) int {
 func main() {
 	c := SafeCounter{v: make(map[string]int)}
 	for i := 0; i < 1000; i++ {
+		// Bug, counter passed by value in cpp translation
 		go c.Inc("somekey")
 	}
 
 	time.Sleep(time.Second)
-	fmt.Println(c.Value("somekey"))
+	fmt.Println("result: ", c.Value("somekey"))
+	fmt.Println("expected: ", 1000)
 }

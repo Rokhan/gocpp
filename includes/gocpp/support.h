@@ -434,6 +434,21 @@ namespace gocpp
         }
     };
 
+    template<typename K, typename V>
+    std::ostream& operator<<(std::ostream& os, const gocpp::map<K, V>& dic)
+    {
+        os << '[';
+        int i = 0;
+        for(auto& kv : dic)
+        {
+            if(i != 0) { os << ", "; }            
+            os << kv.first << ": " << kv.second;
+            i++;
+        }
+        os << ']';
+        return os;
+    }
+
     // FIXME: golang permit to access all element between size and capacity    
     template<typename T>
     gocpp::slice<T> array_base<T>::make_slice(size_t low)
@@ -571,9 +586,25 @@ namespace mocklib
         return std::pow(value, exp);
     }
 
+    // mock "sync" types and functions
+    struct Mutex : std::shared_ptr<std::mutex>
+    {
+        Mutex() : std::shared_ptr<std::mutex>(new std::mutex()) { }
+    };
+    
+    void Lock(const Mutex& mutex)
+    {
+        mutex->lock();
+    }
+
+    void Unlock(const Mutex& mutex)
+    {
+        mutex->unlock();
+    }
+
     // internals: operators for tupples/ostream/slices
     template<typename... Ts>
-    std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)
+    std::ostream& operator<<(std::ostream& os, const std::tuple<Ts...>& theTuple)
     {
         std::apply
         (
@@ -589,7 +620,7 @@ namespace mocklib
     }
 
     template<typename T, int N>
-    std::ostream& operator<<(std::ostream& os, gocpp::array<T, N> const& array)
+    std::ostream& operator<<(std::ostream& os, const gocpp::array<T, N>& array)
     {
         os << '[';
         for(int i=0; i< array.size(); ++i)
@@ -604,7 +635,7 @@ namespace mocklib
     }
 
     template<typename T>
-    std::ostream& operator<<(std::ostream& os, std::initializer_list<T> const& array)
+    std::ostream& operator<<(std::ostream& os, const std::initializer_list<T>& array)
     {
         os << '[';
         int i = 0;

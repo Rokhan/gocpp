@@ -72,6 +72,9 @@ var stdFuncMapping = map[string]string{
 	// strings
 	"strings::Join":   "mocklib::StringsJoin",
 	"strings::Fields": "mocklib::StringsFields",
+	// sync
+	"sync::Mutex": "mocklib::Mutex",
+
 	// wc
 	"wc::Test": "mocklib::wcTest",
 
@@ -950,6 +953,10 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) cppType {
 
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n)
+
+	case *ast.SelectorExpr:
+		typeName := GetCppFunc(cv.convertExpr(n.X) + "::" + cv.convertExpr(n.Sel))
+		return cppType{typeName, nil, true}
 
 	case *ast.StarExpr:
 		t := cv.convertTypeExpr(n.X)

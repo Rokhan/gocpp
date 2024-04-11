@@ -16,13 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "time";
     
-    MyError MyError::Init(void (init)(MyError&))
-    {
-        MyError value;
-        init(value);
-        return value;
-    }
-
     std::ostream& MyError::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     
-    Vertex Vertex::Init(void (init)(Vertex&))
-    {
-        Vertex value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -37,7 +30,7 @@ namespace golang
     }
 
     auto v1 = Vertex {1, 2};
-    auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
+    auto v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};
     auto p = new Vertex {1, 2};
     void main()

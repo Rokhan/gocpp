@@ -16,8 +16,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static rot13Reader Init(void (init)(rot13Reader&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

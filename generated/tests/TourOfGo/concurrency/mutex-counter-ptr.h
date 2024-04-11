@@ -17,8 +17,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static SafeCounter Init(void (init)(SafeCounter&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

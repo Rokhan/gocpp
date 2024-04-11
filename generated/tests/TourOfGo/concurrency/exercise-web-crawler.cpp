@@ -88,13 +88,6 @@ namespace golang
 
     !!TYPE_SPEC_ERROR!! [*ast.MapType];
     
-    fakeResult fakeResult::Init(void (init)(fakeResult&))
-    {
-        fakeResult value;
-        init(value);
-        return value;
-    }
-
     std::ostream& fakeResult::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -119,7 +112,7 @@ namespace golang
         return {"", nullptr, fmt::Errorf("not found: %s", url)};
     }
 
-    auto fetcher = fakeFetcher::Init([](fakeFetcher& x) { x.&{%!s(token.Pos=1169) STRING "https://golang.org/"} = new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}}; x.&{%!s(token.Pos=1320) STRING "https://golang.org/pkg/"} = new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}}; x.&{%!s(token.Pos=1519) STRING "https://golang.org/pkg/fmt/"} = new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; x.&{%!s(token.Pos=1658) STRING "https://golang.org/pkg/os/"} = new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; });
+    auto fetcher = gocpp::Init<fakeFetcher>([](fakeFetcher& x) { x.&{%!s(token.Pos=1169) STRING "https://golang.org/"} = new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}}; x.&{%!s(token.Pos=1320) STRING "https://golang.org/pkg/"} = new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}}; x.&{%!s(token.Pos=1519) STRING "https://golang.org/pkg/fmt/"} = new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; x.&{%!s(token.Pos=1658) STRING "https://golang.org/pkg/os/"} = new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}}; });
 }
 
 int main()

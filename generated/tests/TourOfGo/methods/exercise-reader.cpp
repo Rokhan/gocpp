@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/reader";
     
-    MyReader MyReader::Init(void (init)(MyReader&))
-    {
-        MyReader value;
-        init(value);
-        return value;
-    }
-
     std::ostream& MyReader::PrintTo(std::ostream& os) const
     {
         os << '{';

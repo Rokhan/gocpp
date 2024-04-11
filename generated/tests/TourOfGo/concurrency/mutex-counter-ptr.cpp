@@ -17,13 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "sync";
     // convertSpecs[ImportSpec] Not implemented => "time";
     
-    SafeCounter SafeCounter::Init(void (init)(SafeCounter&))
-    {
-        SafeCounter value;
-        init(value);
-        return value;
-    }
-
     std::ostream& SafeCounter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -57,7 +50,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        auto c = new SafeCounter::Init([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
+        auto c = gocpp::InitPtr<SafeCounter>([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
         for(auto i = 0; i < 1000; i++)
         {
             gocpp::global_pool().enqueue_detach([&]{ Inc(gocpp::recv(c), "somekey"); });

@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     
-    Person Person::Init(void (init)(Person&))
-    {
-        Person value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Person::PrintTo(std::ostream& os) const
     {
         os << '{';

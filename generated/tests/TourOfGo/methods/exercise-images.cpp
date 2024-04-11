@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
     
-    Image Image::Init(void (init)(Image&))
-    {
-        Image value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Image::PrintTo(std::ostream& os) const
     {
         os << '{';

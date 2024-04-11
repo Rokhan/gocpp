@@ -61,13 +61,6 @@ namespace golang
     }
 
     
-    T T::Init(void (init)(T&))
-    {
-        T value;
-        init(value);
-        return value;
-    }
-
     std::ostream& T::PrintTo(std::ostream& os) const
     {
         os << '{';

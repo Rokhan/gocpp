@@ -17,8 +17,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static MyError Init(void (init)(MyError&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

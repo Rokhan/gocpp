@@ -66,8 +66,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static Vertex Init(void (init)(Vertex&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

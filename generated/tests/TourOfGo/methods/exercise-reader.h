@@ -15,8 +15,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static MyReader Init(void (init)(MyReader&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

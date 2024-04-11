@@ -18,8 +18,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static Vertex Init(void (init)(Vertex&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -30,8 +28,6 @@ namespace golang
         Vertex End;
 
         using isGoStruct = void;
-
-        static Segment Init(void (init)(Segment&));
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

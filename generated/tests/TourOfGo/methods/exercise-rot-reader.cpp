@@ -17,13 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "os";
     // convertSpecs[ImportSpec] Not implemented => "strings";
     
-    rot13Reader rot13Reader::Init(void (init)(rot13Reader&))
-    {
-        rot13Reader value;
-        init(value);
-        return value;
-    }
-
     std::ostream& rot13Reader::PrintTo(std::ostream& os) const
     {
         os << '{';

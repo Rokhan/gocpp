@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     
-    Vertex Vertex::Init(void (init)(Vertex&))
-    {
-        Vertex value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -38,13 +31,6 @@ namespace golang
     }
 
     
-    Segment Segment::Init(void (init)(Segment&))
-    {
-        Segment value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Segment::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -60,10 +46,10 @@ namespace golang
     }
 
     auto v1 = Vertex {1, 2, 3};
-    auto v2 = Vertex::Init([](Vertex& x) { x.X = 1; });
+    auto v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
     auto v3 = Vertex {};
-    auto v4 = Vertex::Init([](Vertex& x) { x.X = 1; x.Z = 3; });
-    auto s1 = Segment::Init([](Segment& x) { x.Start = Vertex::Init([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
+    auto v4 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; });
+    auto s1 = gocpp::Init<Segment>([](Segment& x) { x.Start = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
     void main()
     {
         gocpp::Defer defer;

@@ -28,13 +28,6 @@ namespace golang
 
             using isGoStruct = void;
 
-            static gocpp_id_0 Init(void (init)(gocpp_id_0&))
-            {
-                gocpp_id_0 value;
-                init(value);
-                return value;
-            }
-
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';

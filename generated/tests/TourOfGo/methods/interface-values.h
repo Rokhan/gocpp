@@ -62,8 +62,6 @@ namespace golang
 
         using isGoStruct = void;
 
-        static T Init(void (init)(T&));
-
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

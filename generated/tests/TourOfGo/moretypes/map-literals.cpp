@@ -15,13 +15,6 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     
-    Vertex Vertex::Init(void (init)(Vertex&))
-    {
-        Vertex value;
-        init(value);
-        return value;
-    }
-
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -80,6 +80,22 @@ namespace gocpp
     template <typename T>
     class IsGoStruct<T,typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
 
+    template<typename T>
+    T Init(void (init)(T&))
+    {
+        T value;
+        init(value);
+        return value;
+    }
+
+    template<typename T>
+    T* InitPtr(void (init)(T&))
+    {
+        auto value = new T;
+        init(*value);
+        return value;
+    }
+
     struct GoPanic : std::runtime_error 
     {
         GoPanic(const std::string& message) : runtime_error(message)

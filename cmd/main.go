@@ -1101,16 +1101,6 @@ func (cv *cppVisitor) convertStructTypeExpr(node *ast.StructType, param genStruc
 	}
 
 	fmt.Fprintf(buf, "\n")
-	fmt.Fprintf(buf, "%[1]s%[3]s%[2]s %[4]sInit(void (init)(%[2]s&))%[5]s\n", data.out.Indent(), param.name, data.staticPrefix, data.namePrefix, data.declEnd)
-	if data.needBody {
-		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s    %s value;\n", data.out.Indent(), param.name)
-		fmt.Fprintf(buf, "%s    init(value);\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s    return value;\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
-	}
-
-	fmt.Fprintf(buf, "\n")
 	fmt.Fprintf(buf, "%sstd::ostream& %sPrintTo(std::ostream& os) const%s\n", data.out.Indent(), data.namePrefix, data.declEnd)
 	if data.needBody {
 		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
@@ -1346,43 +1336,7 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 		}
 
 	case *ast.CompositeLit:
-		// ignore 'n.Incomplete' at the moment
-		buf := new(bytes.Buffer)
-		var litType string
-		if n.Type != nil {
-
-			array := cv.convertTypeExpr(n.Type)
-			// TODO: typeDefs should be and output of convertExpr
-			// HACK: cv.cpp.out shouldn't be used here
-			for _, def := range array.defs {
-				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), def)
-			}
-
-			litType = array.str
-		}
-
-		var isKvInit bool
-		if len(n.Elts) != 0 {
-			_, isKvInit = n.Elts[0].(*ast.KeyValueExpr)
-		}
-
-		if isKvInit && !isMapType(n.Type) {
-			fmt.Fprintf(buf, "%s::Init([](%s& x) { ", litType, litType)
-			for _, elt := range n.Elts {
-				kv := elt.(*ast.KeyValueExpr)
-				fmt.Fprintf(buf, "x.%s = %s; ", kv.Key, cv.convertExpr(kv.Value))
-			}
-			fmt.Fprintf(buf, "})")
-		} else {
-			fmt.Fprintf(buf, "%s {", litType)
-			var sep = ""
-			for _, elt := range n.Elts {
-				fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(elt))
-				sep = ", "
-			}
-			fmt.Fprintf(buf, "}")
-		}
-		return buf.String()
+		return cv.convertCompositeLit(n, false)
 
 	case *ast.FuncLit:
 		buf := new(bytes.Buffer)
@@ -1407,12 +1361,11 @@ func (cv *cppVisitor) convertExpr(node ast.Expr) string {
 		return buf.String()
 
 	case *ast.UnaryExpr:
-		_, isCompositeLit := n.X.(*ast.CompositeLit)
+		compositLit, isCompositeLit := n.X.(*ast.CompositeLit)
 
 		switch {
 		case n.Op == token.AND && isCompositeLit:
-			// FIME : create a kind a smart pointer instead of this.
-			return "new " + cv.convertExpr(n.X)
+			return cv.convertCompositeLit(compositLit, true)
 		default:
 			return convertToken(n.Op) + " " + cv.convertExpr(n.X)
 		}
@@ -1507,6 +1460,57 @@ func isNameSpace(expr ast.Expr) bool {
 	default:
 		return false
 	}
+}
+
+func (cv *cppVisitor) convertCompositeLit(n *ast.CompositeLit, addPtr bool) string {
+	// ignore 'n.Incomplete' at the moment
+	buf := new(bytes.Buffer)
+	var litType string
+	if n.Type != nil {
+
+		array := cv.convertTypeExpr(n.Type)
+		// TODO: typeDefs should be and output of convertExpr
+		// HACK: cv.cpp.out shouldn't be used here
+		for _, def := range array.defs {
+			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), def)
+		}
+
+		litType = array.str
+	}
+
+	var isKvInit bool
+	if len(n.Elts) != 0 {
+		_, isKvInit = n.Elts[0].(*ast.KeyValueExpr)
+	}
+
+	if isKvInit && !isMapType(n.Type) {
+		ptrSuffix := ""
+		if addPtr {
+			ptrSuffix = "Ptr"
+		}
+		fmt.Fprintf(buf, "gocpp::Init%s<%s>([](%s& x) { ", ptrSuffix, litType, litType)
+
+		for _, elt := range n.Elts {
+			kv := elt.(*ast.KeyValueExpr)
+			fmt.Fprintf(buf, "x.%s = %s; ", kv.Key, cv.convertExpr(kv.Value))
+		}
+		fmt.Fprintf(buf, "})")
+	} else {
+		newPrefix := ""
+		if addPtr {
+			// FIME : create a kind a smart pointer instead of using new.
+			newPrefix = "new "
+		}
+
+		fmt.Fprintf(buf, "%s%s {", newPrefix, litType)
+		var sep = ""
+		for _, elt := range n.Elts {
+			fmt.Fprintf(buf, "%s%s", sep, cv.convertExpr(elt))
+			sep = ", "
+		}
+		fmt.Fprintf(buf, "}")
+	}
+	return buf.String()
 }
 
 func (cv *cppVisitor) convertExprs(exprs []ast.Expr) string {

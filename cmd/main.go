@@ -625,7 +625,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) {
 		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.GoStmt:
-		fmt.Fprintf(cv.cpp.out, "%sgocpp::global_pool().enqueue_detach([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
+		fmt.Fprintf(cv.cpp.out, "%sgocpp::global_pool().enqueue_detach([&]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))

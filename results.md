@@ -26,7 +26,7 @@
 | TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-web-crawler.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/goroutines.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
-| TourOfGo/concurrency/mutex-counter.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter.cpp)) | ❌ |
+| TourOfGo/concurrency/mutex-counter.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter.cpp)) | ✔️ |
 | TourOfGo/concurrency/mutex-counter-ptr.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/range-and-close.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/select.go | ❌ | ❌ | ❌ | ❌ |

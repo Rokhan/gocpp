@@ -124,6 +124,8 @@ namespace gocpp
     template <typename T>
     ObjRecv<T> recv(const T& t) { return ObjRecv<T>(t); }
 
+    template <typename T>
+    PtrRecv<T> recv(T& t) { return PtrRecv<T>(&t); }
 
     template<typename T>
     struct array_base

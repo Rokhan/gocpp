@@ -10,7 +10,7 @@
 
 namespace golang
 {
-    struct Fetcher
+    struct Fetcher : gocpp::Interface
     {
         Fetcher(){}
         Fetcher(Fetcher& i) = default;

@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        !!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i = "hello";
+        std::any i = "hello";
         auto s = !!EXPR_ERROR!! [*ast.TypeAssertExpr];
         mocklib::Println(s);
         auto [s, ok] = !!EXPR_ERROR!! [*ast.TypeAssertExpr];

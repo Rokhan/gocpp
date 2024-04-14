@@ -50,10 +50,56 @@ namespace golang
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
+    
+        template<typename T>
+        gocpp_id_0::gocpp_id_0(T& ref)
+        {
+            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        gocpp_id_0::gocpp_id_0(const T& ref)
+        {
+            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+        }
+
+        template<typename T>
+        gocpp_id_0::gocpp_id_0(T* ptr)
+        {
+            value.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+        }
+
+        std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+        {
+            return os;
+        }
+
+        template<typename T, typename StoreT>
+        double gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vAbs()
+        {
+            return Abs(gocpp::PtrRecv<T, false>(value.get()));
+        }
+
+        double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        {
+            return self.ptr->value->vAbs();
+        }
+
+        double Abs(const gocpp::ObjRecv<gocpp_id_0>& self)
+        {
+            return self.obj.value->vAbs();
+        }
+
+        std::ostream& operator<<(std::ostream& os, const gocpp_id_0& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
     void main()
     {
         gocpp::Defer defer;
-        !!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i;
+        gocpp_id_0 i;
         describe(i);
         i = MyInt(42);
         describe(i);
@@ -63,7 +109,53 @@ namespace golang
         describe(i);
     }
 
-    void describe(!!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i)
+    
+    template<typename T>
+    gocpp_id_1::gocpp_id_1(T& ref)
+    {
+        value.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    gocpp_id_1::gocpp_id_1(const T& ref)
+    {
+        value.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    gocpp_id_1::gocpp_id_1(T* ptr)
+    {
+        value.reset(new gocpp_id_1Impl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename StoreT>
+    double gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vAbs()
+    {
+        return Abs(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self)
+    {
+        return self.ptr->value->vAbs();
+    }
+
+    double Abs(const gocpp::ObjRecv<gocpp_id_1>& self)
+    {
+        return self.obj.value->vAbs();
+    }
+
+    std::ostream& operator<<(std::ostream& os, const gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    void describe(gocpp_id_1 i)
     {
         gocpp::Defer defer;
         if(i != nullptr)

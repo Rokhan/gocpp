@@ -10,7 +10,7 @@
 
 namespace golang
 {
-    struct Abser
+    struct Abser : gocpp::Interface
     {
         Abser(){}
         Abser(Abser& i) = default;

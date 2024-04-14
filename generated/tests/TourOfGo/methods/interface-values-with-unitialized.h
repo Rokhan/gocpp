@@ -10,7 +10,7 @@
 
 namespace golang
 {
-    struct I
+    struct I : gocpp::Interface
     {
         I(){}
         I(I& i) = default;

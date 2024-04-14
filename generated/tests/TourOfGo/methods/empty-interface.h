@@ -11,6 +11,6 @@
 namespace golang
 {
     void main();
-    void describe(!!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i);
+    void describe(std::any i);
 }
 

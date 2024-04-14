@@ -42,7 +42,7 @@ namespace golang
     template<typename T, typename StoreT>
     double Abser::AbserImpl<T, StoreT>::vAbs()
     {
-        return Abs(gocpp::PtrRecv<T, true>(value.get()));
+        return Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     double Abs(const gocpp::PtrRecv<Abser, false>& self)

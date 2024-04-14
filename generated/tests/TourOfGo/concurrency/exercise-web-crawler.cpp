@@ -41,7 +41,7 @@ namespace golang
     template<typename T, typename StoreT>
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
     {
-        return Fetch(gocpp::PtrRecv<T, true>(value.get()));
+        return Fetch(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)

@@ -42,7 +42,7 @@ namespace golang
     template<typename T, typename StoreT>
     void I::IImpl<T, StoreT>::vM()
     {
-        return M(gocpp::PtrRecv<T, true>(value.get()));
+        return M(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     void M(const gocpp::PtrRecv<I, false>& self)

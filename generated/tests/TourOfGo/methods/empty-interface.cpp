@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        !!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i;
+        std::any i;
         describe(i);
         i = 42;
         describe(i);
@@ -25,7 +25,7 @@ namespace golang
         describe(i);
     }
 
-    void describe(!!TYPE_EXPR_ERROR!! [*ast.InterfaceType] i)
+    void describe(std::any i)
     {
         gocpp::Defer defer;
         mocklib::Printf("(%v, %T)\n", i, i);

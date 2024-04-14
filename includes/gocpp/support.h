@@ -1,5 +1,6 @@
 #pragma once
 
+#include <any>
 #include <complex>
 #include <exception>
 #include <functional>
@@ -95,6 +96,21 @@ namespace gocpp
         init(*value);
         return value;
     }
+    
+    struct Interface
+    {
+        bool isNil = true;
+
+        bool operator==(nullptr_t ptr)
+        {
+            return isNil;
+        }
+        
+        bool operator!=(nullptr_t ptr)
+        {
+            return !isNil;
+        }
+    };
 
     struct GoPanic : std::runtime_error 
     {
@@ -110,6 +126,7 @@ namespace gocpp
 
 
     // Receiver adapter for method calls
+    // TODO: check if "IgnoreInterface" parameters has still some utility
     template <typename T, bool IgnoreInterface = false>
     struct PtrRecv
     {        
@@ -815,6 +832,11 @@ namespace mocklib
         Print(std::forward<Args>(args)...);
         std::cout << "\n";
     }    
+
+    std::string Sprint(const std::any& value)
+    {
+        return "<std::any>";
+    }
 
     template<typename T>
     std::string Sprint(const T& value)

@@ -45,7 +45,7 @@
 | TourOfGo/flowcontrol/switch-evaluation-order.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-evaluation-order.cpp)) | ➖ | 
 | TourOfGo/flowcontrol/switch-numeric.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-numeric.cpp)) | ➖ | 
 | TourOfGo/flowcontrol/switch-with-no-condition.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-with-no-condition.cpp)) | ➖ | 
-| TourOfGo/methods/empty-interface.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/empty-interface.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/empty-interface.cpp)) | ❌ |
 | TourOfGo/methods/errors.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/exercise-errors.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/exercise-images.go | ✔️ | ❌ | ❌ | ❌ |
@@ -55,7 +55,7 @@
 | TourOfGo/methods/images.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/indirection.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
 | TourOfGo/methods/indirection-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ❌ |
-| TourOfGo/methods/inline-interface.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/inline-interface.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/inline-interface.cpp)) | ❌ |
 | TourOfGo/methods/interfaces.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ❌ |
 | TourOfGo/methods/interfaces-are-satisfied-implicitly.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.cpp)) | ✔️ |
 | TourOfGo/methods/interfaces-ordered.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |

@@ -1,4 +1,5 @@
-// +build no-diff OMIT
+//go:build ignore || OMIT || no-diff
+// +build ignore OMIT
 
 package main
 

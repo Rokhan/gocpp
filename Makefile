@@ -1,4 +1,7 @@
 
+GO_TEST_DIRS:=$(wildcard ./tests ./tests/*/*/)
+GO_TEST_DIRS:=$(filter-out ./tests/TourOfGo/img/, $(GO_TEST_DIRS))
+
 GO_TEST_FILES=$(wildcard tests/*.go tests/*/*/*.go)
 OUTDIR=generated
 LOGDIR=log
@@ -30,6 +33,9 @@ doc:
 	echo "| ---- | ------------ | --------------- | --- | ----------- |" >> results.md
 	cat $(OUT_MD_TEST_FILES) | sort -t. -k 1d,1 >> results.md
 	dos2unix results.md
+
+format-tests:
+	go fmt $(GO_TEST_DIRS)
 
 allcpp: $(OUT_CPP_TEST_FILES)
 	echo $(OUT_CPP_TEST_FILES)

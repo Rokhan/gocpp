@@ -19,6 +19,8 @@ OUT_EXE_TEST_FILES=$(addprefix $(LOGDIR)/,$(EXE_TEST_FILES))
 MD_TEST_FILES=$(GO_TEST_FILES:.go=.md)
 OUT_MD_TEST_FILES=$(addprefix $(LOGDIR)/,$(MD_TEST_FILES))
 
+CCACHE := $(shell which ccache 2> /dev/null)
+
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
 ##  To generate full report just use "make -k"            ##
@@ -72,7 +74,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES)
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
-	(cd $(OUTDIR) && g++ -std=c++20 -I. -I../includes -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.exe) \
+	(cd $(OUTDIR) && $(CCACHE) g++ -c -std=c++20 -I. -I../includes -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

@@ -1598,7 +1598,7 @@ func (cv *cppVisitor) convertCompositeLit(n *ast.CompositeLit, addPtr bool) stri
 
 		for _, elt := range n.Elts {
 			kv := elt.(*ast.KeyValueExpr)
-			fmt.Fprintf(buf, "x.%s = %s; ", kv.Key, cv.convertExpr(kv.Value))
+			fmt.Fprintf(buf, "x.%s = %s; ", cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
 		}
 		fmt.Fprintf(buf, "})")
 	} else {

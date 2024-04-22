@@ -20,6 +20,13 @@ const (
 )
 
 const (
+	z0 = 0
+	za = 1 << iota // a == 1 (iota has been reset)
+	zb = 1 << iota // b == 2
+	zc = 1 << iota // c == 4
+)
+
+const (
 	u         = iota * 42 // u == 0     (untyped integer constant)
 	v float64 = iota * 42 // v == 42.0  (float64 constant)
 	w         = iota * 42 // w == 84    (untyped integer constant)
@@ -38,6 +45,7 @@ const (
 func main() {
 	fmt.Printf("%v %v %v\n", c0, c1, c2)
 	fmt.Printf("%v %v %v\n", a, b, c)
+	fmt.Printf("%v %v %v %v\n", z0, za, zb, zc)
 	fmt.Printf("%v %v %v\n", u, v, w)
 	fmt.Printf("%v %v\n", x, y)
 	fmt.Printf("%v %v %v\n", bit0, bit1, bit3)

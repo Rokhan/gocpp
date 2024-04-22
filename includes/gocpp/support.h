@@ -15,6 +15,20 @@
 
 #include "thread_pool/thread_pool.h"
 
+namespace gocpp
+{
+    template<typename T> struct slice;
+}
+
+namespace mocklib
+{
+    template<typename T>
+    std::ostream& PrintSliceTo(std::false_type, std::ostream& os, gocpp::slice<T> const& slice);
+        
+    template<typename T>
+    std::ostream& PrintSliceTo(std::true_type, std::ostream& os, gocpp::slice<T> const& slice);
+}
+
 // Support types implementations
 namespace gocpp
 {
@@ -425,6 +439,12 @@ namespace gocpp
     template<typename T>
     bool operator==(nullptr_t, slice<T> s) { return len(s) == 0; }
 
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
+    {
+        return mocklib::PrintSliceTo<T>(gocpp::IsGoStruct<T>(), os, slice);
+    }
+
     template<typename V>
     struct map_value : public std::tuple<typename std::add_lvalue_reference<V>::type, bool>
     {
@@ -442,6 +462,16 @@ namespace gocpp
         std::tuple_element_t<Index, map_value> &get()
         {
             return std::get<Index>(*this);
+        }
+        
+        auto operator->() noexcept -> decltype(std::get<0>(*this))
+        {
+            return std::get<0>(*this);
+        }
+
+        auto operator->() const noexcept -> decltype(std::get<0>(*this))
+        {
+            return std::get<0>(*this);
         }
     };
 
@@ -737,12 +767,6 @@ namespace mocklib
         return os;
     }
 
-    template<typename T>
-    std::ostream& operator<<(std::ostream& os, gocpp::slice<T> const& slice)
-    {
-        return PrintSliceTo<T>(gocpp::IsGoStruct<T>(), os, slice);
-    }
-
     void PrintToVect(std::vector<std::string>&);
 
     template<typename T>
@@ -830,6 +854,11 @@ namespace mocklib
     void Println(Args&&... args)
     {
         Print(std::forward<Args>(args)...);
+        std::cout << "\n";
+    }
+    
+    void Println()
+    {
         std::cout << "\n";
     }    
 

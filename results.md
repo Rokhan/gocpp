@@ -9,7 +9,8 @@
 | TourOfGo/basics/functions.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions.cpp)) | ✔️ |
 | TourOfGo/basics/functions-continued.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions-continued.cpp)) | ✔️ |
 | TourOfGo/basics/imports.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/imports.cpp)) | ❌ |
-| TourOfGo/basics/iota.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/basics/inline-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/inline-values.cpp)) | ✔️ |
+| TourOfGo/basics/iota.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/iota.cpp)) | ✔️ |
 | TourOfGo/basics/multiple-results.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/multiple-results.cpp)) | ✔️ |
 | TourOfGo/basics/named-results.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/named-results.cpp)) | ❌ |
 | TourOfGo/basics/numeric-constants.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/numeric-constants.cpp)) | ❌ |
@@ -23,7 +24,7 @@
 | TourOfGo/concurrency/buffered-channels.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/channels.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/default-selection.go | ❌ | ❌ | ❌ | ❌ |
-| TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-web-crawler.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/goroutines.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
 | TourOfGo/concurrency/mutex-counter.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter.cpp)) | ✔️ |
@@ -51,7 +52,7 @@
 | TourOfGo/methods/exercise-images.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/exercise-reader.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/exercise-rot-reader.go | ✔️ | ❌ | ❌ | ❌ |
-| TourOfGo/methods/exercise-stringer.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/methods/exercise-stringer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/exercise-stringer.cpp)) | ❌ |
 | TourOfGo/methods/images.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/methods/indirection.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
 | TourOfGo/methods/indirection-values.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ❌ |
@@ -98,7 +99,7 @@
 | TourOfGo/moretypes/struct-fields.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-fields-initializer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields-initializer.cpp)) | ✔️ |
 | TourOfGo/moretypes/struct-literals.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-literals.cpp)) | ❌ |
-| TourOfGo/moretypes/struct-pointers.go | ✔️ | ❌ | ❌ | ❌ |
+| TourOfGo/moretypes/struct-pointers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-pointers.cpp)) | ✔️ |
 | TourOfGo/moretypes/structs.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs.cpp)) | ✔️ |
 | TourOfGo/welcome/hello.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/hello.cpp)) | ✔️ |
 | TourOfGo/welcome/sandbox.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/sandbox.cpp)) | ❌ |

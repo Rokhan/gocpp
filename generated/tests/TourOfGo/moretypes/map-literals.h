@@ -21,6 +21,7 @@ namespace golang
     };
 
     std::ostream& operator<<(std::ostream& os, const Vertex& value);
+    extern gocpp::map<std::string, Vertex> m;
     void main();
 }
 

@@ -16,7 +16,7 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "math/cmplx";
     bool ToBe = false;
-    uint64_t MaxInt = 1 << 64 - 1;
+    uint64_t MaxInt = (1 << 64) - 1;
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
     void main()
     {

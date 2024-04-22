@@ -14,8 +14,8 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    auto Big = 1 << 100;
-    auto Small = Big >> 99;
+    int Big = 1 << 100;
+    int Small = Big >> 99;
     int needInt(int x)
     {
         gocpp::Defer defer;

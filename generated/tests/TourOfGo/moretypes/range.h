@@ -10,6 +10,7 @@
 
 namespace golang
 {
+    extern gocpp::slice<int> pow;
     void main();
 }
 

@@ -10,6 +10,7 @@
 
 namespace golang
 {
+    using IPAddr = gocpp::array<unsigned char, 4>;
     void main();
 }
 

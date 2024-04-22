@@ -45,11 +45,11 @@ namespace golang
         return value.PrintTo(os);
     }
 
-    auto v1 = Vertex {1, 2, 3};
-    auto v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
-    auto v3 = Vertex {};
-    auto v4 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; });
-    auto s1 = gocpp::Init<Segment>([](Segment& x) { x.Start = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
+    Vertex v1 = Vertex {1, 2, 3};
+    Vertex v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
+    Vertex v3 = Vertex {};
+    Vertex v4 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; });
+    Segment s1 = gocpp::Init<Segment>([](Segment& x) { x.Start = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
     void main()
     {
         gocpp::Defer defer;

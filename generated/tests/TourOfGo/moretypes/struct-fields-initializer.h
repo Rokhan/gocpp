@@ -33,6 +33,11 @@ namespace golang
     };
 
     std::ostream& operator<<(std::ostream& os, const Segment& value);
+    extern Vertex v1;
+    extern Vertex v2;
+    extern Vertex v3;
+    extern Vertex v4;
+    extern Segment s1;
     void main();
 }
 

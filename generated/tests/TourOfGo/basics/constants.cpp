@@ -14,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    auto Pi = 3.14;
+    double Pi = 3.14;
     void main()
     {
         gocpp::Defer defer;

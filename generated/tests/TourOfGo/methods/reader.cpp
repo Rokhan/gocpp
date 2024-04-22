@@ -20,7 +20,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto r = strings::NewReader("Hello, Reader!");
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<byte>>(), 8);
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
         for(; ; )
         {
             auto [n, err] = Read(gocpp::recv(r), b);

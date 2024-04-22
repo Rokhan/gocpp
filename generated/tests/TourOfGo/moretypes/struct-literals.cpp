@@ -29,10 +29,10 @@ namespace golang
         return value.PrintTo(os);
     }
 
-    auto v1 = Vertex {1, 2};
-    auto v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
-    auto v3 = Vertex {};
-    auto p = new Vertex {1, 2};
+    Vertex v1 = Vertex {1, 2};
+    Vertex v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
+    Vertex v3 = Vertex {};
+    Vertex* p = new Vertex {1, 2};
     void main()
     {
         gocpp::Defer defer;

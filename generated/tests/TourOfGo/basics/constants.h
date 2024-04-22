@@ -10,6 +10,7 @@
 
 namespace golang
 {
+    extern double Pi;
     void main();
 }
 

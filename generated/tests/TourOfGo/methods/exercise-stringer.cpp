@@ -14,7 +14,6 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    gocpp::array<byte, 4> IPAddr;
     void main()
     {
         gocpp::Defer defer;

@@ -14,7 +14,7 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
-    auto pow = gocpp::slice<int> {1, 2, 4, 8, 16, 32, 64, 128};
+    gocpp::slice<int> pow = gocpp::slice<int> {1, 2, 4, 8, 16, 32, 64, 128};
     void main()
     {
         gocpp::Defer defer;

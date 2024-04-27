@@ -40,6 +40,8 @@ namespace gocpp
     struct complex128;
     struct Defer;
 
+    [[noreturn]] void panic(const std::string& message);
+
     inline dp::thread_pool<>& global_pool()
     {
         static dp::thread_pool pool(std::thread::hardware_concurrency());
@@ -70,6 +72,91 @@ namespace gocpp
     inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
 
     template<typename T> struct Tag {};
+
+    template <typename T>
+    class channel_impl
+    {
+    private:
+        dp::thread_safe_queue<T> _queue;
+        std::atomic_bool _open;
+
+    public:
+        channel_impl()
+        {
+            _open.store(true);
+        }
+
+        ~channel_impl()
+        {
+            drain();
+        }
+
+        void drain()
+        {
+            _open.store(false);
+        }
+
+        bool is_open()
+        {
+            return _open || !_queue.empty();
+        }
+
+        void send(T val)
+        {
+            if (!_open)
+            {
+                panic("send attempt while closed");
+            }
+            _queue.push_back(std::move(val));
+        }
+
+        bool recv(T &val)
+        {
+            // TODO use condition variable
+            while (is_open())
+            {
+                auto optVal = _queue.pop_front();
+                if (optVal.has_value())
+                {
+                    val = optVal.value();
+                    return true;
+                }
+                std::this_thread::yield();
+            }
+            return false;
+        }
+    };
+
+    template <typename T>
+    class channel
+    {
+    private:
+        std::shared_ptr<channel_impl<T>> mImpl;
+
+    public:
+        channel() : mImpl(std::make_shared<channel_impl<T>>()) { }
+        
+        // TODO: implement buffer size
+        channel(int) : mImpl(std::make_shared<channel_impl<T>>()) { }
+        
+        void send(T val)
+        {
+            mImpl->send(val);
+        }
+
+        bool recv(T &val)
+        {
+            return mImpl->recv(val);
+        }
+        
+        T recv()
+        {
+            T val;
+            auto ok = mImpl->recv(val);
+            if(!ok) panic("no value in channel");
+            return val;
+        }
+    };
 
     struct Defer : std::vector<std::function<void()>>
     {
@@ -567,22 +654,22 @@ namespace gocpp
         return slice(*this, low, high);
     }
 
-    template<typename T>
-    slice<T> make(Tag<slice<T>>, int n)
+    template <typename T>
+    T make(Tag<T>)
     {
-        return slice<T>(n);
+        return T();
+    }
+    
+    template <typename T, typename P>
+    T make(Tag<T>, P p)
+    {
+        return T(p);
     }
 
-    template<typename T>
-    slice<T> make(Tag<slice<T>>, int n, int r)
+    template <typename T, typename P1, typename P2>
+    T make(Tag<T>, P1 p1, P2 p2)
     {
-        return slice<T>(n, r);
-    }
-
-    template<typename K, typename V>
-    gocpp::map<K, V> make(Tag<gocpp::map<K, V>>)
-    {
-        return gocpp::map<K, V>();
+        return T(p1, p2);
     }
 }
 

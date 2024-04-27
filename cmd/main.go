@@ -732,6 +732,9 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []string
 	case *ast.GoStmt:
 		fmt.Fprintf(cv.cpp.out, "%sgocpp::global_pool().enqueue_detach([&]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
+	case *ast.SendStmt:
+		fmt.Fprintf(cv.cpp.out, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
+
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
 		outlines = cv.convertBlockStmt(s.Body, blockEnv{env, false})
@@ -1128,6 +1131,9 @@ func (cv *cppVisitor) convertTypeExpr(node ast.Expr) cppType {
 	case *ast.ArrayType:
 		return cv.convertArrayTypeExpr(n)
 
+	case *ast.ChanType:
+		return cv.convertChanTypeExpr(n)
+
 	case *ast.FuncType:
 		return cppType{cv.convertFuncTypeExpr(n), nil, false}
 
@@ -1194,6 +1200,11 @@ func (cv *cppVisitor) convertArrayTypeExpr(node *ast.ArrayType) cppType {
 	} else {
 		return cppType{fmt.Sprintf("gocpp::array<%s, %s>", elt.str, cv.convertExpr(node.Len)), elt.defs, false}
 	}
+}
+
+func (cv *cppVisitor) convertChanTypeExpr(node *ast.ChanType) cppType {
+	elt := cv.convertTypeExpr(node.Value)
+	return cppType{fmt.Sprintf("gocpp::channel<%s>", node.Value), elt.defs, false}
 }
 
 func (cv *cppVisitor) convertFuncTypeExpr(node *ast.FuncType) string {
@@ -1620,6 +1631,25 @@ func (cv *cppVisitor) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 		// Type used as parameter, we use a dummy tag value that is used only for its type
 		return fmt.Sprintf("gocpp::Tag<%s>()", array.str)
 
+	case *ast.ChanType:
+		chanType := cv.convertChanTypeExpr(n)
+		// TODO: mapDefs should be and output of convertExpr
+		// HACK: cv.cpp.out shouldn't be used here
+		for _, def := range chanType.defs {
+			if def.inline != nil {
+				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
+			}
+			if def.outline != nil {
+				return "### NOT IMPLEMENTED, convertExpr, can't declare outline from here ###"
+			}
+			if def.header != nil {
+				return "### NOT IMPLEMENTED, convertExpr, can't declare in header from here ###"
+			}
+		}
+
+		// Type used as parameter, we use a dummy tag value that is used only for its type
+		return fmt.Sprintf("gocpp::Tag<%s>()", chanType.str)
+
 	case *ast.MapType:
 		mapType := cv.convertMapTypeExpr(n)
 		// TODO: mapDefs should be and output of convertExpr
@@ -1673,6 +1703,8 @@ func (cv *cppVisitor) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 		switch {
 		case n.Op == token.AND && isCompositeLit:
 			return cv.convertCompositeLit(compositLit, true)
+		case n.Op == token.ARROW:
+			return fmt.Sprintf("%s.recv()", cv.convertExpr(n.X))
 		default:
 			return convertToken(n.Op) + " " + cv.convertExpr(n.X)
 		}

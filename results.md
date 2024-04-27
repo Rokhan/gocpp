@@ -21,15 +21,15 @@
 | TourOfGo/basics/variables.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/variables.cpp)) | ❌ |
 | TourOfGo/basics/variables-with-initializers.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/variables-with-initializers.cpp)) | ✔️ |
 | TourOfGo/basics/zero.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/zero.cpp)) | ❌ |
-| TourOfGo/concurrency/buffered-channels.go | ❌ | ❌ | ❌ | ❌ |
-| TourOfGo/concurrency/channels.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/concurrency/buffered-channels.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/buffered-channels.cpp)) | ✔️ |
+| TourOfGo/concurrency/channels.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/channels.cpp)) | ❌ |
 | TourOfGo/concurrency/default-selection.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-equivalent-binary-trees.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/exercise-web-crawler.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/goroutines.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
 | TourOfGo/concurrency/mutex-counter.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter.cpp)) | ✔️ |
 | TourOfGo/concurrency/mutex-counter-ptr.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter-ptr.cpp)) | ✔️ |
-| TourOfGo/concurrency/range-and-close.go | ❌ | ❌ | ❌ | ❌ |
+| TourOfGo/concurrency/range-and-close.go | ✔️ | ❌ | ❌ | ❌ |
 | TourOfGo/concurrency/select.go | ❌ | ❌ | ❌ | ❌ |
 | TourOfGo/flowcontrol/defer.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/defer.cpp)) | ✔️ |
 | TourOfGo/flowcontrol/defer-multi.go | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/defer-multi.cpp)) | ✔️ |

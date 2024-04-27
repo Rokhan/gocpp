@@ -15,7 +15,7 @@ namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/tree";
-    void Walk(tree::Tree* t, !!TYPE_EXPR_ERROR!! [*ast.ChanType] ch)
+    void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::Defer defer;
         gocpp::panic("Not implemented");

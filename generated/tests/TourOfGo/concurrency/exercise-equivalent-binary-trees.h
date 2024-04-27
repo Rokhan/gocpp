@@ -10,7 +10,7 @@
 
 namespace golang
 {
-    void Walk(tree::Tree* t, !!TYPE_EXPR_ERROR!! [*ast.ChanType] ch);
+    void Walk(tree::Tree* t, gocpp::channel<int> ch);
     bool Same(tree::Tree* t1, tree::Tree* t2);
     void main();
 }

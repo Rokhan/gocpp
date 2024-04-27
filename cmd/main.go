@@ -699,7 +699,7 @@ func (cv *cppVisitor) convertAssignExprs(stmt *ast.AssignStmt) string {
 		}
 
 	default:
-		Panicf("convertAssignExprs, unmanaged token: %s", stmt.Tok)
+		Panicf("convertAssignExprs, unmanaged token: %s, input: %v", stmt.Tok, cv.Position(stmt))
 	}
 
 	// should be unreacheable
@@ -743,7 +743,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []string
 		case token.CONTINUE:
 			fmt.Fprintf(cv.cpp.out, "%scontinue;\n", cv.cpp.Indent())
 		default:
-			Panicf("convertStmt, unmanaged BranchStmt [%v]", s.Tok)
+			Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
 		}
 
 	case *ast.RangeStmt:
@@ -819,7 +819,7 @@ func (cv *cppVisitor) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []string
 		cv.cpp.indent--
 
 	default:
-		Panicf("convertStmt, unmanaged type [%v]", reflect.TypeOf(s))
+		Panicf("convertStmt, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 	return
 }
@@ -853,7 +853,7 @@ func (cv *cppVisitor) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		se.prefix = "else "
 
 	default:
-		Panicf("extractCaseExpr, unmanaged type [%v]", reflect.TypeOf(s))
+		Panicf("extractCaseExpr, unmanaged type [%v], input %s", reflect.TypeOf(s), cv.Position(s))
 	}
 }
 
@@ -877,7 +877,7 @@ func (cv *cppVisitor) inlineStmt(stmt ast.Stmt) (result string) {
 				}
 			}
 		default:
-			Panicf("inlineStmt, unmanaged subtype [%v]", reflect.TypeOf(d))
+			Panicf("inlineStmt, unmanaged subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 		}
 
 	case *ast.ExprStmt:
@@ -897,7 +897,7 @@ func (cv *cppVisitor) inlineStmt(stmt ast.Stmt) (result string) {
 		return cv.convertAssignExprs(s)
 
 	default:
-		Panicf("inlineStmt, unmanaged token [%v]", reflect.TypeOf(s))
+		Panicf("inlineStmt, unmanaged token: [%v], inout: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	// should be unreacheable

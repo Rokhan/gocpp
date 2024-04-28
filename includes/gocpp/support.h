@@ -78,25 +78,33 @@ namespace gocpp
     {
     private:
         dp::thread_safe_queue<T> _queue;
-        std::atomic_bool _open;
+        std::atomic_bool _open;        
+        int _capacity; // No used at the moment
+        
 
     public:
-        channel_impl()
+        channel_impl(int capacity = 0)
         {
+            _capacity = capacity;
             _open.store(true);
         }
 
         ~channel_impl()
         {
-            drain();
+            close();
         }
 
-        void drain()
+        int capacity() const
+        {
+            return _capacity;
+        }
+
+        void close()
         {
             _open.store(false);
         }
 
-        bool is_open()
+        bool is_open() const
         {
             return _open || !_queue.empty();
         }
@@ -110,7 +118,7 @@ namespace gocpp
             _queue.push_back(std::move(val));
         }
 
-        bool recv(T &val)
+        std::pair<T, bool> recv()
         {
             // TODO use condition variable
             while (is_open())
@@ -118,12 +126,11 @@ namespace gocpp
                 auto optVal = _queue.pop_front();
                 if (optVal.has_value())
                 {
-                    val = optVal.value();
-                    return true;
+                    return {optVal.value(), optVal.has_value()};
                 }
                 std::this_thread::yield();
             }
-            return false;
+            return {};
         }
     };
 
@@ -136,9 +143,52 @@ namespace gocpp
     public:
         channel() : mImpl(std::make_shared<channel_impl<T>>()) { }
         
-        // TODO: implement buffer size
-        channel(int) : mImpl(std::make_shared<channel_impl<T>>()) { }
-        
+        // TODO: use capacity
+        channel(int capacity) : mImpl(std::make_shared<channel_impl<T>>(capacity)) { }
+                
+        struct channel_iterator
+        {
+            channel<T> chan;
+            std::optional<T> value;
+            int index = 0;
+
+            channel_iterator(channel<T> c) : chan(c) {}
+
+            std::pair<T, int> operator*()
+            {
+                if(!value.has_value())
+                {
+                    value = chan.recv();
+                }
+
+                return { value.value(), index };
+            }
+
+            channel_iterator& operator++()
+            {
+                ++index;
+                value.reset();
+                return *this;
+            }
+        };
+                
+        struct channel_iterator_end { };
+
+        inline friend bool operator==(const channel_iterator& it, channel_iterator_end end)
+        {
+            return !it.chan.is_open();
+        }
+
+        channel_iterator begin()
+        {
+            return channel_iterator(*this);
+        }
+
+        channel_iterator_end end()
+        {
+            return {};
+        }
+
         void send(T val)
         {
             mImpl->send(val);
@@ -146,15 +196,36 @@ namespace gocpp
 
         bool recv(T &val)
         {
-            return mImpl->recv(val);
+            auto optVal = mImpl->recv();
+            val = optVal.value;
+            return optVal.hasValue;
         }
         
         T recv()
         {
-            T val;
-            auto ok = mImpl->recv(val);
+            auto [val, ok] = mImpl->recv();
             if(!ok) panic("no value in channel");
             return val;
+        }
+
+        bool is_open() const
+        {
+            return mImpl->is_open();
+        }
+
+        void close()
+        {
+            mImpl->close();
+        }
+        
+        friend inline size_t cap(const channel<T>& input)
+        {
+            return input.mImpl->capacity();
+        }
+        
+        friend inline void close(channel<T>& input)
+        {
+            input.close();
         }
     };
 
@@ -495,12 +566,12 @@ namespace gocpp
             panic("invalid slice");
         }
         
-        friend inline size_t len(slice<T> input)
+        friend inline size_t len(const slice<T>& input)
         {
             return input.mEnd - input.mStart;
         }
 
-        friend inline size_t cap(slice<T> input)
+        friend inline size_t cap(const slice<T>& input)
         {
             if(input.mArray)
             {

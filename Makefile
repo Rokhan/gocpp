@@ -72,7 +72,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) main.exe
 	
 	mkdir -p $$(dirname $(LOGDIR)/$*) || true
 
-	echo -n "| [$(<:tests/%=%)]($<)) " > $(LOGDIR)/$*.md
+	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
 
 	./main.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \

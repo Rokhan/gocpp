@@ -28,7 +28,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp::global_pool().enqueue_detach([&]{ say("world"); });
+        gocpp::go([&]{ say("world"); });
         mocklib::Sleep(50 * mocklib::Millisecond);
         say("hello");
     }

@@ -30,7 +30,7 @@ namespace golang
     {
         gocpp::Defer defer;
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 10);
-        gocpp::global_pool().enqueue_detach([&]{ fibonacci(cap(c), c); });
+        gocpp::go([&]{ fibonacci(cap(c), c); });
         for(auto [i, gocpp_ignored] : c)
         {
             mocklib::Println(i);

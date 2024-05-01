@@ -53,7 +53,7 @@ namespace golang
         auto c = gocpp::InitPtr<SafeCounter>([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
         for(auto i = 0; i < 1000; i++)
         {
-            gocpp::global_pool().enqueue_detach([&]{ Inc(gocpp::recv(c), "somekey"); });
+            gocpp::go([&]{ Inc(gocpp::recv(c), "somekey"); });
         }
         mocklib::Sleep(mocklib::Second);
         mocklib::Println("result: ", Value(gocpp::recv(c), "somekey"));

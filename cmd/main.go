@@ -77,6 +77,8 @@ var stdFuncMapping = map[string]string{
 	// pic
 	"pic::Show": "mocklib::picShow",
 	// time
+	"time::After":       "mocklib::After",
+	"time::Tick":        "mocklib::Tick",
 	"time::Now":         "mocklib::Date::Now",
 	"time::Saturday":    "mocklib::Date::Saturday",
 	"time::Sleep":       "mocklib::Sleep",
@@ -712,7 +714,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.GoStmt:
-		fmt.Fprintf(cv.cpp.out, "%sgocpp::global_pool().enqueue_detach([&]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
+		fmt.Fprintf(cv.cpp.out, "%sgocpp::go([&]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.SendStmt:
 		fmt.Fprintf(cv.cpp.out, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
@@ -765,24 +767,21 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init))
 		}
 
-		conditionVarName := "conditionId"
 		inputVarName := ""
 		if s.Tag != nil {
 			inputVarName = "condition"
 			fmt.Fprintf(cv.cpp.out, "%sauto %s = %s;\n", cv.cpp.Indent(), inputVarName, cv.convertExpr(s.Tag))
 		}
 
-		fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
-		se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
-		cv.extractCaseExpr(s.Body, &se)
-		fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
+		cv.convertSwitchBody(env, s.Body, "conditionId", inputVarName)
 
-		cv.currentSwitchId.PushBack(0)
-		outlines = cv.convertBlockStmt(s.Body, blockEnv{env, false})
-		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+	case *ast.SelectStmt:
+		fmt.Fprintf(cv.cpp.out, "%s//Go select emulation\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
+		cv.cpp.indent++
 
-		cv.cpp.indent--
-		fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+		cv.convertSwitchBody(env, s.Body, "conditionId", "")
+		fmt.Fprintf(cv.cpp.out, "%sstd::this_thread::yield();\n", cv.cpp.Indent())
 
 	case *ast.CaseClause:
 		if s.List == nil {
@@ -793,6 +792,24 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 				fmt.Fprintf(cv.cpp.out, "%scase %d:\n", cv.cpp.Indent(), id)
 				cv.currentSwitchId.Back().Value = id + 1
 			}
+		}
+
+		cv.cpp.indent++
+		for _, stmt := range s.Body {
+			stmtOutline := cv.convertStmt(stmt, env)
+			outlines = append(outlines, stmtOutline...)
+		}
+		fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		cv.cpp.indent--
+
+	case *ast.CommClause:
+
+		if s.Comm == nil {
+			fmt.Fprintf(cv.cpp.out, "%sdefault:\n", cv.cpp.Indent())
+		} else {
+			id := cv.currentSwitchId.Back().Value.(int)
+			fmt.Fprintf(cv.cpp.out, "%scase %d:\n", cv.cpp.Indent(), id)
+			cv.currentSwitchId.Back().Value = id + 1
 		}
 
 		cv.cpp.indent++
@@ -816,6 +833,22 @@ type switchEnvName struct {
 	withCondition    bool
 }
 
+func (cv *cppConverter) convertSwitchBody(env stmtEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outlines []string) {
+
+	fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
+	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
+	cv.extractCaseExpr(body, &se)
+	fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
+
+	cv.currentSwitchId.PushBack(0)
+	outlines = cv.convertBlockStmt(body, blockEnv{env, false})
+	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+
+	cv.cpp.indent--
+	fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+	return
+}
+
 func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
@@ -837,15 +870,60 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		}
 		se.prefix = "else "
 
+	case *ast.CommClause:
+		id := cv.currentSwitchId.Back().Value.(int)
+		switch comm := s.Comm.(type) {
+		case *ast.SendStmt:
+			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { /* SendStmt */ %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm), se.conditionVarName, id)
+		case *ast.ExprStmt:
+			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { /* ExprStmt */ %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm.X), se.conditionVarName, id)
+		case nil:
+			/* default, nothing to do */
+		default:
+			Panicf("extractCaseExpr, commClause, unmanaged type [%v], input %s", reflect.TypeOf(comm), cv.Position(comm))
+		}
+		cv.currentSwitchId.Back().Value = id + 1
+		se.prefix = "else "
+
 	default:
 		Panicf("extractCaseExpr, unmanaged type [%v], input %s", reflect.TypeOf(s), cv.Position(s))
 	}
+}
+
+func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result string) {
+	switch n := node.(type) {
+	case nil:
+		return
+
+	case *ast.SendStmt:
+		return fmt.Sprintf("%s.trySend(%s)", cv.convertExpr(n.Chan), cv.convertExpr(n.Value))
+
+	case *ast.ExprStmt:
+		return cv.convertSelectCaseNode(n.X)
+
+	case *ast.UnaryExpr:
+		switch {
+		case n.Op == token.ARROW:
+			return fmt.Sprintf("auto [gocpp_ignored , ok] = %s.tryRecv(); ok", cv.convertExpr(n.X))
+		default:
+			Panicf("convertSelectCaseStmt,unmanaged token: [%v], inout: %v", reflect.TypeOf(n.Op), cv.Position(n))
+		}
+
+	default:
+		Panicf("convertSelectCaseStmt, unmanaged node: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
+	}
+
+	// should be unreacheable
+	panic("convertSelectCaseStmt, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) inlineStmt(stmt ast.Stmt) (result string) {
 	switch s := stmt.(type) {
 	case nil:
 		return
+
+	case *ast.SendStmt:
+		return fmt.Sprintf("%s.send(%s)", cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
 
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
@@ -861,6 +939,7 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt) (result string) {
 					result += "### NOT IMPLEMENTED, inlineStmt, can't declare in header from here"
 				}
 			}
+			return
 		default:
 			Panicf("inlineStmt, unmanaged subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 		}
@@ -886,7 +965,7 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt) (result string) {
 	}
 
 	// should be unreacheable
-	panic("inlineStmt, unmanaged case")
+	panic("inlineStmt, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames, outTypes []string) {

@@ -11,6 +11,7 @@ import (
 func main() {
 	tick := time.Tick(100 * time.Millisecond)
 	boom := time.After(500 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond) // make test output stable
 	for {
 		select {
 		case <-tick:

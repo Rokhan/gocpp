@@ -47,6 +47,12 @@ namespace gocpp
         static dp::thread_pool pool(std::thread::hardware_concurrency());
         return pool;
     }
+    
+    template <typename Function, typename... Args>
+    inline void go(Function &&func, Args &&...args)
+    {
+        global_pool().enqueue_detach(func, args...);
+    }
 
     template <typename T>
     struct ptr
@@ -74,61 +80,89 @@ namespace gocpp
     template<typename T> struct Tag {};
 
     template <typename T>
-    class channel_impl
+    class channelImpl
     {
     private:
-        dp::thread_safe_queue<T> _queue;
-        std::atomic_bool _open;        
-        int _capacity; // No used at the moment
-        
+        dp::thread_safe_queue<T> mQueue;
+        std::atomic_bool mOpen;
+        int mCapacity; // No used at the moment
+        int sync = 0;
 
     public:
-        channel_impl(int capacity = 0)
+        channelImpl(int capacity = 0)
         {
-            _capacity = capacity;
-            _open.store(true);
+            mCapacity = capacity;
+            mOpen.store(true);
         }
 
-        ~channel_impl()
+        ~channelImpl()
         {
             close();
         }
 
         int capacity() const
         {
-            return _capacity;
+            return mCapacity;
         }
 
         void close()
         {
-            _open.store(false);
+            mOpen.store(false);
         }
 
-        bool is_open() const
+        bool isOpen() const
         {
-            return _open || !_queue.empty();
+            return mOpen || !mQueue.empty();
         }
 
         void send(T val)
         {
-            if (!_open)
+            if (!mOpen)
             {
                 panic("send attempt while closed");
             }
-            _queue.push_back(std::move(val));
+            mQueue.push_back(std::move(val));
         }
 
-        std::pair<T, bool> recv()
+        // TODO: wait when capacity reached
+        bool trySend(T val)
+        { 
+            //hack to not block select statements            
+            ++sync;
+            if(sync%2 == 0)
+            {
+                send(val);
+                return true;
+            }
+
+            return false;
+        }
+
+        std::pair<T, bool> receive()
         {
             // TODO use condition variable
-            while (is_open())
+            while (isOpen())
             {
-                auto optVal = _queue.pop_front();
+                auto optVal = mQueue.pop_front();
                 if (optVal.has_value())
                 {
                     return {optVal.value(), optVal.has_value()};
                 }
+
                 std::this_thread::yield();
+            }
+            return {};
+        }
+
+        std::pair<T, bool> tryReceive()
+        {
+            if (isOpen())
+            {
+                auto optVal = mQueue.pop_front();
+                if (optVal.has_value())
+                {
+                    return {optVal.value(), optVal.has_value()};
+                }
             }
             return {};
         }
@@ -138,14 +172,14 @@ namespace gocpp
     class channel
     {
     private:
-        std::shared_ptr<channel_impl<T>> mImpl;
+        std::shared_ptr<channelImpl<T>> mImpl;
 
     public:
-        channel() : mImpl(std::make_shared<channel_impl<T>>()) { }
-        
+        channel() : mImpl(std::make_shared<channelImpl<T>>()) {}
+
         // TODO: use capacity
-        channel(int capacity) : mImpl(std::make_shared<channel_impl<T>>(capacity)) { }
-                
+        channel(int capacity) : mImpl(std::make_shared<channelImpl<T>>(capacity)) {}
+
         struct channel_iterator
         {
             channel<T> chan;
@@ -161,7 +195,7 @@ namespace gocpp
                     value = chan.recv();
                 }
 
-                return { value.value(), index };
+                return {value.value(), index};
             }
 
             channel_iterator& operator++()
@@ -171,12 +205,12 @@ namespace gocpp
                 return *this;
             }
         };
-                
+
         struct channel_iterator_end { };
 
         inline friend bool operator==(const channel_iterator& it, channel_iterator_end end)
         {
-            return !it.chan.is_open();
+            return !it.chan.isOpen();
         }
 
         channel_iterator begin()
@@ -189,43 +223,60 @@ namespace gocpp
             return {};
         }
 
+        bool trySend(T val)
+        {
+            return mImpl->trySend(val);
+        }
+
+        std::pair<T, bool> tryRecv()
+        {
+            return mImpl->tryReceive();
+        }
+
         void send(T val)
         {
             mImpl->send(val);
         }
 
-        bool recv(T &val)
+        bool recv(T& val)
         {
-            auto optVal = mImpl->recv();
+            auto optVal = mImpl->receive();
             val = optVal.value;
             return optVal.hasValue;
         }
-        
+
         T recv()
         {
-            auto [val, ok] = mImpl->recv();
-            if(!ok) panic("no value in channel");
+            auto [val, ok] = mImpl->receive();
+            if(!ok)
+                panic("no value in channel");
             return val;
         }
 
-        bool is_open() const
+        bool isOpen() const
         {
-            return mImpl->is_open();
+            return mImpl->isOpen();
         }
 
         void close()
         {
             mImpl->close();
         }
-        
+
         friend inline size_t cap(const channel<T>& input)
         {
             return input.mImpl->capacity();
         }
-        
+
         friend inline void close(channel<T>& input)
         {
             input.close();
+        }
+
+        long count_copies() const
+        {
+            // TODO: fix this, not safe in theory
+            return mImpl.use_count();
         }
     };
 
@@ -770,6 +821,40 @@ namespace std
 namespace mocklib
 {
     // mock "time" types and functions
+
+    // NB: real go api return channel<Time>
+    gocpp::channel<int64_t> After(int64_t duration_ns)
+    {
+        gocpp::channel<int64_t> c;
+        gocpp::go([=]() mutable {
+            std::this_thread::sleep_for(std::chrono::nanoseconds(duration_ns));
+            c.send(0);
+        });
+        return c;
+    }
+
+    // NB: real go api return channel<Time>
+    gocpp::channel<int64_t> Tick(int64_t duration_ns)
+    {
+        gocpp::channel<int64_t> c;
+        gocpp::go([=]() mutable {
+            while(true)
+            {
+                std::this_thread::sleep_for(std::chrono::nanoseconds(duration_ns));
+                if(c.count_copies()>1)
+                {
+                    c.send(0);                
+                }
+                else
+                {
+                    c.close();
+                    return;
+                }
+            }
+        });
+        return c;
+    }
+
     struct Date
     {
         static Date Now() { return Date{}; };
@@ -1117,5 +1202,5 @@ namespace mocklib
     }
 
     template<typename T>
-    void picShow(const T& func){ /* Just a mock */ }
+    void picShow(const T& func) { /* Just a mock */ }
 }

@@ -874,9 +874,9 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		id := cv.currentSwitchId.Back().Value.(int)
 		switch comm := s.Comm.(type) {
 		case *ast.SendStmt:
-			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { /* SendStmt */ %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm), se.conditionVarName, id)
+			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm), se.conditionVarName, id)
 		case *ast.ExprStmt:
-			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { /* ExprStmt */ %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm.X), se.conditionVarName, id)
+			fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm.X), se.conditionVarName, id)
 		case nil:
 			/* default, nothing to do */
 		default:
@@ -1232,7 +1232,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		}
 
 	default:
-		return cppType{fmt.Sprintf("!!TYPE_EXPR_ERROR!! [%v]", reflect.TypeOf(node)), nil, false}
+		return cppType{fmt.Sprintf("!!TYPE_EXPR_ERROR!! [type: %v, position: %v]", reflect.TypeOf(node), cv.Position(n)), nil, false}
 	}
 }
 
@@ -1854,7 +1854,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
-		return fmt.Sprintf("!!EXPR_ERROR!! [%v]", reflect.TypeOf(node))
+		return fmt.Sprintf("!!EXPR_ERROR!! [type: %v, position: %v]", reflect.TypeOf(node), cv.Position(n))
 	}
 }
 

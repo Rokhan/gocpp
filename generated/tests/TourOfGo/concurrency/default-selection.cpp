@@ -26,8 +26,8 @@ namespace golang
             //Go select emulation
             {
                 int conditionId = -1;
-                if(auto [gocpp_ignored , ok] = tick.tryRecv(); ok) { /* ExprStmt */ conditionId = 0; }
-                else if(auto [gocpp_ignored , ok] = boom.tryRecv(); ok) { /* ExprStmt */ conditionId = 1; }
+                if(auto [gocpp_ignored , ok] = tick.tryRecv(); ok) { conditionId = 0; }
+                else if(auto [gocpp_ignored , ok] = boom.tryRecv(); ok) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:

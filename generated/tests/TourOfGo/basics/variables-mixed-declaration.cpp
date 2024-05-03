@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "tests/TourOfGo/methods/type-assertions.h"
+#include "tests/TourOfGo/basics/variables-mixed-declaration.h"
 #include "gocpp/support.h"
 
 
@@ -17,15 +17,14 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        std::any i = "hello";
-        auto s = gocpp::getValue<std::string>(i);
-        mocklib::Println(s);
-        auto [s, ok] = gocpp::getValue<std::string>(i);
-        mocklib::Println(s, ok);
-        auto [f, ok] = gocpp::getValue<double>(i);
-        mocklib::Println(f, ok);
-        f = gocpp::getValue<double>(i);
-        mocklib::Println(f);
+        auto [s1, i1] = std::tuple{"string1", 1};
+        mocklib::Println(s1, i1);
+        auto [s1, i2] = std::tuple{"string2", 2};
+        mocklib::Println(s1, i2);
+        auto [s2, i2] = std::tuple{"string3", 3};
+        mocklib::Println(s2, i2);
+        std::tie(s2, i2) = std::tuple{"string4", 4};
+        mocklib::Println(s2, i2);
     }
 
 }

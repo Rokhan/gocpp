@@ -1852,6 +1852,9 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 	case *ast.StarExpr:
 		return fmt.Sprintf("*%s", cv.convertExpr(n.X))
 
+	case *ast.TypeAssertExpr:
+		return fmt.Sprintf("gocpp::getValue<%s>(%s)", cv.convertExprCppType(n.Type), cv.convertExpr(n.X))
+
 	default:
 		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
 		return fmt.Sprintf("!!EXPR_ERROR!! [type: %v, position: %v]", reflect.TypeOf(node), cv.Position(n))

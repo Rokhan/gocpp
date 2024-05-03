@@ -11,7 +11,7 @@ func main() {
 	s := value.(string)
 	fmt.Println(s)
 
-	value = 65.4321
+	value = 6.54321
 	f := value.(float64)
 	fmt.Println(f)
 

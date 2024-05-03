@@ -793,6 +793,33 @@ namespace gocpp
     {
         return T(p1, p2);
     }
+
+    template <typename T>
+    T getValue(std::any value)
+    {
+        if(value.type() == typeid(T))
+        {
+            return std::any_cast<T>(value);
+        }
+
+        panic(std::string("invalid value cast, ") + typeid(T).name() + ", " + value.type().name());
+    }
+    
+    template<>
+    std::string getValue(std::any value)
+    {
+        if(value.type() == typeid(std::string))
+        {
+            return std::any_cast<std::string>(value);
+        }
+        
+        if(value.type() == typeid(const char * const))
+        {
+            return std::any_cast<const char * const>(value);
+        }
+
+        panic(std::string("invalid value cast, ") + typeid(std::string).name() + ", " + value.type().name());
+    }
 }
 
 namespace std

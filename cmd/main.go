@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -122,6 +123,10 @@ func GetCppType(goType string) string {
 	} else {
 		return goType
 	}
+}
+
+func GetCppGoType(goType types.Type) string {
+	return GetCppType(goType.String())
 }
 
 func GetCppFunc(goType string) string {
@@ -531,6 +536,12 @@ func needPriority(t token.Token) bool {
 type stmtEnv struct {
 	outNames []string
 	outTypes []string
+	varNames *[]string // maybe use map for perfs
+}
+
+func makeStmtEnv(outNames []string, outTypes []string) stmtEnv {
+	varNames := outNames
+	return stmtEnv{outNames, outTypes, &varNames}
 }
 
 type blockEnv struct {
@@ -577,7 +588,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
 
-		blockOutlines := cv.convertBlockStmt(d.Body, blockEnv{stmtEnv{outNames, outTypes}, true})
+		blockOutlines := cv.convertBlockStmt(d.Body, blockEnv{makeStmtEnv(outNames, outTypes), true})
 		outlines = append(outlines, blockOutlines...)
 		fmt.Fprintf(cv.cpp.out, "\n")
 
@@ -592,6 +603,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outlines []string) {
 	cv.startScope()
+	env.varNames = &[]string{} //clear already declared var names at start of scope
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
 
@@ -646,25 +658,59 @@ func (cv *cppConverter) convertAssignRightExprs(exprs []ast.Expr) string {
 	}
 }
 
-func (cv *cppConverter) convertAssignExprs(stmt *ast.AssignStmt) string {
+func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env stmtEnv) []string {
 	switch stmt.Tok {
 	case token.DEFINE:
 		switch len(stmt.Lhs) {
 		case 0:
-			panic("convertAssignExprs, len(exprs) == 0")
+			panic("convertAssignStmt, len(exprs) == 0")
 		case 1:
-			return fmt.Sprintf("auto %s = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
+			varName := cv.convertExpr(stmt.Lhs[0])
+			*env.varNames = append(*env.varNames, varName)
+			return []string{fmt.Sprintf("auto %s = %s", varName, cv.convertAssignRightExprs(stmt.Rhs))}
 		default:
-			return fmt.Sprintf("auto [%s] = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
+			var decl []string
+			var allNew = true
+			var exprList = cv.convertExprList(stmt.Lhs)
+			var toDeclare []string
+			// first step, just check if there is already declared names
+			for _, varName := range exprList {
+				if !slices.Contains(*env.varNames, varName) {
+					toDeclare = append(toDeclare, varName)
+					*env.varNames = append(*env.varNames, varName)
+				} else {
+					allNew = false
+				}
+			}
+
+			if allNew {
+				// Not necessary, the default case would work, but output looks better
+				return []string{fmt.Sprintf("auto [%s] = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
+			}
+
+			// The 2-step loop on exprList is done to not call "cv.convertExprCppType"
+			// when not strictly necessary as not all types are implemented at the moment.
+			for i, varName := range exprList {
+				//decl = append(decl, fmt.Sprintf("// DBG, declared names : (%s)", strings.Join(*env.varNames, ", ")))
+				if slices.Contains(toDeclare, varName) {
+					if stmt.Lhs[i] != nil {
+						decl = append(decl, fmt.Sprintf("%s %s", cv.convertExprCppType(stmt.Lhs[i]), varName))
+					} else {
+						decl = append(decl, fmt.Sprintf("%s %s", "### NIL EXPRESSION: 'stmt.Lhs[i]'", varName))
+					}
+					*env.varNames = append(*env.varNames, varName)
+				}
+			}
+			return append(decl, fmt.Sprintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs)))
 		}
 	case token.ASSIGN:
 		switch len(stmt.Lhs) {
 		case 0:
-			panic("convertAssignExprs, len(exprs) == 0")
+			panic("convertAssignStmt, len(exprs) == 0")
 		case 1:
-			return fmt.Sprintf("%s = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
+			return []string{fmt.Sprintf("%s = %s", cv.convertExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
 		default:
-			return fmt.Sprintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))
+			return []string{fmt.Sprintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
 		}
 
 	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN,
@@ -674,20 +720,19 @@ func (cv *cppConverter) convertAssignExprs(stmt *ast.AssignStmt) string {
 		{
 			switch len(stmt.Lhs) {
 			case 0:
-				panic("convertAssignExprs, len(exprs) == 0")
+				panic("convertAssignStmt, len(exprs) == 0")
 			case 1:
-				return fmt.Sprintf("%s %s %s", cv.convertExprs(stmt.Lhs), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))
+				return []string{fmt.Sprintf("%s %s %s", cv.convertExprs(stmt.Lhs), stmt.Tok, cv.convertAssignRightExprs(stmt.Rhs))}
 			default:
-				panic("convertAssignExprs, len(exprs) != 1")
+				panic("convertAssignStmt, len(exprs) != 1")
 			}
 		}
 
 	default:
-		Panicf("convertAssignExprs, unmanaged token: %s, input: %v", stmt.Tok, cv.Position(stmt))
+		Panicf("convertAssignStmt, unmanaged token: %s, input: %v", stmt.Tok, cv.Position(stmt))
 	}
 
-	// should be unreacheable
-	panic("convertAssignExprs, unmanaged case")
+	panic("convertAssignStmt, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []string) {
@@ -708,7 +753,10 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertReturnExprs(s.Results, env.outNames))
 
 	case *ast.AssignStmt:
-		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertAssignExprs(s))
+		stmts := cv.convertAssignStmt(s, env)
+		for _, stmt := range stmts {
+			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), stmt)
+		}
 
 	case *ast.DeferStmt:
 		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
@@ -720,7 +768,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		fmt.Fprintf(cv.cpp.out, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
 
 	case *ast.ForStmt:
-		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post))
+		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
 		outlines = cv.convertBlockStmt(s.Body, blockEnv{env, false})
 
 	case *ast.BranchStmt:
@@ -745,7 +793,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 
 	case *ast.IfStmt:
 		if s.Init != nil {
-			fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init), cv.convertExpr(s.Cond))
+			fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond))
 		} else {
 			fmt.Fprintf(cv.cpp.out, "%sif(%s)\n", cv.cpp.Indent(), cv.convertExpr(s.Cond))
 		}
@@ -764,7 +812,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		cv.cpp.indent++
 
 		if s.Init != nil {
-			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init))
+			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
 		}
 
 		inputVarName := ""
@@ -913,11 +961,10 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result string) {
 		Panicf("convertSelectCaseStmt, unmanaged node: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
 	}
 
-	// should be unreacheable
 	panic("convertSelectCaseStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) inlineStmt(stmt ast.Stmt) (result string) {
+func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env stmtEnv) (result string) {
 	switch s := stmt.(type) {
 	case nil:
 		return
@@ -958,13 +1005,18 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt) (result string) {
 		}
 
 	case *ast.AssignStmt:
-		return cv.convertAssignExprs(s)
+		assignStmts := cv.convertAssignStmt(s, env)
+		switch len(assignStmts) {
+		case 1:
+			return assignStmts[0]
+		default:
+			Panicf("inlineStmt, unmanaged multiple assignements [%v], input [%v]", reflect.TypeOf(s.Tok), cv.Position(s))
+		}
 
 	default:
-		Panicf("inlineStmt, unmanaged token: [%v], inout: %v", reflect.TypeOf(s), cv.Position(s))
+		Panicf("inlineStmt, unmanaged token: [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
-	// should be unreacheable
 	panic("inlineStmt, bug, unreacheable code reached !")
 }
 
@@ -1070,7 +1122,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 						t := cv.convertTypeExpr(s.Type)
 						result = append(result, t.defs...)
 						if len(values) == 0 {
-							result = append(result, inlineStr(fmt.Sprintf("%s %s%s", t.str, s.Names[i].Name, end)))
+							result = append(result, inlineStr(fmt.Sprintf("%s %s = {}%s", t.str, s.Names[i].Name, end)))
 						} else {
 							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", t.str, s.Names[i].Name, cv.convertExpr(values[i]), end)))
 						}
@@ -1599,7 +1651,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) string {
 		case token.STRING:
 			return "string"
 		default:
-			panic(fmt.Sprintf("Unmanaged token in convert type %v, token %v", reflect.TypeOf(node), n.Kind))
+			Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
 		}
 
 	case *ast.CompositeLit:
@@ -1625,9 +1677,15 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) string {
 	// 	panic(fmt.Sprintf("Unmanaged type in convert type %v, input: %v", reflect.TypeOf(node), cv.Position(node)))
 
 	default:
-		return convertGoToCppType(cv.convertExprType(n))
-
+		exprType := cv.convertExprType(n)
+		if exprType != nil {
+			return convertGoToCppType(exprType, cv.Position(node))
+		} else {
+			return fmt.Sprintf("[%T, %s, %s]", n, types.ExprString(n), cv.Position(n))
+		}
 	}
+
+	panic("convertExprCppType, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) convertExprType(node ast.Expr) types.Type {
@@ -1635,26 +1693,56 @@ func (cv *cppConverter) convertExprType(node ast.Expr) types.Type {
 		return nil
 	}
 
-	return cv.typeInfo.Types[node].Type
+	typeInfo := cv.typeInfo.Types[node].Type
+
+	if typeInfo != nil {
+		return typeInfo
+	}
+
+	ident, ok := node.(*ast.Ident)
+	if ok {
+		def := cv.typeInfo.Defs[ident]
+		if def != nil {
+			return def.Type()
+		}
+
+		use := cv.typeInfo.Uses[ident]
+		if use != nil {
+			return use.Type()
+		}
+	}
+
+	Panicf("convertExprType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
+	panic("convertExprType, bug, unreacheable code reached !")
 }
 
-func convertGoToCppType(goType types.Type) string {
+func convertGoToCppType(goType types.Type, position token.Position) string {
 	if goType == nil {
 		panic("convertGoToCppType, Cannot convert nil type.")
 	}
 
 	switch subType := goType.(type) {
 	case *types.Basic:
-		return GetCppType(subType.String())
+		return GetCppGoType(subType)
 
 	case *types.Named:
-		return GetCppType(subType.String())
+		return GetCppGoType(subType)
 
 	case *types.Pointer:
-		return GetCppType(subType.Elem().String()) + "*"
+		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem()))
+
+	case *types.Slice:
+		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem()))
+
+	case *types.Array:
+		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem()), subType.Len())
+
+	// TODO
+	// case *types.Signature:
+	// 	return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Params()), GetCppGoType(subType.Results()))
 
 	default:
-		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType: %v", reflect.TypeOf(subType)))
+		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
 	}
 }
 
@@ -1751,7 +1839,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 			fmt.Fprintf(cv.cpp.out, "[=](%s) mutable -> %s\n", params, resultType)
 
 			cv.astIndent++
-			outline := cv.convertBlockStmt(n.Body, blockEnv{stmtEnv{outNames, outTypes}, true})
+			outline := cv.convertBlockStmt(n.Body, blockEnv{makeStmtEnv(outNames, outTypes), true})
 			if outline != nil {
 				fmt.Fprintf(cv.cpp.out, "### NOT IMPLEMENTED, convertExpr, outline not managed in ast.FuncLit ###")
 			}
@@ -1946,12 +2034,15 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) st
 	return buf.String()
 }
 
-func (cv *cppConverter) convertExprs(exprs []ast.Expr) string {
-	var strs []string
+func (cv *cppConverter) convertExprList(exprs []ast.Expr) (strs []string) {
 	for _, expr := range exprs {
 		strs = append(strs, cv.convertExpr(expr))
 	}
-	return strings.Join(strs, ", ")
+	return strs
+}
+
+func (cv *cppConverter) convertExprs(exprs []ast.Expr) string {
+	return strings.Join(cv.convertExprList(exprs), ", ")
 }
 
 func (cv *cppConverter) Position(expr ast.Node) token.Position {

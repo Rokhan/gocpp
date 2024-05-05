@@ -30,7 +30,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        tree::Tree tree;
+        tree::Tree tree = {};
         mocklib::Printf("%T", tree);
     }
 

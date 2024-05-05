@@ -17,10 +17,10 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        int i;
-        double f;
-        bool b;
-        std::string s;
+        int i = {};
+        double f = {};
+        bool b = {};
+        std::string s = {};
         mocklib::Printf("%v %v %v %q\n", i, f, b, s);
     }
 

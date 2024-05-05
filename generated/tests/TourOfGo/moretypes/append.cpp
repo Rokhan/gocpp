@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp::slice<int> s;
+        gocpp::slice<int> s = {};
         printSlice(s);
         s = append(s, 0);
         printSlice(s);

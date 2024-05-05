@@ -32,10 +32,12 @@ namespace golang
         gocpp::go([&]{ fill(c); });
         auto [xx, ok] = c.recv();
         mocklib::Println(xx, ok);
-        auto [zz, ok] = c.recv();
+        int zz;
+        std::tie(zz, ok) = c.recv();
         mocklib::Println(zz, ok);
         close(c);
-        auto [zz, okok] = c.recv();
+        bool okok;
+        std::tie(zz, okok) = c.recv();
         mocklib::Println(zz, okok);
     }
 

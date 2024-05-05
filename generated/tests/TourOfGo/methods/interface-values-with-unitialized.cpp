@@ -87,8 +87,8 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        I i;
-        T* t;
+        I i = {};
+        T* t = {};
         i = t;
         describe(i);
         M(gocpp::recv(i));

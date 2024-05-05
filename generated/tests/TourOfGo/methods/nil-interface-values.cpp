@@ -62,7 +62,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        I i;
+        I i = {};
         describe(i);
         M(gocpp::recv(i));
     }

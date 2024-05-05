@@ -20,9 +20,11 @@ namespace golang
         std::any i = "hello";
         auto s = gocpp::getValue<std::string>(i);
         mocklib::Println(s);
-        auto [s, ok] = gocpp::getValue<std::string>(i);
+        bool ok;
+        std::tie(s, ok) = gocpp::getValue<std::string>(i);
         mocklib::Println(s, ok);
-        auto [f, ok] = gocpp::getValue<double>(i);
+        double f;
+        std::tie(f, ok) = gocpp::getValue<double>(i);
         mocklib::Println(f, ok);
         f = gocpp::getValue<double>(i);
         mocklib::Println(f);

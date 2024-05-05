@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp::array<std::string, 2> a;
+        gocpp::array<std::string, 2> a = {};
         a[0] = "Hello";
         a[1] = "World";
         mocklib::Println(a[0], a[1]);

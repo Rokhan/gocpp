@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        std::any i;
+        std::any i = {};
         describe(i);
         i = 42;
         describe(i);

@@ -14,17 +14,37 @@
 namespace golang
 {
     // convertSpecs[ImportSpec] Not implemented => "fmt";
+    std::tuple<std::string, int, gocpp::slice<std::string>> f1()
+    {
+        gocpp::Defer defer;
+        return {"f1", 1001, gocpp::slice<std::string> {"a", "b"}};
+    }
+
+    std::tuple<std::string, int, gocpp::array<std::string, 3>> f2()
+    {
+        gocpp::Defer defer;
+        return {"f2", 1002, gocpp::array<std::string, 3> {"c", "d", "e"}};
+    }
+
     void main()
     {
         gocpp::Defer defer;
         auto [s1, i1] = std::tuple{"string1", 1};
         mocklib::Println(s1, i1);
-        auto [s1, i2] = std::tuple{"string2", 2};
+        int i2;
+        std::tie(s1, i2) = std::tuple{"string2", 2};
         mocklib::Println(s1, i2);
-        auto [s2, i2] = std::tuple{"string3", 3};
+        std::string s2;
+        std::tie(s2, i2) = std::tuple{"string3", 3};
         mocklib::Println(s2, i2);
         std::tie(s2, i2) = std::tuple{"string4", 4};
         mocklib::Println(s2, i2);
+        gocpp::slice<std::string> a1;
+        std::tie(s2, i2, a1) = f1();
+        mocklib::Println(s2, i2, a1);
+        gocpp::array<std::string, 3> a2;
+        std::tie(s2, i2, a2) = f2();
+        mocklib::Println(s2, i2, a2);
     }
 
 }

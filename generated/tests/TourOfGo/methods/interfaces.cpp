@@ -63,7 +63,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        Abser a;
+        Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
         a = f;

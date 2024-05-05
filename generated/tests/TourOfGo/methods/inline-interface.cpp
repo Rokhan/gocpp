@@ -99,7 +99,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp_id_0 i;
+        gocpp_id_0 i = {};
         describe(i);
         i = MyInt(42);
         describe(i);

@@ -17,7 +17,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        gocpp::slice<int> s;
+        gocpp::slice<int> s = {};
         mocklib::Println(s, len(s), cap(s));
         if(s == nullptr)
         {

@@ -23,9 +23,24 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        int i;
+        int i = {};
         mocklib::Println(i, c, python, java);
         mocklib::Println(ii, jj, kk);
+        std::tie(ii, jj, kk) = std::tuple{6, 7, 8};
+        mocklib::Println(ii, jj, kk);
+        auto [ii, zz, kk] = std::tuple{9, 10, 11};
+        mocklib::Println(ii, zz, kk);
+        {
+            auto [ii, zz, ll] = std::tuple{12, 13, 14};
+            mocklib::Println(ii, zz, ll);
+        }
+        mocklib::Println(ii, zz, kk);
+        if(true)
+        {
+            auto [ii, zz, ll] = std::tuple{15, 16, 17};
+            mocklib::Println(ii, zz, ll);
+        }
+        mocklib::Println(ii, zz, kk);
     }
 
 }

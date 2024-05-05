@@ -87,7 +87,7 @@ namespace golang
     void main()
     {
         gocpp::Defer defer;
-        I i;
+        I i = {};
         T* t = nullptr;
         i = t;
         describe(i);

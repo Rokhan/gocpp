@@ -546,7 +546,20 @@ func makeStmtEnv(outNames []string, outTypes []string) stmtEnv {
 
 type blockEnv struct {
 	stmtEnv
-	isFunc bool
+	isFunc   bool
+	useDefer *bool
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+func makeBlockEnv(env stmtEnv, isFunc bool) blockEnv {
+	return blockEnv{env, isFunc, boolPtr(false)}
+}
+
+func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
+	return blockEnv{env.stmtEnv, isFunc, env.useDefer}
 }
 
 func (cv *cppConverter) outputsPrint(place place, outlines *[]string) {
@@ -588,7 +601,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
 		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
 
-		blockOutlines := cv.convertBlockStmt(d.Body, blockEnv{makeStmtEnv(outNames, outTypes), true})
+		blockOutlines := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 		outlines = append(outlines, blockOutlines...)
 		fmt.Fprintf(cv.cpp.out, "\n")
 
@@ -607,17 +620,21 @@ func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (ou
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
 
-	if env.isFunc {
+	cppOut := cv.withCppBuffer(func() {
+		for i := range env.outNames {
+			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppType(env.outTypes[i]), env.outNames[i])
+		}
+
+		for _, stmt := range block.List {
+			outlines = append(outlines, cv.convertStmt(stmt, env)...)
+		}
+	})
+
+	if env.isFunc && *env.useDefer {
 		fmt.Fprintf(cv.cpp.out, "%sgocpp::Defer defer;\n", cv.cpp.Indent())
 	}
 
-	for i := range env.outNames {
-		fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppType(env.outTypes[i]), env.outNames[i])
-	}
-
-	for _, stmt := range block.List {
-		outlines = append(outlines, cv.convertStmt(stmt, env.stmtEnv)...)
-	}
+	fmt.Fprintf(cv.cpp.out, "%s", cppOut)
 
 	cv.cpp.indent--
 	fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
@@ -658,7 +675,7 @@ func (cv *cppConverter) convertAssignRightExprs(exprs []ast.Expr) string {
 	}
 }
 
-func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env stmtEnv) []string {
+func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []string {
 	switch stmt.Tok {
 	case token.DEFINE:
 		switch len(stmt.Lhs) {
@@ -735,10 +752,10 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env stmtEnv) []s
 	panic("convertAssignStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []string) {
+func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []string) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		outlines = cv.convertBlockStmt(s, blockEnv{env, false})
+		outlines = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
 
 	case *ast.DeclStmt:
 		outlines = cv.convertDecls(s.Decl, false)
@@ -759,6 +776,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		}
 
 	case *ast.DeferStmt:
+		*env.useDefer = true
 		fmt.Fprintf(cv.cpp.out, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
 
 	case *ast.GoStmt:
@@ -769,7 +787,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 
 	case *ast.ForStmt:
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
-		outlines = cv.convertBlockStmt(s.Body, blockEnv{env, false})
+		outlines = cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
 
 	case *ast.BranchStmt:
 		switch s.Tok {
@@ -789,7 +807,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 		} else {
 			panic("Unmanaged case of '*ast.RangeStmt'")
 		}
-		outlines = cv.convertBlockStmt(s.Body, blockEnv{env, false})
+		outlines = cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
 
 	case *ast.IfStmt:
 		if s.Init != nil {
@@ -798,7 +816,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env stmtEnv) (outlines []stri
 			fmt.Fprintf(cv.cpp.out, "%sif(%s)\n", cv.cpp.Indent(), cv.convertExpr(s.Cond))
 		}
 
-		blockOutline := cv.convertBlockStmt(s.Body, blockEnv{env, false})
+		blockOutline := cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
 		outlines = append(outlines, blockOutline...)
 		if s.Else != nil {
 			fmt.Fprintf(cv.cpp.out, "%selse\n", cv.cpp.Indent())
@@ -881,7 +899,7 @@ type switchEnvName struct {
 	withCondition    bool
 }
 
-func (cv *cppConverter) convertSwitchBody(env stmtEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outlines []string) {
+func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outlines []string) {
 
 	fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
 	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
@@ -889,7 +907,7 @@ func (cv *cppConverter) convertSwitchBody(env stmtEnv, body *ast.BlockStmt, cond
 	fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
 	cv.currentSwitchId.PushBack(0)
-	outlines = cv.convertBlockStmt(body, blockEnv{env, false})
+	outlines = cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
 	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
 	cv.cpp.indent--
@@ -964,7 +982,7 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result string) {
 	panic("convertSelectCaseStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env stmtEnv) (result string) {
+func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result string) {
 	switch s := stmt.(type) {
 	case nil:
 		return
@@ -1839,7 +1857,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 			fmt.Fprintf(cv.cpp.out, "[=](%s) mutable -> %s\n", params, resultType)
 
 			cv.astIndent++
-			outline := cv.convertBlockStmt(n.Body, blockEnv{makeStmtEnv(outNames, outTypes), true})
+			outline := cv.convertBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 			if outline != nil {
 				fmt.Fprintf(cv.cpp.out, "### NOT IMPLEMENTED, convertExpr, outline not managed in ast.FuncLit ###")
 			}

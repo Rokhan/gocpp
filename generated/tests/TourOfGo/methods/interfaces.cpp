@@ -62,7 +62,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
@@ -75,7 +74,6 @@ namespace golang
     // using MyFloat = double;
     double Abs(MyFloat f)
     {
-        gocpp::Defer defer;
         if(f < 0)
         {
             return double(- f);
@@ -100,7 +98,6 @@ namespace golang
 
     double Abs(Vertex* v)
     {
-        gocpp::Defer defer;
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }
 

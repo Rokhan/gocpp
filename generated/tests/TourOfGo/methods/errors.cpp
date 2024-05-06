@@ -32,19 +32,16 @@ namespace golang
 
     std::string Error(MyError* e)
     {
-        gocpp::Defer defer;
         return mocklib::Sprintf("at %v, %s", e->When, e->What);
     }
 
     error run()
     {
-        gocpp::Defer defer;
         return new MyError {mocklib::Date::Now(), "it didn't work"};
     }
 
     void main()
     {
-        gocpp::Defer defer;
         if(auto err = run(); err != nullptr)
         {
             mocklib::Println(err);

@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         gocpp::slice<int> s = {};
         mocklib::Println(s, len(s), cap(s));
         if(s == nullptr)

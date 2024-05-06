@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         std::any i = {};
         describe(i);
         i = 42;
@@ -27,7 +26,6 @@ namespace golang
 
     void describe(std::any i)
     {
-        gocpp::Defer defer;
         mocklib::Printf("(%v, %T)\n", i, i);
     }
 

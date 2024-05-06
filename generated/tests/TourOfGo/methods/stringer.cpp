@@ -31,13 +31,11 @@ namespace golang
 
     std::string String(Person p)
     {
-        gocpp::Defer defer;
         return mocklib::Sprintf("%v (%v years)", p.Name, p.Age);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto a = Person {"Arthur Dent", 42};
         auto z = Person {"Zaphod Beeblebrox", 9001};
         mocklib::Println(a, z);

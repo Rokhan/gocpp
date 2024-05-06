@@ -16,13 +16,11 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::tuple<std::string, std::string> swap(std::string x, std::string y)
     {
-        gocpp::Defer defer;
         return {y, x};
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto [a, b] = swap("hello", "world");
         auto [s, i, f] = std::tuple{"str", 5, 3.14159};
         mocklib::Println(a, b);

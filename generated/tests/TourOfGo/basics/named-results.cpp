@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::tuple<int, int> split(int sum)
     {
-        gocpp::Defer defer;
         int x;
         int y;
         x = sum * 4 / 9;
@@ -26,7 +25,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(split(17));
     }
 

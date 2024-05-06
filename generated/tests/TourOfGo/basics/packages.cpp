@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math/rand";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println("My favorite number is", mocklib::Intn(10));
     }
 

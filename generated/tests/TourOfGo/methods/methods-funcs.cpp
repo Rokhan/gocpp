@@ -32,13 +32,11 @@ namespace golang
 
     double Abs(Vertex v)
     {
-        gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto v = Vertex {3, 4};
         mocklib::Println(Abs(v));
     }

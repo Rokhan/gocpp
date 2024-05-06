@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto primes = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};
         gocpp::slice<int> s = primes.make_slice(1, 4);
         mocklib::Println(s);

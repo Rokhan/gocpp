@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println("When's Saturday?");
         auto today = Weekday(gocpp::recv(mocklib::Date::Now()));
         //Go switch emulation

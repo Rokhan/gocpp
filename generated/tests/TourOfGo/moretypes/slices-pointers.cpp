@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto names = gocpp::array<std::string, 4> {"John", "Paul", "George", "Ringo"};
         mocklib::Println(names);
         auto a = names.make_slice(0, 2);

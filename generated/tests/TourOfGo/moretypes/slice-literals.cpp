@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto q = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
         mocklib::Println(q);
         auto r = gocpp::slice<bool> {true, false, true, true, false, true};

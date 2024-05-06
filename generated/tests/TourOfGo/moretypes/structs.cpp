@@ -31,7 +31,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(Vertex {1, 2});
     }
 

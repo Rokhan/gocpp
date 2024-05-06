@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 5);
         printSlice("a", a);
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, 5);
@@ -33,7 +32,6 @@ namespace golang
 
     void printSlice(std::string s, gocpp::slice<int> x)
     {
-        gocpp::Defer defer;
         mocklib::Printf("%v len=%v cap=%v %v\n", s, len(x), cap(x), x);
     }
 

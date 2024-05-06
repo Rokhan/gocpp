@@ -32,20 +32,17 @@ namespace golang
 
     void Scale(Vertex* v, double f)
     {
-        gocpp::Defer defer;
         v->X = v->X * f;
         v->Y = v->Y * f;
     }
 
     double Abs(Vertex* v)
     {
-        gocpp::Defer defer;
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto v = new Vertex {3, 4};
         mocklib::Printf("Before scaling: %+v, Abs: %v\n", v, Abs(gocpp::recv(v)));
         Scale(gocpp::recv(v), 5);

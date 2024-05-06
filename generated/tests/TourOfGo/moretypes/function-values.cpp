@@ -17,16 +17,13 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     double compute(std::function<double (double, double)> fn)
     {
-        gocpp::Defer defer;
         return fn(3, 4);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto hypot = [=](double x, double y) mutable -> double
         {
-            gocpp::Defer defer;
             return std::sqrt(x * x + y * y);
         }
 ;

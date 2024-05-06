@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         std::any value = "hello";
         auto s = gocpp::getValue<std::string>(value);
         mocklib::Println(s);

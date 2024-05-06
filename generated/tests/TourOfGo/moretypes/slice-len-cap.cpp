@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto s = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
         printSlice(s);
         s = s.make_slice(0, 0);
@@ -29,7 +28,6 @@ namespace golang
 
     void printSlice(gocpp::slice<int> s)
     {
-        gocpp::Defer defer;
         mocklib::Printf("len=%v cap=%v %v\n", len(s), cap(s), s);
     }
 

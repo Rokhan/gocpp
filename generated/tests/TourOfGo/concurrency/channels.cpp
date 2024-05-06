@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void sum(gocpp::slice<int> s, gocpp::channel<int> c)
     {
-        gocpp::Defer defer;
         auto sum = 0;
         for(auto [_, v] : s)
         {
@@ -27,7 +26,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto s = gocpp::slice<int> {7, 2, 8, - 9, 4, 0};
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
         gocpp::go([&]{ sum(s.make_slice(0, len(s) / 2), c); });

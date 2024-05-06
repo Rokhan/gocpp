@@ -16,11 +16,9 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::function<int (int)> adder()
     {
-        gocpp::Defer defer;
         auto sum = 0;
         return [=](int x) mutable -> int
         {
-            gocpp::Defer defer;
             sum += x;
             return sum;
         }
@@ -29,7 +27,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto [pos, neg] = std::tuple{adder(), adder()};
         for(auto i = 0; i < 10; i++)
         {

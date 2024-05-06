@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
     gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)
     {
-        gocpp::Defer defer;
         auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8_t>>>(), dx);
         for(auto i = 0; i < dx; i++)
         {
@@ -31,7 +30,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::picShow(Pic);
     }
 

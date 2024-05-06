@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto m = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
         m["Answer"] = 42;
         mocklib::Println("The value:", m["Answer"]);

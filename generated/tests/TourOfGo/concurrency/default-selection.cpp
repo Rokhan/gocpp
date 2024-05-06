@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void main()
     {
-        gocpp::Defer defer;
         auto tick = mocklib::Tick(100 * mocklib::Millisecond);
         auto boom = mocklib::After(500 * mocklib::Millisecond);
         mocklib::Sleep(10 * mocklib::Millisecond);

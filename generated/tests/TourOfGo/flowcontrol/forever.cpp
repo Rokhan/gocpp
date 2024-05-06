@@ -15,7 +15,6 @@ namespace golang
 {
     void main()
     {
-        gocpp::Defer defer;
         for(; ; )
         {
         }

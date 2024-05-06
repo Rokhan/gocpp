@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     double pow(double x, double n, double lim)
     {
-        gocpp::Defer defer;
         if(auto v = mocklib::Pow(x, n); v < lim)
         {
             return v;
@@ -27,7 +26,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(pow(3, 2, 10), pow(3, 3, 20));
     }
 

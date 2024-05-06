@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "image";
     void main()
     {
-        gocpp::Defer defer;
         auto m = NewRGBA(gocpp::recv(image), Rect(gocpp::recv(image), 0, 0, 100, 100));
         mocklib::Println(Bounds(gocpp::recv(m)));
         mocklib::Println(RGBA(gocpp::recv(At(gocpp::recv(m), 0, 0))));

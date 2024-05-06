@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void say(std::string s)
     {
-        gocpp::Defer defer;
         for(auto i = 0; i < 5; i++)
         {
             mocklib::Sleep(100 * mocklib::Millisecond);
@@ -27,7 +26,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         gocpp::go([&]{ say("world"); });
         mocklib::Sleep(50 * mocklib::Millisecond);
         say("hello");

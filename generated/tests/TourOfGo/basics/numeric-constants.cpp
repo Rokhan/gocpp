@@ -18,19 +18,16 @@ namespace golang
     int Small = Big >> 99;
     int needInt(int x)
     {
-        gocpp::Defer defer;
         return x * 10 + 1;
     }
 
     double needFloat(double x)
     {
-        gocpp::Defer defer;
         return x * 0.1;
     }
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(needInt(Small));
         mocklib::Println(needFloat(Small));
         mocklib::Println(needFloat(Big));

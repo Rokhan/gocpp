@@ -61,7 +61,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         I i = {};
         describe(i);
         M(gocpp::recv(i));
@@ -69,7 +68,6 @@ namespace golang
 
     void describe(I i)
     {
-        gocpp::Defer defer;
         mocklib::Printf("(%v, %T)\n", i, i);
     }
 

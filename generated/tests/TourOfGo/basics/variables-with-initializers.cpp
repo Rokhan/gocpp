@@ -18,7 +18,6 @@ namespace golang
     int j = 2;
     void main()
     {
-        gocpp::Defer defer;
         auto c = true;
         auto python = false;
         auto java = "no!";

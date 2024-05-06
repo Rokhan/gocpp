@@ -18,7 +18,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "strings";
     void main()
     {
-        gocpp::Defer defer;
         auto r = strings::NewReader("Hello, Reader!");
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
         for(; ; )

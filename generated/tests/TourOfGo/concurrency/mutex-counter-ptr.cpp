@@ -33,7 +33,6 @@ namespace golang
 
     void Inc(SafeCounter* c, std::string key)
     {
-        gocpp::Defer defer;
         Lock(gocpp::recv(c->mu));
         c->v[key]++;
         Unlock(gocpp::recv(c->mu));
@@ -49,7 +48,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto c = gocpp::InitPtr<SafeCounter>([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
         for(auto i = 0; i < 1000; i++)
         {

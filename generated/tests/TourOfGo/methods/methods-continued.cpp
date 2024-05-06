@@ -18,7 +18,6 @@ namespace golang
     // using MyFloat = double;
     double Abs(MyFloat f)
     {
-        gocpp::Defer defer;
         if(f < 0)
         {
             return double(- f);
@@ -28,7 +27,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto f = MyFloat(- mocklib::Sqrt2);
         mocklib::Println(Abs(gocpp::recv(f)));
     }

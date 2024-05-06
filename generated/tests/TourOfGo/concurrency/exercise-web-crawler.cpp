@@ -61,7 +61,6 @@ namespace golang
 
     void Crawl(std::string url, int depth, Fetcher fetcher)
     {
-        gocpp::Defer defer;
         if(depth <= 0)
         {
             return;
@@ -82,7 +81,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         Crawl("https://golang.org/", 4, fetcher);
     }
 
@@ -103,7 +101,6 @@ namespace golang
 
     std::tuple<std::string, gocpp::slice<std::string>, error> Fetch(fakeFetcher f, std::string url)
     {
-        gocpp::Defer defer;
         if(auto [res, ok] = f[url]; ok)
         {
             return {res->body, res->urls, nullptr};

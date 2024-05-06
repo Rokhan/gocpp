@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         f();
         mocklib::Println("Returned normally from f.");
     }
@@ -26,7 +25,6 @@ namespace golang
         gocpp::Defer defer;
         defer.push_back([=]{ [=]() mutable -> void
         {
-            gocpp::Defer defer;
             if(auto r = recover(); r != nullptr)
             {
                 mocklib::Println("Recovered in f", r);
@@ -35,7 +33,6 @@ namespace golang
 (); });
         defer.push_back([=]{ [=]() mutable -> void
         {
-            gocpp::Defer defer;
             mocklib::Println("Simple defer in f");
         }
 (); });

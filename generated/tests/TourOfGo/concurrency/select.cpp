@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void fibonacci(gocpp::channel<int> c, gocpp::channel<int> quit)
     {
-        gocpp::Defer defer;
         auto [x, y] = std::tuple{0, 1};
         for(; ; )
         {
@@ -42,12 +41,10 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
         auto quit = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
         gocpp::go([&]{ [=]() mutable -> void
         {
-            gocpp::Defer defer;
             for(auto i = 0; i < 10; i++)
             {
                 mocklib::Println(c.recv());

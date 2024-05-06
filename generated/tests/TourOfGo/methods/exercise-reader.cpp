@@ -29,7 +29,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         Validate(gocpp::recv(reader), MyReader {});
     }
 

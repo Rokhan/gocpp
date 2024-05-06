@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Print("Roman Time");
         auto hour = 1 + (Hour(gocpp::recv(mocklib::Date::Now())) % 12);
         //Go switch emulation

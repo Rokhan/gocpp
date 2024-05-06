@@ -39,7 +39,6 @@ namespace golang
     int mask3 = (1 << 3) - 1;
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Printf("%v %v %v\n", c0, c1, c2);
         mocklib::Printf("%v %v %v\n", a, b, c);
         mocklib::Printf("%v %v %v %v\n", z0, za, zb, zc);

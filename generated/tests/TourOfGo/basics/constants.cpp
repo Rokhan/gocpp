@@ -17,7 +17,6 @@ namespace golang
     double Pi = 3.14;
     void main()
     {
-        gocpp::Defer defer;
         auto World = "世界";
         mocklib::Println("Hello", World);
         mocklib::Println("Happy", Pi, "Day");

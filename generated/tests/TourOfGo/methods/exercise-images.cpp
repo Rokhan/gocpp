@@ -29,7 +29,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto m = Image {};
         pic::ShowImage(m);
     }

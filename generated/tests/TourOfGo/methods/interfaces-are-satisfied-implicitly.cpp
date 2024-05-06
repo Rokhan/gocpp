@@ -75,13 +75,11 @@ namespace golang
 
     void M(T t)
     {
-        gocpp::Defer defer;
         mocklib::Println(t.S);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         I i = T {"hello"};
         M(gocpp::recv(i));
         auto t = T {"hello"};

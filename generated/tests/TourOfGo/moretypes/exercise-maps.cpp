@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/wc";
     gocpp::map<std::string, int> WordCount(std::string s)
     {
-        gocpp::Defer defer;
         auto fields = mocklib::StringsFields(s);
         auto wc = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
         for(auto [_, f] : fields)
@@ -29,7 +28,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::wcTest(WordCount);
     }
 

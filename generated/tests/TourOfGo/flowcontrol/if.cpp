@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     std::string sqrt(double x)
     {
-        gocpp::Defer defer;
         if(x < 0)
         {
             return sqrt(- x) + "i";
@@ -27,7 +26,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(sqrt(2), sqrt(- 4));
     }
 

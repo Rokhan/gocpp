@@ -16,13 +16,11 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::tuple<double, error> Sqrt(double x)
     {
-        gocpp::Defer defer;
         return {0, nullptr};
     }
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(Sqrt(2));
         mocklib::Println(Sqrt(- 2));
     }

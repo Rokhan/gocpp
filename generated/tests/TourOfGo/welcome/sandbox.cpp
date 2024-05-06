@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println("Welcome to the playground!");
         mocklib::Println("The time is", mocklib::Date::Now());
     }

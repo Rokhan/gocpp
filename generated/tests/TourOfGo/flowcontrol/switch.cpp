@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "runtime";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Print("Go runs on ");
         //Go switch emulation
         {

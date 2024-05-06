@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto ch = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 2);
         ch.send(1);
         ch.send(2);

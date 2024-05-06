@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Printf("Now you have %g problems.\n", std::sqrt(7));
     }
 

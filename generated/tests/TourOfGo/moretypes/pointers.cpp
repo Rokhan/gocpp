@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto [i, j] = std::tuple{42, 2701};
         auto p = & i;
         mocklib::Println(*p);

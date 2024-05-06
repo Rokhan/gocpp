@@ -35,7 +35,6 @@ namespace golang
     Vertex* p = new Vertex {1, 2};
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(v1, p, v2, v3);
     }
 

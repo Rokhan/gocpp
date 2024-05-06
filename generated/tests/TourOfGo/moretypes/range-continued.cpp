@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         auto pow = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 10);
         for(auto [i, gocpp_ignored] : pow)
         {

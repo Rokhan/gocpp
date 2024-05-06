@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void fill(gocpp::channel<int> c)
     {
-        gocpp::Defer defer;
         for(; ; )
         {
             mocklib::Sleep(5 * mocklib::Millisecond);
@@ -27,7 +26,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 5);
         gocpp::go([&]{ fill(c); });
         auto [xx, ok] = c.recv();

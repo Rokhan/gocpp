@@ -52,7 +52,6 @@ namespace golang
     Segment s1 = gocpp::Init<Segment>([](Segment& x) { x.Start = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(v1, v2, v3, v4, s1);
     }
 

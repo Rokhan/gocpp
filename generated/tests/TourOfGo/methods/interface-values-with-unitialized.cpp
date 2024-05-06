@@ -75,7 +75,6 @@ namespace golang
 
     void M(T* t)
     {
-        gocpp::Defer defer;
         if(t == nullptr)
         {
             mocklib::Println("<nil>");
@@ -86,7 +85,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         I i = {};
         T* t = {};
         i = t;
@@ -99,7 +97,6 @@ namespace golang
 
     void describe(I i)
     {
-        gocpp::Defer defer;
         mocklib::Printf("(%v, %T)\n", i, i);
     }
 

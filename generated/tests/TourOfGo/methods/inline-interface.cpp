@@ -19,13 +19,11 @@ namespace golang
     // using MyFloat = double;
     double Abs(MyInt i)
     {
-        gocpp::Defer defer;
         return std::sqrt(double(i * i));
     }
 
     double Abs(MyFloat f)
     {
-        gocpp::Defer defer;
         return std::sqrt(double(f * f));
     }
 
@@ -46,7 +44,6 @@ namespace golang
 
     double Abs(Vertex v)
     {
-        gocpp::Defer defer;
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
@@ -98,7 +95,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         gocpp_id_0 i = {};
         describe(i);
         i = MyInt(42);
@@ -157,7 +153,6 @@ namespace golang
 
     void describe(gocpp_id_1 i)
     {
-        gocpp::Defer defer;
         if(i != nullptr)
         {
             mocklib::Printf("(%v, %T) => %v\n", i, i, Abs(gocpp::recv(i)));

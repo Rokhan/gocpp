@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "strings";
     void main()
     {
-        gocpp::Defer defer;
         auto board = gocpp::slice<gocpp::slice<std::string>> {gocpp::slice<std::string> {"_", "_", "_"}, gocpp::slice<std::string> {"_", "_", "_"}, gocpp::slice<std::string> {"_", "_", "_"}};
         board[0][0] = "X";
         board[2][2] = "O";

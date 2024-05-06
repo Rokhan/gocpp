@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Printf("Hello, world.\n");
         auto hello = "Hello";
         auto world = "World";
@@ -32,19 +31,16 @@ namespace golang
 
     int square(int num)
     {
-        gocpp::Defer defer;
         return num * num;
     }
 
     void helloFunc(std::string str1, std::string str2, std::string str3)
     {
-        gocpp::Defer defer;
         mocklib::Printf(str1 + ", " + str2 + str3);
     }
 
     void printN(std::string str1, int n)
     {
-        gocpp::Defer defer;
         mocklib::Printf(str1 + "%d\n", n);
     }
 

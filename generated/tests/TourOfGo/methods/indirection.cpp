@@ -31,21 +31,18 @@ namespace golang
 
     void Scale(Vertex* v, double f)
     {
-        gocpp::Defer defer;
         v->X = v->X * f;
         v->Y = v->Y * f;
     }
 
     void ScaleFunc(Vertex* v, double f)
     {
-        gocpp::Defer defer;
         v->X = v->X * f;
         v->Y = v->Y * f;
     }
 
     void main()
     {
-        gocpp::Defer defer;
         auto v = Vertex {3, 4};
         Scale(gocpp::recv(v), 2);
         ScaleFunc(& v, 10);

@@ -16,12 +16,10 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     double Sqrt(double x)
     {
-        gocpp::Defer defer;
     }
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(Sqrt(2));
     }
 

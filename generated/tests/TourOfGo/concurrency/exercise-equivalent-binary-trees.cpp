@@ -17,19 +17,16 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/tree";
     void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
-        gocpp::Defer defer;
         gocpp::panic("Not implemented");
     }
 
     bool Same(tree::Tree* t1, tree::Tree* t2)
     {
-        gocpp::Defer defer;
         gocpp::panic("Not implemented");
     }
 
     void main()
     {
-        gocpp::Defer defer;
         tree::Tree tree = {};
         mocklib::Printf("%T", tree);
     }

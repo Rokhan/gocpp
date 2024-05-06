@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "time";
     void main()
     {
-        gocpp::Defer defer;
         auto t = mocklib::Date::Now();
         //Go switch emulation
         {

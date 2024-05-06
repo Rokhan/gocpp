@@ -16,13 +16,11 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     int add(int x, int y)
     {
-        gocpp::Defer defer;
         return x + y;
     }
 
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(add(42, 13));
     }
 

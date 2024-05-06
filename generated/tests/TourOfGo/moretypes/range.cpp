@@ -17,7 +17,6 @@ namespace golang
     gocpp::slice<int> pow = gocpp::slice<int> {1, 2, 4, 8, 16, 32, 64, 128};
     void main()
     {
-        gocpp::Defer defer;
         for(auto [i, v] : pow)
         {
             mocklib::Printf("2**%v = %v\n", i, v);

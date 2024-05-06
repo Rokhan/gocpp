@@ -76,20 +76,17 @@ namespace golang
 
     void M(T* t)
     {
-        gocpp::Defer defer;
         mocklib::Println(t->S);
     }
 
     // using F = double;
     void M(F f)
     {
-        gocpp::Defer defer;
         mocklib::Println(f);
     }
 
     void main()
     {
-        gocpp::Defer defer;
         I i = {};
         i = new T {"Hello"};
         describe(i);
@@ -101,7 +98,6 @@ namespace golang
 
     void describe(I i)
     {
-        gocpp::Defer defer;
         mocklib::Printf("(%v, %T)\n", i, i);
     }
 

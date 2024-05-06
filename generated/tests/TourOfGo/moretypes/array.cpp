@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         gocpp::array<std::string, 2> a = {};
         a[0] = "Hello";
         a[1] = "World";

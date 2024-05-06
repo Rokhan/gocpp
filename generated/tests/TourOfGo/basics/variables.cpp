@@ -22,7 +22,6 @@ namespace golang
     int kk = 5;
     void main()
     {
-        gocpp::Defer defer;
         int i = {};
         mocklib::Println(i, c, python, java);
         mocklib::Println(ii, jj, kk);

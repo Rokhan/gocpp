@@ -16,12 +16,10 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::function<int ()> fibonacci()
     {
-        gocpp::Defer defer;
         auto f0 = 0;
         auto f1 = 1;
         return [=]() mutable -> int
         {
-            gocpp::Defer defer;
             auto result = f0;
             auto f2 = f0 + f1;
             f0 = f1;
@@ -33,7 +31,6 @@ namespace golang
 
     void main()
     {
-        gocpp::Defer defer;
         auto f = fibonacci();
         for(auto i = 0; i < 10; i++)
         {

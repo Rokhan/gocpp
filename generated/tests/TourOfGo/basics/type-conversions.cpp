@@ -17,7 +17,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "math";
     void main()
     {
-        gocpp::Defer defer;
         int x = 3;
         int y = 4;
         double f = std::sqrt(double(x * x + y * y));

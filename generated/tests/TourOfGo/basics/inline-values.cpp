@@ -16,7 +16,6 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     void main()
     {
-        gocpp::Defer defer;
         mocklib::Println(fetcher["https://golang.org/"]->body);
         for(auto [_, url] : fetcher["https://golang.org/"]->urls)
         {

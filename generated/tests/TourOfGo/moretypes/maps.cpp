@@ -32,7 +32,6 @@ namespace golang
     gocpp::map<std::string, Vertex> m;
     void main()
     {
-        gocpp::Defer defer;
         m = gocpp::make(gocpp::Tag<gocpp::map<std::string, Vertex>>());
         m["Bell Labs"] = Vertex {40.68433, - 74.39967};
         mocklib::Println(m["Bell Labs"]);

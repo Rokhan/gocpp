@@ -1837,9 +1837,12 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 		return fmt.Sprintf("gocpp::Tag<%s>()", mapType.str)
 
 	case *ast.BasicLit:
-		if n.Kind == token.IMAG {
+		switch n.Kind {
+		case token.IMAG:
 			return "gocpp::complex128(0, " + strings.Replace(n.Value, "i", "", -1) + ")"
-		} else {
+		case token.INT, token.FLOAT:
+			return strings.ReplaceAll(n.Value, "_", "")
+		default:
 			return n.Value
 		}
 

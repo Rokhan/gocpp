@@ -2069,7 +2069,7 @@ func (cv *cppConverter) Position(expr ast.Node) token.Position {
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
 func (cv *cppConverter) PrintDefsUses(path string, fset *token.FileSet, files ...*ast.File) error {
-	conf := types.Config{Importer: importer.Default()}
+	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	cv.typeInfo = &types.Info{
 		Types: make(map[ast.Expr]types.TypeAndValue),
 		Defs:  make(map[*ast.Ident]types.Object),
@@ -2148,8 +2148,7 @@ func main() {
 	cv.Init()
 
 	if err := cv.PrintDefsUses("gocpp", fset, f); err != nil {
-		fmt.Println(err.Error()) // type error
-		//log.Fatal(err) // type error
+		log.Fatal(err) // type error
 	}
 
 	fmt.Printf("\n=====\n")

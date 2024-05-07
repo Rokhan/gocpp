@@ -7,7 +7,10 @@ import "golang.org/x/tour/reader"
 
 type MyReader struct{}
 
-// TODO: Add a Read([]byte) (int, error) method to MyReader.
+func (MyReader) Read(buffer []byte) (int, error) {
+	buffer = []byte{'A'}
+	return 1, nil
+}
 
 func main() {
 	reader.Validate(MyReader{})

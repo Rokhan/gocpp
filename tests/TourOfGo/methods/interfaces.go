@@ -1,5 +1,5 @@
-//go:build ignore || OMIT
-// +build ignore OMIT
+//go:build
+// +build
 
 package main
 
@@ -22,7 +22,7 @@ func main() {
 
 	// In the following line, v is a Vertex (not *Vertex)
 	// and does NOT implement Abser.
-	a = v
+	//a = v
 
 	fmt.Println(a.Abs())
 }

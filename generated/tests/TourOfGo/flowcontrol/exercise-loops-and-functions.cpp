@@ -16,6 +16,20 @@ namespace golang
     // convertSpecs[ImportSpec] Not implemented => "fmt";
     double Sqrt(double x)
     {
+        if(x <= 0)
+        {
+            gocpp::panic("error, Sqrt(x) with x<1");
+        }
+        auto z = 1.0;
+        for(auto i = 0; i < 15; i++)
+        {
+            z -= (z * z - 2) / (2 * x);
+            if(z > 0 && z < 0.000000001)
+            {
+                break;
+            }
+        }
+        return z;
     }
 
     void main()

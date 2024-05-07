@@ -30,6 +30,20 @@ namespace golang
         return value.PrintTo(os);
     }
 
+    std::tuple<int, error> Read(rot13Reader r13, gocpp::slice<unsigned char> buf)
+    {
+        auto [n, err] = Read(gocpp::recv(r13.r), buf);
+        if(err != nullptr)
+        {
+            return {n, err};
+        }
+        for(auto i = 0; i < n; i++)
+        {
+            buf[i] += 13;
+        }
+        return {n, nullptr};
+    }
+
     void main()
     {
         auto s = strings::NewReader("Lbh penpxrq gur pbqr!");

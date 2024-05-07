@@ -13,6 +13,8 @@
 
 namespace golang
 {
+    // convertSpecs[ImportSpec] Not implemented => "image";
+    // convertSpecs[ImportSpec] Not implemented => "image/color";
     // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
     
     std::ostream& Image::PrintTo(std::ostream& os) const
@@ -25,6 +27,21 @@ namespace golang
     std::ostream& operator<<(std::ostream& os, const Image& value)
     {
         return value.PrintTo(os);
+    }
+
+    color::Model ColorModel(Image)
+    {
+        gocpp::panic("not implemented");
+    }
+
+    image::Rectangle Bounds(Image)
+    {
+        gocpp::panic("not implemented");
+    }
+
+    color::Color At(Image, int x, int y)
+    {
+        gocpp::panic("not implemented");
     }
 
     void main()

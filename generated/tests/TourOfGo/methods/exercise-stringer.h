@@ -11,6 +11,7 @@
 namespace golang
 {
     using IPAddr = gocpp::array<unsigned char, 4>;
+    std::string String(IPAddr ip);
     void main();
 }
 

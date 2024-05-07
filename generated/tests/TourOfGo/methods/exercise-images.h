@@ -19,6 +19,9 @@ namespace golang
     };
 
     std::ostream& operator<<(std::ostream& os, const Image& value);
+    color::Model ColorModel(Image);
+    image::Rectangle Bounds(Image);
+    color::Color At(Image, int x, int y);
     void main();
 }
 

@@ -67,7 +67,6 @@ namespace golang
         auto v = Vertex {3, 4};
         a = f;
         a = & v;
-        a = v;
         mocklib::Println(Abs(gocpp::recv(a)));
     }
 

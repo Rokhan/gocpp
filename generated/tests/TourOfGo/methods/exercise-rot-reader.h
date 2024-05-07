@@ -20,6 +20,7 @@ namespace golang
     };
 
     std::ostream& operator<<(std::ostream& os, const rot13Reader& value);
+    std::tuple<int, error> Read(rot13Reader r13, gocpp::slice<unsigned char> buf);
     void main();
 }
 

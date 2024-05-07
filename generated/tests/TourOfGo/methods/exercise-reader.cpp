@@ -27,6 +27,12 @@ namespace golang
         return value.PrintTo(os);
     }
 
+    std::tuple<int, error> Read(MyReader, gocpp::slice<unsigned char> buffer)
+    {
+        buffer = gocpp::slice<unsigned char> {'A'};
+        return {1, nullptr};
+    }
+
     void main()
     {
         Validate(gocpp::recv(reader), MyReader {});

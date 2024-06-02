@@ -56,6 +56,23 @@ var nameSpaces = map[string]struct{}{
 	"wc":      {},
 }
 
+// TODO, make a dynamic mapping
+var cppKeyWordsMapping = map[string]string{
+	"do":       "go_do",
+	"while":    "go_while",
+	"template": "go_template",
+	"class":    "go_class",
+}
+
+func GetCppName(name string) string {
+	val, ok := cppKeyWordsMapping[name]
+	if ok {
+		return val
+	} else {
+		return name
+	}
+}
+
 var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
 	// fmt
@@ -117,6 +134,7 @@ func Panicf(format string, a ...interface{}) {
 }
 
 func GetCppType(goType string) string {
+	goType = GetCppName(goType)
 	val, ok := stdTypeMapping[goType]
 	if ok {
 		return val
@@ -129,12 +147,13 @@ func GetCppGoType(goType types.Type) string {
 	return GetCppType(goType.String())
 }
 
-func GetCppFunc(goType string) string {
-	val, ok := stdFuncMapping[goType]
+func GetCppFunc(funcName string) string {
+	funcName = GetCppName(funcName)
+	val, ok := stdFuncMapping[funcName]
 	if ok {
 		return val
 	} else {
-		return goType
+		return funcName
 	}
 }
 
@@ -488,7 +507,7 @@ func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
 	for _, field := range fields.List {
 		var param typeName
 		for _, name := range field.Names {
-			param.names = append(param.names, name.Name)
+			param.names = append(param.names, GetCppName(name.Name))
 		}
 		param.Type = cv.convertTypeExpr(field.Type)
 		params = append(params, param)
@@ -510,7 +529,7 @@ func (cv *cppConverter) readMethods(fields *ast.FieldList) (methods []method) {
 	for _, field := range fields.List {
 		for _, name := range field.Names {
 			outPrm, inPrm := cv.convertMethodExpr(field.Type)
-			methods = append(methods, method{name.Name, outPrm, inPrm})
+			methods = append(methods, method{GetCppName(name.Name), outPrm, inPrm})
 		}
 	}
 	return
@@ -597,9 +616,9 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 				cv.outputsPrint(place, &outlines)
 			}
 		}
-
-		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
-		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, d.Name.Name, params)
+		name := GetCppName(d.Name.Name)
+		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
+		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
 
 		blockOutlines := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 		outlines = append(outlines, blockOutlines...)
@@ -1105,7 +1124,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 						}
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
-						name := s.Names[i].Name
+						name := GetCppName(s.Names[i].Name)
 						if name == "_" {
 							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", exprType, cv.GenerateId(), expr, end)))
 						} else {
@@ -1117,11 +1136,12 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 					for i := range s.Names {
 						t := cv.convertTypeExpr(s.Type)
 						result = append(result, t.defs...)
+						name := GetCppName(s.Names[i].Name)
 
 						if len(values) == 0 {
-							result = append(result, inlineStr(fmt.Sprintf("%s %s%s", t.str, s.Names[i].Name, end)))
+							result = append(result, inlineStr(fmt.Sprintf("%s %s%s", t.str, name, end)))
 						} else {
-							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", t.str, s.Names[i].Name, cv.convertExpr(values[i]), end)))
+							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", t.str, name, cv.convertExpr(values[i]), end)))
 						}
 					}
 				}
@@ -1129,20 +1149,22 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 			} else {
 				if s.Type == nil {
 					for i := range s.Names {
+						name := GetCppName(s.Names[i].Name)
 						if len(values) == 0 {
-							result = append(result, inlineStr(fmt.Sprintf("auto %s%s", s.Names[i].Name, end)))
+							result = append(result, inlineStr(fmt.Sprintf("auto %s%s", name, end)))
 						} else {
-							result = append(result, inlineStr(fmt.Sprintf("auto %s = %s%s", s.Names[i].Name, cv.convertExpr(values[i]), end)))
+							result = append(result, inlineStr(fmt.Sprintf("auto %s = %s%s", name, cv.convertExpr(values[i]), end)))
 						}
 					}
 				} else {
 					for i := range s.Names {
+						name := GetCppName(s.Names[i].Name)
 						t := cv.convertTypeExpr(s.Type)
 						result = append(result, t.defs...)
 						if len(values) == 0 {
-							result = append(result, inlineStr(fmt.Sprintf("%s %s = {}%s", t.str, s.Names[i].Name, end)))
+							result = append(result, inlineStr(fmt.Sprintf("%s %s = {}%s", t.str, name, end)))
 						} else {
-							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", t.str, s.Names[i].Name, cv.convertExpr(values[i]), end)))
+							result = append(result, inlineStr(fmt.Sprintf("%s %s = %s%s", t.str, name, cv.convertExpr(values[i]), end)))
 						}
 					}
 				}
@@ -1195,44 +1217,50 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 	switch n := node.Type.(type) {
 	case *ast.Ident:
 		// TODO : manage go private/public rule to chose where to put definition
-		usingDec := fmt.Sprintf("using %s = %s%s", node.Name.Name, GetCppType(n.Name), end)
+		name := GetCppName(node.Name.Name)
+		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
 
 		// Commented output in cpp as we only need one declaration
 		return cppType{"// " + usingDec, []place{headerStr(usingDec)}, false}
 
 	case *ast.ArrayType:
 		t := cv.convertArrayTypeExpr(n)
-		usingDec := fmt.Sprintf("using %s = %s%s", node.Name.Name, t.str, end)
+		name := GetCppName(node.Name.Name)
+		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
 		return cppType{"", append(t.defs, headerStr(usingDec)), false}
 
 	case *ast.FuncType:
+		name := GetCppName(node.Name.Name)
 		// TODO: This part is probably wrong
-		return cppType{fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), node.Name.Name, end), nil, false}
+		return cppType{fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), name, end), nil, false}
 
 	case *ast.MapType:
 		t := cv.convertMapTypeExpr(n)
-		usingDec := fmt.Sprintf("using %s = %s%s", node.Name.Name, t.str, end)
+		name := GetCppName(node.Name.Name)
+		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
 		return cppType{"", append(t.defs, headerStr(usingDec)), false}
 
 	case *ast.StructType:
+		name := GetCppName(node.Name.Name)
 		// TODO: return type value instead of writing in forward header directly
-		fmt.Fprintf(cv.fwd.out, "%sstruct %s;\n", cv.fwd.Indent(), node.Name.Name)
+		fmt.Fprintf(cv.fwd.out, "%sstruct %s;\n", cv.fwd.Indent(), name)
 
 		// TODO: return type value instead of writing in header directly
-		structDecl := cv.convertStructTypeExpr(n, genStructParam{node.Name.Name, decl, with})
+		structDecl := cv.convertStructTypeExpr(n, genStructParam{name, decl, with})
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), structDecl)
 
-		return cppType{cv.convertStructTypeExpr(n, genStructParam{node.Name.Name, implem, with}), nil, false}
+		return cppType{cv.convertStructTypeExpr(n, genStructParam{name, implem, with}), nil, false}
 
 	case *ast.InterfaceType:
+		name := GetCppName(node.Name.Name)
 		// TODO: return type value instead of writing in forward header directly
-		fmt.Fprintf(cv.fwd.out, "%sstruct %s;\n", cv.fwd.Indent(), node.Name.Name)
+		fmt.Fprintf(cv.fwd.out, "%sstruct %s;\n", cv.fwd.Indent(), name)
 
 		// TODO: return type value instead of writing in header directly
-		structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{node.Name.Name, decl, with})
+		structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{name, decl, with})
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), structDecl)
 
-		return cppType{cv.convertInterfaceTypeExpr(n, genStructParam{node.Name.Name, implem, with}), nil, false}
+		return cppType{cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with}), nil, false}
 
 	default:
 		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v];\n", reflect.TypeOf(n)), nil, false}

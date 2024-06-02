@@ -30,4 +30,29 @@ func main() {
 		fmt.Println(ii, zz, ll)
 	}
 	fmt.Println(ii, zz, kk)
+
+	do, while, template, class := "do", "while", "template", "class"
+	fmt.Println(do, while, template, class)
+
+	dummy_vars()
 }
+
+func dummy_vars() {
+	var do string = "do"
+	var while string = "while"
+	var template string = "template"
+	var class string = "class"
+	fmt.Println(do, while, template, class)
+}
+
+func dummy_funcs() {
+	do()
+	while()
+	template()
+	class()
+}
+
+func do()       {}
+func while()    {}
+func template() {}
+func class()    {}

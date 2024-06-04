@@ -77,7 +77,7 @@
 | [TourOfGo/methods/stringer.go](tests/TourOfGo/methods/stringer.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/stringer.cpp)) | ❌ |
 | [TourOfGo/methods/type-assertions.go](tests/TourOfGo/methods/type-assertions.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/type-assertions-basics.go](tests/TourOfGo/methods/type-assertions-basics.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/type-assertions-basics.cpp)) | ✔️ |
-| [TourOfGo/methods/type-switches.go](tests/TourOfGo/methods/type-switches.go) | ❌ | ❌ | ❌ | ❌ |
+| [TourOfGo/methods/type-switches.go](tests/TourOfGo/methods/type-switches.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/type-switches.cpp)) | ❌ |
 | [TourOfGo/moretypes/append.go](tests/TourOfGo/moretypes/append.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/append.cpp)) | ❌ |
 | [TourOfGo/moretypes/array.go](tests/TourOfGo/moretypes/array.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/array.cpp)) | ✔️ |
 | [TourOfGo/moretypes/exercise-fibonacci-closure.go](tests/TourOfGo/moretypes/exercise-fibonacci-closure.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/exercise-fibonacci-closure.cpp)) | ✔️ |

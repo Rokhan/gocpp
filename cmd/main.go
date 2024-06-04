@@ -58,10 +58,11 @@ var nameSpaces = map[string]struct{}{
 
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
-	"do":       "go_do",
-	"while":    "go_while",
-	"template": "go_template",
 	"class":    "go_class",
+	"do":       "go_do",
+	"template": "go_template",
+	"typeid":   "go_typeid",
+	"while":    "go_while",
 }
 
 func GetCppName(name string) string {
@@ -567,6 +568,10 @@ type blockEnv struct {
 	stmtEnv
 	isFunc   bool
 	useDefer *bool
+
+	isTypeSwitch      bool
+	switchVarName     string
+	typeSwitchVarName string
 }
 
 func boolPtr(b bool) *bool {
@@ -574,11 +579,11 @@ func boolPtr(b bool) *bool {
 }
 
 func makeBlockEnv(env stmtEnv, isFunc bool) blockEnv {
-	return blockEnv{env, isFunc, boolPtr(false)}
+	return blockEnv{env, isFunc, boolPtr(false), false, "", ""}
 }
 
 func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
-	return blockEnv{env.stmtEnv, isFunc, env.useDefer}
+	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName}
 }
 
 func (cv *cppConverter) outputsPrint(place place, outlines *[]string) {
@@ -860,6 +865,28 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 
 		cv.convertSwitchBody(env, s.Body, "conditionId", inputVarName)
 
+	case *ast.TypeSwitchStmt:
+		fmt.Fprintf(cv.cpp.out, "%s//Go type switch emulation\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
+		cv.cpp.indent++
+
+		if s.Init != nil {
+			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
+		}
+
+		var switchExpr string
+		inputVarName := ""
+		switchVarName := cv.GenerateId()
+		if s.Assign != nil {
+			inputVarName, switchExpr = cv.convertTypeSwitchAssign(s.Assign)
+			fmt.Fprintf(cv.cpp.out, "%sconst auto& %s = gocpp::type_info(%s);\n", cv.cpp.Indent(), switchVarName, switchExpr)
+		}
+
+		env.isTypeSwitch = true
+		env.typeSwitchVarName = inputVarName
+		env.switchVarName = switchExpr
+		cv.convertSwitchBody(env, s.Body, "conditionId", switchVarName)
+
 	case *ast.SelectStmt:
 		fmt.Fprintf(cv.cpp.out, "%s//Go select emulation\n", cv.cpp.Indent())
 		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
@@ -869,6 +896,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		fmt.Fprintf(cv.cpp.out, "%sstd::this_thread::yield();\n", cv.cpp.Indent())
 
 	case *ast.CaseClause:
+		var caseType string
 		if s.List == nil {
 			fmt.Fprintf(cv.cpp.out, "%sdefault:\n", cv.cpp.Indent())
 		} else {
@@ -877,15 +905,36 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 				fmt.Fprintf(cv.cpp.out, "%scase %d:\n", cv.cpp.Indent(), id)
 				cv.currentSwitchId.Back().Value = id + 1
 			}
+
+			if env.isTypeSwitch {
+				caseType = cv.convertExprCppType(s.List[0])
+			}
+		}
+
+		if env.isTypeSwitch {
+			fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 		}
 
 		cv.cpp.indent++
+
+		if env.isTypeSwitch {
+			if caseType != "" {
+				fmt.Fprintf(cv.cpp.out, "%s%s %s = gocpp::any_cast<%s>(%s);\n", cv.cpp.Indent(), caseType, env.switchVarName, caseType, env.typeSwitchVarName)
+			} else {
+				fmt.Fprintf(cv.cpp.out, "%sauto %s = %s;\n", cv.cpp.Indent(), env.switchVarName, env.typeSwitchVarName)
+			}
+		}
+
 		for _, stmt := range s.Body {
 			stmtOutline := cv.convertStmt(stmt, env)
 			outlines = append(outlines, stmtOutline...)
 		}
 		fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
 		cv.cpp.indent--
+
+		if env.isTypeSwitch {
+			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+		}
 
 	case *ast.CommClause:
 
@@ -916,12 +965,40 @@ type switchEnvName struct {
 	conditionVarName string
 	prefix           string
 	withCondition    bool
+	isTypeSwitch     bool
+}
+
+func (cv *cppConverter) convertTypeSwitchAssign(stmt ast.Stmt) (varName string, exprString string) {
+
+	switch s := stmt.(type) {
+	case *ast.AssignStmt:
+		if len(s.Lhs) == 1 && len(s.Rhs) == 1 {
+			varName = cv.convertExpr(s.Lhs[0])
+			switch expr := s.Rhs[0].(type) {
+			case *ast.TypeAssertExpr:
+				if expr.Type != nil {
+					// We managed only .(type) syntax
+					Panicf("convertTypeSwitchAssign, unmanaged type switch with type [%v], input: %v", reflect.TypeOf(expr.Type), cv.Position(expr.Type))
+				}
+				exprString = cv.convertExpr(expr.X)
+			default:
+				Panicf("convertTypeSwitchAssign, unmanaged right side expression [%v], input: %v", reflect.TypeOf(expr), cv.Position(expr))
+			}
+		} else {
+			Panicf("convertTypeSwitchAssign, unmanaged multiple assign [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+		}
+
+	default:
+		Panicf("convertTypeSwitchAssign, unmanaged statemet type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+	}
+
+	return
 }
 
 func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outlines []string) {
 
 	fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
-	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != ""}
+	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != "", env.isTypeSwitch}
 	cv.extractCaseExpr(body, &se)
 	fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
@@ -947,7 +1024,11 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		for _, expr := range s.List {
 			id := cv.currentSwitchId.Back().Value.(int)
 			if se.withCondition {
-				fmt.Fprintf(cv.cpp.out, "%s%sif(%s == %s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, se.inputVarName, cv.convertExpr(expr), se.conditionVarName, id)
+				if se.isTypeSwitch {
+					fmt.Fprintf(cv.cpp.out, "%s%sif(%s == typeid(%s)) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, se.inputVarName, cv.convertExprCppType(expr), se.conditionVarName, id)
+				} else {
+					fmt.Fprintf(cv.cpp.out, "%s%sif(%s == %s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, se.inputVarName, cv.convertExpr(expr), se.conditionVarName, id)
+				}
 			} else {
 				fmt.Fprintf(cv.cpp.out, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
 			}

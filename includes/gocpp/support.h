@@ -10,6 +10,7 @@
 #include <numbers>
 #include <string>
 #include <tuple>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -54,6 +55,34 @@ namespace gocpp
         global_pool().enqueue_detach(func, args...);
     }
 
+    const std::type_info& type_info(const std::any& value)
+    {
+        const auto& info = value.type();
+        if(info == typeid(const char * const))
+        {
+            return typeid(std::string);
+        }
+
+        return info;
+    }
+
+    template<typename T>
+    T any_cast(const std::any& value)
+    {
+        return std::any_cast<T>(value);
+    }
+
+    template<>
+    std::string any_cast<std::string>(const std::any& value)
+    {
+        if(value.type() == typeid(const char * const))
+        {
+            return std::any_cast<const char * const>(value);
+        }
+        
+        return std::any_cast<std::string>(value);
+    }
+
     template <typename T>
     struct ptr
     {
@@ -76,6 +105,11 @@ namespace gocpp
     inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
     inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
     inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
+
+    inline size_t len(const std::string& input)
+    {
+        return input.length();
+    }
 
     template<typename T> struct Tag {};
 
@@ -842,6 +876,11 @@ namespace std
     {
         using type = bool;
     };
+}
+
+namespace golang
+{
+    using gocpp::len;
 }
 
 // temporary mock implementations

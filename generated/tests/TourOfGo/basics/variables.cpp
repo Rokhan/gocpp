@@ -40,6 +40,42 @@ namespace golang
             mocklib::Println(ii, zz, ll);
         }
         mocklib::Println(ii, zz, kk);
+        auto [go_do, go_while, go_template, go_class] = std::tuple{"do", "while", "template", "class"};
+        mocklib::Println(go_do, go_while, go_template, go_class);
+        dummy_vars();
+    }
+
+    void dummy_vars()
+    {
+        std::string go_do = "do";
+        std::string go_while = "while";
+        std::string go_template = "template";
+        std::string go_class = "class";
+        mocklib::Println(go_do, go_while, go_template, go_class);
+    }
+
+    void dummy_funcs()
+    {
+        go_do();
+        go_while();
+        go_template();
+        go_class();
+    }
+
+    void go_do()
+    {
+    }
+
+    void go_while()
+    {
+    }
+
+    void go_template()
+    {
+    }
+
+    void go_class()
+    {
     }
 
 }

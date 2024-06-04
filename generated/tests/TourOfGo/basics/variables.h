@@ -11,5 +11,11 @@
 namespace golang
 {
     void main();
+    void dummy_vars();
+    void dummy_funcs();
+    void go_do();
+    void go_while();
+    void go_template();
+    void go_class();
 }
 

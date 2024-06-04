@@ -1,0 +1,71 @@
+#include <complex>
+#include <functional>
+#include <iostream>
+#include <iomanip>
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "tests/TourOfGo/methods/type-switches.h"
+#include "gocpp/support.h"
+
+
+namespace golang
+{
+    // convertSpecs[ImportSpec] Not implemented => "fmt";
+    void go_do(std::any i)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_0 = gocpp::type_info(i);
+            int conditionId = -1;
+            if(gocpp_id_0 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(std::string)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    int v = gocpp::any_cast<int>(i);
+                    mocklib::Printf("Twice %v is %v\n", v, v * 2);
+                    break;
+                }
+                case 1:
+                {
+                    std::string v = gocpp::any_cast<std::string>(i);
+                    mocklib::Printf("%q is %v bytes long\n", v, len(v));
+                    break;
+                }
+                default:
+                {
+                    auto v = i;
+                    mocklib::Printf("I don't know about type %T!\n", v);
+                    break;
+                }
+            }
+        }
+    }
+
+    void main()
+    {
+        go_do(21);
+        go_do("hello");
+        go_do(true);
+    }
+
+}
+
+int main()
+{
+    try
+    {
+        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        golang::main();
+        return 0;
+    }
+    catch(const gocpp::GoPanic& ex)
+    {
+        std::cout << "Panic: " << ex.what() << std::endl;
+        return -1;
+    }
+}

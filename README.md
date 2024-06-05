@@ -1,7 +1,7 @@
 # gocpp
 Quick and dirty experimentations to parse go code and generate equivalent c++ code.
 
-Nothing really useful practically at the moment as a lots of things are still mocked.
+Nothing really useful practically at the moment as a lots of things are still mocked and the garbage collector is not implemented.
 
 The compiler code is in [cmd\main.go](cmd/main.go)
 The compiler is tested with go files in [tests/](./tests/) directory and the output is in [generated/](./generated/) directory.

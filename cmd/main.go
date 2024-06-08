@@ -14,9 +14,12 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // cf following files to add missing types:
@@ -220,6 +223,8 @@ type cppConverter struct {
 	cpp       outFile
 	hpp       outFile
 	fwd       outFile
+	hasMain   bool
+	namespace string
 }
 
 func (cv *cppConverter) ResetIota() {
@@ -250,7 +255,20 @@ func (cv *cppConverter) GenerateId() (id string) {
 
 const dbgPrefix string = "         "
 
-func printCppIntro(cv *cppConverter) {
+func includeDependencies(file outFile, pkgInfos []pkgInfo, suffix string) {
+	if pkgInfos == nil {
+		return
+	}
+
+	fmt.Fprintf(file.out, "// TODO: package import not implemented\n")
+	for _, pkgInfo := range pkgInfos {
+		baseName := strings.TrimSuffix(filepath.Base(pkgInfo.path), ".go")
+		fmt.Fprintf(file.out, "// #include \"%v/%v%v\"\n", pkgInfo.name, baseName, suffix)
+	}
+	fmt.Fprintf(file.out, "\n")
+}
+
+func printCppIntro(cv *cppConverter, pkgInfos []pkgInfo) {
 	//temporarily blindly add "includes" and "using"
 	fmt.Fprintf(cv.cpp.out, "#include <complex>\n")
 	fmt.Fprintf(cv.cpp.out, "#include <functional>\n")
@@ -264,10 +282,11 @@ func printCppIntro(cv *cppConverter) {
 	fmt.Fprintf(cv.cpp.out, "#include \"%s.h\"\n", cv.baseName)
 	fmt.Fprintf(cv.cpp.out, "#include \"%s\"\n", cv.supportHeader)
 	fmt.Fprintf(cv.cpp.out, "\n")
-	fmt.Fprintf(cv.cpp.out, "\n")
+
+	includeDependencies(cv.cpp, pkgInfos, ".h")
 
 	// Put everything generated in "golang" namespace
-	fmt.Fprintf(cv.cpp.out, "namespace golang\n")
+	fmt.Fprintf(cv.cpp.out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(cv.cpp.out, "{\n")
 	cv.cpp.indent++
 }
@@ -278,24 +297,26 @@ func printCppOutro(cv *cppConverter) {
 	fmt.Fprintf(cv.cpp.out, "}\n")
 	fmt.Fprintf(cv.cpp.out, "\n")
 
-	// TODO: manage main parameters
-	fmt.Fprintf(cv.cpp.out, "int main()\n")
-	fmt.Fprintf(cv.cpp.out, "{\n")
-	fmt.Fprintf(cv.cpp.out, "    try\n")
-	fmt.Fprintf(cv.cpp.out, "    {\n")
-	fmt.Fprintf(cv.cpp.out, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
-	fmt.Fprintf(cv.cpp.out, "        golang::main();\n")
-	fmt.Fprintf(cv.cpp.out, "        return 0;\n")
-	fmt.Fprintf(cv.cpp.out, "    }\n")
-	fmt.Fprintf(cv.cpp.out, "    catch(const gocpp::GoPanic& ex)\n")
-	fmt.Fprintf(cv.cpp.out, "    {\n")
-	fmt.Fprintf(cv.cpp.out, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
-	fmt.Fprintf(cv.cpp.out, "        return -1;\n")
-	fmt.Fprintf(cv.cpp.out, "    }\n")
-	fmt.Fprintf(cv.cpp.out, "}\n")
+	if cv.hasMain {
+		// TODO: manage main parameters
+		fmt.Fprintf(cv.cpp.out, "int main()\n")
+		fmt.Fprintf(cv.cpp.out, "{\n")
+		fmt.Fprintf(cv.cpp.out, "    try\n")
+		fmt.Fprintf(cv.cpp.out, "    {\n")
+		fmt.Fprintf(cv.cpp.out, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
+		fmt.Fprintf(cv.cpp.out, "        golang::%v::main();\n", cv.namespace)
+		fmt.Fprintf(cv.cpp.out, "        return 0;\n")
+		fmt.Fprintf(cv.cpp.out, "    }\n")
+		fmt.Fprintf(cv.cpp.out, "    catch(const gocpp::GoPanic& ex)\n")
+		fmt.Fprintf(cv.cpp.out, "    {\n")
+		fmt.Fprintf(cv.cpp.out, "        std::cout << \"Panic: \" << ex.what() << std::endl;\n")
+		fmt.Fprintf(cv.cpp.out, "        return -1;\n")
+		fmt.Fprintf(cv.cpp.out, "    }\n")
+		fmt.Fprintf(cv.cpp.out, "}\n")
+	}
 }
 
-func printHppIntro(cv *cppConverter) {
+func printHppIntro(cv *cppConverter, pkgInfos []pkgInfo) {
 	//temporarily blindly add "includes" and "using"
 	fmt.Fprintf(cv.hpp.out, "#pragma once\n")
 	fmt.Fprintf(cv.hpp.out, "\n")
@@ -308,8 +329,10 @@ func printHppIntro(cv *cppConverter) {
 	fmt.Fprintf(cv.hpp.out, "#include \"%s\"\n", cv.supportHeader)
 	fmt.Fprintf(cv.hpp.out, "\n")
 
+	includeDependencies(cv.hpp, pkgInfos, ".fwd.h")
+
 	// Put everything generated in "golang" namespace
-	fmt.Fprintf(cv.hpp.out, "namespace golang\n")
+	fmt.Fprintf(cv.hpp.out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(cv.hpp.out, "{\n")
 	cv.hpp.indent++
 }
@@ -326,7 +349,7 @@ func printFwdIntro(cv *cppConverter) {
 	fmt.Fprintf(cv.fwd.out, "\n")
 
 	// Put everything generated in "golang" namespace
-	fmt.Fprintf(cv.fwd.out, "namespace golang\n")
+	fmt.Fprintf(cv.fwd.out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(cv.fwd.out, "{\n")
 	cv.fwd.indent++
 }
@@ -461,23 +484,49 @@ func (cv *cppConverter) ConvertFile(node ast.File) {
 	cv.fwd.file = createOutputExt(cv.cppOutDir, cv.baseName, "fwd.h")
 	cv.fwd.out = bufio.NewWriter(cv.fwd.file)
 
-	printCppIntro(cv)
-	printHppIntro(cv)
-	printFwdIntro(cv)
+	cv.hpp.indent++
+	cv.fwd.indent++
+	cv.cpp.indent++
 
+	cv.namespace = node.Name.Name
+	var allOutlines [][]string
+	var pkgInfos []pkgInfo
+	var allCppOut, allHppOut, allFwdOut []string
 	for _, decl := range node.Decls {
 		var outlines []string
+		var cppOut, hppOut, fwdOut string
 
-		cppOut := cv.withCppBuffer(func() {
-			decOutline := cv.convertDecls(decl, true)
-			outlines = append(outlines, decOutline...)
+		fwdOut = cv.withFwdBuffer(func() {
+			hppOut = cv.withHppBuffer(func() {
+				cppOut = cv.withCppBuffer(func() {
+					declOutline, declPkgInfos := cv.convertDecls(decl, true)
+					outlines = append(outlines, declOutline...)
+					pkgInfos = append(pkgInfos, declPkgInfos...)
+				})
+			})
 		})
 
-		for _, outline := range outlines {
+		allOutlines = append(allOutlines, outlines)
+		allFwdOut = append(allFwdOut, fwdOut)
+		allHppOut = append(allHppOut, hppOut)
+		allCppOut = append(allCppOut, cppOut)
+	}
+
+	cv.fwd.indent--
+	cv.hpp.indent--
+	cv.cpp.indent--
+
+	printFwdIntro(cv)
+	printHppIntro(cv, pkgInfos)
+	printCppIntro(cv, pkgInfos)
+
+	for i := 0; i < len(allOutlines); i++ {
+		for _, outline := range allOutlines[i] {
 			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), outline)
 		}
-
-		fmt.Fprintf(cv.cpp.out, "%s", cppOut)
+		fmt.Fprintf(cv.fwd.out, "%s", allFwdOut[i])
+		fmt.Fprintf(cv.hpp.out, "%s", allHppOut[i])
+		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
 
 	if cv.genMakeFile {
@@ -488,9 +537,9 @@ func (cv *cppConverter) ConvertFile(node ast.File) {
 	//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
 	cv.endScope()
 
-	printCppOutro(cv)
-	printHppOutro(cv)
 	printFwdOutro(cv)
+	printHppOutro(cv)
+	printCppOutro(cv)
 
 	cv.cpp.out.Flush()
 	cv.hpp.out.Flush()
@@ -586,7 +635,7 @@ func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
 	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName}
 }
 
-func (cv *cppConverter) outputsPrint(place place, outlines *[]string) {
+func (cv *cppConverter) outputsPrint(place place, outlines *[]string, pkgInfos *[]pkgInfo) {
 	if place.inline != nil {
 		fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), *place.inline)
 	}
@@ -596,13 +645,16 @@ func (cv *cppConverter) outputsPrint(place place, outlines *[]string) {
 	if place.header != nil {
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), *place.header)
 	}
+	if place.pkgInfo != nil {
+		*pkgInfos = append(*pkgInfos, *place.pkgInfo)
+	}
 }
 
-func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines []string) {
+func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines []string, pkgInfos []pkgInfo) {
 	switch d := decl.(type) {
 	case *ast.GenDecl:
 		for _, place := range cv.convertSpecs(d.Specs, isNameSpace, ";\n") {
-			cv.outputsPrint(place, &outlines)
+			cv.outputsPrint(place, &outlines, &pkgInfos)
 		}
 
 	case *ast.FuncDecl:
@@ -618,12 +670,15 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 		cv.DeclareVars(params)
 		for _, param := range params {
 			for _, place := range param.Type.defs {
-				cv.outputsPrint(place, &outlines)
+				cv.outputsPrint(place, &outlines, nil)
 			}
 		}
 		name := GetCppName(d.Name.Name)
 		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
 		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
+		if name == "main" {
+			cv.hasMain = true
+		}
 
 		blockOutlines := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 		outlines = append(outlines, blockOutlines...)
@@ -782,7 +837,11 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		outlines = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
 
 	case *ast.DeclStmt:
-		outlines = cv.convertDecls(s.Decl, false)
+		var pkgInfos []pkgInfo
+		outlines, pkgInfos = cv.convertDecls(s.Decl, false)
+		if len(pkgInfos) != 0 {
+			Panicf("convertStmt, can't manage pkgInfos here, declaration: [%v], input: %v", s.Decl, cv.Position(s))
+		}
 
 	case *ast.ExprStmt:
 		fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X))
@@ -1252,7 +1311,35 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 			}
 
 		case *ast.ImportSpec:
-			result = append(result, inlineStr(fmt.Sprintf("// convertSpecs[ImportSpec] Not implemented => %s%s", s.Path.Value, end)))
+			// Check doc here https://pkg.go.dev/golang.org/x/tools/go/packages
+			pkg := cv.typeInfo.PkgNameOf(s).Imported()
+
+			cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax}
+
+			pkgs, err := packages.Load(cfg, pkg.Path())
+			if err != nil {
+				Panicf("load: %v\n", err)
+			}
+			if packages.PrintErrors(pkgs) > 0 {
+				os.Exit(1)
+			}
+
+			// Print the names of the source files
+			// for each package listed on the command line.
+			for _, pkg := range pkgs {
+				for _, file := range pkg.GoFiles {
+					result = append(result, importPackage(pkg.ID, file, GoFiles))
+				}
+				for _, file := range pkg.CompiledGoFiles {
+					result = append(result, importPackage(pkg.ID, file, CompiledGoFiles))
+				}
+				for _, file := range pkg.OtherFiles {
+					result = append(result, importPackage(pkg.ID, file, OtherFiles))
+				}
+				for _, file := range pkg.EmbedFiles {
+					result = append(result, importPackage(pkg.ID, file, EmbedFiles))
+				}
+			}
 
 		default:
 			Panicf("convertSpecs, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
@@ -1263,6 +1350,21 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 	return result
 }
 
+type pkgType int
+
+const (
+	GoFiles         pkgType = iota
+	CompiledGoFiles pkgType = iota
+	OtherFiles      pkgType = iota
+	EmbedFiles      pkgType = iota
+)
+
+type pkgInfo struct {
+	name     string
+	path     string
+	fileType pkgType
+}
+
 type place struct {
 	// when type/declaration can be used inlined
 	inline *string
@@ -1270,18 +1372,25 @@ type place struct {
 	outline *string
 	// when type/declaration need to be in header
 	header *string
+
+	//packages
+	pkgInfo *pkgInfo
 }
 
 func inlineStr(str string) place {
-	return place{&str, nil, nil}
+	return place{&str, nil, nil, nil}
 }
 
 func outlineStr(str string) place {
-	return place{nil, &str, nil}
+	return place{nil, &str, nil, nil}
 }
 
 func headerStr(str string) place {
-	return place{nil, nil, &str}
+	return place{nil, nil, &str, nil}
+}
+
+func importPackage(name string, path string, pkgType pkgType) place {
+	return place{nil, nil, nil, &pkgInfo{name, path, pkgType}}
 }
 
 type cppType struct {
@@ -1744,11 +1853,23 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, param 
 type action func()
 
 func (cv *cppConverter) withCppBuffer(action action) string {
+	return withFileBuffer(action, &cv.cpp)
+}
+
+func (cv *cppConverter) withHppBuffer(action action) string {
+	return withFileBuffer(action, &cv.hpp)
+}
+
+func (cv *cppConverter) withFwdBuffer(action action) string {
+	return withFileBuffer(action, &cv.fwd)
+}
+
+func withFileBuffer(action action, file *outFile) string {
 	buf := new(bytes.Buffer)
 	bufio := bufio.NewWriter(buf)
-	previousOut := cv.cpp.out
-	defer func() { cv.cpp.out = previousOut }()
-	cv.cpp.out = bufio
+	previousOut := file.out
+	defer func() { file.out = previousOut }()
+	file.out = bufio
 
 	action()
 
@@ -2183,9 +2304,10 @@ func (cv *cppConverter) Position(expr ast.Node) token.Position {
 func (cv *cppConverter) PrintDefsUses(path string, fset *token.FileSet, files ...*ast.File) error {
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	cv.typeInfo = &types.Info{
-		Types: make(map[ast.Expr]types.TypeAndValue),
-		Defs:  make(map[*ast.Ident]types.Object),
-		Uses:  make(map[*ast.Ident]types.Object),
+		Defs:      make(map[*ast.Ident]types.Object),
+		Implicits: make(map[ast.Node]types.Object),
+		Types:     make(map[ast.Expr]types.TypeAndValue),
+		Uses:      make(map[*ast.Ident]types.Object),
 	}
 	_, err := conf.Check(path, fset, files, cv.typeInfo)
 	if err != nil {
@@ -2214,7 +2336,7 @@ func (cv *cppConverter) PrintDefsUses(path string, fset *token.FileSet, files ..
 
 func main() {
 
-	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse")
+	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
 	parseFmtDir := flag.Bool("parseFmt", false, "temporary test parameter")
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")

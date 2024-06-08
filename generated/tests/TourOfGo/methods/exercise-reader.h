@@ -8,7 +8,10 @@
 #include "tests/TourOfGo/methods/exercise-reader.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang
+// TODO: package import not implemented
+// #include "golang.org/x/tour/reader/validate.fwd.h"
+
+namespace golang::main
 {
     struct MyReader
     {

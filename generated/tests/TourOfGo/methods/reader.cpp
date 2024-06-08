@@ -10,12 +10,25 @@
 #include "tests/TourOfGo/methods/reader.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
+// #include "io/io.h"
+// #include "io/multi.h"
+// #include "io/pipe.h"
+// #include "strings/builder.h"
+// #include "strings/clone.h"
+// #include "strings/compare.h"
+// #include "strings/reader.h"
+// #include "strings/replace.h"
+// #include "strings/search.h"
+// #include "strings/strings.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
-    // convertSpecs[ImportSpec] Not implemented => "io";
-    // convertSpecs[ImportSpec] Not implemented => "strings";
     void main()
     {
         auto r = strings::NewReader("Hello, Reader!");
@@ -39,7 +52,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

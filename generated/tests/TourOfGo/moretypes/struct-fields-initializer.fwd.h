@@ -1,6 +1,6 @@
 #pragma once
 
-namespace golang
+namespace golang::main
 {
     struct Vertex;
     struct Segment;

@@ -10,10 +10,15 @@
 #include "tests/TourOfGo/concurrency/range-and-close.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
     void fibonacci(int n, gocpp::channel<int> c)
     {
         auto [x, y] = std::tuple{0, 1};
@@ -42,7 +47,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

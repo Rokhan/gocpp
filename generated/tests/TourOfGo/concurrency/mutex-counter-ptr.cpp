@@ -10,12 +10,37 @@
 #include "tests/TourOfGo/concurrency/mutex-counter-ptr.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
+// #include "sync/cond.h"
+// #include "sync/map.h"
+// #include "sync/mutex.h"
+// #include "sync/once.h"
+// #include "sync/oncefunc.h"
+// #include "sync/pool.h"
+// #include "sync/poolqueue.h"
+// #include "sync/runtime.h"
+// #include "sync/runtime2.h"
+// #include "sync/rwmutex.h"
+// #include "sync/waitgroup.h"
+// #include "time/format.h"
+// #include "time/format_rfc3339.h"
+// #include "time/sleep.h"
+// #include "time/sys_windows.h"
+// #include "time/tick.h"
+// #include "time/time.h"
+// #include "time/zoneinfo.h"
+// #include "time/zoneinfo_abbrs_windows.h"
+// #include "time/zoneinfo_goroot.h"
+// #include "time/zoneinfo_read.h"
+// #include "time/zoneinfo_windows.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
-    // convertSpecs[ImportSpec] Not implemented => "sync";
-    // convertSpecs[ImportSpec] Not implemented => "time";
     
     std::ostream& SafeCounter::PrintTo(std::ostream& os) const
     {
@@ -65,7 +90,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

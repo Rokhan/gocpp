@@ -10,11 +10,29 @@
 #include "tests/TourOfGo/basics/basic-types.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
+// #include "math/cmplx/abs.h"
+// #include "math/cmplx/asin.h"
+// #include "math/cmplx/conj.h"
+// #include "math/cmplx/exp.h"
+// #include "math/cmplx/isinf.h"
+// #include "math/cmplx/isnan.h"
+// #include "math/cmplx/log.h"
+// #include "math/cmplx/phase.h"
+// #include "math/cmplx/polar.h"
+// #include "math/cmplx/pow.h"
+// #include "math/cmplx/rect.h"
+// #include "math/cmplx/sin.h"
+// #include "math/cmplx/sqrt.h"
+// #include "math/cmplx/tan.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
-    // convertSpecs[ImportSpec] Not implemented => "math/cmplx";
     bool ToBe = false;
     uint64_t MaxInt = (1 << 64) - 1;
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
@@ -32,7 +50,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

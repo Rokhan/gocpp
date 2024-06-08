@@ -8,7 +8,17 @@
 #include "tests/TourOfGo/methods/exercise-images.fwd.h"
 #include "gocpp/support.h"
 
-namespace golang
+// TODO: package import not implemented
+// #include "image/format.fwd.h"
+// #include "image/geom.fwd.h"
+// #include "image/image.fwd.h"
+// #include "image/names.fwd.h"
+// #include "image/ycbcr.fwd.h"
+// #include "image/color/color.fwd.h"
+// #include "image/color/ycbcr.fwd.h"
+// #include "golang.org/x/tour/pic/pic.fwd.h"
+
+namespace golang::main
 {
     struct Image
     {

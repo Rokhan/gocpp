@@ -10,11 +10,16 @@
 #include "tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
+// #include "golang.org/x/tour/tree/tree.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
-    // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/tree";
     void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::panic("Not implemented");
@@ -38,7 +43,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

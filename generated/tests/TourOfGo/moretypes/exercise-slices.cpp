@@ -10,10 +10,11 @@
 #include "tests/TourOfGo/moretypes/exercise-slices.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "golang.org/x/tour/pic/pic.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
     gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)
     {
         auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8_t>>>(), dx);
@@ -40,7 +41,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

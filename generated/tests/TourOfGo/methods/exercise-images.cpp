@@ -10,12 +10,18 @@
 #include "tests/TourOfGo/methods/exercise-images.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "image/format.h"
+// #include "image/geom.h"
+// #include "image/image.h"
+// #include "image/names.h"
+// #include "image/ycbcr.h"
+// #include "image/color/color.h"
+// #include "image/color/ycbcr.h"
+// #include "golang.org/x/tour/pic/pic.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "image";
-    // convertSpecs[ImportSpec] Not implemented => "image/color";
-    // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/pic";
     
     std::ostream& Image::PrintTo(std::ostream& os) const
     {
@@ -57,7 +63,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

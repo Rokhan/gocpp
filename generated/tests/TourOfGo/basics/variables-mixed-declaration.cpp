@@ -10,10 +10,15 @@
 #include "tests/TourOfGo/basics/variables-mixed-declaration.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "fmt/doc.h"
+// #include "fmt/errors.h"
+// #include "fmt/format.h"
+// #include "fmt/print.h"
+// #include "fmt/scan.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "fmt";
     std::tuple<std::string, int, gocpp::slice<std::string>> f1()
     {
         return {"f1", 1001, gocpp::slice<std::string> {"a", "b"}};
@@ -51,7 +56,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

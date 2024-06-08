@@ -10,11 +10,18 @@
 #include "tests/TourOfGo/moretypes/exercise-maps.h"
 #include "gocpp/support.h"
 
+// TODO: package import not implemented
+// #include "strings/builder.h"
+// #include "strings/clone.h"
+// #include "strings/compare.h"
+// #include "strings/reader.h"
+// #include "strings/replace.h"
+// #include "strings/search.h"
+// #include "strings/strings.h"
+// #include "golang.org/x/tour/wc/wc.h"
 
-namespace golang
+namespace golang::main
 {
-    // convertSpecs[ImportSpec] Not implemented => "strings";
-    // convertSpecs[ImportSpec] Not implemented => "golang.org/x/tour/wc";
     gocpp::map<std::string, int> WordCount(std::string s)
     {
         auto fields = mocklib::StringsFields(s);
@@ -38,7 +45,7 @@ int main()
     try
     {
         std::cout << std::boolalpha << std::fixed << std::setprecision(5);
-        golang::main();
+        golang::main::main();
         return 0;
     }
     catch(const gocpp::GoPanic& ex)

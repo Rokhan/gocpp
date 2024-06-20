@@ -49,24 +49,25 @@ flow: $(filter $(LOGDIR)/tests/TourOfGo/flowcontrol/%, $(OUT_EXE_TEST_FILES))
 switch: $(filter $(LOGDIR)/tests/TourOfGo/flowcontrol/switch%, $(OUT_EXE_TEST_FILES))
 basics: $(filter $(LOGDIR)/tests/TourOfGo/basics/%, $(OUT_EXE_TEST_FILES))
 concurrency: $(filter $(LOGDIR)/tests/TourOfGo/concurrency/%, $(OUT_EXE_TEST_FILES))
+generics: $(filter $(LOGDIR)/tests/TourOfGo/generics/%, $(OUT_EXE_TEST_FILES))
 moretypes: $(filter $(LOGDIR)/tests/TourOfGo/moretypes/%, $(OUT_EXE_TEST_FILES))
 methods-all: $(filter $(LOGDIR)/tests/TourOfGo/methods/%, $(OUT_EXE_TEST_FILES))
 methods: $(filter $(LOGDIR)/tests/TourOfGo/methods/methods%, $(OUT_EXE_TEST_FILES)) \
 		 $(filter $(LOGDIR)/tests/TourOfGo/methods/indirection%, $(OUT_EXE_TEST_FILES))
-interface: $(filter $(LOGDIR)/tests/TourOfGo/methods/interface%, $(OUT_EXE_TEST_FILES)) 
+interface: $(filter $(LOGDIR)/tests/TourOfGo/methods/interface%, $(OUT_EXE_TEST_FILES))
 
-main.exe: cmd/main.go
-	go build ./cmd/main.go
+gocpp.exe: cmd/main.go
+	go build -o gocpp.exe ./cmd/main.go
 
-$(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) main.exe
+$(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	@echo "    $<"
 	@echo "    $@"
 
-	./main.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $@".log"
+	./gocpp.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $@".log"
 	(cd $(OUTDIR) && make) 
 	$(LOGDIR)/$*.go.exe
 
-$(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) main.exe
+$(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 	@echo "    $< "
 	@echo "    $@ "
 	
@@ -74,11 +75,11 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) main.exe
 
 	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
 
-	./main.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
+	./gocpp.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
-	(cd $(OUTDIR) && $(CCACHE) g++ -c -std=c++20 -I. -I../includes -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
+	(cd $(OUTDIR) && $(CCACHE) g++ -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

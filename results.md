@@ -52,7 +52,7 @@
 | [TourOfGo/generics/generics.go](tests/TourOfGo/generics/generics.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/empty-interface.go](tests/TourOfGo/methods/empty-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/empty-interface.cpp)) | ❌ |
 | [TourOfGo/methods/errors.go](tests/TourOfGo/methods/errors.go) | ✔️ | ❌ | ❌ | ❌ |
-| [TourOfGo/methods/exercise-errors.go](tests/TourOfGo/methods/exercise-errors.go) | ✔️ | ❌ | ❌ | ❌ |
+| [TourOfGo/methods/exercise-errors.go](tests/TourOfGo/methods/exercise-errors.go) | ✔️ | ✔️ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-images.go](tests/TourOfGo/methods/exercise-images.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-reader.go](tests/TourOfGo/methods/exercise-reader.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-rot-reader.go](tests/TourOfGo/methods/exercise-rot-reader.go) | ✔️ | ❌ | ❌ | ❌ |

@@ -1413,19 +1413,15 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		// Commented output in cpp as we only need one declaration
 		return cppType{"// " + usingDec, []place{headerStr(usingDec)}, false}
 
-	case *ast.ArrayType:
-		t := cv.convertArrayTypeExpr(n)
-		name := GetCppName(node.Name.Name)
-		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
-		return cppType{"", append(t.defs, headerStr(usingDec)), false}
-
 	case *ast.FuncType:
 		name := GetCppName(node.Name.Name)
 		// TODO: This part is probably wrong
 		return cppType{fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), name, end), nil, false}
 
-	case *ast.MapType:
-		t := cv.convertMapTypeExpr(n)
+	// Check if it possible to simplify other case and delegates
+	// more things to "convertTypeExpr".
+	case *ast.ArrayType, *ast.ChanType, *ast.MapType, *ast.StarExpr:
+		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
 		return cppType{"", append(t.defs, headerStr(usingDec)), false}

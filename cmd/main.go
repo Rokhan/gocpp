@@ -1453,8 +1453,10 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		return cppType{cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with}), nil, false}
 
 	default:
-		return cppType{fmt.Sprintf("!!TYPE_SPEC_ERROR!! [%v];\n", reflect.TypeOf(n)), nil, false}
+		Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 	}
+
+	panic("convertTypeSpec, bug, unreacheable code reached !")
 }
 
 func isMapType(node ast.Expr) bool {
@@ -1520,8 +1522,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		}
 
 	default:
-		return cppType{fmt.Sprintf("!!TYPE_EXPR_ERROR!! [type: %v, position: %v]", reflect.TypeOf(node), cv.Position(n)), nil, false}
+		Panicf("convertTypeExpr, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 	}
+
+	panic("convertExprCppType, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, string) {
@@ -2179,7 +2183,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 
 	case *ast.SliceExpr:
 		if n.Slice3 {
-			panic("TODO: 3 value slice not implemented")
+			Panicf("convertExprImpl, 3 value slice not implemented: %v, input: %v", types.ExprString(n), cv.Position(n))
 		} else if n.Low == nil {
 			return fmt.Sprintf("%s.make_slice(0, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High))
 		} else if n.High == nil {
@@ -2195,9 +2199,9 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 		return fmt.Sprintf("gocpp::getValue<%s>(%s)", cv.convertExprCppType(n.Type), cv.convertExpr(n.X))
 
 	default:
-		//panic(fmt.Sprintf("Unmanaged type in convert %v", n))
-		return fmt.Sprintf("!!EXPR_ERROR!! [type: %v, position: %v]", reflect.TypeOf(node), cv.Position(n))
+		Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
+	panic("convertExprType, bug, unreacheable code reached !")
 }
 
 func isNameSpace(expr ast.Expr) bool {

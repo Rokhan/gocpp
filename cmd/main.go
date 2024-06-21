@@ -233,12 +233,10 @@ type cppConverter struct {
 	scopes          *list.List
 	iota_value      int
 
-	// Logs and makefile parameters
+	// Makefile parameters
 	genMakeFile bool
-	makeOutFile *os.File
-	makeOut     *bufio.Writer
+	makeFile    outFile
 	binOutDir   string
-	astIndent   int
 
 	// Cpp files parameters
 	cppOutDir string
@@ -259,10 +257,6 @@ func (cv *cppConverter) Iota() string {
 
 func (cv *cppConverter) UpdateIota() {
 	cv.iota_value++
-}
-
-func (cv *cppConverter) Indent() string {
-	return strings.Repeat("  ", cv.astIndent)
 }
 
 func (of *outFile) Indent() string {
@@ -408,12 +402,12 @@ func printFwdOutro(cv *cppConverter) {
 	fmt.Fprintf(out, "\n")
 }
 
-func createOutputExt(outdir, name, ext string) *os.File {
+func createOutputExt(outdir, name, ext string) outFile {
 	var outName = name + "." + ext
 	return createOutput(outdir, outName)
 }
 
-func createOutput(outdir, name string) *os.File {
+func createOutput(outdir, name string) outFile {
 	var outName = outdir + "/" + name
 	var outDir = path.Dir(outName)
 
@@ -428,7 +422,8 @@ func createOutput(outdir, name string) *os.File {
 		panic("cannot create output file")
 	}
 
-	return file
+	writer := bufio.NewWriter(file)
+	return outFile{file, writer, 0}
 }
 
 func (cv *cppConverter) InitAndParse() {
@@ -449,10 +444,9 @@ func (cv *cppConverter) InitAndParse() {
 	cv.scopes = new(list.List)
 
 	if cv.genMakeFile {
-		cv.makeOutFile = createOutput(cv.cppOutDir, "Makefile")
-		cv.makeOut = bufio.NewWriter(cv.makeOutFile)
+		cv.makeFile = createOutput(cv.cppOutDir, "Makefile")
 
-		fmt.Fprintf(cv.makeOut, "all:\n")
+		fmt.Fprintf(cv.makeFile.out, "all:\n")
 	}
 
 	if astFile, done := cv.parsedFiles[cv.inputName]; done {
@@ -558,14 +552,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	cv.startScope()
 
-	cv.cpp.file = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
-	cv.cpp.out = bufio.NewWriter(cv.cpp.file)
-
-	cv.hpp.file = createOutputExt(cv.cppOutDir, cv.baseName, "h")
-	cv.hpp.out = bufio.NewWriter(cv.hpp.file)
-
-	cv.fwd.file = createOutputExt(cv.cppOutDir, cv.baseName, "fwd.h")
-	cv.fwd.out = bufio.NewWriter(cv.fwd.file)
+	cv.cpp = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
+	cv.hpp = createOutputExt(cv.cppOutDir, cv.baseName, "h")
+	cv.fwd = createOutputExt(cv.cppOutDir, cv.baseName, "fwd.h")
 
 	cv.hpp.indent++
 	cv.fwd.indent++
@@ -617,11 +606,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	if cv.genMakeFile {
-		fmt.Fprintf(cv.makeOut, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
+		fmt.Fprintf(cv.makeFile.out, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
 	}
 
-	//fmt.Printf("%s Name: %v\n", v.Indent(), n.Name)
-	//fmt.Printf("%s Scope: %v\n", v.Indent(), n.Scope)
 	cv.endScope()
 
 	printFwdOutro(cv)
@@ -632,7 +619,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.out.Flush()
 	cv.fwd.out.Flush()
 	if cv.genMakeFile {
-		cv.makeOut.Flush()
+		cv.makeFile.out.Flush()
 	}
 
 	return
@@ -643,15 +630,11 @@ func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	return fmt.Printf(format, a...)
 }
 
-func (cv *cppConverter) getUsedDependency(analysedFiles map[string]bool) (pkgInfos []*pkgInfo) {
+func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 
 	usedTypes := cv.getReferencedTypesFrom(cv.typeInfo.Uses, map[string]bool{cv.inputName: true})
-	//definedTypes := cv.getReferencedTypesFrom(cv.typeInfo.Defs, analysedFiles)
 
 	cv.logReferencedTypesFrom(usedTypes, "Used")
-	//cv.logReferencedTypesFrom(definedTypes, "Defined")
-	cv.Logf("\n")
-	cv.Logf(" --- ---\n")
 
 	cv.usedFiles[cv.inputName] = true
 
@@ -718,6 +701,8 @@ func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]bool, 
 			cv.Logf("path: %s.%s, id: %s, exported: %v, file: %v\n", pkg.Name(), usedType.Name(), usedType.Id(), usedType.Exported(), file)
 		}
 	}
+	cv.Logf("\n")
+	cv.Logf(" --- ---\n")
 }
 
 type pkgFilter struct {
@@ -2308,12 +2293,10 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 
 			fmt.Fprintf(cv.cpp.out, "[=](%s) mutable -> %s\n", params, resultType)
 
-			cv.astIndent++
 			outline := cv.convertBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 			if outline != nil {
 				fmt.Fprintf(cv.cpp.out, "### NOT IMPLEMENTED, convertExpr, outline not managed in ast.FuncLit ###")
 			}
-			cv.astIndent--
 		})
 
 	case *ast.UnaryExpr:
@@ -2624,7 +2607,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		}
 	}
 
-	usedPkgInfos = parentCv.getUsedDependency(files)
+	usedPkgInfos = parentCv.getUsedDependency()
 
 	newGeneratedfiles := true
 	loopCount := 1

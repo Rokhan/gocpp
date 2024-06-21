@@ -34,6 +34,12 @@ doc:
 	echo "| file | cpp generate | cpp compilation | run | result diff |" >> results.md
 	echo "| ---- | ------------ | --------------- | --- | ----------- |" >> results.md
 	cat $(OUT_MD_TEST_FILES) | sort -t. -k 1d,1 >> results.md
+	echo "" >> results.md
+	echo "" >> results.md
+	echo "# Conversion of imported packages" >> results.md
+	echo "| file | cpp generate |" >> results.md
+	echo "| ---- | -------------| " >> results.md
+	cat $$(find log/golang -type f -name "*.status.md") >> results.md
 	dos2unix results.md
 
 format-tests:

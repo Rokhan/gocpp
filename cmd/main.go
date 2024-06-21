@@ -210,6 +210,7 @@ type cppConverter struct {
 	// Logs and error management
 	logPrefix  string
 	tryRecover bool
+	statusMd   outFile
 
 	// code generation data
 	baseName       string
@@ -538,6 +539,7 @@ func (cv *cppConverter) IsTypeMap(goType types.Type) bool {
 
 func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
+	generated := false
 	if cv.tryRecover {
 		defer func() {
 			if r := recover(); r != nil {
@@ -545,6 +547,16 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			}
 		}()
 	}
+
+	defer func(bool) {
+		cv.statusMd = createOutputExt(cv.binOutDir, cv.baseName, "status.md")
+		if generated {
+			fmt.Fprintf(cv.statusMd.out, "| %s.go | ✔️ ([cpp](%[2]s/%[3]s.cpp), [h](%[2]s/%[3]s.h))|\n", cv.srcBaseName, cv.cppOutDir, cv.baseName)
+		} else {
+			fmt.Fprintf(cv.statusMd.out, "| %s.go | ❌ |\n", cv.srcBaseName)
+		}
+		cv.statusMd.out.Flush()
+	}(generated)
 
 	cv.Logf("\n")
 	cv.Logf(" !!!>> Start converting file: %v <<!!!\n", cv.inputName)
@@ -614,6 +626,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	printFwdOutro(cv)
 	printHppOutro(cv)
 	printCppOutro(cv)
+
+	generated = true
 
 	cv.cpp.out.Flush()
 	cv.hpp.out.Flush()

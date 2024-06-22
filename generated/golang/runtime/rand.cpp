@@ -11,16 +11,16 @@
 #include "golang/runtime/rand.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+#include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/lock_sema.h"
-#include "golang/runtime/panic.h"
 #include "golang/runtime/os_windows.h"
+#include "golang/runtime/panic.h"
+#include "golang/runtime/runtime2.h"
+// #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
 #include "golang/unsafe/unsafe.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/internal/math/math.h"
 
 namespace golang::runtime
 {

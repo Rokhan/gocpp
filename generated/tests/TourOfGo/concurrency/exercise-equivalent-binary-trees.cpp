@@ -11,8 +11,8 @@
 #include "tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tour/tree/tree.h"
 #include "golang/fmt/print.h"
+#include "golang/golang.org/x/tour/tree/tree.h"
 
 namespace golang::main
 {

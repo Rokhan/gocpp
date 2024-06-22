@@ -9,9 +9,9 @@
 #include "golang/internal/abi/abi.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 #include "golang/internal/abi/abi_amd64.h"
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::abi
 {

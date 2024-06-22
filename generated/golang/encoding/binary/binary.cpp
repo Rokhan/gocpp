@@ -11,13 +11,13 @@
 #include "golang/encoding/binary/binary.h"
 #include "gocpp/support.h"
 
-#include "golang/reflect/value.h"
-#include "golang/errors/errors.h"
-#include "golang/reflect/type.h"
-#include "golang/math/unsafe.h"
-#include "golang/io/io.h"
-#include "golang/sync/map.h"
 #include "golang/encoding/binary/native_endian_little.h"
+#include "golang/errors/errors.h"
+#include "golang/io/io.h"
+#include "golang/math/unsafe.h"
+#include "golang/reflect/type.h"
+#include "golang/reflect/value.h"
+#include "golang/sync/map.h"
 
 namespace golang::binary
 {

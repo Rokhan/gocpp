@@ -9,9 +9,9 @@
 #include "golang/runtime/time_nofake.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/stubs3.h"
 #include "golang/runtime/os_windows.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs3.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

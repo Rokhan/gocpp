@@ -9,27 +9,27 @@
 #include "golang/runtime/mbitmap_allocheaders.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/mheap.h"
 #include "golang/internal/abi/type.h"
-#include "golang/runtime/mbitmap.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.h"
-#include "golang/runtime/typekind.h"
-#include "golang/runtime/stkframe.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/mfinal.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/panic.h"
-#include "golang/unsafe/unsafe.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/print.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/mwbbuf.h"
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/mbitmap.h"
+#include "golang/runtime/mfinal.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mwbbuf.h"
+#include "golang/runtime/panic.h"
+#include "golang/runtime/print.h"
 #include "golang/runtime/rand.h"
+#include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
+#include "golang/runtime/stack.h"
+#include "golang/runtime/stkframe.h"
+// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+#include "golang/runtime/traceback.h"
+#include "golang/runtime/type.h"
+#include "golang/runtime/typekind.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

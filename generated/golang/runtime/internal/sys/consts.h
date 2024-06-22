@@ -10,8 +10,8 @@
 #include "gocpp/support.h"
 
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/sys/consts_norace.h"
 #include "golang/internal/goos/zgoos_windows.h"
+#include "golang/runtime/internal/sys/consts_norace.h"
 
 namespace golang::sys
 {

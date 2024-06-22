@@ -9,8 +9,8 @@
 #include "golang/runtime/msan0.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 #include "golang/runtime/panic.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

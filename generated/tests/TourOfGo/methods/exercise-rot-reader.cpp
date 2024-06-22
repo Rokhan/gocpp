@@ -11,8 +11,8 @@
 #include "tests/TourOfGo/methods/exercise-rot-reader.h"
 #include "gocpp/support.h"
 
-#include "golang/strings/reader.h"
 #include "golang/io/io.h"
+#include "golang/strings/reader.h"
 
 namespace golang::main
 {

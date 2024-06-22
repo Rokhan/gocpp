@@ -11,9 +11,9 @@
 #include "golang/image/geom.h"
 #include "gocpp/support.h"
 
+#include "golang/image/color/color.h"
 #include "golang/math/bits/bits.h"
 #include "golang/strconv/itoa.h"
-#include "golang/image/color/color.h"
 
 namespace golang::image
 {

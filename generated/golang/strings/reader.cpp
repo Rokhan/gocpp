@@ -11,9 +11,9 @@
 #include "golang/strings/reader.h"
 #include "gocpp/support.h"
 
-#include "golang/unicode/utf8/utf8.h"
-#include "golang/io/io.h"
 #include "golang/errors/errors.h"
+#include "golang/io/io.h"
+#include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings
 {

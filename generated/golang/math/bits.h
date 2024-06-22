@@ -10,8 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/math/abs.h"
-#include "golang/math/unsafe.h"
 #include "golang/math/const.h"
+#include "golang/math/unsafe.h"
 
 namespace golang::math
 {

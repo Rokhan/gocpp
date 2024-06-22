@@ -12,10 +12,10 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/deflate.h"
-#include "golang/fmt/errors.h"
 #include "golang/encoding/binary/binary.h"
-#include "golang/hash/hash.h"
+#include "golang/fmt/errors.h"
 #include "golang/hash/adler32/adler32.h"
+#include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
 namespace golang::zlib

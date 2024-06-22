@@ -9,8 +9,8 @@
 #include "tests/TourOfGo/methods/methods-pointers-explained.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/sqrt.h"
 #include "golang/fmt/print.h"
+#include "golang/math/sqrt.h"
 
 namespace golang::main
 {

@@ -9,10 +9,10 @@
 #include "golang/math/exp.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/exp2_noasm.h"
-#include "golang/math/ldexp.h"
-#include "golang/math/exp_asm.h"
 #include "golang/math/bits.h"
+#include "golang/math/exp2_noasm.h"
+#include "golang/math/exp_asm.h"
+#include "golang/math/ldexp.h"
 
 namespace golang::math
 {

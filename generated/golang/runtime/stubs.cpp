@@ -11,13 +11,13 @@
 #include "golang/runtime/stubs.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/type.h"
-#include "golang/runtime/runtime2.h"
+// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/runtime/map.h"
-#include "golang/unsafe/unsafe.h"
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
 #include "golang/runtime/runtime.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

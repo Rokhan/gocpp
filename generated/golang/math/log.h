@@ -9,9 +9,9 @@
 #include "golang/math/log.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/frexp.h"
 #include "golang/math/bits.h"
 #include "golang/math/const.h"
+#include "golang/math/frexp.h"
 #include "golang/math/log_asm.h"
 
 namespace golang::math

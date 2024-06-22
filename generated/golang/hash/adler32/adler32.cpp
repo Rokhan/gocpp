@@ -11,8 +11,8 @@
 #include "golang/hash/adler32/adler32.h"
 #include "gocpp/support.h"
 
-#include "golang/hash/hash.h"
 #include "golang/errors/errors.h"
+#include "golang/hash/hash.h"
 
 namespace golang::adler32
 {

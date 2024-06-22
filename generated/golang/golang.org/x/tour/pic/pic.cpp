@@ -11,12 +11,12 @@
 #include "golang/golang.org/x/tour/pic/pic.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.h"
-#include "golang/image/image.h"
-// #include "golang/image/png/writer.h"  [Ignored, known errors]
-#include "golang/encoding/base64/base64.h"
 #include "golang/bufio/bufio.h"
+#include "golang/encoding/base64/base64.h"
+// #include "golang/image/png/writer.h"  [Ignored, known errors]
 #include "golang/image/geom.h"
+#include "golang/image/image.h"
+#include "golang/io/io.h"
 
 namespace golang::pic
 {

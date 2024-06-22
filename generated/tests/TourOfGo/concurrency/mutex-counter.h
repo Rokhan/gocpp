@@ -9,9 +9,9 @@
 #include "tests/TourOfGo/concurrency/mutex-counter.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/time/sleep.h"
-#include "golang/sync/mutex.h"
 #include "golang/fmt/print.h"
+#include "golang/sync/mutex.h"
+#include "golang/time/sleep.h"
 #include "golang/time/time.h"
 
 namespace golang::main

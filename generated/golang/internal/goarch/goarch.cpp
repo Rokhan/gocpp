@@ -11,8 +11,8 @@
 #include "golang/internal/goarch/goarch.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.h"
 #include "golang/internal/goarch/goarch_amd64.h"
+#include "golang/internal/goarch/zgoarch_amd64.h"
 
 namespace golang::goarch
 {

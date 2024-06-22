@@ -9,8 +9,8 @@
 #include "tests/TourOfGo/moretypes/slices-of-slice.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/strings/strings.h"
 #include "golang/fmt/print.h"
+#include "golang/strings/strings.h"
 
 namespace golang::main
 {

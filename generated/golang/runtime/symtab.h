@@ -9,30 +9,30 @@
 #include "golang/runtime/symtab.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/traceback.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/symtabinl.h"
-#include "golang/runtime/string.h"
-#include "golang/runtime/type.h"
-#include "golang/runtime/extern.h"
-#include "golang/runtime/print.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/atomic_pointer.h"
+// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/plugin.h"
+#include "golang/runtime/atomic_pointer.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/unsafe/unsafe.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime1.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
+#include "golang/runtime/print.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/rand.h"
+#include "golang/runtime/runtime1.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/stack.h"
+#include "golang/runtime/string.h"
+// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/symtabinl.h"
+#include "golang/runtime/traceback.h"
+#include "golang/runtime/type.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

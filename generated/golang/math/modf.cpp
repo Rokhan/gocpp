@@ -11,9 +11,9 @@
 #include "golang/math/modf.h"
 #include "gocpp/support.h"
 
-#include "golang/math/unsafe.h"
 #include "golang/math/bits.h"
 #include "golang/math/modf_noasm.h"
+#include "golang/math/unsafe.h"
 
 namespace golang::math
 {

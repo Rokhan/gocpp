@@ -11,9 +11,9 @@
 #include "golang/sync/mutex.h"
 #include "gocpp/support.h"
 
+// #include "golang/internal/race/norace.h"  [Ignored, known errors]
 // #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
 // #include "golang/sync/runtime.h"  [Ignored, known errors]
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync

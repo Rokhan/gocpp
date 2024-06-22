@@ -12,8 +12,8 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
-#include "golang/math/sqrt.h"
 #include "golang/math/pow.h"
+#include "golang/math/sqrt.h"
 
 namespace golang::main
 {

@@ -11,9 +11,9 @@
 #include "tests/TourOfGo/methods/interfaces-ordered.h"
 #include "gocpp/support.h"
 
-#include "golang/math/sqrt.h"
-#include "golang/math/const.h"
 #include "golang/fmt/print.h"
+#include "golang/math/const.h"
+#include "golang/math/sqrt.h"
 
 namespace golang::main
 {

@@ -9,8 +9,8 @@
 #include "golang/math/frexp.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/stubs.h"
 #include "golang/math/bits.h"
+#include "golang/math/stubs.h"
 #include "golang/math/unsafe.h"
 
 namespace golang::math

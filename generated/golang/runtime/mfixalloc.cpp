@@ -11,12 +11,12 @@
 #include "golang/runtime/mfixalloc.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
-#include "golang/unsafe/unsafe.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/internal/sys/nih.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

@@ -9,8 +9,8 @@
 #include "tests/TourOfGo/methods/reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/strings/reader.h"
 #include "golang/fmt/print.h"
+#include "golang/strings/reader.h"
 
 namespace golang::main
 {

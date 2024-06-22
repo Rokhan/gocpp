@@ -9,17 +9,17 @@
 #include "golang/runtime/mwbbuf.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/panic.h"
-#include "golang/runtime/mheap.h"
-#include "golang/unsafe/unsafe.h"
-#include "golang/runtime/mgcwork.h"
+// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
+#include "golang/runtime/mgcmark.h"
+#include "golang/runtime/mgcwork.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/mgcmark.h"
-#include "golang/runtime/malloc.h"
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

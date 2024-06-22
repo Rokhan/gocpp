@@ -12,9 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/os_windows.h"
-#include "golang/unsafe/unsafe.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

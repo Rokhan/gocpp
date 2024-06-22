@@ -11,11 +11,11 @@
 #include "golang/math/cmplx/sqrt.h"
 #include "gocpp/support.h"
 
-#include "golang/math/hypot.h"
-#include "golang/math/bits.h"
-#include "golang/math/sqrt.h"
 #include "golang/math/abs.h"
+#include "golang/math/bits.h"
 #include "golang/math/copysign.h"
+#include "golang/math/hypot.h"
+#include "golang/math/sqrt.h"
 
 namespace golang::cmplx
 {

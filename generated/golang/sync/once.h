@@ -9,8 +9,8 @@
 #include "golang/sync/once.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/mutex.h"
 #include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 
 namespace golang::sync
 {

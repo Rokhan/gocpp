@@ -270,12 +270,22 @@ func (cv *cppConverter) GenerateId() (id string) {
 	return id
 }
 
+func (pkgInfo *pkgInfo) baseName() string {
+	return strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
+}
+
 func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, suffix string) {
 	if pkgInfos == nil {
 		return
 	}
 
 	var alreadyIncluded map[string]bool = make(map[string]bool)
+
+	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
+		bn1 := p1.baseName()
+		bn2 := p2.baseName()
+		return strings.Compare(p1.pkgPath+bn1, p2.pkgPath+bn2)
+	})
 
 	for _, pkgInfo := range pkgInfos {
 		if _, done := alreadyIncluded[pkgInfo.filePath]; done {
@@ -285,7 +295,7 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 
 		//fmt.Fprintf(out, "// globalSubDir: %v -- pkgInfo.pkgPath: %v -- pkgInfo.filePath: %v \n", globalSubDir, pkgInfo.pkgPath, pkgInfo.filePath)
 
-		baseName := strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
+		baseName := pkgInfo.baseName()
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
 			fmt.Fprintf(out, "#include \"%v%v/%v%v\"\n", globalSubDir, pkgInfo.pkgPath, baseName, suffix)
@@ -642,6 +652,11 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	fmt.Printf("%s", cv.logPrefix)
 	return fmt.Printf(format, a...)
+}
+
+func (cv *cppConverter) needFileGeneration() bool {
+	// TODO
+	return true
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
@@ -2589,8 +2604,8 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		cv.supportHeader = parentCv.supportHeader
 		cv.inputName = pkgInfo.filePath
 		cv.globalSubDir = parentCv.globalSubDir
-		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.pkgPath + "/" + strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
-		cv.baseName = cv.globalSubDir + pkgInfo.pkgPath + "/" + strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
+		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
+		cv.baseName = cv.globalSubDir + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
 		cv.fileSet = parentCv.fileSet
 
 		// We need to parse ignored file to allow type check in PrintDefsUses

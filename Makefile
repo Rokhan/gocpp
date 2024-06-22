@@ -39,7 +39,7 @@ doc:
 	echo "# Conversion of imported packages" >> results.md
 	echo "| file | cpp generate |" >> results.md
 	echo "| ---- | -------------| " >> results.md
-	cat $$(find log/golang -type f -name "*.status.md") >> results.md
+	cat $$(find log/golang -type f -name "*.status.md" | sort) >> results.md
 	dos2unix results.md
 
 format-tests:
@@ -113,3 +113,9 @@ clean:
 	rm -rf $(LOGDIR) $(OUTDIR)
 #	@rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES)
 	rm -f results.md
+
+unix2dos:
+	unix2dos $$(find generated -type f -name "*.cpp" -o -name "*.h")
+
+dos2unix:
+	dos2unix $$(find generated -type f -name "*.cpp" -o -name "*.h")

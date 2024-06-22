@@ -437,6 +437,9 @@ namespace golang::color
         {
             return c;
         }
+        uint32_t _;
+        uint32_t _;
+        uint32_t _;
         uint32_t a;
         std::tie(_, _, _, a) = RGBA(gocpp::recv(c));
         return Alpha {uint8_t(a >> 8)};
@@ -448,6 +451,9 @@ namespace golang::color
         {
             return c;
         }
+        uint32_t _;
+        uint32_t _;
+        uint32_t _;
         uint32_t a;
         std::tie(_, _, _, a) = RGBA(gocpp::recv(c));
         return Alpha16 {uint16_t(a)};
@@ -459,10 +465,7 @@ namespace golang::color
         {
             return c;
         }
-        uint32_t r;
-        uint32_t g;
-        uint32_t b;
-        std::tie(r, g, b, _) = RGBA(gocpp::recv(c));
+        auto [r, g, b, _] = RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
         return Gray {uint8_t(y)};
     }
@@ -473,10 +476,7 @@ namespace golang::color
         {
             return c;
         }
-        uint32_t r;
-        uint32_t g;
-        uint32_t b;
-        std::tie(r, g, b, _) = RGBA(gocpp::recv(c));
+        auto [r, g, b, _] = RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
         return Gray16 {uint16_t(y)};
     }

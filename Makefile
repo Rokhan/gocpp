@@ -21,6 +21,8 @@ OUT_MD_TEST_FILES=$(addprefix $(LOGDIR)/,$(MD_TEST_FILES))
 
 CCACHE := $(shell which ccache 2> /dev/null)
 
+GOCPP_STRICT_MODE = false
+
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
 ##  To generate full report just use "make -k"            ##
@@ -81,7 +83,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 
 	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
 
-	./gocpp.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
+	./gocpp.exe -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

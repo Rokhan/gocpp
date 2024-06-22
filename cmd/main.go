@@ -833,6 +833,11 @@ type stmtEnv struct {
 	varNames *[]string // maybe use map for perfs
 }
 
+func (env *stmtEnv) startVarScope() {
+	//clear already declared var names at start of scope
+	env.varNames = &[]string{}
+}
+
 func makeStmtEnv(outNames []string, outTypes []string) stmtEnv {
 	varNames := outNames
 	return stmtEnv{outNames, outTypes, &varNames}
@@ -924,7 +929,7 @@ func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (ou
 	}
 
 	cv.startScope()
-	env.varNames = &[]string{} //clear already declared var names at start of scope
+	env.startVarScope()
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
 
@@ -1098,6 +1103,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		fmt.Fprintf(cv.cpp.out, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
 
 	case *ast.ForStmt:
+		env.startVarScope()
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
 		outlines = cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
 
@@ -1123,6 +1129,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 
 	case *ast.IfStmt:
 		if s.Init != nil {
+			env.startVarScope()
 			fmt.Fprintf(cv.cpp.out, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond))
 		} else {
 			fmt.Fprintf(cv.cpp.out, "%sif(%s)\n", cv.cpp.Indent(), cv.convertExpr(s.Cond))
@@ -1142,6 +1149,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		cv.cpp.indent++
 
 		if s.Init != nil {
+			env.startVarScope()
 			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
 		}
 
@@ -1159,6 +1167,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		cv.cpp.indent++
 
 		if s.Init != nil {
+			env.startVarScope()
 			fmt.Fprintf(cv.cpp.out, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
 		}
 
@@ -1386,10 +1395,10 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result string) 
 					result += fmt.Sprintf("%s,", *declItem.inline)
 				}
 				if declItem.outline != nil {
-					result += "### NOT IMPLEMENTED, inlineStmt, can't declare outline from here"
+					Panicf("inlineStmt, not implemented, can't declare outline from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 				if declItem.header != nil {
-					result += "### NOT IMPLEMENTED, inlineStmt, can't declare in header from here"
+					Panicf("inlineStmt, not implemented, can't declare header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 			}
 			return
@@ -2593,7 +2602,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 		var cv *cppConverter = new(cppConverter)
 		cv.logPrefix = parentCv.logPrefix + "##> "
-		cv.tryRecover = true
+		cv.tryRecover = !*strictMode
 		cv.parsedFiles = parentCv.parsedFiles
 		cv.generatedFiles = parentCv.generatedFiles
 		cv.usedFiles = parentCv.usedFiles
@@ -2674,6 +2683,8 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 	return
 }
 
+var strictMode *bool
+
 func main() {
 
 	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
@@ -2681,6 +2692,7 @@ func main() {
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
+	strictMode = flag.Bool("strictMode", true, "panic on every error")
 	flag.Parse()
 
 	fset := token.NewFileSet()

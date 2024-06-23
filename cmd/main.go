@@ -206,26 +206,40 @@ type outFile struct {
 	indent int
 }
 
-type cppConverter struct {
-	// Logs and error management
-	logPrefix  string
-	tryRecover bool
-	statusMd   outFile
+// Global parameters and data shared by all child coverters
+type cppConverterSharedData struct {
+	// global parmeters
+	globalSubDir  string
+	supportHeader string
 
-	// code generation data
-	baseName       string
-	srcBaseName    string
-	inputName      string
-	globalSubDir   string
-	supportHeader  string
+	// shared data
 	parsedFiles    map[string]*ast.File
 	generatedFiles map[string]bool
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
 
 	// golang tokens, parsing and types infos
+	fileSet *token.FileSet
+
+	// Cpp files parameters
+	cppOutDir string
+}
+
+type cppConverter struct {
+	shared *cppConverterSharedData
+
+	// Logs and error management
+	logPrefix  string
+	tryRecover bool
+	statusMd   outFile
+
+	// code generation data
+	baseName    string
+	srcBaseName string
+	inputName   string
+
+	// golang tokens, parsing and types infos
 	typeInfo *types.Info
-	fileSet  *token.FileSet
 	astFile  *ast.File
 
 	// Parsing and codegen parameters
@@ -240,7 +254,6 @@ type cppConverter struct {
 	binOutDir   string
 
 	// Cpp files parameters
-	cppOutDir string
 	cpp       outFile
 	hpp       outFile
 	fwd       outFile
@@ -324,10 +337,10 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include <vector>\n")
 	fmt.Fprintf(out, "\n")
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.baseName)
-	fmt.Fprintf(out, "#include \"%s\"\n", cv.supportHeader)
+	fmt.Fprintf(out, "#include \"%s\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.globalSubDir, pkgInfos, ".h")
+	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
@@ -373,11 +386,11 @@ func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include <vector>\n")
 	fmt.Fprintf(out, "\n")
 	fmt.Fprintf(out, "#include \"%s.fwd.h\"\n", cv.baseName)
-	fmt.Fprintf(out, "#include \"%s\"\n", cv.supportHeader)
+	fmt.Fprintf(out, "#include \"%s\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
 	// Can we do something with ".fwd.h" in some situations ?
-	includeDependencies(out, cv.globalSubDir, pkgInfos, ".h")
+	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
@@ -437,34 +450,31 @@ func createOutput(outdir, name string) outFile {
 	return outFile{file, writer, 0}
 }
 
+func buildSharedData() (shared *cppConverterSharedData) {
+	shared = new(cppConverterSharedData)
+	shared.generatedFiles = map[string]bool{}
+	shared.parsedFiles = map[string]*ast.File{}
+	shared.usedFiles = map[string]bool{}
+	shared.packagePaths = map[string]string{}
+	return
+}
+
 func (cv *cppConverter) InitAndParse() {
-	if cv.generatedFiles == nil {
-		cv.generatedFiles = map[string]bool{}
-	}
-	if cv.parsedFiles == nil {
-		cv.parsedFiles = map[string]*ast.File{}
-	}
-	if cv.usedFiles == nil {
-		cv.usedFiles = map[string]bool{}
-	}
-	if cv.packagePaths == nil {
-		cv.packagePaths = map[string]string{}
-	}
 
 	cv.currentSwitchId = new(list.List)
 	cv.scopes = new(list.List)
 
 	if cv.genMakeFile {
-		cv.makeFile = createOutput(cv.cppOutDir, "Makefile")
+		cv.makeFile = createOutput(cv.shared.cppOutDir, "Makefile")
 
 		fmt.Fprintf(cv.makeFile.out, "all:\n")
 	}
 
-	if astFile, done := cv.parsedFiles[cv.inputName]; done {
+	if astFile, done := cv.shared.parsedFiles[cv.inputName]; done {
 		cv.astFile = astFile
 	} else {
 		var parsedFile *ast.File
-		parsedFile, err := parser.ParseFile(cv.fileSet, cv.inputName, nil, parser.ParseComments)
+		parsedFile, err := parser.ParseFile(cv.shared.fileSet, cv.inputName, nil, parser.ParseComments)
 		cv.astFile = parsedFile
 		if err != nil {
 			fmt.Println(err)
@@ -548,7 +558,7 @@ func (cv *cppConverter) IsTypeMap(goType types.Type) bool {
 // }
 
 func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
-
+	shared := cv.shared
 	generated := false
 	if cv.tryRecover {
 		defer func() {
@@ -561,7 +571,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	defer func(bool) {
 		cv.statusMd = createOutputExt(cv.binOutDir, cv.baseName, "status.md")
 		if generated {
-			fmt.Fprintf(cv.statusMd.out, "| %s.go | ✔️ ([cpp](%[2]s/%[3]s.cpp), [h](%[2]s/%[3]s.h))|\n", cv.srcBaseName, cv.cppOutDir, cv.baseName)
+			fmt.Fprintf(cv.statusMd.out, "| %s.go | ✔️ ([cpp](%[2]s/%[3]s.cpp), [h](%[2]s/%[3]s.h))|\n", cv.srcBaseName, shared.cppOutDir, cv.baseName)
 		} else {
 			fmt.Fprintf(cv.statusMd.out, "| %s.go | ❌ |\n", cv.srcBaseName)
 		}
@@ -574,9 +584,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	cv.startScope()
 
-	cv.cpp = createOutputExt(cv.cppOutDir, cv.baseName, "cpp")
-	cv.hpp = createOutputExt(cv.cppOutDir, cv.baseName, "h")
-	cv.fwd = createOutputExt(cv.cppOutDir, cv.baseName, "fwd.h")
+	cv.cpp = createOutputExt(shared.cppOutDir, cv.baseName, "cpp")
+	cv.hpp = createOutputExt(shared.cppOutDir, cv.baseName, "h")
+	cv.fwd = createOutputExt(shared.cppOutDir, cv.baseName, "fwd.h")
 
 	cv.hpp.indent++
 	cv.fwd.indent++
@@ -660,20 +670,19 @@ func (cv *cppConverter) needFileGeneration() bool {
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
-
+	shared := cv.shared
 	usedTypes := cv.getReferencedTypesFrom(cv.typeInfo.Uses, map[string]bool{cv.inputName: true})
-
 	cv.logReferencedTypesFrom(usedTypes, "Used")
 
-	cv.usedFiles[cv.inputName] = true
+	shared.usedFiles[cv.inputName] = true
 
 	for usedType := range usedTypes {
-		var file = cv.fileSet.Position(usedType.Pos()).Filename
+		var file = shared.fileSet.Position(usedType.Pos()).Filename
 
 		// Hack for unsafe.Pointer in unsafe package
 		// Maybe we should load it manually somewhere in cv.fileset ?
 		if file == "" {
-			for pkgFile, path := range cv.packagePaths {
+			for pkgFile, path := range shared.packagePaths {
 				if path == "unsafe" {
 					file = pkgFile
 				}
@@ -684,12 +693,12 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 			continue
 		}
 
-		cv.usedFiles[file] = true
+		shared.usedFiles[file] = true
 		pkg := usedType.Pkg()
 		if pkg != nil {
 			cv.Logf("pkginfo, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v ---\n", usedType.Pkg().Name(), usedType.Pkg().Path(), file, usedType.Name())
 			// usedType.Pkg().Path() doesn't return the full path, using value stored when loading packages
-			pkgPath, ok := cv.packagePaths[file]
+			pkgPath, ok := shared.packagePaths[file]
 			if ok {
 				pkgInfos = append(pkgInfos, &pkgInfo{usedType.Pkg().Name(), pkgPath, file, GoFiles})
 			} else {
@@ -726,7 +735,7 @@ func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]bool, 
 	for usedType := range usedTypes {
 		pkg := usedType.Pkg()
 		if pkg != nil {
-			var file = cv.fileSet.Position(usedType.Pos()).Filename
+			var file = cv.shared.fileSet.Position(usedType.Pos()).Filename
 			cv.Logf("path: %s.%s, id: %s, exported: %v, file: %v\n", pkg.Name(), usedType.Name(), usedType.Id(), usedType.Exported(), file)
 		}
 	}
@@ -2537,7 +2546,7 @@ func (cv *cppConverter) convertExprs(exprs []ast.Expr) string {
 }
 
 func (cv *cppConverter) Position(expr ast.Node) token.Position {
-	return cv.fileSet.Position(expr.Pos())
+	return cv.shared.fileSet.Position(expr.Pos())
 }
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
@@ -2582,7 +2591,7 @@ func (cv *cppConverter) PrintDefsUsage() {
 func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInfos []*pkgInfo, toBeConverted []*cppConverter) {
 	var astFiles map[string][]*ast.File = make(map[string][]*ast.File)
 	var files map[string]bool = map[string]bool{}
-
+	shared := parentCv.shared
 	for _, pkgInfo := range pkgInfos {
 		// Ignored file are ignored only for code generation
 		if !(pkgInfo.fileType == GoFiles || pkgInfo.fileType == CompiledGoFiles || pkgInfo.fileType == Ignored) {
@@ -2590,7 +2599,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		}
 
 		// getUsedDependency need this to get the correct package path
-		parentCv.packagePaths[pkgInfo.filePath] = pkgInfo.pkgPath
+		shared.packagePaths[pkgInfo.filePath] = pkgInfo.pkgPath
 
 		// if astFile, done := parentCv.parsedFiles[pkgInfo.filePath]; done {
 		// 	astFiles[pkgInfo.name] = append(astFiles[pkgInfo.name], astFile)
@@ -2603,25 +2612,18 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		var cv *cppConverter = new(cppConverter)
 		cv.logPrefix = parentCv.logPrefix + "##> "
 		cv.tryRecover = !*strictMode
-		cv.parsedFiles = parentCv.parsedFiles
-		cv.generatedFiles = parentCv.generatedFiles
-		cv.usedFiles = parentCv.usedFiles
-		cv.packagePaths = parentCv.packagePaths
+		cv.shared = parentCv.shared
 		cv.genMakeFile = parentCv.genMakeFile
 		cv.binOutDir = parentCv.binOutDir
-		cv.cppOutDir = parentCv.cppOutDir
-		cv.supportHeader = parentCv.supportHeader
 		cv.inputName = pkgInfo.filePath
-		cv.globalSubDir = parentCv.globalSubDir
 		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
-		cv.baseName = cv.globalSubDir + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
-		cv.fileSet = parentCv.fileSet
+		cv.baseName = cv.shared.globalSubDir + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
 
 		// We need to parse ignored file to allow type check in PrintDefsUses
 		cv.InitAndParse()
 
 		// Don't need to type check a second time already analysed files
-		if _, done := parentCv.parsedFiles[pkgInfo.filePath]; !done {
+		if _, done := shared.parsedFiles[pkgInfo.filePath]; !done {
 			astFiles[pkgInfo.name] = append(astFiles[pkgInfo.name], cv.astFile)
 
 			// Ignored file will not be converted
@@ -2629,13 +2631,13 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 				toBeConverted = append(toBeConverted, cv)
 			}
 
-			parentCv.parsedFiles[pkgInfo.filePath] = cv.astFile
+			shared.parsedFiles[pkgInfo.filePath] = cv.astFile
 			files[pkgInfo.filePath] = true
 		}
 	}
 
 	for pkgName, files := range astFiles {
-		if err := parentCv.LoadAndCheckDefs(pkgName, parentCv.fileSet, files...); err != nil {
+		if err := parentCv.LoadAndCheckDefs(pkgName, shared.fileSet, files...); err != nil {
 			log.Fatal(err) // type error
 		}
 
@@ -2656,17 +2658,17 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 		for _, cv := range toBeConverted {
 			cv.typeInfo = parentCv.typeInfo
-			if !cv.usedFiles[cv.inputName] {
+			if !shared.usedFiles[cv.inputName] {
 				// Not used at the moment, but can be needed by other generated files
 				ignoredFiles[cv.inputName] = cv
 				parentCv.Logf("[%d] Not in used file: %v \n", loopCount, cv.inputName)
 				continue
 			}
-			if cv.generatedFiles[cv.inputName] {
+			if shared.generatedFiles[cv.inputName] {
 				parentCv.Logf("[%d] Already generated: %v \n", loopCount, cv.inputName)
 				continue
 			}
-			cv.generatedFiles[cv.inputName] = true
+			shared.generatedFiles[cv.inputName] = true
 			newGeneratedfiles = true
 			notConverted = append(notConverted, cv.ConvertFile()...)
 		}
@@ -2711,17 +2713,20 @@ func main() {
 		}
 	}
 
-	var cv *cppConverter = new(cppConverter)
+	shared := buildSharedData()
+	shared.globalSubDir = "golang/"
+	shared.fileSet = fset
+	shared.cppOutDir = *cppOutDir
+	shared.supportHeader = "gocpp/support.h"
+
+	cv := new(cppConverter)
+	cv.shared = shared
 	cv.genMakeFile = *genMakeFile
 	cv.binOutDir = *binOutDir
-	cv.cppOutDir = *cppOutDir
-	cv.supportHeader = "gocpp/support.h"
 	cv.inputName = *inputName
 	// No global subdir for main target at the moment
 	cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
 	cv.srcBaseName = strings.TrimSuffix(cv.inputName, ".go")
-	cv.globalSubDir = "golang/"
-	cv.fileSet = fset
 	cv.tryRecover = false
 
 	cv.InitAndParse()

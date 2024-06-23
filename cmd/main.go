@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"time"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -209,8 +210,12 @@ type outFile struct {
 // Global parameters and data shared by all child coverters
 type cppConverterSharedData struct {
 	// global parmeters
-	globalSubDir  string
-	supportHeader string
+	globalSubDir     string
+	supportHeader    string
+	exeDate          time.Time
+	verbose          bool
+	strictMode       bool
+	alwaysRegenerate bool
 
 	// shared data
 	parsedFiles    map[string]*ast.File
@@ -557,6 +562,18 @@ func (cv *cppConverter) IsTypeMap(goType types.Type) bool {
 // 	return fmt.Fprintf(cv.cpp.out, "%s"+format, append([]interface{}{cv.cpp.Indent()}, a...)...)
 // }
 
+func GetFileTimeStamp(filename string, defaultInFuture bool) time.Time {
+	fileInfo, error := os.Stat(filename)
+	if error != nil {
+		if defaultInFuture {
+			return time.Now().AddDate(1000, 0, 0)
+		}
+		return time.Time{}
+	}
+
+	return fileInfo.ModTime()
+}
+
 func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	shared := cv.shared
 	generated := false
@@ -566,6 +583,23 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 				cv.Logf("PANIC when converting file %s, %s\n", cv.inputName, r)
 			}
 		}()
+	}
+
+	cppFileName := shared.cppOutDir + "/" + cv.baseName + ".cpp"
+	goFileDate := GetFileTimeStamp(cv.inputName, true)
+	cppFileDate := GetFileTimeStamp(cppFileName, false)
+
+	if shared.verbose {
+		cv.Logf(" ExeDate: %v\n", shared.exeDate)
+		cv.Logf(" goFileDate: %v\n", goFileDate)
+		cv.Logf(" cppFileDate: %v\n", cppFileDate)
+	}
+	if !shared.alwaysRegenerate {
+		// Probably too aggressive, we should check dependencies
+		if cppFileDate.After(shared.exeDate) && cppFileDate.After(goFileDate) {
+			cv.Logf(" <<< Skipped already up to date file: %s >>>", cv.inputName)
+			return
+		}
 	}
 
 	defer func(bool) {
@@ -773,8 +807,9 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		for _, bad := range knownErrors {
 			pkgFilePath := strings.ReplaceAll(pkg.filePath, "\\", "/")
 			pkgName := strings.ReplaceAll(pkg.name, "\\", "/")
-
-			cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.pkg, pkgFilePath, bad.file)
+			if cv.shared.verbose {
+				cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.pkg, pkgFilePath, bad.file)
+			}
 			if pkgName == bad.pkg && strings.HasSuffix(pkgFilePath, bad.file) {
 				pkg.fileType = Ignored
 				continue
@@ -2611,7 +2646,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 		var cv *cppConverter = new(cppConverter)
 		cv.logPrefix = parentCv.logPrefix + "##> "
-		cv.tryRecover = !*strictMode
+		cv.tryRecover = !shared.strictMode
 		cv.shared = parentCv.shared
 		cv.genMakeFile = parentCv.genMakeFile
 		cv.binOutDir = parentCv.binOutDir
@@ -2685,8 +2720,6 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 	return
 }
 
-var strictMode *bool
-
 func main() {
 
 	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
@@ -2694,7 +2727,10 @@ func main() {
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
-	strictMode = flag.Bool("strictMode", true, "panic on every error")
+	strictMode := flag.Bool("strictMode", true, "panic on every error")
+	verbose := flag.Bool("verbose", false, "verbose logs")
+	alwaysRegenerate := flag.Bool("alwaysRegenerate", false, "force to always generate, even if more recent")
+
 	flag.Parse()
 
 	fset := token.NewFileSet()
@@ -2713,11 +2749,18 @@ func main() {
 		}
 	}
 
+	exePath, _ := os.Executable()
+	fileInfo, _ := os.Stat(exePath)
+
 	shared := buildSharedData()
 	shared.globalSubDir = "golang/"
 	shared.fileSet = fset
 	shared.cppOutDir = *cppOutDir
 	shared.supportHeader = "gocpp/support.h"
+	shared.exeDate = fileInfo.ModTime()
+	shared.verbose = *verbose
+	shared.strictMode = *strictMode
+	shared.alwaysRegenerate = *alwaysRegenerate
 
 	cv := new(cppConverter)
 	cv.shared = shared

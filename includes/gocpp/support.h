@@ -828,6 +828,12 @@ namespace gocpp
         return T(p1, p2);
     }
 
+    template<typename T, typename... Args>
+    gocpp::slice<T> ToSlice(Args&&... args)
+    {
+        return gocpp::slice<T> { T(args)... }; 
+    }
+
     template <typename T>
     T getValue(std::any value)
     {

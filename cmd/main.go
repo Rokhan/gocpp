@@ -924,6 +924,14 @@ func (cv *cppConverter) outputsPrint(place place, outlines *[]string, pkgInfos *
 	}
 }
 
+func Last[EltType any](elts []EltType) (EltType, bool) {
+	if len(elts) == 0 {
+		var zero EltType
+		return zero, false
+	}
+	return elts[len(elts)-1], true
+}
+
 func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines []string, pkgInfos []*pkgInfo) {
 	cv.Logf("decl: %v at %v\n", reflect.TypeOf(decl), cv.Position(decl))
 
@@ -945,9 +953,35 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 				cv.outputsPrint(place, &outlines, nil)
 			}
 		}
+
 		name := GetCppName(d.Name.Name)
-		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
+
 		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
+
+		last, ok := Last(params)
+		if ok && last.Type.isEllipsis {
+
+			if len(last.names) != 1 {
+				Panicf("convertDecls, multiple ellipsis parameters not managed, declararation: [%v], input: %v", d, cv.Position(d))
+			}
+
+			varidicParams := params[:len(params)-1]
+			varidicParams = append(make([]typeName, 0, len(varidicParams)), varidicParams...)
+			var strs []string
+			for _, params := range varidicParams {
+				strs = append(strs, params.names...)
+			}
+			callParams := strings.Join(strs, ", ")
+			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil)})
+
+			fmt.Fprintf(cv.hpp.out, "%stemplate<typename... Args>\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, varidicParams)
+			fmt.Fprintf(cv.hpp.out, "%s{\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.hpp.out, "%s    return %s(%s, gocpp::ToSlice<%s>(%s...));\n", cv.cpp.Indent(), name, callParams, last.Type.eltType, last.names[0])
+			fmt.Fprintf(cv.hpp.out, "%s}\n\n", cv.cpp.Indent())
+		}
+
+		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
 		if name == "main" {
 			cv.hasMain = true
 		}
@@ -1679,9 +1713,23 @@ func importPackage(name string, pkgPath string, filePath string, pkgType pkgType
 }
 
 type cppType struct {
-	str   string  // cpp type as a string
-	defs  []place // inline def used by type
-	isPtr bool    // is type a pointer ?
+	str        string  // cpp type as a string
+	defs       []place // inline def used by type
+	isPtr      bool    // is type a pointer ?
+	isEllipsis bool    // is type created by an ellipsis
+	eltType    string
+}
+
+func mkCppType(str string, defs []place) cppType {
+	return cppType{str, defs, false, false, ""}
+}
+
+func mkCppPtrType(str string, defs []place) cppType {
+	return cppType{str, defs, true, false, ""}
+}
+
+func mkCppEllipsis(str string, defs []place, eltType string) cppType {
+	return cppType{str, defs, false, true, eltType}
 }
 
 func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
@@ -1696,12 +1744,12 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
 
 		// Commented output in cpp as we only need one declaration
-		return cppType{"// " + usingDec, []place{headerStr(usingDec)}, false}
+		return mkCppType("// "+usingDec, []place{headerStr(usingDec)})
 
 	case *ast.FuncType:
 		name := GetCppName(node.Name.Name)
 		// TODO: This part is probably wrong
-		return cppType{fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), name, end), nil, false}
+		return mkCppType(fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), name, end), nil)
 
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
@@ -1709,7 +1757,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
-		return cppType{"", append(t.defs, headerStr(usingDec)), false}
+		return mkCppType("", append(t.defs, headerStr(usingDec)))
 
 	case *ast.StructType:
 		name := GetCppName(node.Name.Name)
@@ -1720,7 +1768,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		structDecl := cv.convertStructTypeExpr(n, genStructParam{name, decl, with})
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), structDecl)
 
-		return cppType{cv.convertStructTypeExpr(n, genStructParam{name, implem, with}), nil, false}
+		return mkCppType(cv.convertStructTypeExpr(n, genStructParam{name, implem, with}), nil)
 
 	case *ast.InterfaceType:
 		name := GetCppName(node.Name.Name)
@@ -1731,7 +1779,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{name, decl, with})
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), structDecl)
 
-		return cppType{cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with}), nil, false}
+		return mkCppType(cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with}), nil)
 
 	default:
 		Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
@@ -1758,7 +1806,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 	switch n := node.(type) {
 	case *ast.Ident:
-		return cppType{GetCppType(n.Name), nil, false}
+		return mkCppType(GetCppType(n.Name), nil)
 
 	case *ast.ArrayType:
 		return cv.convertArrayTypeExpr(n)
@@ -1767,27 +1815,27 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		return cv.convertChanTypeExpr(n)
 
 	case *ast.FuncType:
-		return cppType{cv.convertFuncTypeExpr(n), nil, false}
+		return mkCppType(cv.convertFuncTypeExpr(n), nil)
 
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n)
 
 	case *ast.SelectorExpr:
 		typeName := GetCppFunc(cv.convertExpr(n.X) + "::" + cv.convertExpr(n.Sel))
-		return cppType{typeName, nil, true}
+		return mkCppPtrType(typeName, nil)
 
 	case *ast.StarExpr:
 		t := cv.convertTypeExpr(n.X)
-		return cppType{t.str + "*", t.defs, true}
+		return mkCppPtrType(t.str+"*", t.defs)
 
 	case *ast.StructType:
 		name := cv.GenerateId()
 		t := cv.convertStructTypeExpr(n, genStructParam{name, all, without})
-		return cppType{name, []place{inlineStr(t)}, false}
+		return mkCppType(name, []place{inlineStr(t)})
 
 	case *ast.InterfaceType:
 		if n.Methods == nil || len(n.Methods.List) == 0 {
-			return cppType{"std::any", nil, false}
+			return mkCppType("std::any", nil)
 		} else {
 			name := cv.GenerateId()
 
@@ -1799,8 +1847,11 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 			structDef := cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with})
 			defs = append(defs, outlineStr(structDef))
 
-			return cppType{name, defs, true}
+			return mkCppPtrType(name, defs)
 		}
+
+	case *ast.Ellipsis:
+		return cv.convertEllipsisTypeExpr(n)
 
 	default:
 		Panicf("convertTypeExpr, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
@@ -1830,15 +1881,20 @@ func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType) cppType {
 	elt := cv.convertTypeExpr(node.Elt)
 
 	if node.Len == nil {
-		return cppType{fmt.Sprintf("gocpp::slice<%s>", elt.str), elt.defs, false}
+		return mkCppType(fmt.Sprintf("gocpp::slice<%s>", elt.str), elt.defs)
 	} else {
-		return cppType{fmt.Sprintf("gocpp::array<%s, %s>", elt.str, cv.convertExpr(node.Len)), elt.defs, false}
+		return mkCppType(fmt.Sprintf("gocpp::array<%s, %s>", elt.str, cv.convertExpr(node.Len)), elt.defs)
 	}
+}
+
+func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis) cppType {
+	elt := cv.convertTypeExpr(node.Elt)
+	return mkCppEllipsis(fmt.Sprintf("gocpp::slice<%s>", elt.str), elt.defs, elt.str)
 }
 
 func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType) cppType {
 	elt := cv.convertTypeExpr(node.Value)
-	return cppType{fmt.Sprintf("gocpp::channel<%s>", node.Value), elt.defs, false}
+	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", node.Value), elt.defs)
 }
 
 func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) string {
@@ -1851,7 +1907,7 @@ func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) string {
 func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType) cppType {
 	key := cv.convertTypeExpr(node.Key)
 	value := cv.convertTypeExpr(node.Value)
-	return cppType{fmt.Sprintf("gocpp::map<%s, %s>", key.str, value.str), append(key.defs, value.defs...), false}
+	return mkCppType(fmt.Sprintf("gocpp::map<%s, %s>", key.str, value.str), append(key.defs, value.defs...))
 }
 
 type GenOutputType int

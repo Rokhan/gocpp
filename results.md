@@ -5,6 +5,7 @@
 | [HelloWorld.go](tests/HelloWorld.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/HelloWorld.cpp)) | ❌ |
 | [TourOfGo/basics/basic-types.go](tests/TourOfGo/basics/basic-types.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/basic-types.cpp)) | ❌ |
 | [TourOfGo/basics/constants.go](tests/TourOfGo/basics/constants.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/constants.cpp)) | ❌ |
+| [TourOfGo/basics/ellipsis.go](tests/TourOfGo/basics/ellipsis.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/ellipsis.cpp)) | ❌ |
 | [TourOfGo/basics/exported-names.go](tests/TourOfGo/basics/exported-names.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/exported-names.cpp)) | ❌ |
 | [TourOfGo/basics/functions.go](tests/TourOfGo/basics/functions.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions.cpp)) | ✔️ |
 | [TourOfGo/basics/functions-continued.go](tests/TourOfGo/basics/functions-continued.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/functions-continued.cpp)) | ✔️ |
@@ -117,6 +118,7 @@
 | ---- | -------------| 
 | $(ImportDir)/bufio/bufio.go | ✔️ ([cpp](generated/golang/bufio/bufio.cpp), [h](generated/golang/bufio/bufio.h))|
 | $(ImportDir)/bytes/bytes.go | ❌ |
+| $(ImportDir)/cmp/cmp.go | ✔️ ([cpp](generated/golang/cmp/cmp.cpp), [h](generated/golang/cmp/cmp.h))|
 | $(ImportDir)/compress/flate/deflate.go | ❌ |
 | $(ImportDir)/compress/flate/inflate.go | ❌ |
 | $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))|
@@ -125,7 +127,7 @@
 | $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))|
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))|
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))|
-| $(ImportDir)/fmt/errors.go | ❌ |
+| $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))|
 | $(ImportDir)/fmt/print.go | ❌ |
 | $(ImportDir)/golang.org/x/tour/pic/pic.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/pic/pic.cpp), [h](generated/golang/golang.org/x/tour/pic/pic.h))|
 | $(ImportDir)/golang.org/x/tour/reader/validate.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/reader/validate.cpp), [h](generated/golang/golang.org/x/tour/reader/validate.h))|
@@ -188,7 +190,7 @@
 | $(ImportDir)/reflect/value.go | ❌ |
 | $(ImportDir)/runtime/asan0.go | ✔️ ([cpp](generated/golang/runtime/asan0.cpp), [h](generated/golang/runtime/asan0.h))|
 | $(ImportDir)/runtime/atomic_pointer.go | ✔️ ([cpp](generated/golang/runtime/atomic_pointer.cpp), [h](generated/golang/runtime/atomic_pointer.h))|
-| $(ImportDir)/runtime/cgocall.go | ❌ |
+| $(ImportDir)/runtime/cgocall.go | ✔️ ([cpp](generated/golang/runtime/cgocall.cpp), [h](generated/golang/runtime/cgocall.h))|
 | $(ImportDir)/runtime/cgocheck.go | ✔️ ([cpp](generated/golang/runtime/cgocheck.cpp), [h](generated/golang/runtime/cgocheck.h))|
 | $(ImportDir)/runtime/debug.go | ✔️ ([cpp](generated/golang/runtime/debug.cpp), [h](generated/golang/runtime/debug.h))|
 | $(ImportDir)/runtime/env_posix.go | ✔️ ([cpp](generated/golang/runtime/env_posix.cpp), [h](generated/golang/runtime/env_posix.h))|
@@ -263,6 +265,12 @@
 | $(ImportDir)/runtime/type.go | ❌ |
 | $(ImportDir)/runtime/typekind.go | ✔️ ([cpp](generated/golang/runtime/typekind.cpp), [h](generated/golang/runtime/typekind.h))|
 | $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))|
+| $(ImportDir)/slices/sort.go | ✔️ ([cpp](generated/golang/slices/sort.cpp), [h](generated/golang/slices/sort.h))|
+| $(ImportDir)/slices/zsortanyfunc.go | ✔️ ([cpp](generated/golang/slices/zsortanyfunc.cpp), [h](generated/golang/slices/zsortanyfunc.h))|
+| $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))|
+| $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))|
+| $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))|
+| $(ImportDir)/sort/zsortinterface.go | ✔️ ([cpp](generated/golang/sort/zsortinterface.cpp), [h](generated/golang/sort/zsortinterface.h))|
 | $(ImportDir)/strconv/itoa.go | ✔️ ([cpp](generated/golang/strconv/itoa.cpp), [h](generated/golang/strconv/itoa.h))|
 | $(ImportDir)/strings/builder.go | ✔️ ([cpp](generated/golang/strings/builder.cpp), [h](generated/golang/strings/builder.h))|
 | $(ImportDir)/strings/reader.go | ✔️ ([cpp](generated/golang/strings/reader.cpp), [h](generated/golang/strings/reader.h))|

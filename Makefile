@@ -117,7 +117,7 @@ clean:
 	rm -f results.md
 
 unix2dos:
-	unix2dos $$(find generated -type f -name "*.cpp" -o -name "*.h")
+	unix2dos -q $$(find generated -type f -name "*.cpp" -o -name "*.h")
 
 dos2unix:
-	dos2unix $$(find generated -type f -name "*.cpp" -o -name "*.h")
+	dos2unix -q $$(find generated -type f -name "*.cpp" -o -name "*.h")

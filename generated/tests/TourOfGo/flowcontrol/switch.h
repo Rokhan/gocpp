@@ -14,6 +14,7 @@
 
 namespace golang::main
 {
+    void testFallThrough(int n);
     void main();
 }
 

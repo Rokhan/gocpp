@@ -17,16 +17,16 @@
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/lfstack.h"
 #include "golang/runtime/lock_sema.h"
-#include "golang/runtime/lockrank_off.h"
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mgc.h"
-#include "golang/runtime/mgclimit.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 #include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mgcsweep.h"
-#include "golang/runtime/mstats.h"
+// #include "golang/runtime/mstats.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
-#include "golang/runtime/print.h"
+// #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-#include "golang/runtime/rand.h"
+// #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]

@@ -18,24 +18,24 @@
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
-#include "golang/runtime/print.h"
+// #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-#include "golang/runtime/race0.h"
-#include "golang/runtime/runtime1.h"
+// #include "golang/runtime/race0.h"  [Ignored, known errors]
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
+// #include "golang/runtime/slice.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
-#include "golang/runtime/typekind.h"
+// #include "golang/runtime/typekind.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

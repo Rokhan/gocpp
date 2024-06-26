@@ -15,7 +15,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lock_sema.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
+// #include "golang/runtime/slice.h"  [Ignored, known errors]
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]

@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 

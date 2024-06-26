@@ -14,14 +14,14 @@
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lock_sema.h"
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mgcsweep.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mspanset.h"
-#include "golang/runtime/mstats.h"
+// #include "golang/runtime/mstats.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]

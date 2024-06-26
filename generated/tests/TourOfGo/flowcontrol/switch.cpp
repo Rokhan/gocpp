@@ -16,6 +16,30 @@
 
 namespace golang::main
 {
+    void testFallThrough(int n)
+    {
+        //Go switch emulation
+        {
+            auto condition = n;
+            int conditionId = -1;
+            if(condition == 1) { conditionId = 0; }
+            else if(condition == 2) { conditionId = 1; }
+            else if(condition == 3) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    mocklib::Print("1 ");
+                case 1:
+                    mocklib::Print("2 ");
+                case 2:
+                    mocklib::Print("3 ");
+                default:
+                    mocklib::Printf("Soleil !\n");
+                    break;
+            }
+        }
+    }
+
     void main()
     {
         mocklib::Print("Go runs on ");
@@ -39,6 +63,10 @@ namespace golang::main
                     break;
             }
         }
+        testFallThrough(0);
+        testFallThrough(1);
+        testFallThrough(2);
+        testFallThrough(3);
     }
 
 }

@@ -18,7 +18,7 @@
 #include "golang/runtime/lfstack.h"
 #include "golang/runtime/lock_sema.h"
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
-#include "golang/runtime/lockrank_off.h"
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgcpacer.h"

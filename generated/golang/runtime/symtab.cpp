@@ -23,10 +23,10 @@
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/plugin.h"
-#include "golang/runtime/print.h"
+// #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-#include "golang/runtime/rand.h"
-#include "golang/runtime/runtime1.h"
+// #include "golang/runtime/rand.h"  [Ignored, known errors]
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"

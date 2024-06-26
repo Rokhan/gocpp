@@ -11,7 +11,7 @@
 
 #include "golang/runtime/extern.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/runtime1.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 

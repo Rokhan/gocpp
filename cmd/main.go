@@ -562,9 +562,9 @@ func (cv *cppConverter) IsTypeMap(goType types.Type) bool {
 // 	return fmt.Fprintf(cv.cpp.out, "%s"+format, append([]interface{}{cv.cpp.Indent()}, a...)...)
 // }
 
-func GetFileTimeStamp(filename string, defaultInFuture bool) time.Time {
+func GetFileTimeStamp(filename string, defaultInFuture bool, ignoreEmpty bool) time.Time {
 	fileInfo, error := os.Stat(filename)
-	if error != nil {
+	if error != nil || (ignoreEmpty && fileInfo.Size() == 0) {
 		if defaultInFuture {
 			return time.Now().AddDate(1000, 0, 0)
 		}
@@ -586,8 +586,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	cppFileName := shared.cppOutDir + "/" + cv.baseName + ".cpp"
-	goFileDate := GetFileTimeStamp(cv.inputName, true)
-	cppFileDate := GetFileTimeStamp(cppFileName, false)
+	// Consider empty files as non-existant in strict Mode
+	goFileDate := GetFileTimeStamp(cv.inputName, true, shared.strictMode)
+	cppFileDate := GetFileTimeStamp(cppFileName, false, shared.strictMode)
 
 	if shared.verbose {
 		cv.Logf(" ExeDate: %v\n", shared.exeDate)

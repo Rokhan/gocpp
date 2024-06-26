@@ -793,10 +793,27 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 		{"png", "image/png/writer.go"},
 		{"race", "internal/race/norace.go"},
+		{"runtime", "runtime/defs_windows.go"},
 		{"runtime", "runtime/lockrank.go"},
+		{"runtime", "runtime/lockrank_off.go"},
+		{"runtime", "runtime/mbitmap_allocheaders.go"},
+		{"runtime", "runtime/mgclimit.go"},
+		{"runtime", "runtime/mcache.go"},
+		{"runtime", "runtime/mstats.go"},
+		{"runtime", "runtime/mranges.go"},
+		{"runtime", "runtime/mpagealloc_64bit.go"},
+		{"runtime", "runtime/pagetrace_off.go"},
+		{"runtime", "runtime/print.go"},
+		{"runtime", "runtime/rand.go"},
+		{"runtime", "runtime/race0.go"},
+		{"runtime", "runtime/runtime1.go"},
+		{"runtime", "runtime/slice.go"},
 		{"runtime", "runtime/stubs.go"},
 		{"runtime", "runtime/sizeclasses.go"},
+		{"runtime", "runtime/signal_windows.go"},
 		{"runtime", "runtime/symtab.go"},
+		{"runtime", "runtime/stkframe.go"},
+		{"runtime", "runtime/typekind.go"},
 		{"sync", "sync/runtime.go"},
 		{"sync", "sync/runtime2.go"},
 		{"time", "time/tick.go"},
@@ -1018,7 +1035,8 @@ func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (ou
 		}
 
 		for _, stmt := range block.List {
-			outlines = append(outlines, cv.convertStmt(stmt, env)...)
+			stmtOutiles, _ := cv.convertStmt(stmt, env)
+			outlines = append(outlines, stmtOutiles...)
 		}
 	})
 
@@ -1144,7 +1162,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 	panic("convertAssignStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []string) {
+func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []string, isFallThrough bool) {
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
 		outlines = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
@@ -1192,6 +1210,8 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
 		case token.CONTINUE:
 			fmt.Fprintf(cv.cpp.out, "%scontinue;\n", cv.cpp.Indent())
+		case token.FALLTHROUGH:
+			isFallThrough = true
 		default:
 			Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
 		}
@@ -1218,8 +1238,12 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		outlines = append(outlines, blockOutline...)
 		if s.Else != nil {
 			fmt.Fprintf(cv.cpp.out, "%selse\n", cv.cpp.Indent())
-			elseOutline := cv.convertStmt(s.Else, env)
+			elseOutline, isFallthrough := cv.convertStmt(s.Else, env)
 			outlines = append(outlines, elseOutline...)
+			if isFallthrough {
+				// Shouldn't happen correctly go file
+				Panicf("convertStmt, fallthrough not managed in ast.IfStmt")
+			}
 		}
 
 	case *ast.SwitchStmt:
@@ -1301,11 +1325,19 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 			}
 		}
 
+		var isStmtFallthrough bool
+		var stmtOutline []string
 		for _, stmt := range s.Body {
-			stmtOutline := cv.convertStmt(stmt, env)
+			if isStmtFallthrough {
+				// Shouldn't happen correctly go file
+				Panicf("convertStmt, fallthrough not managed if not the last statement")
+			}
+			stmtOutline, isStmtFallthrough = cv.convertStmt(stmt, env)
 			outlines = append(outlines, stmtOutline...)
 		}
-		fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		if !isStmtFallthrough {
+			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		}
 		cv.cpp.indent--
 
 		if env.isTypeSwitch {
@@ -1323,11 +1355,15 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		}
 
 		cv.cpp.indent++
+		var isStmtFallthrough bool
+		var stmtOutline []string
 		for _, stmt := range s.Body {
-			stmtOutline := cv.convertStmt(stmt, env)
+			stmtOutline, isStmtFallthrough = cv.convertStmt(stmt, env)
 			outlines = append(outlines, stmtOutline...)
 		}
-		fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		if !isStmtFallthrough {
+			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+		}
 		cv.cpp.indent--
 
 	default:

@@ -1018,6 +1018,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 }
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outlines []string) {
+	return cv.convertBlockStmtWithLabel(block, env, nil)
+}
+
+func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env blockEnv, label *ast.Ident) (outlines []string) {
 
 	if block == nil {
 		fmt.Fprintf(cv.cpp.out, "%v/* convertBlockStmt, nil block */;\n", cv.cpp.Indent())
@@ -1037,6 +1041,15 @@ func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (ou
 		for _, stmt := range block.List {
 			stmtOutiles, _ := cv.convertStmt(stmt, env)
 			outlines = append(outlines, stmtOutiles...)
+		}
+
+		if label != nil {
+			fmt.Fprintf(cv.cpp.out, "%sif(false) {\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.cpp.out, "%s%s_continue:\n", cv.cpp.Indent(), label.Name)
+			fmt.Fprintf(cv.cpp.out, "%s    continue;\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.cpp.out, "%s%s_break:\n", cv.cpp.Indent(), label.Name)
+			fmt.Fprintf(cv.cpp.out, "%s    break;\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 		}
 	})
 
@@ -1163,6 +1176,22 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 }
 
 func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []string, isFallThrough bool) {
+	return cv.convertLabelledStmt(stmt, env, nil)
+}
+
+func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *ast.Ident) (outlines []string, isFallThrough bool) {
+
+	if label != nil {
+		switch s := stmt.(type) {
+		case *ast.ForStmt, *ast.RangeStmt:
+			/* Nothing to do*/
+		case *ast.SwitchStmt, *ast.SelectStmt, *ast.TypeSwitchStmt:
+			Panicf("convertStmt, label not implemented. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
+		default:
+			Panicf("convertStmt, label not allowed here. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
+		}
+	}
+
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
 		outlines = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
@@ -1202,19 +1231,35 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 	case *ast.ForStmt:
 		env.startVarScope()
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
-		outlines = cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
+		outlines = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
 	case *ast.BranchStmt:
-		switch s.Tok {
-		case token.BREAK:
-			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
-		case token.CONTINUE:
-			fmt.Fprintf(cv.cpp.out, "%scontinue;\n", cv.cpp.Indent())
-		case token.FALLTHROUGH:
-			isFallThrough = true
-		default:
-			Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
+		if s.Label == nil {
+			switch s.Tok {
+			case token.BREAK:
+				fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
+			case token.CONTINUE:
+				fmt.Fprintf(cv.cpp.out, "%scontinue;\n", cv.cpp.Indent())
+			case token.FALLTHROUGH:
+				isFallThrough = true
+			default:
+				Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
+			}
+		} else {
+			switch s.Tok {
+			case token.BREAK:
+				fmt.Fprintf(cv.cpp.out, "%sgoto %s_break;\n", cv.cpp.Indent(), s.Label)
+			case token.CONTINUE:
+				fmt.Fprintf(cv.cpp.out, "%sgoto %s_continue;\n", cv.cpp.Indent(), s.Label)
+			case token.FALLTHROUGH:
+				fallthrough // Not implemented
+			default:
+				Panicf("convertStmt, unmanaged labelled BranchStmt, label: %v, token: %v, input: %v", s.Label, s.Tok, cv.Position(s))
+			}
 		}
+
+	case *ast.LabeledStmt:
+		cv.convertLabelledStmt(s.Stmt, env, s.Label)
 
 	case *ast.RangeStmt:
 		if s.Key != nil && s.Value != nil && s.Tok == token.DEFINE {
@@ -1224,7 +1269,7 @@ func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []str
 		} else {
 			panic("Unmanaged case of '*ast.RangeStmt'")
 		}
-		outlines = cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
+		outlines = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
 	case *ast.IfStmt:
 		if s.Init != nil {

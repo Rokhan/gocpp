@@ -585,17 +585,17 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		}()
 	}
 
-	cppFileName := shared.cppOutDir + "/" + cv.baseName + ".cpp"
-	// Consider empty files as non-existant in strict Mode
-	goFileDate := GetFileTimeStamp(cv.inputName, true, shared.strictMode)
-	cppFileDate := GetFileTimeStamp(cppFileName, false, shared.strictMode)
-
-	if shared.verbose {
-		cv.Logf(" ExeDate: %v\n", shared.exeDate)
-		cv.Logf(" goFileDate: %v\n", goFileDate)
-		cv.Logf(" cppFileDate: %v\n", cppFileDate)
-	}
 	if !shared.alwaysRegenerate {
+		cppFileName := shared.cppOutDir + "/" + cv.baseName + ".cpp"
+		// Consider empty files as non-existant in strict Mode
+		goFileDate := GetFileTimeStamp(cv.inputName, true, shared.strictMode)
+		cppFileDate := GetFileTimeStamp(cppFileName, false, shared.strictMode)
+
+		if shared.verbose {
+			cv.Logf(" ExeDate: %v\n", shared.exeDate)
+			cv.Logf(" goFileDate: %v\n", goFileDate)
+			cv.Logf(" cppFileDate: %v\n", cppFileDate)
+		}
 		// Probably too aggressive, we should check dependencies
 		if cppFileDate.After(shared.exeDate) && cppFileDate.After(goFileDate) {
 			cv.Logf(" <<< Skipped already up to date file: %s >>>", cv.inputName)
@@ -697,11 +697,6 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	fmt.Printf("%s", cv.logPrefix)
 	return fmt.Printf(format, a...)
-}
-
-func (cv *cppConverter) needFileGeneration() bool {
-	// TODO
-	return true
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {

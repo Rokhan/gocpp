@@ -5,7 +5,7 @@ GO_TEST_DIRS:=$(filter-out ./tests/TourOfGo/img/, $(GO_TEST_DIRS))
 GO_TEST_FILES=$(wildcard tests/*.go tests/*/*/*.go)
 OUTDIR=generated
 LOGDIR=log
-SUPPORT_FILES=includes/gocpp/support.h
+SUPPORT_FILES=includes/gocpp/support.h includes/gocpp/support.fwd.h
 
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.cpp)
 OUT_CPP_TEST_FILES=$(addprefix $(OUTDIR)/,$(CPP_TEST_FILES))

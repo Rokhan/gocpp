@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gocpp/support.fwd.h"
+
 #include <any>
 #include <complex>
 #include <exception>
@@ -14,12 +16,9 @@
 #include <utility>
 #include <vector>
 
-#include "thread_pool/thread_pool.h"
+#include <cstdint>
 
-namespace gocpp
-{
-    template<typename T> struct slice;
-}
+#include "thread_pool/thread_pool.h"
 
 namespace mocklib
 {
@@ -33,13 +32,6 @@ namespace mocklib
 // Support types implementations
 namespace gocpp
 {
-    // TODO : make forward declaration header for types
-
-    template<typename T> struct array_base;
-    template<typename T, int N> struct array;
-    template<typename T> struct slice;
-    struct complex128;
-    struct Defer;
 
     [[noreturn]] void panic(const std::string& message);
 

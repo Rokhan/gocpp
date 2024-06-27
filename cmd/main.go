@@ -342,7 +342,7 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include <vector>\n")
 	fmt.Fprintf(out, "\n")
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.baseName)
-	fmt.Fprintf(out, "#include \"%s\"\n", cv.shared.supportHeader)
+	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
 	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".h")
@@ -391,7 +391,7 @@ func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include <vector>\n")
 	fmt.Fprintf(out, "\n")
 	fmt.Fprintf(out, "#include \"%s.fwd.h\"\n", cv.baseName)
-	fmt.Fprintf(out, "#include \"%s\"\n", cv.shared.supportHeader)
+	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
 	// Can we do something with ".fwd.h" in some situations ?
@@ -411,11 +411,15 @@ func printHppOutro(cv *cppConverter) {
 	fmt.Fprintf(out, "\n")
 }
 
-func printFwdIntro(cv *cppConverter) {
+func printFwdIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	out := cv.fwd.out
 	generatedMessage(out, cv)
 	fmt.Fprintf(out, "#pragma once\n")
 	fmt.Fprintf(out, "\n")
+	fmt.Fprintf(out, "#include \"%s.fwd.h\"\n", cv.shared.supportHeader)
+	fmt.Fprintf(out, "\n")
+
+	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".fwd.h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
@@ -659,7 +663,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	cv.ignoreKnownErrors(usedPkgInfos)
 
-	printFwdIntro(cv)
+	printFwdIntro(cv, usedPkgInfos)
 	printHppIntro(cv, usedPkgInfos)
 	printCppIntro(cv, usedPkgInfos)
 
@@ -931,6 +935,9 @@ func (cv *cppConverter) outputsPrint(place place, outlines *[]string, pkgInfos *
 	}
 	if place.header != nil {
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), *place.header)
+	}
+	if place.fwdHeader != nil {
+		fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
 	}
 	if place.pkgInfo != nil {
 		*pkgInfos = append(*pkgInfos, place.pkgInfo)
@@ -1555,6 +1562,9 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result string) 
 				if declItem.header != nil {
 					Panicf("inlineStmt, not implemented, can't declare header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
+				if declItem.fwdHeader != nil {
+					Panicf("inlineStmt, not implemented, can't declare forward header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+				}
 			}
 			return
 		default:
@@ -1768,25 +1778,31 @@ type place struct {
 	outline *string
 	// when type/declaration need to be in header
 	header *string
+	// when type/declaration need to be in forward declarations header
+	fwdHeader *string
 
 	//packages
 	pkgInfo *pkgInfo
 }
 
 func inlineStr(str string) place {
-	return place{&str, nil, nil, nil}
+	return place{&str, nil, nil, nil, nil}
 }
 
 func outlineStr(str string) place {
-	return place{nil, &str, nil, nil}
+	return place{nil, &str, nil, nil, nil}
 }
 
 func headerStr(str string) place {
-	return place{nil, nil, &str, nil}
+	return place{nil, nil, &str, nil, nil}
+}
+
+func fwdHeaderStr(str string) place {
+	return place{nil, nil, nil, &str, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, &pkgInfo{name, pkgPath, filePath, pkgType}}
+	return place{nil, nil, nil, nil, &pkgInfo{name, pkgPath, filePath, pkgType}}
 }
 
 type cppType struct {
@@ -1819,9 +1835,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		// TODO : manage go private/public rule to chose where to put definition
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
-
-		// Commented output in cpp as we only need one declaration
-		return mkCppType("// "+usingDec, []place{headerStr(usingDec)})
+		return mkCppType("", []place{fwdHeaderStr(usingDec)})
 
 	case *ast.FuncType:
 		name := GetCppName(node.Name.Name)
@@ -1834,7 +1848,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
-		return mkCppType("", append(t.defs, headerStr(usingDec)))
+		return mkCppType("", append(t.defs, fwdHeaderStr(usingDec)))
 
 	case *ast.StructType:
 		name := GetCppName(node.Name.Name)
@@ -2422,6 +2436,18 @@ func (cv *cppConverter) convertSubExpr(node ast.Expr) string {
 	return cv.convertExprImpl(node, true)
 }
 
+func checkOnlyInline(def place) {
+	if def.outline != nil {
+		panic("### NOT IMPLEMENTED, convertExpr, can't declare outline from here ###")
+	}
+	if def.header != nil {
+		panic("### NOT IMPLEMENTED, convertExpr, can't declare in header from here ###")
+	}
+	if def.fwdHeader != nil {
+		panic("### NOT IMPLEMENTED, convertExpr, can't declare in fwdHeader from here ###")
+	}
+}
+
 func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 	if node == nil {
 		return ""
@@ -2436,12 +2462,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 			if def.inline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
 			}
-			if def.outline != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare outline from here ###"
-			}
-			if def.header != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare in header from here ###"
-			}
+			checkOnlyInline(def)
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
@@ -2455,12 +2476,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 			if def.inline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
 			}
-			if def.outline != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare outline from here ###"
-			}
-			if def.header != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare in header from here ###"
-			}
+			checkOnlyInline(def)
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
@@ -2474,12 +2490,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 			if def.inline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
 			}
-			if def.outline != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare outline from here ###"
-			}
-			if def.header != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare in header from here ###"
-			}
+			checkOnlyInline(def)
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
@@ -2655,12 +2666,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) st
 			if def.inline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
 			}
-			if def.outline != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare outline from here"
-			}
-			if def.header != nil {
-				return "### NOT IMPLEMENTED, convertExpr, can't declare in header from here"
-			}
+			checkOnlyInline(def)
 		}
 
 		litType = exprType.str
@@ -2889,7 +2895,7 @@ func main() {
 	shared.globalSubDir = "golang/"
 	shared.fileSet = fset
 	shared.cppOutDir = *cppOutDir
-	shared.supportHeader = "gocpp/support.h"
+	shared.supportHeader = "gocpp/support"
 	shared.exeDate = fileInfo.ModTime()
 	shared.verbose = *verbose
 	shared.strictMode = *strictMode

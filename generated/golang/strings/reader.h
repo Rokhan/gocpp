@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings
@@ -33,7 +33,7 @@ namespace golang::strings
     std::tuple<int, std::string> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
     std::tuple<unsigned char, std::string> ReadByte(Reader* r);
     std::string UnreadByte(Reader* r);
-    std::tuple<rune, int, std::string> ReadRune(Reader* r);
+    std::tuple<gocpp::rune, int, std::string> ReadRune(Reader* r);
     std::string UnreadRune(Reader* r);
     std::tuple<int64_t, std::string> Seek(Reader* r, int64_t offset, int whence);
     std::tuple<int64_t, std::string> WriteTo(Reader* r, io::Writer w);

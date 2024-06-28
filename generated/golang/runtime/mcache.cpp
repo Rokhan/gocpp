@@ -14,7 +14,7 @@
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mcentral.h"
@@ -69,7 +69,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // using gclinkptr = uintptr_t;
     gclink* ptr(gclinkptr p)
     {
         return (*gclink)(Pointer(gocpp::recv(unsafe), p));

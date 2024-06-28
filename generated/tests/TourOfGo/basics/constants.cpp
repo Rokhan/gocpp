@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/basics/constants.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

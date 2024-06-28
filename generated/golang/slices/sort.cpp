@@ -11,10 +11,10 @@
 #include "golang/slices/sort.h"
 #include "gocpp/support.h"
 
-#include "golang/cmp/cmp.h"
+// #include "golang/cmp/cmp.h"  [Ignored, known errors]
 #include "golang/math/bits/bits.h"
-#include "golang/slices/zsortanyfunc.h"
-#include "golang/slices/zsortordered.h"
+// #include "golang/slices/zsortanyfunc.h"  [Ignored, known errors]
+// #include "golang/slices/zsortordered.h"  [Ignored, known errors]
 
 namespace golang::slices
 {
@@ -159,11 +159,9 @@ namespace golang::slices
         return {i, i < n && cmp(x[i], target) == 0};
     }
 
-    // using sortedHint = int;
     sortedHint unknownHint = 0;
     slices.sortedHint increasingHint = 1;
     slices.sortedHint decreasingHint = 2;
-    // using xorshift = uint64_t;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;

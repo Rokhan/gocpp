@@ -13,7 +13,7 @@
 
 #include "golang/encoding/binary/native_endian_little.h"
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
@@ -428,7 +428,7 @@ namespace golang::binary
         return "binary.NativeEndian";
     }
 
-    std::string Read(io::Reader r, ByteOrder order, any data)
+    std::string Read(io::Reader r, ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -672,7 +672,7 @@ namespace golang::binary
         return nullptr;
     }
 
-    std::string Write(io::Writer w, ByteOrder order, any data)
+    std::string Write(io::Writer w, ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -983,7 +983,7 @@ namespace golang::binary
         return err;
     }
 
-    int Size(any v)
+    int Size(go_any v)
     {
         return dataSize(Indirect(gocpp::recv(reflect), ValueOf(gocpp::recv(reflect), v)));
     }
@@ -1104,8 +1104,6 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    // using decoder = coder;
-    // using encoder = coder;
     bool bool(decoder* d)
     {
         auto x = d->buf[d->offset];
@@ -1496,7 +1494,7 @@ namespace golang::binary
         e->offset += n;
     }
 
-    int intDataSize(any data)
+    int intDataSize(go_any data)
     {
         //Go type switch emulation
         {

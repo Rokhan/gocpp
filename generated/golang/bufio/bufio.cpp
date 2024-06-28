@@ -13,7 +13,7 @@
 
 #include "golang/bytes/bytes.h"
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/strings/builder.h"
 #include "golang/unicode/utf8/utf8.h"
 
@@ -318,14 +318,14 @@ namespace golang::bufio
         return nullptr;
     }
 
-    std::tuple<rune, int, std::string> ReadRune(Reader* b)
+    std::tuple<gocpp::rune, int, std::string> ReadRune(Reader* b)
     {
-        rune r;
+        gocpp::rune r;
         int size;
         std::string err;
         for(; b->r + utf8.UTFMax > b->w && ! FullRune(gocpp::recv(utf8), b->buf.make_slice(b->r, b->w)) && b->err == nullptr && b->w - b->r < len(b->buf); )
         {
-            rune r;
+            gocpp::rune r;
             int size;
             std::string err;
             fill(gocpp::recv(b));
@@ -333,7 +333,7 @@ namespace golang::bufio
         b->lastRuneSize = - 1;
         if(b->r == b->w)
         {
-            rune r;
+            gocpp::rune r;
             int size;
             std::string err;
             return {0, 0, readErr(gocpp::recv(b))};
@@ -341,7 +341,7 @@ namespace golang::bufio
         std::tie(r, size) = std::tuple{rune(b->buf[b->r]), 1};
         if(r >= utf8.RuneSelf)
         {
-            rune r;
+            gocpp::rune r;
             int size;
             std::string err;
             std::tie(r, size) = DecodeRune(gocpp::recv(utf8), b->buf.make_slice(b->r, b->w));
@@ -594,7 +594,7 @@ namespace golang::bufio
             }
             fill(gocpp::recv(b));
         }
-        if(b->err == io.EOF)
+        if(b->err == io.go_EOF)
         {
             int64_t n;
             std::string err;
@@ -768,7 +768,7 @@ namespace golang::bufio
         return nullptr;
     }
 
-    std::tuple<int, std::string> WriteRune(Writer* b, rune r)
+    std::tuple<int, std::string> WriteRune(Writer* b, gocpp::rune r)
     {
         int size;
         std::string err;
@@ -915,7 +915,7 @@ namespace golang::bufio
                 break;
             }
         }
-        if(err == io.EOF)
+        if(err == io.go_EOF)
         {
             int64_t n;
             std::string err;

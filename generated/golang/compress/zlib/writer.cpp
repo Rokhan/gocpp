@@ -16,7 +16,7 @@
 #include "golang/fmt/errors.h"
 #include "golang/hash/adler32/adler32.h"
 #include "golang/hash/hash.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::zlib
 {

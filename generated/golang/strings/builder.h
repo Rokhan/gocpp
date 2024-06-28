@@ -36,7 +36,7 @@ namespace golang::strings
     void Grow(Builder* b, int n);
     std::tuple<int, std::string> Write(Builder* b, gocpp::slice<unsigned char> p);
     std::string WriteByte(Builder* b, unsigned char c);
-    std::tuple<int, std::string> WriteRune(Builder* b, rune r);
+    std::tuple<int, std::string> WriteRune(Builder* b, gocpp::rune r);
     std::tuple<int, std::string> WriteString(Builder* b, std::string s);
 }
 

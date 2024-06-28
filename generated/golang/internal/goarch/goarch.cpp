@@ -16,7 +16,6 @@
 
 namespace golang::goarch
 {
-    // using ArchFamilyType = int;
     ArchFamilyType AMD64 = 0;
     goarch.ArchFamilyType ARM = 1;
     goarch.ArchFamilyType ARM64 = 2;

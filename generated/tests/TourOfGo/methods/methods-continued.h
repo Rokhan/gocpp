@@ -9,12 +9,11 @@
 #include "tests/TourOfGo/methods/methods-continued.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/const.h"
 
 namespace golang::main
 {
-    using MyFloat = double;
     double Abs(MyFloat f);
     void main();
 }

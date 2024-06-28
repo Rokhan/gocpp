@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/methods/methods-with-pointer-receivers.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/sqrt.h"
 
 namespace golang::main

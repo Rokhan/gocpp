@@ -14,7 +14,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/float.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -140,7 +140,6 @@ namespace golang::runtime
     extern int scavChunkFlagsMask;
     extern int logScavChunkInUseMax;
     extern int scavChunkInUseMask;
-    using scavChunkFlags = uint8_t;
     bool isEmpty(scavChunkFlags* sc);
     void setEmpty(scavChunkFlags* sc);
     void setNonEmpty(scavChunkFlags* sc);

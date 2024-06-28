@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/flowcontrol/switch.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
 
 namespace golang::main

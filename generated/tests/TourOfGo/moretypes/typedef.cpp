@@ -11,12 +11,10 @@
 #include "tests/TourOfGo/moretypes/typedef.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {
-    // using ArbitraryType = int;
-    // using IntegerType = int;
     
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
@@ -32,7 +30,6 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    // using VertexAlias = Vertex;
     void main()
     {
         mocklib::Println(Vertex {1, 2});

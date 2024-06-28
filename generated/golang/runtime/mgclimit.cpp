@@ -243,7 +243,6 @@ namespace golang::runtime
         unlock(gocpp::recv(l));
     }
 
-    // using limiterEventType = uint8_t;
     limiterEventType limiterEventNone = 0;
     runtime.limiterEventType limiterEventIdleMarkWork = 1;
     runtime.limiterEventType limiterEventMarkAssist = 2;
@@ -252,7 +251,6 @@ namespace golang::runtime
     int limiterEventBits = 3;
     uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
     runtime.limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
-    // using limiterEventStamp = uint64_t;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
     {
         return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));

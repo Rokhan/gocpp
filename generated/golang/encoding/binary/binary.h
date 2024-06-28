@@ -11,7 +11,7 @@
 
 #include "golang/encoding/binary/native_endian_little.h"
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
@@ -207,9 +207,9 @@ namespace golang::binary
     std::string GoString(bigEndian);
     std::string String(nativeEndian);
     std::string GoString(nativeEndian);
-    std::string Read(io::Reader r, ByteOrder order, any data);
-    std::string Write(io::Writer w, ByteOrder order, any data);
-    int Size(any v);
+    std::string Read(io::Reader r, ByteOrder order, go_any data);
+    std::string Write(io::Writer w, ByteOrder order, go_any data);
+    int Size(go_any v);
     int dataSize(reflect::Value v);
     int sizeof(reflect::Type t);
     struct coder
@@ -224,8 +224,6 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const coder& value);
-    using decoder = coder;
-    using encoder = coder;
     bool bool(decoder* d);
     void bool(encoder* e, bool x);
     uint8_t uint8(decoder* d);
@@ -248,6 +246,6 @@ namespace golang::binary
     void value(encoder* e, reflect::Value v);
     void skip(decoder* d, reflect::Value v);
     void skip(encoder* e, reflect::Value v);
-    int intDataSize(any data);
+    int intDataSize(go_any data);
 }
 

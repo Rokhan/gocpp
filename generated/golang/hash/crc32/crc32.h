@@ -22,7 +22,6 @@ namespace golang::crc32
     extern int IEEE;
     extern int Castagnoli;
     extern int Koopman;
-    using Table = gocpp::array<uint32_t, 256>;
     void castagnoliInit();
     extern crc32.Table* IEEETable;
     void ieeeInit();

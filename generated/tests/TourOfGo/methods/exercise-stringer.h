@@ -9,11 +9,10 @@
 #include "tests/TourOfGo/methods/exercise-stringer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {
-    using IPAddr = gocpp::array<unsigned char, 4>;
     std::string String(IPAddr ip);
     void main();
 }

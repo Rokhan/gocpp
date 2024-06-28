@@ -256,7 +256,7 @@ namespace golang::runtime
     }
 
     uint64_t racecgosync;
-    void cgoCheckPointer(any ptr, any arg)
+    void cgoCheckPointer(go_any ptr, go_any arg)
     {
         if(! goexperiment.CgoCheck2 && debug.cgocheck == 0)
         {
@@ -578,7 +578,7 @@ namespace golang::runtime
         return start <= uintptr(p) && uintptr(p) < end;
     }
 
-    void cgoCheckResult(any val)
+    void cgoCheckResult(go_any val)
     {
         if(! goexperiment.CgoCheck2 && debug.cgocheck == 0)
         {

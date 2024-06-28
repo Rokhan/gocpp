@@ -9,10 +9,10 @@
 #include "golang/slices/sort.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/cmp/cmp.h"
+// #include "golang/cmp/cmp.h"  [Ignored, known errors]
 #include "golang/math/bits/bits.h"
-#include "golang/slices/zsortanyfunc.h"
-#include "golang/slices/zsortordered.h"
+// #include "golang/slices/zsortanyfunc.h"  [Ignored, known errors]
+// #include "golang/slices/zsortordered.h"  [Ignored, known errors]
 
 namespace golang::slices
 {
@@ -27,10 +27,8 @@ namespace golang::slices
     E MaxFunc(S x, std::function<int (E a, E b)> cmp);
     std::tuple<int, bool> BinarySearch(S x, E target);
     std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp);
-    using sortedHint = int;
     extern slices.sortedHint increasingHint;
     extern slices.sortedHint decreasingHint;
-    using xorshift = uint64_t;
     uint64_t Next(xorshift* r);
     unsigned int nextPowerOfTwo(int length);
     bool isNaN(T x);

@@ -9,13 +9,11 @@
 #include "tests/TourOfGo/methods/inline-interface.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/sqrt.h"
 
 namespace golang::main
 {
-    using MyInt = int;
-    using MyFloat = double;
     double Abs(MyInt i);
     double Abs(MyFloat f);
     struct Vertex

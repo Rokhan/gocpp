@@ -13,7 +13,7 @@
 
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/slice.h"  [Ignored, known errors]
 #include "golang/runtime/string.h"
@@ -24,7 +24,6 @@
 
 namespace golang::runtime
 {
-    // using hex = uint64_t;
     gocpp::slice<unsigned char> bytes(std::string s)
     {
         gocpp::slice<unsigned char> ret;

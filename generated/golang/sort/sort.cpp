@@ -103,11 +103,9 @@ namespace golang::sort
         pdqsort(data, 0, n, limit);
     }
 
-    // using sortedHint = int;
     sortedHint unknownHint = 0;
     sort.sortedHint increasingHint = 1;
     sort.sortedHint decreasingHint = 2;
-    // using xorshift = uint64_t;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;

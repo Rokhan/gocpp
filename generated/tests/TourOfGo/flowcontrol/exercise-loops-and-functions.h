@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/flowcontrol/exercise-loops-and-functions.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

@@ -17,7 +17,6 @@ namespace golang::adler32
     extern int mod;
     extern int nmax;
     extern int Size;
-    using digest = uint32_t;
     void Reset(digest* d);
     hash::Hash32 New();
     int Size(digest* d);

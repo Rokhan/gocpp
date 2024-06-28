@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/methods/interface-values.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/const.h"
 
 namespace golang::main
@@ -71,7 +71,6 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const T& value);
     void M(T* t);
-    using F = double;
     void M(F f);
     void main();
     void describe(I i);

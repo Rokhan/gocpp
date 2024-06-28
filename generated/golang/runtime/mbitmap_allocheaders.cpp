@@ -930,7 +930,7 @@ namespace golang::runtime
         println();
     }
 
-    gocpp::slice<unsigned char> getgcmask(any ep)
+    gocpp::slice<unsigned char> getgcmask(go_any ep)
     {
         gocpp::slice<unsigned char> mask;
         auto e = *efaceOf(& ep);

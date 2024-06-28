@@ -20,7 +20,6 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p);
     extern int castagnoliK1;
     extern int castagnoliK2;
-    using sse42Table = gocpp::array<Table, 4>;
     bool archAvailableCastagnoli();
     void archInitCastagnoli();
     uint32_t castagnoliShift(sse42Table* table, uint32_t crc);

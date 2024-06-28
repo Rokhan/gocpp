@@ -11,7 +11,7 @@
 #include "golang/runtime/lockrank_off.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 

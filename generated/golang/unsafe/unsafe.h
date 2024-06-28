@@ -11,9 +11,6 @@
 
 namespace golang::unsafe
 {
-    using ArbitraryType = int;
-    using IntegerType = int;
-    using Pointer = ArbitraryType*;
     uintptr_t Sizeof(ArbitraryType x);
     uintptr_t Offsetof(ArbitraryType x);
     uintptr_t Alignof(ArbitraryType x);

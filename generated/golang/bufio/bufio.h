@@ -11,7 +11,7 @@
 
 #include "golang/bytes/bytes.h"
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/strings/builder.h"
 #include "golang/unicode/utf8/utf8.h"
 
@@ -53,7 +53,7 @@ namespace golang::bufio
     std::tuple<int, std::string> Read(Reader* b, gocpp::slice<unsigned char> p);
     std::tuple<unsigned char, std::string> ReadByte(Reader* b);
     std::string UnreadByte(Reader* b);
-    std::tuple<rune, int, std::string> ReadRune(Reader* b);
+    std::tuple<gocpp::rune, int, std::string> ReadRune(Reader* b);
     std::string UnreadRune(Reader* b);
     int Buffered(Reader* b);
     std::tuple<gocpp::slice<unsigned char>, std::string> ReadSlice(Reader* b, unsigned char delim);
@@ -87,7 +87,7 @@ namespace golang::bufio
     int Buffered(Writer* b);
     std::tuple<int, std::string> Write(Writer* b, gocpp::slice<unsigned char> p);
     std::string WriteByte(Writer* b, unsigned char c);
-    std::tuple<int, std::string> WriteRune(Writer* b, rune r);
+    std::tuple<int, std::string> WriteRune(Writer* b, gocpp::rune r);
     std::tuple<int, std::string> WriteString(Writer* b, std::string s);
     std::tuple<int64_t, std::string> ReadFrom(Writer* b, io::Reader r);
     struct ReadWriter

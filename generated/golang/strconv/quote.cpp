@@ -28,7 +28,7 @@ namespace golang::strconv
         return string(appendQuotedWith(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * len(s) / 2), s, quote, ASCIIonly, graphicOnly));
     }
 
-    std::string quoteRuneWith(rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
+    std::string quoteRuneWith(gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
         return string(appendQuotedRuneWith(nullptr, r, quote, ASCIIonly, graphicOnly));
     }
@@ -63,7 +63,7 @@ namespace golang::strconv
         return buf;
     }
 
-    gocpp::slice<unsigned char> appendQuotedRuneWith(gocpp::slice<unsigned char> buf, rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
+    gocpp::slice<unsigned char> appendQuotedRuneWith(gocpp::slice<unsigned char> buf, gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
         buf = append(buf, quote);
         if(! ValidRune(gocpp::recv(utf8), r))
@@ -75,7 +75,7 @@ namespace golang::strconv
         return buf;
     }
 
-    gocpp::slice<unsigned char> appendEscapedRune(gocpp::slice<unsigned char> buf, rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
+    gocpp::slice<unsigned char> appendEscapedRune(gocpp::slice<unsigned char> buf, gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
         if(r == rune(quote) || r == '\\')
         {
@@ -198,32 +198,32 @@ namespace golang::strconv
         return appendQuotedWith(dst, s, '"', false, true);
     }
 
-    std::string QuoteRune(rune r)
+    std::string QuoteRune(gocpp::rune r)
     {
         return quoteRuneWith(r, '\'', false, false);
     }
 
-    gocpp::slice<unsigned char> AppendQuoteRune(gocpp::slice<unsigned char> dst, rune r)
+    gocpp::slice<unsigned char> AppendQuoteRune(gocpp::slice<unsigned char> dst, gocpp::rune r)
     {
         return appendQuotedRuneWith(dst, r, '\'', false, false);
     }
 
-    std::string QuoteRuneToASCII(rune r)
+    std::string QuoteRuneToASCII(gocpp::rune r)
     {
         return quoteRuneWith(r, '\'', true, false);
     }
 
-    gocpp::slice<unsigned char> AppendQuoteRuneToASCII(gocpp::slice<unsigned char> dst, rune r)
+    gocpp::slice<unsigned char> AppendQuoteRuneToASCII(gocpp::slice<unsigned char> dst, gocpp::rune r)
     {
         return appendQuotedRuneWith(dst, r, '\'', true, false);
     }
 
-    std::string QuoteRuneToGraphic(rune r)
+    std::string QuoteRuneToGraphic(gocpp::rune r)
     {
         return quoteRuneWith(r, '\'', false, true);
     }
 
-    gocpp::slice<unsigned char> AppendQuoteRuneToGraphic(gocpp::slice<unsigned char> dst, rune r)
+    gocpp::slice<unsigned char> AppendQuoteRuneToGraphic(gocpp::slice<unsigned char> dst, gocpp::rune r)
     {
         return appendQuotedRuneWith(dst, r, '\'', false, true);
     }
@@ -254,9 +254,9 @@ namespace golang::strconv
         return true;
     }
 
-    std::tuple<rune, bool> unhex(unsigned char b)
+    std::tuple<gocpp::rune, bool> unhex(unsigned char b)
     {
-        rune v;
+        gocpp::rune v;
         bool ok;
         auto c = rune(b);
         //Go switch emulation
@@ -267,7 +267,7 @@ namespace golang::strconv
             else if('A' <= c && c <= 'F') { conditionId = 2; }
             switch(conditionId)
             {
-                rune v;
+                gocpp::rune v;
                 bool ok;
                 case 0:
                     return {c - '0', true};
@@ -283,15 +283,15 @@ namespace golang::strconv
         return {v, ok};
     }
 
-    std::tuple<rune, bool, std::string, std::string> UnquoteChar(std::string s, unsigned char quote)
+    std::tuple<gocpp::rune, bool, std::string, std::string> UnquoteChar(std::string s, unsigned char quote)
     {
-        rune value;
+        gocpp::rune value;
         bool multibyte;
         std::string tail;
         std::string err;
         if(len(s) == 0)
         {
-            rune value;
+            gocpp::rune value;
             bool multibyte;
             std::string tail;
             std::string err;
@@ -307,7 +307,7 @@ namespace golang::strconv
             else if(c != '\\') { conditionId = 2; }
             switch(conditionId)
             {
-                rune value;
+                gocpp::rune value;
                 bool multibyte;
                 std::string tail;
                 std::string err;
@@ -326,7 +326,7 @@ namespace golang::strconv
         }
         if(len(s) <= 1)
         {
-            rune value;
+            gocpp::rune value;
             bool multibyte;
             std::string tail;
             std::string err;
@@ -362,7 +362,7 @@ namespace golang::strconv
             else if(condition == '"') { conditionId = 20; }
             switch(conditionId)
             {
-                rune value;
+                gocpp::rune value;
                 bool multibyte;
                 std::string tail;
                 std::string err;
@@ -400,7 +400,7 @@ namespace golang::strconv
                         else if(condition == 'U') { conditionId = 2; }
                         switch(conditionId)
                         {
-                            rune value;
+                            gocpp::rune value;
                             bool multibyte;
                             std::string tail;
                             std::string err;
@@ -415,10 +415,10 @@ namespace golang::strconv
                                 break;
                         }
                     }
-                    rune v = {};
+                    gocpp::rune v = {};
                     if(len(s) < n)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -427,14 +427,14 @@ namespace golang::strconv
                     }
                     for(auto j = 0; j < n; j++)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
                         auto [x, ok] = unhex(s[j]);
                         if(! ok)
                         {
-                            rune value;
+                            gocpp::rune value;
                             bool multibyte;
                             std::string tail;
                             std::string err;
@@ -446,7 +446,7 @@ namespace golang::strconv
                     s = s.make_slice(n);
                     if(c == 'x')
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -455,7 +455,7 @@ namespace golang::strconv
                     }
                     if(! ValidRune(gocpp::recv(utf8), v))
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -476,7 +476,7 @@ namespace golang::strconv
                     auto v = rune(c) - '0';
                     if(len(s) < 2)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -485,14 +485,14 @@ namespace golang::strconv
                     }
                     for(auto j = 0; j < 2; j++)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
                         auto x = rune(s[j]) - '0';
                         if(x < 0 || x > 7)
                         {
-                            rune value;
+                            gocpp::rune value;
                             bool multibyte;
                             std::string tail;
                             std::string err;
@@ -504,7 +504,7 @@ namespace golang::strconv
                     s = s.make_slice(2);
                     if(v > 255)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -520,7 +520,7 @@ namespace golang::strconv
                 case 20:
                     if(c != quote)
                     {
-                        rune value;
+                        gocpp::rune value;
                         bool multibyte;
                         std::string tail;
                         std::string err;
@@ -783,7 +783,7 @@ namespace golang::strconv
         return i;
     }
 
-    bool IsPrint(rune r)
+    bool IsPrint(gocpp::rune r)
     {
         if(r <= 0xFF)
         {
@@ -823,7 +823,7 @@ namespace golang::strconv
         return j >= len(isNotPrint) || isNotPrint[j] != uint16_t(r);
     }
 
-    bool IsGraphic(rune r)
+    bool IsGraphic(gocpp::rune r)
     {
         if(IsPrint(r))
         {
@@ -832,7 +832,7 @@ namespace golang::strconv
         return isInGraphicList(r);
     }
 
-    bool isInGraphicList(rune r)
+    bool isInGraphicList(gocpp::rune r)
     {
         if(r > 0xFFFF)
         {

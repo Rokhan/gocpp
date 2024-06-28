@@ -74,10 +74,8 @@ namespace golang::sort
 
     std::ostream& operator<<(std::ostream& os, const Interface& value);
     void Sort(Interface data);
-    using sortedHint = int;
     extern sort.sortedHint increasingHint;
     extern sort.sortedHint decreasingHint;
-    using xorshift = uint64_t;
     uint64_t Next(xorshift* r);
     unsigned int nextPowerOfTwo(int length);
     struct lessSwap
@@ -103,18 +101,15 @@ namespace golang::sort
     bool Less(reverse r, int i, int j);
     Interface Reverse(Interface data);
     bool IsSorted(Interface data);
-    using IntSlice = gocpp::slice<int>;
     int Len(IntSlice x);
     bool Less(IntSlice x, int i, int j);
     void Swap(IntSlice x, int i, int j);
     void Sort(IntSlice x);
-    using Float64Slice = gocpp::slice<double>;
     int Len(Float64Slice x);
     bool Less(Float64Slice x, int i, int j);
     void Swap(Float64Slice x, int i, int j);
     bool isNaN(double f);
     void Sort(Float64Slice x);
-    using StringSlice = gocpp::slice<std::string>;
     int Len(StringSlice x);
     bool Less(StringSlice x, int i, int j);
     void Swap(StringSlice x, int i, int j);

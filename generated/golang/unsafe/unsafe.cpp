@@ -13,8 +13,6 @@
 
 namespace golang::unsafe
 {
-    // using ArbitraryType = int;
-    // using IntegerType = int;
     uintptr_t Sizeof(ArbitraryType x)
     /* convertBlockStmt, nil block */;
 

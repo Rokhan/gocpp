@@ -17,7 +17,7 @@
 #include "golang/errors/errors.h"
 #include "golang/hash/adler32/adler32.h"
 #include "golang/hash/hash.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::zlib
 {
@@ -114,13 +114,13 @@ namespace golang::zlib
         int n = {};
         std::tie(n, z->err) = Read(gocpp::recv(z->decompressor), p);
         Write(gocpp::recv(z->digest), p.make_slice(0, n));
-        if(z->err != io.EOF)
+        if(z->err != io.go_EOF)
         {
             return {n, z->err};
         }
         if(auto [_, err] = ReadFull(gocpp::recv(io), z->r, z->scratch.make_slice(0, 4)); err != nullptr)
         {
-            if(err == io.EOF)
+            if(err == io.go_EOF)
             {
                 err = io.ErrUnexpectedEOF;
             }
@@ -133,12 +133,12 @@ namespace golang::zlib
             z->err = ErrChecksum;
             return {n, z->err};
         }
-        return {n, io.EOF};
+        return {n, io.go_EOF};
     }
 
     std::string Close(reader* z)
     {
-        if(z->err != nullptr && z->err != io.EOF)
+        if(z->err != nullptr && z->err != io.go_EOF)
         {
             return z->err;
         }
@@ -160,7 +160,7 @@ namespace golang::zlib
         std::tie(_, z->err) = ReadFull(gocpp::recv(io), z->r, z->scratch.make_slice(0, 2));
         if(z->err != nullptr)
         {
-            if(z->err == io.EOF)
+            if(z->err == io.go_EOF)
             {
                 z->err = io.ErrUnexpectedEOF;
             }
@@ -178,7 +178,7 @@ namespace golang::zlib
             std::tie(_, z->err) = ReadFull(gocpp::recv(io), z->r, z->scratch.make_slice(0, 4));
             if(z->err != nullptr)
             {
-                if(z->err == io.EOF)
+                if(z->err == io.go_EOF)
                 {
                     z->err = io.ErrUnexpectedEOF;
                 }

@@ -13,7 +13,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
@@ -25,23 +25,23 @@
 
 namespace golang::runtime
 {
-    std::tuple<std::string, gocpp::map<std::string, any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit()
+    std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit()
     {
         std::string path;
-        gocpp::map<std::string, any> syms;
+        gocpp::map<std::string, go_any> syms;
         gocpp::slice<initTask*> initTasks;
         std::string errstr;
         moduledata* md = {};
         for(auto pmd = firstmoduledata.next; pmd != nullptr; pmd = pmd->next)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             if(pmd->bad)
             {
                 std::string path;
-                gocpp::map<std::string, any> syms;
+                gocpp::map<std::string, go_any> syms;
                 gocpp::slice<initTask*> initTasks;
                 std::string errstr;
                 md = nullptr;
@@ -52,7 +52,7 @@ namespace golang::runtime
         if(md == nullptr)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             go_throw("runtime: no plugin module data");
@@ -60,7 +60,7 @@ namespace golang::runtime
         if(md->pluginpath == "")
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             go_throw("runtime: plugin has empty pluginpath");
@@ -68,7 +68,7 @@ namespace golang::runtime
         if(md->typemap != nullptr)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             return {"", nullptr, nullptr, "plugin already loaded"};
@@ -76,13 +76,13 @@ namespace golang::runtime
         for(auto [_, pmd] : activeModules())
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             if(pmd->pluginpath == md->pluginpath)
             {
                 std::string path;
-                gocpp::map<std::string, any> syms;
+                gocpp::map<std::string, go_any> syms;
                 gocpp::slice<initTask*> initTasks;
                 std::string errstr;
                 md->bad = true;
@@ -91,7 +91,7 @@ namespace golang::runtime
             if(inRange(pmd->text, pmd->etext, md->text, md->etext) || inRange(pmd->bss, pmd->ebss, md->bss, md->ebss) || inRange(pmd->data, pmd->edata, md->data, md->edata) || inRange(pmd->types, pmd->etypes, md->types, md->etypes))
             {
                 std::string path;
-                gocpp::map<std::string, any> syms;
+                gocpp::map<std::string, go_any> syms;
                 gocpp::slice<initTask*> initTasks;
                 std::string errstr;
                 println("plugin: new module data overlaps with previous moduledata");
@@ -109,13 +109,13 @@ namespace golang::runtime
         for(auto [_, pkghash] : md->pkghashes)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             if(pkghash.linktimehash != *pkghash.runtimehash)
             {
                 std::string path;
-                gocpp::map<std::string, any> syms;
+                gocpp::map<std::string, go_any> syms;
                 gocpp::slice<initTask*> initTasks;
                 std::string errstr;
                 md->bad = true;
@@ -130,29 +130,29 @@ namespace golang::runtime
         for(auto [_, i] : md->itablinks)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             itabAdd(i);
         }
         unlock(& itabLock);
-        syms = gocpp::make(gocpp::Tag<gocpp::map<std::string, any>>(), len(md->ptab));
+        syms = gocpp::make(gocpp::Tag<gocpp::map<std::string, go_any>>(), len(md->ptab));
         for(auto [_, ptab] : md->ptab)
         {
             std::string path;
-            gocpp::map<std::string, any> syms;
+            gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             auto symName = resolveNameOff(Pointer(gocpp::recv(unsafe), md->types), ptab.name);
             auto t = typeOff(gocpp::recv(toRType((*_type)(Pointer(gocpp::recv(unsafe), md->types)))), ptab.typ);
-            any val = {};
+            go_any val = {};
             auto valp = (*gocpp::Tag<gocpp::array<unsafe::Pointer, 2>>())(Pointer(gocpp::recv(unsafe), & val));
             (*valp)[0] = Pointer(gocpp::recv(unsafe), t);
             auto name = Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
                 std::string path;
-                gocpp::map<std::string, any> syms;
+                gocpp::map<std::string, go_any> syms;
                 gocpp::slice<initTask*> initTasks;
                 std::string errstr;
                 name = "." + name;

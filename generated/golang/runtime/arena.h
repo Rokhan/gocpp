@@ -17,7 +17,7 @@
 #include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -50,10 +50,10 @@
 namespace golang::runtime
 {
     unsafe::Pointer arena_newArena();
-    any arena_arena_New(unsafe::Pointer arena, any typ);
-    void arena_arena_Slice(unsafe::Pointer arena, any slice, int cap);
+    go_any arena_arena_New(unsafe::Pointer arena, go_any typ);
+    void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap);
     void arena_arena_Free(unsafe::Pointer arena);
-    any arena_heapify(any s);
+    go_any arena_heapify(go_any s);
     extern int userArenaChunkBytesMax;
     extern uintptr_t userArenaChunkBytes;
     extern uintptr_t userArenaChunkPages;
@@ -75,7 +75,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const userArena& value);
     userArena* newUserArena();
     unsafe::Pointer go_new(userArena* a, _type* typ);
-    void slice(userArena* a, any sl, int cap);
+    void slice(userArena* a, go_any sl, int cap);
     void free(userArena* a);
     unsafe::Pointer alloc(userArena* a, _type* typ, int cap);
     mspan* refill(userArena* a);

@@ -21,7 +21,7 @@
 #include "golang/image/png/reader.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 
 namespace golang::png
@@ -101,7 +101,6 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    // using EncoderBuffer = encoder;
     
     std::ostream& encoder::PrintTo(std::ostream& os) const
     {
@@ -128,7 +127,6 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    // using CompressionLevel = int;
     CompressionLevel DefaultCompression = 0;
     CompressionLevel NoCompression = - 1;
     CompressionLevel BestSpeed = - 2;

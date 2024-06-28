@@ -16,7 +16,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/float.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -146,7 +146,7 @@ namespace golang::runtime
         s->g = getg();
         s->timer = go_new(timer);
         s->timer->arg = s;
-        s->timer->f = [=](any s, uintptr_t _) mutable -> void
+        s->timer->f = [=](go_any s, uintptr_t _) mutable -> void
         {
             wake(gocpp::recv(gocpp::getValue<runtime.scavengerState*>(s)));
         }
@@ -750,7 +750,6 @@ namespace golang::runtime
     int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
     int logScavChunkInUseMax = logPallocChunkPages + 1;
     int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
-    // using scavChunkFlags = uint8_t;
     bool isEmpty(scavChunkFlags* sc)
     {
         return (*sc) & scavChunkHasFree == 0;

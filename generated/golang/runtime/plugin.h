@@ -11,7 +11,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/iface.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
@@ -23,7 +23,7 @@
 
 namespace golang::runtime
 {
-    std::tuple<std::string, gocpp::map<std::string, any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit();
+    std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit();
     void pluginftabverify(moduledata* md);
     bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
     struct ptabEntry

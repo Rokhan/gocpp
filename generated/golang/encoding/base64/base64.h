@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/encoding/binary/binary.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/slices/slices.h"
 #include "golang/strconv/atoi.h"
 #include "golang/strconv/itoa.h"
@@ -21,7 +21,7 @@ namespace golang::base64
     {
         gocpp::array<unsigned char, 64> encode;
         gocpp::array<uint8_t, 256> decodeMap;
-        rune padChar;
+        gocpp::rune padChar;
         bool strict;
 
         using isGoStruct = void;
@@ -33,7 +33,7 @@ namespace golang::base64
     extern std::string decodeMapInitialize;
     extern char invalidIndex;
     Encoding* NewEncoding(std::string encoder);
-    Encoding* WithPadding(Encoding enc, rune padding);
+    Encoding* WithPadding(Encoding enc, gocpp::rune padding);
     Encoding* Strict(Encoding enc);
     extern base64.Encoding* StdEncoding;
     extern base64.Encoding* URLEncoding;
@@ -61,7 +61,6 @@ namespace golang::base64
     std::string Close(encoder* e);
     io::WriteCloser NewEncoder(Encoding* enc, io::Writer w);
     int EncodedLen(Encoding* enc, int n);
-    using CorruptInputError = int64_t;
     std::string Error(CorruptInputError e);
     std::tuple<int, int, std::string> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si);
     std::tuple<gocpp::slice<unsigned char>, std::string> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
@@ -100,6 +99,6 @@ namespace golang::base64
     std::tuple<int, std::string> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
     io::Reader NewDecoder(Encoding* enc, io::Reader r);
     int DecodedLen(Encoding* enc, int n);
-    int decodedLen(int n, rune padChar);
+    int decodedLen(int n, gocpp::rune padChar);
 }
 

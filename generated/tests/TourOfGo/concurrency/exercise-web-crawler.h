@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/errors.h"
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {
@@ -62,7 +62,6 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const Fetcher& value);
     void Crawl(std::string url, int depth, Fetcher fetcher);
     void main();
-    using fakeFetcher = gocpp::map<std::string, fakeResult*>;
     struct fakeResult
     {
         std::string body;

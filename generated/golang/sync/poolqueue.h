@@ -39,12 +39,11 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const eface& value);
     extern int dequeueBits;
     extern int dequeueLimit;
-    using dequeueNil = gocpp_id_0*;
     std::tuple<uint32_t, uint32_t> unpack(poolDequeue* d, uint64_t ptrs);
     uint64_t pack(poolDequeue* d, uint32_t head, uint32_t tail);
-    bool pushHead(poolDequeue* d, any val);
-    std::tuple<any, bool> popHead(poolDequeue* d);
-    std::tuple<any, bool> popTail(poolDequeue* d);
+    bool pushHead(poolDequeue* d, go_any val);
+    std::tuple<go_any, bool> popHead(poolDequeue* d);
+    std::tuple<go_any, bool> popTail(poolDequeue* d);
     struct poolChain
     {
         poolChainElt* head;
@@ -69,8 +68,8 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const poolChainElt& value);
     void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
     poolChainElt* loadPoolChainElt(poolChainElt** pp);
-    void pushHead(poolChain* c, any val);
-    std::tuple<any, bool> popHead(poolChain* c);
-    std::tuple<any, bool> popTail(poolChain* c);
+    void pushHead(poolChain* c, go_any val);
+    std::tuple<go_any, bool> popHead(poolChain* c);
+    std::tuple<go_any, bool> popTail(poolChain* c);
 }
 

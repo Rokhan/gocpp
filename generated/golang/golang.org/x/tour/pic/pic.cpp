@@ -16,7 +16,7 @@
 // #include "golang/image/png/writer.h"  [Ignored, known errors]
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::pic
 {

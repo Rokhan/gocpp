@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/interfaces-ordered.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/const.h"
 #include "golang/math/sqrt.h"
 
@@ -77,7 +77,6 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    // using MyFloat = double;
     void main()
     {
         Abser a = {};

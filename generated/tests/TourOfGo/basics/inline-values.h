@@ -9,14 +9,12 @@
 #include "tests/TourOfGo/basics/inline-values.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {
     void main();
-    using ints = gocpp::slice<int>;
     extern ints smallPrimes;
-    using fakeFetcher = gocpp::map<std::string, fakeResult*>;
     struct fakeResult
     {
         std::string body;

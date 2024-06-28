@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/encoding/binary/binary.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/slices/slices.h"
 #include "golang/strconv/atoi.h"
 #include "golang/strconv/itoa.h"
@@ -36,8 +36,8 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    rune StdPadding = '=';
-    rune NoPadding = - 1;
+    gocpp::rune StdPadding = '=';
+    gocpp::rune NoPadding = - 1;
     std::string decodeMapInitialize = "" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff";
     char invalidIndex = '\xff';
     Encoding* NewEncoding(std::string encoder)
@@ -72,7 +72,7 @@ namespace golang::base64
         return e;
     }
 
-    Encoding* WithPadding(Encoding enc, rune padding)
+    Encoding* WithPadding(Encoding enc, gocpp::rune padding)
     {
         //Go switch emulation
         {
@@ -286,7 +286,6 @@ namespace golang::base64
         return (n + 2) / 3 * 4;
     }
 
-    // using CorruptInputError = int64_t;
     std::string Error(CorruptInputError e)
     {
         return "illegal base64 data at input byte " + FormatInt(gocpp::recv(strconv), int64(e), 10);
@@ -568,7 +567,7 @@ namespace golang::base64
                 }
             }
             d->err = d->readErr;
-            if(d->err == io.EOF && d->nbuf > 0)
+            if(d->err == io.go_EOF && d->nbuf > 0)
             {
                 int n;
                 std::string err;
@@ -759,7 +758,7 @@ namespace golang::base64
         return decodedLen(n, enc->padChar);
     }
 
-    int decodedLen(int n, rune padChar)
+    int decodedLen(int n, gocpp::rune padChar)
     {
         if(padChar == NoPadding)
         {

@@ -106,7 +106,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<int, std::string> WriteRune(Builder* b, rune r)
+    std::tuple<int, std::string> WriteRune(Builder* b, gocpp::rune r)
     {
         copyCheck(gocpp::recv(b));
         auto n = len(b->buf);

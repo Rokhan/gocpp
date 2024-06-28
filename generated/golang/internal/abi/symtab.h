@@ -11,10 +11,8 @@
 
 namespace golang::abi
 {
-    using FuncFlag = uint8_t;
     extern abi.FuncFlag FuncFlagSPWrite;
     extern abi.FuncFlag FuncFlagAsm;
-    using FuncID = uint8_t;
     extern abi.FuncID FuncID_abort;
     extern abi.FuncID FuncID_asmcgocall;
     extern abi.FuncID FuncID_asyncPreempt;

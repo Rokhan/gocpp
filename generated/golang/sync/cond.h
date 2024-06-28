@@ -34,7 +34,6 @@ namespace golang::sync
     void Wait(Cond* c);
     void Signal(Cond* c);
     void Broadcast(Cond* c);
-    using copyChecker = uintptr_t;
     void check(copyChecker* c);
     struct noCopy
     {

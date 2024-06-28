@@ -13,11 +13,9 @@
 
 namespace golang::abi
 {
-    // using FuncFlag = uint8_t;
     FuncFlag FuncFlagTopFrame = 1 << 0;
     abi.FuncFlag FuncFlagSPWrite = 1 << 1;
     abi.FuncFlag FuncFlagAsm = 1 << 2;
-    // using FuncID = uint8_t;
     FuncID FuncIDNormal = 0;
     abi.FuncID FuncID_abort = 1;
     abi.FuncID FuncID_asmcgocall = 2;

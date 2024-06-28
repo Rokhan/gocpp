@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/basics/ellipsis.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/cmplx/sqrt.h"
 
 namespace golang::main

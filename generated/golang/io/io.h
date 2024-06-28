@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/sync/pool.h"
+// #include "golang/sync/pool.h"  [Ignored, known errors]
 
 namespace golang::io
 {
@@ -20,7 +20,7 @@ namespace golang::io
     extern std::string ErrShortWrite;
     extern std::string errInvalidWrite;
     extern std::string ErrShortBuffer;
-    extern std::string EOF;
+    extern std::string go_EOF;
     extern std::string ErrUnexpectedEOF;
     extern std::string ErrNoProgress;
     struct Reader : gocpp::Interface
@@ -872,7 +872,7 @@ namespace golang::io
 
         struct IRuneReader
         {
-            virtual std::tuple<rune, int, std::string> vReadRune() = 0;
+            virtual std::tuple<gocpp::rune, int, std::string> vReadRune() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -883,7 +883,7 @@ namespace golang::io
                 value.reset(ptr);
             }
 
-            std::tuple<rune, int, std::string> vReadRune() override;
+            std::tuple<gocpp::rune, int, std::string> vReadRune() override;
 
             StoreT value;
         };
@@ -891,8 +891,8 @@ namespace golang::io
         std::shared_ptr<IRuneReader> value;
     };
 
-    std::tuple<rune, int, std::string> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self);
-    std::tuple<rune, int, std::string> ReadRune(const gocpp::ObjRecv<RuneReader>& self);
+    std::tuple<gocpp::rune, int, std::string> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self);
+    std::tuple<gocpp::rune, int, std::string> ReadRune(const gocpp::ObjRecv<RuneReader>& self);
 
     std::ostream& operator<<(std::ostream& os, const RuneReader& value);
     struct RuneScanner : gocpp::Interface

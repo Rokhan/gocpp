@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/sync/pool.h"
+// #include "golang/sync/pool.h"  [Ignored, known errors]
 
 namespace golang::io
 {
@@ -22,7 +22,7 @@ namespace golang::io
     std::string ErrShortWrite = New(gocpp::recv(errors), "short write");
     std::string errInvalidWrite = New(gocpp::recv(errors), "invalid write result");
     std::string ErrShortBuffer = New(gocpp::recv(errors), "short buffer");
-    std::string EOF = New(gocpp::recv(errors), "EOF");
+    std::string go_EOF = New(gocpp::recv(errors), "EOF");
     std::string ErrUnexpectedEOF = New(gocpp::recv(errors), "unexpected EOF");
     std::string ErrNoProgress = New(gocpp::recv(errors), "multiple Read calls return no data or error");
     
@@ -785,17 +785,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<rune, int, std::string> RuneReader::RuneReaderImpl<T, StoreT>::vReadRune()
+    std::tuple<gocpp::rune, int, std::string> RuneReader::RuneReaderImpl<T, StoreT>::vReadRune()
     {
         return ReadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<rune, int, std::string> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self)
+    std::tuple<gocpp::rune, int, std::string> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self)
     {
         return self.ptr->value->vReadRune();
     }
 
-    std::tuple<rune, int, std::string> ReadRune(const gocpp::ObjRecv<RuneReader>& self)
+    std::tuple<gocpp::rune, int, std::string> ReadRune(const gocpp::ObjRecv<RuneReader>& self)
     {
         return self.obj.value->vReadRune();
     }
@@ -933,7 +933,7 @@ namespace golang::io
             err = nullptr;
         }
         else
-        if(n > 0 && err == EOF)
+        if(n > 0 && err == go_EOF)
         {
             int n;
             std::string err;
@@ -964,7 +964,7 @@ namespace golang::io
         {
             int64_t written;
             std::string err;
-            err = EOF;
+            err = go_EOF;
         }
         return {written, err};
     }
@@ -1071,7 +1071,7 @@ namespace golang::io
             {
                 int64_t written;
                 std::string err;
-                if(er != EOF)
+                if(er != go_EOF)
                 {
                     int64_t written;
                     std::string err;
@@ -1111,7 +1111,7 @@ namespace golang::io
         {
             int n;
             std::string err;
-            return {0, EOF};
+            return {0, go_EOF};
         }
         if(int64(len(p)) > l->N)
         {
@@ -1165,7 +1165,7 @@ namespace golang::io
         {
             int n;
             std::string err;
-            return {0, EOF};
+            return {0, go_EOF};
         }
         if(auto max = s->limit - s->off; int64(len(p)) > max)
         {
@@ -1221,7 +1221,7 @@ namespace golang::io
         {
             int n;
             std::string err;
-            return {0, EOF};
+            return {0, go_EOF};
         }
         off += s->base;
         if(auto max = s->limit - off; int64(len(p)) > max)
@@ -1234,7 +1234,7 @@ namespace golang::io
             {
                 int n;
                 std::string err;
-                err = EOF;
+                err = go_EOF;
             }
             return {n, err};
         }
@@ -1391,7 +1391,7 @@ namespace golang::io
         return {len(s), nullptr};
     }
 
-    sync::Pool blackHolePool = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = [=]() mutable -> any
+    sync::Pool blackHolePool = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = [=]() mutable -> go_any
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8192);
         return & b;
@@ -1414,7 +1414,7 @@ namespace golang::io
                 int64_t n;
                 std::string err;
                 Put(gocpp::recv(blackHolePool), bufp);
-                if(err == EOF)
+                if(err == go_EOF)
                 {
                     int64_t n;
                     std::string err;
@@ -1486,7 +1486,7 @@ namespace golang::io
             b = b.make_slice(0, len(b) + n);
             if(err != nullptr)
             {
-                if(err == EOF)
+                if(err == go_EOF)
                 {
                     err = nullptr;
                 }

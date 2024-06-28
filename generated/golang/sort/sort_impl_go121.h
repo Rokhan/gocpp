@@ -9,7 +9,7 @@
 #include "golang/sort/sort_impl_go121.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/slices/sort.h"
+// #include "golang/slices/sort.h"  [Ignored, known errors]
 
 namespace golang::sort
 {

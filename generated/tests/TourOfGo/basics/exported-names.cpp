@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/basics/exported-names.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/const.h"
 
 namespace golang::main

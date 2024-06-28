@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/type-assertions-basics.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

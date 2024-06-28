@@ -96,7 +96,7 @@ namespace golang::runtime
     void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
     void doubleCheckTypePointersOfType(mspan* s, _type* typ, uintptr_t addr, uintptr_t size);
     void dumpTypePointers(typePointers tp);
-    gocpp::slice<unsigned char> getgcmask(any ep);
+    gocpp::slice<unsigned char> getgcmask(go_any ep);
     void userArenaHeapBitsSetType(_type* typ, unsafe::Pointer ptr, mspan* s);
     void writeHeapBitsForAddr();
     struct heapBits

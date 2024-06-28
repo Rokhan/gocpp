@@ -11,13 +11,11 @@
 #include "tests/TourOfGo/methods/inline-interface.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/sqrt.h"
 
 namespace golang::main
 {
-    // using MyInt = int;
-    // using MyFloat = double;
     double Abs(MyInt i)
     {
         return std::sqrt(double(i * i));

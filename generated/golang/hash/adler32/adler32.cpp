@@ -19,7 +19,6 @@ namespace golang::adler32
     int mod = 65521;
     int nmax = 5552;
     int Size = 4;
-    // using digest = uint32_t;
     void Reset(digest* d)
     {
         *d = 1;

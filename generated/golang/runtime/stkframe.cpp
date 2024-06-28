@@ -314,7 +314,7 @@ namespace golang::runtime
     gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
     void stkobjinit()
     {
-        any abiRegArgsEface = abi::RegArgs {};
+        go_any abiRegArgsEface = abi::RegArgs {};
         auto abiRegArgsType = efaceOf(& abiRegArgsEface)->_type;
         if(abiRegArgsType->Kind_ & kindGCProg != 0)
         {

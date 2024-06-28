@@ -19,7 +19,7 @@
 #include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -56,7 +56,7 @@ namespace golang::runtime
         return Pointer(gocpp::recv(unsafe), newUserArena());
     }
 
-    any arena_arena_New(unsafe::Pointer arena, any typ)
+    go_any arena_arena_New(unsafe::Pointer arena, go_any typ)
     {
         auto t = (*_type)(efaceOf(& typ)->data);
         if(t->Kind_ & kindMask != kindPtr)
@@ -65,14 +65,14 @@ namespace golang::runtime
         }
         auto te = (*ptrtype)(Pointer(gocpp::recv(unsafe), t))->Elem;
         auto x = go_new(gocpp::recv(((*userArena)(arena))), te);
-        any result = {};
+        go_any result = {};
         auto e = efaceOf(& result);
         e->_type = t;
         e->data = x;
         return result;
     }
 
-    void arena_arena_Slice(unsafe::Pointer arena, any slice, int cap)
+    void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap)
     {
         slice(gocpp::recv(((*userArena)(arena))), slice, cap);
     }
@@ -82,7 +82,7 @@ namespace golang::runtime
         free(gocpp::recv(((*userArena)(arena))));
     }
 
-    any arena_heapify(any s)
+    go_any arena_heapify(go_any s)
     {
         unsafe::Pointer v = {};
         auto e = efaceOf(& s);
@@ -115,7 +115,7 @@ namespace golang::runtime
         {
             return s;
         }
-        any x = {};
+        go_any x = {};
         //Go switch emulation
         {
             auto condition = t->Kind_ & kindMask;
@@ -227,7 +227,7 @@ namespace golang::runtime
         return alloc(gocpp::recv(a), typ, - 1);
     }
 
-    void slice(userArena* a, any sl, int cap)
+    void slice(userArena* a, go_any sl, int cap)
     {
         if(cap < 0)
         {

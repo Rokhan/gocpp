@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/flowcontrol/if-with-a-short-statement.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/pow.h"
 
 namespace golang::main

@@ -14,7 +14,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"

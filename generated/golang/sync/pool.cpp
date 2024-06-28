@@ -14,9 +14,9 @@
 // #include "golang/internal/race/norace.h"  [Ignored, known errors]
 #include "golang/runtime/debug.h"
 // #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
-#include "golang/sync/cond.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-#include "golang/sync/poolqueue.h"
+// #include "golang/sync/poolqueue.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
@@ -73,14 +73,14 @@ namespace golang::sync
     /* convertBlockStmt, nil block */;
 
     gocpp::array<uint64_t, 128> poolRaceHash;
-    unsafe::Pointer poolRaceAddr(any x)
+    unsafe::Pointer poolRaceAddr(go_any x)
     {
         auto ptr = uintptr((*gocpp::Tag<gocpp::array<unsafe::Pointer, 2>>())(Pointer(gocpp::recv(unsafe), & x))[1]);
         auto h = uint32_t((uint64_t(uint32_t(ptr)) * 0x85ebca6b) >> 16);
         return Pointer(gocpp::recv(unsafe), & poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
-    void Put(Pool* p, any x)
+    void Put(Pool* p, go_any x)
     {
         if(x == nullptr)
         {
@@ -111,7 +111,7 @@ namespace golang::sync
         }
     }
 
-    any Get(Pool* p)
+    go_any Get(Pool* p)
     {
         if(race.Enabled)
         {
@@ -144,7 +144,7 @@ namespace golang::sync
         return x;
     }
 
-    any getSlow(Pool* p, int pid)
+    go_any getSlow(Pool* p, int pid)
     {
         auto size = runtime_LoadAcquintptr(& p->localSize);
         auto locals = p->local;

@@ -77,7 +77,7 @@ namespace golang::sync
         return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
     }
 
-    bool pushHead(poolDequeue* d, any val)
+    bool pushHead(poolDequeue* d, go_any val)
     {
         auto ptrs = Load(gocpp::recv(d->headTail));
         auto [head, tail] = unpack(gocpp::recv(d), ptrs);
@@ -95,12 +95,12 @@ namespace golang::sync
         {
             val = dequeueNil(nullptr);
         }
-        *(*any)(Pointer(gocpp::recv(unsafe), slot)) = val;
+        *(*go_any)(Pointer(gocpp::recv(unsafe), slot)) = val;
         Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
 
-    std::tuple<any, bool> popHead(poolDequeue* d)
+    std::tuple<go_any, bool> popHead(poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -119,7 +119,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(*any)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(*go_any)(Pointer(gocpp::recv(unsafe), slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -128,7 +128,7 @@ namespace golang::sync
         return {val, true};
     }
 
-    std::tuple<any, bool> popTail(poolDequeue* d)
+    std::tuple<go_any, bool> popTail(poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -146,7 +146,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(*any)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(*go_any)(Pointer(gocpp::recv(unsafe), slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -196,7 +196,7 @@ namespace golang::sync
         return (*poolChainElt)(LoadPointer(gocpp::recv(atomic), (*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), pp))));
     }
 
-    void pushHead(poolChain* c, any val)
+    void pushHead(poolChain* c, go_any val)
     {
         auto d = c->head;
         if(d == nullptr)
@@ -223,7 +223,7 @@ namespace golang::sync
         pushHead(gocpp::recv(d2), val);
     }
 
-    std::tuple<any, bool> popHead(poolChain* c)
+    std::tuple<go_any, bool> popHead(poolChain* c)
     {
         auto d = c->head;
         for(; d != nullptr; )
@@ -237,7 +237,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
-    std::tuple<any, bool> popTail(poolChain* c)
+    std::tuple<go_any, bool> popTail(poolChain* c)
     {
         auto d = loadPoolChainElt(& c->tail);
         if(d == nullptr)

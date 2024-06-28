@@ -40,7 +40,6 @@
 
 namespace golang::runtime
 {
-    using cgoCallers = gocpp::array<uintptr_t, 32>;
     struct argset
     {
         unsafe::Pointer args;
@@ -66,13 +65,13 @@ namespace golang::runtime
     void unwindm(bool* restore);
     void badcgocallback();
     void cgounimpl();
-    void cgoCheckPointer(any ptr, any arg);
+    void cgoCheckPointer(go_any ptr, go_any arg);
     extern std::string cgoCheckPointerFail;
     extern std::string cgoResultFail;
     void cgoCheckArg(_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
     std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg);
     bool cgoIsGoPointer(unsafe::Pointer p);
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end);
-    void cgoCheckResult(any val);
+    void cgoCheckResult(go_any val);
 }
 

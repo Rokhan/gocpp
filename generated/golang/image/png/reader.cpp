@@ -13,7 +13,7 @@
 
 #include "golang/compress/zlib/reader.h"
 #include "golang/encoding/binary/binary.h"
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
@@ -21,7 +21,7 @@
 #include "golang/image/format.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::png
 {
@@ -116,14 +116,12 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    // using FormatError = std::string;
     std::string Error(FormatError e)
     {
         return "png: invalid format: " + string(e);
     }
 
     png.FormatError chunkOrderError = FormatError("chunk out of order");
-    // using UnsupportedError = std::string;
     std::string Error(UnsupportedError e)
     {
         return "png: unsupported feature: " + string(e);
@@ -543,7 +541,7 @@ namespace golang::png
             }
             std::tie(n, err) = Read(gocpp::recv(r), d->tmp.make_slice(0, 1));
         }
-        if(err != nullptr && err != io.EOF)
+        if(err != nullptr && err != io.go_EOF)
         {
             return {nullptr, FormatError(Error(gocpp::recv(err)))};
         }
@@ -700,7 +698,7 @@ namespace golang::png
             auto [_, err] = ReadFull(gocpp::recv(io), r, cr);
             if(err != nullptr)
             {
-                if(err == io.EOF || err == io.ErrUnexpectedEOF)
+                if(err == io.go_EOF || err == io.ErrUnexpectedEOF)
                 {
                     return {nullptr, FormatError("not enough pixel data")};
                 }
@@ -1357,7 +1355,7 @@ namespace golang::png
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = NewIEEE(gocpp::recv(crc32)); });
         if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)
         {
-            if(err == io.EOF)
+            if(err == io.go_EOF)
             {
                 err = io.ErrUnexpectedEOF;
             }
@@ -1367,7 +1365,7 @@ namespace golang::png
         {
             if(auto err = parseChunk(gocpp::recv(d), false); err != nullptr)
             {
-                if(err == io.EOF)
+                if(err == io.go_EOF)
                 {
                     err = io.ErrUnexpectedEOF;
                 }
@@ -1382,7 +1380,7 @@ namespace golang::png
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = NewIEEE(gocpp::recv(crc32)); });
         if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)
         {
-            if(err == io.EOF)
+            if(err == io.go_EOF)
             {
                 err = io.ErrUnexpectedEOF;
             }
@@ -1392,7 +1390,7 @@ namespace golang::png
         {
             if(auto err = parseChunk(gocpp::recv(d), true); err != nullptr)
             {
-                if(err == io.EOF)
+                if(err == io.go_EOF)
                 {
                     err = io.ErrUnexpectedEOF;
                 }

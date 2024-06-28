@@ -19,7 +19,7 @@
 #include "golang/image/png/reader.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 
 namespace golang::png
@@ -87,7 +87,6 @@ namespace golang::png
     void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*);
 
     std::ostream& operator<<(std::ostream& os, const EncoderBufferPool& value);
-    using EncoderBuffer = encoder;
     struct encoder
     {
         Encoder* enc;
@@ -110,7 +109,6 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const encoder& value);
-    using CompressionLevel = int;
     struct opaquer : gocpp::Interface
     {
         opaquer(){}

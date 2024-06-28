@@ -52,7 +52,6 @@ namespace golang::runtime
     void unlock(gcCPULimiterState* l);
     extern double capacityPerProc;
     void resetCapacity(gcCPULimiterState* l, int64_t now, int32_t nprocs);
-    using limiterEventType = uint8_t;
     extern runtime.limiterEventType limiterEventIdleMarkWork;
     extern runtime.limiterEventType limiterEventMarkAssist;
     extern runtime.limiterEventType limiterEventScavengeAssist;
@@ -60,7 +59,6 @@ namespace golang::runtime
     extern int limiterEventBits;
     extern uint64_t limiterEventTypeMask;
     extern runtime.limiterEventStamp limiterEventStampNone;
-    using limiterEventStamp = uint64_t;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
     int64_t duration(limiterEventStamp s, int64_t now);
     limiterEventType typ(limiterEventStamp s);

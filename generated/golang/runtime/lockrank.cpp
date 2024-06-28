@@ -13,7 +13,6 @@
 
 namespace golang::runtime
 {
-    // using lockRank = int;
     lockRank lockRankUnknown = 0;
     runtime.lockRank lockRankSysmon = 1;
     runtime.lockRank lockRankScavenge = 2;

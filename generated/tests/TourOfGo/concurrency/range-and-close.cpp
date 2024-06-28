@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/concurrency/range-and-close.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/concurrency/channels-opt.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/time/sleep.h"
 #include "golang/time/time.h"
 

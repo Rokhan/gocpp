@@ -12,12 +12,12 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/sort/sort.h"
 
 namespace golang::fmt
 {
-    std::string Errorf(std::string format, gocpp::slice<any> a)
+    std::string Errorf(std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;

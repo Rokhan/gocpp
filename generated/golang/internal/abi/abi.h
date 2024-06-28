@@ -30,7 +30,6 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const RegArgs& value);
     void Dump(RegArgs* r);
     unsafe::Pointer IntRegArgAddr(RegArgs* r, int reg, uintptr_t argSize);
-    using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
     void Set(IntArgRegBitmap* b, int i);
     bool Get(IntArgRegBitmap* b, int i);
 }

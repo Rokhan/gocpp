@@ -9,13 +9,10 @@
 #include "tests/TourOfGo/moretypes/typedef.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {
-    using ArbitraryType = int;
-    using IntegerType = int;
-    using Pointer = ArbitraryType*;
     struct Vertex
     {
         int X;
@@ -27,8 +24,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const Vertex& value);
-    using VertexAlias = Vertex;
-    using VertexPtr = Vertex*;
     void main();
 }
 

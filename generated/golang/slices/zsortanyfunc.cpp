@@ -11,7 +11,7 @@
 #include "golang/slices/zsortanyfunc.h"
 #include "gocpp/support.h"
 
-#include "golang/slices/sort.h"
+// #include "golang/slices/sort.h"  [Ignored, known errors]
 
 namespace golang::slices
 {

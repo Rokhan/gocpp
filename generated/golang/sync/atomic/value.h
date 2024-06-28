@@ -16,7 +16,7 @@ namespace golang::atomic
 {
     struct Value
     {
-        any v;
+        go_any v;
 
         using isGoStruct = void;
 
@@ -35,10 +35,10 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const efaceWords& value);
-    any Load(Value* v);
-    void Store(Value* v, any val);
-    any Swap(Value* v, any go_new);
-    bool CompareAndSwap(Value* v, any old, any go_new);
+    go_any Load(Value* v);
+    void Store(Value* v, go_any val);
+    go_any Swap(Value* v, go_any go_new);
+    bool CompareAndSwap(Value* v, go_any old, go_any go_new);
     int runtime_procPin();
     void runtime_procUnpin();
 }

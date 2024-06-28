@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings
@@ -55,7 +55,7 @@ namespace golang::strings
         {
             int n;
             std::string err;
-            return {0, io.EOF};
+            return {0, io.go_EOF};
         }
         r->prevRune = - 1;
         n = copy(b, r->s.make_slice(r->i));
@@ -77,14 +77,14 @@ namespace golang::strings
         {
             int n;
             std::string err;
-            return {0, io.EOF};
+            return {0, io.go_EOF};
         }
         n = copy(b, r->s.make_slice(off));
         if(n < len(b))
         {
             int n;
             std::string err;
-            err = io.EOF;
+            err = io.go_EOF;
         }
         return {n, err};
     }
@@ -94,7 +94,7 @@ namespace golang::strings
         r->prevRune = - 1;
         if(r->i >= int64(len(r->s)))
         {
-            return {0, io.EOF};
+            return {0, io.go_EOF};
         }
         auto b = r->s[r->i];
         r->i++;
@@ -112,23 +112,23 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<rune, int, std::string> ReadRune(Reader* r)
+    std::tuple<gocpp::rune, int, std::string> ReadRune(Reader* r)
     {
-        rune ch;
+        gocpp::rune ch;
         int size;
         std::string err;
         if(r->i >= int64(len(r->s)))
         {
-            rune ch;
+            gocpp::rune ch;
             int size;
             std::string err;
             r->prevRune = - 1;
-            return {0, 0, io.EOF};
+            return {0, 0, io.go_EOF};
         }
         r->prevRune = int(r->i);
         if(auto c = r->s[r->i]; c < utf8.RuneSelf)
         {
-            rune ch;
+            gocpp::rune ch;
             int size;
             std::string err;
             r->i++;

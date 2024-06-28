@@ -11,7 +11,7 @@
 
 #include "golang/compress/zlib/reader.h"
 #include "golang/encoding/binary/binary.h"
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
@@ -19,7 +19,7 @@
 #include "golang/image/format.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::png
 {
@@ -98,10 +98,8 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const decoder& value);
-    using FormatError = std::string;
     std::string Error(FormatError e);
     extern png.FormatError chunkOrderError;
-    using UnsupportedError = std::string;
     std::string Error(UnsupportedError e);
     std::string parseIHDR(decoder* d, uint32_t length);
     std::string parsePLTE(decoder* d, uint32_t length);

@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/methods/interfaces-ordered.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/math/const.h"
 #include "golang/math/sqrt.h"
 
@@ -72,7 +72,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const Vertex& value);
-    using MyFloat = double;
     void main();
     double Abs(MyFloat f);
     double Abs(Vertex* v);

@@ -11,7 +11,7 @@
 
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lock_sema.h"
+// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mgcpacer.h"
@@ -100,7 +100,6 @@ namespace golang::runtime
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
     void flushmcache(int i);
     void flushallmcaches();
-    using sysMemStat = uint64_t;
     uint64_t load(sysMemStat* s);
     void add(sysMemStat* s, int64_t n);
     struct heapStatsDelta

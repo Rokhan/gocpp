@@ -10,16 +10,16 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/sort/sort.h"
 
 namespace golang::fmt
 {
-    std::string Errorf(std::string format, gocpp::slice<any> a);
+    std::string Errorf(std::string format, gocpp::slice<go_any> a);
     template<typename... Args>
     std::string Errorf(std::string format, Args... a)
     {
-        return Errorf(format, gocpp::ToSlice<any>(a...));
+        return Errorf(format, gocpp::ToSlice<go_any>(a...));
     }
 
     struct wrapError

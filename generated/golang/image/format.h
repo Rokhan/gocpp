@@ -12,7 +12,7 @@
 #include "golang/bufio/bufio.h"
 #include "golang/errors/errors.h"
 #include "golang/image/image.h"
-#include "golang/io/io.h"
+// #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/sync/atomic/value.h"
 #include "golang/sync/mutex.h"
 

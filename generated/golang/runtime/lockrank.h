@@ -11,7 +11,6 @@
 
 namespace golang::runtime
 {
-    using lockRank = int;
     extern runtime.lockRank lockRankSysmon;
     extern runtime.lockRank lockRankScavenge;
     extern runtime.lockRank lockRankForcegc;

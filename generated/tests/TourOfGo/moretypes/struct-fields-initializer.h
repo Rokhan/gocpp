@@ -9,7 +9,7 @@
 #include "tests/TourOfGo/moretypes/struct-fields-initializer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
+// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

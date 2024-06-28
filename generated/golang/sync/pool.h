@@ -12,9 +12,9 @@
 // #include "golang/internal/race/norace.h"  [Ignored, known errors]
 #include "golang/runtime/debug.h"
 // #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
-#include "golang/sync/cond.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-#include "golang/sync/poolqueue.h"
+// #include "golang/sync/poolqueue.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
@@ -26,7 +26,7 @@ namespace golang::sync
         uintptr_t localSize;
         unsafe::Pointer victim;
         uintptr_t victimSize;
-        std::function<any ()> New;
+        std::function<go_any ()> New;
 
         using isGoStruct = void;
 
@@ -36,7 +36,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const Pool& value);
     struct poolLocalInternal
     {
-        any private;
+        go_any private;
         poolChain shared;
 
         using isGoStruct = void;
@@ -56,10 +56,10 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const poolLocal& value);
     uint32_t runtime_randn(uint32_t n);
-    unsafe::Pointer poolRaceAddr(any x);
-    void Put(Pool* p, any x);
-    any Get(Pool* p);
-    any getSlow(Pool* p, int pid);
+    unsafe::Pointer poolRaceAddr(go_any x);
+    void Put(Pool* p, go_any x);
+    go_any Get(Pool* p);
+    go_any getSlow(Pool* p, int pid);
     std::tuple<poolLocal*, int> pin(Pool* p);
     std::tuple<poolLocal*, int> pinSlow(Pool* p);
     void poolCleanup();

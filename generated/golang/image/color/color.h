@@ -223,7 +223,6 @@ namespace golang::color
     Color alpha16Model(Color c);
     Color grayModel(Color c);
     Color gray16Model(Color c);
-    using Palette = gocpp::slice<Color>;
     Color Convert(Palette p, Color c);
     int Index(Palette p, Color c);
     uint32_t sqDiff(uint32_t x, uint32_t y);

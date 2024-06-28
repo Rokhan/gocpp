@@ -62,7 +62,6 @@ namespace golang::sync
         runtime_notifyListNotifyAll(& c->notify);
     }
 
-    // using copyChecker = uintptr_t;
     void check(copyChecker* c)
     {
         if(uintptr(*c) != uintptr(Pointer(gocpp::recv(unsafe), c)) && ! CompareAndSwapUintptr(gocpp::recv(atomic), (*uintptr)(c), 0, uintptr(Pointer(gocpp::recv(unsafe), c))) && uintptr(*c) != uintptr(Pointer(gocpp::recv(unsafe), c)))

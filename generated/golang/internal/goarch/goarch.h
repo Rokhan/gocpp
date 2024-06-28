@@ -14,7 +14,6 @@
 
 namespace golang::goarch
 {
-    using ArchFamilyType = int;
     extern goarch.ArchFamilyType ARM;
     extern goarch.ArchFamilyType ARM64;
     extern goarch.ArchFamilyType I386;

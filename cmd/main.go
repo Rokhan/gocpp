@@ -36,7 +36,6 @@ var stdTypeMapping = map[string]string{
 	"float32":    "float",
 	"float64":    "double",
 	"int":        "int",
-	"string":     "std::string",
 	"uintptr":    "uintptr_t",
 	"uint":       "unsigned int",
 	"uint8":      "uint8_t",
@@ -47,6 +46,8 @@ var stdTypeMapping = map[string]string{
 	"int16":      "int16_t",
 	"int32":      "int32_t",
 	"int64":      "int64_t",
+	"rune":       "gocpp::rune",
+	"string":     "std::string",
 	// untyped types !!!
 	"untyped bool":    "bool",
 	"untyped complex": "goccp::complex128",
@@ -71,13 +72,17 @@ var nameSpaces = map[string]struct{}{
 
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
-	"class":    "go_class",
-	"do":       "go_do",
-	"new":      "go_new",
-	"template": "go_template",
-	"throw":    "go_throw",
-	"typeid":   "go_typeid",
-	"while":    "go_while",
+	"any":      "go_any",      // just to avoid confusion with std::any used in support lib
+	"class":    "go_class",    // keyword
+	"do":       "go_do",       // keyword
+	"EOF":      "go_EOF",      // Macro of <cstdio>
+	"new":      "go_new",      // keyword
+	"signed":   "go_signed",   // keyword
+	"template": "go_template", // keyword
+	"throw":    "go_throw",    // keyword
+	"typeid":   "go_typeid",   // keyword
+	"unsigned": "go_unsigned", // keyword
+	"while":    "go_while",    // keyword
 }
 
 func GetCppName(name string) string {
@@ -804,8 +809,12 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 	knownErrors := []*pkgFilter{
 		{"abi", "internal/abi/abi.go"},
 		{"abi", "internal/abi/symtab.go"},
+		{"cmp", "cmp/cmp.go"},
 		{"atomic", "sync/atomic/doc.go"},
+		{"fmt", "fmt/print.go"},
+		{"fmtsort", "internal/fmtsort/sort.go"},
 		{"goarch", "internal/goarch/goarch.go"},
+		{"io", "io/io.go"},
 		{"pic", "golang.org/x/tour@v0.1.0/pic/pic.go"},
 		{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 		{"png", "image/png/writer.go"},
@@ -813,6 +822,7 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"runtime", "runtime/defs_windows.go"},
 		{"runtime", "runtime/lockrank.go"},
 		{"runtime", "runtime/lockrank_off.go"},
+		{"runtime", "runtime/lock_sema.go"},
 		{"runtime", "runtime/mbitmap_allocheaders.go"},
 		{"runtime", "runtime/mgclimit.go"},
 		{"runtime", "runtime/mcache.go"},
@@ -831,6 +841,12 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"runtime", "runtime/symtab.go"},
 		{"runtime", "runtime/stkframe.go"},
 		{"runtime", "runtime/typekind.go"},
+		{"slices", "slices/sort.go"},
+		{"slices", "slices/zsortanyfunc.go"},
+		{"slices", "slices/zsortordered.go"},
+		{"sync", "sync/cond.go"},
+		{"sync", "sync/pool.go"},
+		{"sync", "sync/poolqueue.go"},
 		{"sync", "sync/runtime.go"},
 		{"sync", "sync/runtime2.go"},
 		{"time", "time/tick.go"},

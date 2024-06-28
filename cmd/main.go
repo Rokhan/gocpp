@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"container/list"
 	"flag"
 	"fmt"
@@ -632,24 +633,24 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.cpp.indent++
 
 	cv.namespace = cv.astFile.Name.Name
-	var allOutlines [][]string
+	var allOutPlaces [][]place
 	var pkgInfos []*pkgInfo
 	var allCppOut, allHppOut, allFwdOut []string
 	for _, decl := range cv.astFile.Decls {
-		var outlines []string
+		var outPlaces []place
 		var cppOut, hppOut, fwdOut string
 
 		fwdOut = cv.withFwdBuffer(func() {
 			hppOut = cv.withHppBuffer(func() {
 				cppOut = cv.withCppBuffer(func() {
-					declOutline, declPkgInfos := cv.convertDecls(decl, true)
-					outlines = append(outlines, declOutline...)
+					declOutPlaces, declPkgInfos := cv.convertDecls(decl, true)
+					outPlaces = append(outPlaces, declOutPlaces...)
 					pkgInfos = append(pkgInfos, declPkgInfos...)
 				})
 			})
 		})
 
-		allOutlines = append(allOutlines, outlines)
+		allOutPlaces = append(allOutPlaces, outPlaces)
 		allFwdOut = append(allFwdOut, fwdOut)
 		allHppOut = append(allHppOut, hppOut)
 		allCppOut = append(allCppOut, cppOut)
@@ -667,13 +668,30 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	printHppIntro(cv, usedPkgInfos)
 	printCppIntro(cv, usedPkgInfos)
 
-	for i := 0; i < len(allOutlines); i++ {
-		for _, outline := range allOutlines[i] {
-			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), outline)
+	var fwdHeaderElts []place
+	for i := 0; i < len(allOutPlaces); i++ {
+		for _, place := range allOutPlaces[i] {
+			if place.outline != nil {
+				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *place.outline)
+			}
+			if place.fwdHeader != nil {
+				fwdHeaderElts = append(fwdHeaderElts, place)
+			}
+			if place.header != nil || place.inline != nil {
+				panic("BUG: place.header and place.inline should always be nil at this point.")
+			}
 		}
 		fmt.Fprintf(cv.fwd.out, "%s", allFwdOut[i])
 		fmt.Fprintf(cv.hpp.out, "%s", allHppOut[i])
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
+	}
+
+	slices.SortFunc(fwdHeaderElts, func(x place, y place) int {
+		return cmp.Compare(x.priority, y.priority)
+	})
+
+	for _, place := range fwdHeaderElts {
+		fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
 	}
 
 	if cv.genMakeFile {
@@ -926,18 +944,22 @@ func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
 	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName}
 }
 
-func (cv *cppConverter) outputsPrint(place place, outlines *[]string, pkgInfos *[]*pkgInfo) {
+// print inline and header, keep outline and fwdHeader for later
+func (cv *cppConverter) outputsPrint(place place, outPlaces *[]place, pkgInfos *[]*pkgInfo) {
+	// Print immediatly inline && header in buffer
 	if place.inline != nil {
 		fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), *place.inline)
-	}
-	if place.outline != nil {
-		*outlines = append(*outlines, *place.outline)
 	}
 	if place.header != nil {
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), *place.header)
 	}
+
+	//outline, fwdHeader and pkgInfo will be managed by caller
+	if place.outline != nil {
+		*outPlaces = append(*outPlaces, outlineStr(*place.outline))
+	}
 	if place.fwdHeader != nil {
-		fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
+		*outPlaces = append(*outPlaces, fwdHeaderStr(*place.fwdHeader, place.priority))
 	}
 	if place.pkgInfo != nil {
 		*pkgInfos = append(*pkgInfos, place.pkgInfo)
@@ -952,13 +974,13 @@ func Last[EltType any](elts []EltType) (EltType, bool) {
 	return elts[len(elts)-1], true
 }
 
-func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines []string, pkgInfos []*pkgInfo) {
+func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces []place, pkgInfos []*pkgInfo) {
 	cv.Logf("decl: %v at %v\n", reflect.TypeOf(decl), cv.Position(decl))
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
 		for _, place := range cv.convertSpecs(d.Specs, isNameSpace, ";\n") {
-			cv.outputsPrint(place, &outlines, &pkgInfos)
+			cv.outputsPrint(place, &outPlaces, &pkgInfos)
 		}
 
 	case *ast.FuncDecl:
@@ -970,7 +992,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 		cv.DeclareVars(params)
 		for _, param := range params {
 			for _, place := range param.Type.defs {
-				cv.outputsPrint(place, &outlines, nil)
+				cv.outputsPrint(place, &outPlaces, nil)
 			}
 		}
 
@@ -1007,7 +1029,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 		}
 
 		blockOutlines := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
-		outlines = append(outlines, blockOutlines...)
+		outPlaces = append(outPlaces, blockOutlines...)
 		fmt.Fprintf(cv.cpp.out, "\n")
 
 	case *ast.BadDecl:
@@ -1019,11 +1041,11 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outlines 
 	return
 }
 
-func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outlines []string) {
+func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
 	return cv.convertBlockStmtWithLabel(block, env, nil)
 }
 
-func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env blockEnv, label *ast.Ident) (outlines []string) {
+func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env blockEnv, label *ast.Ident) (outPlaces []place) {
 
 	if block == nil {
 		fmt.Fprintf(cv.cpp.out, "%v/* convertBlockStmt, nil block */;\n", cv.cpp.Indent())
@@ -1042,7 +1064,7 @@ func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env bloc
 
 		for _, stmt := range block.List {
 			stmtOutiles, _ := cv.convertStmt(stmt, env)
-			outlines = append(outlines, stmtOutiles...)
+			outPlaces = append(outPlaces, stmtOutiles...)
 		}
 
 		if label != nil {
@@ -1177,11 +1199,11 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 	panic("convertAssignStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outlines []string, isFallThrough bool) {
+func (cv *cppConverter) convertStmt(stmt ast.Stmt, env blockEnv) (outPlaces []place, isFallThrough bool) {
 	return cv.convertLabelledStmt(stmt, env, nil)
 }
 
-func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *ast.Ident) (outlines []string, isFallThrough bool) {
+func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *ast.Ident) (outPlaces []place, isFallThrough bool) {
 
 	if label != nil {
 		switch s := stmt.(type) {
@@ -1196,11 +1218,11 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		outlines = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
+		outPlaces = cv.convertBlockStmt(s, makeSubBlockEnv(env, false))
 
 	case *ast.DeclStmt:
 		var pkgInfos []*pkgInfo
-		outlines, pkgInfos = cv.convertDecls(s.Decl, false)
+		outPlaces, pkgInfos = cv.convertDecls(s.Decl, false)
 		if len(pkgInfos) != 0 {
 			Panicf("convertStmt, can't manage pkgInfos here, declaration: [%v], input: %v", s.Decl, cv.Position(s))
 		}
@@ -1233,7 +1255,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	case *ast.ForStmt:
 		env.startVarScope()
 		fmt.Fprintf(cv.cpp.out, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
-		outlines = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
 	case *ast.BranchStmt:
 		if s.Label == nil {
@@ -1271,7 +1293,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		} else {
 			panic("Unmanaged case of '*ast.RangeStmt'")
 		}
-		outlines = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
 	case *ast.IfStmt:
 		if s.Init != nil {
@@ -1282,11 +1304,11 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 
 		blockOutline := cv.convertBlockStmt(s.Body, makeSubBlockEnv(env, false))
-		outlines = append(outlines, blockOutline...)
+		outPlaces = append(outPlaces, blockOutline...)
 		if s.Else != nil {
 			fmt.Fprintf(cv.cpp.out, "%selse\n", cv.cpp.Indent())
-			elseOutline, isFallthrough := cv.convertStmt(s.Else, env)
-			outlines = append(outlines, elseOutline...)
+			elseOutPlace, isFallthrough := cv.convertStmt(s.Else, env)
+			outPlaces = append(outPlaces, elseOutPlace...)
 			if isFallthrough {
 				// Shouldn't happen correctly go file
 				Panicf("convertStmt, fallthrough not managed in ast.IfStmt")
@@ -1373,14 +1395,14 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 
 		var isStmtFallthrough bool
-		var stmtOutline []string
+		var stmtOutPlace []place
 		for _, stmt := range s.Body {
 			if isStmtFallthrough {
 				// Shouldn't happen correctly go file
 				Panicf("convertStmt, fallthrough not managed if not the last statement")
 			}
-			stmtOutline, isStmtFallthrough = cv.convertStmt(stmt, env)
-			outlines = append(outlines, stmtOutline...)
+			stmtOutPlace, isStmtFallthrough = cv.convertStmt(stmt, env)
+			outPlaces = append(outPlaces, stmtOutPlace...)
 		}
 		if !isStmtFallthrough {
 			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
@@ -1403,10 +1425,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		cv.cpp.indent++
 		var isStmtFallthrough bool
-		var stmtOutline []string
+		var stmtOutPlace []place
 		for _, stmt := range s.Body {
-			stmtOutline, isStmtFallthrough = cv.convertStmt(stmt, env)
-			outlines = append(outlines, stmtOutline...)
+			stmtOutPlace, isStmtFallthrough = cv.convertStmt(stmt, env)
+			outPlaces = append(outPlaces, stmtOutPlace...)
 		}
 		if !isStmtFallthrough {
 			fmt.Fprintf(cv.cpp.out, "%sbreak;\n", cv.cpp.Indent())
@@ -1454,7 +1476,7 @@ func (cv *cppConverter) convertTypeSwitchAssign(stmt ast.Stmt) (varName string, 
 	return
 }
 
-func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outlines []string) {
+func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, conditionVarName string, inputVarName string) (outPlaces []place) {
 
 	fmt.Fprintf(cv.cpp.out, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
 	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != "", env.isTypeSwitch}
@@ -1462,7 +1484,7 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 	fmt.Fprintf(cv.cpp.out, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
 	cv.currentSwitchId.PushBack(0)
-	outlines = cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
+	outPlaces = cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
 	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
 	cv.cpp.indent--
@@ -1781,28 +1803,33 @@ type place struct {
 	// when type/declaration need to be in forward declarations header
 	fwdHeader *string
 
+	// -> Currently it's a fixed value chosen at creation but ultimately
+	// this should be computed by looking at dependency graph.
+	// -> used only for forward declaration order at the moment
+	priority int
+
 	//packages
 	pkgInfo *pkgInfo
 }
 
 func inlineStr(str string) place {
-	return place{&str, nil, nil, nil, nil}
+	return place{&str, nil, nil, nil, 0, nil}
 }
 
 func outlineStr(str string) place {
-	return place{nil, &str, nil, nil, nil}
+	return place{nil, &str, nil, nil, 0, nil}
 }
 
 func headerStr(str string) place {
-	return place{nil, nil, &str, nil, nil}
+	return place{nil, nil, &str, nil, 0, nil}
 }
 
-func fwdHeaderStr(str string) place {
-	return place{nil, nil, nil, &str, nil}
+func fwdHeaderStr(str string, priority int) place {
+	return place{nil, nil, nil, &str, priority, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, nil, &pkgInfo{name, pkgPath, filePath, pkgType}}
+	return place{nil, nil, nil, nil, 0, &pkgInfo{name, pkgPath, filePath, pkgType}}
 }
 
 type cppType struct {
@@ -1835,7 +1862,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		// TODO : manage go private/public rule to chose where to put definition
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
-		return mkCppType("", []place{fwdHeaderStr(usingDec)})
+		return mkCppType("", []place{fwdHeaderStr(usingDec, 1)})
 
 	case *ast.FuncType:
 		name := GetCppName(node.Name.Name)
@@ -1848,7 +1875,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
-		return mkCppType("", append(t.defs, fwdHeaderStr(usingDec)))
+		return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, 2)))
 
 	case *ast.StructType:
 		name := GetCppName(node.Name.Name)

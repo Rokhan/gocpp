@@ -50,7 +50,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const argset& value);
+    std::ostream& operator<<(std::ostream& os, const struct argset& value);
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args);
     template<typename... Args>
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, Args... args)

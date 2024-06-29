@@ -38,7 +38,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const fixalloc& value)
+    std::ostream& operator<<(std::ostream& os, const struct fixalloc& value)
     {
         return value.PrintTo(os);
     }
@@ -53,12 +53,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const mlink& value)
+    std::ostream& operator<<(std::ostream& os, const struct mlink& value)
     {
         return value.PrintTo(os);
     }
 
-    void init(fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat)
+    void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {
@@ -77,7 +77,7 @@ namespace golang::runtime
         f->zero = true;
     }
 
-    unsafe::Pointer alloc(fixalloc* f)
+    unsafe::Pointer alloc(struct fixalloc* f)
     {
         if(f->size == 0)
         {
@@ -111,7 +111,7 @@ namespace golang::runtime
         return v;
     }
 
-    void free(fixalloc* f, unsafe::Pointer p)
+    void free(struct fixalloc* f, unsafe::Pointer p)
     {
         f->inuse -= f->size;
         auto v = (*mlink)(p);

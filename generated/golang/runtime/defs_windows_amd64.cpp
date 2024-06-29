@@ -26,7 +26,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const m128a& value)
+    std::ostream& operator<<(std::ostream& os, const struct m128a& value)
     {
         return value.PrintTo(os);
     }
@@ -85,41 +85,41 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const context& value)
+    std::ostream& operator<<(std::ostream& os, const struct context& value)
     {
         return value.PrintTo(os);
     }
 
-    uintptr_t ip(context* c)
+    uintptr_t ip(struct context* c)
     {
         return uintptr(c->rip);
     }
 
-    uintptr_t sp(context* c)
+    uintptr_t sp(struct context* c)
     {
         return uintptr(c->rsp);
     }
 
-    uintptr_t lr(context* c)
+    uintptr_t lr(struct context* c)
     {
         return 0;
     }
 
-    void set_lr(context* c, uintptr_t x)
+    void set_lr(struct context* c, uintptr_t x)
     {
     }
 
-    void set_ip(context* c, uintptr_t x)
+    void set_ip(struct context* c, uintptr_t x)
     {
         c->rip = uint64_t(x);
     }
 
-    void set_sp(context* c, uintptr_t x)
+    void set_sp(struct context* c, uintptr_t x)
     {
         c->rsp = uint64_t(x);
     }
 
-    void set_fp(context* c, uintptr_t x)
+    void set_fp(struct context* c, uintptr_t x)
     {
         c->rbp = uint64_t(x);
     }
@@ -171,12 +171,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const _DISPATCHER_CONTEXT& value)
+    std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value)
     {
         return value.PrintTo(os);
     }
 
-    context* ctx(_DISPATCHER_CONTEXT* c)
+    context* ctx(struct _DISPATCHER_CONTEXT* c)
     {
         return c->context;
     }

@@ -26,7 +26,7 @@ namespace golang::time
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Ticker& value)
+    std::ostream& operator<<(std::ostream& os, const struct Ticker& value)
     {
         return value.PrintTo(os);
     }
@@ -43,12 +43,12 @@ namespace golang::time
         return t;
     }
 
-    void Stop(Ticker* t)
+    void Stop(struct Ticker* t)
     {
         stopTimer(& t->r);
     }
 
-    void Reset(Ticker* t, Duration d)
+    void Reset(struct Ticker* t, Duration d)
     {
         if(d <= 0)
         {

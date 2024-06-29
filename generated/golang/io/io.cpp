@@ -65,7 +65,7 @@ namespace golang::io
         return self.obj.value->vRead(gocpp::slice<unsigned char> p);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Reader& value)
+    std::ostream& operator<<(std::ostream& os, const struct Reader& value)
     {
         return value.PrintTo(os);
     }
@@ -110,7 +110,7 @@ namespace golang::io
         return self.obj.value->vWrite(gocpp::slice<unsigned char> p);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Writer& value)
+    std::ostream& operator<<(std::ostream& os, const struct Writer& value)
     {
         return value.PrintTo(os);
     }
@@ -155,7 +155,7 @@ namespace golang::io
         return self.obj.value->vClose();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Closer& value)
+    std::ostream& operator<<(std::ostream& os, const struct Closer& value)
     {
         return value.PrintTo(os);
     }
@@ -200,7 +200,7 @@ namespace golang::io
         return self.obj.value->vSeek(int64_t offset, int whence);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Seeker& value)
+    std::ostream& operator<<(std::ostream& os, const struct Seeker& value)
     {
         return value.PrintTo(os);
     }
@@ -230,7 +230,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadWriter& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value)
     {
         return value.PrintTo(os);
     }
@@ -260,7 +260,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadCloser& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value)
     {
         return value.PrintTo(os);
     }
@@ -290,7 +290,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const WriteCloser& value)
+    std::ostream& operator<<(std::ostream& os, const struct WriteCloser& value)
     {
         return value.PrintTo(os);
     }
@@ -320,7 +320,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadWriteCloser& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadWriteCloser& value)
     {
         return value.PrintTo(os);
     }
@@ -350,7 +350,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadSeeker& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadSeeker& value)
     {
         return value.PrintTo(os);
     }
@@ -380,7 +380,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadSeekCloser& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadSeekCloser& value)
     {
         return value.PrintTo(os);
     }
@@ -410,7 +410,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const WriteSeeker& value)
+    std::ostream& operator<<(std::ostream& os, const struct WriteSeeker& value)
     {
         return value.PrintTo(os);
     }
@@ -440,7 +440,7 @@ namespace golang::io
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const ReadWriteSeeker& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReadWriteSeeker& value)
     {
         return value.PrintTo(os);
     }
@@ -485,7 +485,7 @@ namespace golang::io
         return self.obj.value->vReadFrom(Reader r);
     }
 
-    std::ostream& operator<<(std::ostream& os, const ReaderFrom& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReaderFrom& value)
     {
         return value.PrintTo(os);
     }
@@ -530,7 +530,7 @@ namespace golang::io
         return self.obj.value->vWriteTo(Writer w);
     }
 
-    std::ostream& operator<<(std::ostream& os, const WriterTo& value)
+    std::ostream& operator<<(std::ostream& os, const struct WriterTo& value)
     {
         return value.PrintTo(os);
     }
@@ -575,7 +575,7 @@ namespace golang::io
         return self.obj.value->vReadAt(gocpp::slice<unsigned char> p, int64_t off);
     }
 
-    std::ostream& operator<<(std::ostream& os, const ReaderAt& value)
+    std::ostream& operator<<(std::ostream& os, const struct ReaderAt& value)
     {
         return value.PrintTo(os);
     }
@@ -620,7 +620,7 @@ namespace golang::io
         return self.obj.value->vWriteAt(gocpp::slice<unsigned char> p, int64_t off);
     }
 
-    std::ostream& operator<<(std::ostream& os, const WriterAt& value)
+    std::ostream& operator<<(std::ostream& os, const struct WriterAt& value)
     {
         return value.PrintTo(os);
     }
@@ -665,7 +665,7 @@ namespace golang::io
         return self.obj.value->vReadByte();
     }
 
-    std::ostream& operator<<(std::ostream& os, const ByteReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct ByteReader& value)
     {
         return value.PrintTo(os);
     }
@@ -710,7 +710,7 @@ namespace golang::io
         return self.obj.value->vUnreadByte();
     }
 
-    std::ostream& operator<<(std::ostream& os, const ByteScanner& value)
+    std::ostream& operator<<(std::ostream& os, const struct ByteScanner& value)
     {
         return value.PrintTo(os);
     }
@@ -755,7 +755,7 @@ namespace golang::io
         return self.obj.value->vWriteByte(unsigned char c);
     }
 
-    std::ostream& operator<<(std::ostream& os, const ByteWriter& value)
+    std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value)
     {
         return value.PrintTo(os);
     }
@@ -800,7 +800,7 @@ namespace golang::io
         return self.obj.value->vReadRune();
     }
 
-    std::ostream& operator<<(std::ostream& os, const RuneReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct RuneReader& value)
     {
         return value.PrintTo(os);
     }
@@ -845,7 +845,7 @@ namespace golang::io
         return self.obj.value->vUnreadRune();
     }
 
-    std::ostream& operator<<(std::ostream& os, const RuneScanner& value)
+    std::ostream& operator<<(std::ostream& os, const struct RuneScanner& value)
     {
         return value.PrintTo(os);
     }
@@ -890,7 +890,7 @@ namespace golang::io
         return self.obj.value->vWriteString(std::string s);
     }
 
-    std::ostream& operator<<(std::ostream& os, const StringWriter& value)
+    std::ostream& operator<<(std::ostream& os, const struct StringWriter& value)
     {
         return value.PrintTo(os);
     }
@@ -1098,12 +1098,12 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const LimitedReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct LimitedReader& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(LimitedReader* l, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct LimitedReader* l, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -1152,12 +1152,12 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const SectionReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct SectionReader& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(SectionReader* s, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct SectionReader* s, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -1180,7 +1180,7 @@ namespace golang::io
 
     std::string errWhence = New(gocpp::recv(errors), "Seek: invalid whence");
     std::string errOffset = New(gocpp::recv(errors), "Seek: invalid offset");
-    std::tuple<int64_t, std::string> Seek(SectionReader* s, int64_t offset, int whence)
+    std::tuple<int64_t, std::string> Seek(struct SectionReader* s, int64_t offset, int whence)
     {
         //Go switch emulation
         {
@@ -1213,7 +1213,7 @@ namespace golang::io
         return {offset - s->base, nullptr};
     }
 
-    std::tuple<int, std::string> ReadAt(SectionReader* s, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, std::string> ReadAt(struct SectionReader* s, gocpp::slice<unsigned char> p, int64_t off)
     {
         int n;
         std::string err;
@@ -1241,12 +1241,12 @@ namespace golang::io
         return ReadAt(gocpp::recv(s->r), p, off);
     }
 
-    int64_t Size(SectionReader* s)
+    int64_t Size(struct SectionReader* s)
     {
         return s->limit - s->base;
     }
 
-    std::tuple<ReaderAt, int64_t, int64_t> Outer(SectionReader* s)
+    std::tuple<ReaderAt, int64_t, int64_t> Outer(struct SectionReader* s)
     {
         ReaderAt r;
         int64_t off;
@@ -1265,7 +1265,7 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const OffsetWriter& value)
+    std::ostream& operator<<(std::ostream& os, const struct OffsetWriter& value)
     {
         return value.PrintTo(os);
     }
@@ -1275,7 +1275,7 @@ namespace golang::io
         return new OffsetWriter {w, off, off};
     }
 
-    std::tuple<int, std::string> Write(OffsetWriter* o, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Write(struct OffsetWriter* o, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -1284,7 +1284,7 @@ namespace golang::io
         return {n, err};
     }
 
-    std::tuple<int, std::string> WriteAt(OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, std::string> WriteAt(struct OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off)
     {
         int n;
         std::string err;
@@ -1298,7 +1298,7 @@ namespace golang::io
         return WriteAt(gocpp::recv(o->w), p, off);
     }
 
-    std::tuple<int64_t, std::string> Seek(OffsetWriter* o, int64_t offset, int whence)
+    std::tuple<int64_t, std::string> Seek(struct OffsetWriter* o, int64_t offset, int whence)
     {
         //Go switch emulation
         {
@@ -1342,12 +1342,12 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const teeReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct teeReader& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(teeReader* t, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct teeReader* t, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -1375,7 +1375,7 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const discard& value)
+    std::ostream& operator<<(std::ostream& os, const struct discard& value)
     {
         return value.PrintTo(os);
     }
@@ -1442,7 +1442,7 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const nopCloser& value)
+    std::ostream& operator<<(std::ostream& os, const struct nopCloser& value)
     {
         return value.PrintTo(os);
     }
@@ -1460,7 +1460,7 @@ namespace golang::io
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const nopCloserWriterTo& value)
+    std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value)
     {
         return value.PrintTo(os);
     }
@@ -1470,7 +1470,7 @@ namespace golang::io
         return nullptr;
     }
 
-    std::tuple<int64_t, std::string> WriteTo(nopCloserWriterTo c, Writer w)
+    std::tuple<int64_t, std::string> WriteTo(struct nopCloserWriterTo c, Writer w)
     {
         int64_t n;
         std::string err;

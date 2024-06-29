@@ -61,7 +61,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const pollDesc& value);
+    std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
     extern int pollClosing;
     extern int pollEventErr;
     extern int pollExpiredReadDeadline;
@@ -73,9 +73,9 @@ namespace golang::runtime
     bool eventErr(pollInfo i);
     bool expiredReadDeadline(pollInfo i);
     bool expiredWriteDeadline(pollInfo i);
-    pollInfo info(pollDesc* pd);
-    void publishInfo(pollDesc* pd);
-    void setEventErr(pollDesc* pd, bool b, uintptr_t seq);
+    pollInfo info(struct pollDesc* pd);
+    void publishInfo(struct pollDesc* pd);
+    void setEventErr(struct pollDesc* pd, bool b, uintptr_t seq);
     struct pollCache
     {
         mutex lock;
@@ -86,14 +86,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const pollCache& value);
+    std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
     void poll_runtime_pollServerInit();
     void netpollGenericInit();
     bool netpollinited();
     bool poll_runtime_isPollServerDescriptor(uintptr_t fd);
     std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(pollDesc* pd);
-    void free(pollCache* c, pollDesc* pd);
+    void free(struct pollCache* c, pollDesc* pd);
     int poll_runtime_pollReset(pollDesc* pd, int mode);
     int poll_runtime_pollWait(pollDesc* pd, int mode);
     void poll_runtime_pollWaitCanceled(pollDesc* pd, int mode);
@@ -111,7 +111,7 @@ namespace golang::runtime
     void netpollWriteDeadline(go_any arg, uintptr_t seq);
     bool netpollAnyWaiters();
     void netpollAdjustWaiters(int32_t delta);
-    pollDesc* alloc(pollCache* c);
-    go_any makeArg(pollDesc* pd);
+    pollDesc* alloc(struct pollCache* c);
+    go_any makeArg(struct pollDesc* pd);
 }
 

@@ -45,7 +45,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const timer& value)
+    std::ostream& operator<<(std::ostream& os, const struct timer& value)
     {
         return value.PrintTo(os);
     }

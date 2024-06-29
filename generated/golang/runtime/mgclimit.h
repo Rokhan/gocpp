@@ -37,21 +37,21 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const gcCPULimiterState& value);
-    bool limiting(gcCPULimiterState* l);
-    void startGCTransition(gcCPULimiterState* l, bool enableGC, int64_t now);
-    void finishGCTransition(gcCPULimiterState* l, int64_t now);
+    std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
+    bool limiting(struct gcCPULimiterState* l);
+    void startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now);
+    void finishGCTransition(struct gcCPULimiterState* l, int64_t now);
     extern double gcCPULimiterUpdatePeriod;
-    bool needUpdate(gcCPULimiterState* l, int64_t now);
-    void addAssistTime(gcCPULimiterState* l, int64_t t);
-    void addIdleTime(gcCPULimiterState* l, int64_t t);
-    void update(gcCPULimiterState* l, int64_t now);
-    void updateLocked(gcCPULimiterState* l, int64_t now);
-    void accumulate(gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
-    bool tryLock(gcCPULimiterState* l);
-    void unlock(gcCPULimiterState* l);
+    bool needUpdate(struct gcCPULimiterState* l, int64_t now);
+    void addAssistTime(struct gcCPULimiterState* l, int64_t t);
+    void addIdleTime(struct gcCPULimiterState* l, int64_t t);
+    void update(struct gcCPULimiterState* l, int64_t now);
+    void updateLocked(struct gcCPULimiterState* l, int64_t now);
+    void accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
+    bool tryLock(struct gcCPULimiterState* l);
+    void unlock(struct gcCPULimiterState* l);
     extern double capacityPerProc;
-    void resetCapacity(gcCPULimiterState* l, int64_t now, int32_t nprocs);
+    void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
     extern runtime.limiterEventType limiterEventIdleMarkWork;
     extern runtime.limiterEventType limiterEventMarkAssist;
     extern runtime.limiterEventType limiterEventScavengeAssist;
@@ -71,9 +71,9 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const limiterEvent& value);
-    bool start(limiterEvent* e, limiterEventType typ, int64_t now);
-    std::tuple<limiterEventType, int64_t> consume(limiterEvent* e, int64_t now);
-    void stop(limiterEvent* e, limiterEventType typ, int64_t now);
+    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
+    bool start(struct limiterEvent* e, limiterEventType typ, int64_t now);
+    std::tuple<limiterEventType, int64_t> consume(struct limiterEvent* e, int64_t now);
+    void stop(struct limiterEvent* e, limiterEventType typ, int64_t now);
 }
 

@@ -151,7 +151,7 @@ namespace golang::binary
         return self.obj.value->vString();
     }
 
-    std::ostream& operator<<(std::ostream& os, const ByteOrder& value)
+    std::ostream& operator<<(std::ostream& os, const struct ByteOrder& value)
     {
         return value.PrintTo(os);
     }
@@ -241,7 +241,7 @@ namespace golang::binary
         return self.obj.value->vString();
     }
 
-    std::ostream& operator<<(std::ostream& os, const AppendByteOrder& value)
+    std::ostream& operator<<(std::ostream& os, const struct AppendByteOrder& value)
     {
         return value.PrintTo(os);
     }
@@ -256,7 +256,7 @@ namespace golang::binary
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const littleEndian& value)
+    std::ostream& operator<<(std::ostream& os, const struct littleEndian& value)
     {
         return value.PrintTo(os);
     }
@@ -341,7 +341,7 @@ namespace golang::binary
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const bigEndian& value)
+    std::ostream& operator<<(std::ostream& os, const struct bigEndian& value)
     {
         return value.PrintTo(os);
     }
@@ -1099,19 +1099,19 @@ namespace golang::binary
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const coder& value)
+    std::ostream& operator<<(std::ostream& os, const struct coder& value)
     {
         return value.PrintTo(os);
     }
 
-    bool bool(decoder* d)
+    bool bool(struct decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x != 0;
     }
 
-    void bool(encoder* e, bool x)
+    void bool(struct encoder* e, bool x)
     {
         if(x)
         {
@@ -1124,99 +1124,99 @@ namespace golang::binary
         e->offset++;
     }
 
-    uint8_t uint8(decoder* d)
+    uint8_t uint8(struct decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x;
     }
 
-    void uint8(encoder* e, uint8_t x)
+    void uint8(struct encoder* e, uint8_t x)
     {
         e->buf[e->offset] = x;
         e->offset++;
     }
 
-    uint16_t uint16(decoder* d)
+    uint16_t uint16(struct decoder* d)
     {
         auto x = Uint16(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 2));
         d->offset += 2;
         return x;
     }
 
-    void uint16(encoder* e, uint16_t x)
+    void uint16(struct encoder* e, uint16_t x)
     {
         PutUint16(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 2), x);
         e->offset += 2;
     }
 
-    uint32_t uint32(decoder* d)
+    uint32_t uint32(struct decoder* d)
     {
         auto x = Uint32(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 4));
         d->offset += 4;
         return x;
     }
 
-    void uint32(encoder* e, uint32_t x)
+    void uint32(struct encoder* e, uint32_t x)
     {
         PutUint32(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 4), x);
         e->offset += 4;
     }
 
-    uint64_t uint64(decoder* d)
+    uint64_t uint64(struct decoder* d)
     {
         auto x = Uint64(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 8));
         d->offset += 8;
         return x;
     }
 
-    void uint64(encoder* e, uint64_t x)
+    void uint64(struct encoder* e, uint64_t x)
     {
         PutUint64(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 8), x);
         e->offset += 8;
     }
 
-    int8_t int8(decoder* d)
+    int8_t int8(struct decoder* d)
     {
         return int8(uint8_t(gocpp::recv(d)));
     }
 
-    void int8(encoder* e, int8_t x)
+    void int8(struct encoder* e, int8_t x)
     {
         uint8_t(gocpp::recv(e), uint8_t(x));
     }
 
-    int16_t int16(decoder* d)
+    int16_t int16(struct decoder* d)
     {
         return int16(uint16_t(gocpp::recv(d)));
     }
 
-    void int16(encoder* e, int16_t x)
+    void int16(struct encoder* e, int16_t x)
     {
         uint16_t(gocpp::recv(e), uint16_t(x));
     }
 
-    int32_t int32(decoder* d)
+    int32_t int32(struct decoder* d)
     {
         return int32(uint32_t(gocpp::recv(d)));
     }
 
-    void int32(encoder* e, int32_t x)
+    void int32(struct encoder* e, int32_t x)
     {
         uint32_t(gocpp::recv(e), uint32_t(x));
     }
 
-    int64_t int64(decoder* d)
+    int64_t int64(struct decoder* d)
     {
         return int64(uint64_t(gocpp::recv(d)));
     }
 
-    void int64(encoder* e, int64_t x)
+    void int64(struct encoder* e, int64_t x)
     {
         uint64_t(gocpp::recv(e), uint64_t(x));
     }
 
-    void value(decoder* d, reflect::Value v)
+    void value(struct decoder* d, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1312,7 +1312,7 @@ namespace golang::binary
         }
     }
 
-    void value(encoder* e, reflect::Value v)
+    void value(struct encoder* e, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1478,12 +1478,12 @@ namespace golang::binary
         }
     }
 
-    void skip(decoder* d, reflect::Value v)
+    void skip(struct decoder* d, reflect::Value v)
     {
         d->offset += dataSize(v);
     }
 
-    void skip(encoder* e, reflect::Value v)
+    void skip(struct encoder* e, reflect::Value v)
     {
         auto n = dataSize(v);
         auto zero = e->buf.make_slice(e->offset, e->offset + n);

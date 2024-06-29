@@ -25,12 +25,12 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value)
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
     {
         return value.PrintTo(os);
     }
 
-    void Scale(Vertex* v, double f)
+    void Scale(struct Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;

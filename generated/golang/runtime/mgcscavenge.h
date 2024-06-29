@@ -71,20 +71,20 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const scavengerState& value);
-    void init(scavengerState* s);
-    void park(scavengerState* s);
-    void ready(scavengerState* s);
-    void wake(scavengerState* s);
-    void sleep(scavengerState* s, double worked);
-    void controllerFailed(scavengerState* s);
-    std::tuple<uintptr_t, double> run(scavengerState* s);
+    std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
+    void init(struct scavengerState* s);
+    void park(struct scavengerState* s);
+    void ready(struct scavengerState* s);
+    void wake(struct scavengerState* s);
+    void sleep(struct scavengerState* s, double worked);
+    void controllerFailed(struct scavengerState* s);
+    std::tuple<uintptr_t, double> run(struct scavengerState* s);
     void bgscavenge(gocpp::channel<int> c);
-    uintptr_t scavenge(pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force);
+    uintptr_t scavenge(struct pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force);
     void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
-    uintptr_t scavengeOne(pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max);
+    uintptr_t scavengeOne(struct pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max);
     uint64_t fillAligned(uint64_t x, unsigned int m);
-    std::tuple<unsigned int, unsigned int> findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
+    std::tuple<unsigned int, unsigned int> findScavengeCandidate(struct pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
     struct scavengeIndex
     {
         gocpp::slice<atomicScavChunkData> chunks;
@@ -102,14 +102,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const scavengeIndex& value);
-    uintptr_t init(scavengeIndex* s, bool test, sysMemStat* sysStat);
-    uintptr_t grow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
-    std::tuple<chunkIdx, unsigned int> find(scavengeIndex* s, bool force);
-    void alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages);
-    void free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages);
-    void nextGen(scavengeIndex* s);
-    void setEmpty(scavengeIndex* s, chunkIdx ci);
+    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
+    uintptr_t init(struct scavengeIndex* s, bool test, sysMemStat* sysStat);
+    uintptr_t grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
+    std::tuple<chunkIdx, unsigned int> find(struct scavengeIndex* s, bool force);
+    void alloc(struct scavengeIndex* s, chunkIdx ci, unsigned int npages);
+    void free(struct scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages);
+    void nextGen(struct scavengeIndex* s);
+    void setEmpty(struct scavengeIndex* s, chunkIdx ci);
     struct atomicScavChunkData
     {
         atomic::Uint64 value;
@@ -119,9 +119,9 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const atomicScavChunkData& value);
-    scavChunkData load(atomicScavChunkData* sc);
-    void store(atomicScavChunkData* sc, scavChunkData ssc);
+    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
+    scavChunkData load(struct atomicScavChunkData* sc);
+    void store(struct atomicScavChunkData* sc, scavChunkData ssc);
     struct scavChunkData
     {
         uint16_t inUse;
@@ -133,9 +133,9 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const scavChunkData& value);
+    std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
-    uint64_t pack(scavChunkData sc);
+    uint64_t pack(struct scavChunkData sc);
     extern int scavChunkMaxFlags;
     extern int scavChunkFlagsMask;
     extern int logScavChunkInUseMax;
@@ -143,9 +143,9 @@ namespace golang::runtime
     bool isEmpty(scavChunkFlags* sc);
     void setEmpty(scavChunkFlags* sc);
     void setNonEmpty(scavChunkFlags* sc);
-    bool shouldScavenge(scavChunkData sc, uint32_t currGen, bool force);
-    void alloc(scavChunkData* sc, unsigned int npages, uint32_t newGen);
-    void free(scavChunkData* sc, unsigned int npages, uint32_t newGen);
+    bool shouldScavenge(struct scavChunkData sc, uint32_t currGen, bool force);
+    void alloc(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
+    void free(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
     struct piController
     {
         double kp;
@@ -162,8 +162,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const piController& value);
-    std::tuple<double, bool> next(piController* c, double input, double setpoint, double period);
-    void reset(piController* c);
+    std::ostream& operator<<(std::ostream& os, const struct piController& value);
+    std::tuple<double, bool> next(struct piController* c, double input, double setpoint, double period);
+    void reset(struct piController* c);
 }
 

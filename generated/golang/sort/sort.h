@@ -72,7 +72,7 @@ namespace golang::sort
     void Swap(const gocpp::PtrRecv<Interface, false>& self, int i, int j);
     void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j);
 
-    std::ostream& operator<<(std::ostream& os, const Interface& value);
+    std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void Sort(Interface data);
     extern sort.sortedHint increasingHint;
     extern sort.sortedHint decreasingHint;
@@ -88,7 +88,7 @@ namespace golang::sort
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const lessSwap& value);
+    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct reverse
     {
 
@@ -97,8 +97,8 @@ namespace golang::sort
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const reverse& value);
-    bool Less(reverse r, int i, int j);
+    std::ostream& operator<<(std::ostream& os, const struct reverse& value);
+    bool Less(struct reverse r, int i, int j);
     Interface Reverse(Interface data);
     bool IsSorted(Interface data);
     int Len(IntSlice x);

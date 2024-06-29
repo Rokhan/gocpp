@@ -26,12 +26,12 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Once& value)
+    std::ostream& operator<<(std::ostream& os, const struct Once& value)
     {
         return value.PrintTo(os);
     }
 
-    void Do(Once* o, std::function<void ()> f)
+    void Do(struct Once* o, std::function<void ()> f)
     {
         if(Load(gocpp::recv(o->done)) == 0)
         {
@@ -39,7 +39,7 @@ namespace golang::sync
         }
     }
 
-    void doSlow(Once* o, std::function<void ()> f)
+    void doSlow(struct Once* o, std::function<void ()> f)
     {
         gocpp::Defer defer;
         Lock(gocpp::recv(o->m));

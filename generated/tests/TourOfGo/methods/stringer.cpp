@@ -25,12 +25,12 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Person& value)
+    std::ostream& operator<<(std::ostream& os, const struct Person& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string String(Person p)
+    std::string String(struct Person p)
     {
         return mocklib::Sprintf("%v (%v years)", p.Name, p.Age);
     }

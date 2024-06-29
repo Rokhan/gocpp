@@ -57,7 +57,7 @@ namespace golang::main
         return self.obj.value->vAbs();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Abser& value)
+    std::ostream& operator<<(std::ostream& os, const struct Abser& value)
     {
         return value.PrintTo(os);
     }
@@ -72,7 +72,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value)
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
     {
         return value.PrintTo(os);
     }
@@ -97,7 +97,7 @@ namespace golang::main
         return double(f);
     }
 
-    double Abs(Vertex* v)
+    double Abs(struct Vertex* v)
     {
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }

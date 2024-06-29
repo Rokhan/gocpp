@@ -28,19 +28,19 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const SafeCounter& value)
+    std::ostream& operator<<(std::ostream& os, const struct SafeCounter& value)
     {
         return value.PrintTo(os);
     }
 
-    void Inc(SafeCounter* c, std::string key)
+    void Inc(struct SafeCounter* c, std::string key)
     {
         Lock(gocpp::recv(c->mu));
         c->v[key]++;
         Unlock(gocpp::recv(c->mu));
     }
 
-    int Value(SafeCounter* c, std::string key)
+    int Value(struct SafeCounter* c, std::string key)
     {
         gocpp::Defer defer;
         Lock(gocpp::recv(c->mu));

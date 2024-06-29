@@ -36,6 +36,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const ptabEntry& value);
+    std::ostream& operator<<(std::ostream& os, const struct ptabEntry& value);
 }
 

@@ -76,7 +76,7 @@ namespace golang::png
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const interlaceScan& value)
+    std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value)
     {
         return value.PrintTo(os);
     }
@@ -111,7 +111,7 @@ namespace golang::png
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const decoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct decoder& value)
     {
         return value.PrintTo(os);
     }
@@ -127,7 +127,7 @@ namespace golang::png
         return "png: unsupported feature: " + string(e);
     }
 
-    std::string parseIHDR(decoder* d, uint32_t length)
+    std::string parseIHDR(struct decoder* d, uint32_t length)
     {
         if(length != 13)
         {
@@ -300,7 +300,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::string parsePLTE(decoder* d, uint32_t length)
+    std::string parsePLTE(struct decoder* d, uint32_t length)
     {
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
@@ -355,7 +355,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::string parsetRNS(decoder* d, uint32_t length)
+    std::string parsetRNS(struct decoder* d, uint32_t length)
     {
         //Go switch emulation
         {
@@ -459,7 +459,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::tuple<int, std::string> Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -493,7 +493,7 @@ namespace golang::png
         return {n, err};
     }
 
-    std::tuple<image::Image, std::string> decode(decoder* d)
+    std::tuple<image::Image, std::string> decode(struct decoder* d)
     {
         gocpp::Defer defer;
         auto [r, err] = NewReader(gocpp::recv(zlib), d);
@@ -552,7 +552,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
-    std::tuple<image::Image, std::string> readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly)
+    std::tuple<image::Image, std::string> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -1081,7 +1081,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
-    void mergePassInto(decoder* d, image::Image dst, image::Image src, int pass)
+    void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
@@ -1196,7 +1196,7 @@ namespace golang::png
         }
     }
 
-    std::string parseIDAT(decoder* d, uint32_t length)
+    std::string parseIDAT(struct decoder* d, uint32_t length)
     {
         std::string err;
         d->idatLength = length;
@@ -1209,7 +1209,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::string parseIEND(decoder* d, uint32_t length)
+    std::string parseIEND(struct decoder* d, uint32_t length)
     {
         if(length != 0)
         {
@@ -1218,7 +1218,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::string parseChunk(decoder* d, bool configOnly)
+    std::string parseChunk(struct decoder* d, bool configOnly)
     {
         if(auto [_, err] = ReadFull(gocpp::recv(io), d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
@@ -1323,7 +1323,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::string verifyChecksum(decoder* d)
+    std::string verifyChecksum(struct decoder* d)
     {
         if(auto [_, err] = ReadFull(gocpp::recv(io), d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
@@ -1336,7 +1336,7 @@ namespace golang::png
         return nullptr;
     }
 
-    std::string checkHeader(decoder* d)
+    std::string checkHeader(struct decoder* d)
     {
         auto [_, err] = ReadFull(gocpp::recv(io), d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)

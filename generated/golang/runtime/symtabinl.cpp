@@ -29,7 +29,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const inlinedCall& value)
+    std::ostream& operator<<(std::ostream& os, const struct inlinedCall& value)
     {
         return value.PrintTo(os);
     }
@@ -44,7 +44,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const inlineUnwinder& value)
+    std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value)
     {
         return value.PrintTo(os);
     }
@@ -59,7 +59,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const inlineFrame& value)
+    std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value)
     {
         return value.PrintTo(os);
     }
@@ -76,17 +76,17 @@ namespace golang::runtime
         return {u, resolveInternal(gocpp::recv(u), pc)};
     }
 
-    inlineFrame resolveInternal(inlineUnwinder* u, uintptr_t pc)
+    inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
         return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi.PCDATA_InlTreeIndex, pc, false); });
     }
 
-    bool valid(inlineFrame uf)
+    bool valid(struct inlineFrame uf)
     {
         return uf.pc != 0;
     }
 
-    inlineFrame next(inlineUnwinder* u, inlineFrame uf)
+    inlineFrame next(struct inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -97,12 +97,12 @@ namespace golang::runtime
         return resolveInternal(gocpp::recv(u), entry(gocpp::recv(u->f)) + uintptr(parentPc));
     }
 
-    bool isInlined(inlineUnwinder* u, inlineFrame uf)
+    bool isInlined(struct inlineUnwinder* u, inlineFrame uf)
     {
         return uf.index >= 0;
     }
 
-    srcFunc srcFunc(inlineUnwinder* u, inlineFrame uf)
+    srcFunc srcFunc(struct inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -112,7 +112,7 @@ namespace golang::runtime
         return srcFunc {u->f.datap, t->nameOff, t->startLine, t->funcID};
     }
 
-    std::tuple<std::string, int> fileLine(inlineUnwinder* u, inlineFrame uf)
+    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, inlineFrame uf)
     {
         std::string file;
         int line;

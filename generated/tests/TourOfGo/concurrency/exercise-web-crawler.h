@@ -59,7 +59,7 @@ namespace golang::main
     std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
     std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
 
-    std::ostream& operator<<(std::ostream& os, const Fetcher& value);
+    std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
     void Crawl(std::string url, int depth, Fetcher fetcher);
     void main();
     struct fakeResult
@@ -72,7 +72,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const fakeResult& value);
+    std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
     std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(fakeFetcher f, std::string url);
     extern fakeFetcher fetcher;
 }

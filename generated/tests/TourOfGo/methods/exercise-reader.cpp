@@ -23,7 +23,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const MyReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct MyReader& value)
     {
         return value.PrintTo(os);
     }

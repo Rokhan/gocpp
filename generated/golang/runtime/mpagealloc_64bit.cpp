@@ -33,7 +33,7 @@ namespace golang::runtime
     gocpp::array<unsigned int, summaryLevels> levelBits = gocpp::array<unsigned int, summaryLevels> {summaryL0Bits, summaryLevelBits, summaryLevelBits, summaryLevelBits, summaryLevelBits};
     gocpp::array<unsigned int, summaryLevels> levelShift = gocpp::array<unsigned int, summaryLevels> {heapAddrBits - summaryL0Bits, heapAddrBits - summaryL0Bits - 1 * summaryLevelBits, heapAddrBits - summaryL0Bits - 2 * summaryLevelBits, heapAddrBits - summaryL0Bits - 3 * summaryLevelBits, heapAddrBits - summaryL0Bits - 4 * summaryLevelBits};
     gocpp::array<unsigned int, summaryLevels> levelLogPages = gocpp::array<unsigned int, summaryLevels> {logPallocChunkPages + 4 * summaryLevelBits, logPallocChunkPages + 3 * summaryLevelBits, logPallocChunkPages + 2 * summaryLevelBits, logPallocChunkPages + 1 * summaryLevelBits, logPallocChunkPages};
-    void sysInit(pageAlloc* p, bool test)
+    void sysInit(struct pageAlloc* p, bool test)
     {
         for(auto [l, shift] : levelShift)
         {
@@ -49,7 +49,7 @@ namespace golang::runtime
         }
     }
 
-    void sysGrow(pageAlloc* p, uintptr_t base, uintptr_t limit)
+    void sysGrow(struct pageAlloc* p, uintptr_t base, uintptr_t limit)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -104,7 +104,7 @@ namespace golang::runtime
         p->summaryMappedReady += sysGrow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
     }
 
-    uintptr_t sysGrow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
+    uintptr_t sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -144,7 +144,7 @@ namespace golang::runtime
         return size(gocpp::recv(need));
     }
 
-    uintptr_t sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat)
+    uintptr_t sysInit(struct scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         auto n = uintptr(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * Sizeof(gocpp::recv(unsafe), atomicScavChunkData {});

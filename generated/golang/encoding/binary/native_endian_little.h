@@ -21,6 +21,6 @@ namespace golang::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const nativeEndian& value);
+    std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
 }
 

@@ -27,7 +27,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const poolDequeue& value)
+    std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value)
     {
         return value.PrintTo(os);
     }
@@ -42,7 +42,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const eface& value)
+    std::ostream& operator<<(std::ostream& os, const struct eface& value)
     {
         return value.PrintTo(os);
     }
@@ -61,7 +61,7 @@ namespace golang::sync
             return os;
         }
     };
-    std::tuple<uint32_t, uint32_t> unpack(poolDequeue* d, uint64_t ptrs)
+    std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs)
     {
         uint32_t head;
         uint32_t tail;
@@ -71,13 +71,13 @@ namespace golang::sync
         return {head, tail};
     }
 
-    uint64_t pack(poolDequeue* d, uint32_t head, uint32_t tail)
+    uint64_t pack(struct poolDequeue* d, uint32_t head, uint32_t tail)
     {
         auto mask = (1 << dequeueBits) - 1;
         return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
     }
 
-    bool pushHead(poolDequeue* d, go_any val)
+    bool pushHead(struct poolDequeue* d, go_any val)
     {
         auto ptrs = Load(gocpp::recv(d->headTail));
         auto [head, tail] = unpack(gocpp::recv(d), ptrs);
@@ -100,7 +100,7 @@ namespace golang::sync
         return true;
     }
 
-    std::tuple<go_any, bool> popHead(poolDequeue* d)
+    std::tuple<go_any, bool> popHead(struct poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -128,7 +128,7 @@ namespace golang::sync
         return {val, true};
     }
 
-    std::tuple<go_any, bool> popTail(poolDequeue* d)
+    std::tuple<go_any, bool> popTail(struct poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -166,7 +166,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const poolChain& value)
+    std::ostream& operator<<(std::ostream& os, const struct poolChain& value)
     {
         return value.PrintTo(os);
     }
@@ -181,7 +181,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const poolChainElt& value)
+    std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value)
     {
         return value.PrintTo(os);
     }
@@ -196,7 +196,7 @@ namespace golang::sync
         return (*poolChainElt)(LoadPointer(gocpp::recv(atomic), (*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), pp))));
     }
 
-    void pushHead(poolChain* c, go_any val)
+    void pushHead(struct poolChain* c, go_any val)
     {
         auto d = c->head;
         if(d == nullptr)
@@ -223,7 +223,7 @@ namespace golang::sync
         pushHead(gocpp::recv(d2), val);
     }
 
-    std::tuple<go_any, bool> popHead(poolChain* c)
+    std::tuple<go_any, bool> popHead(struct poolChain* c)
     {
         auto d = c->head;
         for(; d != nullptr; )
@@ -237,7 +237,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
-    std::tuple<go_any, bool> popTail(poolChain* c)
+    std::tuple<go_any, bool> popTail(struct poolChain* c)
     {
         auto d = loadPoolChainElt(& c->tail);
         if(d == nullptr)

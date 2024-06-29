@@ -44,16 +44,16 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const gcWork& value);
-    void init(gcWork* w);
-    void put(gcWork* w, uintptr_t obj);
-    bool putFast(gcWork* w, uintptr_t obj);
-    void putBatch(gcWork* w, gocpp::slice<uintptr_t> obj);
-    uintptr_t tryGet(gcWork* w);
-    uintptr_t tryGetFast(gcWork* w);
-    void dispose(gcWork* w);
-    void balance(gcWork* w);
-    bool empty(gcWork* w);
+    std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
+    void init(struct gcWork* w);
+    void put(struct gcWork* w, uintptr_t obj);
+    bool putFast(struct gcWork* w, uintptr_t obj);
+    void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj);
+    uintptr_t tryGet(struct gcWork* w);
+    uintptr_t tryGetFast(struct gcWork* w);
+    void dispose(struct gcWork* w);
+    void balance(struct gcWork* w);
+    bool empty(struct gcWork* w);
     struct workbufhdr
     {
         lfnode node;
@@ -64,7 +64,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const workbufhdr& value);
+    std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
     struct workbuf
     {
         sys::NotInHeap _;
@@ -75,9 +75,9 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const workbuf& value);
-    void checknonempty(workbuf* b);
-    void checkempty(workbuf* b);
+    std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
+    void checknonempty(struct workbuf* b);
+    void checkempty(struct workbuf* b);
     workbuf* getempty();
     void putempty(workbuf* b);
     void putfull(workbuf* b);

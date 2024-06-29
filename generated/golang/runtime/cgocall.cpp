@@ -52,7 +52,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const argset& value)
+    std::ostream& operator<<(std::ostream& os, const struct argset& value)
     {
         return value.PrintTo(os);
     }

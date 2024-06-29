@@ -36,7 +36,7 @@ namespace golang::png
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Encoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct Encoder& value)
     {
         return value.PrintTo(os);
     }
@@ -96,7 +96,7 @@ namespace golang::png
         return self.obj.value->vPut(EncoderBuffer*);
     }
 
-    std::ostream& operator<<(std::ostream& os, const EncoderBufferPool& value)
+    std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value)
     {
         return value.PrintTo(os);
     }
@@ -122,7 +122,7 @@ namespace golang::png
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const encoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct encoder& value)
     {
         return value.PrintTo(os);
     }
@@ -171,7 +171,7 @@ namespace golang::png
         return self.obj.value->vOpaque();
     }
 
-    std::ostream& operator<<(std::ostream& os, const opaquer& value)
+    std::ostream& operator<<(std::ostream& os, const struct opaquer& value)
     {
         return value.PrintTo(os);
     }
@@ -210,7 +210,7 @@ namespace golang::png
         return 256 - int(d);
     }
 
-    void writeChunk(encoder* e, gocpp::slice<unsigned char> b, std::string name)
+    void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name)
     {
         if(e->err != nullptr)
         {
@@ -244,7 +244,7 @@ namespace golang::png
         std::tie(_, e->err) = Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
     }
 
-    void writeIHDR(encoder* e)
+    void writeIHDR(struct encoder* e)
     {
         auto b = Bounds(gocpp::recv(e->m));
         PutUint32(gocpp::recv(binary.BigEndian), e->tmp.make_slice(0, 4), uint32_t(Dx(gocpp::recv(b))));
@@ -313,7 +313,7 @@ namespace golang::png
         writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR");
     }
 
-    void writePLTEAndTRNS(encoder* e, color::Palette p)
+    void writePLTEAndTRNS(struct encoder* e, color::Palette p)
     {
         if(len(p) < 1 || len(p) > 256)
         {
@@ -340,7 +340,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<int, std::string> Write(encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
         writeChunk(gocpp::recv(e), b, "IDAT");
         if(e->err != nullptr)
@@ -451,7 +451,7 @@ namespace golang::png
         }
     }
 
-    std::string writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level)
+    std::string writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         if(e->zw == nullptr || e->zwLevel != level)
@@ -771,7 +771,7 @@ namespace golang::png
         return nullptr;
     }
 
-    void writeIDATs(encoder* e)
+    void writeIDATs(struct encoder* e)
     {
         if(e->err != nullptr)
         {
@@ -824,7 +824,7 @@ namespace golang::png
         }
     }
 
-    void writeIEND(encoder* e)
+    void writeIEND(struct encoder* e)
     {
         writeChunk(gocpp::recv(e), nullptr, "IEND");
     }
@@ -835,7 +835,7 @@ namespace golang::png
         return Encode(gocpp::recv(e), w, m);
     }
 
-    std::string Encode(Encoder* enc, io::Writer w, image::Image m)
+    std::string Encode(struct Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
         auto [mw, mh] = std::tuple{int64(Dx(gocpp::recv(Bounds(gocpp::recv(m))))), int64(Dy(gocpp::recv(Bounds(gocpp::recv(m)))))};

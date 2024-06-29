@@ -24,8 +24,8 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Once& value);
-    void Do(Once* o, std::function<void ()> f);
-    void doSlow(Once* o, std::function<void ()> f);
+    std::ostream& operator<<(std::ostream& os, const struct Once& value);
+    void Do(struct Once* o, std::function<void ()> f);
+    void doSlow(struct Once* o, std::function<void ()> f);
 }
 

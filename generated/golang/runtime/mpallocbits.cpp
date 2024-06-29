@@ -389,18 +389,18 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pallocData& value)
+    std::ostream& operator<<(std::ostream& os, const struct pallocData& value)
     {
         return value.PrintTo(os);
     }
 
-    void allocRange(pallocData* m, unsigned int i, unsigned int n)
+    void allocRange(struct pallocData* m, unsigned int i, unsigned int n)
     {
         allocRange(gocpp::recv(m->pallocBits), i, n);
         clearRange(gocpp::recv(m->scavenged), i, n);
     }
 
-    void allocAll(pallocData* m)
+    void allocAll(struct pallocData* m)
     {
         allocAll(gocpp::recv(m->pallocBits));
         clearAll(gocpp::recv(m->scavenged));

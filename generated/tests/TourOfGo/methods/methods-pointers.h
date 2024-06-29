@@ -24,9 +24,9 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value);
-    double Abs(Vertex v);
-    void Scale(Vertex* v, double f);
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    double Abs(struct Vertex v);
+    void Scale(struct Vertex* v, double f);
     void main();
 }
 

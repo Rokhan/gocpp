@@ -23,7 +23,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Image& value);
+    std::ostream& operator<<(std::ostream& os, const struct Image& value);
     color::Model ColorModel(Image);
     image::Rectangle Bounds(Image);
     color::Color At(Image, int x, int y);

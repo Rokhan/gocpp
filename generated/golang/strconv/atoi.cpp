@@ -35,17 +35,17 @@ namespace golang::strconv
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const NumError& value)
+    std::ostream& operator<<(std::ostream& os, const struct NumError& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string Error(NumError* e)
+    std::string Error(struct NumError* e)
     {
         return "strconv." + e->Func + ": " + "parsing " + Quote(e->Num) + ": " + Error(gocpp::recv(e->Err));
     }
 
-    std::string Unwrap(NumError* e)
+    std::string Unwrap(struct NumError* e)
     {
         return e->Err;
     }

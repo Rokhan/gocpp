@@ -53,7 +53,7 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const compressionLevel& value);
+    std::ostream& operator<<(std::ostream& os, const struct compressionLevel& value);
     extern gocpp::slice<compressionLevel> levels;
     struct compressor
     {
@@ -84,27 +84,27 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const compressor& value);
-    int fillDeflate(compressor* d, gocpp::slice<unsigned char> b);
-    std::string writeBlock(compressor* d, gocpp::slice<token> tokens, int index);
-    void fillWindow(compressor* d, gocpp::slice<unsigned char> b);
-    std::tuple<int, int, bool> findMatch(compressor* d, int pos, int prevHead, int prevLength, int lookahead);
-    std::string writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf);
+    std::ostream& operator<<(std::ostream& os, const struct compressor& value);
+    int fillDeflate(struct compressor* d, gocpp::slice<unsigned char> b);
+    std::string writeBlock(struct compressor* d, gocpp::slice<token> tokens, int index);
+    void fillWindow(struct compressor* d, gocpp::slice<unsigned char> b);
+    std::tuple<int, int, bool> findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead);
+    std::string writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf);
     extern int hashmul;
     uint32_t hash4(gocpp::slice<unsigned char> b);
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
-    void encSpeed(compressor* d);
-    void initDeflate(compressor* d);
-    void deflate(compressor* d);
-    int fillStore(compressor* d, gocpp::slice<unsigned char> b);
-    void store(compressor* d);
-    void storeHuff(compressor* d);
-    std::tuple<int, std::string> write(compressor* d, gocpp::slice<unsigned char> b);
-    std::string syncFlush(compressor* d);
-    std::string init(compressor* d, io::Writer w, int level);
-    void reset(compressor* d, io::Writer w);
-    std::string close(compressor* d);
+    void encSpeed(struct compressor* d);
+    void initDeflate(struct compressor* d);
+    void deflate(struct compressor* d);
+    int fillStore(struct compressor* d, gocpp::slice<unsigned char> b);
+    void store(struct compressor* d);
+    void storeHuff(struct compressor* d);
+    std::tuple<int, std::string> write(struct compressor* d, gocpp::slice<unsigned char> b);
+    std::string syncFlush(struct compressor* d);
+    std::string init(struct compressor* d, io::Writer w, int level);
+    void reset(struct compressor* d, io::Writer w);
+    std::string close(struct compressor* d);
     std::tuple<Writer*, std::string> NewWriter(io::Writer w, int level);
     std::tuple<Writer*, std::string> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
     struct dictWriter
@@ -116,8 +116,8 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const dictWriter& value);
-    std::tuple<int, std::string> Write(dictWriter* w, gocpp::slice<unsigned char> b);
+    std::ostream& operator<<(std::ostream& os, const struct dictWriter& value);
+    std::tuple<int, std::string> Write(struct dictWriter* w, gocpp::slice<unsigned char> b);
     extern std::string errWriterClosed;
     struct Writer
     {
@@ -129,10 +129,10 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Writer& value);
-    std::tuple<int, std::string> Write(Writer* w, gocpp::slice<unsigned char> data);
-    std::string Flush(Writer* w);
-    std::string Close(Writer* w);
-    void Reset(Writer* w, io::Writer dst);
+    std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    std::tuple<int, std::string> Write(struct Writer* w, gocpp::slice<unsigned char> data);
+    std::string Flush(struct Writer* w);
+    std::string Close(struct Writer* w);
+    void Reset(struct Writer* w, io::Writer dst);
 }
 

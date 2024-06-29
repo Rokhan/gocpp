@@ -33,7 +33,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Pool& value);
+    std::ostream& operator<<(std::ostream& os, const struct Pool& value);
     struct poolLocalInternal
     {
         go_any private;
@@ -44,7 +44,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const poolLocalInternal& value);
+    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     struct poolLocal
     {
         gocpp::array<unsigned char, 128 - Sizeof(gocpp::recv(unsafe), poolLocalInternal {}) % 128> pad;
@@ -54,14 +54,14 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const poolLocal& value);
+    std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
     uint32_t runtime_randn(uint32_t n);
     unsafe::Pointer poolRaceAddr(go_any x);
-    void Put(Pool* p, go_any x);
-    go_any Get(Pool* p);
-    go_any getSlow(Pool* p, int pid);
-    std::tuple<poolLocal*, int> pin(Pool* p);
-    std::tuple<poolLocal*, int> pinSlow(Pool* p);
+    void Put(struct Pool* p, go_any x);
+    go_any Get(struct Pool* p);
+    go_any getSlow(struct Pool* p, int pid);
+    std::tuple<poolLocal*, int> pin(struct Pool* p);
+    std::tuple<poolLocal*, int> pinSlow(struct Pool* p);
     void poolCleanup();
     void init();
     poolLocal* indexLocal(unsafe::Pointer l, int i);

@@ -100,7 +100,7 @@ namespace golang::hash
         return self.obj.value->vBlockSize();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Hash& value)
+    std::ostream& operator<<(std::ostream& os, const struct Hash& value)
     {
         return value.PrintTo(os);
     }
@@ -145,7 +145,7 @@ namespace golang::hash
         return self.obj.value->vSum32();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Hash32& value)
+    std::ostream& operator<<(std::ostream& os, const struct Hash32& value)
     {
         return value.PrintTo(os);
     }
@@ -190,7 +190,7 @@ namespace golang::hash
         return self.obj.value->vSum64();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Hash64& value)
+    std::ostream& operator<<(std::ostream& os, const struct Hash64& value)
     {
         return value.PrintTo(os);
     }

@@ -29,7 +29,7 @@ namespace golang::strconv
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const floatInfo& value);
+    std::ostream& operator<<(std::ostream& os, const struct floatInfo& value);
     extern floatInfo float32info;
     extern floatInfo float64info;
     std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
@@ -49,7 +49,7 @@ namespace golang::strconv
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const decimalSlice& value);
+    std::ostream& operator<<(std::ostream& os, const struct decimalSlice& value);
     gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec, unsigned char fmt);
     gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec);
     gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, floatInfo* flt);

@@ -121,7 +121,7 @@ namespace golang::fmt
         return self.obj.value->vFlag(int c);
     }
 
-    std::ostream& operator<<(std::ostream& os, const State& value)
+    std::ostream& operator<<(std::ostream& os, const struct State& value)
     {
         return value.PrintTo(os);
     }
@@ -166,7 +166,7 @@ namespace golang::fmt
         return self.obj.value->vFormat(State f, gocpp::rune verb);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Formatter& value)
+    std::ostream& operator<<(std::ostream& os, const struct Formatter& value)
     {
         return value.PrintTo(os);
     }
@@ -211,7 +211,7 @@ namespace golang::fmt
         return self.obj.value->vString();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Stringer& value)
+    std::ostream& operator<<(std::ostream& os, const struct Stringer& value)
     {
         return value.PrintTo(os);
     }
@@ -256,7 +256,7 @@ namespace golang::fmt
         return self.obj.value->vGoString();
     }
 
-    std::ostream& operator<<(std::ostream& os, const GoStringer& value)
+    std::ostream& operator<<(std::ostream& os, const struct GoStringer& value)
     {
         return value.PrintTo(os);
     }
@@ -323,7 +323,7 @@ namespace golang::fmt
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pp& value)
+    std::ostream& operator<<(std::ostream& os, const struct pp& value)
     {
         return value.PrintTo(os);
     }
@@ -343,7 +343,7 @@ namespace golang::fmt
         return p;
     }
 
-    void free(pp* p)
+    void free(struct pp* p)
     {
         if(cap(p->buf) > 64 * 1024)
         {
@@ -363,21 +363,21 @@ namespace golang::fmt
         Put(gocpp::recv(ppFree), p);
     }
 
-    std::tuple<int, bool> Width(pp* p)
+    std::tuple<int, bool> Width(struct pp* p)
     {
         int wid;
         bool ok;
         return {p->fmt.wid, p->fmt.widPresent};
     }
 
-    std::tuple<int, bool> Precision(pp* p)
+    std::tuple<int, bool> Precision(struct pp* p)
     {
         int prec;
         bool ok;
         return {p->fmt.prec, p->fmt.precPresent};
     }
 
-    bool Flag(pp* p, int b)
+    bool Flag(struct pp* p, int b)
     {
         //Go switch emulation
         {
@@ -410,7 +410,7 @@ namespace golang::fmt
         return false;
     }
 
-    std::tuple<int, std::string> Write(pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int, std::string> Write(struct pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
         std::string err;
@@ -418,7 +418,7 @@ namespace golang::fmt
         return {len(b), nullptr};
     }
 
-    std::tuple<int, std::string> WriteString(pp* p, std::string s)
+    std::tuple<int, std::string> WriteString(struct pp* p, std::string s)
     {
         int ret;
         std::string err;
@@ -580,7 +580,7 @@ namespace golang::fmt
         return {num, isnum, newi};
     }
 
-    void unknownType(pp* p, reflect::Value v)
+    void unknownType(struct pp* p, reflect::Value v)
     {
         if(! IsValid(gocpp::recv(v)))
         {
@@ -592,7 +592,7 @@ namespace golang::fmt
         writeByte(gocpp::recv(p->buf), '?');
     }
 
-    void badVerb(pp* p, gocpp::rune verb)
+    void badVerb(struct pp* p, gocpp::rune verb)
     {
         p->erroring = true;
         writeString(gocpp::recv(p->buf), percentBangString);
@@ -624,7 +624,7 @@ namespace golang::fmt
         p->erroring = false;
     }
 
-    void fmtBool(pp* p, bool v, gocpp::rune verb)
+    void fmtBool(struct pp* p, bool v, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -645,7 +645,7 @@ namespace golang::fmt
         }
     }
 
-    void fmt0x64(pp* p, uint64_t v, bool leading0x)
+    void fmt0x64(struct pp* p, uint64_t v, bool leading0x)
     {
         auto sharp = p->fmt.sharp;
         p->fmt.sharp = leading0x;
@@ -653,7 +653,7 @@ namespace golang::fmt
         p->fmt.sharp = sharp;
     }
 
-    void fmtInteger(pp* p, uint64_t v, bool isSigned, gocpp::rune verb)
+    void fmtInteger(struct pp* p, uint64_t v, bool isSigned, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -713,7 +713,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtFloat(pp* p, double v, int size, gocpp::rune verb)
+    void fmtFloat(struct pp* p, double v, int size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -756,7 +756,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtComplex(pp* p, gocpp::complex128 v, int size, gocpp::rune verb)
+    void fmtComplex(struct pp* p, gocpp::complex128 v, int size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -799,7 +799,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtString(pp* p, std::string v, gocpp::rune verb)
+    void fmtString(struct pp* p, std::string v, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -841,7 +841,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtBytes(pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, std::string typeString)
+    void fmtBytes(struct pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, std::string typeString)
     {
         //Go switch emulation
         {
@@ -909,7 +909,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtPointer(pp* p, reflect::Value value, gocpp::rune verb)
+    void fmtPointer(struct pp* p, reflect::Value value, gocpp::rune verb)
     {
         uintptr_t u = {};
         //Go switch emulation
@@ -996,7 +996,7 @@ namespace golang::fmt
         }
     }
 
-    void catchPanic(pp* p, go_any arg, gocpp::rune verb, std::string method)
+    void catchPanic(struct pp* p, go_any arg, gocpp::rune verb, std::string method)
     {
         if(auto err = recover(); err != nullptr)
         {
@@ -1024,7 +1024,7 @@ namespace golang::fmt
         }
     }
 
-    bool handleMethods(pp* p, gocpp::rune verb)
+    bool handleMethods(struct pp* p, gocpp::rune verb)
     {
         gocpp::Defer defer;
         bool handled;
@@ -1121,7 +1121,7 @@ namespace golang::fmt
         return false;
     }
 
-    void printArg(pp* p, go_any arg, gocpp::rune verb)
+    void printArg(struct pp* p, go_any arg, gocpp::rune verb)
     {
         p->arg = arg;
         p->value = reflect::Value {};
@@ -1324,7 +1324,7 @@ namespace golang::fmt
         }
     }
 
-    void printValue(pp* p, reflect::Value value, gocpp::rune verb, int depth)
+    void printValue(struct pp* p, reflect::Value value, gocpp::rune verb, int depth)
     {
         if(depth > 0 && IsValid(gocpp::recv(value)) && CanInterface(gocpp::recv(value)))
         {
@@ -1750,7 +1750,7 @@ namespace golang::fmt
         return {0, 1, false};
     }
 
-    std::tuple<int, int, bool> argNumber(pp* p, int argNum, std::string format, int i, int numArgs)
+    std::tuple<int, int, bool> argNumber(struct pp* p, int argNum, std::string format, int i, int numArgs)
     {
         int newArgNum;
         int newi;
@@ -1775,21 +1775,21 @@ namespace golang::fmt
         return {argNum, i + wid, ok};
     }
 
-    void badArgNum(pp* p, gocpp::rune verb)
+    void badArgNum(struct pp* p, gocpp::rune verb)
     {
         writeString(gocpp::recv(p->buf), percentBangString);
         writeRune(gocpp::recv(p->buf), verb);
         writeString(gocpp::recv(p->buf), badIndexString);
     }
 
-    void missingArg(pp* p, gocpp::rune verb)
+    void missingArg(struct pp* p, gocpp::rune verb)
     {
         writeString(gocpp::recv(p->buf), percentBangString);
         writeRune(gocpp::recv(p->buf), verb);
         writeString(gocpp::recv(p->buf), missingString);
     }
 
-    void doPrintf(pp* p, std::string format, gocpp::slice<go_any> a)
+    void doPrintf(struct pp* p, std::string format, gocpp::slice<go_any> a)
     {
         auto end = len(format);
         auto argNum = 0;
@@ -2017,7 +2017,7 @@ namespace golang::fmt
         }
     }
 
-    void doPrint(pp* p, gocpp::slice<go_any> a)
+    void doPrint(struct pp* p, gocpp::slice<go_any> a)
     {
         auto prevString = false;
         for(auto [argNum, arg] : a)
@@ -2032,7 +2032,7 @@ namespace golang::fmt
         }
     }
 
-    void doPrintln(pp* p, gocpp::slice<go_any> a)
+    void doPrintln(struct pp* p, gocpp::slice<go_any> a)
     {
         for(auto [argNum, arg] : a)
         {

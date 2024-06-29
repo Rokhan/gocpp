@@ -34,7 +34,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Mutex& value)
+    std::ostream& operator<<(std::ostream& os, const struct Mutex& value)
     {
         return value.PrintTo(os);
     }
@@ -94,7 +94,7 @@ namespace golang::sync
         return self.obj.value->vUnlock();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Locker& value)
+    std::ostream& operator<<(std::ostream& os, const struct Locker& value)
     {
         return value.PrintTo(os);
     }
@@ -104,7 +104,7 @@ namespace golang::sync
     int mutexStarving = 1 << 2;
     int mutexWaiterShift = 3;
     double starvationThresholdNs = 1e6;
-    void Lock(Mutex* m)
+    void Lock(struct Mutex* m)
     {
         if(CompareAndSwapInt32(gocpp::recv(atomic), & m->state, 0, mutexLocked))
         {
@@ -117,7 +117,7 @@ namespace golang::sync
         lockSlow(gocpp::recv(m));
     }
 
-    bool TryLock(Mutex* m)
+    bool TryLock(struct Mutex* m)
     {
         auto old = m->state;
         if(old & (mutexLocked | mutexStarving) != 0)
@@ -135,7 +135,7 @@ namespace golang::sync
         return true;
     }
 
-    void lockSlow(Mutex* m)
+    void lockSlow(struct Mutex* m)
     {
         int64_t waitStartTime = {};
         auto starving = false;
@@ -218,7 +218,7 @@ namespace golang::sync
         }
     }
 
-    void Unlock(Mutex* m)
+    void Unlock(struct Mutex* m)
     {
         if(race.Enabled)
         {
@@ -232,7 +232,7 @@ namespace golang::sync
         }
     }
 
-    void unlockSlow(Mutex* m, int32_t go_new)
+    void unlockSlow(struct Mutex* m, int32_t go_new)
     {
         if((go_new + mutexLocked) & mutexLocked == 0)
         {

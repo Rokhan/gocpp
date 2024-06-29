@@ -21,8 +21,8 @@ namespace golang::errors
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const errorString& value);
-    std::string Error(errorString* e);
+    std::ostream& operator<<(std::ostream& os, const struct errorString& value);
+    std::string Error(struct errorString* e);
     extern std::string ErrUnsupported;
 }
 

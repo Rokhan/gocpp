@@ -24,11 +24,11 @@ namespace golang::strconv
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const decimal& value);
-    std::string String(decimal* a);
+    std::ostream& operator<<(std::ostream& os, const struct decimal& value);
+    std::string String(struct decimal* a);
     int digitZero(gocpp::slice<unsigned char> dst);
     void trim(decimal* a);
-    void Assign(decimal* a, uint64_t v);
+    void Assign(struct decimal* a, uint64_t v);
     extern int uintSize;
     extern int maxShift;
     void rightShift(decimal* a, unsigned int k);
@@ -42,15 +42,15 @@ namespace golang::strconv
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const leftCheat& value);
+    std::ostream& operator<<(std::ostream& os, const struct leftCheat& value);
     extern gocpp::slice<leftCheat> leftcheats;
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, std::string s);
     void leftShift(decimal* a, unsigned int k);
-    void Shift(decimal* a, int k);
+    void Shift(struct decimal* a, int k);
     bool shouldRoundUp(decimal* a, int nd);
-    void Round(decimal* a, int nd);
-    void RoundDown(decimal* a, int nd);
-    void RoundUp(decimal* a, int nd);
-    uint64_t RoundedInteger(decimal* a);
+    void Round(struct decimal* a, int nd);
+    void RoundDown(struct decimal* a, int nd);
+    void RoundUp(struct decimal* a, int nd);
+    uint64_t RoundedInteger(struct decimal* a);
 }
 

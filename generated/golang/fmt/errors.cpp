@@ -75,17 +75,17 @@ namespace golang::fmt
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const wrapError& value)
+    std::ostream& operator<<(std::ostream& os, const struct wrapError& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string Error(wrapError* e)
+    std::string Error(struct wrapError* e)
     {
         return e->msg;
     }
 
-    std::string Unwrap(wrapError* e)
+    std::string Unwrap(struct wrapError* e)
     {
         return e->err;
     }
@@ -100,17 +100,17 @@ namespace golang::fmt
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const wrapErrors& value)
+    std::ostream& operator<<(std::ostream& os, const struct wrapErrors& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string Error(wrapErrors* e)
+    std::string Error(struct wrapErrors* e)
     {
         return e->msg;
     }
 
-    gocpp::slice<std::string> Unwrap(wrapErrors* e)
+    gocpp::slice<std::string> Unwrap(struct wrapErrors* e)
     {
         return e->errs;
     }

@@ -24,8 +24,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const MyError& value);
-    std::string Error(MyError* e);
+    std::ostream& operator<<(std::ostream& os, const struct MyError& value);
+    std::string Error(struct MyError* e);
     std::string run();
     void main();
 }

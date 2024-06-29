@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 // #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/image/color/color.h"
 
 namespace golang::main
 {
@@ -21,6 +22,7 @@ namespace golang::main
         auto hello = "Hello";
         auto world = "World";
         helloFunc(hello, world, "!");
+        Yyy _ = {};
         auto a = 5;
         auto b = 8 + 7;
         mocklib::Printf("result = %d\n", a * b + 4);

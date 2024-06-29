@@ -25,7 +25,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const fakeResult& value);
+    std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
     extern fakeFetcher fetcher;
 }
 

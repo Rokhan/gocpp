@@ -35,7 +35,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const net_op& value);
+    std::ostream& operator<<(std::ostream& os, const struct net_op& value);
     struct overlappedEntry
     {
         pollDesc* key;
@@ -48,7 +48,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const overlappedEntry& value);
+    std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
     void netpollinit();
     bool netpollIsPollDescriptor(uintptr_t fd);
     int32_t netpollopen(uintptr_t fd, pollDesc* pd);

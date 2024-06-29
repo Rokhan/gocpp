@@ -87,7 +87,7 @@ namespace golang::sort
         return self.obj.value->vSwap(int i, int j);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Interface& value)
+    std::ostream& operator<<(std::ostream& os, const struct Interface& value)
     {
         return value.PrintTo(os);
     }
@@ -130,7 +130,7 @@ namespace golang::sort
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const lessSwap& value)
+    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value)
     {
         return value.PrintTo(os);
     }
@@ -143,12 +143,12 @@ namespace golang::sort
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const reverse& value)
+    std::ostream& operator<<(std::ostream& os, const struct reverse& value)
     {
         return value.PrintTo(os);
     }
 
-    bool Less(reverse r, int i, int j)
+    bool Less(struct reverse r, int i, int j)
     {
         return Less(gocpp::recv(r.Interface), j, i);
     }

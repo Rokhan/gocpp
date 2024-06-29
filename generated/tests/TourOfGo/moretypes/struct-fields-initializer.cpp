@@ -26,7 +26,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value)
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
     {
         return value.PrintTo(os);
     }
@@ -41,7 +41,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Segment& value)
+    std::ostream& operator<<(std::ostream& os, const struct Segment& value)
     {
         return value.PrintTo(os);
     }

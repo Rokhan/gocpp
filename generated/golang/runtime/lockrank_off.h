@@ -24,7 +24,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const lockRankStruct& value);
+    std::ostream& operator<<(std::ostream& os, const struct lockRankStruct& value);
     void lockInit(mutex* l, lockRank rank);
     lockRank getLockRank(mutex* l);
     void lockWithRank(mutex* l, lockRank rank);

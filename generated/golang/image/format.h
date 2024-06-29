@@ -31,7 +31,7 @@ namespace golang::image
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const format& value);
+    std::ostream& operator<<(std::ostream& os, const struct format& value);
     void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<Image, std::string> (io::Reader)> decode, std::function<std::tuple<Config, std::string> (io::Reader)> decodeConfig);
     struct reader : gocpp::Interface
     {
@@ -78,7 +78,7 @@ namespace golang::image
     std::tuple<gocpp::slice<unsigned char>, std::string> Peek(const gocpp::PtrRecv<reader, false>& self, int);
     std::tuple<gocpp::slice<unsigned char>, std::string> Peek(const gocpp::ObjRecv<reader>& self, int);
 
-    std::ostream& operator<<(std::ostream& os, const reader& value);
+    std::ostream& operator<<(std::ostream& os, const struct reader& value);
     reader asReader(io::Reader r);
     bool match(std::string magic, gocpp::slice<unsigned char> b);
     format sniff(reader r);

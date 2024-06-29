@@ -28,12 +28,12 @@ namespace golang::strings
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Reader& value)
+    std::ostream& operator<<(std::ostream& os, const struct Reader& value)
     {
         return value.PrintTo(os);
     }
 
-    int Len(Reader* r)
+    int Len(struct Reader* r)
     {
         if(r->i >= int64(len(r->s)))
         {
@@ -42,12 +42,12 @@ namespace golang::strings
         return int(int64(len(r->s)) - r->i);
     }
 
-    int64_t Size(Reader* r)
+    int64_t Size(struct Reader* r)
     {
         return int64(len(r->s));
     }
 
-    std::tuple<int, std::string> Read(Reader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int, std::string> Read(struct Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
         std::string err;
@@ -63,7 +63,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    std::tuple<int, std::string> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, std::string> ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         std::string err;
@@ -89,7 +89,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    std::tuple<unsigned char, std::string> ReadByte(Reader* r)
+    std::tuple<unsigned char, std::string> ReadByte(struct Reader* r)
     {
         r->prevRune = - 1;
         if(r->i >= int64(len(r->s)))
@@ -101,7 +101,7 @@ namespace golang::strings
         return {b, nullptr};
     }
 
-    std::string UnreadByte(Reader* r)
+    std::string UnreadByte(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -112,7 +112,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<gocpp::rune, int, std::string> ReadRune(Reader* r)
+    std::tuple<gocpp::rune, int, std::string> ReadRune(struct Reader* r)
     {
         gocpp::rune ch;
         int size;
@@ -139,7 +139,7 @@ namespace golang::strings
         return {ch, size, err};
     }
 
-    std::string UnreadRune(Reader* r)
+    std::string UnreadRune(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -154,7 +154,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<int64_t, std::string> Seek(Reader* r, int64_t offset, int whence)
+    std::tuple<int64_t, std::string> Seek(struct Reader* r, int64_t offset, int whence)
     {
         r->prevRune = - 1;
         int64_t abs = {};
@@ -189,7 +189,7 @@ namespace golang::strings
         return {abs, nullptr};
     }
 
-    std::tuple<int64_t, std::string> WriteTo(Reader* r, io::Writer w)
+    std::tuple<int64_t, std::string> WriteTo(struct Reader* r, io::Writer w)
     {
         int64_t n;
         std::string err;
@@ -219,7 +219,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    void Reset(Reader* r, std::string s)
+    void Reset(struct Reader* r, std::string s)
     {
         *r = Reader {s, 0, - 1};
     }

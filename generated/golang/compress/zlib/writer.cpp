@@ -41,7 +41,7 @@ namespace golang::zlib
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Writer& value)
+    std::ostream& operator<<(std::ostream& os, const struct Writer& value)
     {
         return value.PrintTo(os);
     }
@@ -66,7 +66,7 @@ namespace golang::zlib
         return {gocpp::InitPtr<Writer>([](Writer& x) { x.w = w; x.level = level; x.dict = dict; }), nullptr};
     }
 
-    void Reset(Writer* z, io::Writer w)
+    void Reset(struct Writer* z, io::Writer w)
     {
         z->w = w;
         if(z->compressor != nullptr)
@@ -82,7 +82,7 @@ namespace golang::zlib
         z->wroteHeader = false;
     }
 
-    std::string writeHeader(Writer* z)
+    std::string writeHeader(struct Writer* z)
     {
         std::string err;
         z->wroteHeader = true;
@@ -166,7 +166,7 @@ namespace golang::zlib
         return nullptr;
     }
 
-    std::tuple<int, std::string> Write(Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Write(struct Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -200,7 +200,7 @@ namespace golang::zlib
         return {n, err};
     }
 
-    std::string Flush(Writer* z)
+    std::string Flush(struct Writer* z)
     {
         if(! z->wroteHeader)
         {
@@ -214,7 +214,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    std::string Close(Writer* z)
+    std::string Close(struct Writer* z)
     {
         if(! z->wroteHeader)
         {

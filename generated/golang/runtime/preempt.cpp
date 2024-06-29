@@ -40,7 +40,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const suspendGState& value)
+    std::ostream& operator<<(std::ostream& os, const struct suspendGState& value)
     {
         return value.PrintTo(os);
     }

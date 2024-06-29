@@ -100,7 +100,7 @@ namespace golang::binary
     std::string String(const gocpp::PtrRecv<ByteOrder, false>& self);
     std::string String(const gocpp::ObjRecv<ByteOrder>& self);
 
-    std::ostream& operator<<(std::ostream& os, const ByteOrder& value);
+    std::ostream& operator<<(std::ostream& os, const struct ByteOrder& value);
     struct AppendByteOrder : gocpp::Interface
     {
         AppendByteOrder(){}
@@ -164,7 +164,7 @@ namespace golang::binary
     std::string String(const gocpp::PtrRecv<AppendByteOrder, false>& self);
     std::string String(const gocpp::ObjRecv<AppendByteOrder>& self);
 
-    std::ostream& operator<<(std::ostream& os, const AppendByteOrder& value);
+    std::ostream& operator<<(std::ostream& os, const struct AppendByteOrder& value);
     struct littleEndian
     {
 
@@ -173,7 +173,7 @@ namespace golang::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const littleEndian& value);
+    std::ostream& operator<<(std::ostream& os, const struct littleEndian& value);
     uint16_t Uint16(littleEndian, gocpp::slice<unsigned char> b);
     void PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
     gocpp::slice<unsigned char> AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
@@ -193,7 +193,7 @@ namespace golang::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const bigEndian& value);
+    std::ostream& operator<<(std::ostream& os, const struct bigEndian& value);
     uint16_t Uint16(bigEndian, gocpp::slice<unsigned char> b);
     void PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
     gocpp::slice<unsigned char> AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
@@ -223,29 +223,29 @@ namespace golang::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const coder& value);
-    bool bool(decoder* d);
-    void bool(encoder* e, bool x);
-    uint8_t uint8(decoder* d);
-    void uint8(encoder* e, uint8_t x);
-    uint16_t uint16(decoder* d);
-    void uint16(encoder* e, uint16_t x);
-    uint32_t uint32(decoder* d);
-    void uint32(encoder* e, uint32_t x);
-    uint64_t uint64(decoder* d);
-    void uint64(encoder* e, uint64_t x);
-    int8_t int8(decoder* d);
-    void int8(encoder* e, int8_t x);
-    int16_t int16(decoder* d);
-    void int16(encoder* e, int16_t x);
-    int32_t int32(decoder* d);
-    void int32(encoder* e, int32_t x);
-    int64_t int64(decoder* d);
-    void int64(encoder* e, int64_t x);
-    void value(decoder* d, reflect::Value v);
-    void value(encoder* e, reflect::Value v);
-    void skip(decoder* d, reflect::Value v);
-    void skip(encoder* e, reflect::Value v);
+    std::ostream& operator<<(std::ostream& os, const struct coder& value);
+    bool bool(struct decoder* d);
+    void bool(struct encoder* e, bool x);
+    uint8_t uint8(struct decoder* d);
+    void uint8(struct encoder* e, uint8_t x);
+    uint16_t uint16(struct decoder* d);
+    void uint16(struct encoder* e, uint16_t x);
+    uint32_t uint32(struct decoder* d);
+    void uint32(struct encoder* e, uint32_t x);
+    uint64_t uint64(struct decoder* d);
+    void uint64(struct encoder* e, uint64_t x);
+    int8_t int8(struct decoder* d);
+    void int8(struct encoder* e, int8_t x);
+    int16_t int16(struct decoder* d);
+    void int16(struct encoder* e, int16_t x);
+    int32_t int32(struct decoder* d);
+    void int32(struct encoder* e, int32_t x);
+    int64_t int64(struct decoder* d);
+    void int64(struct encoder* e, int64_t x);
+    void value(struct decoder* d, reflect::Value v);
+    void value(struct encoder* e, reflect::Value v);
+    void skip(struct decoder* d, reflect::Value v);
+    void skip(struct encoder* e, reflect::Value v);
     int intDataSize(go_any data);
 }
 

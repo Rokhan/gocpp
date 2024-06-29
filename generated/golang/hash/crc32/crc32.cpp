@@ -106,7 +106,7 @@ namespace golang::crc32
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const digest& value)
+    std::ostream& operator<<(std::ostream& os, const struct digest& value)
     {
         return value.PrintTo(os);
     }
@@ -125,24 +125,24 @@ namespace golang::crc32
         return New(IEEETable);
     }
 
-    int Size(digest* d)
+    int Size(struct digest* d)
     {
         return Size;
     }
 
-    int BlockSize(digest* d)
+    int BlockSize(struct digest* d)
     {
         return 1;
     }
 
-    void Reset(digest* d)
+    void Reset(struct digest* d)
     {
         d->crc = 0;
     }
 
     std::string magic = "crc\x01";
     int marshaledSize = len(magic) + 4 + 4;
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -151,7 +151,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    std::string UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    std::string UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -211,7 +211,7 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, std::string> Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Write(struct digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -219,12 +219,12 @@ namespace golang::crc32
         return {len(p), nullptr};
     }
 
-    uint32_t Sum32(digest* d)
+    uint32_t Sum32(struct digest* d)
     {
         return d->crc;
     }
 
-    gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = Sum32(gocpp::recv(d));
         return append(in, byte(s >> 24), byte(s >> 16), byte(s >> 8), byte(s));

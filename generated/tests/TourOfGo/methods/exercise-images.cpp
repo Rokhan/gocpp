@@ -25,7 +25,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Image& value)
+    std::ostream& operator<<(std::ostream& os, const struct Image& value)
     {
         return value.PrintTo(os);
     }

@@ -38,7 +38,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const suspendGState& value);
+    std::ostream& operator<<(std::ostream& os, const struct suspendGState& value);
     suspendGState suspendG(g* gp);
     void resumeG(suspendGState state);
     bool canPreemptM(m* mp);

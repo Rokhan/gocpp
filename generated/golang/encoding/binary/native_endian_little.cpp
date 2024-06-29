@@ -23,7 +23,7 @@ namespace golang::binary
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const nativeEndian& value)
+    std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value)
     {
         return value.PrintTo(os);
     }

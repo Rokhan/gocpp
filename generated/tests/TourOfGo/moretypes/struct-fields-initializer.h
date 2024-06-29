@@ -24,7 +24,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value);
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     struct Segment
     {
         Vertex Start;
@@ -35,7 +35,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Segment& value);
+    std::ostream& operator<<(std::ostream& os, const struct Segment& value);
     extern Vertex v1;
     extern Vertex v2;
     extern Vertex v3;

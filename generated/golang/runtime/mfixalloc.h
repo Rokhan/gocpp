@@ -36,7 +36,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const fixalloc& value);
+    std::ostream& operator<<(std::ostream& os, const struct fixalloc& value);
     struct mlink
     {
         sys::NotInHeap _;
@@ -47,9 +47,9 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const mlink& value);
-    void init(fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat);
-    unsafe::Pointer alloc(fixalloc* f);
-    void free(fixalloc* f, unsafe::Pointer p);
+    std::ostream& operator<<(std::ostream& os, const struct mlink& value);
+    void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat);
+    unsafe::Pointer alloc(struct fixalloc* f);
+    void free(struct fixalloc* f, unsafe::Pointer p);
 }
 

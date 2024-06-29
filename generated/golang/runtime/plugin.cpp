@@ -206,7 +206,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const ptabEntry& value)
+    std::ostream& operator<<(std::ostream& os, const struct ptabEntry& value)
     {
         return value.PrintTo(os);
     }

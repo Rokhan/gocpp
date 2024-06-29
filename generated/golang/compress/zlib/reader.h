@@ -37,7 +37,7 @@ namespace golang::zlib
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const reader& value);
+    std::ostream& operator<<(std::ostream& os, const struct reader& value);
     struct Resetter : gocpp::Interface
     {
         Resetter(){}
@@ -83,11 +83,11 @@ namespace golang::zlib
     std::string Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict);
     std::string Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict);
 
-    std::ostream& operator<<(std::ostream& os, const Resetter& value);
+    std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     std::tuple<io::ReadCloser, std::string> NewReader(io::Reader r);
     std::tuple<io::ReadCloser, std::string> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
-    std::tuple<int, std::string> Read(reader* z, gocpp::slice<unsigned char> p);
-    std::string Close(reader* z);
-    std::string Reset(reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
+    std::tuple<int, std::string> Read(struct reader* z, gocpp::slice<unsigned char> p);
+    std::string Close(struct reader* z);
+    std::string Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
 }
 

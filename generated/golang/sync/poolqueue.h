@@ -25,7 +25,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const poolDequeue& value);
+    std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
     struct eface
     {
         unsafe::Pointer typ;
@@ -36,14 +36,14 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const eface& value);
+    std::ostream& operator<<(std::ostream& os, const struct eface& value);
     extern int dequeueBits;
     extern int dequeueLimit;
-    std::tuple<uint32_t, uint32_t> unpack(poolDequeue* d, uint64_t ptrs);
-    uint64_t pack(poolDequeue* d, uint32_t head, uint32_t tail);
-    bool pushHead(poolDequeue* d, go_any val);
-    std::tuple<go_any, bool> popHead(poolDequeue* d);
-    std::tuple<go_any, bool> popTail(poolDequeue* d);
+    std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs);
+    uint64_t pack(struct poolDequeue* d, uint32_t head, uint32_t tail);
+    bool pushHead(struct poolDequeue* d, go_any val);
+    std::tuple<go_any, bool> popHead(struct poolDequeue* d);
+    std::tuple<go_any, bool> popTail(struct poolDequeue* d);
     struct poolChain
     {
         poolChainElt* head;
@@ -54,7 +54,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const poolChain& value);
+    std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
     struct poolChainElt
     {
         poolChainElt* next;
@@ -65,11 +65,11 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const poolChainElt& value);
+    std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
     void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
     poolChainElt* loadPoolChainElt(poolChainElt** pp);
-    void pushHead(poolChain* c, go_any val);
-    std::tuple<go_any, bool> popHead(poolChain* c);
-    std::tuple<go_any, bool> popTail(poolChain* c);
+    void pushHead(struct poolChain* c, go_any val);
+    std::tuple<go_any, bool> popHead(struct poolChain* c);
+    std::tuple<go_any, bool> popTail(struct poolChain* c);
 }
 

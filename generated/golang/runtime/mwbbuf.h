@@ -35,14 +35,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const wbBuf& value);
+    std::ostream& operator<<(std::ostream& os, const struct wbBuf& value);
     extern int wbBufEntries;
     extern int wbMaxEntriesPerCall;
-    void reset(wbBuf* b);
-    void discard(wbBuf* b);
-    bool empty(wbBuf* b);
-    gocpp::array<uintptr_t, 1>* get1(wbBuf* b);
-    gocpp::array<uintptr_t, 2>* get2(wbBuf* b);
+    void reset(struct wbBuf* b);
+    void discard(struct wbBuf* b);
+    bool empty(struct wbBuf* b);
+    gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b);
+    gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b);
     void wbBufFlush();
     void wbBufFlush1(p* pp);
 }

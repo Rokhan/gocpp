@@ -76,7 +76,7 @@ namespace golang::hash
     int BlockSize(const gocpp::PtrRecv<Hash, false>& self);
     int BlockSize(const gocpp::ObjRecv<Hash>& self);
 
-    std::ostream& operator<<(std::ostream& os, const Hash& value);
+    std::ostream& operator<<(std::ostream& os, const struct Hash& value);
     struct Hash32 : gocpp::Interface
     {
         Hash32(){}
@@ -122,7 +122,7 @@ namespace golang::hash
     uint32_t Sum32(const gocpp::PtrRecv<Hash32, false>& self);
     uint32_t Sum32(const gocpp::ObjRecv<Hash32>& self);
 
-    std::ostream& operator<<(std::ostream& os, const Hash32& value);
+    std::ostream& operator<<(std::ostream& os, const struct Hash32& value);
     struct Hash64 : gocpp::Interface
     {
         Hash64(){}
@@ -168,6 +168,6 @@ namespace golang::hash
     uint64_t Sum64(const gocpp::PtrRecv<Hash64, false>& self);
     uint64_t Sum64(const gocpp::ObjRecv<Hash64>& self);
 
-    std::ostream& operator<<(std::ostream& os, const Hash64& value);
+    std::ostream& operator<<(std::ostream& os, const struct Hash64& value);
 }
 

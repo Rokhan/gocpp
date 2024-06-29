@@ -37,7 +37,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const net_op& value)
+    std::ostream& operator<<(std::ostream& os, const struct net_op& value)
     {
         return value.PrintTo(os);
     }
@@ -54,7 +54,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const overlappedEntry& value)
+    std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value)
     {
         return value.PrintTo(os);
     }

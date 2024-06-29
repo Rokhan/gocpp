@@ -131,12 +131,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const scavengerState& value)
+    std::ostream& operator<<(std::ostream& os, const struct scavengerState& value)
     {
         return value.PrintTo(os);
     }
 
-    void init(scavengerState* s)
+    void init(struct scavengerState* s)
     {
         if(s->g != nullptr)
         {
@@ -187,7 +187,7 @@ namespace golang::runtime
         }
     }
 
-    void park(scavengerState* s)
+    void park(struct scavengerState* s)
     {
         lock(& s->lock);
         if(getg() != s->g)
@@ -198,12 +198,12 @@ namespace golang::runtime
         goparkunlock(& s->lock, waitReasonGCScavengeWait, traceBlockSystemGoroutine, 2);
     }
 
-    void ready(scavengerState* s)
+    void ready(struct scavengerState* s)
     {
         Store(gocpp::recv(s->sysmonWake), 1);
     }
 
-    void wake(scavengerState* s)
+    void wake(struct scavengerState* s)
     {
         lock(& s->lock);
         if(s->parked)
@@ -217,7 +217,7 @@ namespace golang::runtime
         unlock(& s->lock);
     }
 
-    void sleep(scavengerState* s, double worked)
+    void sleep(struct scavengerState* s, double worked)
     {
         lock(& s->lock);
         if(getg() != s->g)
@@ -272,14 +272,14 @@ namespace golang::runtime
         }
     }
 
-    void controllerFailed(scavengerState* s)
+    void controllerFailed(struct scavengerState* s)
     {
         lock(& s->lock);
         s->printControllerReset = true;
         unlock(& s->lock);
     }
 
-    std::tuple<uintptr_t, double> run(scavengerState* s)
+    std::tuple<uintptr_t, double> run(struct scavengerState* s)
     {
         uintptr_t released;
         double worked;
@@ -357,7 +357,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t scavenge(pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
+    uintptr_t scavenge(struct pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
     {
         auto released = uintptr(0);
         for(; released < nbytes; )
@@ -399,7 +399,7 @@ namespace golang::runtime
         printunlock();
     }
 
-    uintptr_t scavengeOne(pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max)
+    uintptr_t scavengeOne(struct pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max)
     {
         auto maxPages = max / pageSize;
         if(max % pageSize != 0)
@@ -499,7 +499,7 @@ namespace golang::runtime
         return ^ ((x - (x >> (m - 1))) | x);
     }
 
-    std::tuple<unsigned int, unsigned int> findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
+    std::tuple<unsigned int, unsigned int> findScavengeCandidate(struct pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
     {
         if(minimum & (minimum - 1) != 0 || minimum == 0)
         {
@@ -589,12 +589,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const scavengeIndex& value)
+    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value)
     {
         return value.PrintTo(os);
     }
 
-    uintptr_t init(scavengeIndex* s, bool test, sysMemStat* sysStat)
+    uintptr_t init(struct scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         Clear(gocpp::recv(s->searchAddrBg));
         Clear(gocpp::recv(s->searchAddrForce));
@@ -603,7 +603,7 @@ namespace golang::runtime
         return sysInit(gocpp::recv(s), test, sysStat);
     }
 
-    uintptr_t grow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
+    uintptr_t grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
     {
         auto minHeapIdx = Load(gocpp::recv(s->minHeapIdx));
         if(auto baseIdx = uintptr(chunkIndex(base)); minHeapIdx == 0 || baseIdx < minHeapIdx)
@@ -613,7 +613,7 @@ namespace golang::runtime
         return sysGrow(gocpp::recv(s), base, limit, sysStat);
     }
 
-    std::tuple<chunkIdx, unsigned int> find(scavengeIndex* s, bool force)
+    std::tuple<chunkIdx, unsigned int> find(struct scavengeIndex* s, bool force)
     {
         auto cursor = & s->searchAddrBg;
         if(force)
@@ -653,14 +653,14 @@ namespace golang::runtime
         return {0, 0};
     }
 
-    void alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages)
+    void alloc(struct scavengeIndex* s, chunkIdx ci, unsigned int npages)
     {
         auto sc = load(gocpp::recv(s->chunks[ci]));
         alloc(gocpp::recv(sc), npages, s->gen);
         store(gocpp::recv(s->chunks[ci]), sc);
     }
 
-    void free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages)
+    void free(struct scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages)
     {
         auto sc = load(gocpp::recv(s->chunks[ci]));
         free(gocpp::recv(sc), npages, s->gen);
@@ -677,7 +677,7 @@ namespace golang::runtime
         }
     }
 
-    void nextGen(scavengeIndex* s)
+    void nextGen(struct scavengeIndex* s)
     {
         s->gen++;
         auto [searchAddr, _] = Load(gocpp::recv(s->searchAddrBg));
@@ -688,7 +688,7 @@ namespace golang::runtime
         s->freeHWM = minOffAddr;
     }
 
-    void setEmpty(scavengeIndex* s, chunkIdx ci)
+    void setEmpty(struct scavengeIndex* s, chunkIdx ci)
     {
         auto val = load(gocpp::recv(s->chunks[ci]));
         setEmpty(gocpp::recv(val));
@@ -704,17 +704,17 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const atomicScavChunkData& value)
+    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value)
     {
         return value.PrintTo(os);
     }
 
-    scavChunkData load(atomicScavChunkData* sc)
+    scavChunkData load(struct atomicScavChunkData* sc)
     {
         return unpackScavChunkData(Load(gocpp::recv(sc->value)));
     }
 
-    void store(atomicScavChunkData* sc, scavChunkData ssc)
+    void store(struct atomicScavChunkData* sc, scavChunkData ssc)
     {
         Store(gocpp::recv(sc->value), pack(gocpp::recv(ssc)));
     }
@@ -730,7 +730,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const scavChunkData& value)
+    std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value)
     {
         return value.PrintTo(os);
     }
@@ -740,7 +740,7 @@ namespace golang::runtime
         return gocpp::Init<scavChunkData>([](scavChunkData& x) { x.inUse = uint16_t(sc); x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask; x.gen = uint32_t(sc >> 32); x.scavChunkFlags = scavChunkFlags(uint8_t(sc >> (16 + logScavChunkInUseMax)) & scavChunkFlagsMask); });
     }
 
-    uint64_t pack(scavChunkData sc)
+    uint64_t pack(struct scavChunkData sc)
     {
         return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
     }
@@ -765,7 +765,7 @@ namespace golang::runtime
         *sc |= scavChunkHasFree;
     }
 
-    bool shouldScavenge(scavChunkData sc, uint32_t currGen, bool force)
+    bool shouldScavenge(struct scavChunkData sc, uint32_t currGen, bool force)
     {
         if(isEmpty(gocpp::recv(sc)))
         {
@@ -782,7 +782,7 @@ namespace golang::runtime
         return sc.inUse < scavChunkHiOccPages;
     }
 
-    void alloc(scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void alloc(struct scavChunkData* sc, unsigned int npages, uint32_t newGen)
     {
         if((unsigned int)(sc->inUse) + npages > pallocChunkPages)
         {
@@ -801,7 +801,7 @@ namespace golang::runtime
         }
     }
 
-    void free(scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void free(struct scavChunkData* sc, unsigned int npages, uint32_t newGen)
     {
         if((unsigned int)(sc->inUse) < npages)
         {
@@ -833,12 +833,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const piController& value)
+    std::ostream& operator<<(std::ostream& os, const struct piController& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<double, bool> next(piController* c, double input, double setpoint, double period)
+    std::tuple<double, bool> next(struct piController* c, double input, double setpoint, double period)
     {
         auto prop = c->kp * (setpoint - input);
         auto rawOutput = prop + c->errIntegral;
@@ -871,7 +871,7 @@ namespace golang::runtime
         return {output, true};
     }
 
-    void reset(piController* c)
+    void reset(struct piController* c)
     {
         c->errIntegral = 0;
     }

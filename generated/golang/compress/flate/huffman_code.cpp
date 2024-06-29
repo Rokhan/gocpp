@@ -28,7 +28,7 @@ namespace golang::flate
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const hcode& value)
+    std::ostream& operator<<(std::ostream& os, const struct hcode& value)
     {
         return value.PrintTo(os);
     }
@@ -46,7 +46,7 @@ namespace golang::flate
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const huffmanEncoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value)
     {
         return value.PrintTo(os);
     }
@@ -61,7 +61,7 @@ namespace golang::flate
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const literalNode& value)
+    std::ostream& operator<<(std::ostream& os, const struct literalNode& value)
     {
         return value.PrintTo(os);
     }
@@ -79,12 +79,12 @@ namespace golang::flate
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const levelInfo& value)
+    std::ostream& operator<<(std::ostream& os, const struct levelInfo& value)
     {
         return value.PrintTo(os);
     }
 
-    void set(hcode* h, uint16_t code, uint16_t length)
+    void set(struct hcode* h, uint16_t code, uint16_t length)
     {
         h->len = length;
         h->code = code;
@@ -153,7 +153,7 @@ namespace golang::flate
 
     huffmanEncoder* fixedLiteralEncoding = generateFixedLiteralEncoding();
     huffmanEncoder* fixedOffsetEncoding = generateFixedOffsetEncoding();
-    int bitLength(huffmanEncoder* h, gocpp::slice<int32_t> freq)
+    int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq)
     {
         int total = {};
         for(auto [i, f] : freq)
@@ -167,7 +167,7 @@ namespace golang::flate
     }
 
     int maxBitsLimit = 16;
-    gocpp::slice<int32_t> bitCounts(huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
+    gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
     {
         if(maxBits >= maxBitsLimit)
         {
@@ -249,7 +249,7 @@ namespace golang::flate
         return bitCount;
     }
 
-    void assignEncodingAndSize(huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
+    void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
     {
         auto code = uint16_t(0);
         for(auto [n, bits] : bitCount)
@@ -270,7 +270,7 @@ namespace golang::flate
         }
     }
 
-    void generate(huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
+    void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
     {
         if(h->freqcache == nullptr)
         {

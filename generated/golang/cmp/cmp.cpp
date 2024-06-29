@@ -38,7 +38,7 @@ namespace golang::cmp
     }
 
 
-    std::ostream& operator<<(std::ostream& os, const Ordered& value)
+    std::ostream& operator<<(std::ostream& os, const struct Ordered& value)
     {
         return value.PrintTo(os);
     }

@@ -34,7 +34,7 @@ namespace golang::png
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Encoder& value);
+    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
     struct EncoderBufferPool : gocpp::Interface
     {
         EncoderBufferPool(){}
@@ -86,7 +86,7 @@ namespace golang::png
     void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*);
     void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*);
 
-    std::ostream& operator<<(std::ostream& os, const EncoderBufferPool& value);
+    std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
     struct encoder
     {
         Encoder* enc;
@@ -108,7 +108,7 @@ namespace golang::png
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const encoder& value);
+    std::ostream& operator<<(std::ostream& os, const struct encoder& value);
     struct opaquer : gocpp::Interface
     {
         opaquer(){}
@@ -154,20 +154,20 @@ namespace golang::png
     bool Opaque(const gocpp::PtrRecv<opaquer, false>& self);
     bool Opaque(const gocpp::ObjRecv<opaquer>& self);
 
-    std::ostream& operator<<(std::ostream& os, const opaquer& value);
+    std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     bool opaque(image::Image m);
     int abs8(uint8_t d);
-    void writeChunk(encoder* e, gocpp::slice<unsigned char> b, std::string name);
-    void writeIHDR(encoder* e);
-    void writePLTEAndTRNS(encoder* e, color::Palette p);
-    std::tuple<int, std::string> Write(encoder* e, gocpp::slice<unsigned char> b);
+    void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
+    void writeIHDR(struct encoder* e);
+    void writePLTEAndTRNS(struct encoder* e, color::Palette p);
+    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> b);
     int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
-    std::string writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level);
-    void writeIDATs(encoder* e);
+    std::string writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level);
+    void writeIDATs(struct encoder* e);
     int levelToZlib(CompressionLevel l);
-    void writeIEND(encoder* e);
+    void writeIEND(struct encoder* e);
     std::string Encode(io::Writer w, image::Image m);
-    std::string Encode(Encoder* enc, io::Writer w, image::Image m);
+    std::string Encode(struct Encoder* enc, io::Writer w, image::Image m);
 }
 

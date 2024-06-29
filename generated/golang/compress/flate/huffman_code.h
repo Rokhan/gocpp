@@ -26,7 +26,7 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const hcode& value);
+    std::ostream& operator<<(std::ostream& os, const struct hcode& value);
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes;
@@ -40,7 +40,7 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const huffmanEncoder& value);
+    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
     struct literalNode
     {
         uint16_t literal;
@@ -51,7 +51,7 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const literalNode& value);
+    std::ostream& operator<<(std::ostream& os, const struct literalNode& value);
     struct levelInfo
     {
         int32_t level;
@@ -65,17 +65,17 @@ namespace golang::flate
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const levelInfo& value);
-    void set(hcode* h, uint16_t code, uint16_t length);
+    std::ostream& operator<<(std::ostream& os, const struct levelInfo& value);
+    void set(struct hcode* h, uint16_t code, uint16_t length);
     literalNode maxNode();
     huffmanEncoder* newHuffmanEncoder(int size);
     huffmanEncoder* generateFixedLiteralEncoding();
     huffmanEncoder* generateFixedOffsetEncoding();
-    int bitLength(huffmanEncoder* h, gocpp::slice<int32_t> freq);
+    int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);
     extern int maxBitsLimit;
-    gocpp::slice<int32_t> bitCounts(huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
-    void assignEncodingAndSize(huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
-    void generate(huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
+    gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
+    void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
+    void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
     void sort(byLiteral* s, gocpp::slice<literalNode> a);
     int Len(byLiteral s);
     bool Less(byLiteral s, int i, int j);

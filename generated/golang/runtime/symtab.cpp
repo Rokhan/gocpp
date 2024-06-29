@@ -49,7 +49,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Frames& value)
+    std::ostream& operator<<(std::ostream& os, const struct Frames& value)
     {
         return value.PrintTo(os);
     }
@@ -70,7 +70,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Frame& value)
+    std::ostream& operator<<(std::ostream& os, const struct Frame& value)
     {
         return value.PrintTo(os);
     }
@@ -82,7 +82,7 @@ namespace golang::runtime
         return f;
     }
 
-    std::tuple<Frame, bool> Next(Frames* ci)
+    std::tuple<Frame, bool> Next(struct Frames* ci)
     {
         Frame frame;
         bool more;
@@ -252,22 +252,22 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Func& value)
+    std::ostream& operator<<(std::ostream& os, const struct Func& value)
     {
         return value.PrintTo(os);
     }
 
-    _func* raw(Func* f)
+    _func* raw(struct Func* f)
     {
         return (*_func)(Pointer(gocpp::recv(unsafe), f));
     }
 
-    funcInfo funcInfo(Func* f)
+    funcInfo funcInfo(struct Func* f)
     {
         return funcInfo(gocpp::recv(raw(gocpp::recv(f))));
     }
 
-    funcInfo funcInfo(_func* f)
+    funcInfo funcInfo(struct _func* f)
     {
         auto ptr = uintptr(Pointer(gocpp::recv(unsafe), f));
         moduledata* mod = {};
@@ -308,7 +308,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pcHeader& value)
+    std::ostream& operator<<(std::ostream& os, const struct pcHeader& value)
     {
         return value.PrintTo(os);
     }
@@ -365,7 +365,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const moduledata& value)
+    std::ostream& operator<<(std::ostream& os, const struct moduledata& value)
     {
         return value.PrintTo(os);
     }
@@ -381,7 +381,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const modulehash& value)
+    std::ostream& operator<<(std::ostream& os, const struct modulehash& value)
     {
         return value.PrintTo(os);
     }
@@ -441,7 +441,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const functab& value)
+    std::ostream& operator<<(std::ostream& os, const struct functab& value)
     {
         return value.PrintTo(os);
     }
@@ -457,7 +457,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const textsect& value)
+    std::ostream& operator<<(std::ostream& os, const struct textsect& value)
     {
         return value.PrintTo(os);
     }
@@ -474,7 +474,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const findfuncbucket& value)
+    std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value)
     {
         return value.PrintTo(os);
     }
@@ -537,7 +537,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t textAddr(moduledata* md, uint32_t off32)
+    uintptr_t textAddr(struct moduledata* md, uint32_t off32)
     {
         auto off = uintptr(off32);
         auto res = md->text + off;
@@ -560,7 +560,7 @@ namespace golang::runtime
         return res;
     }
 
-    std::tuple<uint32_t, bool> textOff(moduledata* md, uintptr_t pc)
+    std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc)
     {
         auto res = uint32_t(pc - md->text);
         if(len(md->textsectmap) > 1)
@@ -586,7 +586,7 @@ namespace golang::runtime
         return {res, true};
     }
 
-    std::string funcName(moduledata* md, int32_t nameOff)
+    std::string funcName(struct moduledata* md, int32_t nameOff)
     {
         if(nameOff == 0)
         {
@@ -613,7 +613,7 @@ namespace golang::runtime
         return (*Func)(Pointer(gocpp::recv(unsafe), fi));
     }
 
-    std::string Name(Func* f)
+    std::string Name(struct Func* f)
     {
         if(f == nullptr)
         {
@@ -628,7 +628,7 @@ namespace golang::runtime
         return funcNameForPrint(funcname(funcInfo(gocpp::recv(f))));
     }
 
-    uintptr_t Entry(Func* f)
+    uintptr_t Entry(struct Func* f)
     {
         auto fn = raw(gocpp::recv(f));
         if(isInlined(gocpp::recv(fn)))
@@ -639,7 +639,7 @@ namespace golang::runtime
         return entry(gocpp::recv(funcInfo(gocpp::recv(fn))));
     }
 
-    std::tuple<std::string, int> FileLine(Func* f, uintptr_t pc)
+    std::tuple<std::string, int> FileLine(struct Func* f, uintptr_t pc)
     {
         std::string file;
         int line;
@@ -655,7 +655,7 @@ namespace golang::runtime
         return {file, int(line32)};
     }
 
-    int32_t startLine(Func* f)
+    int32_t startLine(struct Func* f)
     {
         auto fn = raw(gocpp::recv(f));
         if(isInlined(gocpp::recv(fn)))
@@ -687,27 +687,27 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const funcInfo& value)
+    std::ostream& operator<<(std::ostream& os, const struct funcInfo& value)
     {
         return value.PrintTo(os);
     }
 
-    bool valid(funcInfo f)
+    bool valid(struct funcInfo f)
     {
         return f._func != nullptr;
     }
 
-    Func* _Func(funcInfo f)
+    Func* _Func(struct funcInfo f)
     {
         return (*Func)(Pointer(gocpp::recv(unsafe), f._func));
     }
 
-    bool isInlined(_func* f)
+    bool isInlined(struct _func* f)
     {
         return f->entryOff == ^ uint32_t(0);
     }
 
-    uintptr_t entry(funcInfo f)
+    uintptr_t entry(struct funcInfo f)
     {
         return textAddr(gocpp::recv(f.datap), f.entryOff);
     }
@@ -750,12 +750,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const srcFunc& value)
+    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value)
     {
         return value.PrintTo(os);
     }
 
-    srcFunc srcFunc(funcInfo f)
+    srcFunc srcFunc(struct funcInfo f)
     {
         if(! valid(gocpp::recv(f)))
         {
@@ -764,7 +764,7 @@ namespace golang::runtime
         return srcFunc {f.datap, f.nameOff, f.startLine, f.funcID};
     }
 
-    std::string name(srcFunc s)
+    std::string name(struct srcFunc s)
     {
         if(s.datap == nullptr)
         {
@@ -783,7 +783,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pcvalueCache& value)
+    std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value)
     {
         return value.PrintTo(os);
     }
@@ -800,7 +800,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pcvalueCacheEnt& value)
+    std::ostream& operator<<(std::ostream& os, const struct pcvalueCacheEnt& value)
     {
         return value.PrintTo(os);
     }
@@ -1153,7 +1153,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const stackmap& value)
+    std::ostream& operator<<(std::ostream& os, const struct stackmap& value)
     {
         return value.PrintTo(os);
     }

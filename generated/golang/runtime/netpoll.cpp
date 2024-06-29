@@ -66,7 +66,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pollDesc& value)
+    std::ostream& operator<<(std::ostream& os, const struct pollDesc& value)
     {
         return value.PrintTo(os);
     }
@@ -98,12 +98,12 @@ namespace golang::runtime
         return i & pollExpiredWriteDeadline != 0;
     }
 
-    pollInfo info(pollDesc* pd)
+    pollInfo info(struct pollDesc* pd)
     {
         return pollInfo(Load(gocpp::recv(pd->atomicInfo)));
     }
 
-    void publishInfo(pollDesc* pd)
+    void publishInfo(struct pollDesc* pd)
     {
         uint32_t info = {};
         if(pd->closing)
@@ -126,7 +126,7 @@ namespace golang::runtime
         }
     }
 
-    void setEventErr(pollDesc* pd, bool b, uintptr_t seq)
+    void setEventErr(struct pollDesc* pd, bool b, uintptr_t seq)
     {
         auto mSeq = uint32_t(seq & pollFDSeqMask);
         auto x = Load(gocpp::recv(pd->atomicInfo));
@@ -156,7 +156,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pollCache& value)
+    std::ostream& operator<<(std::ostream& os, const struct pollCache& value)
     {
         return value.PrintTo(os);
     }
@@ -254,7 +254,7 @@ namespace golang::runtime
         free(gocpp::recv(pollcache), pd);
     }
 
-    void free(pollCache* c, pollDesc* pd)
+    void free(struct pollCache* c, pollDesc* pd)
     {
         lock(& pd->lock);
         auto fdseq = Load(gocpp::recv(pd->fdseq));
@@ -664,7 +664,7 @@ namespace golang::runtime
         }
     }
 
-    pollDesc* alloc(pollCache* c)
+    pollDesc* alloc(struct pollCache* c)
     {
         lock(& c->lock);
         if(c->first == nullptr)
@@ -690,7 +690,7 @@ namespace golang::runtime
         return pd;
     }
 
-    go_any makeArg(pollDesc* pd)
+    go_any makeArg(struct pollDesc* pd)
     {
         go_any i;
         auto x = (*eface)(Pointer(gocpp::recv(unsafe), & i));

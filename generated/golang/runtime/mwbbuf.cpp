@@ -37,14 +37,14 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const wbBuf& value)
+    std::ostream& operator<<(std::ostream& os, const struct wbBuf& value)
     {
         return value.PrintTo(os);
     }
 
     int wbBufEntries = 512;
     int wbMaxEntriesPerCall = 8;
-    void reset(wbBuf* b)
+    void reset(struct wbBuf* b)
     {
         auto start = uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
         b->next = start;
@@ -62,17 +62,17 @@ namespace golang::runtime
         }
     }
 
-    void discard(wbBuf* b)
+    void discard(struct wbBuf* b)
     {
         b->next = uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
     }
 
-    bool empty(wbBuf* b)
+    bool empty(struct wbBuf* b)
     {
         return b->next == uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
     }
 
-    gocpp::array<uintptr_t, 1>* get1(wbBuf* b)
+    gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b)
     {
         if(b->next + goarch.PtrSize > b->end)
         {
@@ -83,7 +83,7 @@ namespace golang::runtime
         return p;
     }
 
-    gocpp::array<uintptr_t, 2>* get2(wbBuf* b)
+    gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b)
     {
         if(b->next + 2 * goarch.PtrSize > b->end)
         {

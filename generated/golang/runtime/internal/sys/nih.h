@@ -19,7 +19,7 @@ namespace golang::sys
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const nih& value);
+    std::ostream& operator<<(std::ostream& os, const struct nih& value);
     struct NotInHeap
     {
         nih _;
@@ -29,6 +29,6 @@ namespace golang::sys
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const NotInHeap& value);
+    std::ostream& operator<<(std::ostream& os, const struct NotInHeap& value);
 }
 

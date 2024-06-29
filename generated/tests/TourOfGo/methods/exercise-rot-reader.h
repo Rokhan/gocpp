@@ -23,8 +23,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const rot13Reader& value);
-    std::tuple<int, std::string> Read(rot13Reader r13, gocpp::slice<unsigned char> buf);
+    std::ostream& operator<<(std::ostream& os, const struct rot13Reader& value);
+    std::tuple<int, std::string> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf);
     void main();
 }
 

@@ -28,7 +28,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Mutex& value);
+    std::ostream& operator<<(std::ostream& os, const struct Mutex& value);
     struct Locker : gocpp::Interface
     {
         Locker(){}
@@ -80,16 +80,16 @@ namespace golang::sync
     void Unlock(const gocpp::PtrRecv<Locker, false>& self);
     void Unlock(const gocpp::ObjRecv<Locker>& self);
 
-    std::ostream& operator<<(std::ostream& os, const Locker& value);
+    std::ostream& operator<<(std::ostream& os, const struct Locker& value);
     extern int mutexLocked;
     extern int mutexWoken;
     extern int mutexStarving;
     extern int mutexWaiterShift;
     extern double starvationThresholdNs;
-    void Lock(Mutex* m);
-    bool TryLock(Mutex* m);
-    void lockSlow(Mutex* m);
-    void Unlock(Mutex* m);
-    void unlockSlow(Mutex* m, int32_t go_new);
+    void Lock(struct Mutex* m);
+    bool TryLock(struct Mutex* m);
+    void lockSlow(struct Mutex* m);
+    void Unlock(struct Mutex* m);
+    void unlockSlow(struct Mutex* m, int32_t go_new);
 }
 

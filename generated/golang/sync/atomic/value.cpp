@@ -25,7 +25,7 @@ namespace golang::atomic
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Value& value)
+    std::ostream& operator<<(std::ostream& os, const struct Value& value)
     {
         return value.PrintTo(os);
     }
@@ -40,12 +40,12 @@ namespace golang::atomic
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const efaceWords& value)
+    std::ostream& operator<<(std::ostream& os, const struct efaceWords& value)
     {
         return value.PrintTo(os);
     }
 
-    go_any Load(Value* v)
+    go_any Load(struct Value* v)
     {
         go_any val;
         auto vp = (*efaceWords)(Pointer(gocpp::recv(unsafe), v));
@@ -63,7 +63,7 @@ namespace golang::atomic
     }
 
     unsigned char firstStoreInProgress;
-    void Store(Value* v, go_any val)
+    void Store(struct Value* v, go_any val)
     {
         if(val == nullptr)
         {
@@ -100,7 +100,7 @@ namespace golang::atomic
         }
     }
 
-    go_any Swap(Value* v, go_any go_new)
+    go_any Swap(struct Value* v, go_any go_new)
     {
         go_any old;
         if(go_new == nullptr)
@@ -145,7 +145,7 @@ namespace golang::atomic
         }
     }
 
-    bool CompareAndSwap(Value* v, go_any old, go_any go_new)
+    bool CompareAndSwap(struct Value* v, go_any old, go_any go_new)
     {
         bool swapped;
         if(go_new == nullptr)

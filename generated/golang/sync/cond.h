@@ -29,11 +29,11 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Cond& value);
+    std::ostream& operator<<(std::ostream& os, const struct Cond& value);
     Cond* NewCond(Locker l);
-    void Wait(Cond* c);
-    void Signal(Cond* c);
-    void Broadcast(Cond* c);
+    void Wait(struct Cond* c);
+    void Signal(struct Cond* c);
+    void Broadcast(struct Cond* c);
     void check(copyChecker* c);
     struct noCopy
     {
@@ -43,7 +43,7 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const noCopy& value);
+    std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
     void Lock(noCopy*);
     void Unlock(noCopy*);
 }

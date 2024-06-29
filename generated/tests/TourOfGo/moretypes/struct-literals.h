@@ -23,7 +23,7 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value);
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     extern Vertex v1;
     extern Vertex v2;
     extern Vertex v3;

@@ -66,7 +66,7 @@ namespace golang::png
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const interlaceScan& value);
+    std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
     extern gocpp::slice<interlaceScan> interlacing;
     extern int dsStart;
     extern int dsSeenIHDR;
@@ -97,22 +97,22 @@ namespace golang::png
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const decoder& value);
+    std::ostream& operator<<(std::ostream& os, const struct decoder& value);
     std::string Error(FormatError e);
     extern png.FormatError chunkOrderError;
     std::string Error(UnsupportedError e);
-    std::string parseIHDR(decoder* d, uint32_t length);
-    std::string parsePLTE(decoder* d, uint32_t length);
-    std::string parsetRNS(decoder* d, uint32_t length);
-    std::tuple<int, std::string> Read(decoder* d, gocpp::slice<unsigned char> p);
-    std::tuple<image::Image, std::string> decode(decoder* d);
-    std::tuple<image::Image, std::string> readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly);
-    void mergePassInto(decoder* d, image::Image dst, image::Image src, int pass);
-    std::string parseIDAT(decoder* d, uint32_t length);
-    std::string parseIEND(decoder* d, uint32_t length);
-    std::string parseChunk(decoder* d, bool configOnly);
-    std::string verifyChecksum(decoder* d);
-    std::string checkHeader(decoder* d);
+    std::string parseIHDR(struct decoder* d, uint32_t length);
+    std::string parsePLTE(struct decoder* d, uint32_t length);
+    std::string parsetRNS(struct decoder* d, uint32_t length);
+    std::tuple<int, std::string> Read(struct decoder* d, gocpp::slice<unsigned char> p);
+    std::tuple<image::Image, std::string> decode(struct decoder* d);
+    std::tuple<image::Image, std::string> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
+    void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass);
+    std::string parseIDAT(struct decoder* d, uint32_t length);
+    std::string parseIEND(struct decoder* d, uint32_t length);
+    std::string parseChunk(struct decoder* d, bool configOnly);
+    std::string verifyChecksum(struct decoder* d);
+    std::string checkHeader(struct decoder* d);
     std::tuple<image::Image, std::string> Decode(io::Reader r);
     std::tuple<image::Config, std::string> DecodeConfig(io::Reader r);
     void init();

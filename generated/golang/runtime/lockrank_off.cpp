@@ -26,7 +26,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const lockRankStruct& value)
+    std::ostream& operator<<(std::ostream& os, const struct lockRankStruct& value)
     {
         return value.PrintTo(os);
     }

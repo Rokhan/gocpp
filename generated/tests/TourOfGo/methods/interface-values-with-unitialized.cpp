@@ -55,7 +55,7 @@ namespace golang::main
         return self.obj.value->vM();
     }
 
-    std::ostream& operator<<(std::ostream& os, const I& value)
+    std::ostream& operator<<(std::ostream& os, const struct I& value)
     {
         return value.PrintTo(os);
     }
@@ -69,12 +69,12 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const T& value)
+    std::ostream& operator<<(std::ostream& os, const struct T& value)
     {
         return value.PrintTo(os);
     }
 
-    void M(T* t)
+    void M(struct T* t)
     {
         if(t == nullptr)
         {

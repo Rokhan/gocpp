@@ -53,7 +53,7 @@ namespace golang::color
         return self.obj.value->vRGBA();
     }
 
-    std::ostream& operator<<(std::ostream& os, const Color& value)
+    std::ostream& operator<<(std::ostream& os, const struct Color& value)
     {
         return value.PrintTo(os);
     }
@@ -70,12 +70,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const RGBA& value)
+    std::ostream& operator<<(std::ostream& os, const struct RGBA& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(RGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -104,12 +104,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const RGBA64& value)
+    std::ostream& operator<<(std::ostream& os, const struct RGBA64& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(RGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -130,12 +130,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const NRGBA& value)
+    std::ostream& operator<<(std::ostream& os, const struct NRGBA& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -170,12 +170,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const NRGBA64& value)
+    std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -203,12 +203,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Alpha& value)
+    std::ostream& operator<<(std::ostream& os, const struct Alpha& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Alpha c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha c)
     {
         uint32_t r;
         uint32_t g;
@@ -228,12 +228,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Alpha16& value)
+    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Alpha16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -252,12 +252,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Gray& value)
+    std::ostream& operator<<(std::ostream& os, const struct Gray& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray c)
     {
         uint32_t r;
         uint32_t g;
@@ -277,12 +277,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Gray16& value)
+    std::ostream& operator<<(std::ostream& os, const struct Gray16& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -332,7 +332,7 @@ namespace golang::color
         return self.obj.value->vConvert(Color c);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Model& value)
+    std::ostream& operator<<(std::ostream& os, const struct Model& value)
     {
         return value.PrintTo(os);
     }
@@ -351,12 +351,12 @@ namespace golang::color
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const modelFunc& value)
+    std::ostream& operator<<(std::ostream& os, const struct modelFunc& value)
     {
         return value.PrintTo(os);
     }
 
-    Color Convert(modelFunc* m, Color c)
+    Color Convert(struct modelFunc* m, Color c)
     {
         return f(gocpp::recv(m), c);
     }

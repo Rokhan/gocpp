@@ -29,12 +29,12 @@ namespace golang::abi
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const RegArgs& value)
+    std::ostream& operator<<(std::ostream& os, const struct RegArgs& value)
     {
         return value.PrintTo(os);
     }
 
-    void Dump(RegArgs* r)
+    void Dump(struct RegArgs* r)
     {
         print("Ints:");
         for(auto [_, x] : r->Ints)
@@ -56,7 +56,7 @@ namespace golang::abi
         println();
     }
 
-    unsafe::Pointer IntRegArgAddr(RegArgs* r, int reg, uintptr_t argSize)
+    unsafe::Pointer IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize)
     {
         if(argSize > goarch.PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {

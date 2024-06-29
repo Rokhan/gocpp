@@ -26,12 +26,12 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const MyError& value)
+    std::ostream& operator<<(std::ostream& os, const struct MyError& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string Error(MyError* e)
+    std::string Error(struct MyError* e)
     {
         return mocklib::Sprintf("at %v, %s", e->When, e->What);
     }

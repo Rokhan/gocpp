@@ -50,7 +50,7 @@ namespace golang::cmp
         std::shared_ptr<IOrdered> value;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Ordered& value);
+    std::ostream& operator<<(std::ostream& os, const struct Ordered& value);
     bool Less(T x, T y);
     int Compare(T x, T y);
     bool isNaN(T x);

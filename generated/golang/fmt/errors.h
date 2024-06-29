@@ -32,9 +32,9 @@ namespace golang::fmt
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const wrapError& value);
-    std::string Error(wrapError* e);
-    std::string Unwrap(wrapError* e);
+    std::ostream& operator<<(std::ostream& os, const struct wrapError& value);
+    std::string Error(struct wrapError* e);
+    std::string Unwrap(struct wrapError* e);
     struct wrapErrors
     {
         std::string msg;
@@ -45,8 +45,8 @@ namespace golang::fmt
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const wrapErrors& value);
-    std::string Error(wrapErrors* e);
-    gocpp::slice<std::string> Unwrap(wrapErrors* e);
+    std::ostream& operator<<(std::ostream& os, const struct wrapErrors& value);
+    std::string Error(struct wrapErrors* e);
+    gocpp::slice<std::string> Unwrap(struct wrapErrors* e);
 }
 

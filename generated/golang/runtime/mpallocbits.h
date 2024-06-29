@@ -47,8 +47,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const pallocData& value);
-    void allocRange(pallocData* m, unsigned int i, unsigned int n);
-    void allocAll(pallocData* m);
+    std::ostream& operator<<(std::ostream& os, const struct pallocData& value);
+    void allocRange(struct pallocData* m, unsigned int i, unsigned int n);
+    void allocAll(struct pallocData* m);
 }
 

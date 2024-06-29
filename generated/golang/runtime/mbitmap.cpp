@@ -62,18 +62,18 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const markBits& value)
+    std::ostream& operator<<(std::ostream& os, const struct markBits& value)
     {
         return value.PrintTo(os);
     }
 
-    markBits allocBitsForIndex(mspan* s, uintptr_t allocBitIndex)
+    markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = bitp(gocpp::recv(s->allocBits), allocBitIndex);
         return markBits {bytep, mask, allocBitIndex};
     }
 
-    void refillAllocCache(mspan* s, uint16_t whichByte)
+    void refillAllocCache(struct mspan* s, uint16_t whichByte)
     {
         auto bytes = (*gocpp::Tag<gocpp::array<uint8_t, 8>>())(Pointer(gocpp::recv(unsafe), bytep(gocpp::recv(s->allocBits), uintptr(whichByte))));
         auto aCache = uint64_t(0);
@@ -88,7 +88,7 @@ namespace golang::runtime
         s->allocCache = ^ aCache;
     }
 
-    uint16_t nextFreeIndex(mspan* s)
+    uint16_t nextFreeIndex(struct mspan* s)
     {
         auto sfreeindex = s->freeindex;
         auto snelems = s->nelems;
@@ -132,7 +132,7 @@ namespace golang::runtime
         return result;
     }
 
-    bool isFree(mspan* s, uintptr_t index)
+    bool isFree(struct mspan* s, uintptr_t index)
     {
         if(index < uintptr(s->freeIndexForScan))
         {
@@ -142,7 +142,7 @@ namespace golang::runtime
         return *bytep & mask == 0;
     }
 
-    uintptr_t divideByElemSize(mspan* s, uintptr_t n)
+    uintptr_t divideByElemSize(struct mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
         auto q = uintptr((uint64_t(n) * uint64_t(s->divMul)) >> 32);
@@ -154,7 +154,7 @@ namespace golang::runtime
         return q;
     }
 
-    uintptr_t objIndex(mspan* s, uintptr_t p)
+    uintptr_t objIndex(struct mspan* s, uintptr_t p)
     {
         return divideByElemSize(gocpp::recv(s), p - base(gocpp::recv(s)));
     }
@@ -166,33 +166,33 @@ namespace golang::runtime
         return markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    markBits markBitsForIndex(mspan* s, uintptr_t objIndex)
+    markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex)
     {
         auto [bytep, mask] = bitp(gocpp::recv(s->gcmarkBits), objIndex);
         return markBits {bytep, mask, objIndex};
     }
 
-    markBits markBitsForBase(mspan* s)
+    markBits markBitsForBase(struct mspan* s)
     {
         return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
-    bool isMarked(markBits m)
+    bool isMarked(struct markBits m)
     {
         return *m.bytep & m.mask != 0;
     }
 
-    void setMarked(markBits m)
+    void setMarked(struct markBits m)
     {
         Or8(gocpp::recv(atomic), m.bytep, m.mask);
     }
 
-    void setMarkedNonAtomic(markBits m)
+    void setMarkedNonAtomic(struct markBits m)
     {
         *m.bytep |= m.mask;
     }
 
-    void clearMarked(markBits m)
+    void clearMarked(struct markBits m)
     {
         And8(gocpp::recv(atomic), m.bytep, ^ m.mask);
     }
@@ -209,7 +209,7 @@ namespace golang::runtime
         return mbits;
     }
 
-    void advance(markBits* m)
+    void advance(struct markBits* m)
     {
         if(m->mask == (1 << 7))
         {
@@ -386,7 +386,7 @@ namespace golang::runtime
         }
     }
 
-    int countAlloc(mspan* s)
+    int countAlloc(struct mspan* s)
     {
         auto count = 0;
         auto bytes = divRoundUp(uintptr(s->nelems), 8);

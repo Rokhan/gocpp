@@ -23,8 +23,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Person& value);
-    std::string String(Person p);
+    std::ostream& operator<<(std::ostream& os, const struct Person& value);
+    std::string String(struct Person p);
     void main();
 }
 

@@ -52,7 +52,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const mstats& value)
+    std::ostream& operator<<(std::ostream& os, const struct mstats& value)
     {
         return value.PrintTo(os);
     }
@@ -98,7 +98,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const MemStats& value)
+    std::ostream& operator<<(std::ostream& os, const struct MemStats& value)
     {
         return value.PrintTo(os);
     }
@@ -351,12 +351,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const heapStatsDelta& value)
+    std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value)
     {
         return value.PrintTo(os);
     }
 
-    void merge(heapStatsDelta* a, heapStatsDelta* b)
+    void merge(struct heapStatsDelta* a, heapStatsDelta* b)
     {
         a->committed += b->committed;
         a->released += b->released;
@@ -390,12 +390,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const consistentHeapStats& value)
+    std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value)
     {
         return value.PrintTo(os);
     }
 
-    heapStatsDelta* acquire(consistentHeapStats* m)
+    heapStatsDelta* acquire(struct consistentHeapStats* m)
     {
         if(auto pp = ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -414,7 +414,7 @@ namespace golang::runtime
         return & m->stats[gen];
     }
 
-    void release(consistentHeapStats* m)
+    void release(struct consistentHeapStats* m)
     {
         if(auto pp = ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -431,7 +431,7 @@ namespace golang::runtime
         }
     }
 
-    void unsafeRead(consistentHeapStats* m, heapStatsDelta* out)
+    void unsafeRead(struct consistentHeapStats* m, heapStatsDelta* out)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -440,7 +440,7 @@ namespace golang::runtime
         }
     }
 
-    void unsafeClear(consistentHeapStats* m)
+    void unsafeClear(struct consistentHeapStats* m)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -449,7 +449,7 @@ namespace golang::runtime
         }
     }
 
-    void read(consistentHeapStats* m, heapStatsDelta* out)
+    void read(struct consistentHeapStats* m, heapStatsDelta* out)
     {
         auto mp = acquirem();
         auto currGen = Load(gocpp::recv(m->gen));
@@ -492,12 +492,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const cpuStats& value)
+    std::ostream& operator<<(std::ostream& os, const struct cpuStats& value)
     {
         return value.PrintTo(os);
     }
 
-    void accumulate(cpuStats* s, int64_t now, bool gcMarkPhase)
+    void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase)
     {
         int64_t markAssistCpu = {};
         int64_t markDedicatedCpu = {};

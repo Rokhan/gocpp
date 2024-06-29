@@ -35,7 +35,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const pageTraceBuf& value)
+    std::ostream& operator<<(std::ostream& os, const struct pageTraceBuf& value)
     {
         return value.PrintTo(os);
     }

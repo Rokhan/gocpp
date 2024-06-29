@@ -53,12 +53,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const gcWork& value)
+    std::ostream& operator<<(std::ostream& os, const struct gcWork& value)
     {
         return value.PrintTo(os);
     }
 
-    void init(gcWork* w)
+    void init(struct gcWork* w)
     {
         w->wbuf1 = getempty();
         auto wbuf2 = trygetfull();
@@ -69,7 +69,7 @@ namespace golang::runtime
         w->wbuf2 = wbuf2;
     }
 
-    void put(gcWork* w, uintptr_t obj)
+    void put(struct gcWork* w, uintptr_t obj)
     {
         auto flushed = false;
         auto wbuf = w->wbuf1;
@@ -102,7 +102,7 @@ namespace golang::runtime
         }
     }
 
-    bool putFast(gcWork* w, uintptr_t obj)
+    bool putFast(struct gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == len(wbuf->obj))
@@ -114,7 +114,7 @@ namespace golang::runtime
         return true;
     }
 
-    void putBatch(gcWork* w, gocpp::slice<uintptr_t> obj)
+    void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj)
     {
         if(len(obj) == 0)
         {
@@ -147,7 +147,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t tryGet(gcWork* w)
+    uintptr_t tryGet(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
@@ -175,7 +175,7 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
-    uintptr_t tryGetFast(gcWork* w)
+    uintptr_t tryGetFast(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == 0)
@@ -186,7 +186,7 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
-    void dispose(gcWork* w)
+    void dispose(struct gcWork* w)
     {
         if(auto wbuf = w->wbuf1; wbuf != nullptr)
         {
@@ -224,7 +224,7 @@ namespace golang::runtime
         }
     }
 
-    void balance(gcWork* w)
+    void balance(struct gcWork* w)
     {
         if(w->wbuf1 == nullptr)
         {
@@ -252,7 +252,7 @@ namespace golang::runtime
         }
     }
 
-    bool empty(gcWork* w)
+    bool empty(struct gcWork* w)
     {
         return w->wbuf1 == nullptr || (w->wbuf1->nobj == 0 && w->wbuf2->nobj == 0);
     }
@@ -267,7 +267,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const workbufhdr& value)
+    std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value)
     {
         return value.PrintTo(os);
     }
@@ -282,12 +282,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const workbuf& value)
+    std::ostream& operator<<(std::ostream& os, const struct workbuf& value)
     {
         return value.PrintTo(os);
     }
 
-    void checknonempty(workbuf* b)
+    void checknonempty(struct workbuf* b)
     {
         if(b->nobj == 0)
         {
@@ -295,7 +295,7 @@ namespace golang::runtime
         }
     }
 
-    void checkempty(workbuf* b)
+    void checkempty(struct workbuf* b)
     {
         if(b->nobj != 0)
         {

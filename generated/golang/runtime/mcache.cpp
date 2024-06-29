@@ -50,7 +50,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const mcache& value)
+    std::ostream& operator<<(std::ostream& os, const struct mcache& value)
     {
         return value.PrintTo(os);
     }
@@ -64,7 +64,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const gclink& value)
+    std::ostream& operator<<(std::ostream& os, const struct gclink& value)
     {
         return value.PrintTo(os);
     }
@@ -84,7 +84,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const stackfreelist& value)
+    std::ostream& operator<<(std::ostream& os, const struct stackfreelist& value)
     {
         return value.PrintTo(os);
     }
@@ -137,7 +137,7 @@ namespace golang::runtime
         return c;
     }
 
-    void refill(mcache* c, spanClass spc)
+    void refill(struct mcache* c, spanClass spc)
     {
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)
@@ -181,7 +181,7 @@ namespace golang::runtime
         c->alloc[spc] = s;
     }
 
-    mspan* allocLarge(mcache* c, uintptr_t size, bool noscan)
+    mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {
@@ -211,7 +211,7 @@ namespace golang::runtime
         return s;
     }
 
-    void releaseAll(mcache* c)
+    void releaseAll(struct mcache* c)
     {
         auto scanAlloc = int64(c->scanAlloc);
         c->scanAlloc = 0;
@@ -245,7 +245,7 @@ namespace golang::runtime
         update(gocpp::recv(gcController), dHeapLive, scanAlloc);
     }
 
-    void prepareForSweep(mcache* c)
+    void prepareForSweep(struct mcache* c)
     {
         auto sg = mheap_.sweepgen;
         auto flushGen = Load(gocpp::recv(c->flushGen));

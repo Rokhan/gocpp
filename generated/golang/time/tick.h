@@ -24,10 +24,10 @@ namespace golang::time
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Ticker& value);
+    std::ostream& operator<<(std::ostream& os, const struct Ticker& value);
     Ticker* NewTicker(Duration d);
-    void Stop(Ticker* t);
-    void Reset(Ticker* t, Duration d);
+    void Stop(struct Ticker* t);
+    void Reset(struct Ticker* t, Duration d);
     gocpp::channel<Time> Tick(Duration d);
 }
 

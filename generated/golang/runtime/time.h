@@ -43,7 +43,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const timer& value);
+    std::ostream& operator<<(std::ostream& os, const struct timer& value);
     extern int timerNoStatus;
     extern int timerWaiting;
     extern int timerRunning;

@@ -33,7 +33,7 @@ namespace golang::image
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const format& value)
+    std::ostream& operator<<(std::ostream& os, const struct format& value)
     {
         return value.PrintTo(os);
     }
@@ -88,7 +88,7 @@ namespace golang::image
         return self.obj.value->vPeek(int);
     }
 
-    std::ostream& operator<<(std::ostream& os, const reader& value)
+    std::ostream& operator<<(std::ostream& os, const struct reader& value)
     {
         return value.PrintTo(os);
     }

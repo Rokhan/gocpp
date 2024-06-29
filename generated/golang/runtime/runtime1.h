@@ -50,7 +50,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const x1t& value);
+    std::ostream& operator<<(std::ostream& os, const struct x1t& value);
     struct y1t
     {
         x1t x1;
@@ -61,7 +61,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const y1t& value);
+    std::ostream& operator<<(std::ostream& os, const struct y1t& value);
     struct dbgVar
     {
         std::string name;
@@ -74,7 +74,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const dbgVar& value);
+    std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
     extern gocpp::slice<dbgVar*> dbgvars;
     void parsedebugvars();
     void reparsedebugvars(std::string env);

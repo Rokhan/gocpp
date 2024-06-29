@@ -41,7 +41,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const fakeResult& value)
+    std::ostream& operator<<(std::ostream& os, const struct fakeResult& value)
     {
         return value.PrintTo(os);
     }

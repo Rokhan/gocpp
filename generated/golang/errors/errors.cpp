@@ -27,12 +27,12 @@ namespace golang::errors
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const errorString& value)
+    std::ostream& operator<<(std::ostream& os, const struct errorString& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string Error(errorString* e)
+    std::string Error(struct errorString* e)
     {
         return e->s;
     }

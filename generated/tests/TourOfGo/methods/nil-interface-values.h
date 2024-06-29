@@ -58,7 +58,7 @@ namespace golang::main
     void M(const gocpp::PtrRecv<I, false>& self);
     void M(const gocpp::ObjRecv<I>& self);
 
-    std::ostream& operator<<(std::ostream& os, const I& value);
+    std::ostream& operator<<(std::ostream& os, const struct I& value);
     void main();
     void describe(I i);
 }

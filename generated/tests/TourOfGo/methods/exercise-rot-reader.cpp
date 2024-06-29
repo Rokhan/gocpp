@@ -25,12 +25,12 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const rot13Reader& value)
+    std::ostream& operator<<(std::ostream& os, const struct rot13Reader& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(rot13Reader r13, gocpp::slice<unsigned char> buf)
+    std::tuple<int, std::string> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf)
     {
         auto [n, err] = Read(gocpp::recv(r13.r), buf);
         if(err != nullptr)

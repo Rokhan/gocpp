@@ -50,7 +50,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const mstats& value);
+    std::ostream& operator<<(std::ostream& os, const struct mstats& value);
     struct MemStats
     {
         uint64_t Alloc;
@@ -91,7 +91,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const MemStats& value);
+    std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
     void init();
     void ReadMemStats(MemStats* m);
     extern bool doubleCheckReadMemStats;
@@ -123,8 +123,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const heapStatsDelta& value);
-    void merge(heapStatsDelta* a, heapStatsDelta* b);
+    std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
+    void merge(struct heapStatsDelta* a, heapStatsDelta* b);
     struct consistentHeapStats
     {
         gocpp::array<heapStatsDelta, 3> stats;
@@ -136,12 +136,12 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const consistentHeapStats& value);
-    heapStatsDelta* acquire(consistentHeapStats* m);
-    void release(consistentHeapStats* m);
-    void unsafeRead(consistentHeapStats* m, heapStatsDelta* out);
-    void unsafeClear(consistentHeapStats* m);
-    void read(consistentHeapStats* m, heapStatsDelta* out);
+    std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
+    heapStatsDelta* acquire(struct consistentHeapStats* m);
+    void release(struct consistentHeapStats* m);
+    void unsafeRead(struct consistentHeapStats* m, heapStatsDelta* out);
+    void unsafeClear(struct consistentHeapStats* m);
+    void read(struct consistentHeapStats* m, heapStatsDelta* out);
     struct cpuStats
     {
         int64_t gcAssistTime;
@@ -161,7 +161,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const cpuStats& value);
-    void accumulate(cpuStats* s, int64_t now, bool gcMarkPhase);
+    std::ostream& operator<<(std::ostream& os, const struct cpuStats& value);
+    void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase);
 }
 

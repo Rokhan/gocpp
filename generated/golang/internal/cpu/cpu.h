@@ -22,7 +22,7 @@ namespace golang::cpu
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const CacheLinePad& value);
+    std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
     void Initialize(std::string env);
     struct option
     {
@@ -36,7 +36,7 @@ namespace golang::cpu
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const option& value);
+    std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(std::string env);
     int indexByte(std::string s, unsigned char c);
 }

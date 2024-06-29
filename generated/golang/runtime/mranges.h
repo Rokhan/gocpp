@@ -32,14 +32,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const addrRange& value);
+    std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
     addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
-    uintptr_t size(addrRange a);
-    bool contains(addrRange a, uintptr_t addr);
-    addrRange subtract(addrRange a, addrRange b);
-    std::tuple<uintptr_t, bool> takeFromFront(addrRange* a, uintptr_t len, uint8_t align);
-    std::tuple<uintptr_t, bool> takeFromBack(addrRange* a, uintptr_t len, uint8_t align);
-    addrRange removeGreaterEqual(addrRange a, uintptr_t addr);
+    uintptr_t size(struct addrRange a);
+    bool contains(struct addrRange a, uintptr_t addr);
+    addrRange subtract(struct addrRange a, addrRange b);
+    std::tuple<uintptr_t, bool> takeFromFront(struct addrRange* a, uintptr_t len, uint8_t align);
+    std::tuple<uintptr_t, bool> takeFromBack(struct addrRange* a, uintptr_t len, uint8_t align);
+    addrRange removeGreaterEqual(struct addrRange a, uintptr_t addr);
     extern offAddr minOffAddr;
     extern offAddr maxOffAddr;
     struct offAddr
@@ -51,14 +51,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const offAddr& value);
-    offAddr add(offAddr l, uintptr_t bytes);
-    offAddr sub(offAddr l, uintptr_t bytes);
-    uintptr_t diff(offAddr l1, offAddr l2);
-    bool lessThan(offAddr l1, offAddr l2);
-    bool lessEqual(offAddr l1, offAddr l2);
-    bool equal(offAddr l1, offAddr l2);
-    uintptr_t addr(offAddr l);
+    std::ostream& operator<<(std::ostream& os, const struct offAddr& value);
+    offAddr add(struct offAddr l, uintptr_t bytes);
+    offAddr sub(struct offAddr l, uintptr_t bytes);
+    uintptr_t diff(struct offAddr l1, offAddr l2);
+    bool lessThan(struct offAddr l1, offAddr l2);
+    bool lessEqual(struct offAddr l1, offAddr l2);
+    bool equal(struct offAddr l1, offAddr l2);
+    uintptr_t addr(struct offAddr l);
     struct atomicOffAddr
     {
         atomic::Int64 a;
@@ -68,12 +68,12 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const atomicOffAddr& value);
-    void Clear(atomicOffAddr* b);
-    void StoreMin(atomicOffAddr* b, uintptr_t addr);
-    void StoreUnmark(atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr);
-    void StoreMarked(atomicOffAddr* b, uintptr_t addr);
-    std::tuple<uintptr_t, bool> Load(atomicOffAddr* b);
+    std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
+    void Clear(struct atomicOffAddr* b);
+    void StoreMin(struct atomicOffAddr* b, uintptr_t addr);
+    void StoreUnmark(struct atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr);
+    void StoreMarked(struct atomicOffAddr* b, uintptr_t addr);
+    std::tuple<uintptr_t, bool> Load(struct atomicOffAddr* b);
     struct addrRanges
     {
         gocpp::slice<addrRange> ranges;
@@ -85,14 +85,14 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const addrRanges& value);
-    void init(addrRanges* a, sysMemStat* sysStat);
-    int findSucc(addrRanges* a, uintptr_t addr);
-    std::tuple<uintptr_t, bool> findAddrGreaterEqual(addrRanges* a, uintptr_t addr);
-    bool contains(addrRanges* a, uintptr_t addr);
-    void add(addrRanges* a, addrRange r);
-    addrRange removeLast(addrRanges* a, uintptr_t nBytes);
-    void removeGreaterEqual(addrRanges* a, uintptr_t addr);
-    void cloneInto(addrRanges* a, addrRanges* b);
+    std::ostream& operator<<(std::ostream& os, const struct addrRanges& value);
+    void init(struct addrRanges* a, sysMemStat* sysStat);
+    int findSucc(struct addrRanges* a, uintptr_t addr);
+    std::tuple<uintptr_t, bool> findAddrGreaterEqual(struct addrRanges* a, uintptr_t addr);
+    bool contains(struct addrRanges* a, uintptr_t addr);
+    void add(struct addrRanges* a, addrRange r);
+    addrRange removeLast(struct addrRanges* a, uintptr_t nBytes);
+    void removeGreaterEqual(struct addrRanges* a, uintptr_t addr);
+    void cloneInto(struct addrRanges* a, addrRanges* b);
 }
 

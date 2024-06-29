@@ -47,7 +47,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const neverCallThisFunction& value);
+    std::ostream& operator<<(std::ostream& os, const struct neverCallThisFunction& value);
     void goexit(neverCallThisFunction);
     void publicationBarrier();
     uintptr_t getcallerpc();

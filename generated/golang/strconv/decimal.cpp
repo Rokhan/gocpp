@@ -26,12 +26,12 @@ namespace golang::strconv
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const decimal& value)
+    std::ostream& operator<<(std::ostream& os, const struct decimal& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string String(decimal* a)
+    std::string String(struct decimal* a)
     {
         auto n = 10 + a->nd;
         if(a->dp > 0)
@@ -99,7 +99,7 @@ namespace golang::strconv
         }
     }
 
-    void Assign(decimal* a, uint64_t v)
+    void Assign(struct decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
         auto n = 0;
@@ -188,7 +188,7 @@ namespace golang::strconv
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const leftCheat& value)
+    std::ostream& operator<<(std::ostream& os, const struct leftCheat& value)
     {
         return value.PrintTo(os);
     }
@@ -262,7 +262,7 @@ namespace golang::strconv
         trim(a);
     }
 
-    void Shift(decimal* a, int k)
+    void Shift(struct decimal* a, int k)
     {
         //Go switch emulation
         {
@@ -311,7 +311,7 @@ namespace golang::strconv
         return a->d[nd] >= '5';
     }
 
-    void Round(decimal* a, int nd)
+    void Round(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -327,7 +327,7 @@ namespace golang::strconv
         }
     }
 
-    void RoundDown(decimal* a, int nd)
+    void RoundDown(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -337,7 +337,7 @@ namespace golang::strconv
         trim(a);
     }
 
-    void RoundUp(decimal* a, int nd)
+    void RoundUp(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -358,7 +358,7 @@ namespace golang::strconv
         a->dp++;
     }
 
-    uint64_t RoundedInteger(decimal* a)
+    uint64_t RoundedInteger(struct decimal* a)
     {
         if(a->dp > 20)
         {

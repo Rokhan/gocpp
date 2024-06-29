@@ -31,7 +31,7 @@ namespace golang::strconv
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const floatInfo& value)
+    std::ostream& operator<<(std::ostream& os, const struct floatInfo& value)
     {
         return value.PrintTo(os);
     }
@@ -448,7 +448,7 @@ namespace golang::strconv
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const decimalSlice& value)
+    std::ostream& operator<<(std::ostream& os, const struct decimalSlice& value)
     {
         return value.PrintTo(os);
     }

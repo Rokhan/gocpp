@@ -33,12 +33,12 @@ namespace golang::chacha8rand
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const State& value)
+    std::ostream& operator<<(std::ostream& os, const struct State& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<uint64_t, bool> Next(State* s)
+    std::tuple<uint64_t, bool> Next(struct State* s)
     {
         auto i = s->i;
         if(i >= s->n)
@@ -49,12 +49,12 @@ namespace golang::chacha8rand
         return {s->buf[i & 31], true};
     }
 
-    void Init(State* s, gocpp::array<unsigned char, 32> seed)
+    void Init(struct State* s, gocpp::array<unsigned char, 32> seed)
     {
         Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
     }
 
-    void Init64(State* s, gocpp::array<uint64_t, 4> seed)
+    void Init64(struct State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
         block(& s->seed, & s->buf, 0);
@@ -63,7 +63,7 @@ namespace golang::chacha8rand
         s->n = chunk;
     }
 
-    void Refill(State* s)
+    void Refill(struct State* s)
     {
         s->c += ctrInc;
         if(s->c == ctrMax)
@@ -83,7 +83,7 @@ namespace golang::chacha8rand
         }
     }
 
-    void Reseed(State* s)
+    void Reseed(struct State* s)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)
@@ -123,7 +123,7 @@ namespace golang::chacha8rand
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const errUnmarshalChaCha8& value)
+    std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value)
     {
         return value.PrintTo(os);
     }

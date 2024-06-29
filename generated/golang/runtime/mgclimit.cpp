@@ -40,17 +40,17 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const gcCPULimiterState& value)
+    std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value)
     {
         return value.PrintTo(os);
     }
 
-    bool limiting(gcCPULimiterState* l)
+    bool limiting(struct gcCPULimiterState* l)
     {
         return Load(gocpp::recv(l->enabled));
     }
 
-    void startGCTransition(gcCPULimiterState* l, bool enableGC, int64_t now)
+    void startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now)
     {
         if(! tryLock(gocpp::recv(l)))
         {
@@ -65,7 +65,7 @@ namespace golang::runtime
         l->transitioning = true;
     }
 
-    void finishGCTransition(gcCPULimiterState* l, int64_t now)
+    void finishGCTransition(struct gcCPULimiterState* l, int64_t now)
     {
         if(! l->transitioning)
         {
@@ -81,22 +81,22 @@ namespace golang::runtime
     }
 
     double gcCPULimiterUpdatePeriod = 10e6;
-    bool needUpdate(gcCPULimiterState* l, int64_t now)
+    bool needUpdate(struct gcCPULimiterState* l, int64_t now)
     {
         return now - Load(gocpp::recv(l->lastUpdate)) > gcCPULimiterUpdatePeriod;
     }
 
-    void addAssistTime(gcCPULimiterState* l, int64_t t)
+    void addAssistTime(struct gcCPULimiterState* l, int64_t t)
     {
         Add(gocpp::recv(l->assistTimePool), t);
     }
 
-    void addIdleTime(gcCPULimiterState* l, int64_t t)
+    void addIdleTime(struct gcCPULimiterState* l, int64_t t)
     {
         Add(gocpp::recv(l->idleTimePool), t);
     }
 
-    void update(gcCPULimiterState* l, int64_t now)
+    void update(struct gcCPULimiterState* l, int64_t now)
     {
         if(! tryLock(gocpp::recv(l)))
         {
@@ -110,7 +110,7 @@ namespace golang::runtime
         unlock(gocpp::recv(l));
     }
 
-    void updateLocked(gcCPULimiterState* l, int64_t now)
+    void updateLocked(struct gcCPULimiterState* l, int64_t now)
     {
         auto lastUpdate = Load(gocpp::recv(l->lastUpdate));
         if(now < lastUpdate)
@@ -175,7 +175,7 @@ namespace golang::runtime
         accumulate(gocpp::recv(l), windowTotalTime - windowGCTime, windowGCTime);
     }
 
-    void accumulate(gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime)
+    void accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime)
     {
         auto headroom = l->bucket.capacity - l->bucket.fill;
         auto enabled = headroom == 0;
@@ -205,12 +205,12 @@ namespace golang::runtime
         }
     }
 
-    bool tryLock(gcCPULimiterState* l)
+    bool tryLock(struct gcCPULimiterState* l)
     {
         return CompareAndSwap(gocpp::recv(l->lock), 0, 1);
     }
 
-    void unlock(gcCPULimiterState* l)
+    void unlock(struct gcCPULimiterState* l)
     {
         auto old = Swap(gocpp::recv(l->lock), 0);
         if(old != 1)
@@ -220,7 +220,7 @@ namespace golang::runtime
     }
 
     double capacityPerProc = 1e9;
-    void resetCapacity(gcCPULimiterState* l, int64_t now, int32_t nprocs)
+    void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs)
     {
         if(! tryLock(gocpp::recv(l)))
         {
@@ -280,12 +280,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const limiterEvent& value)
+    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value)
     {
         return value.PrintTo(os);
     }
 
-    bool start(limiterEvent* e, limiterEventType typ, int64_t now)
+    bool start(struct limiterEvent* e, limiterEventType typ, int64_t now)
     {
         if(typ(gocpp::recv(limiterEventStamp(Load(gocpp::recv(e->stamp))))) != limiterEventNone)
         {
@@ -295,7 +295,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::tuple<limiterEventType, int64_t> consume(limiterEvent* e, int64_t now)
+    std::tuple<limiterEventType, int64_t> consume(struct limiterEvent* e, int64_t now)
     {
         limiterEventType typ;
         int64_t duration;
@@ -329,7 +329,7 @@ namespace golang::runtime
         return {typ, duration};
     }
 
-    void stop(limiterEvent* e, limiterEventType typ, int64_t now)
+    void stop(struct limiterEvent* e, limiterEventType typ, int64_t now)
     {
         limiterEventStamp stamp = {};
         for(; ; )

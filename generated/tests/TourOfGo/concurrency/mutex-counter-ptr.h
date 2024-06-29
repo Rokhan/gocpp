@@ -26,9 +26,9 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const SafeCounter& value);
-    void Inc(SafeCounter* c, std::string key);
-    int Value(SafeCounter* c, std::string key);
+    std::ostream& operator<<(std::ostream& os, const struct SafeCounter& value);
+    void Inc(struct SafeCounter* c, std::string key);
+    int Value(struct SafeCounter* c, std::string key);
     void main();
 }
 

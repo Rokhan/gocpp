@@ -48,7 +48,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const mcache& value);
+    std::ostream& operator<<(std::ostream& os, const struct mcache& value);
     struct gclink
     {
         gclinkptr next;
@@ -58,7 +58,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const gclink& value);
+    std::ostream& operator<<(std::ostream& os, const struct gclink& value);
     gclink* ptr(gclinkptr p);
     struct stackfreelist
     {
@@ -70,13 +70,13 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const stackfreelist& value);
+    std::ostream& operator<<(std::ostream& os, const struct stackfreelist& value);
     mcache* allocmcache();
     void freemcache(mcache* c);
     mcache* getMCache(m* mp);
-    void refill(mcache* c, spanClass spc);
-    mspan* allocLarge(mcache* c, uintptr_t size, bool noscan);
-    void releaseAll(mcache* c);
-    void prepareForSweep(mcache* c);
+    void refill(struct mcache* c, spanClass spc);
+    mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan);
+    void releaseAll(struct mcache* c);
+    void prepareForSweep(struct mcache* c);
 }
 

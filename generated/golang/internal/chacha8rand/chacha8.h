@@ -29,12 +29,12 @@ namespace golang::chacha8rand
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const State& value);
-    std::tuple<uint64_t, bool> Next(State* s);
-    void Init(State* s, gocpp::array<unsigned char, 32> seed);
-    void Init64(State* s, gocpp::array<uint64_t, 4> seed);
-    void Refill(State* s);
-    void Reseed(State* s);
+    std::ostream& operator<<(std::ostream& os, const struct State& value);
+    std::tuple<uint64_t, bool> Next(struct State* s);
+    void Init(struct State* s, gocpp::array<unsigned char, 32> seed);
+    void Init64(struct State* s, gocpp::array<uint64_t, 4> seed);
+    void Refill(struct State* s);
+    void Reseed(struct State* s);
     gocpp::slice<unsigned char> Marshal(State* s);
     struct errUnmarshalChaCha8
     {
@@ -44,7 +44,7 @@ namespace golang::chacha8rand
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const errUnmarshalChaCha8& value);
+    std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value);
     std::string Error(errUnmarshalChaCha8*);
     std::string Unmarshal(State* s, gocpp::slice<unsigned char> data);
     uint64_t beUint64(gocpp::slice<unsigned char> b);

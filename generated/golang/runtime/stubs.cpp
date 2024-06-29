@@ -101,7 +101,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const neverCallThisFunction& value)
+    std::ostream& operator<<(std::ostream& os, const struct neverCallThisFunction& value)
     {
         return value.PrintTo(os);
     }

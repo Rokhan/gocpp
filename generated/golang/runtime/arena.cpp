@@ -205,7 +205,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const userArena& value)
+    std::ostream& operator<<(std::ostream& os, const struct userArena& value)
     {
         return value.PrintTo(os);
     }
@@ -222,12 +222,12 @@ namespace golang::runtime
         return a;
     }
 
-    unsafe::Pointer go_new(userArena* a, _type* typ)
+    unsafe::Pointer go_new(struct userArena* a, _type* typ)
     {
         return alloc(gocpp::recv(a), typ, - 1);
     }
 
-    void slice(userArena* a, go_any sl, int cap)
+    void slice(struct userArena* a, go_any sl, int cap)
     {
         if(cap < 0)
         {
@@ -248,7 +248,7 @@ namespace golang::runtime
         *((*slice)(i->data)) = slice {alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
-    void free(userArena* a)
+    void free(struct userArena* a)
     {
         if(Load(gocpp::recv(a->defunct)))
         {
@@ -288,7 +288,7 @@ namespace golang::runtime
         a->refs = nullptr;
     }
 
-    unsafe::Pointer alloc(userArena* a, _type* typ, int cap)
+    unsafe::Pointer alloc(struct userArena* a, _type* typ, int cap)
     {
         auto s = a->active;
         unsafe::Pointer x = {};
@@ -304,7 +304,7 @@ namespace golang::runtime
         return x;
     }
 
-    mspan* refill(userArena* a)
+    mspan* refill(struct userArena* a)
     {
         auto s = a->active;
         if(s != nullptr)
@@ -352,7 +352,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const liveUserArenaChunk& value)
+    std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value)
     {
         return value.PrintTo(os);
     }
@@ -376,7 +376,7 @@ namespace golang::runtime
         }
     };
     gocpp_id_0 userArenaState;
-    unsafe::Pointer userArenaNextFree(mspan* s, _type* typ, int cap)
+    unsafe::Pointer userArenaNextFree(struct mspan* s, _type* typ, int cap)
     {
         auto size = typ->Size_;
         if(cap > 0)
@@ -572,12 +572,12 @@ namespace golang::runtime
         return {x, span};
     }
 
-    bool isUnusedUserArenaChunk(mspan* s)
+    bool isUnusedUserArenaChunk(struct mspan* s)
     {
         return s->isUserArenaChunk && s->spanclass == makeSpanClass(0, true);
     }
 
-    void setUserArenaChunkToFault(mspan* s)
+    void setUserArenaChunkToFault(struct mspan* s)
     {
         if(! s->isUserArenaChunk)
         {
@@ -667,7 +667,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    mspan* allocUserArenaChunk(mheap* h)
+    mspan* allocUserArenaChunk(struct mheap* h)
     {
         mspan* s = {};
         uintptr_t base = {};

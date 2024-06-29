@@ -44,7 +44,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const stkframe& value)
+    std::ostream& operator<<(std::ostream& os, const struct stkframe& value)
     {
         return value.PrintTo(os);
     }
@@ -60,12 +60,12 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const reflectMethodValue& value)
+    std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value)
     {
         return value.PrintTo(os);
     }
 
-    uintptr_t argBytes(stkframe* frame)
+    uintptr_t argBytes(struct stkframe* frame)
     {
         if(frame->fn.args != abi.ArgsSizeUnknown)
         {
@@ -75,7 +75,7 @@ namespace golang::runtime
         return uintptr(argMap.n) * goarch.PtrSize;
     }
 
-    std::tuple<bitvector, bool> argMapInternal(stkframe* frame)
+    std::tuple<bitvector, bool> argMapInternal(struct stkframe* frame)
     {
         bitvector argMap;
         bool hasReflectStackObj;
@@ -149,7 +149,7 @@ namespace golang::runtime
         return {argMap, hasReflectStackObj};
     }
 
-    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(stkframe* frame, bool debug)
+    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug)
     {
         bitvector locals;
         bitvector args;

@@ -26,7 +26,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value)
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
     {
         return value.PrintTo(os);
     }

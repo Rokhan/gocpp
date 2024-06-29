@@ -31,7 +31,7 @@ namespace golang::base64
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Encoding& value)
+    std::ostream& operator<<(std::ostream& os, const struct Encoding& value)
     {
         return value.PrintTo(os);
     }
@@ -72,7 +72,7 @@ namespace golang::base64
         return e;
     }
 
-    Encoding* WithPadding(Encoding enc, gocpp::rune padding)
+    Encoding* WithPadding(struct Encoding enc, gocpp::rune padding)
     {
         //Go switch emulation
         {
@@ -93,7 +93,7 @@ namespace golang::base64
         return & enc;
     }
 
-    Encoding* Strict(Encoding enc)
+    Encoding* Strict(struct Encoding enc)
     {
         enc.strict = true;
         return & enc;
@@ -103,7 +103,7 @@ namespace golang::base64
     base64.Encoding* URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
     base64.Encoding* RawStdEncoding = WithPadding(gocpp::recv(StdEncoding), NoPadding);
     base64.Encoding* RawURLEncoding = WithPadding(gocpp::recv(URLEncoding), NoPadding);
-    void Encode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    void Encode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         if(len(src) == 0)
         {
@@ -160,7 +160,7 @@ namespace golang::base64
         }
     }
 
-    gocpp::slice<unsigned char> AppendEncode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<unsigned char> AppendEncode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = EncodedLen(gocpp::recv(enc), len(src));
         dst = Grow(gocpp::recv(slices), dst, n);
@@ -168,7 +168,7 @@ namespace golang::base64
         return dst.make_slice(0, len(dst) + n);
     }
 
-    std::string EncodeToString(Encoding* enc, gocpp::slice<unsigned char> src)
+    std::string EncodeToString(struct Encoding* enc, gocpp::slice<unsigned char> src)
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), EncodedLen(gocpp::recv(enc), len(src)));
         Encode(gocpp::recv(enc), buf, src);
@@ -189,12 +189,12 @@ namespace golang::base64
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const encoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct encoder& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -261,7 +261,7 @@ namespace golang::base64
         return {n, err};
     }
 
-    std::string Close(encoder* e)
+    std::string Close(struct encoder* e)
     {
         if(e->err == nullptr && e->nbuf > 0)
         {
@@ -277,7 +277,7 @@ namespace golang::base64
         return gocpp::InitPtr<encoder>([](encoder& x) { x.enc = enc; x.w = w; });
     }
 
-    int EncodedLen(Encoding* enc, int n)
+    int EncodedLen(struct Encoding* enc, int n)
     {
         if(enc->padChar == NoPadding)
         {
@@ -291,7 +291,7 @@ namespace golang::base64
         return "illegal base64 data at input byte " + FormatInt(gocpp::recv(strconv), int64(e), 10);
     }
 
-    std::tuple<int, int, std::string> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
+    std::tuple<int, int, std::string> decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
     {
         int nsi;
         int n;
@@ -459,7 +459,7 @@ namespace golang::base64
         return {si, dlen - 1, err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<gocpp::slice<unsigned char>, std::string> AppendDecode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = len(src);
         for(; n > 0 && rune(src[n - 1]) == enc->padChar; )
@@ -473,7 +473,7 @@ namespace golang::base64
         return {dst.make_slice(0, len(dst) + n), err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> DecodeString(Encoding* enc, std::string s)
+    std::tuple<gocpp::slice<unsigned char>, std::string> DecodeString(struct Encoding* enc, std::string s)
     {
         auto dbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), DecodedLen(gocpp::recv(enc), len(s)));
         auto [n, err] = Decode(gocpp::recv(enc), dbuf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
@@ -496,12 +496,12 @@ namespace golang::base64
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const decoder& value)
+    std::ostream& operator<<(std::ostream& os, const struct decoder& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
         std::string err;
@@ -597,7 +597,7 @@ namespace golang::base64
         return {n, d->err};
     }
 
-    std::tuple<int, std::string> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int, std::string> Decode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         int n;
         std::string err;
@@ -717,12 +717,12 @@ namespace golang::base64
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const newlineFilteringReader& value)
+    std::ostream& operator<<(std::ostream& os, const struct newlineFilteringReader& value)
     {
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct newlineFilteringReader* r, gocpp::slice<unsigned char> p)
     {
         auto [n, err] = Read(gocpp::recv(r->wrapped), p);
         for(; n > 0; )
@@ -753,7 +753,7 @@ namespace golang::base64
         return gocpp::InitPtr<decoder>([](decoder& x) { x.enc = enc; x.r = new newlineFilteringReader {r}; });
     }
 
-    int DecodedLen(Encoding* enc, int n)
+    int DecodedLen(struct Encoding* enc, int n)
     {
         return decodedLen(n, enc->padChar);
     }

@@ -70,6 +70,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const gsignalStack& value);
+    std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value);
 }
 

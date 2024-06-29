@@ -37,7 +37,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const slice& value);
+    std::ostream& operator<<(std::ostream& os, const struct slice& value);
     struct notInHeapSlice
     {
         notInHeap* array;
@@ -49,7 +49,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const notInHeapSlice& value);
+    std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
     void panicmakeslicelen();
     void panicmakeslicecap();
     unsafe::Pointer makeslicecopy(_type* et, int tolen, int fromlen, unsafe::Pointer from);

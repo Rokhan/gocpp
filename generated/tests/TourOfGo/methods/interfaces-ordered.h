@@ -60,7 +60,7 @@ namespace golang::main
     double Abs(const gocpp::PtrRecv<Abser, false>& self);
     double Abs(const gocpp::ObjRecv<Abser>& self);
 
-    std::ostream& operator<<(std::ostream& os, const Abser& value);
+    std::ostream& operator<<(std::ostream& os, const struct Abser& value);
     struct Vertex
     {
         double X;
@@ -71,9 +71,9 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value);
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
     double Abs(MyFloat f);
-    double Abs(Vertex* v);
+    double Abs(struct Vertex* v);
 }
 

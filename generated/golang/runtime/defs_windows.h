@@ -62,7 +62,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const systeminfo& value);
+    std::ostream& operator<<(std::ostream& os, const struct systeminfo& value);
     struct exceptionpointers
     {
         exceptionrecord* record;
@@ -73,7 +73,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const exceptionpointers& value);
+    std::ostream& operator<<(std::ostream& os, const struct exceptionpointers& value);
     struct exceptionrecord
     {
         uint32_t exceptioncode;
@@ -88,7 +88,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const exceptionrecord& value);
+    std::ostream& operator<<(std::ostream& os, const struct exceptionrecord& value);
     struct overlapped
     {
         uintptr_t internal;
@@ -101,7 +101,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const overlapped& value);
+    std::ostream& operator<<(std::ostream& os, const struct overlapped& value);
     struct memoryBasicInformation
     {
         uintptr_t baseAddress;
@@ -117,6 +117,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const memoryBasicInformation& value);
+    std::ostream& operator<<(std::ostream& os, const struct memoryBasicInformation& value);
 }
 

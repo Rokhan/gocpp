@@ -37,7 +37,7 @@ namespace golang::fmt
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const fmtFlags& value);
+    std::ostream& operator<<(std::ostream& os, const struct fmtFlags& value);
     struct fmt
     {
         buffer* buf;
@@ -50,25 +50,25 @@ namespace golang::fmt
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const fmt& value);
-    void clearflags(fmt* f);
-    void init(fmt* f, buffer* buf);
-    void writePadding(fmt* f, int n);
-    void pad(fmt* f, gocpp::slice<unsigned char> b);
-    void padString(fmt* f, std::string s);
-    void fmtBoolean(fmt* f, bool v);
-    void fmtUnicode(fmt* f, uint64_t u);
-    void fmtInteger(fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits);
-    std::string truncateString(fmt* f, std::string s);
-    gocpp::slice<unsigned char> truncate(fmt* f, gocpp::slice<unsigned char> b);
-    void fmtS(fmt* f, std::string s);
-    void fmtBs(fmt* f, gocpp::slice<unsigned char> b);
-    void fmtSbx(fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits);
-    void fmtSx(fmt* f, std::string s, std::string digits);
-    void fmtBx(fmt* f, gocpp::slice<unsigned char> b, std::string digits);
-    void fmtQ(fmt* f, std::string s);
-    void fmtC(fmt* f, uint64_t c);
-    void fmtQc(fmt* f, uint64_t c);
-    void fmtFloat(fmt* f, double v, int size, gocpp::rune verb, int prec);
+    std::ostream& operator<<(std::ostream& os, const struct fmt& value);
+    void clearflags(struct fmt* f);
+    void init(struct fmt* f, buffer* buf);
+    void writePadding(struct fmt* f, int n);
+    void pad(struct fmt* f, gocpp::slice<unsigned char> b);
+    void padString(struct fmt* f, std::string s);
+    void fmtBoolean(struct fmt* f, bool v);
+    void fmtUnicode(struct fmt* f, uint64_t u);
+    void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits);
+    std::string truncateString(struct fmt* f, std::string s);
+    gocpp::slice<unsigned char> truncate(struct fmt* f, gocpp::slice<unsigned char> b);
+    void fmtS(struct fmt* f, std::string s);
+    void fmtBs(struct fmt* f, gocpp::slice<unsigned char> b);
+    void fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits);
+    void fmtSx(struct fmt* f, std::string s, std::string digits);
+    void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits);
+    void fmtQ(struct fmt* f, std::string s);
+    void fmtC(struct fmt* f, uint64_t c);
+    void fmtQc(struct fmt* f, uint64_t c);
+    void fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec);
 }
 

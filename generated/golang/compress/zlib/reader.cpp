@@ -39,7 +39,7 @@ namespace golang::zlib
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const reader& value)
+    std::ostream& operator<<(std::ostream& os, const struct reader& value)
     {
         return value.PrintTo(os);
     }
@@ -84,7 +84,7 @@ namespace golang::zlib
         return self.obj.value->vReset(io::Reader r, gocpp::slice<unsigned char> dict);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Resetter& value)
+    std::ostream& operator<<(std::ostream& os, const struct Resetter& value)
     {
         return value.PrintTo(os);
     }
@@ -105,7 +105,7 @@ namespace golang::zlib
         return {z, nullptr};
     }
 
-    std::tuple<int, std::string> Read(reader* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, std::string> Read(struct reader* z, gocpp::slice<unsigned char> p)
     {
         if(z->err != nullptr)
         {
@@ -136,7 +136,7 @@ namespace golang::zlib
         return {n, io.go_EOF};
     }
 
-    std::string Close(reader* z)
+    std::string Close(struct reader* z)
     {
         if(z->err != nullptr && z->err != io.go_EOF)
         {
@@ -146,7 +146,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    std::string Reset(reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
+    std::string Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
         if(auto [fr, ok] = gocpp::getValue<compress/flate.Reader>(r); ok)

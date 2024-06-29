@@ -454,7 +454,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const gsignalStack& value)
+    std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value)
     {
         return value.PrintTo(os);
     }

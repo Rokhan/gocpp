@@ -27,22 +27,22 @@ namespace golang::fmtsort
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const SortedMap& value)
+    std::ostream& operator<<(std::ostream& os, const struct SortedMap& value)
     {
         return value.PrintTo(os);
     }
 
-    int Len(SortedMap* o)
+    int Len(struct SortedMap* o)
     {
         return len(o->Key);
     }
 
-    bool Less(SortedMap* o, int i, int j)
+    bool Less(struct SortedMap* o, int i, int j)
     {
         return compare(o->Key[i], o->Key[j]) < 0;
     }
 
-    void Swap(SortedMap* o, int i, int j)
+    void Swap(struct SortedMap* o, int i, int j)
     {
         std::tie(o->Key[i], o->Key[j]) = std::tuple{o->Key[j], o->Key[i]};
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};

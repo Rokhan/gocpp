@@ -24,7 +24,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const pageTraceBuf& value);
+    std::ostream& operator<<(std::ostream& os, const struct pageTraceBuf& value);
     void initPageTrace(std::string env);
     void finishPageTrace();
 }

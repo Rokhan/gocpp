@@ -64,7 +64,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const systeminfo& value)
+    std::ostream& operator<<(std::ostream& os, const struct systeminfo& value)
     {
         return value.PrintTo(os);
     }
@@ -79,7 +79,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const exceptionpointers& value)
+    std::ostream& operator<<(std::ostream& os, const struct exceptionpointers& value)
     {
         return value.PrintTo(os);
     }
@@ -98,7 +98,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const exceptionrecord& value)
+    std::ostream& operator<<(std::ostream& os, const struct exceptionrecord& value)
     {
         return value.PrintTo(os);
     }
@@ -115,7 +115,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const overlapped& value)
+    std::ostream& operator<<(std::ostream& os, const struct overlapped& value)
     {
         return value.PrintTo(os);
     }
@@ -135,7 +135,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const memoryBasicInformation& value)
+    std::ostream& operator<<(std::ostream& os, const struct memoryBasicInformation& value)
     {
         return value.PrintTo(os);
     }

@@ -27,42 +27,42 @@ namespace golang::image
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Point& value)
+    std::ostream& operator<<(std::ostream& os, const struct Point& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string String(Point p)
+    std::string String(struct Point p)
     {
         return "(" + Itoa(gocpp::recv(strconv), p.X) + "," + Itoa(gocpp::recv(strconv), p.Y) + ")";
     }
 
-    Point Add(Point p, Point q)
+    Point Add(struct Point p, Point q)
     {
         return Point {p.X + q.X, p.Y + q.Y};
     }
 
-    Point Sub(Point p, Point q)
+    Point Sub(struct Point p, Point q)
     {
         return Point {p.X - q.X, p.Y - q.Y};
     }
 
-    Point Mul(Point p, int k)
+    Point Mul(struct Point p, int k)
     {
         return Point {p.X * k, p.Y * k};
     }
 
-    Point Div(Point p, int k)
+    Point Div(struct Point p, int k)
     {
         return Point {p.X / k, p.Y / k};
     }
 
-    bool In(Point p, Rectangle r)
+    bool In(struct Point p, Rectangle r)
     {
         return r.Min.X <= p.X && p.X < r.Max.X && r.Min.Y <= p.Y && p.Y < r.Max.Y;
     }
 
-    Point Mod(Point p, Rectangle r)
+    Point Mod(struct Point p, Rectangle r)
     {
         auto [w, h] = std::tuple{Dx(gocpp::recv(r)), Dy(gocpp::recv(r))};
         p = Sub(gocpp::recv(p), r.Min);
@@ -79,7 +79,7 @@ namespace golang::image
         return Add(gocpp::recv(p), r.Min);
     }
 
-    bool Eq(Point p, Point q)
+    bool Eq(struct Point p, Point q)
     {
         return p == q;
     }
@@ -100,42 +100,42 @@ namespace golang::image
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Rectangle& value)
+    std::ostream& operator<<(std::ostream& os, const struct Rectangle& value)
     {
         return value.PrintTo(os);
     }
 
-    std::string String(Rectangle r)
+    std::string String(struct Rectangle r)
     {
         return String(gocpp::recv(r.Min)) + "-" + String(gocpp::recv(r.Max));
     }
 
-    int Dx(Rectangle r)
+    int Dx(struct Rectangle r)
     {
         return r.Max.X - r.Min.X;
     }
 
-    int Dy(Rectangle r)
+    int Dy(struct Rectangle r)
     {
         return r.Max.Y - r.Min.Y;
     }
 
-    Point Size(Rectangle r)
+    Point Size(struct Rectangle r)
     {
         return Point {r.Max.X - r.Min.X, r.Max.Y - r.Min.Y};
     }
 
-    Rectangle Add(Rectangle r, Point p)
+    Rectangle Add(struct Rectangle r, Point p)
     {
         return Rectangle {Point {r.Min.X + p.X, r.Min.Y + p.Y}, Point {r.Max.X + p.X, r.Max.Y + p.Y}};
     }
 
-    Rectangle Sub(Rectangle r, Point p)
+    Rectangle Sub(struct Rectangle r, Point p)
     {
         return Rectangle {Point {r.Min.X - p.X, r.Min.Y - p.Y}, Point {r.Max.X - p.X, r.Max.Y - p.Y}};
     }
 
-    Rectangle Inset(Rectangle r, int n)
+    Rectangle Inset(struct Rectangle r, int n)
     {
         if(Dx(gocpp::recv(r)) < 2 * n)
         {
@@ -160,7 +160,7 @@ namespace golang::image
         return r;
     }
 
-    Rectangle Intersect(Rectangle r, Rectangle s)
+    Rectangle Intersect(struct Rectangle r, Rectangle s)
     {
         if(r.Min.X < s.Min.X)
         {
@@ -185,7 +185,7 @@ namespace golang::image
         return r;
     }
 
-    Rectangle Union(Rectangle r, Rectangle s)
+    Rectangle Union(struct Rectangle r, Rectangle s)
     {
         if(Empty(gocpp::recv(r)))
         {
@@ -214,22 +214,22 @@ namespace golang::image
         return r;
     }
 
-    bool Empty(Rectangle r)
+    bool Empty(struct Rectangle r)
     {
         return r.Min.X >= r.Max.X || r.Min.Y >= r.Max.Y;
     }
 
-    bool Eq(Rectangle r, Rectangle s)
+    bool Eq(struct Rectangle r, Rectangle s)
     {
         return r == s || Empty(gocpp::recv(r)) && Empty(gocpp::recv(s));
     }
 
-    bool Overlaps(Rectangle r, Rectangle s)
+    bool Overlaps(struct Rectangle r, Rectangle s)
     {
         return ! Empty(gocpp::recv(r)) && ! Empty(gocpp::recv(s)) && r.Min.X < s.Max.X && s.Min.X < r.Max.X && r.Min.Y < s.Max.Y && s.Min.Y < r.Max.Y;
     }
 
-    bool In(Rectangle r, Rectangle s)
+    bool In(struct Rectangle r, Rectangle s)
     {
         if(Empty(gocpp::recv(r)))
         {
@@ -238,7 +238,7 @@ namespace golang::image
         return s.Min.X <= r.Min.X && r.Max.X <= s.Max.X && s.Min.Y <= r.Min.Y && r.Max.Y <= s.Max.Y;
     }
 
-    Rectangle Canon(Rectangle r)
+    Rectangle Canon(struct Rectangle r)
     {
         if(r.Max.X < r.Min.X)
         {
@@ -251,7 +251,7 @@ namespace golang::image
         return r;
     }
 
-    color::Color At(Rectangle r, int x, int y)
+    color::Color At(struct Rectangle r, int x, int y)
     {
         if(In(gocpp::recv((Point {x, y})), r))
         {
@@ -260,7 +260,7 @@ namespace golang::image
         return color.Transparent;
     }
 
-    color::RGBA64 RGBA64At(Rectangle r, int x, int y)
+    color::RGBA64 RGBA64At(struct Rectangle r, int x, int y)
     {
         if(In(gocpp::recv((Point {x, y})), r))
         {
@@ -269,12 +269,12 @@ namespace golang::image
         return color::RGBA64 {};
     }
 
-    Rectangle Bounds(Rectangle r)
+    Rectangle Bounds(struct Rectangle r)
     {
         return r;
     }
 
-    color::Model ColorModel(Rectangle r)
+    color::Model ColorModel(struct Rectangle r)
     {
         return color.Alpha16Model;
     }

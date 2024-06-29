@@ -56,7 +56,7 @@ namespace golang::main
         return self.obj.value->vFetch(std::string url);
     }
 
-    std::ostream& operator<<(std::ostream& os, const Fetcher& value)
+    std::ostream& operator<<(std::ostream& os, const struct Fetcher& value)
     {
         return value.PrintTo(os);
     }
@@ -96,7 +96,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const fakeResult& value)
+    std::ostream& operator<<(std::ostream& os, const struct fakeResult& value)
     {
         return value.PrintTo(os);
     }

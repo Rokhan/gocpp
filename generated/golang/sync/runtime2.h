@@ -26,6 +26,6 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const notifyList& value);
+    std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
 }
 

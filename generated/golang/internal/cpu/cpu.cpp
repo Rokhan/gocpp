@@ -25,7 +25,7 @@ namespace golang::cpu
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const CacheLinePad& value)
+    std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value)
     {
         return value.PrintTo(os);
     }
@@ -270,7 +270,7 @@ namespace golang::cpu
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const option& value)
+    std::ostream& operator<<(std::ostream& os, const struct option& value)
     {
         return value.PrintTo(os);
     }

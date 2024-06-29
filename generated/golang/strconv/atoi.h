@@ -29,9 +29,9 @@ namespace golang::strconv
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const NumError& value);
-    std::string Error(NumError* e);
-    std::string Unwrap(NumError* e);
+    std::ostream& operator<<(std::ostream& os, const struct NumError& value);
+    std::string Error(struct NumError* e);
+    std::string Unwrap(struct NumError* e);
     std::string cloneString(std::string x);
     NumError* syntaxError(std::string fn, std::string str);
     NumError* rangeError(std::string fn, std::string str);

@@ -52,7 +52,7 @@ namespace golang::flate
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const huffmanBitWriter& value)
+    std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value)
     {
         return value.PrintTo(os);
     }
@@ -62,13 +62,13 @@ namespace golang::flate
         return gocpp::InitPtr<huffmanBitWriter>([](huffmanBitWriter& x) { x.writer = w; x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit); x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount); x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1); x.literalEncoding = newHuffmanEncoder(maxNumLit); x.codegenEncoding = newHuffmanEncoder(codegenCodeCount); x.offsetEncoding = newHuffmanEncoder(offsetCodeCount); });
     }
 
-    void reset(huffmanBitWriter* w, io::Writer writer)
+    void reset(struct huffmanBitWriter* w, io::Writer writer)
     {
         w->writer = writer;
         std::tie(w->bits, w->nbits, w->nbytes, w->err) = std::tuple{0, 0, 0, nullptr};
     }
 
-    void flush(huffmanBitWriter* w)
+    void flush(struct huffmanBitWriter* w)
     {
         if(w->err != nullptr)
         {
@@ -95,7 +95,7 @@ namespace golang::flate
         w->nbytes = 0;
     }
 
-    void write(huffmanBitWriter* w, gocpp::slice<unsigned char> b)
+    void write(struct huffmanBitWriter* w, gocpp::slice<unsigned char> b)
     {
         if(w->err != nullptr)
         {
@@ -104,7 +104,7 @@ namespace golang::flate
         std::tie(_, w->err) = Write(gocpp::recv(w->writer), b);
     }
 
-    void writeBits(huffmanBitWriter* w, int32_t b, unsigned int nb)
+    void writeBits(struct huffmanBitWriter* w, int32_t b, unsigned int nb)
     {
         if(w->err != nullptr)
         {
@@ -135,7 +135,7 @@ namespace golang::flate
         }
     }
 
-    void writeBytes(huffmanBitWriter* w, gocpp::slice<unsigned char> bytes)
+    void writeBytes(struct huffmanBitWriter* w, gocpp::slice<unsigned char> bytes)
     {
         if(w->err != nullptr)
         {
@@ -162,7 +162,7 @@ namespace golang::flate
         write(gocpp::recv(w), bytes);
     }
 
-    void generateCodegen(huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
+    void generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
     {
         for(auto [i, gocpp_ignored] : w->codegenFreq)
         {
@@ -251,7 +251,7 @@ namespace golang::flate
         codegen[outIndex] = badCode;
     }
 
-    std::tuple<int, int> dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits)
+    std::tuple<int, int> dynamicSize(struct huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits)
     {
         int size;
         int numCodegens;
@@ -267,12 +267,12 @@ namespace golang::flate
         return {size, numCodegens};
     }
 
-    int fixedSize(huffmanBitWriter* w, int extraBits)
+    int fixedSize(struct huffmanBitWriter* w, int extraBits)
     {
         return 3 + bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) + bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) + extraBits;
     }
 
-    std::tuple<int, bool> storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in)
+    std::tuple<int, bool> storedSize(struct huffmanBitWriter* w, gocpp::slice<unsigned char> in)
     {
         if(in == nullptr)
         {
@@ -285,7 +285,7 @@ namespace golang::flate
         return {0, false};
     }
 
-    void writeCode(huffmanBitWriter* w, hcode c)
+    void writeCode(struct huffmanBitWriter* w, hcode c)
     {
         if(w->err != nullptr)
         {
@@ -316,7 +316,7 @@ namespace golang::flate
         }
     }
 
-    void writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
+    void writeDynamicHeader(struct huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -372,7 +372,7 @@ namespace golang::flate
         }
     }
 
-    void writeStoredHeader(huffmanBitWriter* w, int length, bool isEof)
+    void writeStoredHeader(struct huffmanBitWriter* w, int length, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -389,7 +389,7 @@ namespace golang::flate
         writeBits(gocpp::recv(w), int32(^ uint16_t(length)), 16);
     }
 
-    void writeFixedHeader(huffmanBitWriter* w, bool isEof)
+    void writeFixedHeader(struct huffmanBitWriter* w, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -403,7 +403,7 @@ namespace golang::flate
         writeBits(gocpp::recv(w), value, 3);
     }
 
-    void writeBlock(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void writeBlock(struct huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -454,7 +454,7 @@ namespace golang::flate
         writeTokens(gocpp::recv(w), tokens, literalEncoding->codes, offsetEncoding->codes);
     }
 
-    void writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -475,7 +475,7 @@ namespace golang::flate
         writeTokens(gocpp::recv(w), tokens, w->literalEncoding->codes, w->offsetEncoding->codes);
     }
 
-    std::tuple<int, int> indexTokens(huffmanBitWriter* w, gocpp::slice<token> tokens)
+    std::tuple<int, int> indexTokens(struct huffmanBitWriter* w, gocpp::slice<token> tokens)
     {
         int numLiterals;
         int numOffsets;
@@ -533,7 +533,7 @@ namespace golang::flate
         return {numLiterals, numOffsets};
     }
 
-    void writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
+    void writeTokens(struct huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
     {
         if(w->err != nullptr)
         {
@@ -576,7 +576,7 @@ namespace golang::flate
         generate(gocpp::recv(huffOffset), offsetFreq, 15);
     }
 
-    void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input)
+    void writeBlockHuff(struct huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {

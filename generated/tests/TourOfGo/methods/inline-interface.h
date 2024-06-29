@@ -26,8 +26,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Vertex& value);
-    double Abs(Vertex v);
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    double Abs(struct Vertex v);
     void main();
     struct gocpp_id_0 : gocpp::Interface
     {
@@ -74,7 +74,7 @@ namespace golang::main
     double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self);
     double Abs(const gocpp::ObjRecv<gocpp_id_0>& self);
 
-    std::ostream& operator<<(std::ostream& os, const gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct gocpp_id_1 : gocpp::Interface
     {
         gocpp_id_1(){}
@@ -120,7 +120,7 @@ namespace golang::main
     double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self);
     double Abs(const gocpp::ObjRecv<gocpp_id_1>& self);
 
-    std::ostream& operator<<(std::ostream& os, const gocpp_id_1& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void describe(gocpp_id_1 i);
 }
 

@@ -39,7 +39,7 @@ namespace golang::fmt
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const fmtFlags& value)
+    std::ostream& operator<<(std::ostream& os, const struct fmtFlags& value)
     {
         return value.PrintTo(os);
     }
@@ -56,23 +56,23 @@ namespace golang::fmt
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const fmt& value)
+    std::ostream& operator<<(std::ostream& os, const struct fmt& value)
     {
         return value.PrintTo(os);
     }
 
-    void clearflags(fmt* f)
+    void clearflags(struct fmt* f)
     {
         f->fmtFlags = fmtFlags {};
     }
 
-    void init(fmt* f, buffer* buf)
+    void init(struct fmt* f, buffer* buf)
     {
         f->buf = buf;
         clearflags(gocpp::recv(f));
     }
 
-    void writePadding(fmt* f, int n)
+    void writePadding(struct fmt* f, int n)
     {
         if(n <= 0)
         {
@@ -99,7 +99,7 @@ namespace golang::fmt
         *f->buf = buf.make_slice(0, newLen);
     }
 
-    void pad(fmt* f, gocpp::slice<unsigned char> b)
+    void pad(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(! f->widPresent || f->wid == 0)
         {
@@ -119,7 +119,7 @@ namespace golang::fmt
         }
     }
 
-    void padString(fmt* f, std::string s)
+    void padString(struct fmt* f, std::string s)
     {
         if(! f->widPresent || f->wid == 0)
         {
@@ -139,7 +139,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtBoolean(fmt* f, bool v)
+    void fmtBoolean(struct fmt* f, bool v)
     {
         if(v)
         {
@@ -151,7 +151,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtUnicode(fmt* f, uint64_t u)
+    void fmtUnicode(struct fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
         auto prec = 4;
@@ -202,7 +202,7 @@ namespace golang::fmt
         f->zero = oldZero;
     }
 
-    void fmtInteger(fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
+    void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
     {
         auto negative = isSigned && int64(u) < 0;
         if(negative)
@@ -359,7 +359,7 @@ namespace golang::fmt
         f->zero = oldZero;
     }
 
-    std::string truncateString(fmt* f, std::string s)
+    std::string truncateString(struct fmt* f, std::string s)
     {
         if(f->precPresent)
         {
@@ -376,7 +376,7 @@ namespace golang::fmt
         return s;
     }
 
-    gocpp::slice<unsigned char> truncate(fmt* f, gocpp::slice<unsigned char> b)
+    gocpp::slice<unsigned char> truncate(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(f->precPresent)
         {
@@ -399,19 +399,19 @@ namespace golang::fmt
         return b;
     }
 
-    void fmtS(fmt* f, std::string s)
+    void fmtS(struct fmt* f, std::string s)
     {
         s = truncateString(gocpp::recv(f), s);
         padString(gocpp::recv(f), s);
     }
 
-    void fmtBs(fmt* f, gocpp::slice<unsigned char> b)
+    void fmtBs(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         b = truncate(gocpp::recv(f), b);
         pad(gocpp::recv(f), b);
     }
 
-    void fmtSbx(fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
+    void fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
     {
         auto length = len(b);
         if(b == nullptr)
@@ -484,17 +484,17 @@ namespace golang::fmt
         }
     }
 
-    void fmtSx(fmt* f, std::string s, std::string digits)
+    void fmtSx(struct fmt* f, std::string s, std::string digits)
     {
         fmtSbx(gocpp::recv(f), s, nullptr, digits);
     }
 
-    void fmtBx(fmt* f, gocpp::slice<unsigned char> b, std::string digits)
+    void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
     {
         fmtSbx(gocpp::recv(f), "", b, digits);
     }
 
-    void fmtQ(fmt* f, std::string s)
+    void fmtQ(struct fmt* f, std::string s)
     {
         s = truncateString(gocpp::recv(f), s);
         if(f->sharp && CanBackquote(gocpp::recv(strconv), s))
@@ -513,7 +513,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtC(fmt* f, uint64_t c)
+    void fmtC(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
         if(c > utf8.MaxRune)
@@ -524,7 +524,7 @@ namespace golang::fmt
         pad(gocpp::recv(f), AppendRune(gocpp::recv(utf8), buf, r));
     }
 
-    void fmtQc(fmt* f, uint64_t c)
+    void fmtQc(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
         if(c > utf8.MaxRune)
@@ -542,7 +542,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtFloat(fmt* f, double v, int size, gocpp::rune verb, int prec)
+    void fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
         if(f->precPresent)
         {

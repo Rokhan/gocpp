@@ -31,7 +31,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Cond& value)
+    std::ostream& operator<<(std::ostream& os, const struct Cond& value)
     {
         return value.PrintTo(os);
     }
@@ -41,7 +41,7 @@ namespace golang::sync
         return gocpp::InitPtr<Cond>([](Cond& x) { x.L = l; });
     }
 
-    void Wait(Cond* c)
+    void Wait(struct Cond* c)
     {
         check(gocpp::recv(c->checker));
         auto t = runtime_notifyListAdd(& c->notify);
@@ -50,13 +50,13 @@ namespace golang::sync
         Lock(gocpp::recv(c->L));
     }
 
-    void Signal(Cond* c)
+    void Signal(struct Cond* c)
     {
         check(gocpp::recv(c->checker));
         runtime_notifyListNotifyOne(& c->notify);
     }
 
-    void Broadcast(Cond* c)
+    void Broadcast(struct Cond* c)
     {
         check(gocpp::recv(c->checker));
         runtime_notifyListNotifyAll(& c->notify);
@@ -78,7 +78,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const noCopy& value)
+    std::ostream& operator<<(std::ostream& os, const struct noCopy& value)
     {
         return value.PrintTo(os);
     }

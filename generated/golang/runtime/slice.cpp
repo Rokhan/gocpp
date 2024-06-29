@@ -39,7 +39,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const slice& value)
+    std::ostream& operator<<(std::ostream& os, const struct slice& value)
     {
         return value.PrintTo(os);
     }
@@ -55,7 +55,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const notInHeapSlice& value)
+    std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value)
     {
         return value.PrintTo(os);
     }

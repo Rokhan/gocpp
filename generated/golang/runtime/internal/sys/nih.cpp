@@ -21,7 +21,7 @@ namespace golang::sys
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const nih& value)
+    std::ostream& operator<<(std::ostream& os, const struct nih& value)
     {
         return value.PrintTo(os);
     }
@@ -35,7 +35,7 @@ namespace golang::sys
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const NotInHeap& value)
+    std::ostream& operator<<(std::ostream& os, const struct NotInHeap& value)
     {
         return value.PrintTo(os);
     }

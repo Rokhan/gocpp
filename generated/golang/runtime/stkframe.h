@@ -42,7 +42,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const stkframe& value);
+    std::ostream& operator<<(std::ostream& os, const struct stkframe& value);
     struct reflectMethodValue
     {
         uintptr_t fn;
@@ -54,10 +54,10 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const reflectMethodValue& value);
-    uintptr_t argBytes(stkframe* frame);
-    std::tuple<bitvector, bool> argMapInternal(stkframe* frame);
-    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(stkframe* frame, bool debug);
+    std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
+    uintptr_t argBytes(struct stkframe* frame);
+    std::tuple<bitvector, bool> argMapInternal(struct stkframe* frame);
+    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug);
     void stkobjinit();
 }
 

@@ -27,7 +27,7 @@ namespace golang::tree
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Tree& value)
+    std::ostream& operator<<(std::ostream& os, const struct Tree& value)
     {
         return value.PrintTo(os);
     }
@@ -59,7 +59,7 @@ namespace golang::tree
         return t;
     }
 
-    std::string String(Tree* t)
+    std::string String(struct Tree* t)
     {
         if(t == nullptr)
         {

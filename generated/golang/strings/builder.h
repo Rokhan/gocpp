@@ -25,18 +25,18 @@ namespace golang::strings
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Builder& value);
+    std::ostream& operator<<(std::ostream& os, const struct Builder& value);
     unsafe::Pointer noescape(unsafe::Pointer p);
-    void copyCheck(Builder* b);
-    std::string String(Builder* b);
-    int Len(Builder* b);
-    int Cap(Builder* b);
-    void Reset(Builder* b);
-    void grow(Builder* b, int n);
-    void Grow(Builder* b, int n);
-    std::tuple<int, std::string> Write(Builder* b, gocpp::slice<unsigned char> p);
-    std::string WriteByte(Builder* b, unsigned char c);
-    std::tuple<int, std::string> WriteRune(Builder* b, gocpp::rune r);
-    std::tuple<int, std::string> WriteString(Builder* b, std::string s);
+    void copyCheck(struct Builder* b);
+    std::string String(struct Builder* b);
+    int Len(struct Builder* b);
+    int Cap(struct Builder* b);
+    void Reset(struct Builder* b);
+    void grow(struct Builder* b, int n);
+    void Grow(struct Builder* b, int n);
+    std::tuple<int, std::string> Write(struct Builder* b, gocpp::slice<unsigned char> p);
+    std::string WriteByte(struct Builder* b, unsigned char c);
+    std::tuple<int, std::string> WriteRune(struct Builder* b, gocpp::rune r);
+    std::tuple<int, std::string> WriteString(struct Builder* b, std::string s);
 }
 

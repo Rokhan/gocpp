@@ -25,10 +25,10 @@ namespace golang::fmtsort
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const SortedMap& value);
-    int Len(SortedMap* o);
-    bool Less(SortedMap* o, int i, int j);
-    void Swap(SortedMap* o, int i, int j);
+    std::ostream& operator<<(std::ostream& os, const struct SortedMap& value);
+    int Len(struct SortedMap* o);
+    bool Less(struct SortedMap* o, int i, int j);
+    void Swap(struct SortedMap* o, int i, int j);
     SortedMap* Sort(reflect::Value mapValue);
     int compare(reflect::Value aVal, reflect::Value bVal);
     std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);

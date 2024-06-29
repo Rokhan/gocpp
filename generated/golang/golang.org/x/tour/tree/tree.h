@@ -25,9 +25,9 @@ namespace golang::tree
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Tree& value);
+    std::ostream& operator<<(std::ostream& os, const struct Tree& value);
     Tree* New(int k);
     Tree* insert(Tree* t, int v);
-    std::string String(Tree* t);
+    std::string String(struct Tree* t);
 }
 

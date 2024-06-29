@@ -27,7 +27,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const inlinedCall& value);
+    std::ostream& operator<<(std::ostream& os, const struct inlinedCall& value);
     struct inlineUnwinder
     {
         funcInfo f;
@@ -38,7 +38,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const inlineUnwinder& value);
+    std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
     struct inlineFrame
     {
         uintptr_t pc;
@@ -49,13 +49,13 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const inlineFrame& value);
+    std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value);
     std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(funcInfo f, uintptr_t pc);
-    inlineFrame resolveInternal(inlineUnwinder* u, uintptr_t pc);
-    bool valid(inlineFrame uf);
-    inlineFrame next(inlineUnwinder* u, inlineFrame uf);
-    bool isInlined(inlineUnwinder* u, inlineFrame uf);
-    srcFunc srcFunc(inlineUnwinder* u, inlineFrame uf);
-    std::tuple<std::string, int> fileLine(inlineUnwinder* u, inlineFrame uf);
+    inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc);
+    bool valid(struct inlineFrame uf);
+    inlineFrame next(struct inlineUnwinder* u, inlineFrame uf);
+    bool isInlined(struct inlineUnwinder* u, inlineFrame uf);
+    srcFunc srcFunc(struct inlineUnwinder* u, inlineFrame uf);
+    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, inlineFrame uf);
 }
 

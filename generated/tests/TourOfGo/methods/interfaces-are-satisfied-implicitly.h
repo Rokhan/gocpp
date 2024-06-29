@@ -58,7 +58,7 @@ namespace golang::main
     void M(const gocpp::PtrRecv<I, false>& self);
     void M(const gocpp::ObjRecv<I>& self);
 
-    std::ostream& operator<<(std::ostream& os, const I& value);
+    std::ostream& operator<<(std::ostream& os, const struct I& value);
     struct T
     {
         std::string S;
@@ -68,8 +68,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const T& value);
-    void M(T t);
+    std::ostream& operator<<(std::ostream& os, const struct T& value);
+    void M(struct T t);
     void main();
 }
 

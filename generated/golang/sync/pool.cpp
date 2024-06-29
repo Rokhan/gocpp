@@ -35,7 +35,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const Pool& value)
+    std::ostream& operator<<(std::ostream& os, const struct Pool& value)
     {
         return value.PrintTo(os);
     }
@@ -50,7 +50,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const poolLocalInternal& value)
+    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value)
     {
         return value.PrintTo(os);
     }
@@ -64,7 +64,7 @@ namespace golang::sync
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const poolLocal& value)
+    std::ostream& operator<<(std::ostream& os, const struct poolLocal& value)
     {
         return value.PrintTo(os);
     }
@@ -80,7 +80,7 @@ namespace golang::sync
         return Pointer(gocpp::recv(unsafe), & poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
-    void Put(Pool* p, go_any x)
+    void Put(struct Pool* p, go_any x)
     {
         if(x == nullptr)
         {
@@ -111,7 +111,7 @@ namespace golang::sync
         }
     }
 
-    go_any Get(Pool* p)
+    go_any Get(struct Pool* p)
     {
         if(race.Enabled)
         {
@@ -144,7 +144,7 @@ namespace golang::sync
         return x;
     }
 
-    go_any getSlow(Pool* p, int pid)
+    go_any getSlow(struct Pool* p, int pid)
     {
         auto size = runtime_LoadAcquintptr(& p->localSize);
         auto locals = p->local;
@@ -180,7 +180,7 @@ namespace golang::sync
         return nullptr;
     }
 
-    std::tuple<poolLocal*, int> pin(Pool* p)
+    std::tuple<poolLocal*, int> pin(struct Pool* p)
     {
         if(p == nullptr)
         {
@@ -196,7 +196,7 @@ namespace golang::sync
         return pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<poolLocal*, int> pinSlow(Pool* p)
+    std::tuple<poolLocal*, int> pinSlow(struct Pool* p)
     {
         gocpp::Defer defer;
         runtime_procUnpin();

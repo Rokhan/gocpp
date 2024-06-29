@@ -55,7 +55,7 @@ namespace golang::main
         return self.obj.value->vM();
     }
 
-    std::ostream& operator<<(std::ostream& os, const I& value)
+    std::ostream& operator<<(std::ostream& os, const struct I& value)
     {
         return value.PrintTo(os);
     }

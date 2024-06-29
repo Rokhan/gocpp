@@ -1887,7 +1887,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
-	case *ast.ArrayType, *ast.ChanType, *ast.MapType, *ast.StarExpr:
+	case *ast.ArrayType, *ast.ChanType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)

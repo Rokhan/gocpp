@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	//"time"
+	"image/color"
 )
+
+type Zzz = color.Color
 
 func main() {
 	fmt.Printf("Hello, world.\n")
@@ -11,6 +13,9 @@ func main() {
 	var world = "World"
 	helloFunc(hello, world, "!")
 	//time.Sleep(100 * time.Millisecond)
+
+	type Yyy = color.Color
+	var _ Yyy
 
 	var a = 5
 	var b = 8 + 7

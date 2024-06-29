@@ -179,18 +179,31 @@ func GetCppFunc(funcName string) string {
 }
 
 type typeName struct {
-	names []string
-	Type  cppType
+	names  []string
+	Type   cppType
+	isRecv bool
 }
 
 type typeNames []typeName
+
+func (receivers *typeNames) setIsRecv() {
+	for i := range *receivers {
+		(*receivers)[i].isRecv = true
+	}
+}
 
 func (tn typeName) ParamDecl() []string {
 	var strs []string
 
 	if len(tn.names) != 0 {
 		for _, name := range tn.names {
-			strs = append(strs, fmt.Sprintf("%v %v", GetCppType(tn.Type.str), name))
+			if tn.isRecv && tn.Type.isSimple {
+				// Need to add 'struct' to avoid conflicts when function have the same name than the struct
+				//   => exemple "RGBA" in "image\color\color.go"
+				strs = append(strs, fmt.Sprintf("struct %v %v", GetCppType(tn.Type.str), name))
+			} else {
+				strs = append(strs, fmt.Sprintf("%v %v", GetCppType(tn.Type.str), name))
+			}
 		}
 	} else {
 		strs = append(strs, fmt.Sprintf("%v", GetCppType(tn.Type.str)))
@@ -1001,6 +1014,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	case *ast.FuncDecl:
 		params := cv.readFields(d.Recv)
+		params.setIsRecv()
 		params = append(params, cv.readFields(d.Type.Params)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
 		resultType := buildOutType(outTypes)
@@ -1030,7 +1044,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 				strs = append(strs, params.names...)
 			}
 			callParams := strings.Join(strs, ", ")
-			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil)})
+			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil), false})
 
 			fmt.Fprintf(cv.hpp.out, "%stemplate<typename... Args>\n", cv.cpp.Indent())
 			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, varidicParams)
@@ -1852,20 +1866,21 @@ type cppType struct {
 	str        string  // cpp type as a string
 	defs       []place // inline def used by type
 	isPtr      bool    // is type a pointer ?
+	isSimple   bool    // is the name of a stuct or an interface
 	isEllipsis bool    // is type created by an ellipsis
 	eltType    string
 }
 
 func mkCppType(str string, defs []place) cppType {
-	return cppType{str, defs, false, false, ""}
+	return cppType{str, defs, false, false, false, ""}
 }
 
 func mkCppPtrType(str string, defs []place) cppType {
-	return cppType{str, defs, true, false, ""}
+	return cppType{str, defs, true, false, false, ""}
 }
 
 func mkCppEllipsis(str string, defs []place, eltType string) cppType {
-	return cppType{str, defs, false, true, eltType}
+	return cppType{str, defs, false, false, true, eltType}
 }
 
 func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
@@ -1933,6 +1948,24 @@ func isMapType(node ast.Expr) bool {
 	}
 }
 
+func (cv *cppConverter) checkSimpleType(expr ast.Expr, cppType *cppType) {
+	tv := cv.typeInfo.Types[expr].Type
+
+	switch tv.(type) {
+	case *types.Named:
+		switch tv.Underlying().(type) {
+		case *types.Interface:
+			cppType.isSimple = true
+		case *types.Struct:
+			cppType.isSimple = true
+		}
+	}
+
+	if cv.shared.verbose {
+		cv.Logf("checkSimpleType, %v => %v, %T, %T\n", types.ExprString(expr), cppType.isSimple, tv, tv.Underlying())
+	}
+}
+
 func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	if node == nil {
 		panic("node is nil")
@@ -1940,7 +1973,9 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 	switch n := node.(type) {
 	case *ast.Ident:
-		return mkCppType(GetCppType(n.Name), nil)
+		identType := mkCppType(GetCppType(n.Name), nil)
+		cv.checkSimpleType(n, &identType)
+		return identType
 
 	case *ast.ArrayType:
 		return cv.convertArrayTypeExpr(n)
@@ -1960,7 +1995,9 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 	case *ast.StarExpr:
 		t := cv.convertTypeExpr(n.X)
-		return mkCppPtrType(t.str+"*", t.defs)
+		identType := mkCppPtrType(t.str+"*", t.defs)
+		cv.checkSimpleType(n.X, &identType)
+		return identType
 
 	case *ast.StructType:
 		name := cv.GenerateId()
@@ -2155,7 +2192,9 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, param genStr
 
 	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)%s\n", data.out.Indent(), param.name, data.declEnd)
+		// Need to add 'struct' to avoid conflicts when function have the same name than the struct
+		//   => exemple "RGBA" in "image\color\color.go"
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const struct %s& value)%s\n", data.out.Indent(), param.name, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 			fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", data.out.Indent())
@@ -2314,7 +2353,9 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, param 
 
 	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const %s& value)%s\n", data.out.Indent(), structName, data.declEnd)
+		// Need to add 'struct' to avoid conflicts when function have the same name than the struct
+		//   => exemple "RGBA" in "image\color\color.go"
+		fmt.Fprintf(buf, "%sstd::ostream& operator<<(std::ostream& os, const struct %s& value)%s\n", data.out.Indent(), structName, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 			fmt.Fprintf(buf, "%s    return value.PrintTo(os);\n", data.out.Indent())

@@ -145,17 +145,19 @@
 | $(ImportDir)/hash/crc32/crc32_generic.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_generic.cpp), [h](generated/golang/hash/crc32/crc32_generic.h))|
 | $(ImportDir)/hash/hash.go | ✔️ ([cpp](generated/golang/hash/hash.cpp), [h](generated/golang/hash/hash.h))|
 | $(ImportDir)/image/color/color.go | ✔️ ([cpp](generated/golang/image/color/color.cpp), [h](generated/golang/image/color/color.h))|
+| $(ImportDir)/image/color/ycbcr.go | ✔️ ([cpp](generated/golang/image/color/ycbcr.cpp), [h](generated/golang/image/color/ycbcr.h))|
 | $(ImportDir)/image/format.go | ✔️ ([cpp](generated/golang/image/format.cpp), [h](generated/golang/image/format.h))|
 | $(ImportDir)/image/geom.go | ✔️ ([cpp](generated/golang/image/geom.cpp), [h](generated/golang/image/geom.h))|
-| $(ImportDir)/image/image.go | ❌ |
+| $(ImportDir)/image/image.go | ✔️ ([cpp](generated/golang/image/image.cpp), [h](generated/golang/image/image.h))|
 | $(ImportDir)/image/png/paeth.go | ✔️ ([cpp](generated/golang/image/png/paeth.cpp), [h](generated/golang/image/png/paeth.h))|
 | $(ImportDir)/image/png/reader.go | ✔️ ([cpp](generated/golang/image/png/reader.cpp), [h](generated/golang/image/png/reader.h))|
 | $(ImportDir)/image/png/writer.go | ✔️ ([cpp](generated/golang/image/png/writer.cpp), [h](generated/golang/image/png/writer.h))|
 | $(ImportDir)/internal/abi/abi.go | ✔️ ([cpp](generated/golang/internal/abi/abi.cpp), [h](generated/golang/internal/abi/abi.h))|
 | $(ImportDir)/internal/abi/abi_amd64.go | ✔️ ([cpp](generated/golang/internal/abi/abi_amd64.cpp), [h](generated/golang/internal/abi/abi_amd64.h))|
 | $(ImportDir)/internal/abi/funcpc.go | ✔️ ([cpp](generated/golang/internal/abi/funcpc.cpp), [h](generated/golang/internal/abi/funcpc.h))|
+| $(ImportDir)/internal/abi/map.go | ✔️ ([cpp](generated/golang/internal/abi/map.cpp), [h](generated/golang/internal/abi/map.h))|
 | $(ImportDir)/internal/abi/symtab.go | ✔️ ([cpp](generated/golang/internal/abi/symtab.cpp), [h](generated/golang/internal/abi/symtab.h))|
-| $(ImportDir)/internal/abi/type.go | ❌ |
+| $(ImportDir)/internal/abi/type.go | ✔️ ([cpp](generated/golang/internal/abi/type.cpp), [h](generated/golang/internal/abi/type.h))|
 | $(ImportDir)/internal/bytealg/bytealg.go | ✔️ ([cpp](generated/golang/internal/bytealg/bytealg.cpp), [h](generated/golang/internal/bytealg/bytealg.h))|
 | $(ImportDir)/internal/bytealg/indexbyte_native.go | ✔️ ([cpp](generated/golang/internal/bytealg/indexbyte_native.cpp), [h](generated/golang/internal/bytealg/indexbyte_native.h))|
 | $(ImportDir)/internal/chacha8rand/chacha8.go | ✔️ ([cpp](generated/golang/internal/chacha8rand/chacha8.cpp), [h](generated/golang/internal/chacha8rand/chacha8.h))|
@@ -195,7 +197,9 @@
 | $(ImportDir)/math/sqrt.go | ✔️ ([cpp](generated/golang/math/sqrt.cpp), [h](generated/golang/math/sqrt.h))|
 | $(ImportDir)/math/stubs.go | ✔️ ([cpp](generated/golang/math/stubs.cpp), [h](generated/golang/math/stubs.h))|
 | $(ImportDir)/math/unsafe.go | ✔️ ([cpp](generated/golang/math/unsafe.cpp), [h](generated/golang/math/unsafe.h))|
-| $(ImportDir)/reflect/type.go | ❌ |
+| $(ImportDir)/reflect/abi.go | ✔️ ([cpp](generated/golang/reflect/abi.cpp), [h](generated/golang/reflect/abi.h))|
+| $(ImportDir)/reflect/float32reg_generic.go | ✔️ ([cpp](generated/golang/reflect/float32reg_generic.cpp), [h](generated/golang/reflect/float32reg_generic.h))|
+| $(ImportDir)/reflect/type.go | ✔️ ([cpp](generated/golang/reflect/type.cpp), [h](generated/golang/reflect/type.h))|
 | $(ImportDir)/reflect/value.go | ❌ |
 | $(ImportDir)/runtime/arena.go | ✔️ ([cpp](generated/golang/runtime/arena.cpp), [h](generated/golang/runtime/arena.h))|
 | $(ImportDir)/runtime/asan0.go | ✔️ ([cpp](generated/golang/runtime/asan0.cpp), [h](generated/golang/runtime/asan0.h))|
@@ -287,7 +291,7 @@
 | $(ImportDir)/runtime/type.go | ✔️ ([cpp](generated/golang/runtime/type.cpp), [h](generated/golang/runtime/type.h))|
 | $(ImportDir)/runtime/typekind.go | ✔️ ([cpp](generated/golang/runtime/typekind.cpp), [h](generated/golang/runtime/typekind.h))|
 | $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))|
-| $(ImportDir)/slices/slices.go | ❌ |
+| $(ImportDir)/slices/slices.go | ✔️ ([cpp](generated/golang/slices/slices.cpp), [h](generated/golang/slices/slices.h))|
 | $(ImportDir)/slices/sort.go | ✔️ ([cpp](generated/golang/slices/sort.cpp), [h](generated/golang/slices/sort.h))|
 | $(ImportDir)/slices/zsortanyfunc.go | ✔️ ([cpp](generated/golang/slices/zsortanyfunc.cpp), [h](generated/golang/slices/zsortanyfunc.h))|
 | $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))|
@@ -318,5 +322,8 @@
 | $(ImportDir)/time/sleep.go | ❌ |
 | $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))|
 | $(ImportDir)/time/time.go | ❌ |
-| $(ImportDir)/unicode/utf8/utf8.go | ❌ |
+| $(ImportDir)/unicode/digit.go | ✔️ ([cpp](generated/golang/unicode/digit.cpp), [h](generated/golang/unicode/digit.h))|
+| $(ImportDir)/unicode/graphic.go | ✔️ ([cpp](generated/golang/unicode/graphic.cpp), [h](generated/golang/unicode/graphic.h))|
+| $(ImportDir)/unicode/letter.go | ✔️ ([cpp](generated/golang/unicode/letter.cpp), [h](generated/golang/unicode/letter.h))|
+| $(ImportDir)/unicode/utf8/utf8.go | ✔️ ([cpp](generated/golang/unicode/utf8/utf8.cpp), [h](generated/golang/unicode/utf8/utf8.h))|
 | $(ImportDir)/unsafe/unsafe.go | ✔️ ([cpp](generated/golang/unsafe/unsafe.cpp), [h](generated/golang/unsafe/unsafe.h))|

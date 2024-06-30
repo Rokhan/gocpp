@@ -564,25 +564,31 @@ namespace gocpp
 
         slice(array_base<T>& a, int low, int high)
         {
-            if(low > high)
-            {
-                panic("slice: low > high");
-            }
-
-            if(a.size() < low)
-            {
-                panic("slice: low > size");
-            }
-
-            if(a.size() < high)
-            {
-                panic("slice: high > size");
-            }
-
+            checkParams(a, low, high);            
             this->mArray = a.mArray;
             mStart = low;
             mEnd = high;
         }
+        
+        slice(array_base<T>& a, int low, int high, int capacity)
+        {
+            checkParams(a, low, high);
+
+            if(high > capacity)
+            {
+                panic("slice: high > capacity");
+            }
+
+            if(a.size() < capacity)
+            {
+                panic("slice: capacity > size");
+            }
+
+            this->mArray = std::make_shared<store_type>(a.begin() + low, a.begin() + high);
+            this->mArray.reserve(capacity);
+            mStart = 0;
+            mEnd = high - low;
+        }        
 
         // TODO : other constructors
 
@@ -665,6 +671,25 @@ namespace gocpp
         // [mStart, mEnd[
         int mStart = 0;
         int mEnd = 0;
+
+    private:
+        void checkParams(array_base<T>& a, int low, int high)
+        {
+            if(low > high)
+            {
+                panic("slice: low > high");
+            }
+
+            if(a.size() < low)
+            {
+                panic("slice: low > size");
+            }
+
+            if(a.size() < high)
+            {
+                panic("slice: high > size");
+            }
+        }
     };
     
 

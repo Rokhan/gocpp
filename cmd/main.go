@@ -2483,6 +2483,11 @@ func (cv *cppConverter) convertExprType(node ast.Expr) types.Type {
 	panic("convertExprType, bug, unreacheable code reached !")
 }
 
+// TODO, check if we really need all this methods/function
+//
+//	-> convertGoToCppType(goType types.Type, position token.Position) string
+//	-> convertTypeExpr(node ast.Expr) cppType
+//	-> convertTypeSpec(node *ast.TypeSpec, end string) cppType
 func convertGoToCppType(goType types.Type, position token.Position) string {
 	if goType == nil {
 		panic("convertGoToCppType, Cannot convert nil type.")
@@ -2491,6 +2496,9 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	switch subType := goType.(type) {
 	case *types.Basic:
 		return GetCppGoType(subType)
+
+	// case *types.Chan:
+	// 	return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem()))
 
 	case *types.Named:
 		return GetCppGoType(subType)
@@ -2666,7 +2674,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 
 	case *ast.SliceExpr:
 		if n.Slice3 {
-			Panicf("convertExprImpl, 3 value slice not implemented: %v, input: %v", types.ExprString(n), cv.Position(n))
+			return fmt.Sprintf("%s.make_slice(%s, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
 		} else if n.Low == nil {
 			return fmt.Sprintf("%s.make_slice(0, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High))
 		} else if n.High == nil {

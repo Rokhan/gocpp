@@ -192,6 +192,13 @@ func (receivers *typeNames) setIsRecv() {
 	}
 }
 
+func (tns typeNames) getDefs() (defs []place) {
+	for _, tn := range tns {
+		defs = append(defs, tn.Type.defs...)
+	}
+	return
+}
+
 func (tn typeName) ParamDecl() []string {
 	var strs []string
 
@@ -1895,14 +1902,9 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
 		return mkCppType("", []place{fwdHeaderStr(usingDec, 1)})
 
-	case *ast.FuncType:
-		name := GetCppName(node.Name.Name)
-		// TODO: This part is probably wrong
-		return mkCppType(fmt.Sprintf("%s %s%s", cv.convertFuncTypeExpr(n), name, end), nil)
-
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
-	case *ast.ArrayType, *ast.ChanType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
+	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
@@ -1984,7 +1986,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		return cv.convertChanTypeExpr(n)
 
 	case *ast.FuncType:
-		return mkCppType(cv.convertFuncTypeExpr(n), nil)
+		return cv.convertFuncTypeExpr(n)
 
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n)
@@ -2068,11 +2070,11 @@ func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType) cppType {
 	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", node.Value), elt.defs)
 }
 
-func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) string {
+func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) cppType {
 	params := cv.readFields(node.Params)
 	_, outTypes := cv.getResultInfos(node)
 	resultType := buildOutType(outTypes)
-	return fmt.Sprintf("std::function<%s (%s)>", resultType, params)
+	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), params.getDefs())
 }
 
 func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType) cppType {
@@ -2538,11 +2540,12 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 	}
 
 	switch n := node.(type) {
-	case *ast.ArrayType:
-		array := cv.convertArrayTypeExpr(n)
+
+	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType:
+		typeDesc := cv.convertTypeExpr(n)
 		// TODO: typeDefs should be and output of convertExpr
 		// HACK: cv.cpp.out shouldn't be used here
-		for _, def := range array.defs {
+		for _, def := range typeDesc.defs {
 			if def.inline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
 			}
@@ -2550,35 +2553,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) string {
 		}
 
 		// Type used as parameter, we use a dummy tag value that is used only for its type
-		return fmt.Sprintf("gocpp::Tag<%s>()", array.str)
-
-	case *ast.ChanType:
-		chanType := cv.convertChanTypeExpr(n)
-		// TODO: mapDefs should be and output of convertExpr
-		// HACK: cv.cpp.out shouldn't be used here
-		for _, def := range chanType.defs {
-			if def.inline != nil {
-				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
-			}
-			checkOnlyInline(def)
-		}
-
-		// Type used as parameter, we use a dummy tag value that is used only for its type
-		return fmt.Sprintf("gocpp::Tag<%s>()", chanType.str)
-
-	case *ast.MapType:
-		mapType := cv.convertMapTypeExpr(n)
-		// TODO: mapDefs should be and output of convertExpr
-		// HACK: cv.cpp.out shouldn't be used here
-		for _, def := range mapType.defs {
-			if def.inline != nil {
-				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *def.inline)
-			}
-			checkOnlyInline(def)
-		}
-
-		// Type used as parameter, we use a dummy tag value that is used only for its type
-		return fmt.Sprintf("gocpp::Tag<%s>()", mapType.str)
+		return fmt.Sprintf("gocpp::Tag<%s>()", typeDesc.str)
 
 	case *ast.BasicLit:
 		switch n.Kind {

@@ -60,7 +60,6 @@ namespace golang::wc
             return os;
         }
     };
-
-    gocpp::slice<gocpp_id_1> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!", gocpp::map<std::string, int> {{ "I", 1 }, { "am", 1 }, { "learning", 1 }, { "Go!", 1 }}},  {"The quick brown fox jumped over the lazy dog.", gocpp::map<std::string, int> {{ "The", 1 }, { "quick", 1 }, { "brown", 1 }, { "fox", 1 }, { "jumped", 1 }, { "over", 1 }, { "the", 1 }, { "lazy", 1 }, { "dog.", 1 }}},  {"I ate a donut. Then I ate another donut.", gocpp::map<std::string, int> {{ "I", 2 }, { "ate", 2 }, { "a", 1 }, { "donut.", 2 }, { "Then", 1 }, { "another", 1 }}},  {"A man a plan a canal panama.", gocpp::map<std::string, int> {{ "A", 1 }, { "man", 1 }, { "a", 2 }, { "plan", 1 }, { "canal", 1 }, { "panama.", 1 }}}};
+    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!", gocpp::map<std::string, int> {{ "I", 1 }, { "am", 1 }, { "learning", 1 }, { "Go!", 1 }}},  {"The quick brown fox jumped over the lazy dog.", gocpp::map<std::string, int> {{ "The", 1 }, { "quick", 1 }, { "brown", 1 }, { "fox", 1 }, { "jumped", 1 }, { "over", 1 }, { "the", 1 }, { "lazy", 1 }, { "dog.", 1 }}},  {"I ate a donut. Then I ate another donut.", gocpp::map<std::string, int> {{ "I", 2 }, { "ate", 2 }, { "a", 1 }, { "donut.", 2 }, { "Then", 1 }, { "another", 1 }}},  {"A man a plan a canal panama.", gocpp::map<std::string, int> {{ "A", 1 }, { "man", 1 }, { "a", 2 }, { "plan", 1 }, { "canal", 1 }, { "panama.", 1 }}}};
 }
 

@@ -19,19 +19,19 @@ namespace golang::runtime
 {
     struct rtype;
     struct _typePair;
-    using nameOff = abi::NameOff;
-    using typeOff = abi::TypeOff;
+    using arraytype = abi::ArrayType;
+    using chantype = abi::ChanType;
     using textOff = abi::TextOff;
-    using _type = abi::Type;
     using uncommontype = abi::UncommonType;
     using interfacetype = abi::InterfaceType;
     using maptype = abi::MapType;
-    using arraytype = abi::ArrayType;
-    using chantype = abi::ChanType;
+    using nameOff = abi::NameOff;
+    using _type = abi::Type;
     using slicetype = abi::SliceType;
     using functype = abi::FuncType;
     using ptrtype = abi::PtrType;
     using name = abi::Name;
     using structtype = abi::StructType;
+    using typeOff = abi::TypeOff;
 }
 

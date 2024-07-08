@@ -7,34 +7,34 @@
 
 namespace golang::abi
 {
+    struct u;
+    struct MapType;
     struct Type;
+    struct Name;
+    struct u;
+    struct StructType;
     struct Method;
     struct UncommonType;
     struct Imethod;
     struct ArrayType;
-    struct ChanType;
+    struct StructField;
+    struct u;
     struct structTypeUncommon;
     struct u;
-    struct u;
-    struct u;
-    struct u;
+    struct PtrType;
+    struct FuncType;
+    struct ChanType;
     struct u;
     struct u;
     struct u;
     struct u;
     struct InterfaceType;
-    struct MapType;
     struct SliceType;
-    struct FuncType;
-    struct PtrType;
-    struct StructField;
-    struct StructType;
-    struct Name;
     using Kind = unsigned int;
-    using TFlag = uint8_t;
-    using NameOff = int32_t;
     using TypeOff = int32_t;
-    using TextOff = int32_t;
+    using TFlag = uint8_t;
     using ChanDir = int;
+    using TextOff = int32_t;
+    using NameOff = int32_t;
 }
 

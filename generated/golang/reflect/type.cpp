@@ -2656,6 +2656,13 @@ namespace golang::reflect
     Type StructOf(gocpp::slice<StructField> fields)
     {
         gocpp::Defer defer;
+        auto hash = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+        uintptr_t size = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+        uint8_t typalign = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+        auto comparable = true;
+        gocpp::slice<abi::Method> methods = true;
+        auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
+        auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
         struct gocpp_id_2
         {
 
@@ -2668,14 +2675,6 @@ namespace golang::reflect
                 return os;
             }
         };
-
-        auto hash = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        uintptr_t size = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        uint8_t typalign = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        auto comparable = true;
-        gocpp::slice<abi::Method> methods = true;
-        auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
-        auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
         auto fset = gocpp::map<std::string, gocpp_id_2> {};
         auto hasGCProg = false;
         auto lastzero = uintptr(0);
@@ -2908,7 +2907,6 @@ namespace golang::reflect
                 return os;
             }
         };
-
         go_any istruct = gocpp_id_4 {};
         auto prototype = *(**structType)(Pointer(gocpp::recv(unsafe), & istruct));
         *typ = *prototype;

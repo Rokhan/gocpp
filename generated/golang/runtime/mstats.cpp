@@ -140,7 +140,7 @@ namespace golang::runtime
         auto nMalloc = consStats.largeAllocCount;
         auto totalFree = consStats.largeFree;
         auto nFree = consStats.largeFreeCount;
-        struct gocpp_id_2
+        struct gocpp_id_1
         {
             uint32_t Size;
             uint64_t Mallocs;
@@ -158,7 +158,7 @@ namespace golang::runtime
                 return os;
             }
         };
-        gocpp::array<gocpp_id_2, _NumSizeClasses> bySize = {};
+        gocpp::array<gocpp_id_1, _NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
             bySize[i].Size = uint32_t(class_to_size[i]);

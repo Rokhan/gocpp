@@ -904,6 +904,7 @@ namespace std
 namespace golang
 {
     using gocpp::len;
+    using go_any = std::any;
 }
 
 // temporary mock implementations

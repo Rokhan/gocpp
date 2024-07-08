@@ -19,6 +19,7 @@
 | [TourOfGo/basics/panic-recover.go](tests/TourOfGo/basics/panic-recover.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/basics/short-variable-declarations.go](tests/TourOfGo/basics/short-variable-declarations.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/short-variable-declarations.cpp)) | ✔️ |
 | [TourOfGo/basics/type-conversions.go](tests/TourOfGo/basics/type-conversions.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/type-conversions.cpp)) | ✔️ |
+| [TourOfGo/basics/type-conversions-advanced.go](tests/TourOfGo/basics/type-conversions-advanced.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/basics/type-inference.go](tests/TourOfGo/basics/type-inference.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/type-inference.cpp)) | ❌ |
 | [TourOfGo/basics/variables.go](tests/TourOfGo/basics/variables.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/variables.cpp)) | ✔️ |
 | [TourOfGo/basics/variables-mixed-declaration.go](tests/TourOfGo/basics/variables-mixed-declaration.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/variables-mixed-declaration.cpp)) | ✔️ |
@@ -171,7 +172,9 @@
 | $(ImportDir)/internal/goexperiment/exp_cgocheck2_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_cgocheck2_off.cpp), [h](generated/golang/internal/goexperiment/exp_cgocheck2_off.h))|
 | $(ImportDir)/internal/goexperiment/exp_heapminimum512kib_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.cpp), [h](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.h))|
 | $(ImportDir)/internal/goos/zgoos_windows.go | ✔️ ([cpp](generated/golang/internal/goos/zgoos_windows.cpp), [h](generated/golang/internal/goos/zgoos_windows.h))|
+| $(ImportDir)/internal/itoa/itoa.go | ✔️ ([cpp](generated/golang/internal/itoa/itoa.cpp), [h](generated/golang/internal/itoa/itoa.h))|
 | $(ImportDir)/internal/race/norace.go | ✔️ ([cpp](generated/golang/internal/race/norace.cpp), [h](generated/golang/internal/race/norace.h))|
+| $(ImportDir)/internal/unsafeheader/unsafeheader.go | ✔️ ([cpp](generated/golang/internal/unsafeheader/unsafeheader.cpp), [h](generated/golang/internal/unsafeheader/unsafeheader.h))|
 | $(ImportDir)/io/io.go | ✔️ ([cpp](generated/golang/io/io.cpp), [h](generated/golang/io/io.h))|
 | $(ImportDir)/math/abs.go | ✔️ ([cpp](generated/golang/math/abs.cpp), [h](generated/golang/math/abs.h))|
 | $(ImportDir)/math/bits.go | ✔️ ([cpp](generated/golang/math/bits.cpp), [h](generated/golang/math/bits.h))|
@@ -199,6 +202,7 @@
 | $(ImportDir)/math/unsafe.go | ✔️ ([cpp](generated/golang/math/unsafe.cpp), [h](generated/golang/math/unsafe.h))|
 | $(ImportDir)/reflect/abi.go | ✔️ ([cpp](generated/golang/reflect/abi.cpp), [h](generated/golang/reflect/abi.h))|
 | $(ImportDir)/reflect/float32reg_generic.go | ✔️ ([cpp](generated/golang/reflect/float32reg_generic.cpp), [h](generated/golang/reflect/float32reg_generic.h))|
+| $(ImportDir)/reflect/makefunc.go | ✔️ ([cpp](generated/golang/reflect/makefunc.cpp), [h](generated/golang/reflect/makefunc.h))|
 | $(ImportDir)/reflect/type.go | ✔️ ([cpp](generated/golang/reflect/type.cpp), [h](generated/golang/reflect/type.h))|
 | $(ImportDir)/reflect/value.go | ❌ |
 | $(ImportDir)/runtime/arena.go | ✔️ ([cpp](generated/golang/runtime/arena.cpp), [h](generated/golang/runtime/arena.h))|

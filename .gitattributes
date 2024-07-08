@@ -4,6 +4,9 @@ generated/** linguist-generated
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# generated file are in unix format
+generated/** text eol=lf
+
 # Custom for Visual Studio
 *.cs     diff=csharp
 

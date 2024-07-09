@@ -190,13 +190,13 @@ namespace golang::runtime
         if(ctxt != 0)
         {
             auto s = append(gp->cgoCtxt, ctxt);
-            auto p = (*slice)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
+            auto p = (slice*)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
             atomicstorep(Pointer(gocpp::recv(unsafe), & p->array), Pointer(gocpp::recv(unsafe), & s[0]));
             p->cap = cap(s);
             p->len = len(s);
             defer.push_back([=]{ [=](g* gp) mutable -> void
             {
-                auto p = (*slice)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
+                auto p = (slice*)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
                 p->len--;
             }
 (gp); });
@@ -218,7 +218,7 @@ namespace golang::runtime
         }
         std::function<void (unsafe::Pointer frame)> cb = {};
         auto cbFV = funcval {uintptr(fn)};
-        *(*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), & cb)) = noescape(Pointer(gocpp::recv(unsafe), & cbFV));
+        *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), & cb)) = noescape(Pointer(gocpp::recv(unsafe), & cbFV));
         cb(frame);
         if(raceenabled)
         {
@@ -233,7 +233,7 @@ namespace golang::runtime
         {
             auto mp = acquirem();
             auto sched = & mp->g0->sched;
-            sched->sp = *(*uintptr)(Pointer(gocpp::recv(unsafe), sched->sp + alignUp(sys.MinFrameSize, sys.StackAlign)));
+            sched->sp = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), sched->sp + alignUp(sys.MinFrameSize, sys.StackAlign)));
             if(mp->ncgo > 0)
             {
                 mp->incgo = false;
@@ -270,7 +270,7 @@ namespace golang::runtime
             auto p = ep->data;
             if(t->Kind_ & kindDirectIface == 0)
             {
-                p = *(*unsafe.Pointer)(p);
+                p = *(unsafe::Pointer*)(p);
             }
             if(p == nullptr || ! cgoIsGoPointer(p))
             {
@@ -291,7 +291,7 @@ namespace golang::runtime
                         {
                             break;
                         }
-                        auto pt = (*ptrtype)(Pointer(gocpp::recv(unsafe), t));
+                        auto pt = (ptrtype*)(Pointer(gocpp::recv(unsafe), t));
                         cgoCheckArg(pt->Elem, p, true, false, cgoCheckPointerFail);
                         return;
                         break;
@@ -341,7 +341,7 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (*arraytype)(Pointer(gocpp::recv(unsafe), t));
+                    auto at = (arraytype*)(Pointer(gocpp::recv(unsafe), t));
                     if(! indir)
                     {
                         if(at->Len != 1)
@@ -364,7 +364,7 @@ namespace golang::runtime
                 case 3:
                     if(indir)
                     {
-                        p = *(*unsafe.Pointer)(p);
+                        p = *(unsafe::Pointer*)(p);
                     }
                     if(! cgoIsGoPointer(p))
                     {
@@ -373,7 +373,7 @@ namespace golang::runtime
                     gocpp::panic(errorString(msg));
                     break;
                 case 4:
-                    auto it = *(**_type)(p);
+                    auto it = *(_type**)(p);
                     if(it == nullptr)
                     {
                         return;
@@ -382,7 +382,7 @@ namespace golang::runtime
                     {
                         gocpp::panic(errorString(msg));
                     }
-                    p = *(*unsafe.Pointer)(add(p, goarch.PtrSize));
+                    p = *(unsafe::Pointer*)(add(p, goarch.PtrSize));
                     if(! cgoIsGoPointer(p))
                     {
                         return;
@@ -394,8 +394,8 @@ namespace golang::runtime
                     cgoCheckArg(it, p, it->Kind_ & kindDirectIface == 0, false, msg);
                     break;
                 case 5:
-                    auto st = (*slicetype)(Pointer(gocpp::recv(unsafe), t));
-                    auto s = (*slice)(p);
+                    auto st = (slicetype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto s = (slice*)(p);
                     p = s->array;
                     if(p == nullptr || ! cgoIsGoPointer(p))
                     {
@@ -416,7 +416,7 @@ namespace golang::runtime
                     }
                     break;
                 case 6:
-                    auto ss = (*stringStruct)(p);
+                    auto ss = (stringStruct*)(p);
                     if(! cgoIsGoPointer(ss->str))
                     {
                         return;
@@ -427,7 +427,7 @@ namespace golang::runtime
                     }
                     break;
                 case 7:
-                    auto st = (*structtype)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (structtype*)(Pointer(gocpp::recv(unsafe), t));
                     if(! indir)
                     {
                         if(len(st->Fields) != 1)
@@ -450,7 +450,7 @@ namespace golang::runtime
                 case 9:
                     if(indir)
                     {
-                        p = *(*unsafe.Pointer)(p);
+                        p = *(unsafe::Pointer*)(p);
                         if(p == nullptr)
                         {
                             return;
@@ -502,7 +502,7 @@ namespace golang::runtime
                         uintptr_t i;
                         break;
                     }
-                    auto pp = *(*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), addr));
+                    auto pp = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
                         uintptr_t base;
@@ -528,7 +528,7 @@ namespace golang::runtime
                         uintptr_t i;
                         break;
                     }
-                    auto pp = *(*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), addr));
+                    auto pp = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
                         uintptr_t base;

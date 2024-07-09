@@ -121,8 +121,8 @@ namespace golang::runtime
                         return {bitvector {}, false};
                     }
                     hasReflectStackObj = true;
-                    auto mv = *(**reflectMethodValue)(Pointer(gocpp::recv(unsafe), arg0));
-                    auto retValid = *(*bool)(Pointer(gocpp::recv(unsafe), arg0 + 4 * goarch.PtrSize));
+                    auto mv = *(reflectMethodValue**)(Pointer(gocpp::recv(unsafe), arg0));
+                    auto retValid = *(bool*)(Pointer(gocpp::recv(unsafe), arg0 + 4 * goarch.PtrSize));
                     if(mv->fn != entry(gocpp::recv(f)))
                     {
                         bitvector argMap;
@@ -205,7 +205,7 @@ namespace golang::runtime
             bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             auto stackid = pcdata;
-            auto stkmap = (*stackmap)(funcdata(f, abi.FUNCDATA_LocalsPointerMaps));
+            auto stkmap = (stackmap*)(funcdata(f, abi.FUNCDATA_LocalsPointerMaps));
             if(stkmap == nullptr || stkmap->n <= 0)
             {
                 bitvector locals;
@@ -252,7 +252,7 @@ namespace golang::runtime
             bitvector locals;
             bitvector args;
             gocpp::slice<stackObjectRecord> objs;
-            auto stackmap = (*stackmap)(funcdata(f, abi.FUNCDATA_ArgsPointerMaps));
+            auto stackmap = (stackmap*)(funcdata(f, abi.FUNCDATA_ArgsPointerMaps));
             if(stackmap == nullptr || stackmap->n <= 0)
             {
                 bitvector locals;
@@ -302,9 +302,9 @@ namespace golang::runtime
                 bitvector locals;
                 bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
-                auto n = *(*uintptr)(p);
+                auto n = *(uintptr_t*)(p);
                 p = add(p, goarch.PtrSize);
-                auto r0 = (*stackObjectRecord)(noescape(p));
+                auto r0 = (stackObjectRecord*)(noescape(p));
                 objs = Slice(gocpp::recv(unsafe), r0, int(n));
             }
         }

@@ -27,7 +27,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> bytes(std::string s)
     {
         gocpp::slice<unsigned char> ret;
-        auto rp = (*slice)(Pointer(gocpp::recv(unsafe), & ret));
+        auto rp = (slice*)(Pointer(gocpp::recv(unsafe), & ret));
         auto sp = stringStructOf(& s);
         rp->array = sp->str;
         rp->len = sp->len;
@@ -271,7 +271,7 @@ namespace golang::runtime
 
     void printslice(gocpp::slice<unsigned char> s)
     {
-        auto sp = (*slice)(Pointer(gocpp::recv(unsafe), & s));
+        auto sp = (slice*)(Pointer(gocpp::recv(unsafe), & s));
         print("[", len(s), "/", cap(s), "]");
         printpointer(sp->array);
     }
@@ -311,7 +311,7 @@ namespace golang::runtime
                 }
             }
             gwrite(markbuf.make_slice(0, ));
-            auto val = *(*uintptr)(Pointer(gocpp::recv(unsafe), p + i));
+            auto val = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), p + i));
             print(hex(val));
             print(" ");
             auto fn = findfunc(val);

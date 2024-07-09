@@ -95,7 +95,7 @@ namespace golang::sync
         {
             val = dequeueNil(nullptr);
         }
-        *(*go_any)(Pointer(gocpp::recv(unsafe), slot)) = val;
+        *(go_any*)(Pointer(gocpp::recv(unsafe), slot)) = val;
         Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
@@ -119,7 +119,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(*go_any)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(go_any*)(Pointer(gocpp::recv(unsafe), slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -146,7 +146,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(*go_any)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(go_any*)(Pointer(gocpp::recv(unsafe), slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -188,12 +188,12 @@ namespace golang::sync
 
     void storePoolChainElt(poolChainElt** pp, poolChainElt* v)
     {
-        StorePointer(gocpp::recv(atomic), (*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), pp)), Pointer(gocpp::recv(unsafe), v));
+        StorePointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), pp)), Pointer(gocpp::recv(unsafe), v));
     }
 
     poolChainElt* loadPoolChainElt(poolChainElt** pp)
     {
-        return (*poolChainElt)(LoadPointer(gocpp::recv(atomic), (*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), pp))));
+        return (poolChainElt*)(LoadPointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), pp))));
     }
 
     void pushHead(struct poolChain* c, go_any val)
@@ -255,7 +255,7 @@ namespace golang::sync
             {
                 return {nullptr, false};
             }
-            if(CompareAndSwapPointer(gocpp::recv(atomic), (*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), & c->tail)), Pointer(gocpp::recv(unsafe), d), Pointer(gocpp::recv(unsafe), d2)))
+            if(CompareAndSwapPointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), & c->tail)), Pointer(gocpp::recv(unsafe), d), Pointer(gocpp::recv(unsafe), d2)))
             {
                 storePoolChainElt(& d2->prev, nullptr);
             }

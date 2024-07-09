@@ -24,7 +24,7 @@ namespace golang::runtime
 {
     void atomicwb(unsafe::Pointer* ptr, unsafe::Pointer go_new)
     {
-        auto slot = (*uintptr)(Pointer(gocpp::recv(unsafe), ptr));
+        auto slot = (uintptr_t*)(Pointer(gocpp::recv(unsafe), ptr));
         auto buf = get2(gocpp::recv(ptr(gocpp::recv(getg()->m->p))->wbBuf));
         buf[0] = *slot;
         buf[1] = uintptr(go_new);
@@ -34,11 +34,11 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled)
         {
-            atomicwb((*unsafe.Pointer)(ptr), go_new);
+            atomicwb((unsafe::Pointer*)(ptr), go_new);
         }
         if(goexperiment.CgoCheck2)
         {
-            cgoCheckPtrWrite((*unsafe.Pointer)(ptr), go_new);
+            cgoCheckPtrWrite((unsafe::Pointer*)(ptr), go_new);
         }
         StorepNoWB(gocpp::recv(atomic), noescape(ptr), go_new);
     }
@@ -74,7 +74,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        sync_atomic_StoreUintptr((*uintptr)(Pointer(gocpp::recv(unsafe), ptr)), uintptr(go_new));
+        sync_atomic_StoreUintptr((uintptr_t*)(Pointer(gocpp::recv(unsafe), ptr)), uintptr(go_new));
     }
 
     uintptr_t sync_atomic_SwapUintptr(uintptr_t* ptr, uintptr_t go_new)
@@ -90,7 +90,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        auto old = Pointer(gocpp::recv(unsafe), sync_atomic_SwapUintptr((*uintptr)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(go_new)));
+        auto old = Pointer(gocpp::recv(unsafe), sync_atomic_SwapUintptr((uintptr_t*)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(go_new)));
         return old;
     }
 
@@ -107,7 +107,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        return sync_atomic_CompareAndSwapUintptr((*uintptr)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(old), uintptr(go_new));
+        return sync_atomic_CompareAndSwapUintptr((uintptr_t*)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(old), uintptr(go_new));
     }
 
 }

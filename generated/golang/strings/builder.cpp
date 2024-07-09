@@ -42,7 +42,7 @@ namespace golang::strings
     {
         if(b->addr == nullptr)
         {
-            b->addr = (*Builder)(noescape(Pointer(gocpp::recv(unsafe), b)));
+            b->addr = (Builder*)(noescape(Pointer(gocpp::recv(unsafe), b)));
         }
         else
         if(b->addr != b)

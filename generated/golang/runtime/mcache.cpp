@@ -71,7 +71,7 @@ namespace golang::runtime
 
     gclink* ptr(gclinkptr p)
     {
-        return (*gclink)(Pointer(gocpp::recv(unsafe), p));
+        return (gclink*)(Pointer(gocpp::recv(unsafe), p));
     }
 
     
@@ -96,7 +96,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            c = (*mcache)(alloc(gocpp::recv(mheap_.cachealloc)));
+            c = (mcache*)(alloc(gocpp::recv(mheap_.cachealloc)));
             Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
             unlock(& mheap_.lock);
         }

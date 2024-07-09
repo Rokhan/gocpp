@@ -75,7 +75,7 @@ namespace golang::runtime
     unsigned char** argv;
     unsigned char* argv_index(unsigned char** argv, int32_t i)
     {
-        return *(**byte)(add(Pointer(gocpp::recv(unsafe), argv), uintptr(i) * goarch.PtrSize));
+        return *(unsigned char**)(add(Pointer(gocpp::recv(unsafe), argv), uintptr(i) * goarch.PtrSize));
     }
 
     void args(int32_t c, unsigned char** v)
@@ -319,7 +319,7 @@ namespace golang::runtime
         {
             go_throw("atomicand8");
         }
-        *(*uint64_t)(Pointer(gocpp::recv(unsafe), & j)) = ^ uint64_t(0);
+        *(uint64_t*)(Pointer(gocpp::recv(unsafe), & j)) = ^ uint64_t(0);
         if(j == j)
         {
             go_throw("float64nan");
@@ -328,7 +328,7 @@ namespace golang::runtime
         {
             go_throw("float64nan1");
         }
-        *(*uint64_t)(Pointer(gocpp::recv(unsafe), & j1)) = ^ uint64_t(1);
+        *(uint64_t*)(Pointer(gocpp::recv(unsafe), & j1)) = ^ uint64_t(1);
         if(j == j1)
         {
             go_throw("float64nan2");
@@ -337,7 +337,7 @@ namespace golang::runtime
         {
             go_throw("float64nan3");
         }
-        *(*uint32_t)(Pointer(gocpp::recv(unsafe), & i)) = ^ uint32_t(0);
+        *(uint32_t*)(Pointer(gocpp::recv(unsafe), & i)) = ^ uint32_t(0);
         if(i == i)
         {
             go_throw("float32nan");
@@ -346,7 +346,7 @@ namespace golang::runtime
         {
             go_throw("float32nan1");
         }
-        *(*uint32_t)(Pointer(gocpp::recv(unsafe), & i1)) = ^ uint32_t(1);
+        *(uint32_t*)(Pointer(gocpp::recv(unsafe), & i1)) = ^ uint32_t(1);
         if(i == i1)
         {
             go_throw("float32nan2");
@@ -702,12 +702,12 @@ namespace golang::runtime
 
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((*_type)(rtype))), typeOff(off)));
+        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
     {
-        return textOff(gocpp::recv(toRType((*_type)(rtype))), textOff(off));
+        return textOff(gocpp::recv(toRType((_type*)(rtype))), textOff(off));
     }
 
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
@@ -717,7 +717,7 @@ namespace golang::runtime
 
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((*_type)(rtype))), typeOff(off)));
+        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     int32_t reflect_addReflectOff(unsafe::Pointer ptr)

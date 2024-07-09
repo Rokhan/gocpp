@@ -78,7 +78,7 @@ namespace golang::runtime
         {
             wbBufFlush();
         }
-        auto p = (*gocpp::Tag<gocpp::array<uintptr_t, 1>>())(Pointer(gocpp::recv(unsafe), b->next));
+        auto p = (gocpp::array<uintptr_t, 1>*)(Pointer(gocpp::recv(unsafe), b->next));
         b->next += goarch.PtrSize;
         return p;
     }
@@ -89,7 +89,7 @@ namespace golang::runtime
         {
             wbBufFlush();
         }
-        auto p = (*gocpp::Tag<gocpp::array<uintptr_t, 2>>())(Pointer(gocpp::recv(unsafe), b->next));
+        auto p = (gocpp::array<uintptr_t, 2>*)(Pointer(gocpp::recv(unsafe), b->next));
         b->next += 2 * goarch.PtrSize;
         return p;
     }

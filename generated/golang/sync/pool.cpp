@@ -75,7 +75,7 @@ namespace golang::sync
     gocpp::array<uint64_t, 128> poolRaceHash;
     unsafe::Pointer poolRaceAddr(go_any x)
     {
-        auto ptr = uintptr((*gocpp::Tag<gocpp::array<unsafe::Pointer, 2>>())(Pointer(gocpp::recv(unsafe), & x))[1]);
+        auto ptr = uintptr((gocpp::array<unsafe::Pointer, 2>*)(Pointer(gocpp::recv(unsafe), & x))[1]);
         auto h = uint32_t((uint64_t(uint32_t(ptr)) * 0x85ebca6b) >> 16);
         return Pointer(gocpp::recv(unsafe), & poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
@@ -248,7 +248,7 @@ namespace golang::sync
     poolLocal* indexLocal(unsafe::Pointer l, int i)
     {
         auto lp = Pointer(gocpp::recv(unsafe), uintptr(l) + uintptr(i) * Sizeof(gocpp::recv(unsafe), poolLocal {}));
-        return (*poolLocal)(lp);
+        return (poolLocal*)(lp);
     }
 
     void runtime_registerPoolCleanup(std::function<void ()> cleanup)

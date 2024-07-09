@@ -50,7 +50,7 @@ namespace golang::runtime
     int64_t NumCgoCall()
     {
         auto n = int64(Load64(gocpp::recv(atomic), & ncgocall));
-        for(auto mp = (*m)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
+        for(auto mp = (m*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
         {
             n += int64(mp->ncgocall);
         }
@@ -61,7 +61,7 @@ namespace golang::runtime
     {
         auto total = Load(gocpp::recv(sched.totalMutexWaitTime));
         total += Load(gocpp::recv(sched.totalRuntimeLockWaitTime));
-        for(auto mp = (*m)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
+        for(auto mp = (m*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
         {
             total += Load(gocpp::recv(mp->mLockProfile.waitTime));
         }

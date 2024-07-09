@@ -71,7 +71,7 @@ namespace golang::runtime
         {
             return {gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; }), gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = - 1; })};
         }
-        auto inlTree = (*gocpp::Tag<gocpp::array<inlinedCall, 1 << 20>>())(inldata);
+        auto inlTree = (gocpp::array<inlinedCall, 1 << 20>*)(inldata);
         auto u = gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; x.inlTree = inlTree; });
         return {u, resolveInternal(gocpp::recv(u), pc)};
     }

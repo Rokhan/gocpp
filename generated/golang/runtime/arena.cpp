@@ -58,13 +58,13 @@ namespace golang::runtime
 
     go_any arena_arena_New(unsafe::Pointer arena, go_any typ)
     {
-        auto t = (*_type)(efaceOf(& typ)->data);
+        auto t = (_type*)(efaceOf(& typ)->data);
         if(t->Kind_ & kindMask != kindPtr)
         {
             go_throw("arena_New: non-pointer type");
         }
-        auto te = (*ptrtype)(Pointer(gocpp::recv(unsafe), t))->Elem;
-        auto x = go_new(gocpp::recv(((*userArena)(arena))), te);
+        auto te = (ptrtype*)(Pointer(gocpp::recv(unsafe), t))->Elem;
+        auto x = go_new(gocpp::recv(((userArena*)(arena))), te);
         go_any result = {};
         auto e = efaceOf(& result);
         e->_type = t;
@@ -74,12 +74,12 @@ namespace golang::runtime
 
     void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap)
     {
-        slice(gocpp::recv(((*userArena)(arena))), slice, cap);
+        slice(gocpp::recv(((userArena*)(arena))), slice, cap);
     }
 
     void arena_arena_Free(unsafe::Pointer arena)
     {
-        free(gocpp::recv(((*userArena)(arena))));
+        free(gocpp::recv(((userArena*)(arena))));
     }
 
     go_any arena_heapify(go_any s)
@@ -97,10 +97,10 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    v = stringStructOf((*string)(e->data))->str;
+                    v = stringStructOf((std::string*)(e->data))->str;
                     break;
                 case 1:
-                    v = (*slice)(e->data)->array;
+                    v = (slice*)(e->data)->array;
                     break;
                 case 2:
                     v = e->data;
@@ -132,16 +132,16 @@ namespace golang::runtime
                     x = s2;
                     break;
                 case 1:
-                    auto len = (*slice)(e->data)->len;
-                    auto et = (*slicetype)(Pointer(gocpp::recv(unsafe), t))->Elem;
+                    auto len = (slice*)(e->data)->len;
+                    auto et = (slicetype*)(Pointer(gocpp::recv(unsafe), t))->Elem;
                     auto sl = go_new(slice);
-                    *sl = slice {makeslicecopy(et, len, len, (*slice)(e->data)->array), len, len};
+                    *sl = slice {makeslicecopy(et, len, len, (slice*)(e->data)->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
                     xe->data = Pointer(gocpp::recv(unsafe), sl);
                     break;
                 case 2:
-                    auto et = (*ptrtype)(Pointer(gocpp::recv(unsafe), t))->Elem;
+                    auto et = (ptrtype*)(Pointer(gocpp::recv(unsafe), t))->Elem;
                     auto e2 = newobject(et);
                     typedmemmove(et, e2, e->data);
                     auto xe = efaceOf(& x);
@@ -239,13 +239,13 @@ namespace golang::runtime
         {
             gocpp::panic("slice result of non-ptr type");
         }
-        typ = (*ptrtype)(Pointer(gocpp::recv(unsafe), typ))->Elem;
+        typ = (ptrtype*)(Pointer(gocpp::recv(unsafe), typ))->Elem;
         if(typ->Kind_ & kindMask != kindSlice)
         {
             gocpp::panic("slice of non-ptr-to-slice type");
         }
-        typ = (*slicetype)(Pointer(gocpp::recv(unsafe), typ))->Elem;
-        *((*slice)(i->data)) = slice {alloc(gocpp::recv(a), typ, cap), cap, cap};
+        typ = (slicetype*)(Pointer(gocpp::recv(unsafe), typ))->Elem;
+        *((slice*)(i->data)) = slice {alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
     void free(struct userArena* a)
@@ -736,8 +736,8 @@ namespace golang::runtime
         push(gocpp::recv(fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
         if(goexperiment.AllocHeaders)
         {
-            *(*uintptr)(Pointer(gocpp::recv(unsafe), & s->largeType)) = uintptr(Pointer(gocpp::recv(unsafe), s->limit));
-            *(*uintptr)(Pointer(gocpp::recv(unsafe), & s->largeType->GCData)) = s->limit + Sizeof(gocpp::recv(unsafe), _type {});
+            *(uintptr_t*)(Pointer(gocpp::recv(unsafe), & s->largeType)) = uintptr(Pointer(gocpp::recv(unsafe), s->limit));
+            *(uintptr_t*)(Pointer(gocpp::recv(unsafe), & s->largeType->GCData)) = s->limit + Sizeof(gocpp::recv(unsafe), _type {});
             s->largeType->PtrBytes = 0;
             s->largeType->Size_ = s->elemsize;
         }

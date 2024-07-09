@@ -679,8 +679,8 @@ namespace golang::png
                             auto src = rgba->Pix.make_slice(PixOffset(gocpp::recv(rgba), b.Min.X, y), PixOffset(gocpp::recv(rgba), b.Max.X, y));
                             for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
                             {
-                                auto d = (*gocpp::Tag<gocpp::array<unsigned char, 4>>())(dst);
-                                auto s = (*gocpp::Tag<gocpp::array<unsigned char, 4>>())(src);
+                                auto d = (gocpp::array<unsigned char, 4>*)(dst);
+                                auto s = (gocpp::array<unsigned char, 4>*)(src);
                                 if(s[3] == 0x00)
                                 {
                                     d[0] = 0;
@@ -847,7 +847,7 @@ namespace golang::png
         if(enc->BufferPool != nullptr)
         {
             auto buffer = Get(gocpp::recv(enc->BufferPool));
-            e = (*encoder)(buffer);
+            e = (encoder*)(buffer);
         }
         if(e == nullptr)
         {
@@ -855,7 +855,7 @@ namespace golang::png
         }
         if(enc->BufferPool != nullptr)
         {
-            defer.push_back([=]{ Put(gocpp::recv(enc->BufferPool), (*EncoderBuffer)(e)); });
+            defer.push_back([=]{ Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
         }
         e->enc = enc;
         e->w = w;

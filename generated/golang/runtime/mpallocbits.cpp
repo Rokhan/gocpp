@@ -325,37 +325,37 @@ namespace golang::runtime
 
     void allocRange(pallocBits* b, unsigned int i, unsigned int n)
     {
-        setRange(gocpp::recv((*pageBits)(b)), i, n);
+        setRange(gocpp::recv((pageBits*)(b)), i, n);
     }
 
     void allocAll(pallocBits* b)
     {
-        setAll(gocpp::recv((*pageBits)(b)));
+        setAll(gocpp::recv((pageBits*)(b)));
     }
 
     void free1(pallocBits* b, unsigned int i)
     {
-        clear(gocpp::recv((*pageBits)(b)), i);
+        clear(gocpp::recv((pageBits*)(b)), i);
     }
 
     void free(pallocBits* b, unsigned int i, unsigned int n)
     {
-        clearRange(gocpp::recv((*pageBits)(b)), i, n);
+        clearRange(gocpp::recv((pageBits*)(b)), i, n);
     }
 
     void freeAll(pallocBits* b)
     {
-        clearAll(gocpp::recv((*pageBits)(b)));
+        clearAll(gocpp::recv((pageBits*)(b)));
     }
 
     uint64_t pages64(pallocBits* b, unsigned int i)
     {
-        return block64(gocpp::recv((*pageBits)(b)), i);
+        return block64(gocpp::recv((pageBits*)(b)), i);
     }
 
     void allocPages64(pallocBits* b, unsigned int i, uint64_t alloc)
     {
-        setBlock64(gocpp::recv((*pageBits)(b)), i, alloc);
+        setBlock64(gocpp::recv((pageBits*)(b)), i, alloc);
     }
 
     unsigned int findBitRange64(uint64_t c, unsigned int n)

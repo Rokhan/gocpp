@@ -163,7 +163,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                auto v = *(*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), addr));
+                auto v = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -180,7 +180,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                auto v = *(*unsafe.Pointer)(Pointer(gocpp::recv(unsafe), addr));
+                auto v = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -217,7 +217,7 @@ namespace golang::runtime
             {
                 if(bits & 1 != 0)
                 {
-                    auto v = *(*unsafe.Pointer)(add(src, i));
+                    auto v = *(unsafe::Pointer*)(add(src, i));
                     if(cgoIsGoPointer(v) && ! isPinned(v))
                     {
                         go_throw(cgoWriteBarrierFail);
@@ -258,7 +258,7 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (*arraytype)(Pointer(gocpp::recv(unsafe), typ));
+                    auto at = (arraytype*)(Pointer(gocpp::recv(unsafe), typ));
                     for(auto i = uintptr(0); i < at->Len; i++)
                     {
                         if(off < at->Elem->Size_)
@@ -281,7 +281,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
-                    auto st = (*structtype)(Pointer(gocpp::recv(unsafe), typ));
+                    auto st = (structtype*)(Pointer(gocpp::recv(unsafe), typ));
                     for(auto [_, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)

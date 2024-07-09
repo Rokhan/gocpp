@@ -87,7 +87,7 @@ namespace golang::runtime
 
     bool resetForSleep(g* gp, unsafe::Pointer ut)
     {
-        auto t = (*timer)(ut);
+        auto t = (timer*)(ut);
         resettimer(t, t->nextwhen);
         return true;
     }

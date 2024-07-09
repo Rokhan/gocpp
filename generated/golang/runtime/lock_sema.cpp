@@ -180,7 +180,7 @@ namespace golang::runtime
                     go_throw("notewakeup - double wakeup");
                     break;
                 default:
-                    semawakeup((*m)(Pointer(gocpp::recv(unsafe), v)));
+                    semawakeup((m*)(Pointer(gocpp::recv(unsafe), v)));
                     break;
             }
         }

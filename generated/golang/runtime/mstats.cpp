@@ -317,12 +317,12 @@ namespace golang::runtime
 
     uint64_t load(sysMemStat* s)
     {
-        return Load64(gocpp::recv(atomic), (*uint64_t)(s));
+        return Load64(gocpp::recv(atomic), (uint64_t*)(s));
     }
 
     void add(sysMemStat* s, int64_t n)
     {
-        auto val = Xadd64(gocpp::recv(atomic), (*uint64_t)(s), n);
+        auto val = Xadd64(gocpp::recv(atomic), (uint64_t*)(s), n);
         if((n > 0 && int64(val) < n) || (n < 0 && int64(val) + n < n))
         {
             print("runtime: val=", val, " n=", n, "\n");

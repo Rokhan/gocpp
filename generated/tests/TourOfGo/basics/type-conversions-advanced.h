@@ -15,6 +15,7 @@
 namespace golang::main
 {
     void toto();
+    int totoInt();
     struct III : gocpp::Interface
     {
         III(){}
@@ -71,6 +72,17 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct T& value);
     void M(T*);
+    struct Vertex
+    {
+        double Lat;
+        double Long;
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
 }
 

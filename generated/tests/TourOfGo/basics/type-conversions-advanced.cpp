@@ -20,6 +20,11 @@ namespace golang::main
     {
     }
 
+    int totoInt()
+    {
+        return 0;
+    }
+
     
     template<typename T>
     III::III(T& ref)
@@ -82,15 +87,41 @@ namespace golang::main
     {
     }
 
+    
+    std::ostream& Vertex::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Lat;
+        os << " " << Long;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Vertex& value)
+    {
+        return value.PrintTo(os);
+    }
+
     void main()
     {
         int x = 3;
         int y = 4;
         double f = std::sqrt(double(x * x + y * y));
-        unsigned int z = (unsigned int)(f);
-        mocklib::Println(x, y, z);
-        go_any ifunc = (gocpp::Tag<std::function<void ()>>())(toto);
-        mocklib::Println(ifunc);
+        unsigned int z1 = (unsigned int)(f);
+        mocklib::Println(x, y, z1);
+        unsigned int z2 = (unsigned int)(f);
+        mocklib::Println("z2:", z2);
+        unsigned int z3 = (unsigned int)(z2);
+        mocklib::Println("z2:", z3);
+        go_any ifunc1 = (std::function<void ()>)(toto);
+        mocklib::Println(ifunc1);
+        go_any ifunc2 = (totoInt)();
+        mocklib::Println(ifunc2);
+        auto m1 = gocpp::make(gocpp::Tag<gocpp::map<std::string, Vertex>>());
+        auto m2 = gocpp::make((gocpp::Tag<gocpp::map<std::string, Vertex>>()));
+        auto m3 = gocpp::make((gocpp::Tag<gocpp::map<std::string, Vertex>>()));
+        int i = {};
+        mocklib::Println(m1, m2, m3, i);
     }
 
 }

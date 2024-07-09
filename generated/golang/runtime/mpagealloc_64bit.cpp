@@ -44,8 +44,8 @@ namespace golang::runtime
             {
                 go_throw("failed to reserve page summary memory");
             }
-            auto sl = notInHeapSlice {(*notInHeap)(r), 0, entries};
-            p->summary[l] = *(*gocpp::Tag<gocpp::slice<pallocSum>>())(Pointer(gocpp::recv(unsafe), & sl));
+            auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
+            p->summary[l] = *(gocpp::slice<pallocSum>*)(Pointer(gocpp::recv(unsafe), & sl));
         }
     }
 
@@ -149,8 +149,8 @@ namespace golang::runtime
         auto n = uintptr(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * Sizeof(gocpp::recv(unsafe), atomicScavChunkData {});
         auto r = sysReserve(nullptr, nbytes);
-        auto sl = notInHeapSlice {(*notInHeap)(r), int(n), int(n)};
-        s->chunks = *(*gocpp::Tag<gocpp::slice<atomicScavChunkData>>())(Pointer(gocpp::recv(unsafe), & sl));
+        auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
+        s->chunks = *(gocpp::slice<atomicScavChunkData>*)(Pointer(gocpp::recv(unsafe), & sl));
         return 0;
     }
 

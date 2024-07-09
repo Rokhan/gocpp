@@ -46,12 +46,12 @@ namespace golang::runtime
 
     uint64_t float64bits(double f)
     {
-        return *(*uint64_t)(Pointer(gocpp::recv(unsafe), & f));
+        return *(uint64_t*)(Pointer(gocpp::recv(unsafe), & f));
     }
 
     double float64frombits(uint64_t b)
     {
-        return *(*double)(Pointer(gocpp::recv(unsafe), & b));
+        return *(double*)(Pointer(gocpp::recv(unsafe), & b));
     }
 
 }

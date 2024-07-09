@@ -233,7 +233,7 @@ namespace golang::reflect
                     return assignIntN(gocpp::recv(a), offset, goarch.PtrSize, 3, 0b001);
                     break;
                 case 24:
-                    auto tt = (*arrayType)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (arrayType*)(Pointer(gocpp::recv(unsafe), t));
                     //Go switch emulation
                     {
                         auto condition = tt->Len;
@@ -255,7 +255,7 @@ namespace golang::reflect
                     }
                     break;
                 case 25:
-                    auto st = (*structType)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (structType*)(Pointer(gocpp::recv(unsafe), t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -473,10 +473,10 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    *(*float)(to) = archFloat32FromReg(r->Floats[reg]);
+                    *(float*)(to) = archFloat32FromReg(r->Floats[reg]);
                     break;
                 case 1:
-                    *(*double)(to) = *(*double)(Pointer(gocpp::recv(unsafe), & r->Floats[reg]));
+                    *(double*)(to) = *(double*)(Pointer(gocpp::recv(unsafe), & r->Floats[reg]));
                     break;
                 default:
                     gocpp::panic("bad argSize");
@@ -496,10 +496,10 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    r->Floats[reg] = archFloat32ToReg(*(*float)(from));
+                    r->Floats[reg] = archFloat32ToReg(*(float*)(from));
                     break;
                 case 1:
-                    r->Floats[reg] = *(*uint64_t)(from);
+                    r->Floats[reg] = *(uint64_t*)(from);
                     break;
                 default:
                     gocpp::panic("bad argSize");

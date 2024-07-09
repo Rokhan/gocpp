@@ -22,7 +22,7 @@ namespace golang::atomic
 
     unsafe::Pointer Loadp(unsafe::Pointer ptr)
     {
-        return *(*unsafe.Pointer)(ptr);
+        return *(unsafe::Pointer*)(ptr);
     }
 
     uint64_t Load64(uint64_t* ptr)

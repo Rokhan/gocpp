@@ -259,7 +259,7 @@ namespace golang::runtime
 
     _func* raw(struct Func* f)
     {
-        return (*_func)(Pointer(gocpp::recv(unsafe), f));
+        return (_func*)(Pointer(gocpp::recv(unsafe), f));
     }
 
     funcInfo funcInfo(struct Func* f)
@@ -392,7 +392,7 @@ namespace golang::runtime
     gocpp::slice<moduledata*>* modulesSlice;
     gocpp::slice<moduledata*> activeModules()
     {
-        auto p = (*gocpp::Tag<gocpp::slice<moduledata*>>())(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & modulesSlice)));
+        auto p = (gocpp::slice<moduledata*>*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & modulesSlice)));
         if(p == nullptr)
         {
             return nullptr;
@@ -413,9 +413,9 @@ namespace golang::runtime
             if(md->gcdatamask == (bitvector {}))
             {
                 auto scanDataSize = md->edata - md->data;
-                md->gcdatamask = progToPointerMask((*byte)(Pointer(gocpp::recv(unsafe), md->gcdata)), scanDataSize);
+                md->gcdatamask = progToPointerMask((unsigned char*)(Pointer(gocpp::recv(unsafe), md->gcdata)), scanDataSize);
                 auto scanBSSSize = md->ebss - md->bss;
-                md->gcbssmask = progToPointerMask((*byte)(Pointer(gocpp::recv(unsafe), md->gcbss)), scanBSSSize);
+                md->gcbssmask = progToPointerMask((unsigned char*)(Pointer(gocpp::recv(unsafe), md->gcbss)), scanBSSSize);
                 addGlobals(gocpp::recv(gcController), int64(scanDataSize + scanBSSSize));
             }
         }
@@ -501,8 +501,8 @@ namespace golang::runtime
         {
             if(datap->ftab[i].entryoff > datap->ftab[i + 1].entryoff)
             {
-                auto f1 = funcInfo {(*_func)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[i].funcoff])), datap};
-                auto f2 = funcInfo {(*_func)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
+                auto f1 = funcInfo {(_func*)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[i].funcoff])), datap};
+                auto f2 = funcInfo {(_func*)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
                 auto f2name = "end";
                 if(i + 1 < nftab)
                 {
@@ -511,7 +511,7 @@ namespace golang::runtime
                 println("function symbol table not sorted by PC offset:", hex(datap->ftab[i].entryoff), funcname(f1), ">", hex(datap->ftab[i + 1].entryoff), f2name, ", plugin:", datap->pluginpath);
                 for(auto j = 0; j <= i; j++)
                 {
-                    println("\t", hex(datap->ftab[j].entryoff), funcname(funcInfo {(*_func)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[j].funcoff])), datap}));
+                    println("\t", hex(datap->ftab[j].entryoff), funcname(funcInfo {(_func*)(Pointer(gocpp::recv(unsafe), & datap->pclntable[datap->ftab[j].funcoff])), datap}));
                 }
                 if(GOOS == "aix" && isarchive)
                 {
@@ -610,7 +610,7 @@ namespace golang::runtime
         auto sf = srcFunc(gocpp::recv(u), uf);
         auto [file, line] = fileLine(gocpp::recv(u), uf);
         auto fi = gocpp::InitPtr<funcinl>([](funcinl& x) { x.ones = ^ uint32_t(0); x.entry = entry(gocpp::recv(f)); x.name = name(gocpp::recv(sf)); x.file = file; x.line = int32(line); x.startLine = sf.startLine; });
-        return (*Func)(Pointer(gocpp::recv(unsafe), fi));
+        return (Func*)(Pointer(gocpp::recv(unsafe), fi));
     }
 
     std::string Name(struct Func* f)
@@ -622,7 +622,7 @@ namespace golang::runtime
         auto fn = raw(gocpp::recv(f));
         if(isInlined(gocpp::recv(fn)))
         {
-            auto fi = (*funcinl)(Pointer(gocpp::recv(unsafe), fn));
+            auto fi = (funcinl*)(Pointer(gocpp::recv(unsafe), fn));
             return funcNameForPrint(fi->name);
         }
         return funcNameForPrint(funcname(funcInfo(gocpp::recv(f))));
@@ -633,7 +633,7 @@ namespace golang::runtime
         auto fn = raw(gocpp::recv(f));
         if(isInlined(gocpp::recv(fn)))
         {
-            auto fi = (*funcinl)(Pointer(gocpp::recv(unsafe), fn));
+            auto fi = (funcinl*)(Pointer(gocpp::recv(unsafe), fn));
             return fi->entry;
         }
         return entry(gocpp::recv(funcInfo(gocpp::recv(fn))));
@@ -648,7 +648,7 @@ namespace golang::runtime
         {
             std::string file;
             int line;
-            auto fi = (*funcinl)(Pointer(gocpp::recv(unsafe), fn));
+            auto fi = (funcinl*)(Pointer(gocpp::recv(unsafe), fn));
             return {fi->file, int(fi->line)};
         }
         auto [file, line32] = funcline1(funcInfo(gocpp::recv(f)), pc, false);
@@ -660,7 +660,7 @@ namespace golang::runtime
         auto fn = raw(gocpp::recv(f));
         if(isInlined(gocpp::recv(fn)))
         {
-            auto fi = (*funcinl)(Pointer(gocpp::recv(unsafe), fn));
+            auto fi = (funcinl*)(Pointer(gocpp::recv(unsafe), fn));
             return fi->startLine;
         }
         return funcInfo(gocpp::recv(fn)).startLine;
@@ -699,7 +699,7 @@ namespace golang::runtime
 
     Func* _Func(struct funcInfo f)
     {
-        return (*Func)(Pointer(gocpp::recv(unsafe), f._func));
+        return (Func*)(Pointer(gocpp::recv(unsafe), f._func));
     }
 
     bool isInlined(struct _func* f)
@@ -728,14 +728,14 @@ namespace golang::runtime
         auto x = uintptr(pcOff) + datap->text - datap->minpc;
         auto b = x / pcbucketsize;
         auto i = x % pcbucketsize / (pcbucketsize / nsub);
-        auto ffb = (*findfuncbucket)(add(Pointer(gocpp::recv(unsafe), datap->findfunctab), b * Sizeof(gocpp::recv(unsafe), findfuncbucket {})));
+        auto ffb = (findfuncbucket*)(add(Pointer(gocpp::recv(unsafe), datap->findfunctab), b * Sizeof(gocpp::recv(unsafe), findfuncbucket {})));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
         for(; datap->ftab[idx + 1].entryoff <= pcOff; )
         {
             idx++;
         }
         auto funcoff = datap->ftab[idx].funcoff;
-        return funcInfo {(*_func)(Pointer(gocpp::recv(unsafe), & datap->pclntable[funcoff])), datap};
+        return funcInfo {(_func*)(Pointer(gocpp::recv(unsafe), & datap->pclntable[funcoff])), datap};
     }
 
     
@@ -1033,7 +1033,7 @@ namespace golang::runtime
 
     uint32_t pcdatastart(funcInfo f, uint32_t table)
     {
-        return *(*uint32_t)(add(Pointer(gocpp::recv(unsafe), & f.nfuncdata), Sizeof(gocpp::recv(unsafe), f.nfuncdata) + uintptr(table) * 4));
+        return *(uint32_t*)(add(Pointer(gocpp::recv(unsafe), & f.nfuncdata), Sizeof(gocpp::recv(unsafe), f.nfuncdata) + uintptr(table) * 4));
     }
 
     int32_t pcdatavalue(funcInfo f, uint32_t table, uintptr_t targetpc)
@@ -1073,7 +1073,7 @@ namespace golang::runtime
         }
         auto base = f.datap->gofunc;
         auto p = uintptr(Pointer(gocpp::recv(unsafe), & f.nfuncdata)) + Sizeof(gocpp::recv(unsafe), f.nfuncdata) + uintptr(f.npcdata) * 4 + uintptr(i) * 4;
-        auto off = *(*uint32_t)(Pointer(gocpp::recv(unsafe), p));
+        auto off = *(uint32_t*)(Pointer(gocpp::recv(unsafe), p));
         uintptr_t mask = {};
         if(off == ^ uint32_t(0))
         {

@@ -176,7 +176,7 @@ namespace golang::runtime
             auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);
             return uint32_t(hi ^ lo);
         }
-        auto t = (*gocpp::Tag<gocpp::array<uint32_t, 2>>())(Pointer(gocpp::recv(unsafe), & mp->cheaprand));
+        auto t = (gocpp::array<uint32_t, 2>*)(Pointer(gocpp::recv(unsafe), & mp->cheaprand));
         auto [s1, s0] = std::tuple{t[0], t[1]};
         s1 ^= s1 << 17;
         s1 = s1 ^ s0 ^ (s1 >> 7) ^ (s0 >> 16);

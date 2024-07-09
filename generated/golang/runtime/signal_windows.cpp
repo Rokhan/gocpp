@@ -240,12 +240,12 @@ namespace golang::runtime
             set_sp(gocpp::recv(r), uintptr(sp));
             if(usesLR)
             {
-                *((*uintptr)(sp)) = lr(gocpp::recv(r));
+                *((uintptr_t*)(sp)) = lr(gocpp::recv(r));
                 set_lr(gocpp::recv(r), ip(gocpp::recv(r)));
             }
             else
             {
-                *((*uintptr)(sp)) = ip(gocpp::recv(r));
+                *((uintptr_t*)(sp)) = ip(gocpp::recv(r));
             }
         }
         set_ip(gocpp::recv(r), FuncPCABI0(gocpp::recv(abi), sigpanic0));

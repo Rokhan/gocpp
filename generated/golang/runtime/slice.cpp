@@ -337,7 +337,7 @@ namespace golang::runtime
         }
         if(size == 1)
         {
-            *(*byte)(toPtr) = *(*byte)(fromPtr);
+            *(unsigned char*)(toPtr) = *(unsigned char*)(fromPtr);
         }
         else
         {
@@ -352,7 +352,7 @@ namespace golang::runtime
         {
             panicmakeslicelen();
         }
-        return Slice(gocpp::recv(unsafe), (*byte)(mallocgc(uintptr(len), nullptr, false)), len);
+        return Slice(gocpp::recv(unsafe), (unsigned char*)(mallocgc(uintptr(len), nullptr, false)), len);
     }
 
 }

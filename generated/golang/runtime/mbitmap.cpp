@@ -33,22 +33,22 @@ namespace golang::runtime
 {
     unsigned char* addb(unsigned char* p, uintptr_t n)
     {
-        return (*byte)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) + n));
+        return (unsigned char*)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) + n));
     }
 
     unsigned char* subtractb(unsigned char* p, uintptr_t n)
     {
-        return (*byte)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) - n));
+        return (unsigned char*)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) - n));
     }
 
     unsigned char* add1(unsigned char* p)
     {
-        return (*byte)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) + 1));
+        return (unsigned char*)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) + 1));
     }
 
     unsigned char* subtract1(unsigned char* p)
     {
-        return (*byte)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) - 1));
+        return (unsigned char*)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), p)) - 1));
     }
 
     
@@ -75,7 +75,7 @@ namespace golang::runtime
 
     void refillAllocCache(struct mspan* s, uint16_t whichByte)
     {
-        auto bytes = (*gocpp::Tag<gocpp::array<uint8_t, 8>>())(Pointer(gocpp::recv(unsafe), bytep(gocpp::recv(s->allocBits), uintptr(whichByte))));
+        auto bytes = (gocpp::array<uint8_t, 8>*)(Pointer(gocpp::recv(unsafe), bytep(gocpp::recv(s->allocBits), uintptr(whichByte))));
         auto aCache = uint64_t(0);
         aCache |= uint64_t(bytes[0]);
         aCache |= uint64_t(bytes[1]) << (1 * 8);
@@ -213,7 +213,7 @@ namespace golang::runtime
     {
         if(m->mask == (1 << 7))
         {
-            m->bytep = (*uint8_t)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), m->bytep)) + 1));
+            m->bytep = (uint8_t*)(Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), m->bytep)) + 1));
             m->mask = 1;
         }
         else
@@ -323,7 +323,7 @@ namespace golang::runtime
             }
             if(*bits & mask != 0)
             {
-                auto dstx = (*uintptr)(Pointer(gocpp::recv(unsafe), dst + i));
+                auto dstx = (uintptr_t*)(Pointer(gocpp::recv(unsafe), dst + i));
                 if(src == 0)
                 {
                     auto p = get1(gocpp::recv(buf));
@@ -331,7 +331,7 @@ namespace golang::runtime
                 }
                 else
                 {
-                    auto srcx = (*uintptr)(Pointer(gocpp::recv(unsafe), src + i));
+                    auto srcx = (uintptr_t*)(Pointer(gocpp::recv(unsafe), src + i));
                     auto p = get2(gocpp::recv(buf));
                     p[0] = *dstx;
                     p[1] = *srcx;
@@ -377,8 +377,8 @@ namespace golang::runtime
             }
             if(bits & 1 != 0)
             {
-                auto dstx = (*uintptr)(Pointer(gocpp::recv(unsafe), dst + i));
-                auto srcx = (*uintptr)(Pointer(gocpp::recv(unsafe), src + i));
+                auto dstx = (uintptr_t*)(Pointer(gocpp::recv(unsafe), dst + i));
+                auto srcx = (uintptr_t*)(Pointer(gocpp::recv(unsafe), src + i));
                 auto p = get2(gocpp::recv(buf));
                 p[0] = *dstx;
                 p[1] = *srcx;
@@ -392,7 +392,7 @@ namespace golang::runtime
         auto bytes = divRoundUp(uintptr(s->nelems), 8);
         for(auto i = uintptr(0); i < bytes; i += 8)
         {
-            auto mrkBits = *(*uint64_t)(Pointer(gocpp::recv(unsafe), bytep(gocpp::recv(s->gcmarkBits), i)));
+            auto mrkBits = *(uint64_t*)(Pointer(gocpp::recv(unsafe), bytep(gocpp::recv(s->gcmarkBits), i)));
             count += OnesCount64(gocpp::recv(sys), mrkBits);
         }
         return count;
@@ -400,7 +400,7 @@ namespace golang::runtime
 
     uintptr_t readUintptr(unsigned char* p)
     {
-        auto x = *(*uintptr)(Pointer(gocpp::recv(unsafe), p));
+        auto x = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), p));
         if(goarch.BigEndian)
         {
             if(goarch.PtrSize == 8)
@@ -432,7 +432,7 @@ namespace golang::runtime
     bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch.PtrSize + 7) / 8;
-        auto x = (*gocpp::Tag<gocpp::array<unsigned char, 1 << 30>>())(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
+        auto x = (gocpp::array<unsigned char, 1 << 30>*)(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
         x[len(x) - 1] = 0xa1;
         n = runGCProg(prog, & x[0]);
         if(x[len(x) - 1] != 0xa1)
@@ -620,7 +620,7 @@ namespace golang::runtime
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch.PtrSize);
         auto pages = divRoundUp(bitmapBytes, pageSize);
         auto s = allocManual(gocpp::recv(mheap_), pages, spanAllocPtrScalarBits);
-        runGCProg(addb(prog, 4), (*byte)(Pointer(gocpp::recv(unsafe), s->startAddr)));
+        runGCProg(addb(prog, 4), (unsigned char*)(Pointer(gocpp::recv(unsafe), s->startAddr)));
         return s;
     }
 

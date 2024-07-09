@@ -10,5 +10,6 @@ namespace golang::main
 {
     struct III;
     struct T;
+    struct Vertex;
 }
 

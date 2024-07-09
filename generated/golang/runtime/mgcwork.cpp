@@ -308,7 +308,7 @@ namespace golang::runtime
         workbuf* b = {};
         if(work.empty != 0)
         {
-            b = (*workbuf)(pop(gocpp::recv(work.empty)));
+            b = (workbuf*)(pop(gocpp::recv(work.empty)));
             if(b != nullptr)
             {
                 checkempty(gocpp::recv(b));
@@ -347,7 +347,7 @@ namespace golang::runtime
             }
             for(auto i = uintptr(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
-                auto newb = (*workbuf)(Pointer(gocpp::recv(unsafe), base(gocpp::recv(s)) + i));
+                auto newb = (workbuf*)(Pointer(gocpp::recv(unsafe), base(gocpp::recv(s)) + i));
                 newb->nobj = 0;
                 lfnodeValidate(& newb->node);
                 if(i == 0)
@@ -377,7 +377,7 @@ namespace golang::runtime
 
     workbuf* trygetfull()
     {
-        auto b = (*workbuf)(pop(gocpp::recv(work.full)));
+        auto b = (workbuf*)(pop(gocpp::recv(work.full)));
         if(b != nullptr)
         {
             checknonempty(gocpp::recv(b));

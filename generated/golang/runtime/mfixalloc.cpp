@@ -114,7 +114,7 @@ namespace golang::runtime
     void free(struct fixalloc* f, unsafe::Pointer p)
     {
         f->inuse -= f->size;
-        auto v = (*mlink)(p);
+        auto v = (mlink*)(p);
         v->next = f->list;
         f->list = v;
     }

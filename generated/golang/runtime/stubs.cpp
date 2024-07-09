@@ -69,7 +69,7 @@ namespace golang::runtime
     T* noEscapePtr(T* p)
     {
         auto x = uintptr(Pointer(gocpp::recv(unsafe), p));
-        return (*T)(Pointer(gocpp::recv(unsafe), x ^ 0));
+        return (T*)(Pointer(gocpp::recv(unsafe), x ^ 0));
     }
 
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt)
@@ -243,7 +243,7 @@ namespace golang::runtime
 
     int bool2int(bool x)
     {
-        return int(*(*uint8_t)(Pointer(gocpp::recv(unsafe), & x)));
+        return int(*(uint8_t*)(Pointer(gocpp::recv(unsafe), & x)));
     }
 
     void abort()

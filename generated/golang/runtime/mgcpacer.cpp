@@ -313,7 +313,7 @@ namespace golang::runtime
         {
             return {nullptr, now};
         }
-        auto node = (*gcBgMarkWorkerNode)(pop(gocpp::recv(gcBgMarkWorkerPool)));
+        auto node = (gcBgMarkWorkerNode*)(pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
         {
             return {nullptr, now};

@@ -2108,6 +2108,9 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n)
 
+	case *ast.ParenExpr:
+		return cv.convertTypeExpr(n.X)
+
 	case *ast.SelectorExpr:
 		typeName := GetCppExprFunc(ExprPrintf("%s::%s", cv.convertExpr(n.X), cv.convertExpr(n.Sel)))
 		// TODO: Check this. Why mkCppPtrType and not mkCppType ?
@@ -2789,6 +2792,8 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 				cv.BuffExprPrintf(buf, "%v(gocpp::recv(%v)", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				sep = ", "
 			}
+		case *ast.ParenExpr:
+			cv.BuffExprPrintf(buf, "(%v)(", cv.convertTypeExpr(fun.X))
 		default:
 			cv.BuffExprPrintf(buf, "%v(", cv.convertExpr(n.Fun))
 		}
@@ -2960,6 +2965,7 @@ func (cv *cppConverter) LoadAndCheckDefs(path string, fset *token.FileSet, files
 }
 
 func (cv *cppConverter) PrintDefsUsage() {
+	fmt.Println()
 	fmt.Println(" --  Info.Types -- ")
 	for expr, obj := range cv.typeInfo.Types {
 		var filePos = cv.Position(expr)

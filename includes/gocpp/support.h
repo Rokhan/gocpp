@@ -22,6 +22,8 @@
 
 namespace mocklib
 {
+    std::string Sprint(const std::any& value);
+
     template<typename T>
     std::ostream& PrintSliceTo(std::false_type, std::ostream& os, gocpp::slice<T> const& slice);
         
@@ -45,6 +47,14 @@ namespace gocpp
     inline void go(Function &&func, Args &&...args)
     {
         global_pool().enqueue_detach(func, args...);
+    }
+
+    struct go_any : std::any {
+        using any::any;
+    };
+
+    std::ostream& operator<<(std::ostream& os, gocpp::go_any const& value) {
+        return os << mocklib::Sprint(value);
     }
 
     const std::type_info& type_info(const std::any& value)
@@ -904,7 +914,7 @@ namespace std
 namespace golang
 {
     using gocpp::len;
-    using go_any = std::any;
+    using go_any = gocpp::go_any;
 }
 
 // temporary mock implementations

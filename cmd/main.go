@@ -1769,7 +1769,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
-			t := cv.convertTypeSpec(s, end)
+			t := cv.convertTypeSpec(s, end, isNamespace)
 			result = append(result, t.defs...)
 			if t.str != "" {
 				result = append(result, inlineStr(t.str))
@@ -2061,7 +2061,7 @@ func (buff *cppExprBuffer) Expr() cppExpr {
 	return cppExpr{buff.buff.String(), *buff.defs}
 }
 
-func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType {
+func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamespace bool) cppType {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -2073,6 +2073,12 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
 		return mkCppType("", []place{fwdHeaderStr(usingDec, 1)})
 
+		if isNamespace {
+			return mkCppType("", []place{fwdHeaderStr(usingDec, cv.getDepInfo(node))})
+		} else {
+			return mkCppType("", []place{inlineStr(usingDec)})
+		}
+
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
 	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
@@ -2081,15 +2087,23 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
 		return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, 2)))
 
+		if isNamespace {
+			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, cv.getDepInfo(node))))
+		} else {
+			return mkCppType("", append(t.defs, inlineStr(usingDec)))
+		}
+
 	case *ast.StructType:
 		name := GetCppName(node.Name.Name)
 		defs := []place{}
 
-		structFwdDecl := fmt.Sprintf("struct %s;\n", name)
-		defs = append(defs, fwdHeaderStr(structFwdDecl, 0))
+		if isNamespace {
+			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
+			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getDepInfo(node)))
 
-		structDecl := cv.convertStructTypeExpr(n, genStructParam{name, decl, with})
-		defs = append(defs, headerStr(structDecl))
+			structDecl := cv.convertStructTypeExpr(n, genStructParam{name, decl, with})
+			defs = append(defs, headerStr(structDecl))
+		}
 
 		return mkCppType(cv.convertStructTypeExpr(n, genStructParam{name, implem, with}), defs)
 
@@ -2097,11 +2111,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 		name := GetCppName(node.Name.Name)
 		defs := []place{}
 
-		structFwdDecl := fmt.Sprintf("struct %s;\n", name)
-		defs = append(defs, fwdHeaderStr(structFwdDecl, 0))
+		if isNamespace {
+			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
+			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getDepInfo(node)))
 
-		structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{name, decl, with})
-		defs = append(defs, headerStr(structDecl))
+			structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{name, decl, with})
+			defs = append(defs, headerStr(structDecl))
+		}
 
 		return mkCppType(cv.convertInterfaceTypeExpr(n, genStructParam{name, implem, with}), defs)
 

@@ -160,8 +160,8 @@ namespace golang::slices
     }
 
     sortedHint unknownHint = 0;
-    slices.sortedHint increasingHint = 1;
-    slices.sortedHint decreasingHint = 2;
+    sortedHint increasingHint = 1;
+    sortedHint decreasingHint = 2;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;

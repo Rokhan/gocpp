@@ -15,7 +15,7 @@
 // #include "golang/runtime/mbitmap_allocheaders.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mfinal.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/os_windows.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/pinner.fwd.h"
 // #include "golang/runtime/print.fwd.h"  [Ignored, known errors]

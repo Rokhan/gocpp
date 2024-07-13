@@ -45,10 +45,10 @@ namespace golang::reflect
     }
 
     abiStepKind abiStepBad = 0;
-    reflect.abiStepKind abiStepStack = 1;
-    reflect.abiStepKind abiStepIntReg = 2;
-    reflect.abiStepKind abiStepPointer = 3;
-    reflect.abiStepKind abiStepFloatReg = 4;
+    abiStepKind abiStepStack = 1;
+    abiStepKind abiStepIntReg = 2;
+    abiStepKind abiStepPointer = 3;
+    abiStepKind abiStepFloatReg = 4;
     
     std::ostream& abiSeq::PrintTo(std::ostream& os) const
     {

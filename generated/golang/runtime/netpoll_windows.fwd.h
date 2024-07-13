@@ -5,8 +5,8 @@
 
 #include "golang/runtime/internal/atomic/types.fwd.h"
 // #include "golang/runtime/defs_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/netpoll.fwd.h"
-#include "golang/runtime/os_windows.fwd.h"
+// #include "golang/runtime/netpoll.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/proc.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]

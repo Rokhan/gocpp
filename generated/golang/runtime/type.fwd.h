@@ -17,21 +17,21 @@
 
 namespace golang::runtime
 {
-    struct rtype;
-    struct _typePair;
     using arraytype = abi::ArrayType;
     using chantype = abi::ChanType;
-    using textOff = abi::TextOff;
-    using uncommontype = abi::UncommonType;
+    using functype = abi::FuncType;
     using interfacetype = abi::InterfaceType;
     using maptype = abi::MapType;
-    using nameOff = abi::NameOff;
-    using _type = abi::Type;
-    using slicetype = abi::SliceType;
-    using functype = abi::FuncType;
-    using ptrtype = abi::PtrType;
     using name = abi::Name;
+    using nameOff = abi::NameOff;
+    using ptrtype = abi::PtrType;
+    using slicetype = abi::SliceType;
     using structtype = abi::StructType;
+    using textOff = abi::TextOff;
+    using _type = abi::Type;
     using typeOff = abi::TypeOff;
+    using uncommontype = abi::UncommonType;
+    struct _typePair;
+    struct rtype;
 }
 

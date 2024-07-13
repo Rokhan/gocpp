@@ -11,7 +11,7 @@
 
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
-#include "golang/runtime/cgocall.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]

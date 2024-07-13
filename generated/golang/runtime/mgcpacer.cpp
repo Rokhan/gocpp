@@ -11,7 +11,7 @@
 #include "golang/runtime/mgcpacer.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/cpu/cpu.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/env_posix.h"
@@ -20,7 +20,7 @@
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
-#include "golang/runtime/mgcscavenge.h"
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcsweep.h"
 // #include "golang/runtime/mstats.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -31,7 +31,7 @@
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

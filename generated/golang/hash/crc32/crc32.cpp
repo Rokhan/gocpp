@@ -49,7 +49,7 @@ namespace golang::crc32
         Store(gocpp::recv(haveCastagnoli), true);
     }
 
-    crc32.Table* IEEETable = simpleMakeTable(IEEE);
+    Table* IEEETable = simpleMakeTable(IEEE);
     slicing8Table* ieeeTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     sync::Once ieeeOnce;

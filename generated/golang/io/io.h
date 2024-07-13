@@ -1058,6 +1058,7 @@ namespace golang::io
 
     std::ostream& operator<<(std::ostream& os, const struct teeReader& value);
     std::tuple<int, std::string> Read(struct teeReader* t, gocpp::slice<unsigned char> p);
+    extern Writer Discard;
     struct discard
     {
 
@@ -1067,6 +1068,7 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct discard& value);
+    extern ReaderFrom _;
     std::tuple<int, std::string> Write(discard, gocpp::slice<unsigned char> p);
     std::tuple<int, std::string> WriteString(discard, std::string s);
     extern sync::Pool blackHolePool;

@@ -16,15 +16,15 @@
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
-#include "golang/runtime/preempt.h"
+// #include "golang/runtime/preempt.h"  [Ignored, known errors]
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.h"
+// #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

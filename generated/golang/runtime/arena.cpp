@@ -31,7 +31,7 @@
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgcmark.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mprof.h"
 // #include "golang/runtime/mranges.h"  [Ignored, known errors]

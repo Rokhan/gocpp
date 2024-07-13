@@ -7,8 +7,8 @@
 
 namespace golang::runtime
 {
-    struct m128a;
-    struct context;
     struct _DISPATCHER_CONTEXT;
+    struct context;
+    struct m128a;
 }
 

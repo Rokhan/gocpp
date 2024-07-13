@@ -8,8 +8,8 @@
 
 namespace golang::runtime
 {
-    struct inlinedCall;
-    struct inlineUnwinder;
     struct inlineFrame;
+    struct inlineUnwinder;
+    struct inlinedCall;
 }
 

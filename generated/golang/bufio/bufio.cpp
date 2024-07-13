@@ -48,7 +48,7 @@ namespace golang::bufio
     int maxConsecutiveEmptyReads = 100;
     Reader* NewReaderSize(io::Reader rd, int size)
     {
-        auto [b, ok] = gocpp::getValue<bufio.Reader*>(rd);
+        auto [b, ok] = gocpp::getValue<Reader*>(rd);
         if(ok && len(b->buf) >= size)
         {
             return b;
@@ -634,7 +634,7 @@ namespace golang::bufio
 
     Writer* NewWriterSize(io::Writer w, int size)
     {
-        auto [b, ok] = gocpp::getValue<bufio.Writer*>(w);
+        auto [b, ok] = gocpp::getValue<Writer*>(w);
         if(ok && len(b->buf) >= size)
         {
             return b;

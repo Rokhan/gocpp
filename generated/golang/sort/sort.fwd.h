@@ -9,13 +9,13 @@
 
 namespace golang::sort
 {
+    using Float64Slice = gocpp::slice<double>;
+    using IntSlice = gocpp::slice<int>;
     struct Interface;
+    using StringSlice = gocpp::slice<std::string>;
     struct lessSwap;
     struct reverse;
     using sortedHint = int;
     using xorshift = uint64_t;
-    using IntSlice = gocpp::slice<int>;
-    using Float64Slice = gocpp::slice<double>;
-    using StringSlice = gocpp::slice<std::string>;
 }
 

@@ -8,8 +8,8 @@
 
 namespace golang::runtime
 {
-    struct pallocData;
-    using pallocBits = pageBits;
-    using pageBits = gocpp::array<uint64_t, pallocChunkPages / 64>;
+    /* using pageBits = gocpp::array<uint64_t, pallocChunkPages / 64>;
+ */    /* using pallocBits = pageBits;
+ */    struct pallocData;
 }
 

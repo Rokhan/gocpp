@@ -18,11 +18,11 @@
 
 namespace golang::png
 {
+    using CompressionLevel = int;
     struct Encoder;
+    using EncoderBuffer = encoder;
     struct EncoderBufferPool;
     struct encoder;
     struct opaquer;
-    using EncoderBuffer = encoder;
-    using CompressionLevel = int;
 }
 

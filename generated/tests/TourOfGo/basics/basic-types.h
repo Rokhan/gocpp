@@ -14,6 +14,9 @@
 
 namespace golang::main
 {
+    extern bool ToBe;
+    extern uint64_t MaxInt;
+    extern gocpp::complex128 z;
     void main();
 }
 

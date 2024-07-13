@@ -104,8 +104,8 @@ namespace golang::sort
     }
 
     sortedHint unknownHint = 0;
-    sort.sortedHint increasingHint = 1;
-    sort.sortedHint decreasingHint = 2;
+    sortedHint increasingHint = 1;
+    sortedHint decreasingHint = 2;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;

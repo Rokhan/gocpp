@@ -20,7 +20,7 @@
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
@@ -31,8 +31,8 @@
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/symtabinl.h"
-#include "golang/runtime/traceback.h"
+// #include "golang/runtime/symtabinl.h"  [Ignored, known errors]
+// #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 

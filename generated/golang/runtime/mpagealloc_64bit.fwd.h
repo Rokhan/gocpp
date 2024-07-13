@@ -6,7 +6,7 @@
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mgcscavenge.fwd.h"
+// #include "golang/runtime/mgcscavenge.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mpagealloc.fwd.h"
 // #include "golang/runtime/mranges.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]

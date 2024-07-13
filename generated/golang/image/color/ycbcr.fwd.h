@@ -7,8 +7,8 @@
 
 namespace golang::color
 {
-    struct YCbCr;
-    struct NYCbCrA;
     struct CMYK;
+    struct NYCbCrA;
+    struct YCbCr;
 }
 

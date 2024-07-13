@@ -20,7 +20,7 @@
 
 namespace golang::runtime
 {
-    struct slice;
     struct notInHeapSlice;
+    struct slice;
 }
 

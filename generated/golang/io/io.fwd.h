@@ -8,34 +8,34 @@
 
 namespace golang::io
 {
-    struct Reader;
-    struct Writer;
-    struct Closer;
-    struct Seeker;
-    struct ReadWriter;
-    struct ReadCloser;
-    struct WriteCloser;
-    struct ReadWriteCloser;
-    struct ReadSeeker;
-    struct ReadSeekCloser;
-    struct WriteSeeker;
-    struct ReadWriteSeeker;
-    struct ReaderFrom;
-    struct WriterTo;
-    struct ReaderAt;
-    struct WriterAt;
     struct ByteReader;
     struct ByteScanner;
     struct ByteWriter;
+    struct Closer;
+    struct LimitedReader;
+    struct OffsetWriter;
+    struct ReadCloser;
+    struct ReadSeekCloser;
+    struct ReadSeeker;
+    struct ReadWriteCloser;
+    struct ReadWriteSeeker;
+    struct ReadWriter;
+    struct Reader;
+    struct ReaderAt;
+    struct ReaderFrom;
     struct RuneReader;
     struct RuneScanner;
-    struct StringWriter;
-    struct LimitedReader;
     struct SectionReader;
-    struct OffsetWriter;
-    struct teeReader;
+    struct Seeker;
+    struct StringWriter;
+    struct WriteCloser;
+    struct WriteSeeker;
+    struct Writer;
+    struct WriterAt;
+    struct WriterTo;
     struct discard;
     struct nopCloser;
     struct nopCloserWriterTo;
+    struct teeReader;
 }
 

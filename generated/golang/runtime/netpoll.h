@@ -17,15 +17,15 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/netpoll_windows.h"
+// #include "golang/runtime/netpoll_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/tagptr_64bit.h"
-#include "golang/runtime/time.h"
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -35,6 +35,9 @@ namespace golang::runtime
     extern int pollErrClosing;
     extern int pollErrTimeout;
     extern int pollErrNotPollable;
+    extern uintptr_t pdNil;
+    extern uintptr_t pdReady;
+    extern uintptr_t pdWait;
     extern int pollBlockSize;
     struct pollDesc
     {
@@ -113,5 +116,7 @@ namespace golang::runtime
     void netpollAdjustWaiters(int32_t delta);
     pollDesc* alloc(struct pollCache* c);
     go_any makeArg(struct pollDesc* pd);
+    extern go_any pdEface;
+    extern _type* pdType;
 }
 

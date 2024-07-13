@@ -131,7 +131,7 @@ namespace golang::color
     Model YCbCrModel = ModelFunc(yCbCrModel);
     Color yCbCrModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.YCbCr>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<YCbCr>(c); ok)
         {
             return c;
         }
@@ -197,19 +197,19 @@ namespace golang::color
         {
             const auto& gocpp_id_0 = gocpp::type_info(c);
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(color.NYCbCrA)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(color.YCbCr)) { conditionId = 1; }
+            if(gocpp_id_0 == typeid(NYCbCrA)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(YCbCr)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    color.NYCbCrA c = gocpp::any_cast<color.NYCbCrA>(c);
+                    NYCbCrA c = gocpp::any_cast<NYCbCrA>(c);
                     return c;
                     break;
                 }
                 case 1:
                 {
-                    color.YCbCr c = gocpp::any_cast<color.YCbCr>(c);
+                    YCbCr c = gocpp::any_cast<YCbCr>(c);
                     return NYCbCrA {c, 0xff};
                     break;
                 }
@@ -288,7 +288,7 @@ namespace golang::color
     Model CMYKModel = ModelFunc(cmykModel);
     Color cmykModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.CMYK>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<CMYK>(c); ok)
         {
             return c;
         }

@@ -21,32 +21,32 @@
 
 namespace golang::reflect
 {
-    struct Method;
-    struct StructField;
-    struct interfaceType;
-    struct common;
-    struct rtype;
-    struct mapType;
-    struct layoutType;
-    struct layoutKey;
-    struct structTypeUncommon;
-    struct cacheKey;
-    struct ptrType;
-    struct Type;
-    struct structType;
-    struct bitVector;
-    struct fieldScan;
-    struct sliceType;
-    using Kind = unsigned int;
-    using StructTag = std::string;
-    using ChanDir = int;
-    using structField = abi::StructField;
-    using uncommonType = abi::UncommonType;
-    using funcType = abi::FuncType;
-    using chanType = abi::ChanType;
     using arrayType = abi::ArrayType;
+    using chanType = abi::ChanType;
+    using funcType = abi::FuncType;
+    using aNameOff = abi::NameOff;
+    using structField = abi::StructField;
     using aTextOff = abi::TextOff;
     using aTypeOff = abi::TypeOff;
-    using aNameOff = abi::NameOff;
+    using uncommonType = abi::UncommonType;
+    using ChanDir = int;
+    using Kind = unsigned int;
+    struct Method;
+    struct StructField;
+    using StructTag = std::string;
+    struct Type;
+    struct bitVector;
+    struct cacheKey;
+    struct common;
+    struct fieldScan;
+    struct interfaceType;
+    struct layoutKey;
+    struct layoutType;
+    struct mapType;
+    struct ptrType;
+    struct rtype;
+    struct sliceType;
+    struct structType;
+    struct structTypeUncommon;
 }
 

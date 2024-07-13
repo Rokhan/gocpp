@@ -11,10 +11,10 @@
 
 namespace golang::base64
 {
-    struct Encoding;
-    struct encoder;
-    struct decoder;
-    struct newlineFilteringReader;
     using CorruptInputError = int64_t;
+    struct Encoding;
+    struct decoder;
+    struct encoder;
+    struct newlineFilteringReader;
 }
 

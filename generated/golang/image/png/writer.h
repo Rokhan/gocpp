@@ -109,6 +109,10 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
+    extern CompressionLevel DefaultCompression;
+    extern CompressionLevel NoCompression;
+    extern CompressionLevel BestSpeed;
+    extern CompressionLevel BestCompression;
     struct opaquer : gocpp::Interface
     {
         opaquer(){}

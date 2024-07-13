@@ -23,6 +23,7 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
+    extern uintptr_t CacheLineSize;
     void Initialize(std::string env);
     struct option
     {

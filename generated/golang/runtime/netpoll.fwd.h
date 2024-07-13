@@ -11,22 +11,22 @@
 // #include "golang/runtime/lockrank.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/netpoll_windows.fwd.h"
+// #include "golang/runtime/netpoll_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/tagptr_64bit.fwd.h"
-#include "golang/runtime/time.fwd.h"
+// #include "golang/runtime/time.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.fwd.h"
-#include "golang/runtime/trace2runtime.fwd.h"
+// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct pollDesc;
     struct pollCache;
+    struct pollDesc;
     using pollInfo = uint32_t;
 }
 

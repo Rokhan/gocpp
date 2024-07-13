@@ -15,7 +15,7 @@
 
 namespace golang::goarch
 {
-    goarch.ArchFamilyType _ArchFamily = AMD64;
+    ArchFamilyType _ArchFamily = AMD64;
     int _DefaultPhysPageSize = 4096;
     int _PCQuantum = 1;
     int _MinFrameSize = 0;

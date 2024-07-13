@@ -11,7 +11,7 @@
 // #include "golang/runtime/mbitmap_allocheaders.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mcentral.fwd.h"
 #include "golang/runtime/mfixalloc.fwd.h"
-#include "golang/runtime/mgcpacer.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mgcsweep.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mspanset.fwd.h"
@@ -25,9 +25,9 @@
 
 namespace golang::runtime
 {
-    struct mcache;
     struct gclink;
-    struct stackfreelist;
     using gclinkptr = uintptr_t;
+    struct mcache;
+    struct stackfreelist;
 }
 

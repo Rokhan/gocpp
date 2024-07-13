@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/mgcpacer.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 // #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
 
@@ -12,7 +12,7 @@ namespace golang::runtime
 {
     struct gcCPULimiterState;
     struct limiterEvent;
-    using limiterEventType = uint8_t;
     using limiterEventStamp = uint64_t;
+    using limiterEventType = uint8_t;
 }
 

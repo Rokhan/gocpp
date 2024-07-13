@@ -13,7 +13,7 @@
 
 namespace golang::goarch
 {
-    extern goarch.ArchFamilyType _ArchFamily;
+    extern ArchFamilyType _ArchFamily;
     extern int _DefaultPhysPageSize;
     extern int _PCQuantum;
     extern int _MinFrameSize;

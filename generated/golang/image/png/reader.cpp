@@ -121,7 +121,7 @@ namespace golang::png
         return "png: invalid format: " + string(e);
     }
 
-    png.FormatError chunkOrderError = FormatError("chunk out of order");
+    FormatError chunkOrderError = FormatError("chunk out of order");
     std::string Error(UnsupportedError e)
     {
         return "png: unsupported feature: " + string(e);

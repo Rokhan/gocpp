@@ -26,7 +26,7 @@
 // #include "golang/runtime/stkframe.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.h"
+// #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 // #include "golang/runtime/typekind.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"

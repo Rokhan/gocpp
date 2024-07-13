@@ -30,15 +30,17 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
+    extern gocpp::rune StdPadding;
+    extern gocpp::rune NoPadding;
     extern std::string decodeMapInitialize;
     extern char invalidIndex;
     Encoding* NewEncoding(std::string encoder);
     Encoding* WithPadding(struct Encoding enc, gocpp::rune padding);
     Encoding* Strict(struct Encoding enc);
-    extern base64.Encoding* StdEncoding;
-    extern base64.Encoding* URLEncoding;
-    extern base64.Encoding* RawStdEncoding;
-    extern base64.Encoding* RawURLEncoding;
+    extern Encoding* StdEncoding;
+    extern Encoding* URLEncoding;
+    extern Encoding* RawStdEncoding;
+    extern Encoding* RawURLEncoding;
     void Encode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     std::string EncodeToString(struct Encoding* enc, gocpp::slice<unsigned char> src);

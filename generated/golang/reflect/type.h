@@ -253,33 +253,34 @@ namespace golang::reflect
     uncommonType* uncommon(const gocpp::ObjRecv<Type>& self);
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    extern reflect.Kind Bool;
-    extern reflect.Kind Int;
-    extern reflect.Kind Int8;
-    extern reflect.Kind Int16;
-    extern reflect.Kind Int32;
-    extern reflect.Kind Int64;
-    extern reflect.Kind Uint;
-    extern reflect.Kind Uint8;
-    extern reflect.Kind Uint16;
-    extern reflect.Kind Uint32;
-    extern reflect.Kind Uint64;
-    extern reflect.Kind Uintptr;
-    extern reflect.Kind Float32;
-    extern reflect.Kind Float64;
-    extern reflect.Kind Complex64;
-    extern reflect.Kind Complex128;
-    extern reflect.Kind Array;
-    extern reflect.Kind Chan;
-    extern reflect.Kind Func;
-    extern reflect.Kind Interface;
-    extern reflect.Kind Map;
-    extern reflect.Kind Pointer;
-    extern reflect.Kind Slice;
-    extern reflect.Kind String;
-    extern reflect.Kind Struct;
-    extern reflect.Kind UnsafePointer;
-    extern reflect.Kind Ptr;
+    extern Kind Invalid;
+    extern Kind Bool;
+    extern Kind Int;
+    extern Kind Int8;
+    extern Kind Int16;
+    extern Kind Int32;
+    extern Kind Int64;
+    extern Kind Uint;
+    extern Kind Uint8;
+    extern Kind Uint16;
+    extern Kind Uint32;
+    extern Kind Uint64;
+    extern Kind Uintptr;
+    extern Kind Float32;
+    extern Kind Float64;
+    extern Kind Complex64;
+    extern Kind Complex128;
+    extern Kind Array;
+    extern Kind Chan;
+    extern Kind Func;
+    extern Kind Interface;
+    extern Kind Map;
+    extern Kind Pointer;
+    extern Kind Slice;
+    extern Kind String;
+    extern Kind Struct;
+    extern Kind UnsafePointer;
+    extern Kind Ptr;
     struct common
     {
 
@@ -301,8 +302,9 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     abi::Type* common(struct rtype* t);
     abi::UncommonType* uncommon(struct rtype* t);
-    extern reflect.ChanDir SendDir;
-    extern reflect.ChanDir BothDir;
+    extern ChanDir RecvDir;
+    extern ChanDir SendDir;
+    extern ChanDir BothDir;
     struct interfaceType
     {
 
@@ -503,6 +505,9 @@ namespace golang::reflect
     bool isReflexive(abi::Type* t);
     bool needKeyUpdate(abi::Type* t);
     bool hashMightPanic(abi::Type* t);
+    extern uintptr_t bucketSize;
+    extern uintptr_t maxKeySize;
+    extern uintptr_t maxValSize;
     abi::Type* bucketOf(abi::Type* ktyp, abi::Type* etyp);
     gocpp::slice<unsigned char> gcSlice(struct rtype* t, uintptr_t begin, uintptr_t end);
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);

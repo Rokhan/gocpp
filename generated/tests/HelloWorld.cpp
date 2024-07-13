@@ -22,6 +22,7 @@ namespace golang::main
         auto hello = "Hello";
         auto world = "World";
         helloFunc(hello, world, "!");
+        using Yyy = color::Color;
         Yyy _ = {};
         auto a = 5;
         auto b = 8 + 7;

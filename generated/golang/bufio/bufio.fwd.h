@@ -11,8 +11,8 @@
 
 namespace golang::bufio
 {
+    struct ReadWriter;
     struct Reader;
     struct Writer;
-    struct ReadWriter;
 }
 

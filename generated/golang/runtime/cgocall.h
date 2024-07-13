@@ -21,7 +21,7 @@
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]

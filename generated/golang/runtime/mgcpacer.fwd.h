@@ -3,7 +3,7 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/cpu/cpu.fwd.h"
+// #include "golang/internal/cpu/cpu.fwd.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/env_posix.fwd.h"
@@ -12,7 +12,7 @@
 // #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mgc.fwd.h"
 // #include "golang/runtime/mgclimit.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mgcscavenge.fwd.h"
+// #include "golang/runtime/mgcscavenge.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mgcsweep.fwd.h"
 // #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
@@ -23,7 +23,7 @@
 #include "golang/runtime/string.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.fwd.h"
-#include "golang/runtime/trace2runtime.fwd.h"
+// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

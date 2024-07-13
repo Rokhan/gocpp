@@ -9,10 +9,10 @@
 
 namespace golang::sync
 {
-    struct poolDequeue;
+    using dequeueNil = gocpp_id_0*;
     struct eface;
     struct poolChain;
     struct poolChainElt;
-    using dequeueNil = gocpp_id_0*;
+    struct poolDequeue;
 }
 

@@ -8,8 +8,8 @@
 
 namespace golang::main
 {
+    using F = double;
     struct I;
     struct T;
-    using F = double;
 }
 

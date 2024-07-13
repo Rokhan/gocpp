@@ -371,7 +371,7 @@ namespace golang::color
     Model Gray16Model = ModelFunc(gray16Model);
     Color rgbaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.RGBA>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<RGBA>(c); ok)
         {
             return c;
         }
@@ -381,7 +381,7 @@ namespace golang::color
 
     Color rgba64Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.RGBA64>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<RGBA64>(c); ok)
         {
             return c;
         }
@@ -391,7 +391,7 @@ namespace golang::color
 
     Color nrgbaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.NRGBA>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<NRGBA>(c); ok)
         {
             return c;
         }
@@ -412,7 +412,7 @@ namespace golang::color
 
     Color nrgba64Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.NRGBA64>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<NRGBA64>(c); ok)
         {
             return c;
         }
@@ -433,7 +433,7 @@ namespace golang::color
 
     Color alphaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.Alpha>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<Alpha>(c); ok)
         {
             return c;
         }
@@ -447,7 +447,7 @@ namespace golang::color
 
     Color alpha16Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.Alpha16>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<Alpha16>(c); ok)
         {
             return c;
         }
@@ -461,7 +461,7 @@ namespace golang::color
 
     Color grayModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.Gray>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<Gray>(c); ok)
         {
             return c;
         }
@@ -472,7 +472,7 @@ namespace golang::color
 
     Color gray16Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<color.Gray16>(c); ok)
+        if(auto [_, ok] = gocpp::getValue<Gray16>(c); ok)
         {
             return c;
         }

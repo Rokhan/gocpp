@@ -818,7 +818,7 @@ namespace golang::flate
 
     void Reset(struct Writer* w, io::Writer dst)
     {
-        if(auto [dw, ok] = gocpp::getValue<flate.dictWriter*>(w->d.w->writer); ok)
+        if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
         {
             dw->w = dst;
             reset(gocpp::recv(w->d), dw);

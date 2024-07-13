@@ -16,7 +16,7 @@
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mpagealloc.fwd.h"
 // #include "golang/runtime/mpagealloc_64bit.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mpallocbits.fwd.h"
+// #include "golang/runtime/mpallocbits.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/mranges.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.fwd.h"  [Ignored, known errors]
@@ -25,18 +25,18 @@
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time.fwd.h"
+// #include "golang/runtime/time.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.fwd.h"
-#include "golang/runtime/trace2runtime.fwd.h"
+// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct scavengerState;
-    struct scavengeIndex;
     struct atomicScavChunkData;
-    struct scavChunkData;
     struct piController;
+    struct scavChunkData;
     using scavChunkFlags = uint8_t;
+    struct scavengeIndex;
+    struct scavengerState;
 }
 

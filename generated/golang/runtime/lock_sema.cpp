@@ -14,7 +14,7 @@
 #include "golang/runtime/internal/atomic/stubs.h"
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"

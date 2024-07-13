@@ -17,16 +17,16 @@
 namespace golang::goarch
 {
     ArchFamilyType AMD64 = 0;
-    goarch.ArchFamilyType ARM = 1;
-    goarch.ArchFamilyType ARM64 = 2;
-    goarch.ArchFamilyType I386 = 3;
-    goarch.ArchFamilyType LOONG64 = 4;
-    goarch.ArchFamilyType MIPS = 5;
-    goarch.ArchFamilyType MIPS64 = 6;
-    goarch.ArchFamilyType PPC64 = 7;
-    goarch.ArchFamilyType RISCV64 = 8;
-    goarch.ArchFamilyType S390X = 9;
-    goarch.ArchFamilyType WASM = 10;
+    ArchFamilyType ARM = 1;
+    ArchFamilyType ARM64 = 2;
+    ArchFamilyType I386 = 3;
+    ArchFamilyType LOONG64 = 4;
+    ArchFamilyType MIPS = 5;
+    ArchFamilyType MIPS64 = 6;
+    ArchFamilyType PPC64 = 7;
+    ArchFamilyType RISCV64 = 8;
+    ArchFamilyType S390X = 9;
+    ArchFamilyType WASM = 10;
     int PtrSize = 4 << (^ uintptr(0) >> 63);
     ArchFamilyType ArchFamily = _ArchFamily;
     bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;

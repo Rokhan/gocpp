@@ -24,6 +24,8 @@ namespace golang::main
         mocklib::Println(a);
         auto primes = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};
         mocklib::Println(primes);
+        auto ints = gocpp::array_base<int> {1, 2, 3};
+        mocklib::Println(ints);
     }
 
 }

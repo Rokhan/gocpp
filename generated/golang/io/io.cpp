@@ -899,7 +899,7 @@ namespace golang::io
     {
         int n;
         std::string err;
-        if(auto [sw, ok] = gocpp::getValue<io.StringWriter>(w); ok)
+        if(auto [sw, ok] = gocpp::getValue<StringWriter>(w); ok)
         {
             int n;
             std::string err;
@@ -993,13 +993,13 @@ namespace golang::io
     {
         int64_t written;
         std::string err;
-        if(auto [wt, ok] = gocpp::getValue<io.WriterTo>(src); ok)
+        if(auto [wt, ok] = gocpp::getValue<WriterTo>(src); ok)
         {
             int64_t written;
             std::string err;
             return WriteTo(gocpp::recv(wt), dst);
         }
-        if(auto [rt, ok] = gocpp::getValue<io.ReaderFrom>(dst); ok)
+        if(auto [rt, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
         {
             int64_t written;
             std::string err;
@@ -1010,7 +1010,7 @@ namespace golang::io
             int64_t written;
             std::string err;
             auto size = 32 * 1024;
-            if(auto [l, ok] = gocpp::getValue<io.LimitedReader*>(src); ok && int64(size) > l->N)
+            if(auto [l, ok] = gocpp::getValue<LimitedReader*>(src); ok && int64(size) > l->N)
             {
                 int64_t written;
                 std::string err;
@@ -1427,7 +1427,7 @@ namespace golang::io
 
     ReadCloser NopCloser(Reader r)
     {
-        if(auto [_, ok] = gocpp::getValue<io.WriterTo>(r); ok)
+        if(auto [_, ok] = gocpp::getValue<WriterTo>(r); ok)
         {
             return nopCloserWriterTo {r};
         }
@@ -1474,7 +1474,7 @@ namespace golang::io
     {
         int64_t n;
         std::string err;
-        return WriteTo(gocpp::recv(gocpp::getValue<io.WriterTo>(c.Reader)), w);
+        return WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)), w);
     }
 
     std::tuple<gocpp::slice<unsigned char>, std::string> ReadAll(Reader r)

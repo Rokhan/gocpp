@@ -22,7 +22,7 @@
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
 // #include "golang/runtime/mpagealloc_64bit.h"  [Ignored, known errors]
-#include "golang/runtime/mpallocbits.h"
+// #include "golang/runtime/mpallocbits.h"  [Ignored, known errors]
 // #include "golang/runtime/mranges.h"  [Ignored, known errors]
 // #include "golang/runtime/mstats.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
@@ -31,9 +31,9 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/time.h"
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -136,6 +136,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
     uint64_t pack(struct scavChunkData sc);
+    extern scavChunkFlags scavChunkHasFree;
     extern int scavChunkMaxFlags;
     extern int scavChunkFlagsMask;
     extern int logScavChunkInUseMax;

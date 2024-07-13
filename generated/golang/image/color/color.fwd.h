@@ -5,17 +5,17 @@
 
 namespace golang::color
 {
-    struct Color;
-    struct RGBA;
-    struct RGBA64;
-    struct NRGBA;
-    struct NRGBA64;
     struct Alpha;
     struct Alpha16;
+    struct Color;
     struct Gray;
     struct Gray16;
     struct Model;
-    struct modelFunc;
+    struct NRGBA;
+    struct NRGBA64;
     using Palette = gocpp::slice<Color>;
+    struct RGBA;
+    struct RGBA64;
+    struct modelFunc;
 }
 

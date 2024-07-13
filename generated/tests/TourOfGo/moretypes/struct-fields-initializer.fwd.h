@@ -7,7 +7,7 @@
 
 namespace golang::main
 {
-    struct Vertex;
     struct Segment;
+    struct Vertex;
 }
 

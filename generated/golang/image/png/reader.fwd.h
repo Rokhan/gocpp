@@ -17,9 +17,9 @@
 
 namespace golang::png
 {
-    struct interlaceScan;
-    struct decoder;
     using FormatError = std::string;
     using UnsupportedError = std::string;
+    struct decoder;
+    struct interlaceScan;
 }
 

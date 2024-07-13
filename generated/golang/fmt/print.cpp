@@ -335,7 +335,7 @@ namespace golang::fmt
 ; });
     pp* newPrinter()
     {
-        auto p = gocpp::getValue<fmt.pp*>(Get(gocpp::recv(ppFree)));
+        auto p = gocpp::getValue<pp*>(Get(gocpp::recv(ppFree)));
         p->panicking = false;
         p->erroring = false;
         p->wrapErrs = false;
@@ -1045,7 +1045,7 @@ namespace golang::fmt
             }
             verb = 'v';
         }
-        if(auto [formatter, ok] = gocpp::getValue<fmt.Formatter>(p->arg); ok)
+        if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
         {
             bool handled;
             handled = true;
@@ -1056,7 +1056,7 @@ namespace golang::fmt
         if(p->fmt.sharpV)
         {
             bool handled;
-            if(auto [stringer, ok] = gocpp::getValue<fmt.GoStringer>(p->arg); ok)
+            if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
             {
                 bool handled;
                 handled = true;
@@ -1090,7 +1090,7 @@ namespace golang::fmt
                             const auto& gocpp_id_0 = gocpp::type_info(p->arg);
                             int conditionId = -1;
                             if(gocpp_id_0 == typeid(std::string)) { conditionId = 0; }
-                            else if(gocpp_id_0 == typeid(fmt.Stringer)) { conditionId = 1; }
+                            else if(gocpp_id_0 == typeid(Stringer)) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 bool handled;
@@ -1105,7 +1105,7 @@ namespace golang::fmt
                                 }
                                 case 1:
                                 {
-                                    fmt.Stringer v = gocpp::any_cast<fmt.Stringer>(p->arg);
+                                    Stringer v = gocpp::any_cast<Stringer>(p->arg);
                                     handled = true;
                                     defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "String"); });
                                     fmtString(gocpp::recv(p), String(gocpp::recv(v)), verb);

@@ -17,8 +17,8 @@
 namespace golang::runtime
 {
     struct addrRange;
-    struct offAddr;
-    struct atomicOffAddr;
     struct addrRanges;
+    struct atomicOffAddr;
+    struct offAddr;
 }
 

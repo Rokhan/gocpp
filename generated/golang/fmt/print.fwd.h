@@ -14,11 +14,11 @@
 
 namespace golang::fmt
 {
-    struct State;
     struct Formatter;
-    struct Stringer;
     struct GoStringer;
-    struct pp;
+    struct State;
+    struct Stringer;
     using buffer = gocpp::slice<unsigned char>;
+    struct pp;
 }
 

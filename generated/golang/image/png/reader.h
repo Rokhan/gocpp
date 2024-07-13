@@ -99,7 +99,7 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
     std::string Error(FormatError e);
-    extern png.FormatError chunkOrderError;
+    extern FormatError chunkOrderError;
     std::string Error(UnsupportedError e);
     std::string parseIHDR(struct decoder* d, uint32_t length);
     std::string parsePLTE(struct decoder* d, uint32_t length);

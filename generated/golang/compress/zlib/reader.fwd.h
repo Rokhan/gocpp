@@ -13,7 +13,7 @@
 
 namespace golang::zlib
 {
-    struct reader;
     struct Resetter;
+    struct reader;
 }
 

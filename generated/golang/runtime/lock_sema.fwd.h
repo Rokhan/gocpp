@@ -6,7 +6,7 @@
 #include "golang/runtime/internal/atomic/stubs.fwd.h"
 // #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mprof.fwd.h"
-#include "golang/runtime/os_windows.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

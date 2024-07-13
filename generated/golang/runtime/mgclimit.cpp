@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 
@@ -244,13 +244,13 @@ namespace golang::runtime
     }
 
     limiterEventType limiterEventNone = 0;
-    runtime.limiterEventType limiterEventIdleMarkWork = 1;
-    runtime.limiterEventType limiterEventMarkAssist = 2;
-    runtime.limiterEventType limiterEventScavengeAssist = 3;
-    runtime.limiterEventType limiterEventIdle = 4;
+    limiterEventType limiterEventIdleMarkWork = 1;
+    limiterEventType limiterEventMarkAssist = 2;
+    limiterEventType limiterEventScavengeAssist = 3;
+    limiterEventType limiterEventIdle = 4;
     int limiterEventBits = 3;
     uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
-    runtime.limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
+    limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
     {
         return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));

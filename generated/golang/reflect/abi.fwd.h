@@ -14,9 +14,9 @@
 
 namespace golang::reflect
 {
-    struct abiStep;
-    struct abiSeq;
     struct abiDesc;
+    struct abiSeq;
+    struct abiStep;
     using abiStepKind = int;
 }
 

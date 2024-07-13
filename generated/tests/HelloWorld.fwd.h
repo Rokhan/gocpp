@@ -9,6 +9,5 @@
 namespace golang::main
 {
     using Zzz = color::Color;
-    using Yyy = color::Color;
 }
 

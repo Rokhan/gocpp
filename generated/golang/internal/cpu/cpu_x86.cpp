@@ -11,7 +11,7 @@
 #include "golang/internal/cpu/cpu_x86.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/cpu/cpu.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 
 namespace golang::cpu
 {

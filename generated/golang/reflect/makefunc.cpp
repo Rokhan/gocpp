@@ -46,7 +46,7 @@ namespace golang::reflect
         auto code = FuncPCABI0(gocpp::recv(abi), makeFuncStub);
         internal/abi.Type* _;
         sync.Pool* _;
-        reflect.abiDesc abid;
+        abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([](makeFuncImpl& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.ftyp = ftyp; x.fn = fn; });
         return Value {t, Pointer(gocpp::recv(unsafe), impl), flag(Func)};
@@ -79,11 +79,11 @@ namespace golang::reflect
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(Kind(gocpp::recv(typ(gocpp::recv(v)))));
         auto rcvr = Value {typ(gocpp::recv(v)), v.ptr, fl};
-        auto ftyp = (funcType*)(Pointer(gocpp::recv(unsafe), gocpp::getValue<reflect.rtype*>(Type(gocpp::recv(v)))));
+        auto ftyp = (funcType*)(Pointer(gocpp::recv(unsafe), gocpp::getValue<rtype*>(Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
         internal/abi.Type* _;
         sync.Pool* _;
-        reflect.abiDesc abid;
+        abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([](methodValue& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.method = int(v.flag) >> flagMethodShift; x.rcvr = rcvr; });
         methodReceiver(op, fv->rcvr, fv->method);

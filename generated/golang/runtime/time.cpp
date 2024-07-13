@@ -15,8 +15,8 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-#include "golang/runtime/netpoll.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/netpoll.h"  [Ignored, known errors]
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/race0.h"  [Ignored, known errors]
@@ -24,7 +24,7 @@
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -122,7 +122,7 @@ namespace golang::runtime
 
     void goroutineReady(go_any arg, uintptr_t seq)
     {
-        goready(gocpp::getValue<runtime.g*>(arg), 0);
+        goready(gocpp::getValue<g*>(arg), 0);
     }
 
     void addtimer(timer* t)

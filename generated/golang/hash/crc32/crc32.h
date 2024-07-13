@@ -23,7 +23,7 @@ namespace golang::crc32
     extern int Castagnoli;
     extern int Koopman;
     void castagnoliInit();
-    extern crc32.Table* IEEETable;
+    extern Table* IEEETable;
     void ieeeInit();
     Table* MakeTable(uint32_t poly);
     struct digest

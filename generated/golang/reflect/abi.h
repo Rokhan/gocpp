@@ -38,10 +38,11 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiStep& value);
-    extern reflect.abiStepKind abiStepStack;
-    extern reflect.abiStepKind abiStepIntReg;
-    extern reflect.abiStepKind abiStepPointer;
-    extern reflect.abiStepKind abiStepFloatReg;
+    extern abiStepKind abiStepBad;
+    extern abiStepKind abiStepStack;
+    extern abiStepKind abiStepIntReg;
+    extern abiStepKind abiStepPointer;
+    extern abiStepKind abiStepFloatReg;
     struct abiSeq
     {
         gocpp::slice<abiStep> steps;

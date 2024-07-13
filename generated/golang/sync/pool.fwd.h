@@ -14,7 +14,7 @@
 namespace golang::sync
 {
     struct Pool;
-    struct poolLocalInternal;
     struct poolLocal;
+    struct poolLocalInternal;
 }
 

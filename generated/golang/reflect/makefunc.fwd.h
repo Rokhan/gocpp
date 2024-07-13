@@ -12,8 +12,8 @@
 
 namespace golang::reflect
 {
+    struct makeFuncCtxt;
     struct makeFuncImpl;
     struct methodValue;
-    struct makeFuncCtxt;
 }
 

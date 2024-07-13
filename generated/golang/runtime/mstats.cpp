@@ -16,7 +16,7 @@
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]

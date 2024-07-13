@@ -33,38 +33,44 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    extern abi.Kind Bool;
-    extern abi.Kind Int;
-    extern abi.Kind Int8;
-    extern abi.Kind Int16;
-    extern abi.Kind Int32;
-    extern abi.Kind Int64;
-    extern abi.Kind Uint;
-    extern abi.Kind Uint8;
-    extern abi.Kind Uint16;
-    extern abi.Kind Uint32;
-    extern abi.Kind Uint64;
-    extern abi.Kind Uintptr;
-    extern abi.Kind Float32;
-    extern abi.Kind Float64;
-    extern abi.Kind Complex64;
-    extern abi.Kind Complex128;
-    extern abi.Kind Array;
-    extern abi.Kind Chan;
-    extern abi.Kind Func;
-    extern abi.Kind Interface;
-    extern abi.Kind Map;
-    extern abi.Kind Pointer;
-    extern abi.Kind Slice;
-    extern abi.Kind String;
-    extern abi.Kind Struct;
-    extern abi.Kind UnsafePointer;
+    extern Kind Invalid;
+    extern Kind Bool;
+    extern Kind Int;
+    extern Kind Int8;
+    extern Kind Int16;
+    extern Kind Int32;
+    extern Kind Int64;
+    extern Kind Uint;
+    extern Kind Uint8;
+    extern Kind Uint16;
+    extern Kind Uint32;
+    extern Kind Uint64;
+    extern Kind Uintptr;
+    extern Kind Float32;
+    extern Kind Float64;
+    extern Kind Complex64;
+    extern Kind Complex128;
+    extern Kind Array;
+    extern Kind Chan;
+    extern Kind Func;
+    extern Kind Interface;
+    extern Kind Map;
+    extern Kind Pointer;
+    extern Kind Slice;
+    extern Kind String;
+    extern Kind Struct;
+    extern Kind UnsafePointer;
     extern int KindDirectIface;
     extern int KindGCProg;
     extern int KindMask;
-    std::string String(Kind k);
+    extern TFlag TFlagUncommon;
+    extern TFlag TFlagExtraStar;
+    extern TFlag TFlagNamed;
+    extern TFlag TFlagRegularMemory;
+    extern TFlag TFlagUnrolledBitmap;
+/*     std::string String(Kind k); [Ignored, known name conflict] */ 
     extern gocpp::slice<std::string> kindNames;
-    Kind Kind(struct Type* t);
+/*     Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
     bool HasName(struct Type* t);
     bool Pointers(struct Type* t);
     bool IfaceIndir(struct Type* t);
@@ -125,8 +131,10 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     int Len(struct Type* t);
     Type* Common(struct Type* t);
-    extern abi.ChanDir SendDir;
-    extern abi.ChanDir BothDir;
+    extern ChanDir RecvDir;
+    extern ChanDir SendDir;
+    extern ChanDir BothDir;
+    extern ChanDir InvalidDir;
     struct ChanType
     {
         Type* Elem;
@@ -148,100 +156,20 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
-    ChanDir ChanDir(struct Type* t);
+/*     ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
     UncommonType* Uncommon(struct Type* t);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
-    struct u
-    {
-        UncommonType u;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct u& value);
     Type* Elem(struct Type* t);
-    StructType* StructType(struct Type* t);
-    MapType* MapType(struct Type* t);
-    ArrayType* ArrayType(struct Type* t);
-    FuncType* FuncType(struct Type* t);
-    InterfaceType* InterfaceType(struct Type* t);
+/*     StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
+/*     MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
+/*     ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
+/*     FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
+/*     InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
     uintptr_t Size(struct Type* t);
     int Align(struct Type* t);
     int FieldAlign(struct Type* t);
     struct InterfaceType
     {
-        Name PkgPath;
+        /* Name PkgPath; [Known incomplete type] */
         gocpp::slice<Imethod> Methods;
 
         using isGoStruct = void;
@@ -316,7 +244,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct PtrType& value);
     struct StructField
     {
-        Name Name;
+        /* Name Name; [Known incomplete type] */
         Type* Typ;
         uintptr_t Offset;
 
@@ -329,7 +257,7 @@ namespace golang::abi
     bool Embedded(struct StructField* f);
     struct StructType
     {
-        Name PkgPath;
+        /* Name PkgPath; [Known incomplete type] */
         gocpp::slice<StructField> Fields;
 
         using isGoStruct = void;
@@ -356,7 +284,7 @@ namespace golang::abi
     std::tuple<int, int> ReadVarint(struct Name n, int off);
     bool IsBlank(struct Name n);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
-    std::string Name(struct Name n);
+/*     std::string Name(struct Name n); [Ignored, known name conflict] */ 
     std::string Tag(struct Name n);
     Name NewName(std::string n, std::string tag, bool exported, bool embedded);
 }

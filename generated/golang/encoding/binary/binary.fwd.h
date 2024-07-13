@@ -13,12 +13,12 @@
 
 namespace golang::binary
 {
-    struct ByteOrder;
     struct AppendByteOrder;
-    struct littleEndian;
+    struct ByteOrder;
     struct bigEndian;
     struct coder;
     using decoder = coder;
     using encoder = coder;
+    struct littleEndian;
 }
 

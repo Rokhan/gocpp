@@ -12,7 +12,7 @@
 namespace golang::sync
 {
     struct Cond;
-    struct noCopy;
     using copyChecker = uintptr_t;
+    struct noCopy;
 }
 

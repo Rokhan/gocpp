@@ -19,7 +19,7 @@
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mgc.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"

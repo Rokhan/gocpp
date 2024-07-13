@@ -9,19 +9,19 @@
 
 namespace golang::image
 {
+    struct Alpha;
+    struct Alpha16;
+    struct CMYK;
     struct Config;
+    struct Gray;
+    struct Gray16;
     struct Image;
-    struct RGBA64Image;
+    struct NRGBA;
+    struct NRGBA64;
+    struct Paletted;
     struct PalettedImage;
     struct RGBA;
     struct RGBA64;
-    struct NRGBA;
-    struct NRGBA64;
-    struct Alpha;
-    struct Alpha16;
-    struct Gray;
-    struct Gray16;
-    struct CMYK;
-    struct Paletted;
+    struct RGBA64Image;
 }
 

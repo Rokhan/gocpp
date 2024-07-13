@@ -7,11 +7,11 @@
 
 namespace golang::main
 {
-    struct Vertex;
     using ArbitraryType = int;
     using IntegerType = int;
-    using VertexAlias = Vertex;
     using Pointer = ArbitraryType*;
+    struct Vertex;
+    using VertexAlias = Vertex;
     using VertexPtr = Vertex*;
 }
 

@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 
@@ -52,13 +52,14 @@ namespace golang::runtime
     void unlock(struct gcCPULimiterState* l);
     extern double capacityPerProc;
     void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
-    extern runtime.limiterEventType limiterEventIdleMarkWork;
-    extern runtime.limiterEventType limiterEventMarkAssist;
-    extern runtime.limiterEventType limiterEventScavengeAssist;
-    extern runtime.limiterEventType limiterEventIdle;
+    extern limiterEventType limiterEventNone;
+    extern limiterEventType limiterEventIdleMarkWork;
+    extern limiterEventType limiterEventMarkAssist;
+    extern limiterEventType limiterEventScavengeAssist;
+    extern limiterEventType limiterEventIdle;
     extern int limiterEventBits;
     extern uint64_t limiterEventTypeMask;
-    extern runtime.limiterEventStamp limiterEventStampNone;
+    extern limiterEventStamp limiterEventStampNone;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
     int64_t duration(limiterEventStamp s, int64_t now);
     limiterEventType typ(limiterEventStamp s);

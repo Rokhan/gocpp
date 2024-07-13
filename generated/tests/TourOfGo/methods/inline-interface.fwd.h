@@ -8,8 +8,8 @@
 
 namespace golang::main
 {
-    struct Vertex;
-    using MyInt = int;
     using MyFloat = double;
+    using MyInt = int;
+    struct Vertex;
 }
 

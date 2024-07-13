@@ -7,7 +7,7 @@
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "golang/runtime/env_posix.fwd.h"
 // #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.fwd.h"
+// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

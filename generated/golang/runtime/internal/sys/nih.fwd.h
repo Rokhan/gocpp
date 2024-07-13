@@ -5,7 +5,7 @@
 
 namespace golang::sys
 {
-    struct nih;
     struct NotInHeap;
+    struct nih;
 }
 

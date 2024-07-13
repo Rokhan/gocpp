@@ -12,7 +12,7 @@
 #include "golang/runtime/atomic_pointer.fwd.h"
 #include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/mbitmap.fwd.h"
-#include "golang/runtime/mgcpacer.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/plugin.fwd.h"
 // #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
@@ -23,26 +23,26 @@
 #include "golang/runtime/stack.fwd.h"
 #include "golang/runtime/string.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/symtabinl.fwd.h"
-#include "golang/runtime/traceback.fwd.h"
+// #include "golang/runtime/symtabinl.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct Frames;
     struct Frame;
+    struct Frames;
     struct Func;
-    struct pcHeader;
-    struct moduledata;
-    struct modulehash;
-    struct functab;
-    struct textsect;
     struct findfuncbucket;
     struct funcInfo;
-    struct srcFunc;
+    struct functab;
+    struct moduledata;
+    struct modulehash;
+    struct pcHeader;
     struct pcvalueCache;
     struct pcvalueCacheEnt;
+    struct srcFunc;
     struct stackmap;
+    struct textsect;
 }
 

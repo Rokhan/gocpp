@@ -16,6 +16,13 @@ namespace golang::main
     extern int c0;
     extern int c1;
     extern int c2;
+    extern int c3;
+    extern int c4;
+    extern int c5;
+    extern Kind Invalid;
+    extern Kind Bool;
+    extern Kind Int;
+    extern Kind Int8;
     extern int a;
     extern int b;
     extern int c;
@@ -24,6 +31,7 @@ namespace golang::main
     extern int zb;
     extern int zc;
     extern int u;
+    extern double v;
     extern int w;
     extern int x;
     extern int y;

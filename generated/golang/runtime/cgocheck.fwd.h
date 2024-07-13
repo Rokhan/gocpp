@@ -5,7 +5,7 @@
 
 // #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_allocheaders_on.fwd.h"
-#include "golang/runtime/cgocall.fwd.h"
+// #include "golang/runtime/cgocall.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mbitmap.fwd.h"
 // #include "golang/runtime/mbitmap_allocheaders.fwd.h"  [Ignored, known errors]

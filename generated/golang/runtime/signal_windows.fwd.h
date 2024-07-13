@@ -10,15 +10,15 @@
 // #include "golang/runtime/defs_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.fwd.h"
 #include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/os_windows.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/preempt.fwd.h"
+// #include "golang/runtime/preempt.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/stack.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.fwd.h"
+// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime

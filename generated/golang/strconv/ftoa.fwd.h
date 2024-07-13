@@ -12,7 +12,7 @@
 
 namespace golang::strconv
 {
-    struct floatInfo;
     struct decimalSlice;
+    struct floatInfo;
 }
 

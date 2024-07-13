@@ -14,17 +14,19 @@
 
 namespace golang::goarch
 {
-    extern goarch.ArchFamilyType ARM;
-    extern goarch.ArchFamilyType ARM64;
-    extern goarch.ArchFamilyType I386;
-    extern goarch.ArchFamilyType LOONG64;
-    extern goarch.ArchFamilyType MIPS;
-    extern goarch.ArchFamilyType MIPS64;
-    extern goarch.ArchFamilyType PPC64;
-    extern goarch.ArchFamilyType RISCV64;
-    extern goarch.ArchFamilyType S390X;
-    extern goarch.ArchFamilyType WASM;
+    extern ArchFamilyType AMD64;
+    extern ArchFamilyType ARM;
+    extern ArchFamilyType ARM64;
+    extern ArchFamilyType I386;
+    extern ArchFamilyType LOONG64;
+    extern ArchFamilyType MIPS;
+    extern ArchFamilyType MIPS64;
+    extern ArchFamilyType PPC64;
+    extern ArchFamilyType RISCV64;
+    extern ArchFamilyType S390X;
+    extern ArchFamilyType WASM;
     extern int PtrSize;
+    extern ArchFamilyType ArchFamily;
     extern bool BigEndian;
     extern int DefaultPhysPageSize;
     extern int PCQuantum;

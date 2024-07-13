@@ -13,9 +13,9 @@
 
 namespace golang::flate
 {
+    struct Writer;
     struct compressionLevel;
     struct compressor;
     struct dictWriter;
-    struct Writer;
 }
 

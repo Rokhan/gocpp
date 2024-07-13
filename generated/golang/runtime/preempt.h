@@ -14,7 +14,7 @@
 // #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
@@ -22,7 +22,7 @@
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/symtabinl.h"
+// #include "golang/runtime/symtabinl.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
 
 namespace golang::runtime

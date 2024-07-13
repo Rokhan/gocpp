@@ -13,8 +13,8 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
-#include "golang/runtime/netpoll.h"
-#include "golang/runtime/os_windows.h"
+// #include "golang/runtime/netpoll.h"  [Ignored, known errors]
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]

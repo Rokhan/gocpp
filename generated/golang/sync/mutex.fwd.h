@@ -10,7 +10,7 @@
 
 namespace golang::sync
 {
-    struct Mutex;
     struct Locker;
+    struct Mutex;
 }
 

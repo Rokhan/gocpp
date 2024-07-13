@@ -40,32 +40,32 @@ namespace golang::abi
     }
 
     Kind Invalid = 0;
-    abi.Kind Bool = 1;
-    abi.Kind Int = 2;
-    abi.Kind Int8 = 3;
-    abi.Kind Int16 = 4;
-    abi.Kind Int32 = 5;
-    abi.Kind Int64 = 6;
-    abi.Kind Uint = 7;
-    abi.Kind Uint8 = 8;
-    abi.Kind Uint16 = 9;
-    abi.Kind Uint32 = 10;
-    abi.Kind Uint64 = 11;
-    abi.Kind Uintptr = 12;
-    abi.Kind Float32 = 13;
-    abi.Kind Float64 = 14;
-    abi.Kind Complex64 = 15;
-    abi.Kind Complex128 = 16;
-    abi.Kind Array = 17;
-    abi.Kind Chan = 18;
-    abi.Kind Func = 19;
-    abi.Kind Interface = 20;
-    abi.Kind Map = 21;
-    abi.Kind Pointer = 22;
-    abi.Kind Slice = 23;
-    abi.Kind String = 24;
-    abi.Kind Struct = 25;
-    abi.Kind UnsafePointer = 26;
+    Kind Bool = 1;
+    Kind Int = 2;
+    Kind Int8 = 3;
+    Kind Int16 = 4;
+    Kind Int32 = 5;
+    Kind Int64 = 6;
+    Kind Uint = 7;
+    Kind Uint8 = 8;
+    Kind Uint16 = 9;
+    Kind Uint32 = 10;
+    Kind Uint64 = 11;
+    Kind Uintptr = 12;
+    Kind Float32 = 13;
+    Kind Float64 = 14;
+    Kind Complex64 = 15;
+    Kind Complex128 = 16;
+    Kind Array = 17;
+    Kind Chan = 18;
+    Kind Func = 19;
+    Kind Interface = 20;
+    Kind Map = 21;
+    Kind Pointer = 22;
+    Kind Slice = 23;
+    Kind String = 24;
+    Kind Struct = 25;
+    Kind UnsafePointer = 26;
     int KindDirectIface = 1 << 5;
     int KindGCProg = 1 << 6;
     int KindMask = (1 << 5) - 1;
@@ -218,8 +218,8 @@ namespace golang::abi
     }
 
     ChanDir RecvDir = 1 << 0;
-    abi.ChanDir SendDir = 1 << 1;
-    abi.ChanDir BothDir = RecvDir | SendDir;
+    ChanDir SendDir = 1 << 1;
+    ChanDir BothDir = RecvDir | SendDir;
     ChanDir InvalidDir = 0;
     
     std::ostream& ChanType::PrintTo(std::ostream& os) const

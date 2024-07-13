@@ -19,15 +19,15 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/netpoll_windows.h"
+// #include "golang/runtime/netpoll_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/tagptr_64bit.h"
-#include "golang/runtime/time.h"
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -638,17 +638,17 @@ namespace golang::runtime
 
     void netpollDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<runtime.pollDesc*>(arg), seq, true, true);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, true);
     }
 
     void netpollReadDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<runtime.pollDesc*>(arg), seq, true, false);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, false);
     }
 
     void netpollWriteDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<runtime.pollDesc*>(arg), seq, false, true);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, false, true);
     }
 
     bool netpollAnyWaiters()

@@ -12,9 +12,9 @@ namespace golang::flate
 {
     struct hcode;
     struct huffmanEncoder;
-    struct literalNode;
     struct levelInfo;
-    using byLiteral = gocpp::slice<literalNode>;
+    struct literalNode;
     using byFreq = gocpp::slice<literalNode>;
+    using byLiteral = gocpp::slice<literalNode>;
 }
 

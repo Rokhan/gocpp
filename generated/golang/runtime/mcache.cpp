@@ -19,7 +19,7 @@
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mfixalloc.h"
-#include "golang/runtime/mgcpacer.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mgcsweep.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mspanset.h"

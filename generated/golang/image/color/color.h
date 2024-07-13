@@ -215,6 +215,14 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
     Color Convert(struct modelFunc* m, Color c);
+    extern Model RGBAModel;
+    extern Model RGBA64Model;
+    extern Model NRGBAModel;
+    extern Model NRGBA64Model;
+    extern Model AlphaModel;
+    extern Model Alpha16Model;
+    extern Model GrayModel;
+    extern Model Gray16Model;
     Color rgbaModel(Color c);
     Color rgba64Model(Color c);
     Color nrgbaModel(Color c);

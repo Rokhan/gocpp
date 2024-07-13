@@ -178,7 +178,7 @@ namespace golang::png
 
     bool opaque(image::Image m)
     {
-        if(auto [o, ok] = gocpp::getValue<png.opaquer>(m); ok)
+        if(auto [o, ok] = gocpp::getValue<opaquer>(m); ok)
         {
             return Opaque(gocpp::recv(o));
         }

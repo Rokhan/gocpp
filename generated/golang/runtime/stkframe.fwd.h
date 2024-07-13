@@ -14,13 +14,13 @@
 #include "golang/runtime/stack.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.fwd.h"
+// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct stkframe;
     struct reflectMethodValue;
+    struct stkframe;
 }
 

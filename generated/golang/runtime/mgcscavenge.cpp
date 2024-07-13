@@ -24,7 +24,7 @@
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
 // #include "golang/runtime/mpagealloc_64bit.h"  [Ignored, known errors]
-#include "golang/runtime/mpallocbits.h"
+// #include "golang/runtime/mpallocbits.h"  [Ignored, known errors]
 // #include "golang/runtime/mranges.h"  [Ignored, known errors]
 // #include "golang/runtime/mstats.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
@@ -33,9 +33,9 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/time.h"
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
-#include "golang/runtime/trace2runtime.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -148,7 +148,7 @@ namespace golang::runtime
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _) mutable -> void
         {
-            wake(gocpp::recv(gocpp::getValue<runtime.scavengerState*>(s)));
+            wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         }
 ;
         s->sleepController = gocpp::Init<piController>([](piController& x) { x.kp = 0.3375; x.ti = 3.2e6; x.tt = 1e9; x.min = 0.001; x.max = 1000.0; });

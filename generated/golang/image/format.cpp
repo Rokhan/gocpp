@@ -95,7 +95,7 @@ namespace golang::image
 
     reader asReader(io::Reader r)
     {
-        if(auto [rr, ok] = gocpp::getValue<image.reader>(r); ok)
+        if(auto [rr, ok] = gocpp::getValue<reader>(r); ok)
         {
             return rr;
         }

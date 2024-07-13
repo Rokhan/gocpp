@@ -525,33 +525,33 @@ namespace golang::reflect
     }
 
     Kind Invalid = 0;
-    reflect.Kind Bool = 1;
-    reflect.Kind Int = 2;
-    reflect.Kind Int8 = 3;
-    reflect.Kind Int16 = 4;
-    reflect.Kind Int32 = 5;
-    reflect.Kind Int64 = 6;
-    reflect.Kind Uint = 7;
-    reflect.Kind Uint8 = 8;
-    reflect.Kind Uint16 = 9;
-    reflect.Kind Uint32 = 10;
-    reflect.Kind Uint64 = 11;
-    reflect.Kind Uintptr = 12;
-    reflect.Kind Float32 = 13;
-    reflect.Kind Float64 = 14;
-    reflect.Kind Complex64 = 15;
-    reflect.Kind Complex128 = 16;
-    reflect.Kind Array = 17;
-    reflect.Kind Chan = 18;
-    reflect.Kind Func = 19;
-    reflect.Kind Interface = 20;
-    reflect.Kind Map = 21;
-    reflect.Kind Pointer = 22;
-    reflect.Kind Slice = 23;
-    reflect.Kind String = 24;
-    reflect.Kind Struct = 25;
-    reflect.Kind UnsafePointer = 26;
-    reflect.Kind Ptr = Pointer;
+    Kind Bool = 1;
+    Kind Int = 2;
+    Kind Int8 = 3;
+    Kind Int16 = 4;
+    Kind Int32 = 5;
+    Kind Int64 = 6;
+    Kind Uint = 7;
+    Kind Uint8 = 8;
+    Kind Uint16 = 9;
+    Kind Uint32 = 10;
+    Kind Uint64 = 11;
+    Kind Uintptr = 12;
+    Kind Float32 = 13;
+    Kind Float64 = 14;
+    Kind Complex64 = 15;
+    Kind Complex128 = 16;
+    Kind Array = 17;
+    Kind Chan = 18;
+    Kind Func = 19;
+    Kind Interface = 20;
+    Kind Map = 21;
+    Kind Pointer = 22;
+    Kind Slice = 23;
+    Kind String = 24;
+    Kind Struct = 25;
+    Kind UnsafePointer = 26;
+    Kind Ptr = Pointer;
     
     std::ostream& common::PrintTo(std::ostream& os) const
     {
@@ -590,8 +590,8 @@ namespace golang::reflect
     }
 
     ChanDir RecvDir = 1 << 0;
-    reflect.ChanDir SendDir = 1 << 1;
-    reflect.ChanDir BothDir = RecvDir | SendDir;
+    ChanDir SendDir = 1 << 1;
+    ChanDir BothDir = RecvDir | SendDir;
     
     std::ostream& interfaceType::PrintTo(std::ostream& os) const
     {
@@ -896,7 +896,7 @@ namespace golang::reflect
         m.Type = mt;
         auto tfn = textOff(gocpp::recv(t), p.Tfn);
         auto fn = Pointer(gocpp::recv(unsafe), & tfn);
-        m.Func = Value {& gocpp::getValue<reflect.rtype*>(mt)->t, fn, fl};
+        m.Func = Value {& gocpp::getValue<rtype*>(mt)->t, fn, fl};
         m.Index = i;
         return m;
     }
@@ -1579,7 +1579,7 @@ namespace golang::reflect
 
     Type PointerTo(Type t)
     {
-        return toRType(ptrTo(gocpp::recv(gocpp::getValue<reflect.rtype*>(t))));
+        return toRType(ptrTo(gocpp::recv(gocpp::getValue<rtype*>(t))));
     }
 
     abi::Type* ptrTo(struct rtype* t)
@@ -1591,7 +1591,7 @@ namespace golang::reflect
         }
         if(auto [pi, ok] = Load(gocpp::recv(ptrMap), t); ok)
         {
-            return & gocpp::getValue<reflect.ptrType*>(pi)->Type;
+            return & gocpp::getValue<ptrType*>(pi)->Type;
         }
         auto s = "*" + String(gocpp::recv(t));
         for(auto [_, tt] : typesByString(s))
@@ -1602,7 +1602,7 @@ namespace golang::reflect
                 continue;
             }
             auto [pi, _] = LoadOrStore(gocpp::recv(ptrMap), t, p);
-            return & gocpp::getValue<reflect.ptrType*>(pi)->Type;
+            return & gocpp::getValue<ptrType*>(pi)->Type;
         }
         go_any iptr = (unsafe::Pointer*)(nullptr);
         auto prototype = *(ptrType**)(Pointer(gocpp::recv(unsafe), & iptr));
@@ -1612,7 +1612,7 @@ namespace golang::reflect
         pp.Hash = fnv1(t->t.Hash, '*');
         pp.Elem = at;
         auto [pi, _] = LoadOrStore(gocpp::recv(ptrMap), t, & pp);
-        return & gocpp::getValue<reflect.ptrType*>(pi)->Type;
+        return & gocpp::getValue<ptrType*>(pi)->Type;
     }
 
     abi::Type* ptrTo(abi::Type* t)
@@ -1987,7 +1987,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Chan, typ, nullptr, uintptr(dir)};
         if(auto [ch, ok] = Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<reflect.rtype*>(ch);
+            return gocpp::getValue<rtype*>(ch);
         }
         if(typ->Size_ >= (1 << 16))
         {
@@ -2031,7 +2031,7 @@ namespace golang::reflect
             if(ch->Elem == typ && ch->Dir == ChanDir(gocpp::recv(abi), dir))
             {
                 auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<reflect.Type>(ti);
+                return gocpp::getValue<Type>(ti);
             }
         }
         go_any ichan = (gocpp::channel<&{unsafe Pointer}>)(nullptr);
@@ -2043,7 +2043,7 @@ namespace golang::reflect
         ch.Hash = fnv1(typ->Hash, 'c', byte(dir));
         ch.Elem = typ;
         auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& ch.Type));
-        return gocpp::getValue<reflect.Type>(ti);
+        return gocpp::getValue<Type>(ti);
     }
 
     Type MapOf(Type key, Type elem)
@@ -2057,7 +2057,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Map, ktyp, etyp, 0};
         if(auto [mt, ok] = Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<reflect.Type>(mt);
+            return gocpp::getValue<Type>(mt);
         }
         auto s = "map[" + stringFor(ktyp) + "]" + stringFor(etyp);
         for(auto [_, tt] : typesByString(s))
@@ -2066,7 +2066,7 @@ namespace golang::reflect
             if(mt->Key == ktyp && mt->Elem == etyp)
             {
                 auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<reflect.Type>(ti);
+                return gocpp::getValue<Type>(ti);
             }
         }
         go_any imap = (gocpp::map<unsafe::Pointer, unsafe::Pointer>)(nullptr);
@@ -2116,7 +2116,7 @@ namespace golang::reflect
         }
         mt.PtrToThis = 0;
         auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.Type));
-        return gocpp::getValue<reflect.Type>(ti);
+        return gocpp::getValue<Type>(ti);
     }
 
     gocpp::slice<Type> funcTypes;
@@ -2161,7 +2161,7 @@ namespace golang::reflect
         uint32_t hash = {};
         for(auto [_, in] : in)
         {
-            auto t = gocpp::getValue<reflect.rtype*>(in);
+            auto t = gocpp::getValue<rtype*>(in);
             args = append(args, t);
             hash = fnv1(hash, byte(t->t.Hash >> 24), byte(t->t.Hash >> 16), byte(t->t.Hash >> 8), byte(t->t.Hash));
         }
@@ -2172,7 +2172,7 @@ namespace golang::reflect
         hash = fnv1(hash, '.');
         for(auto [_, out] : out)
         {
-            auto t = gocpp::getValue<reflect.rtype*>(out);
+            auto t = gocpp::getValue<rtype*>(out);
             args = append(args, t);
             hash = fnv1(hash, byte(t->t.Hash >> 24), byte(t->t.Hash >> 16), byte(t->t.Hash >> 8), byte(t->t.Hash));
         }
@@ -2579,7 +2579,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Slice, typ, nullptr, 0};
         if(auto [slice, ok] = Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<reflect.Type>(slice);
+            return gocpp::getValue<Type>(slice);
         }
         auto s = "[]" + stringFor(typ);
         for(auto [_, tt] : typesByString(s))
@@ -2588,7 +2588,7 @@ namespace golang::reflect
             if(slice->Elem == typ)
             {
                 auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<reflect.Type>(ti);
+                return gocpp::getValue<Type>(ti);
             }
         }
         go_any islice = (gocpp::slice<unsafe::Pointer>)(nullptr);
@@ -2600,7 +2600,7 @@ namespace golang::reflect
         slice.Elem = typ;
         slice.PtrToThis = 0;
         auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.Type));
-        return gocpp::getValue<reflect.Type>(ti);
+        return gocpp::getValue<Type>(ti);
     }
 
     struct gocpp_id_1
@@ -3124,7 +3124,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Array, typ, nullptr, uintptr(length)};
         if(auto [array, ok] = Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<reflect.Type>(array);
+            return gocpp::getValue<Type>(array);
         }
         auto s = "[" + Itoa(gocpp::recv(strconv), length) + "]" + stringFor(typ);
         for(auto [_, tt] : typesByString(s))
@@ -3133,7 +3133,7 @@ namespace golang::reflect
             if(array->Elem == typ)
             {
                 auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
-                return gocpp::getValue<reflect.Type>(ti);
+                return gocpp::getValue<Type>(ti);
             }
         }
         go_any iarray = gocpp::array<unsafe::Pointer, 1> {};
@@ -3165,7 +3165,7 @@ namespace golang::reflect
         array.Align_ = typ->Align_;
         array.FieldAlign_ = typ->FieldAlign_;
         array.Len = uintptr(length);
-        array.Slice = & (gocpp::getValue<reflect.rtype*>(SliceOf(elem))->t);
+        array.Slice = & (gocpp::getValue<rtype*>(SliceOf(elem))->t);
         //Go switch emulation
         {
             int conditionId = -1;
@@ -3257,7 +3257,7 @@ namespace golang::reflect
             }
         }
         auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& array.Type));
-        return gocpp::getValue<reflect.Type>(ti);
+        return gocpp::getValue<Type>(ti);
     }
 
     gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v)
@@ -3336,7 +3336,7 @@ namespace golang::reflect
             abi::Type* frametype;
             sync::Pool* framePool;
             abiDesc abid;
-            auto lt = gocpp::getValue<reflect.layoutType>(lti);
+            auto lt = gocpp::getValue<layoutType>(lti);
             return {lt.t, lt.framePool, lt.abid};
         }
         abid = newAbiDesc(t, rcvr);
@@ -3370,7 +3370,7 @@ namespace golang::reflect
         }
 ; });
         auto [lti, _] = LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([](layoutType& x) { x.t = x; x.framePool = framePool; x.abid = abid; }));
-        auto lt = gocpp::getValue<reflect.layoutType>(lti);
+        auto lt = gocpp::getValue<layoutType>(lti);
         return {lt.t, lt.framePool, lt.abid};
     }
 

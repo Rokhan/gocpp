@@ -20,7 +20,7 @@
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.h"
+// #include "golang/runtime/traceback.h"  [Ignored, known errors]
 // #include "golang/runtime/typekind.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 

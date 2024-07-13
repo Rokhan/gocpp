@@ -7,7 +7,7 @@
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/runtime/internal/math/math.fwd.h"
 // #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/os_windows.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]

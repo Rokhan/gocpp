@@ -24,8 +24,6 @@
 
 namespace golang::runtime
 {
-    struct x1t;
-    struct y1t;
     struct dbgVar;
 }
 

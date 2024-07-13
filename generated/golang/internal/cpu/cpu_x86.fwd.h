@@ -3,7 +3,7 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/cpu/cpu.fwd.h"
+// #include "golang/internal/cpu/cpu.fwd.h"  [Ignored, known errors]
 
 namespace golang::cpu
 {

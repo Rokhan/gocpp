@@ -10,7 +10,7 @@
 
 namespace golang::fmt
 {
-    struct fmtFlags;
     struct fmt;
+    struct fmtFlags;
 }
 

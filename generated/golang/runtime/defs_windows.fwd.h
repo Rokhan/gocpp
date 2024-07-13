@@ -7,10 +7,10 @@
 
 namespace golang::runtime
 {
-    struct systeminfo;
     struct exceptionpointers;
     struct exceptionrecord;
-    struct overlapped;
     struct memoryBasicInformation;
+    struct overlapped;
+    struct systeminfo;
 }
 

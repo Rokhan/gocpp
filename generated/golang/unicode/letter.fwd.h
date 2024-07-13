@@ -7,12 +7,12 @@
 
 namespace golang::unicode
 {
-    struct RangeTable;
+    struct CaseRange;
     struct Range16;
     struct Range32;
-    struct CaseRange;
-    struct foldPair;
+    struct RangeTable;
     using SpecialCase = gocpp::slice<CaseRange>;
     using d = gocpp::array<gocpp::rune, MaxCase>;
+    struct foldPair;
 }
 

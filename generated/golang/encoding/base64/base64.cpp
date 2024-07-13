@@ -99,10 +99,10 @@ namespace golang::base64
         return & enc;
     }
 
-    base64.Encoding* StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-    base64.Encoding* URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
-    base64.Encoding* RawStdEncoding = WithPadding(gocpp::recv(StdEncoding), NoPadding);
-    base64.Encoding* RawURLEncoding = WithPadding(gocpp::recv(URLEncoding), NoPadding);
+    Encoding* StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    Encoding* URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+    Encoding* RawStdEncoding = WithPadding(gocpp::recv(StdEncoding), NoPadding);
+    Encoding* RawURLEncoding = WithPadding(gocpp::recv(URLEncoding), NoPadding);
     void Encode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         if(len(src) == 0)

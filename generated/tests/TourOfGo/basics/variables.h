@@ -13,6 +13,9 @@
 
 namespace golang::main
 {
+    extern int ii;
+    extern int jj;
+    extern int kk;
     void main();
     void dummy_vars();
     void dummy_funcs();

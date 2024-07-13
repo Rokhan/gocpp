@@ -13,6 +13,8 @@
 
 namespace golang::main
 {
+    extern int i;
+    extern int j;
     void main();
 }
 

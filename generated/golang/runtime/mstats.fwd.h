@@ -8,7 +8,7 @@
 // #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mgcpacer.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/proc.fwd.h"
 // #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
@@ -19,11 +19,11 @@
 
 namespace golang::runtime
 {
-    struct mstats;
     struct MemStats;
-    struct heapStatsDelta;
     struct consistentHeapStats;
     struct cpuStats;
+    struct heapStatsDelta;
+    struct mstats;
     using sysMemStat = uint64_t;
 }
 

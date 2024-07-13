@@ -700,7 +700,7 @@ namespace golang::reflect
         auto f = ctxt->fn;
         internal/abi.Type* _;
         sync.Pool* _;
-        reflect.abiDesc abid;
+        abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
         auto ptr = frame;
         auto in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), 0, int(ftyp->InCount));
@@ -966,7 +966,7 @@ namespace golang::reflect
         auto [rcvrType, valueFuncType, methodFn] = methodReceiver("call", rcvr, ctxt->method);
         internal/abi.Type* _;
         sync.Pool* _;
-        reflect.abiDesc valueABI;
+        abiDesc valueABI;
         std::tie(_, _, valueABI) = funcLayout(valueFuncType, nullptr);
         auto [valueFrame, valueRegs] = std::tuple{frame, regs};
         auto [methodFrameType, methodFramePool, methodABI] = funcLayout(valueFuncType, rcvrType);

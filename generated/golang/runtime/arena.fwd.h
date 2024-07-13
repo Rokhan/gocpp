@@ -23,7 +23,7 @@
 #include "golang/runtime/mfinal.fwd.h"
 #include "golang/runtime/mgc.fwd.h"
 #include "golang/runtime/mgcmark.fwd.h"
-#include "golang/runtime/mgcpacer.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mprof.fwd.h"
 // #include "golang/runtime/mranges.fwd.h"  [Ignored, known errors]
@@ -43,7 +43,7 @@
 
 namespace golang::runtime
 {
-    struct userArena;
     struct liveUserArenaChunk;
+    struct userArena;
 }
 

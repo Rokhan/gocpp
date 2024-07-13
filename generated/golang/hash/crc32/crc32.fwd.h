@@ -12,7 +12,7 @@
 
 namespace golang::crc32
 {
-    struct digest;
     using Table = gocpp::array<uint32_t, 256>;
+    struct digest;
 }
 

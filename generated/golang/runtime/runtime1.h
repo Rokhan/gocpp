@@ -33,6 +33,7 @@ namespace golang::runtime
     extern int tracebackCrash;
     extern int tracebackAll;
     extern int tracebackShift;
+    extern uint32_t traceback_cache;
     std::tuple<int32_t, bool, bool> gotraceback();
     unsigned char* argv_index(unsigned char** argv, int32_t i);
     void args(int32_t c, unsigned char** v);
@@ -41,27 +42,6 @@ namespace golang::runtime
     gocpp::slice<std::string> environ();
     void testAtomic64();
     void check();
-    struct x1t
-    {
-        uint8_t x;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct x1t& value);
-    struct y1t
-    {
-        x1t x1;
-        uint8_t y;
-
-        using isGoStruct = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct y1t& value);
     struct dbgVar
     {
         std::string name;

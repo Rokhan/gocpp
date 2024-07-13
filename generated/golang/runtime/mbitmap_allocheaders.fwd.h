@@ -20,7 +20,7 @@
 // #include "golang/runtime/stkframe.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/traceback.fwd.h"
+// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
 #include "golang/runtime/type.fwd.h"
 // #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
@@ -28,8 +28,8 @@
 namespace golang::runtime
 {
     struct heapArenaPtrScalar;
+    struct heapBits;
     struct typePointers;
     struct writeUserArenaHeapBits;
-    struct heapBits;
 }
 

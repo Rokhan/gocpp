@@ -9,7 +9,7 @@
 
 namespace golang::abi
 {
-    struct RegArgs;
     using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
+    struct RegArgs;
 }
 

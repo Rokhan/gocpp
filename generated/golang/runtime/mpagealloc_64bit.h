@@ -12,7 +12,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
-#include "golang/runtime/mgcscavenge.h"
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mpagealloc.h"
 // #include "golang/runtime/mranges.h"  [Ignored, known errors]
 // #include "golang/runtime/mstats.h"  [Ignored, known errors]

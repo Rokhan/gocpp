@@ -28,6 +28,7 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct YCbCr& value);
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct YCbCr c);
+    extern Model YCbCrModel;
     Color yCbCrModel(Color c);
     struct NYCbCrA
     {
@@ -40,6 +41,7 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value);
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NYCbCrA c);
+    extern Model NYCbCrAModel;
     Color nYCbCrAModel(Color c);
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b);
     std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
@@ -57,6 +59,7 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct CMYK c);
+    extern Model CMYKModel;
     Color cmykModel(Color c);
 }
 

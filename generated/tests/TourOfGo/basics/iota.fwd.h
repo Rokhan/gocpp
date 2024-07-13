@@ -7,5 +7,6 @@
 
 namespace golang::main
 {
+    using Kind = unsigned int;
 }
 

@@ -27,8 +27,9 @@ namespace golang::slices
     E MaxFunc(S x, std::function<int (E a, E b)> cmp);
     std::tuple<int, bool> BinarySearch(S x, E target);
     std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp);
-    extern slices.sortedHint increasingHint;
-    extern slices.sortedHint decreasingHint;
+    extern sortedHint unknownHint;
+    extern sortedHint increasingHint;
+    extern sortedHint decreasingHint;
     uint64_t Next(xorshift* r);
     unsigned int nextPowerOfTwo(int length);
     bool isNaN(T x);

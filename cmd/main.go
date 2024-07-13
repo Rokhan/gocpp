@@ -2255,9 +2255,12 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, string) {
 func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType) cppType {
 	elt := cv.convertTypeExpr(node.Elt)
 
-	if node.Len == nil {
+	switch node.Len.(type) {
+	case nil:
 		return ExprPrintf("gocpp::slice<%s>", elt).toCppType()
-	} else {
+	case *ast.Ellipsis:
+		return ExprPrintf("gocpp::array_base<%s>", elt).toCppType()
+	default:
 		return ExprPrintf("gocpp::array<%s, %s>", elt, cv.convertExpr(node.Len)).toCppType()
 	}
 }

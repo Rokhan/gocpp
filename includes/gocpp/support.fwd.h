@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace gocpp
 {
     template<typename T> struct slice;
@@ -8,6 +10,8 @@ namespace gocpp
     template<typename K, typename V> struct map;
     
     struct complex128;
+    struct go_any;
     struct Defer;
+
     using rune = int;
 }

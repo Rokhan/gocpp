@@ -16,13 +16,12 @@
 #include <utility>
 #include <vector>
 
-#include <cstdint>
-
 #include "thread_pool/thread_pool.h"
 
 namespace mocklib
 {
     std::string Sprint(const std::any& value);
+    std::string Sprint(const gocpp::go_any& value);
 
     template<typename T>
     std::ostream& PrintSliceTo(std::false_type, std::ostream& os, gocpp::slice<T> const& slice);
@@ -426,15 +425,20 @@ namespace gocpp
         using vect_iterator = typename store_type::iterator;
         using const_vect_iterator = typename store_type::iterator;
 
+        array_base(std::initializer_list<T> list)
+        {
+            this->mArray = std::make_shared<store_type>(list.begin(), list.end());
+        }
+
         // (index, value) iterator
         struct range_iterator
         {
             size_t index;
             vect_iterator iter;
 
-            bool operator != (const range_iterator & other) const { return iter != other.iter; }
+            bool operator != (const range_iterator& other) const { return iter != other.iter; }
             void operator ++ () { ++index; ++iter; }
-            range_iterator operator + (int n) { return {index + n, iter + n}; }
+            range_iterator operator + (int n) { return { index + n, iter + n }; }
             auto operator * () const { return std::tie(index, *iter); }
         };
 
@@ -515,7 +519,9 @@ namespace gocpp
         gocpp::slice<T> make_slice(size_t low);
         gocpp::slice<T> make_slice(size_t low, size_t high);
 
-    protected:    
+    protected:
+        array_base() { }
+
         std::shared_ptr<store_type> mArray;
     };
 
@@ -1027,8 +1033,8 @@ namespace mocklib
         return os;
     }
 
-    template<typename T, int N>
-    std::ostream& operator<<(std::ostream& os, const gocpp::array<T, N>& array)
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const gocpp::array_base<T>& array)
     {
         os << '[';
         for(int i=0; i< array.size(); ++i)
@@ -1208,6 +1214,11 @@ namespace mocklib
     std::string Sprint(const std::any& value)
     {
         return "<std::any>";
+    }
+
+    std::string Sprint(const gocpp::go_any& value)
+    {
+        return "<gocpp::go_any>";
     }
 
     template<typename T>

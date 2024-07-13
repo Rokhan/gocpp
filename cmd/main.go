@@ -705,14 +705,14 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	printHppIntro(cv, usedPkgInfos)
 	printCppIntro(cv, usedPkgInfos)
 
-	var fwdHeaderElts []place
+	var fwdHeaderElts []*place
 	for i := 0; i < len(allOutPlaces); i++ {
 		for _, place := range allOutPlaces[i] {
 			if place.outline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *place.outline)
 			}
 			if place.fwdHeader != nil {
-				fwdHeaderElts = append(fwdHeaderElts, place)
+				fwdHeaderElts = append(fwdHeaderElts, &place)
 			}
 			if place.header != nil || place.inline != nil {
 				panic("BUG: place.header and place.inline should always be nil at this point.")
@@ -723,12 +723,31 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
 
-	slices.SortFunc(fwdHeaderElts, func(x place, y place) int {
-		return cmp.Compare(x.priority, y.priority)
-	})
+	if len(fwdHeaderElts) != 0 {
+		for _, place := range fwdHeaderElts {
+			place.depInfo.ComputeDeps()
+			cv.Logf("Fwd header decl: type=%v, deps=%v\n", place.depInfo.decType, place.depInfo.dependencies)
+		}
 
-	for _, place := range fwdHeaderElts {
-		fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
+		cv.Logf("Fwd header decl: Sorting.\n")
+		slices.SortFunc(fwdHeaderElts, func(x *place, y *place) int {
+			_, ok := x.depInfo.dependencies[y.depInfo.decType]
+			if ok {
+				cv.Logf("Fwd header decl: %v < %v .\n", x.depInfo.decType, y.depInfo.decType)
+				return 1
+			}
+			_, ok = y.depInfo.dependencies[x.depInfo.decType]
+			if ok {
+				cv.Logf("Fwd header decl: %v < %v .\n", y.depInfo.decType, x.depInfo.decType)
+				return -1
+			}
+			return cmp.Compare(x.depInfo.decType.String(), y.depInfo.decType.String())
+		})
+
+		for _, place := range fwdHeaderElts {
+			fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
+			cv.Logf("Fwd header decl: type=%v, deps=%v\n", place.depInfo.decType, place.depInfo.dependencies)
+		}
 	}
 
 	if cv.genMakeFile {
@@ -1004,10 +1023,10 @@ func (cv *cppConverter) printOrKeepPlace(place place, outPlaces *[]place, pkgInf
 
 	//outline, fwdHeader and pkgInfo will be managed by caller
 	if place.outline != nil {
-		*outPlaces = append(*outPlaces, outlineStr(*place.outline))
+		*outPlaces = append(*outPlaces, place)
 	}
 	if place.fwdHeader != nil {
-		*outPlaces = append(*outPlaces, fwdHeaderStr(*place.fwdHeader, place.priority))
+		*outPlaces = append(*outPlaces, place)
 	}
 	if place.pkgInfo != nil {
 		*pkgInfos = append(*pkgInfos, place.pkgInfo)
@@ -1871,6 +1890,56 @@ type pkgInfo struct {
 	fileType pkgType
 }
 
+type depInfo struct {
+	decType      types.Type
+	dependencies map[types.Type]bool
+}
+
+func (depInfo *depInfo) ComputeDeps() {
+	depInfo.dependencies = ComputeDeps(depInfo.dependencies)
+}
+
+func ComputeDeps(toDo map[types.Type]bool) map[types.Type]bool {
+	done := map[types.Type]bool{}
+	for len(toDo) != 0 {
+		for elt := range toDo {
+			if _, skip := done[elt]; skip {
+				delete(toDo, elt)
+				continue
+			}
+
+			switch t := elt.(type) {
+			case *types.Array:
+				toDo[t.Elem()] = true
+
+			case *types.Chan:
+				toDo[t.Elem()] = true
+
+			case *types.Slice:
+				toDo[t.Elem()] = true
+
+			case *types.Map:
+				toDo[t.Elem()] = true
+				toDo[t.Key()] = true
+
+			case *types.Pointer:
+				toDo[t.Elem()] = true
+
+			case *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.Struct:
+				// Nothing to do
+
+			default:
+				Panicf("ComputeDeps, unmanaged type %T", t)
+			}
+
+			done[elt] = true
+			delete(toDo, elt)
+		}
+	}
+
+	return done
+}
+
 type place struct {
 	// when type/declaration can be used inlined
 	inline *string
@@ -1884,30 +1953,30 @@ type place struct {
 	// -> Currently it's a fixed value chosen at creation but ultimately
 	// this should be computed by looking at dependency graph.
 	// -> used only for forward declaration order at the moment
-	priority int
+	depInfo depInfo
 
 	//packages
 	pkgInfo *pkgInfo
 }
 
 func inlineStr(str string) place {
-	return place{&str, nil, nil, nil, 0, nil}
+	return place{&str, nil, nil, nil, depInfo{}, nil}
 }
 
 func outlineStr(str string) place {
-	return place{nil, &str, nil, nil, 0, nil}
+	return place{nil, &str, nil, nil, depInfo{}, nil}
 }
 
 func headerStr(str string) place {
-	return place{nil, nil, &str, nil, 0, nil}
+	return place{nil, nil, &str, nil, depInfo{}, nil}
 }
 
-func fwdHeaderStr(str string, priority int) place {
-	return place{nil, nil, nil, &str, priority, nil}
+func fwdHeaderStr(str string, depInfo depInfo) place {
+	return place{nil, nil, nil, &str, depInfo, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, nil, 0, &pkgInfo{name, pkgPath, filePath, pkgType}}
+	return place{nil, nil, nil, nil, depInfo{}, &pkgInfo{name, pkgPath, filePath, pkgType}}
 }
 
 func inlineStrf(format string, params ...any) []place {
@@ -2041,6 +2110,12 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string) cppType 
 	}
 
 	panic("convertTypeSpec, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) getDepInfo(n *ast.TypeSpec) depInfo {
+	defName := cv.typeInfo.Defs[n.Name].Type()
+	defType := cv.typeInfo.Types[n.Type].Type
+	return depInfo{defName, map[types.Type]bool{defType: true}}
 }
 
 func isMapType(node ast.Expr) bool {

@@ -2136,7 +2136,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		var usingDec string
 
 		if cv.ignoreKnownError(name, knownMissingDeps) {
-			usingDec = fmt.Sprintf("/* using %s = %s%s */", name, GetCppType(n.Name), end)
+			usingDec = fmt.Sprintf("/* using %s = %s */%s", name, GetCppType(n.Name), end)
 		} else {
 			usingDec = fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
 		}

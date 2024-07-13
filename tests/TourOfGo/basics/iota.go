@@ -11,6 +11,18 @@ const ( // iota is reset to 0
 	c0 = iota // c0 == 0
 	c1 = iota // c1 == 1
 	c2 = iota // c2 == 2
+	c3        // c3 == 3
+	c4        // c4 == 4
+	c5        // c5 == 5
+)
+
+type Kind uint
+
+const (
+	Invalid Kind = iota
+	Bool
+	Int
+	Int8
 )
 
 const (
@@ -43,7 +55,7 @@ const (
 )
 
 func main() {
-	fmt.Printf("%v %v %v\n", c0, c1, c2)
+	fmt.Printf("%v %v %v // %v %v %v\n", c0, c1, c2, c3, c4, c5)
 	fmt.Printf("%v %v %v\n", a, b, c)
 	fmt.Printf("%v %v %v %v\n", z0, za, zb, zc)
 	fmt.Printf("%v %v %v\n", u, v, w)

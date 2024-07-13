@@ -2649,8 +2649,11 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppExpr {
 
 	default:
 		exprType := cv.convertExprType(n)
+		cppType := convertGoToCppType(exprType, cv.Position(node))
+		cppType = strings.TrimPrefix(cppType, cv.namespace+".")
+		// TODO transform a.x to a::x here ??
 		if exprType != nil {
-			return mkCppExpr(convertGoToCppType(exprType, cv.Position(node)))
+			return mkCppExpr(cppType)
 		} else {
 			Panicf("convertExprCppType, [%T, %s, %s]", n, types.ExprString(n), cv.Position(n))
 		}
@@ -3212,7 +3215,7 @@ func main() {
 
 	cv.InitAndParse()
 
-	if err := cv.LoadAndCheckDefs("gocpp", fset, cv.astFile); err != nil {
+	if err := cv.LoadAndCheckDefs(cv.astFile.Name.Name, fset, cv.astFile); err != nil {
 		log.Fatal(err) // type error
 	}
 

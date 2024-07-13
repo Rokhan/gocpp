@@ -18,6 +18,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"time"
@@ -621,7 +622,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	if cv.tryRecover {
 		defer func() {
 			if r := recover(); r != nil {
-				cv.Logf("PANIC when converting file %s, %s\n", cv.inputName, r)
+				cv.Logf("PANIC when converting file %s, %s, %s\n", cv.inputName, r, string(debug.Stack()))
 			}
 		}()
 	}

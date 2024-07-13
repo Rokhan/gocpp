@@ -1798,13 +1798,14 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 					}
 				} else {
 					for i := range s.Names {
-						t := cv.convertTypeExpr(s.Type)
+						exprType := cv.convertTypeExpr(s.Type)
 						name := GetCppName(s.Names[i].Name)
 
 						if len(values) == 0 {
-							result = append(result, inlineStrf("%s %s%s", t, name, end)...)
+							result = append(result, inlineStrf("%s %s%s", exprType, name, end)...)
 						} else {
-							result = append(result, inlineStrf("%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+							result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+							result = append(result, inlineStrf("%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 						}
 					}
 				}

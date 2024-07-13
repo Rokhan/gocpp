@@ -851,16 +851,17 @@ func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]bool, 
 	cv.Logf(" --- ---\n")
 }
 
-type pkgFilter struct {
-	pkg  string
-	file string
+type errorFilter struct {
+	target string
+	file   string
 }
 
 func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
-	knownErrors := []*pkgFilter{
+	knownErrors := []*errorFilter{
 		{"abi", "internal/abi/abi.go"},
 		{"abi", "internal/abi/symtab.go"},
 		{"cmp", "cmp/cmp.go"},
+		{"cpu", "internal/cpu/cpu.go"},
 		{"atomic", "sync/atomic/doc.go"},
 		{"fmt", "fmt/print.go"},
 		{"fmtsort", "internal/fmtsort/sort.go"},
@@ -870,27 +871,44 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 		{"png", "image/png/writer.go"},
 		{"race", "internal/race/norace.go"},
+		{"runtime", "runtime/alg.go"},
+		{"runtime", "runtime/cgocall.go"},
 		{"runtime", "runtime/defs_windows.go"},
 		{"runtime", "runtime/lockrank.go"},
 		{"runtime", "runtime/lockrank_off.go"},
 		{"runtime", "runtime/lock_sema.go"},
 		{"runtime", "runtime/mbitmap_allocheaders.go"},
 		{"runtime", "runtime/mgclimit.go"},
+		{"runtime", "runtime/mgcscavenge.go"},
+		{"runtime", "runtime/mgcpacer.go"},
 		{"runtime", "runtime/mcache.go"},
 		{"runtime", "runtime/mstats.go"},
 		{"runtime", "runtime/mranges.go"},
+		{"runtime", "runtime/mpallocbits.go"},
 		{"runtime", "runtime/mpagealloc_64bit.go"},
+		{"runtime", "runtime/netpoll.go"},
+		{"runtime", "runtime/netpoll_windows.go"},
+		{"runtime", "runtime/os_windows.go"},
 		{"runtime", "runtime/pagetrace_off.go"},
+		{"runtime", "runtime/preempt.go"},
 		{"runtime", "runtime/print.go"},
 		{"runtime", "runtime/rand.go"},
 		{"runtime", "runtime/race0.go"},
 		{"runtime", "runtime/runtime1.go"},
+		{"runtime", "runtime/sigqueue_note.go"},
+		{"runtime", "runtime/signal_windows.go"},
+		{"runtime", "runtime/sizeclasses.go"},
 		{"runtime", "runtime/slice.go"},
 		{"runtime", "runtime/stubs.go"},
-		{"runtime", "runtime/sizeclasses.go"},
-		{"runtime", "runtime/signal_windows.go"},
 		{"runtime", "runtime/symtab.go"},
+		{"runtime", "runtime/symtabinl.go"},
+		{"runtime", "runtime/syscall_windows.go"},
 		{"runtime", "runtime/stkframe.go"},
+		{"runtime", "runtime/traceback.go"},
+		{"runtime", "runtime/trace2map.go"},
+		{"runtime", "runtime/trace2region.go"},
+		{"runtime", "runtime/trace2runtime.go"},
+		{"runtime", "runtime/time.go"},
 		{"runtime", "runtime/typekind.go"},
 		{"slices", "slices/sort.go"},
 		{"slices", "slices/zsortanyfunc.go"},
@@ -910,14 +928,54 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 			pkgFilePath := strings.ReplaceAll(pkg.filePath, "\\", "/")
 			pkgName := strings.ReplaceAll(pkg.name, "\\", "/")
 			if cv.shared.verbose {
-				cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.pkg, pkgFilePath, bad.file)
+				cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
 			}
-			if pkgName == bad.pkg && strings.HasSuffix(pkgFilePath, bad.file) {
+			if pkgName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 				pkg.fileType = Ignored
 				continue
 			}
 		}
 	}
+}
+
+var knownNameConflicts = []*errorFilter{
+	{"ArrayType", "internal/abi/type"},
+	{"ChanDir", "internal/abi/type"},
+	{"FuncType", "internal/abi/type"},
+	{"InterfaceType", "internal/abi/type"},
+	{"Kind", "internal/abi/type"},
+	{"Name", "internal/abi/type"},
+	{"String", "internal/abi/type"},
+	{"StructType", "internal/abi/type"},
+	{"MapType", "internal/abi/type"},
+
+	{"name", "runtime/type"},
+	{"nameOff", "runtime/type"},
+	{"typeOff", "runtime/type"},
+	{"textOff", "runtime/type"},
+	{"typesEqual", "runtime/type"}, // missing inlined type def
+}
+
+var knownMissingDeps = []*errorFilter{
+	{"pageBits", "runtime/mpallocbits"},
+	{"pallocBits", "runtime/mpallocbits"},
+}
+
+var knownIncomplete = []*errorFilter{
+	{"InterfaceType::PkgPath", "internal/abi/type"},
+	{"StructField::Name", "internal/abi/type"},
+	{"StructType::PkgPath", "internal/abi/type"},
+}
+
+func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFilter) bool {
+	// Potentially slow but funtion 'ignoreKnownErrors' should be removed completly in future
+	for _, bad := range knownErrors {
+		pkgFilePath := strings.ReplaceAll(cv.srcBaseName, "\\", "/")
+		if funcName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
+			return true
+		}
+	}
+	return false
 }
 
 func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
@@ -1072,7 +1130,11 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 		name := GetCppName(d.Name.Name)
 
-		fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
+		if cv.ignoreKnownError(name, knownNameConflicts) {
+			fmt.Fprintf(cv.hpp.out, "/* %s%s %s(%s); [Ignored, known name conflict] */ \n", cv.cpp.Indent(), resultType, name, params)
+		} else {
+			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
+		}
 
 		last, ok := Last(params)
 		if ok && last.Type.isEllipsis {
@@ -2071,8 +2133,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	case *ast.Ident:
 		// TODO : manage go private/public rule to chose where to put definition
 		name := GetCppName(node.Name.Name)
-		usingDec := fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
-		return mkCppType("", []place{fwdHeaderStr(usingDec, 1)})
+		var usingDec string
+
+		if cv.ignoreKnownError(name, knownMissingDeps) {
+			usingDec = fmt.Sprintf("/* using %s = %s%s */", name, GetCppType(n.Name), end)
+		} else {
+			usingDec = fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
+		}
 
 		if isNamespace {
 			return mkCppType("", []place{fwdHeaderStr(usingDec, cv.getDepInfo(node))})
@@ -2085,8 +2152,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
-		usingDec := fmt.Sprintf("using %s = %s%s", name, t.str, end)
-		return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, 2)))
+		var usingDec string
+
+		if cv.ignoreKnownError(name, knownMissingDeps) {
+			usingDec = fmt.Sprintf("/* using %s = %s%s */", name, t.str, end)
+		} else {
+			usingDec = fmt.Sprintf("using %s = %s%s", name, t.str, end)
+		}
 
 		if isNamespace {
 			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, cv.getDepInfo(node))))
@@ -2375,7 +2447,12 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, param genStr
 		data.out.indent++
 		for _, field := range fields {
 			for _, name := range field.names {
-				fmt.Fprintf(buf, "%s%s %s;\n", data.out.Indent(), field.Type.str, name)
+				fieldAndType := fmt.Sprintf("%s::%s", param.name, name)
+				if cv.ignoreKnownError(fieldAndType, knownIncomplete) {
+					fmt.Fprintf(buf, "%s/* %s %s; [Known incomplete type] */\n", data.out.Indent(), field.Type.str, name)
+				} else {
+					fmt.Fprintf(buf, "%s%s %s;\n", data.out.Indent(), field.Type.str, name)
+				}
 			}
 		}
 

@@ -1344,11 +1344,11 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	if label != nil {
 		switch s := stmt.(type) {
 		case *ast.ForStmt, *ast.RangeStmt:
-			/* Nothing to do*/
+			/* Nothing to do */
 		case *ast.SwitchStmt, *ast.SelectStmt, *ast.TypeSwitchStmt:
 			Panicf("convertStmt, label not implemented. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		default:
-			Panicf("convertStmt, label not allowed here. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
+			/* Nothing to do */
 		}
 	}
 
@@ -1413,6 +1413,8 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 				cv.WritterExprPrintf(cppOut, "%sgoto %s_break;\n", cv.cpp.Indent(), s.Label)
 			case token.CONTINUE:
 				cv.WritterExprPrintf(cppOut, "%sgoto %s_continue;\n", cv.cpp.Indent(), s.Label)
+			case token.GOTO:
+				cv.WritterExprPrintf(cppOut, "%sgoto %s;\n", cv.cpp.Indent(), s.Label)
 			case token.FALLTHROUGH:
 				fallthrough // Not implemented
 			default:
@@ -1421,6 +1423,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 
 	case *ast.LabeledStmt:
+		cv.WritterExprPrintf(cppOut, "%s%s:\n", cv.cpp.Indent(), s.Label.Name)
 		outPlaces, isFallThrough = cv.convertLabelledStmt(s.Stmt, env, s.Label)
 
 	case *ast.RangeStmt:

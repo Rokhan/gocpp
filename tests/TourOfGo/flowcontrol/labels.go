@@ -1,11 +1,14 @@
 //go:build OMIT
-// +build OMIT
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
+	testGoTo()
+
 	testFor(0)
 	testFor(1)
 	testFor(2)
@@ -47,4 +50,32 @@ loop1:
 	}
 	fmt.Println("end")
 	fmt.Println()
+}
+
+func testGoTo() {
+	i := 0
+label1:
+	i++
+
+	if i < 5 {
+		fmt.Println("goto label1")
+		goto label1
+	}
+
+label2:
+	if i < 10 {
+		i++
+		fmt.Println("goto label2")
+		goto label2
+	}
+label3:
+	for j := 0; j < 10; j++ {
+		i++
+		if i < 15 {
+			fmt.Printf("goto label3, i = %v, j = %v\n", i, j)
+			goto label3
+		}
+
+		fmt.Printf("............ i = %v, j = %v\n", i, j)
+	}
 }

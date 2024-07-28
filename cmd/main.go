@@ -59,18 +59,6 @@ var stdTypeMapping = map[string]string{
 	"error": "std::string",
 }
 
-var nameSpaces = map[string]struct{}{
-	"cmplx":   {},
-	"fmt":     {},
-	"math":    {},
-	"pic":     {},
-	"rand":    {},
-	"runtime": {},
-	"time":    {},
-	"strings": {},
-	"wc":      {},
-}
-
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
 	"any":      "go_any",      // just to avoid confusion with std::any used in support lib
@@ -2964,7 +2952,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		var sep = ""
 		switch fun := n.Fun.(type) {
 		case *ast.SelectorExpr:
-			if isNameSpace(fun.X) {
+			if cv.isNameSpace(fun.X) {
 				funcName := ExprPrintf("%s::%s", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
 				cv.BuffExprPrintf(buf, "%v(", GetCppExprFunc(funcName))
 			} else {
@@ -2997,7 +2985,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	case *ast.SelectorExpr:
 		name := cv.convertExpr(n.X)
 
-		if isNameSpace(n.X) {
+		if cv.isNameSpace(n.X) {
 			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertExpr(n.Sel)))
 		} else {
 			// TODO: use only IsExprPtr ?
@@ -3031,17 +3019,17 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	panic("convertExprType, bug, unreacheable code reached !")
 }
 
-func isNameSpace(expr ast.Expr) bool {
+func (cv *cppConverter) isNameSpace(expr ast.Expr) bool {
 
 	switch n := expr.(type) {
 	case *ast.Ident:
-		if _, ok := nameSpaces[n.Name]; ok {
+		exprType := cv.typeInfo.Uses[n]
+		switch exprType.(type) {
+		case *types.PkgName:
 			return true
 		}
-		return false
-	default:
-		return false
 	}
+	return false
 }
 
 func (cv *cppConverter) convertCompositeLitType(n *ast.CompositeLit, addPtr bool) cppType {

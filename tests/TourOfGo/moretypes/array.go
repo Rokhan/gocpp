@@ -5,6 +5,17 @@ package main
 
 import "fmt"
 
+// Array of struct
+type semTable1 [10]struct {
+	value int
+}
+
+const ten int = 10
+
+type semTable2 [ten]struct {
+	value int
+}
+
 func main() {
 	var a [2]string
 	a[0] = "Hello"
@@ -17,4 +28,10 @@ func main() {
 
 	var ints = [...]int{1, 2, 3}
 	fmt.Println(ints)
+
+	var st1 = semTable1{{1}, {1}}
+	fmt.Println(st1)
+
+	var st2 = semTable2{{1}, {1}}
+	fmt.Println(st2)
 }

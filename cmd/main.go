@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"cmp"
 	"container/list"
 	"flag"
 	"fmt"
@@ -54,6 +53,7 @@ var stdTypeMapping = map[string]string{
 	"untyped complex": "goccp::complex128",
 	"untyped float":   "double",
 	"untyped int":     "int",
+	"untyped rune":    "gocpp::rune",
 	"untyped string":  "std::string",
 	// predefined types
 	"error": "std::string",
@@ -128,14 +128,21 @@ var stdFuncMapping = map[string]string{
 	"nil":    "nullptr",
 
 	// type conversions
-	"float":   "double",
-	"float32": "float",
-	"float64": "double",
-	"uint":    "(unsigned int)",
-	"uint8":   "uint8_t",
-	"uint16":  "uint16_t",
-	"uint32":  "uint32_t",
-	"uint64":  "uint64_t",
+	"byte":       "unsigned char",
+	"complex128": "gocpp::complex128",
+	"float":      "double",
+	"float32":    "float",
+	"float64":    "double",
+	"uint":       "(unsigned int)",
+	"uint8":      "uint8_t",
+	"uint16":     "uint16_t",
+	"uint32":     "uint32_t",
+	"uint64":     "uint64_t",
+	"uintptr":    "uintptr_t",
+	"int8":       "int8_t",
+	"int16":      "int16_t",
+	"int32":      "int32_t",
+	"int64":      "int64_t",
 }
 
 func Panicf(format string, a ...interface{}) {
@@ -318,6 +325,13 @@ func (pkgInfo *pkgInfo) baseName() string {
 	return strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
 }
 
+func (pkgInfo *pkgInfo) basePath() string {
+	if pkgInfo != nil {
+		return fmt.Sprintf("%v/%v", pkgInfo.pkgPath, pkgInfo.baseName())
+	}
+	return "### UNDEFINED PATH ###"
+}
+
 func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, suffix string) {
 	if pkgInfos == nil {
 		return
@@ -326,9 +340,7 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 	var alreadyIncluded map[string]bool = make(map[string]bool)
 
 	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
-		bn1 := p1.baseName()
-		bn2 := p2.baseName()
-		return strings.Compare(p1.pkgPath+bn1, p2.pkgPath+bn2)
+		return strings.Compare(p1.basePath(), p2.basePath())
 	})
 
 	for _, pkgInfo := range pkgInfos {
@@ -339,15 +351,51 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 
 		//fmt.Fprintf(out, "// globalSubDir: %v -- pkgInfo.pkgPath: %v -- pkgInfo.filePath: %v \n", globalSubDir, pkgInfo.pkgPath, pkgInfo.filePath)
 
-		baseName := pkgInfo.baseName()
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
-			fmt.Fprintf(out, "#include \"%v%v/%v%v\"\n", globalSubDir, pkgInfo.pkgPath, baseName, suffix)
+			fmt.Fprintf(out, "#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
 		case Ignored:
-			fmt.Fprintf(out, "// #include \"%v%v/%v%v\"  [Ignored, known errors]\n", globalSubDir, pkgInfo.pkgPath, baseName, suffix)
+			fmt.Fprintf(out, "// #include \"%v%v%v\"  [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
 		}
 	}
 	fmt.Fprintf(out, "\n")
+}
+
+func Ptr[T any](value T) *T {
+	return &value
+}
+
+func (cv *cppConverter) includeFwdHeaderDependencies(pkgInfos []*pkgInfo, suffix string, order int) (result []*place) {
+	globalSubDir := cv.shared.globalSubDir
+	if pkgInfos == nil {
+		return nil
+	}
+
+	var alreadyIncluded map[string]bool = make(map[string]bool)
+
+	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
+		return strings.Compare(p1.basePath(), p2.basePath())
+	})
+
+	for _, pkgInfo := range pkgInfos {
+		if _, done := alreadyIncluded[pkgInfo.filePath]; done {
+			continue
+		}
+		alreadyIncluded[pkgInfo.filePath] = true
+
+		order++
+		di := depInfo{nil, map[types.Type]bool{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, order, 0}
+
+		switch pkgInfo.fileType {
+		case GoFiles, CompiledGoFiles:
+			str := fmt.Sprintf("#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
+			result = append(result, Ptr(includeStr(str, di)))
+		case Ignored:
+			str := fmt.Sprintf("// #include \"%v%v%v\" [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
+			result = append(result, Ptr(includeStr(str, di)))
+		}
+	}
+	return
 }
 
 func generatedMessage(out io.Writer, cv *cppConverter) {
@@ -437,7 +485,7 @@ func printHppOutro(cv *cppConverter) {
 	fmt.Fprintf(out, "\n")
 }
 
-func printFwdIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
+func printFwdIntro(cv *cppConverter /*, pkgInfos []*pkgInfo*/) {
 	out := cv.fwd.out
 	generatedMessage(out, cv)
 	fmt.Fprintf(out, "#pragma once\n")
@@ -445,20 +493,12 @@ func printFwdIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include \"%s.fwd.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".fwd.h")
-
-	// Put everything generated in "golang" namespace
-	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
-	fmt.Fprintf(out, "{\n")
 	cv.fwd.indent++
 }
 
 func printFwdOutro(cv *cppConverter) {
-	out := cv.fwd.out
 	// Close golang namespace
 	cv.fwd.indent--
-	fmt.Fprintf(out, "}\n")
-	fmt.Fprintf(out, "\n")
 }
 
 func createOutputExt(outdir, name, ext string) outFile {
@@ -689,17 +729,20 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	cv.ignoreKnownErrors(usedPkgInfos)
 
-	printFwdIntro(cv, usedPkgInfos)
+	printFwdIntro(cv)
 	printHppIntro(cv, usedPkgInfos)
 	printCppIntro(cv, usedPkgInfos)
 
 	var fwdHeaderElts []*place
+	initialOrder := 0
 	for i := 0; i < len(allOutPlaces); i++ {
 		for _, place := range allOutPlaces[i] {
 			if place.outline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *place.outline)
 			}
 			if place.fwdHeader != nil {
+				initialOrder++
+				place.depInfo.initialOrder = initialOrder
 				fwdHeaderElts = append(fwdHeaderElts, &place)
 			}
 			if place.header != nil || place.inline != nil {
@@ -711,30 +754,45 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
 
+	fwdHeaderElts = append(fwdHeaderElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".fwd.h", initialOrder)...)
+	inNamespace := false
+	indent := ""
+
 	if len(fwdHeaderElts) != 0 {
 		for _, place := range fwdHeaderElts {
-			place.depInfo.ComputeDeps()
-			cv.Logf("Fwd header decl: type=%v, deps=%v\n", place.depInfo.decType, place.depInfo.dependencies)
+			di := &place.depInfo
+			di.ComputeDeps()
+			cv.Logf("Fwd header decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
 		}
 
 		cv.Logf("Fwd header decl: Sorting.\n")
-		slices.SortFunc(fwdHeaderElts, func(x *place, y *place) int {
-			_, ok := x.depInfo.dependencies[y.depInfo.decType]
-			if ok {
-				cv.Logf("Fwd header decl: %v < %v .\n", x.depInfo.decType, y.depInfo.decType)
-				return 1
-			}
-			_, ok = y.depInfo.dependencies[x.depInfo.decType]
-			if ok {
-				cv.Logf("Fwd header decl: %v < %v .\n", y.depInfo.decType, x.depInfo.decType)
-				return -1
-			}
-			return cmp.Compare(x.depInfo.decType.String(), y.depInfo.decType.String())
-		})
+		cv.topoSort(fwdHeaderElts)
 
 		for _, place := range fwdHeaderElts {
-			fmt.Fprintf(cv.fwd.out, "%s%s", cv.fwd.Indent(), *place.fwdHeader)
-			cv.Logf("Fwd header decl: type=%v, deps=%v\n", place.depInfo.decType, place.depInfo.dependencies)
+
+			// Close namespace for includes
+			if place.isInclude && inNamespace {
+				fmt.Fprintf(cv.fwd.out, "}\n")
+				inNamespace = false
+				indent = ""
+			}
+
+			// Open namespace for declarartions
+			if !place.isInclude && !inNamespace {
+				fmt.Fprintf(cv.fwd.out, "\nnamespace golang::%v\n{\n", cv.namespace)
+				inNamespace = true
+				indent = cv.fwd.Indent()
+			}
+
+			fmt.Fprintf(cv.fwd.out, "%s%s", indent, *place.fwdHeader)
+
+			di := &place.depInfo
+			cv.Logf("Fwd header decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+		}
+
+		//ensure namespace is closed at end
+		if inNamespace {
+			fmt.Fprintf(cv.fwd.out, "}\n")
 		}
 	}
 
@@ -760,52 +818,242 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	return
 }
 
+func (cv *cppConverter) ComparePlace(x *place, y *place) int {
+	_, ok := x.depInfo.dependencies[y.depInfo.decType]
+	xstr := strings.TrimSpace(*x.fwdHeader)
+	ystr := strings.TrimSpace(*y.fwdHeader)
+	if ok {
+		cv.Logf("Fwd header sort type: '%v' use type '%v' .\n", xstr, y.depInfo.decType)
+		return 1
+	}
+	_, ok = y.depInfo.dependencies[x.depInfo.decType]
+	if ok {
+		cv.Logf("Fwd header sort type: '%v' use type '%v' .\n", ystr, x.depInfo.decType)
+		return -1
+	}
+
+	_, ok = x.depInfo.depIdents[y.depInfo.decIdent]
+	if ok {
+		cv.Logf("Fwd header sort ident: '%v' use ident '%v'.\n", xstr, y.depInfo.decIdent)
+		return 1
+	}
+	_, ok = y.depInfo.depIdents[x.depInfo.decIdent]
+	if ok {
+		cv.Logf("Fwd header sort ident: '%v' use ident '%v'.\n", ystr, x.depInfo.decIdent)
+		return -1
+	}
+
+	_, ok = x.depInfo.depPkgs[y.depInfo.decPkg]
+	if ok {
+		cv.Logf("Fwd header sort pkg: '%v' used by pkg '%v'.\n", xstr, y.depInfo.decPkg)
+		return 1
+	}
+	_, ok = y.depInfo.depPkgs[x.depInfo.decPkg]
+	if ok {
+		cv.Logf("Fwd header sort pkg: '%v' used by pkg '%v'.\n", ystr, x.depInfo.decPkg)
+		return -1
+	}
+
+	// TODO: find a way to do include/imports as late as possible
+
+	return 0
+	//return cmp.Compare(x.depInfo.initialOrder, y.depInfo.initialOrder)
+}
+
+// Probably not an efficient toposort algorithm
+// Custom toposort with additional constraints
+//
+//	-> that preserve initial order if possible
+//	-> push import as late as possible
+//	-> push declaration as soon as possible
+func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
+	var maxIndex int = 0
+	elts := map[int]map[*place]bool{}
+	elts[maxIndex] = map[*place]bool{}
+	for _, elt := range fwdHeaderElts {
+		elts[0][elt] = true
+	}
+
+	// Hack to push "neutral elements" as far as possible in the result
+	//direction := -1
+
+	for len(elts[maxIndex]) > 0 {
+		curentIndex := maxIndex
+		maxIndex++
+		elts[maxIndex] = map[*place]bool{}
+
+		for elt1 := range elts[curentIndex] {
+
+			for elt2 := range elts[maxIndex] {
+				if elt1 == elt2 {
+					continue
+				}
+
+				switch cv.ComparePlace(elt1, elt2) {
+				case 1:
+					delete(elts[curentIndex], elt1)
+					elts[maxIndex][elt1] = true
+					elt1.depInfo.rank = maxIndex
+				}
+			}
+
+			for elt2 := range elts[curentIndex] {
+				if elt1 == elt2 {
+					continue
+				}
+
+				switch cv.ComparePlace(elt1, elt2) {
+				case -1:
+					delete(elts[curentIndex], elt2)
+					elts[maxIndex][elt2] = true
+					elt2.depInfo.rank = maxIndex
+				case 1:
+					delete(elts[curentIndex], elt1)
+					elts[maxIndex][elt1] = true
+					elt1.depInfo.rank = maxIndex
+				}
+			}
+		}
+	}
+
+	// Add intermedite space netween existing ranks
+	splitElts := map[int]map[*place]bool{}
+	for i, rankElts := range elts {
+		for elt, _ := range rankElts {
+			elt.depInfo.rank = 2*i + 0
+		}
+		splitElts[2*i+0] = rankElts
+		splitElts[2*i+1] = map[*place]bool{}
+	}
+	elts = splitElts
+	maxIndex = 2 * maxIndex
+
+	// Push imports as late as possible
+	for i := 0; i < maxIndex-1; i++ {
+		for elt1 := range elts[i] {
+			if elt1.depInfo.decPkg == "" {
+				continue
+			}
+			pushLater := true
+			for elt2 := range elts[i+1] {
+				if cv.ComparePlace(elt1, elt2) != 0 {
+					pushLater = false
+					break
+				}
+			}
+
+			if pushLater {
+				delete(elts[i], elt1)
+				elts[i+1][elt1] = true
+				elt1.depInfo.rank = i + 1
+			}
+		}
+	}
+
+	// Push defintion as soon as possible
+	for i := maxIndex; i > 0; i-- {
+		for elt1 := range elts[i] {
+			if elt1.depInfo.decPkg != "" {
+				continue
+			}
+			pushSooner := true
+			for elt2 := range elts[i-1] {
+				if cv.ComparePlace(elt1, elt2) != 0 {
+					pushSooner = false
+					break
+				}
+			}
+
+			if pushSooner {
+				delete(elts[i], elt1)
+				elts[i-1][elt1] = true
+				elt1.depInfo.rank = i - 1
+			}
+		}
+	}
+
+	slices.SortFunc(fwdHeaderElts, func(x *place, y *place) int {
+		if x.depInfo.rank < y.depInfo.rank {
+			return -1
+		} else if x.depInfo.rank > y.depInfo.rank {
+			return +1
+		}
+
+		if x.depInfo.initialOrder < y.depInfo.initialOrder {
+			return -1
+		} else if x.depInfo.initialOrder > y.depInfo.initialOrder {
+			return +1
+		}
+		return 0
+	})
+}
+
+func ToString(obj fmt.Stringer) string {
+	if obj != nil {
+		return obj.String()
+	}
+	return ""
+}
+
 func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	fmt.Printf("%s", cv.logPrefix)
 	return fmt.Printf(format, a...)
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
-	shared := cv.shared
+
 	usedTypes := cv.getReferencedTypesFrom(cv.typeInfo.Uses, map[string]bool{cv.inputName: true})
 	cv.logReferencedTypesFrom(usedTypes, "Used")
 
-	shared.usedFiles[cv.inputName] = true
+	cv.shared.usedFiles[cv.inputName] = true
 
 	for usedType := range usedTypes {
-		var file = shared.fileSet.Position(usedType.Pos()).Filename
-
-		// Hack for unsafe.Pointer in unsafe package
-		// Maybe we should load it manually somewhere in cv.fileset ?
-		if file == "" {
-			for pkgFile, path := range shared.packagePaths {
-				if path == "unsafe" {
-					file = pkgFile
-				}
-			}
-		}
-
-		if file == "" || file == cv.inputName {
-			continue
-		}
-
-		shared.usedFiles[file] = true
-		pkg := usedType.Pkg()
-		if pkg != nil {
-			cv.Logf("pkginfo, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v ---\n", usedType.Pkg().Name(), usedType.Pkg().Path(), file, usedType.Name())
-			// usedType.Pkg().Path() doesn't return the full path, using value stored when loading packages
-			pkgPath, ok := shared.packagePaths[file]
-			if ok {
-				pkgInfos = append(pkgInfos, &pkgInfo{usedType.Pkg().Name(), pkgPath, file, GoFiles})
-			} else {
-				pkgInfos = append(pkgInfos, &pkgInfo{usedType.Pkg().Name(), usedType.Pkg().Path(), file, GoFiles})
-				cv.Logf("  -> pkgPath is null, file: %v\n", file)
-			}
-		} else {
-			cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v ---\n", file, usedType.Name())
+		result := cv.getPackageFromType(usedType)
+		if result != nil {
+			pkgInfos = append(pkgInfos, result)
 		}
 	}
 	return
+}
+
+func (cv *cppConverter) getPackageFromType(usedType types.Object) *pkgInfo {
+	if usedType == nil {
+		return nil
+	}
+
+	var file = cv.shared.fileSet.Position(usedType.Pos()).Filename
+
+	// Hack for "unsafe.Pointer" in "unsafe" package
+	// Maybe we should load it manually somewhere in cv.fileset ?
+	if file == "" {
+		for pkgFile, path := range cv.shared.packagePaths {
+			if path == "unsafe" {
+				file = pkgFile
+			}
+		}
+	}
+
+	if file == "" || file == cv.inputName {
+		return nil
+	}
+
+	cv.shared.usedFiles[file] = true
+	pkg := usedType.Pkg()
+	if pkg != nil {
+		cv.Logf("pkginfo, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v ---\n", usedType.Pkg().Name(), usedType.Pkg().Path(), file, usedType.Name())
+
+		// usedType.Pkg().Path() doesn't return the full path, using value stored when loading packages
+		pkgPath, ok := cv.shared.packagePaths[file]
+		if ok {
+			return &pkgInfo{usedType.Pkg().Name(), pkgPath, file, GoFiles}
+		} else {
+			cv.Logf("  -> pkgPath is null, file: %v\n", file)
+			return &pkgInfo{usedType.Pkg().Name(), usedType.Pkg().Path(), file, GoFiles}
+		}
+	} else {
+		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v ---\n", file, usedType.Name())
+	}
+	return nil
 }
 
 func (cv *cppConverter) getReferencedTypesFrom(objects map[*ast.Ident]types.Object, files map[string]bool) (usedTypes map[types.Object]bool) {
@@ -846,14 +1094,13 @@ type errorFilter struct {
 
 func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 	knownErrors := []*errorFilter{
-		{"abi", "internal/abi/abi.go"},
 		{"abi", "internal/abi/symtab.go"},
+		{"bytealg", "internal/bytealg/bytealg.go"},
 		{"cmp", "cmp/cmp.go"},
 		{"cpu", "internal/cpu/cpu.go"},
 		{"atomic", "sync/atomic/doc.go"},
 		{"fmt", "fmt/print.go"},
 		{"fmtsort", "internal/fmtsort/sort.go"},
-		{"goarch", "internal/goarch/goarch.go"},
 		{"io", "io/io.go"},
 		{"pic", "golang.org/x/tour@v0.1.0/pic/pic.go"},
 		{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
@@ -869,11 +1116,8 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"runtime", "runtime/mgclimit.go"},
 		{"runtime", "runtime/mgcscavenge.go"},
 		{"runtime", "runtime/mgcpacer.go"},
+		{"runtime", "runtime/mgcsweep.go"},
 		{"runtime", "runtime/mcache.go"},
-		{"runtime", "runtime/mstats.go"},
-		{"runtime", "runtime/mranges.go"},
-		{"runtime", "runtime/mpallocbits.go"},
-		{"runtime", "runtime/mpagealloc_64bit.go"},
 		{"runtime", "runtime/netpoll.go"},
 		{"runtime", "runtime/netpoll_windows.go"},
 		{"runtime", "runtime/os_windows.go"},
@@ -883,15 +1127,13 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		{"runtime", "runtime/rand.go"},
 		{"runtime", "runtime/race0.go"},
 		{"runtime", "runtime/runtime1.go"},
+		{"runtime", "runtime/sema.go"},
 		{"runtime", "runtime/sigqueue_note.go"},
 		{"runtime", "runtime/signal_windows.go"},
-		{"runtime", "runtime/sizeclasses.go"},
-		{"runtime", "runtime/slice.go"},
 		{"runtime", "runtime/stubs.go"},
 		{"runtime", "runtime/symtab.go"},
 		{"runtime", "runtime/symtabinl.go"},
 		{"runtime", "runtime/syscall_windows.go"},
-		{"runtime", "runtime/stkframe.go"},
 		{"runtime", "runtime/traceback.go"},
 		{"runtime", "runtime/trace2map.go"},
 		{"runtime", "runtime/trace2region.go"},
@@ -941,18 +1183,98 @@ var knownNameConflicts = []*errorFilter{
 	{"nameOff", "runtime/type"},
 	{"typeOff", "runtime/type"},
 	{"textOff", "runtime/type"},
-	{"typesEqual", "runtime/type"}, // missing inlined type def
+
+	{"slice", "runtime/mbarrier"},
+	{"slice", "runtime/arena"},
+
+	// missing included type def
+	{"typesEqual", "runtime/type"},
+	{"partialUnswept", "runtime/mcentral"},
+	{"partialSwept", "runtime/mcentral"},
+	{"fullUnswept", "runtime/mcentral"},
+	{"fullSwept", "runtime/mcentral"},
+
+	{"queuefinalizer", "runtime/mfinal"},
+	{"iterate_finq", "runtime/mfinal"},
+	{"finalizercommit", "runtime/mfinal"},
+	{"wakefing", "runtime/mfinal"},
+
+	{"recordUnlock", "runtime/mprof"},                // missing type from broken include
+	{"recordLock", "runtime/mprof"},                  // missing type from broken include
+	{"tryRecordGoroutineProfileWB", "runtime/mprof"}, // missing type from broken include
+	{"tryRecordGoroutineProfile", "runtime/mprof"},   // missing type from broken include
+	{"doRecordGoroutineProfile", "runtime/mprof"},    // missing type from broken include
+	{"saveg", "runtime/mprof"},                       // missing type from broken include
 }
 
 var knownMissingDeps = []*errorFilter{
-	{"pageBits", "runtime/mpallocbits"},
-	{"pallocBits", "runtime/mpallocbits"},
+	// {"pageBits", "runtime/mpallocbits"},
+	// {"pallocBits", "runtime/mpallocbits"},
+
+	{"buckhashArray", "runtime/mprof"},
+	{"goroutineProfileStateHolder", "runtime/mprof"},
+	{"mProfCycleWrap", "runtime/mprof"}, // constant using incomplete type
+
+	{"pallocSumBytes", "runtime/mpagealloc"}, // constant using incomplete type
+
+	{"physPageAlignedStacks", "runtime/mheap"}, // constant using strings (GOOS == "openbsd")
+	{"gcBitsHeaderBytes", "runtime/mheap"},     // constant unsafe::Sizeof and incomplete type
+
+	{"pageCachePages", "runtime/mpagecache"}, // constant unsafe::Sizeof and incomplete type
+
+	{"hchanSize", "runtime/chan"}, // constant unsafe::Sizeof and incomplete type
 }
 
 var knownIncomplete = []*errorFilter{
 	{"InterfaceType::PkgPath", "internal/abi/type"},
 	{"StructField::Name", "internal/abi/type"},
 	{"StructType::PkgPath", "internal/abi/type"},
+
+	{"dlogger::w", "runtime/debuglog"},           // Declaration order problem
+	{"dlogger::owned", "runtime/debuglog"},       // Type not declared because of error in included files
+	{"debugLogWriter::data", "runtime/debuglog"}, // Declaration order problem
+	{"debugLogWriter::r", "runtime/debuglog"},    // Declaration order problem
+
+	{"memRecord::active", "runtime/mprof"},       // Declaration order problem
+	{"mProfCycleHolder::value", "runtime/mprof"}, // Type not declared because of error in included files
+	{"lockTimer::lock", "runtime/mprof"},         // Type not declared because of error in included files
+	{"mLockProfile::waitTime", "runtime/mprof"},  // Type not declared because of error in included files
+
+	{"mcentral::partial", "runtime/mcentral"}, // Type not declared because of error in included files
+	{"mcentral::full", "runtime/mcentral"},    // Type not declared because of error in included files
+
+	{"finblock::_", "runtime/mfinal"},   // ??? !!!
+	{"finblock::fin", "runtime/mfinal"}, // Unknwon constants in type
+	{"finalizer::fn", "runtime/mfinal"}, // Unknwon constants in type
+
+	{"userArena::defunct", "runtime/arena"}, // Type not declared because of error in included files
+
+	{"hchan::recvq", "runtime/chan"}, // Declaration order problem
+	{"hchan::sendq", "runtime/chan"}, // Declaration order problem
+	{"hchan::lock", "runtime/chan"},  // Type not declared because of error in included files
+	{"waitq::first", "runtime/chan"}, // Type not declared because of error in included files
+	{"waitq::last", "runtime/chan"},  // Type not declared because of error in included files
+
+	{"mstats::heapStats", "runtime/mstats"}, // Declaration order problem
+
+	{"addrRange::base", "runtime/mranges"},  // Declaration order problem
+	{"addrRange::limit", "runtime/mranges"}, // Declaration order problem
+
+	{"pageAlloc::scav", "runtime/mpagealloc"}, // Missing inlined subtype gocpp_id_0
+
+	{"mheap::_", "runtime/mheap"},              // ??? !!!
+	{"mheap::curArena", "runtime/mheap"},       // Missing inlined subtype gocpp_id_0
+	{"mheap::userArena", "runtime/mheap"},      // Missing inlined subtype gocpp_id_2
+	{"mheap::heapArenaAlloc", "runtime/mheap"}, // Multi header Declaration order problem with runtime/malloc
+	{"mheap::arena", "runtime/mheap"},          // Multi header Declaration order problem with runtime/malloc
+	{"gcBitsArena::bits", "runtime/mheap"},     // type declaration ignored in header becuase of other error
+
+	{"stackpoolItem::span", "runtime/stack"}, // Multi header Declaration order problem with runtime/mheap
+
+	{"stackWorkBuf::obj", "runtime/mgcstack"},   // Declaration order + Need special case to manage unsafe::Sizeof
+	{"stackObjectBuf::obj", "runtime/mgcstack"}, // Multi header Declaration order problem with runtime/malloc
+
+	{"workbuf::obj", "runtime/mgcwork"}, // Need special case to manage unsafe::Sizeof
 }
 
 func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFilter) bool {
@@ -1004,6 +1326,16 @@ func (cv *cppConverter) readMethods(fields *ast.FieldList) (methods []method) {
 
 func convertToken(t token.Token) string {
 	switch t {
+	// TODO: implement specific conversion need here if needed
+	default:
+		return fmt.Sprintf("%v", t)
+	}
+}
+
+func convertUnaryToken(t token.Token) string {
+	switch t {
+	case token.XOR:
+		return "~"
 	// TODO: implement specific conversion need here if needed
 	default:
 		return fmt.Sprintf("%v", t)
@@ -1098,7 +1430,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		for _, place := range cv.convertSpecs(d.Specs, isNameSpace, ";\n") {
+		for _, place := range cv.convertSpecs(d.Specs, d.Tok, isNameSpace, ";\n") {
 			cv.printOrKeepPlace(place, &outPlaces, &pkgInfos)
 		}
 
@@ -1119,7 +1451,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		name := GetCppName(d.Name.Name)
 
 		if cv.ignoreKnownError(name, knownNameConflicts) {
-			fmt.Fprintf(cv.hpp.out, "/* %s%s %s(%s); [Ignored, known name conflict] */ \n", cv.cpp.Indent(), resultType, name, params)
+			fmt.Fprintf(cv.hpp.out, "%s/* %s %s(%s); [Ignored, known name conflict] */ \n", cv.cpp.Indent(), resultType, name, params)
 		} else {
 			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
 		}
@@ -1505,7 +1837,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			}
 
 			if env.isTypeSwitch {
-				caseType = cv.convertExprCppType(s.List[0])
+				caseType = cv.convertExprCppType(s.List[0]).cppExpr
 			}
 		}
 
@@ -1719,7 +2051,7 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
 		case *ast.GenDecl:
-			for _, declItem := range cv.convertSpecs(d.Specs, false, "") {
+			for _, declItem := range cv.convertSpecs(d.Specs, d.Tok, false, "") {
 				if declItem.inline != nil {
 					result = ExprPrintf("%s%s,", result, *declItem.inline)
 				}
@@ -1813,7 +2145,7 @@ func buildOutType(outTypes []string) string {
 	return resultType
 }
 
-func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end string) []place {
+func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamespace bool, end string) []place {
 	var result []place
 
 	cv.ResetIota()
@@ -1844,9 +2176,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 						name := GetCppName(s.Names[i].Name)
 						if name == "_" {
 							result = append(result, inlineStrf("%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
+						} else if tok == token.CONST && exprType.canFwd {
+							if cv.ignoreKnownError(name, knownMissingDeps) {
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+							} else {
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "const %s %s = %s%s", exprType, name, expr, end)...)
+							}
 						} else {
-							result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-							result = append(result, inlineStrf("%s %s = %s%s", exprType, name, expr, end)...)
+							if cv.ignoreKnownError(name, knownMissingDeps) {
+								result = append(result, headerStrf("/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf("/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+							} else {
+								result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf("%s %s = %s%s", exprType, name, expr, end)...)
+							}
 						}
 					}
 				} else {
@@ -1856,9 +2199,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, isNamespace bool, end str
 
 						if len(values) == 0 {
 							result = append(result, inlineStrf("%s %s%s", exprType, name, end)...)
+						} else if tok == token.CONST && exprType.canFwd {
+							if cv.ignoreKnownError(name, knownMissingDeps) {
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							} else {
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							}
 						} else {
-							result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-							result = append(result, inlineStrf("%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							if cv.ignoreKnownError(name, knownMissingDeps) {
+								result = append(result, headerStrf("/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf("/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							} else {
+								result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf("%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							}
 						}
 					}
 				}
@@ -1947,6 +2301,15 @@ type pkgInfo struct {
 type depInfo struct {
 	decType      types.Type
 	dependencies map[types.Type]bool
+
+	decIdent  string
+	depIdents map[string]bool
+
+	decPkg  string
+	depPkgs map[string]bool
+
+	initialOrder int
+	rank         int
 }
 
 func (depInfo *depInfo) ComputeDeps() {
@@ -1979,7 +2342,7 @@ func ComputeDeps(toDo map[types.Type]bool) map[types.Type]bool {
 			case *types.Pointer:
 				toDo[t.Elem()] = true
 
-			case *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.Struct:
+			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.Struct:
 				// Nothing to do
 
 			default:
@@ -2003,6 +2366,7 @@ type place struct {
 	header *string
 	// when type/declaration need to be in forward declarations header
 	fwdHeader *string
+	isInclude bool
 
 	// -> Currently it's a fixed value chosen at creation but ultimately
 	// this should be computed by looking at dependency graph.
@@ -2014,23 +2378,27 @@ type place struct {
 }
 
 func inlineStr(str string) place {
-	return place{&str, nil, nil, nil, depInfo{}, nil}
+	return place{&str, nil, nil, nil, false, depInfo{}, nil}
 }
 
 func outlineStr(str string) place {
-	return place{nil, &str, nil, nil, depInfo{}, nil}
+	return place{nil, &str, nil, nil, false, depInfo{}, nil}
 }
 
 func headerStr(str string) place {
-	return place{nil, nil, &str, nil, depInfo{}, nil}
+	return place{nil, nil, &str, nil, false, depInfo{}, nil}
 }
 
 func fwdHeaderStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, &str, depInfo, nil}
+	return place{nil, nil, nil, &str, false, depInfo, nil}
+}
+
+func includeStr(str string, depInfo depInfo) place {
+	return place{nil, nil, nil, &str, true, depInfo, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, nil, depInfo{}, &pkgInfo{name, pkgPath, filePath, pkgType}}
+	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, pkgType}}
 }
 
 func inlineStrf(format string, params ...any) []place {
@@ -2051,11 +2419,11 @@ func headerStrf(format string, params ...any) []place {
 	return expr.defs
 }
 
-// func fwdHeaderStrf(priority int, format string, params ...any) []place {
-// 	expr := ExprPrintf(format, params...)
-// 	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, priority))
-// 	return expr.defs
-// }
+func fwdHeaderStrf(di depInfo, format string, params ...any) []place {
+	expr := ExprPrintf(format, params...)
+	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, di))
+	return expr.defs
+}
 
 type cppExpr struct {
 	str  string  // cpp type as a string
@@ -2063,7 +2431,7 @@ type cppExpr struct {
 }
 
 func (expr cppExpr) toCppType() cppType {
-	return cppType{expr, false, false, false, ""}
+	return cppType{expr, false, false, false, "", true}
 }
 
 func mkCppExpr(str string) cppExpr {
@@ -2076,18 +2444,20 @@ type cppType struct {
 	isSimple   bool // is the name of a stuct or an interface
 	isEllipsis bool // is type created by an ellipsis
 	eltType    string
+
+	canFwd bool // Can go in forward header
 }
 
 func mkCppType(str string, defs []place) cppType {
-	return cppType{cppExpr{str, defs}, false, false, false, ""}
+	return cppType{cppExpr{str, defs}, false, false, false, "", true}
 }
 
 func mkCppPtrType(expr cppExpr) cppType {
-	return cppType{expr, true, false, false, ""}
+	return cppType{expr, true, false, false, "", true}
 }
 
 func mkCppEllipsis(expr cppExpr, eltType string) cppType {
-	return cppType{expr, false, false, true, eltType}
+	return cppType{expr, false, false, true, eltType, true}
 }
 
 type cppExprWritter[TWritter io.Writer] struct {
@@ -2121,38 +2491,22 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	}
 
 	switch n := node.Type.(type) {
-	case *ast.Ident:
-		// TODO : manage go private/public rule to chose where to put definition
-		name := GetCppName(node.Name.Name)
-		var usingDec string
-
-		if cv.ignoreKnownError(name, knownMissingDeps) {
-			usingDec = fmt.Sprintf("/* using %s = %s */%s", name, GetCppType(n.Name), end)
-		} else {
-			usingDec = fmt.Sprintf("using %s = %s%s", name, GetCppType(n.Name), end)
-		}
-
-		if isNamespace {
-			return mkCppType("", []place{fwdHeaderStr(usingDec, cv.getDepInfo(node))})
-		} else {
-			return mkCppType("", []place{inlineStr(usingDec)})
-		}
 
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
-	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
+	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.Ident, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
 		t := cv.convertTypeExpr(n)
 		name := GetCppName(node.Name.Name)
 		var usingDec string
 
 		if cv.ignoreKnownError(name, knownMissingDeps) {
-			usingDec = fmt.Sprintf("/* using %s = %s%s */", name, t.str, end)
+			usingDec = fmt.Sprintf("/* using %s = %s */%s", name, t.str, end)
 		} else {
 			usingDec = fmt.Sprintf("using %s = %s%s", name, t.str, end)
 		}
 
 		if isNamespace {
-			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, cv.getDepInfo(node))))
+			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, cv.getTypeDepInfo(node))))
 		} else {
 			return mkCppType("", append(t.defs, inlineStr(usingDec)))
 		}
@@ -2163,7 +2517,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		if isNamespace {
 			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
-			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getDepInfo(node)))
+			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getTypeDepInfo(node)))
 
 			structDecl := cv.convertStructTypeExpr(n, genStructParam{name, decl, with})
 			defs = append(defs, headerStr(structDecl))
@@ -2177,7 +2531,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		if isNamespace {
 			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
-			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getDepInfo(node)))
+			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getTypeDepInfo(node)))
 
 			structDecl := cv.convertInterfaceTypeExpr(n, genStructParam{name, decl, with})
 			defs = append(defs, headerStr(structDecl))
@@ -2192,10 +2546,73 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	panic("convertTypeSpec, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) getDepInfo(n *ast.TypeSpec) depInfo {
-	defName := cv.typeInfo.Defs[n.Name].Type()
-	defType := cv.typeInfo.Types[n.Type].Type
-	return depInfo{defName, map[types.Type]bool{defType: true}}
+type GetIdentfiers struct {
+	idents map[*ast.Ident]bool
+}
+
+func (visitor *GetIdentfiers) Visit(node ast.Node) ast.Visitor {
+	switch n := node.(type) {
+	case *ast.Ident:
+		visitor.idents[n] = true
+	case nil:
+		return nil
+	}
+	return visitor
+}
+
+func getAllIdentifiers(expr ast.Expr) map[*ast.Ident]bool {
+	gi := &GetIdentfiers{map[*ast.Ident]bool{}}
+	ast.Walk(gi, expr)
+	return gi.idents
+}
+
+func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]bool {
+	result := map[string]bool{}
+	for ident := range getAllIdentifiers(expr) {
+		defObj := cv.typeInfo.Uses[ident]
+		if defObj != nil {
+			pkg := cv.getPackageFromType(defObj)
+			if pkg != nil {
+				result[pkg.basePath()] = true
+			}
+		}
+	}
+	return result
+}
+
+func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
+	result := map[string]bool{}
+	for ident := range getAllIdentifiers(expr) {
+		result[ident.Name] = true
+	}
+	return result
+}
+
+func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
+	pkgs := cv.getAllUsedPackages(n.Type)
+	definedName := cv.typeInfo.Defs[n.Name].Type()
+	usedType := cv.typeInfo.Types[n.Type].Type
+	return depInfo{definedName, map[types.Type]bool{usedType: true}, n.Name.Name, map[string]bool{}, "", pkgs, 0, 0}
+}
+
+func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
+	// // Probably wrong, should be managed differently than types
+	// // We need to manage dependecies on variable names declaration and not on types.
+	// defName := cv.typeInfo.Defs[n.Names[i]].Type()
+	// defType := cv.typeInfo.Types[n.Type].Type
+	// return depInfo{defName, map[types.Type]bool{defType: true}, 0}
+
+	var pkgs map[string]bool
+	var names map[string]bool
+	if n.Values != nil {
+		pkgs = cv.getAllUsedPackages(n.Values[i])
+		names = cv.getAllUsedNames(n.Values[i])
+	} else {
+		pkgs = map[string]bool{}
+		names = map[string]bool{}
+	}
+	defType := cv.typeInfo.Defs[n.Names[i]].Type()
+	return depInfo{nil, map[types.Type]bool{defType: true}, n.Names[i].Name, names, "", pkgs, 0, 0}
 }
 
 func isMapType(node ast.Expr) bool {
@@ -2227,6 +2644,15 @@ func (cv *cppConverter) checkSimpleType(expr ast.Expr, cppType *cppType) {
 	}
 }
 
+func (cv *cppConverter) checkCanFwd(cppType *cppType) {
+	switch cppType.str {
+	case "std::string":
+		cppType.canFwd = false
+	case "gocpp::complex128":
+		cppType.isSimple = true
+	}
+}
+
 // put this in cppConverter ?
 var exprToId map[ast.Expr]string = map[ast.Expr]string{}
 
@@ -2241,6 +2667,8 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 	return id, true
 }
 
+// Maybe merge this function with "convertExprType" in future ?
+// Maybe merge this function with "convertExprCppType" in future ?
 func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	if node == nil {
 		panic("node is nil")
@@ -2250,6 +2678,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	case *ast.Ident:
 		identType := mkCppType(GetCppType(n.Name), nil)
 		cv.checkSimpleType(n, &identType)
+		cv.checkCanFwd(&identType)
 		return identType
 
 	case *ast.ArrayType:
@@ -2281,8 +2710,13 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	case *ast.StructType:
 		name, first := cv.GenerateExprId(node)
 		if first {
-			t := cv.convertStructTypeExpr(n, genStructParam{name, all, without})
-			return mkCppType(name, []place{inlineStr(t)})
+			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
+
+			// if we want to use "inlineStr" we have to know if we are inside function or not to disable
+			// stream operator generation.
+			structDef := cv.convertStructTypeExpr(n, genStructParam{name, all, with})
+			//return mkCppType(name, []place{inlineStr(structDef), fwdHeaderStr(structFwdDecl, depInfo{})})
+			return mkCppType(name, []place{outlineStr(structDef), fwdHeaderStr(structFwdDecl, depInfo{})})
 		}
 		return mkCppType(name, nil)
 
@@ -2686,40 +3120,47 @@ func withFileBuffer(action action, file *outFile) string {
 }
 
 // Maybe merge this function with "convertExpr" in future ?
+// Maybe merge this function with "convertExprType" in future ?
+// Maybe merge this function with "convertTypeExpr" in future ?
 // Return cppType ?
-func (cv *cppConverter) convertExprCppType(node ast.Expr) cppExpr {
+func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	if node == nil {
-		return mkCppExpr("")
+		return mkCppType("", nil)
 	}
 
 	switch n := node.(type) {
 
 	// TODO: merge with default case and remove switch ?
 	case *ast.BasicLit:
+		canFwd := true
 		var basicLit string
 		switch n.Kind {
 		case token.IMAG:
 			basicLit = "gocpp::complex128"
+			canFwd = false
 		case token.INT:
-			basicLit = "int"
+			basicLit = "long"
 		case token.FLOAT:
 			basicLit = "double"
 		case token.CHAR:
 			basicLit = "char"
 		case token.STRING:
 			basicLit = "std::string"
+			canFwd = false
 		default:
 			Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
 		}
-		return mkCppExpr(basicLit)
+		cppType := mkCppType(basicLit, nil)
+		cppType.canFwd = canFwd
+		return cppType
 
 	case *ast.CompositeLit:
-		return cv.convertCompositeLitType(n, false).cppExpr
+		return cv.convertCompositeLitType(n, false)
 
 	case *ast.UnaryExpr:
 		switch n.Op {
 		case token.AND:
-			return ExprPrintf("%s*", cv.convertExprCppType(n.X))
+			return ExprPrintf("%s*", cv.convertExprCppType(n.X)).toCppType()
 		default:
 			return cv.convertExprCppType(n.X)
 		}
@@ -2737,11 +3178,19 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppExpr {
 
 	default:
 		exprType := cv.convertExprType(n)
-		cppType := convertGoToCppType(exprType, cv.Position(node))
-		cppType = strings.TrimPrefix(cppType, cv.namespace+".")
-		// TODO transform a.x to a::x here ??
 		if exprType != nil {
-			return mkCppExpr(cppType)
+			typeStr := convertGoToCppType(exprType, cv.Position(node))
+			typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
+			typeStr = strings.ReplaceAll(typeStr, ".", "::")
+			cppType := mkCppType(typeStr, nil)
+
+			switch typeStr {
+			case "std::string":
+				cppType.canFwd = false
+			case "gocpp::complex128":
+				cppType.canFwd = false
+			}
+			return cppType
 		} else {
 			Panicf("convertExprCppType, [%T, %s, %s]", n, types.ExprString(n), cv.Position(n))
 		}
@@ -2893,7 +3342,15 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		case token.INT, token.FLOAT:
 			return mkCppExpr(strings.ReplaceAll(n.Value, "_", ""))
 		default:
-			return mkCppExpr(n.Value)
+			switch n.Value[0] {
+			case '`':
+				// TODO: check if there is other replacements to do
+				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\""
+				return mkCppExpr(content)
+			default:
+				return mkCppExpr(n.Value)
+
+			}
 		}
 
 	case *ast.CompositeLit:
@@ -2923,7 +3380,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		case n.Op == token.ARROW:
 			return ExprPrintf("%s.recv()", cv.convertExpr(n.X))
 		default:
-			return ExprPrintf("%s %s", convertToken(n.Op), cv.convertExpr(n.X))
+			return ExprPrintf("%s %s", convertUnaryToken(n.Op), cv.convertExpr(n.X))
 		}
 
 	case *ast.ParenExpr:
@@ -3180,8 +3637,8 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		cv.genMakeFile = parentCv.genMakeFile
 		cv.binOutDir = parentCv.binOutDir
 		cv.inputName = pkgInfo.filePath
-		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
-		cv.baseName = cv.shared.globalSubDir + pkgInfo.pkgPath + "/" + pkgInfo.baseName()
+		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.basePath()
+		cv.baseName = cv.shared.globalSubDir + pkgInfo.basePath()
 
 		// We need to parse ignored file to allow type check in PrintDefsUses
 		cv.InitAndParse()

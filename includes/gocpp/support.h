@@ -18,6 +18,40 @@
 
 #include "thread_pool/thread_pool.h"
 
+// Temporary definitions to mock broken include files
+namespace golang
+{
+    namespace runtime
+    {
+        struct g {};
+        struct p {};
+        struct m {};
+
+        struct sudog{};
+        struct mutex{};
+        struct stack{};
+        struct funcInfo{};
+        struct gclinkptr{};
+        struct lfnode{};
+    }
+    
+    namespace atomic
+    {
+        struct Bool{};
+        struct Int32{};
+        struct Int64{};
+        struct Uint8{};
+        struct Uint32{};
+        struct Uint64{};
+        struct Uintptr{};
+    }
+
+    namespace cpu
+    {
+        struct CacheLinePad{};
+    }
+}
+
 namespace mocklib
 {
     std::string Sprint(const std::any& value);
@@ -538,6 +572,7 @@ namespace gocpp
         array(std::initializer_list<T> list)
         {
             this->mArray = std::make_shared<store_type>(list.begin(), list.end());
+            this->mArray->resize(N);
         }
 
         // TODO : other constructors

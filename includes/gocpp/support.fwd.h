@@ -2,6 +2,30 @@
 
 #include <cstdint>
 
+// Temporary definitions to mock broken include files
+namespace golang
+{
+    namespace runtime
+    {
+        struct g;
+        struct sudog;
+        struct mutex;
+
+        struct funcval;
+        struct gobuf;
+        struct gclinkptr;
+        struct mcache;
+        struct adjustinfo;
+        struct funcInfo;
+        struct itab;
+        struct eface;
+        struct iface;
+        struct _defer;
+        struct _panic;
+        struct godebugInc;
+    }
+}
+
 namespace gocpp
 {
     template<typename T> struct slice;
@@ -15,3 +39,4 @@ namespace gocpp
 
     using rune = int;
 }
+

@@ -15,10 +15,10 @@
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
-#include "golang/image/png/paeth.h"
-#include "golang/image/png/reader.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
+#include "golang/image/png/paeth.h"
+#include "golang/image/png/reader.h"
 // #include "golang/io/io.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 
@@ -109,10 +109,6 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
-    extern CompressionLevel DefaultCompression;
-    extern CompressionLevel NoCompression;
-    extern CompressionLevel BestSpeed;
-    extern CompressionLevel BestCompression;
     struct opaquer : gocpp::Interface
     {
         opaquer(){}

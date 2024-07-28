@@ -15,7 +15,6 @@
 
 namespace golang::main
 {
-    double Pi = 3.14;
     void main()
     {
         auto World = "世界";

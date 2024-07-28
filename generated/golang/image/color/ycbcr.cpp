@@ -17,9 +17,9 @@ namespace golang::color
 {
     std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b)
     {
-        auto r1 = int32(r);
-        auto g1 = int32(g);
-        auto b1 = int32(b);
+        auto r1 = int32_t(r);
+        auto g1 = int32_t(g);
+        auto b1 = int32_t(b);
         auto yy = (19595 * r1 + 38470 * g1 + 7471 * b1 + (1 << 15)) >> 16;
         auto cb = - 11056 * r1 - 21712 * g1 + 32768 * b1 + (257 << 15);
         if(uint32_t(cb) & 0xff000000 == 0)
@@ -28,7 +28,7 @@ namespace golang::color
         }
         else
         {
-            cb = ^ (cb >> 31);
+            cb = ~ (cb >> 31);
         }
         auto cr = 32768 * r1 - 27440 * g1 - 5328 * b1 + (257 << 15);
         if(uint32_t(cr) & 0xff000000 == 0)
@@ -37,16 +37,16 @@ namespace golang::color
         }
         else
         {
-            cr = ^ (cr >> 31);
+            cr = ~ (cr >> 31);
         }
         return {uint8_t(yy), uint8_t(cb), uint8_t(cr)};
     }
 
     std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr)
     {
-        auto yy1 = int32(y) * 0x10101;
-        auto cb1 = int32(cb) - 128;
-        auto cr1 = int32(cr) - 128;
+        auto yy1 = int32_t(y) * 0x10101;
+        auto cb1 = int32_t(cb) - 128;
+        auto cr1 = int32_t(cr) - 128;
         auto r = yy1 + 91881 * cr1;
         if(uint32_t(r) & 0xff000000 == 0)
         {
@@ -54,7 +54,7 @@ namespace golang::color
         }
         else
         {
-            r = ^ (r >> 31);
+            r = ~ (r >> 31);
         }
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
@@ -63,7 +63,7 @@ namespace golang::color
         }
         else
         {
-            g = ^ (g >> 31);
+            g = ~ (g >> 31);
         }
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
@@ -72,7 +72,7 @@ namespace golang::color
         }
         else
         {
-            b = ^ (b >> 31);
+            b = ~ (b >> 31);
         }
         return {uint8_t(r), uint8_t(g), uint8_t(b)};
     }
@@ -95,9 +95,9 @@ namespace golang::color
 
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct YCbCr c)
     {
-        auto yy1 = int32(c.Y) * 0x10101;
-        auto cb1 = int32(c.Cb) - 128;
-        auto cr1 = int32(c.Cr) - 128;
+        auto yy1 = int32_t(c.Y) * 0x10101;
+        auto cb1 = int32_t(c.Cb) - 128;
+        auto cr1 = int32_t(c.Cr) - 128;
         auto r = yy1 + 91881 * cr1;
         if(uint32_t(r) & 0xff000000 == 0)
         {
@@ -105,7 +105,7 @@ namespace golang::color
         }
         else
         {
-            r = ^ (r >> 31) & 0xffff;
+            r = ~ (r >> 31) & 0xffff;
         }
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
@@ -114,7 +114,7 @@ namespace golang::color
         }
         else
         {
-            g = ^ (g >> 31) & 0xffff;
+            g = ~ (g >> 31) & 0xffff;
         }
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
@@ -123,7 +123,7 @@ namespace golang::color
         }
         else
         {
-            b = ^ (b >> 31) & 0xffff;
+            b = ~ (b >> 31) & 0xffff;
         }
         return {uint32_t(r), uint32_t(g), uint32_t(b), 0xffff};
     }
@@ -156,9 +156,9 @@ namespace golang::color
 
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NYCbCrA c)
     {
-        auto yy1 = int32(c.Y) * 0x10101;
-        auto cb1 = int32(c.Cb) - 128;
-        auto cr1 = int32(c.Cr) - 128;
+        auto yy1 = int32_t(c.Y) * 0x10101;
+        auto cb1 = int32_t(c.Cb) - 128;
+        auto cr1 = int32_t(c.Cr) - 128;
         auto r = yy1 + 91881 * cr1;
         if(uint32_t(r) & 0xff000000 == 0)
         {
@@ -166,7 +166,7 @@ namespace golang::color
         }
         else
         {
-            r = ^ (r >> 31) & 0xffff;
+            r = ~ (r >> 31) & 0xffff;
         }
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
@@ -175,7 +175,7 @@ namespace golang::color
         }
         else
         {
-            g = ^ (g >> 31) & 0xffff;
+            g = ~ (g >> 31) & 0xffff;
         }
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
@@ -184,7 +184,7 @@ namespace golang::color
         }
         else
         {
-            b = ^ (b >> 31) & 0xffff;
+            b = ~ (b >> 31) & 0xffff;
         }
         auto a = uint32_t(c.A) * 0x101;
         return {uint32_t(r) * a / 0xffff, uint32_t(g) * a / 0xffff, uint32_t(b) * a / 0xffff, a};

@@ -24,7 +24,6 @@
 
 namespace golang::runtime
 {
-    int traceBytesPerNumber = 10;
     
     std::ostream& traceWriter::PrintTo(std::ostream& os) const
     {
@@ -101,7 +100,7 @@ namespace golang::runtime
             else
             {
                 unlock(& trace.lock);
-                w.traceBuf = (traceBuf*)(sysAlloc(Sizeof(gocpp::recv(unsafe), traceBuf {}), & memstats.other_sys));
+                w.traceBuf = (traceBuf*)(sysAlloc(unsafe::Sizeof(traceBuf {}), & memstats.other_sys));
                 if(w.traceBuf == nullptr)
                 {
                     go_throw("trace: out of memory");
@@ -117,12 +116,12 @@ namespace golang::runtime
         w.traceBuf->lastTime = ts;
         w.traceBuf->link = nullptr;
         w.traceBuf->pos = 0;
-        auto mID = ^ uint64_t(0);
+        auto mID = ~ uint64_t(0);
         if(w.mp != nullptr)
         {
             mID = uint64_t(w.mp->procid);
         }
-        byte(gocpp::recv(w), byte(traceEvEventBatch));
+        unsigned char(gocpp::recv(w), unsigned char(traceEvEventBatch));
         varint(gocpp::recv(w), uint64_t(w.gen));
         varint(gocpp::recv(w), uint64_t(mID));
         varint(gocpp::recv(w), uint64_t(ts));
@@ -227,10 +226,10 @@ namespace golang::runtime
             if(v < 0x80)
             {
                 pos += i + 1;
-                arr[i] = byte(v);
+                arr[i] = unsigned char(v);
                 break;
             }
-            arr[i] = 0x80 | byte(v);
+            arr[i] = 0x80 | unsigned char(v);
             v >>= 7;
         }
         buf->pos = pos;
@@ -259,11 +258,11 @@ namespace golang::runtime
         {
             if(i < traceBytesPerNumber - 1)
             {
-                buf->arr[pos] = 0x80 | byte(v);
+                buf->arr[pos] = 0x80 | unsigned char(v);
             }
             else
             {
-                buf->arr[pos] = byte(v);
+                buf->arr[pos] = unsigned char(v);
             }
             v >>= 7;
             pos++;

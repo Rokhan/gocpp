@@ -10,10 +10,10 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goos/zgoos_windows.h"
+#include "golang/runtime/float.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/float.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -21,10 +21,10 @@
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
-// #include "golang/runtime/mpagealloc_64bit.h"  [Ignored, known errors]
-// #include "golang/runtime/mpallocbits.h"  [Ignored, known errors]
-// #include "golang/runtime/mranges.h"  [Ignored, known errors]
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mpagealloc_64bit.h"
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mstats.h"
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
@@ -38,17 +38,8 @@
 
 namespace golang::runtime
 {
-    extern int scavengePercent;
-    extern int retainExtraPercent;
-    extern int reduceExtraPercent;
-    extern int maxPagesPerPhysPage;
-    extern double scavengeCostRatio;
-    extern double scavChunkHiOccFrac;
-    extern uint16_t scavChunkHiOccPages;
     uint64_t heapRetained();
     void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
-    extern double startingScavSleepRatio;
-    extern double minScavWorkTime;
     struct scavengerState
     {
         mutex lock;
@@ -136,11 +127,6 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
     uint64_t pack(struct scavChunkData sc);
-    extern scavChunkFlags scavChunkHasFree;
-    extern int scavChunkMaxFlags;
-    extern int scavChunkFlagsMask;
-    extern int logScavChunkInUseMax;
-    extern int scavChunkInUseMask;
     bool isEmpty(scavChunkFlags* sc);
     void setEmpty(scavChunkFlags* sc);
     void setNonEmpty(scavChunkFlags* sc);

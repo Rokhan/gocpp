@@ -3,9 +3,53 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::abi
 {
     using FuncFlag = uint8_t;
     using FuncID = uint8_t;
+    const long ArgsSizeUnknown = - 0x80000000;
+    const long PCDATA_UnsafePoint = 0;
+    const long PCDATA_StackMapIndex = 1;
+    const long PCDATA_InlTreeIndex = 2;
+    const long PCDATA_ArgLiveIndex = 3;
+    const long FUNCDATA_ArgsPointerMaps = 0;
+    const long FUNCDATA_LocalsPointerMaps = 1;
+    const long FUNCDATA_StackObjects = 2;
+    const long FUNCDATA_InlTree = 3;
+    const long FUNCDATA_OpenCodedDeferInfo = 4;
+    const long FUNCDATA_ArgInfo = 5;
+    const long FUNCDATA_ArgLiveInfo = 6;
+    const long FUNCDATA_WrapInfo = 7;
+    const long UnsafePointSafe = - 1;
+    const long UnsafePointUnsafe = - 2;
+    const long UnsafePointRestart1 = - 3;
+    const long UnsafePointRestart2 = - 4;
+    const long UnsafePointRestartAtEntry = - 5;
+    const FuncFlag FuncFlagTopFrame = 1 << 0;
+    const FuncFlag FuncFlagSPWrite = 1 << 1;
+    const FuncFlag FuncFlagAsm = 1 << 2;
+    const FuncID FuncIDNormal = 0;
+    const FuncID FuncID_abort = 1;
+    const FuncID FuncID_asmcgocall = 2;
+    const FuncID FuncID_asyncPreempt = 3;
+    const FuncID FuncID_cgocallback = 4;
+    const FuncID FuncID_corostart = 5;
+    const FuncID FuncID_debugCallV2 = 6;
+    const FuncID FuncID_gcBgMarkWorker = 7;
+    const FuncID FuncID_goexit = 8;
+    const FuncID FuncID_gogo = 9;
+    const FuncID FuncID_gopanic = 10;
+    const FuncID FuncID_handleAsyncEvent = 11;
+    const FuncID FuncID_mcall = 12;
+    const FuncID FuncID_morestack = 13;
+    const FuncID FuncID_mstart = 14;
+    const FuncID FuncID_panicwrap = 15;
+    const FuncID FuncID_rt0_go = 16;
+    const FuncID FuncID_runfinq = 17;
+    const FuncID FuncID_runtime_main = 18;
+    const FuncID FuncID_sigpanic = 19;
+    const FuncID FuncID_systemstack = 20;
+    const FuncID FuncID_systemstack_switch = 21;
+    const FuncID FuncIDWrapper = 22;
 }
-

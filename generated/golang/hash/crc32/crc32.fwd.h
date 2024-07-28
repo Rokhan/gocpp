@@ -3,16 +3,20 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::crc32
+{
+    const long Size = 4;
+    const long IEEE = 0xedb88320;
+    const long Castagnoli = 0x82f63b78;
+    const long Koopman = 0xeb31d82e;
+    using Table = gocpp::array<uint32_t, 256>;
+    struct digest;
+    const int marshaledSize = len(magic) + 4 + 4;
+}
 #include "golang/errors/errors.fwd.h"
 #include "golang/hash/crc32/crc32_amd64.fwd.h"
 #include "golang/hash/crc32/crc32_generic.fwd.h"
 #include "golang/hash/hash.fwd.h"
 #include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/once.fwd.h"
-
-namespace golang::crc32
-{
-    using Table = gocpp::array<uint32_t, 256>;
-    struct digest;
-}
-

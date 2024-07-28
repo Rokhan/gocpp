@@ -3,11 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "golang/runtime/internal/sys/consts_norace.fwd.h"
 
 namespace golang::sys
 {
+    const int StackGuardMultiplier = 1 + goos::IsAix + isRace;
+    const int DefaultPhysPageSize = goarch::DefaultPhysPageSize;
+    const int PCQuantum = goarch::PCQuantum;
+    const int Int64Align = goarch::PtrSize;
+    const int MinFrameSize = goarch::MinFrameSize;
+    const int StackAlign = goarch::StackAlign;
 }
-

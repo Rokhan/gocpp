@@ -11,9 +11,9 @@
 
 #include "golang/bufio/bufio.h"
 #include "golang/encoding/base64/base64.h"
-// #include "golang/image/png/writer.h"  [Ignored, known errors]
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
+// #include "golang/image/png/writer.h"  [Ignored, known errors]
 // #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::pic

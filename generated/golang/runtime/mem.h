@@ -11,7 +11,7 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mem_windows.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

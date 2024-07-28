@@ -3,50 +3,96 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
+
+namespace golang::reflect
+{
+    using Kind = unsigned int;
+    using ChanDir = int;
+    const int kindDirectIface = 1 << 5;
+    const int kindGCProg = 1 << 6;
+    const int kindMask = (1 << 5) - 1;
+    struct StructField;
+    using StructTag = std::string;
+    struct fieldScan;
+    struct gocpp_id_0;
+    struct gocpp_id_1;
+    struct structTypeUncommon;
+    struct gocpp_id_2;
+    struct gocpp_id_3;
+    struct gocpp_id_4;
+    const long maxPtrmaskBytes = 2048;
+    struct bitVector;
+    const Kind Invalid = 0;
+    const Kind Bool = 1;
+    const Kind Int = 2;
+    const Kind Int8 = 3;
+    const Kind Int16 = 4;
+    const Kind Int32 = 5;
+    const Kind Int64 = 6;
+    const Kind Uint = 7;
+    const Kind Uint8 = 8;
+    const Kind Uint16 = 9;
+    const Kind Uint32 = 10;
+    const Kind Uint64 = 11;
+    const Kind Uintptr = 12;
+    const Kind Float32 = 13;
+    const Kind Float64 = 14;
+    const Kind Complex64 = 15;
+    const Kind Complex128 = 16;
+    const Kind Array = 17;
+    const Kind Chan = 18;
+    const Kind Func = 19;
+    const Kind Interface = 20;
+    const Kind Map = 21;
+    const Kind Pointer = 22;
+    const Kind Slice = 23;
+    const Kind String = 24;
+    const Kind Struct = 25;
+    const Kind UnsafePointer = 26;
+    const ChanDir RecvDir = 1 << 0;
+    const ChanDir SendDir = 1 << 1;
+}
 #include "golang/internal/abi/map.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
 #include "golang/reflect/abi.fwd.h"
 #include "golang/reflect/value.fwd.h"
+// #include "golang/sync/pool.fwd.h" [Ignored, known errors]
+
+namespace golang::reflect
+{
+    struct Type;
+    using uncommonType = abi::UncommonType;
+    struct common;
+    struct rtype;
+    using aNameOff = abi::NameOff;
+    using aTypeOff = abi::TypeOff;
+    using aTextOff = abi::TextOff;
+    using arrayType = abi::ArrayType;
+    using chanType = abi::ChanType;
+    using funcType = abi::FuncType;
+    struct interfaceType;
+    struct mapType;
+    struct ptrType;
+    struct sliceType;
+    using structField = abi::StructField;
+    struct structType;
+    struct Method;
+    struct cacheKey;
+    const uintptr_t bucketSize = abi::MapBucketCount;
+    const uintptr_t maxKeySize = abi::MapMaxKeyBytes;
+    const uintptr_t maxValSize = abi::MapMaxElemBytes;
+    struct layoutKey;
+    struct layoutType;
+    const Kind Ptr = Pointer;
+    const ChanDir BothDir = RecvDir | SendDir;
+}
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/strconv/itoa.fwd.h"
 #include "golang/strconv/quote.fwd.h"
 #include "golang/sync/map.fwd.h"
 #include "golang/sync/mutex.fwd.h"
-// #include "golang/sync/pool.fwd.h"  [Ignored, known errors]
-#include "golang/unicode/utf8/utf8.fwd.h"
 #include "golang/unicode/digit.fwd.h"
 #include "golang/unicode/graphic.fwd.h"
+#include "golang/unicode/utf8/utf8.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::reflect
-{
-    using arrayType = abi::ArrayType;
-    using chanType = abi::ChanType;
-    using funcType = abi::FuncType;
-    using aNameOff = abi::NameOff;
-    using structField = abi::StructField;
-    using aTextOff = abi::TextOff;
-    using aTypeOff = abi::TypeOff;
-    using uncommonType = abi::UncommonType;
-    using ChanDir = int;
-    using Kind = unsigned int;
-    struct Method;
-    struct StructField;
-    using StructTag = std::string;
-    struct Type;
-    struct bitVector;
-    struct cacheKey;
-    struct common;
-    struct fieldScan;
-    struct interfaceType;
-    struct layoutKey;
-    struct layoutType;
-    struct mapType;
-    struct ptrType;
-    struct rtype;
-    struct sliceType;
-    struct structType;
-    struct structTypeUncommon;
-}
-

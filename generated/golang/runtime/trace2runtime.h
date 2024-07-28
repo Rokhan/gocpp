@@ -9,8 +9,8 @@
 #include "golang/runtime/trace2runtime.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -66,25 +66,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
     void traceLockInit();
     void lockRankMayTraceFlush();
-    extern traceBlockReason traceBlockGeneric;
-    extern traceBlockReason traceBlockForever;
-    extern traceBlockReason traceBlockNet;
-    extern traceBlockReason traceBlockSelect;
-    extern traceBlockReason traceBlockCondWait;
-    extern traceBlockReason traceBlockSync;
-    extern traceBlockReason traceBlockChanSend;
-    extern traceBlockReason traceBlockChanRecv;
-    extern traceBlockReason traceBlockGCMarkAssist;
-    extern traceBlockReason traceBlockGCSweep;
-    extern traceBlockReason traceBlockSystemGoroutine;
-    extern traceBlockReason traceBlockPreempted;
-    extern traceBlockReason traceBlockDebugCall;
-    extern traceBlockReason traceBlockUntilGCEnds;
-    extern traceBlockReason traceBlockSleep;
     extern gocpp::array_base<std::string> traceBlockReasonStrings;
-    extern traceGoStopReason traceGoStopGeneric;
-    extern traceGoStopReason traceGoStopGoSched;
-    extern traceGoStopReason traceGoStopPreempted;
     extern gocpp::array_base<std::string> traceGoStopReasonStrings;
     bool traceEnabled();
     bool traceShuttingDown();
@@ -99,7 +81,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
-    extern bool debugTraceReentrancy;
     traceLocker traceAcquire();
     traceLocker traceAcquireEnabled();
     bool ok(struct traceLocker tl);

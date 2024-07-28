@@ -4,12 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/internal/abi/abi_amd64.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::abi
 {
-    using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
     struct RegArgs;
+    using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
 }
-
+#include "golang/internal/goarch/goarch.fwd.h"

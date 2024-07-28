@@ -3,12 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
+    using ints = gocpp::slice<int>;
     struct fakeResult;
     using fakeFetcher = gocpp::map<std::string, fakeResult*>;
-    using ints = gocpp::slice<int>;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

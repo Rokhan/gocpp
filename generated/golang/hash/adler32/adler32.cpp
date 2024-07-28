@@ -16,9 +16,6 @@
 
 namespace golang::adler32
 {
-    int mod = 65521;
-    int nmax = 5552;
-    int Size = 4;
     void Reset(digest* d)
     {
         *d = 1;
@@ -42,7 +39,6 @@ namespace golang::adler32
     }
 
     std::string magic = "adl\x01";
-    int marshaledSize = len(magic) + 4;
     std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
@@ -55,11 +51,11 @@ namespace golang::adler32
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
-            return New(gocpp::recv(errors), "hash/adler32: invalid hash state identifier");
+            return errors::New("hash/adler32: invalid hash state identifier");
         }
         if(len(b) != marshaledSize)
         {
-            return New(gocpp::recv(errors), "hash/adler32: invalid hash state size");
+            return errors::New("hash/adler32: invalid hash state size");
         }
         *d = digest(readUint32(b.make_slice(len(magic))));
         return nullptr;
@@ -67,7 +63,7 @@ namespace golang::adler32
 
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
     {
-        return append(b, byte(x >> 24), byte(x >> 16), byte(x >> 8), byte(x));
+        return append(b, unsigned char(x >> 24), unsigned char(x >> 16), unsigned char(x >> 8), unsigned char(x));
     }
 
     uint32_t readUint32(gocpp::slice<unsigned char> b)
@@ -126,7 +122,7 @@ namespace golang::adler32
     gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = uint32_t(*d);
-        return append(in, byte(s >> 24), byte(s >> 16), byte(s >> 8), byte(s));
+        return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));
     }
 
     uint32_t Checksum(gocpp::slice<unsigned char> data)

@@ -15,7 +15,6 @@
 
 namespace golang::race
 {
-    bool Enabled = false;
     void Acquire(unsafe::Pointer addr)
     {
     }

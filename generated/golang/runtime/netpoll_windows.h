@@ -9,8 +9,8 @@
 #include "golang/runtime/netpoll_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/netpoll.h"  [Ignored, known errors]
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -20,8 +20,6 @@
 
 namespace golang::runtime
 {
-    extern int _DWORD_MAX;
-    extern uintptr_t _INVALID_HANDLE_VALUE;
     struct net_op
     {
         overlapped o;

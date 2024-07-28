@@ -3,46 +3,52 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/symtab.fwd.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/atomic_pointer.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/plugin.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/rand.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct Frame;
     struct Frames;
+    struct Frame;
     struct Func;
-    struct findfuncbucket;
-    struct funcInfo;
-    struct functab;
-    struct moduledata;
-    struct modulehash;
     struct pcHeader;
+    struct modulehash;
+    struct functab;
+    struct textsect;
+    const long minfunc = 16;
+    struct findfuncbucket;
+    const bool debugPcln = false;
     struct pcvalueCache;
     struct pcvalueCacheEnt;
-    struct srcFunc;
     struct stackmap;
-    struct textsect;
+    const int pcbucketsize = 256 * minfunc;
 }
+// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+#include "golang/runtime/internal/sys/nih.fwd.h"
+#include "golang/runtime/plugin.fwd.h"
+#include "golang/runtime/proc.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/stack.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
+namespace golang::runtime
+{
+    struct moduledata;
+    struct funcInfo;
+    struct srcFunc;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/atomic_pointer.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/internal/sys/consts.fwd.h"
+#include "golang/runtime/mbitmap.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
+#include "golang/runtime/string.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

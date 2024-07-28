@@ -3,30 +3,72 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::abi
+{
+    using Kind = unsigned int;
+    const int KindDirectIface = 1 << 5;
+    const int KindGCProg = 1 << 6;
+    const int KindMask = (1 << 5) - 1;
+    using TFlag = uint8_t;
+    using NameOff = int32_t;
+    using TypeOff = int32_t;
+    using TextOff = int32_t;
+    struct Method;
+    struct UncommonType;
+    struct Imethod;
+    struct ArrayType;
+    using ChanDir = int;
+    struct ChanType;
+    struct structTypeUncommon;
+    struct InterfaceType;
+    struct SliceType;
+    struct FuncType;
+    struct PtrType;
+    struct StructField;
+    struct StructType;
+    struct Name;
+    const Kind Invalid = 0;
+    const Kind Bool = 1;
+    const Kind Int = 2;
+    const Kind Int8 = 3;
+    const Kind Int16 = 4;
+    const Kind Int32 = 5;
+    const Kind Int64 = 6;
+    const Kind Uint = 7;
+    const Kind Uint8 = 8;
+    const Kind Uint16 = 9;
+    const Kind Uint32 = 10;
+    const Kind Uint64 = 11;
+    const Kind Uintptr = 12;
+    const Kind Float32 = 13;
+    const Kind Float64 = 14;
+    const Kind Complex64 = 15;
+    const Kind Complex128 = 16;
+    const Kind Array = 17;
+    const Kind Chan = 18;
+    const Kind Func = 19;
+    const Kind Interface = 20;
+    const Kind Map = 21;
+    const Kind Pointer = 22;
+    const Kind Slice = 23;
+    const Kind String = 24;
+    const Kind Struct = 25;
+    const Kind UnsafePointer = 26;
+    const TFlag TFlagUncommon = 1 << 0;
+    const TFlag TFlagExtraStar = 1 << 1;
+    const TFlag TFlagNamed = 1 << 2;
+    const TFlag TFlagRegularMemory = 1 << 3;
+    const TFlag TFlagUnrolledBitmap = 1 << 4;
+    const ChanDir RecvDir = 1 << 0;
+    const ChanDir SendDir = 1 << 1;
+    const ChanDir InvalidDir = 0;
+}
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::abi
 {
-    struct ArrayType;
-    using ChanDir = int;
-    struct ChanType;
-    struct FuncType;
-    struct Imethod;
-    struct InterfaceType;
-    using Kind = unsigned int;
-    struct MapType;
-    struct Method;
-    struct Name;
-    using NameOff = int32_t;
-    struct PtrType;
-    struct SliceType;
-    struct StructField;
-    struct StructType;
-    using TFlag = uint8_t;
-    using TextOff = int32_t;
     struct Type;
-    using TypeOff = int32_t;
-    struct UncommonType;
-    struct structTypeUncommon;
+    struct MapType;
+    const ChanDir BothDir = RecvDir | SendDir;
 }
-

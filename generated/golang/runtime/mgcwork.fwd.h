@@ -3,27 +3,32 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    const long _WorkbufSize = 2048;
+    const int workbufAlloc = 32 << 10;
+    struct gcWork;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/lfstack.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct gcWork;
-    struct workbuf;
     struct workbufhdr;
+    struct workbuf;
 }
-
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/lfstack.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/mgc.fwd.h"
+// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

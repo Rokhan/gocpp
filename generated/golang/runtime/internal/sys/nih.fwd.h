@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::sys
 {
-    struct NotInHeap;
     struct nih;
+    struct NotInHeap;
 }
-

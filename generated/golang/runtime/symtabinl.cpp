@@ -66,7 +66,7 @@ namespace golang::runtime
 
     std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(funcInfo f, uintptr_t pc)
     {
-        auto inldata = funcdata(f, abi.FUNCDATA_InlTree);
+        auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
         {
             return {gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; }), gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = - 1; })};
@@ -78,7 +78,7 @@ namespace golang::runtime
 
     inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
-        return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi.PCDATA_InlTreeIndex, pc, false); });
+        return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false); });
     }
 
     bool valid(struct inlineFrame uf)
@@ -94,7 +94,7 @@ namespace golang::runtime
             return uf;
         }
         auto parentPc = u->inlTree[uf.index].parentPc;
-        return resolveInternal(gocpp::recv(u), entry(gocpp::recv(u->f)) + uintptr(parentPc));
+        return resolveInternal(gocpp::recv(u), entry(gocpp::recv(u->f)) + uintptr_t(parentPc));
     }
 
     bool isInlined(struct inlineUnwinder* u, inlineFrame uf)

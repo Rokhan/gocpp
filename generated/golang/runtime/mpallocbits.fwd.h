@@ -3,13 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
+
+namespace golang::runtime
+{
+    struct pallocData;
+}
 #include "golang/runtime/mpagealloc.fwd.h"
 
 namespace golang::runtime
 {
-    /* using pageBits = gocpp::array<uint64_t, pallocChunkPages / 64>;
- */    /* using pallocBits = pageBits;
- */    struct pallocData;
+    using pageBits = gocpp::array<uint64_t, pallocChunkPages / 64>;
+    using pallocBits = pageBits;
 }
-
+#include "golang/runtime/internal/sys/intrinsics.fwd.h"

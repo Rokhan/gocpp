@@ -10,11 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
+#include "golang/runtime/internal/math/math.h"
+#include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/msan0.h"

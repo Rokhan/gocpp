@@ -11,8 +11,8 @@
 #include "golang/runtime/trace2runtime.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -98,25 +98,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& trace.lock, getLockRank(& trace.lock));
     }
 
-    traceBlockReason traceBlockGeneric = 0;
-    traceBlockReason traceBlockForever = 1;
-    traceBlockReason traceBlockNet = 2;
-    traceBlockReason traceBlockSelect = 3;
-    traceBlockReason traceBlockCondWait = 4;
-    traceBlockReason traceBlockSync = 5;
-    traceBlockReason traceBlockChanSend = 6;
-    traceBlockReason traceBlockChanRecv = 7;
-    traceBlockReason traceBlockGCMarkAssist = 8;
-    traceBlockReason traceBlockGCSweep = 9;
-    traceBlockReason traceBlockSystemGoroutine = 10;
-    traceBlockReason traceBlockPreempted = 11;
-    traceBlockReason traceBlockDebugCall = 12;
-    traceBlockReason traceBlockUntilGCEnds = 13;
-    traceBlockReason traceBlockSleep = 14;
     gocpp::array_base<std::string> traceBlockReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.traceBlockGeneric = "unspecified"; x.traceBlockForever = "forever"; x.traceBlockNet = "network"; x.traceBlockSelect = "select"; x.traceBlockCondWait = "sync.(*Cond).Wait"; x.traceBlockSync = "sync"; x.traceBlockChanSend = "chan send"; x.traceBlockChanRecv = "chan receive"; x.traceBlockGCMarkAssist = "GC mark assist wait for work"; x.traceBlockGCSweep = "GC background sweeper wait"; x.traceBlockSystemGoroutine = "system goroutine wait"; x.traceBlockPreempted = "preempted"; x.traceBlockDebugCall = "wait for debug call"; x.traceBlockUntilGCEnds = "wait until GC ends"; x.traceBlockSleep = "sleep"; });
-    traceGoStopReason traceGoStopGeneric = 0;
-    traceGoStopReason traceGoStopGoSched = 1;
-    traceGoStopReason traceGoStopPreempted = 2;
     gocpp::array_base<std::string> traceGoStopReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.traceGoStopGeneric = "unspecified"; x.traceGoStopGoSched = "runtime.Gosched"; x.traceGoStopPreempted = "preempted"; });
     bool traceEnabled()
     {
@@ -143,7 +125,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool debugTraceReentrancy = false;
     traceLocker traceAcquire()
     {
         if(! traceEnabled())
@@ -367,7 +348,7 @@ namespace golang::runtime
             }
         }
         auto pp = ptr(gocpp::recv(tl.mp->p));
-        pp->trace.mSyscallID = int64(tl.mp->procid);
+        pp->trace.mSyscallID = int64_t(tl.mp->procid);
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoSyscallBegin, nextSeq(gocpp::recv(pp->trace), tl.gen), stack(gocpp::recv(tl), skip));
     }
 
@@ -418,7 +399,7 @@ namespace golang::runtime
     void HeapGoal(struct traceLocker tl)
     {
         auto heapGoal = heapGoal(gocpp::recv(gcController));
-        if(heapGoal == ^ uint64_t(0))
+        if(heapGoal == ~ uint64_t(0))
         {
             heapGoal = 0;
         }
@@ -523,7 +504,7 @@ namespace golang::runtime
             {
                 if(mp->trace.buf[i] != nullptr)
                 {
-                    traceBufFlush(mp->trace.buf[i], uintptr(i));
+                    traceBufFlush(mp->trace.buf[i], uintptr_t(i));
                     mp->trace.buf[i] = nullptr;
                 }
             }

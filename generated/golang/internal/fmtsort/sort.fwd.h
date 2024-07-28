@@ -3,12 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/reflect/type.fwd.h"
 #include "golang/reflect/value.fwd.h"
-#include "golang/sort/sort.fwd.h"
 
 namespace golang::fmtsort
 {
     struct SortedMap;
 }
-
+#include "golang/reflect/type.fwd.h"
+#include "golang/sort/sort.fwd.h"

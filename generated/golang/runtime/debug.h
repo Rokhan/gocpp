@@ -9,9 +9,9 @@
 #include "golang/runtime/debug.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"

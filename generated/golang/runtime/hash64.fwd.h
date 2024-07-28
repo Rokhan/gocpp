@@ -3,12 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/math/math.fwd.h"
-// #include "golang/runtime/alg.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
+    const long m1 = 0xa0761d6478bd642f;
+    const long m2 = 0xe7037ed1a0b428db;
+    const long m3 = 0x8ebc6af09c88c6e3;
+    const long m4 = 0x589965cc75374cc3;
+    const long m5 = 0x1d8e4e27c47d124f;
 }
-
+// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
+#include "golang/runtime/internal/math/math.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

@@ -3,36 +3,46 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-// #include "golang/runtime/alg.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/asan0.fwd.h"
-// #include "golang/runtime/cgocall.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/mfinal.fwd.h"
-#include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stkframe.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
+    const long tracebackInnerFrames = 50;
+    const long tracebackOuterFrames = 50;
+    using unwindFlags = uint8_t;
+    struct cgoTracebackArg;
     struct cgoContextArg;
     struct cgoSymbolizerArg;
-    struct cgoTracebackArg;
-    using unwindFlags = uint8_t;
+    const unwindFlags unwindPrintErrors = 1 << 0;
+    const unwindFlags unwindSilentErrors = 1 << 1;
+    const unwindFlags unwindTrap = 1 << 2;
+    const unwindFlags unwindJumpStack = 1 << 3;
+}
+// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+#include "golang/runtime/internal/sys/consts.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    const bool usesLR = sys::MinFrameSize > 0;
     struct unwinder;
 }
-
+#include "golang/internal/bytealg/indexbyte_native.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
+#include "golang/runtime/asan0.fwd.h"
+// #include "golang/runtime/cgocall.fwd.h" [Ignored, known errors]
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/mfinal.fwd.h"
+#include "golang/runtime/msan0.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+#include "golang/runtime/proc.fwd.h"
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
+#include "golang/runtime/string.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time_nofake.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

@@ -47,8 +47,6 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    int dequeueBits = 32;
-    int dequeueLimit = (1 << dequeueBits) / 4;
     struct gocpp_id_0
     {
 
@@ -61,6 +59,13 @@ namespace golang::sync
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs)
     {
         uint32_t head;
@@ -86,7 +91,7 @@ namespace golang::sync
             return false;
         }
         auto slot = & d->vals[head & uint32_t(len(d->vals) - 1)];
-        auto typ = LoadPointer(gocpp::recv(atomic), & slot->typ);
+        auto typ = atomic::LoadPointer(& slot->typ);
         if(typ != nullptr)
         {
             return false;
@@ -95,7 +100,7 @@ namespace golang::sync
         {
             val = dequeueNil(nullptr);
         }
-        *(go_any*)(Pointer(gocpp::recv(unsafe), slot)) = val;
+        *(go_any*)(unsafe::Pointer(slot)) = val;
         Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
@@ -119,7 +124,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(go_any*)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(go_any*)(unsafe::Pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -146,13 +151,13 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(go_any*)(Pointer(gocpp::recv(unsafe), slot));
+        auto val = *(go_any*)(unsafe::Pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
         }
         slot->val = nullptr;
-        StorePointer(gocpp::recv(atomic), & slot->typ, nullptr);
+        atomic::StorePointer(& slot->typ, nullptr);
         return {val, true};
     }
 
@@ -188,12 +193,12 @@ namespace golang::sync
 
     void storePoolChainElt(poolChainElt** pp, poolChainElt* v)
     {
-        StorePointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), pp)), Pointer(gocpp::recv(unsafe), v));
+        atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(pp)), unsafe::Pointer(v));
     }
 
     poolChainElt* loadPoolChainElt(poolChainElt** pp)
     {
-        return (poolChainElt*)(LoadPointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), pp))));
+        return (poolChainElt*)(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(pp))));
     }
 
     void pushHead(struct poolChain* c, go_any val)
@@ -255,7 +260,7 @@ namespace golang::sync
             {
                 return {nullptr, false};
             }
-            if(CompareAndSwapPointer(gocpp::recv(atomic), (unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), & c->tail)), Pointer(gocpp::recv(unsafe), d), Pointer(gocpp::recv(unsafe), d2)))
+            if(atomic::CompareAndSwapPointer((unsafe::Pointer*)(unsafe::Pointer(& c->tail)), unsafe::Pointer(d), unsafe::Pointer(d2)))
             {
                 storePoolChainElt(& d2->prev, nullptr);
             }

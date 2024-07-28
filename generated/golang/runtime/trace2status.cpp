@@ -21,16 +21,6 @@
 
 namespace golang::runtime
 {
-    traceGoStatus traceGoBad = 0;
-    traceGoStatus traceGoRunnable = 1;
-    traceGoStatus traceGoRunning = 2;
-    traceGoStatus traceGoSyscall = 3;
-    traceGoStatus traceGoWaiting = 4;
-    traceProcStatus traceProcBad = 0;
-    traceProcStatus traceProcRunning = 1;
-    traceProcStatus traceProcIdle = 2;
-    traceProcStatus traceProcSyscall = 3;
-    traceProcStatus traceProcSyscallAbandoned = 4;
     traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
     {
         if(status == traceGoBad)

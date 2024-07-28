@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/abi_amd64.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::abi
@@ -58,16 +58,16 @@ namespace golang::abi
 
     unsafe::Pointer IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize)
     {
-        if(argSize > goarch.PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
+        if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {
             gocpp::panic("invalid argSize");
         }
-        auto offset = uintptr(0);
-        if(goarch.BigEndian)
+        auto offset = uintptr_t(0);
+        if(goarch::BigEndian)
         {
-            offset = goarch.PtrSize - argSize;
+            offset = goarch::PtrSize - argSize;
         }
-        return Pointer(gocpp::recv(unsafe), uintptr(Pointer(gocpp::recv(unsafe), & r->Ints[reg])) + offset);
+        return unsafe::Pointer(uintptr_t(unsafe::Pointer(& r->Ints[reg])) + offset);
     }
 
     void Set(IntArgRegBitmap* b, int i)

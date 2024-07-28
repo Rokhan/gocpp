@@ -11,10 +11,10 @@
 #include "golang/runtime/syscall_windows.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
@@ -52,13 +52,20 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 cbs;
     void cbsLock()
     {
         lock(& cbs.lock);
         if(raceenabled && mainStarted)
         {
-            raceacquire(Pointer(gocpp::recv(unsafe), & cbs.lock));
+            raceacquire(unsafe::Pointer(& cbs.lock));
         }
     }
 
@@ -66,7 +73,7 @@ namespace golang::runtime
     {
         if(raceenabled && mainStarted)
         {
-            racerelease(Pointer(gocpp::recv(unsafe), & cbs.lock));
+            racerelease(unsafe::Pointer(& cbs.lock));
         }
         unlock(& cbs.lock);
     }
@@ -87,9 +94,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    abiPartKind abiPartBad = 0;
-    abiPartKind abiPartStack = 1;
-    abiPartKind abiPartReg = 2;
     
     std::ostream& abiPart::PrintTo(std::ostream& os) const
     {
@@ -143,7 +147,7 @@ namespace golang::runtime
 
     void assignArg(struct abiDesc* p, _type* t)
     {
-        if(t->Size_ > goarch.PtrSize)
+        if(t->Size_ > goarch::PtrSize)
         {
             gocpp::panic("compileCallback: argument size is larger than uintptr");
         }
@@ -153,19 +157,19 @@ namespace golang::runtime
         }
         if(t->Size_ == 0)
         {
-            p->dstStackSize = alignUp(p->dstStackSize, uintptr(t->Align_));
+            p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
             return;
         }
         auto oldParts = p->parts;
         if(tryRegAssignArg(gocpp::recv(p), t, 0))
         {
-            p->dstSpill = alignUp(p->dstSpill, uintptr(t->Align_));
+            p->dstSpill = alignUp(p->dstSpill, uintptr_t(t->Align_));
             p->dstSpill += t->Size_;
         }
         else
         {
             p->parts = oldParts;
-            p->dstStackSize = alignUp(p->dstStackSize, uintptr(t->Align_));
+            p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
             auto part = gocpp::Init<abiPart>([](abiPart& x) { x.kind = abiPartStack; x.srcStackOffset = p->srcStackSize; x.dstStackOffset = p->dstStackSize; x.len = t->Size_; });
             if(len(p->parts) == 0 || ! tryMerge(gocpp::recv(p->parts[len(p->parts) - 1]), part))
             {
@@ -173,7 +177,7 @@ namespace golang::runtime
             }
             p->dstStackSize += t->Size_;
         }
-        p->srcStackSize += goarch.PtrSize;
+        p->srcStackSize += goarch::PtrSize;
     }
 
     bool tryRegAssignArg(struct abiDesc* p, _type* t, uintptr_t offset)
@@ -217,20 +221,20 @@ namespace golang::runtime
                     break;
                 case 12:
                 case 13:
-                    if(goarch.PtrSize == 8)
+                    if(goarch::PtrSize == 8)
                     {
                         return assignReg(gocpp::recv(p), t->Size_, offset);
                     }
                     break;
                 case 14:
-                    auto at = (arraytype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto at = (arraytype*)(unsafe::Pointer(t));
                     if(at->Len == 1)
                     {
                         return tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
                 case 15:
-                    auto st = (structtype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (structtype*)(unsafe::Pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -301,10 +305,9 @@ namespace golang::runtime
                     break;
             }
         }
-        return FuncPCABI0(gocpp::recv(abi), callbackasm) + uintptr(i * entrySize);
+        return abi::FuncPCABI0(callbackasm) + uintptr_t(i * entrySize);
     }
 
-    int callbackMaxFrame = 64 * goarch.PtrSize;
     uintptr_t compileCallback(eface fn, bool cdecl)
     {
         uintptr_t code;
@@ -318,21 +321,21 @@ namespace golang::runtime
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
-        auto ft = (functype*)(Pointer(gocpp::recv(unsafe), fn._type));
+        auto ft = (functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
         for(auto [_, t] : InSlice(gocpp::recv(ft)))
         {
             uintptr_t code;
             assignArg(gocpp::recv(abiMap), t);
         }
-        abiMap.dstStackSize = alignUp(abiMap.dstStackSize, goarch.PtrSize);
+        abiMap.dstStackSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         abiMap.retOffset = abiMap.dstStackSize;
         if(len(OutSlice(gocpp::recv(ft))) != 1)
         {
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
-        if(OutSlice(gocpp::recv(ft))[0]->Size_ != goarch.PtrSize)
+        if(OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
         {
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
@@ -345,9 +348,9 @@ namespace golang::runtime
         if(intArgRegs == 0)
         {
             uintptr_t code;
-            abiMap.dstStackSize += goarch.PtrSize;
+            abiMap.dstStackSize += goarch::PtrSize;
         }
-        auto frameSize = alignUp(abiMap.dstStackSize, goarch.PtrSize);
+        auto frameSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         frameSize += abiMap.dstSpill;
         if(frameSize > callbackMaxFrame)
         {
@@ -411,7 +414,7 @@ namespace golang::runtime
         a->retPop = c.retPop;
         abi::RegArgs regs = {};
         gocpp::array<unsigned char, callbackMaxFrame> frame = {};
-        auto goArgs = Pointer(gocpp::recv(unsafe), & frame);
+        auto goArgs = unsafe::Pointer(& frame);
         for(auto [_, part] : c.abiMap.parts)
         {
             //Go switch emulation
@@ -426,7 +429,7 @@ namespace golang::runtime
                         memmove(add(goArgs, part.dstStackOffset), add(a->args, part.srcStackOffset), part.len);
                         break;
                     case 1:
-                        auto goReg = Pointer(gocpp::recv(unsafe), & regs.Ints[part.dstRegister]);
+                        auto goReg = unsafe::Pointer(& regs.Ints[part.dstRegister]);
                         memmove(goReg, add(a->args, part.srcStackOffset), part.len);
                         break;
                     default:
@@ -435,12 +438,12 @@ namespace golang::runtime
                 }
             }
         }
-        auto frameSize = alignUp(c.abiMap.dstStackSize, goarch.PtrSize);
+        auto frameSize = alignUp(c.abiMap.dstStackSize, goarch::PtrSize);
         frameSize += c.abiMap.dstSpill;
-        reflectcall(nullptr, Pointer(gocpp::recv(unsafe), c.fn), noescape(goArgs), uint32_t(c.abiMap.dstStackSize), uint32_t(c.abiMap.retOffset), uint32_t(frameSize), & regs);
+        reflectcall(nullptr, unsafe::Pointer(c.fn), noescape(goArgs), uint32_t(c.abiMap.dstStackSize), uint32_t(c.abiMap.retOffset), uint32_t(frameSize), & regs);
         if(c.abiMap.dstStackSize != c.abiMap.retOffset)
         {
-            a->result = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), & frame[c.abiMap.retOffset]));
+            a->result = *(uintptr_t*)(unsafe::Pointer(& frame[c.abiMap.retOffset]));
         }
         else
         {
@@ -449,16 +452,7 @@ namespace golang::runtime
         }
     }
 
-    int _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
-    std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename)
-    {
-        uintptr_t handle;
-        uintptr_t err;
-        lockOSThread();
-        auto c = & getg()->m->syscall;
-        c->fn = getLoadLibraryEx();
-        c->n = 3;
-        struct gocpp_id_1
+    struct gocpp_id_1
         {
             uint16_t* lpFileName;
             uintptr_t hFile;
@@ -477,9 +471,23 @@ namespace golang::runtime
             }
         };
 
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
+    std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename)
+    {
+        uintptr_t handle;
+        uintptr_t err;
+        lockOSThread();
+        auto c = & getg()->m->syscall;
+        c->fn = getLoadLibraryEx();
+        c->n = 3;
         auto args = gocpp_id_1 {filename, 0, _LOAD_LIBRARY_SEARCH_SYSTEM32};
-        c->args = uintptr(noescape(Pointer(gocpp::recv(unsafe), & args)));
-        cgocall(asmstdcallAddr, Pointer(gocpp::recv(unsafe), c));
+        c->args = uintptr_t(noescape(unsafe::Pointer(& args)));
+        cgocall(asmstdcallAddr, unsafe::Pointer(c));
         KeepAlive(filename);
         handle = c->r1;
         if(handle == 0)
@@ -502,8 +510,8 @@ namespace golang::runtime
         auto c = & getg()->m->syscall;
         c->fn = getLoadLibrary();
         c->n = 1;
-        c->args = uintptr(noescape(Pointer(gocpp::recv(unsafe), & filename)));
-        cgocall(asmstdcallAddr, Pointer(gocpp::recv(unsafe), c));
+        c->args = uintptr_t(noescape(unsafe::Pointer(& filename)));
+        cgocall(asmstdcallAddr, unsafe::Pointer(c));
         KeepAlive(filename);
         handle = c->r1;
         if(handle == 0)
@@ -525,8 +533,8 @@ namespace golang::runtime
         auto c = & getg()->m->syscall;
         c->fn = getGetProcAddress();
         c->n = 2;
-        c->args = uintptr(noescape(Pointer(gocpp::recv(unsafe), & handle)));
-        cgocall(asmstdcallAddr, Pointer(gocpp::recv(unsafe), c));
+        c->args = uintptr_t(noescape(unsafe::Pointer(& handle)));
+        cgocall(asmstdcallAddr, unsafe::Pointer(c));
         KeepAlive(procname);
         outhandle = c->r1;
         if(outhandle == 0)
@@ -586,7 +594,6 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
     }
 
-    int maxArgs = 42;
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
     {
         gocpp::Defer defer;
@@ -618,9 +625,9 @@ namespace golang::runtime
         defer.push_back([=]{ unlockOSThread(); });
         auto c = & getg()->m->syscall;
         c->fn = trap;
-        c->n = uintptr(nargs);
-        c->args = uintptr(noescape(Pointer(gocpp::recv(unsafe), & args[0])));
-        cgocall(asmstdcallAddr, Pointer(gocpp::recv(unsafe), c));
+        c->n = uintptr_t(nargs);
+        c->args = uintptr_t(noescape(unsafe::Pointer(& args[0])));
+        cgocall(asmstdcallAddr, unsafe::Pointer(c));
         return {c->r1, c->r2, c->err};
     }
 

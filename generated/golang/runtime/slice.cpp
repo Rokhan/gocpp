@@ -12,11 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
+#include "golang/runtime/internal/math/math.h"
+#include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/msan0.h"
@@ -74,19 +74,19 @@ namespace golang::runtime
     {
         uintptr_t tomem = {};
         uintptr_t copymem = {};
-        if(uintptr(tolen) > uintptr(fromlen))
+        if(uintptr_t(tolen) > uintptr_t(fromlen))
         {
             bool overflow = {};
-            std::tie(tomem, overflow) = math::MulUintptr(et->Size_, uintptr(tolen));
+            std::tie(tomem, overflow) = math::MulUintptr(et->Size_, uintptr_t(tolen));
             if(overflow || tomem > maxAlloc || tolen < 0)
             {
                 panicmakeslicelen();
             }
-            copymem = et->Size_ * uintptr(fromlen);
+            copymem = et->Size_ * uintptr_t(fromlen);
         }
         else
         {
-            tomem = et->Size_ * uintptr(tolen);
+            tomem = et->Size_ * uintptr_t(tolen);
             copymem = tomem;
         }
         unsafe::Pointer to = {};
@@ -103,13 +103,13 @@ namespace golang::runtime
             to = mallocgc(tomem, et, true);
             if(copymem > 0 && writeBarrier.enabled)
             {
-                bulkBarrierPreWriteSrcOnly(uintptr(to), uintptr(from), copymem, et);
+                bulkBarrierPreWriteSrcOnly(uintptr_t(to), uintptr_t(from), copymem, et);
             }
         }
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            auto pc = FuncPCABIInternal(gocpp::recv(abi), makeslicecopy);
+            auto pc = abi::FuncPCABIInternal(makeslicecopy);
             racereadrangepc(from, copymem, callerpc, pc);
         }
         if(msanenabled)
@@ -126,10 +126,10 @@ namespace golang::runtime
 
     unsafe::Pointer makeslice(_type* et, int len, int cap)
     {
-        auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr(cap));
+        auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
         {
-            auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr(len));
+            auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(len));
             if(overflow || mem > maxAlloc || len < 0)
             {
                 panicmakeslicelen();
@@ -142,12 +142,12 @@ namespace golang::runtime
     unsafe::Pointer makeslice64(_type* et, int64_t len64, int64_t cap64)
     {
         auto len = int(len64);
-        if(int64(len) != len64)
+        if(int64_t(len) != len64)
         {
             panicmakeslicelen();
         }
         auto cap = int(cap64);
-        if(int64(cap) != cap64)
+        if(int64_t(cap) != cap64)
         {
             panicmakeslicecap();
         }
@@ -160,15 +160,15 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            racereadrangepc(oldPtr, uintptr(oldLen * int(et->Size_)), callerpc, FuncPCABIInternal(gocpp::recv(abi), growslice));
+            racereadrangepc(oldPtr, uintptr_t(oldLen * int(et->Size_)), callerpc, abi::FuncPCABIInternal(growslice));
         }
         if(msanenabled)
         {
-            msanread(oldPtr, uintptr(oldLen * int(et->Size_)));
+            msanread(oldPtr, uintptr_t(oldLen * int(et->Size_)));
         }
         if(asanenabled)
         {
-            asanread(oldPtr, uintptr(oldLen * int(et->Size_)));
+            asanread(oldPtr, uintptr_t(oldLen * int(et->Size_)));
         }
         if(newLen < 0)
         {
@@ -176,7 +176,7 @@ namespace golang::runtime
         }
         if(et->Size_ == 0)
         {
-            return slice {Pointer(gocpp::recv(unsafe), & zerobase), newLen, newLen};
+            return slice {unsafe::Pointer(& zerobase), newLen, newLen};
         }
         auto newcap = nextslicecap(newLen, oldCap);
         bool overflow = {};
@@ -188,48 +188,48 @@ namespace golang::runtime
         {
             int conditionId = -1;
             if(et->Size_ == 1) { conditionId = 0; }
-            else if(et->Size_ == goarch.PtrSize) { conditionId = 1; }
+            else if(et->Size_ == goarch::PtrSize) { conditionId = 1; }
             else if(isPowerOfTwo(et->Size_)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
-                    lenmem = uintptr(oldLen);
-                    newlenmem = uintptr(newLen);
-                    capmem = roundupsize(uintptr(newcap), noscan);
-                    overflow = uintptr(newcap) > maxAlloc;
+                    lenmem = uintptr_t(oldLen);
+                    newlenmem = uintptr_t(newLen);
+                    capmem = roundupsize(uintptr_t(newcap), noscan);
+                    overflow = uintptr_t(newcap) > maxAlloc;
                     newcap = int(capmem);
                     break;
                 case 1:
-                    lenmem = uintptr(oldLen) * goarch.PtrSize;
-                    newlenmem = uintptr(newLen) * goarch.PtrSize;
-                    capmem = roundupsize(uintptr(newcap) * goarch.PtrSize, noscan);
-                    overflow = uintptr(newcap) > maxAlloc / goarch.PtrSize;
-                    newcap = int(capmem / goarch.PtrSize);
+                    lenmem = uintptr_t(oldLen) * goarch::PtrSize;
+                    newlenmem = uintptr_t(newLen) * goarch::PtrSize;
+                    capmem = roundupsize(uintptr_t(newcap) * goarch::PtrSize, noscan);
+                    overflow = uintptr_t(newcap) > maxAlloc / goarch::PtrSize;
+                    newcap = int(capmem / goarch::PtrSize);
                     break;
                 case 2:
                     uintptr_t shift = {};
-                    if(goarch.PtrSize == 8)
+                    if(goarch::PtrSize == 8)
                     {
-                        shift = uintptr(TrailingZeros64(gocpp::recv(sys), uint64_t(et->Size_))) & 63;
+                        shift = uintptr_t(sys::TrailingZeros64(uint64_t(et->Size_))) & 63;
                     }
                     else
                     {
-                        shift = uintptr(TrailingZeros32(gocpp::recv(sys), uint32_t(et->Size_))) & 31;
+                        shift = uintptr_t(sys::TrailingZeros32(uint32_t(et->Size_))) & 31;
                     }
-                    lenmem = uintptr(oldLen) << shift;
-                    newlenmem = uintptr(newLen) << shift;
-                    capmem = roundupsize(uintptr(newcap) << shift, noscan);
-                    overflow = uintptr(newcap) > (maxAlloc >> shift);
+                    lenmem = uintptr_t(oldLen) << shift;
+                    newlenmem = uintptr_t(newLen) << shift;
+                    capmem = roundupsize(uintptr_t(newcap) << shift, noscan);
+                    overflow = uintptr_t(newcap) > (maxAlloc >> shift);
                     newcap = int(capmem >> shift);
-                    capmem = uintptr(newcap) << shift;
+                    capmem = uintptr_t(newcap) << shift;
                     break;
                 default:
-                    lenmem = uintptr(oldLen) * et->Size_;
-                    newlenmem = uintptr(newLen) * et->Size_;
-                    std::tie(capmem, overflow) = math::MulUintptr(et->Size_, uintptr(newcap));
+                    lenmem = uintptr_t(oldLen) * et->Size_;
+                    newlenmem = uintptr_t(newLen) * et->Size_;
+                    std::tie(capmem, overflow) = math::MulUintptr(et->Size_, uintptr_t(newcap));
                     capmem = roundupsize(capmem, noscan);
                     newcap = int(capmem / et->Size_);
-                    capmem = uintptr(newcap) * et->Size_;
+                    capmem = uintptr_t(newcap) * et->Size_;
                     break;
             }
         }
@@ -248,7 +248,7 @@ namespace golang::runtime
             p = mallocgc(capmem, et, true);
             if(lenmem > 0 && writeBarrier.enabled)
             {
-                bulkBarrierPreWriteSrcOnly(uintptr(p), uintptr(oldPtr), lenmem - et->Size_ + et->PtrBytes, et);
+                bulkBarrierPreWriteSrcOnly(uintptr_t(p), uintptr_t(oldPtr), lenmem - et->Size_ + et->PtrBytes, et);
             }
         }
         memmove(p, oldPtr, lenmem);
@@ -289,8 +289,8 @@ namespace golang::runtime
         auto go_new = growslice(old.array, old.cap + num, old.cap, num, et);
         if(et->PtrBytes == 0)
         {
-            auto oldcapmem = uintptr(old.cap) * et->Size_;
-            auto newlenmem = uintptr(go_new.len) * et->Size_;
+            auto oldcapmem = uintptr_t(old.cap) * et->Size_;
+            auto newlenmem = uintptr_t(go_new.len) * et->Size_;
             memclrNoHeapPointers(add(go_new.array, oldcapmem), newlenmem - oldcapmem);
         }
         go_new.len = old.len;
@@ -317,11 +317,11 @@ namespace golang::runtime
         {
             return n;
         }
-        auto size = uintptr(n) * width;
+        auto size = uintptr_t(n) * width;
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            auto pc = FuncPCABIInternal(gocpp::recv(abi), slicecopy);
+            auto pc = abi::FuncPCABIInternal(slicecopy);
             racereadrangepc(fromPtr, size, callerpc, pc);
             racewriterangepc(toPtr, size, callerpc, pc);
         }
@@ -348,11 +348,11 @@ namespace golang::runtime
 
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len)
     {
-        if(uintptr(len) > maxAlloc)
+        if(uintptr_t(len) > maxAlloc)
         {
             panicmakeslicelen();
         }
-        return Slice(gocpp::recv(unsafe), (unsigned char*)(mallocgc(uintptr(len), nullptr, false)), len);
+        return unsafe::Slice((unsigned char*)(mallocgc(uintptr_t(len), nullptr, false)), len);
     }
 
 }

@@ -15,7 +15,6 @@
 
 namespace golang::main
 {
-    int PrimeRK = 16777619;
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
         auto hash = uint32_t(0);

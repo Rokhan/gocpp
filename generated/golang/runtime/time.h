@@ -44,18 +44,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timer& value);
-    extern int timerNoStatus;
-    extern int timerWaiting;
-    extern int timerRunning;
-    extern int timerDeleted;
-    extern int timerRemoving;
-    extern int timerRemoved;
-    extern int timerModifying;
-    extern int timerModifiedEarlier;
-    extern int timerModifiedLater;
-    extern int timerMoving;
-    extern int maxWhen;
-    extern bool verifyTimers;
     void timeSleep(int64_t ns);
     bool resetForSleep(g* gp, unsafe::Pointer ut);
     void startTimer(timer* t);

@@ -3,7 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
+
+namespace golang::runtime
+{
+    const bool testSmallBuf = false;
+    struct wbBuf;
+    const long wbBufEntries = 512;
+    const long wbMaxEntriesPerCall = 8;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mbitmap.fwd.h"
@@ -12,11 +20,5 @@
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-    struct wbBuf;
-}
-

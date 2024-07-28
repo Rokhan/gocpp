@@ -13,27 +13,27 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mem_windows.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
     unsafe::Pointer sysAlloc(uintptr_t n, sysMemStat* sysStat)
     {
-        add(gocpp::recv(sysStat), int64(n));
-        Add(gocpp::recv(gcController.mappedReady), int64(n));
+        add(gocpp::recv(sysStat), int64_t(n));
+        Add(gocpp::recv(gcController.mappedReady), int64_t(n));
         return sysAllocOS(n);
     }
 
     void sysUnused(unsafe::Pointer v, uintptr_t n)
     {
-        Add(gocpp::recv(gcController.mappedReady), - int64(n));
+        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysUnusedOS(v, n);
     }
 
     void sysUsed(unsafe::Pointer v, uintptr_t n, uintptr_t prepared)
     {
-        Add(gocpp::recv(gcController.mappedReady), int64(prepared));
+        Add(gocpp::recv(gcController.mappedReady), int64_t(prepared));
         sysUsedOS(v, n);
     }
 
@@ -54,14 +54,14 @@ namespace golang::runtime
 
     void sysFree(unsafe::Pointer v, uintptr_t n, sysMemStat* sysStat)
     {
-        add(gocpp::recv(sysStat), - int64(n));
-        Add(gocpp::recv(gcController.mappedReady), - int64(n));
+        add(gocpp::recv(sysStat), - int64_t(n));
+        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFreeOS(v, n);
     }
 
     void sysFault(unsafe::Pointer v, uintptr_t n)
     {
-        Add(gocpp::recv(gcController.mappedReady), - int64(n));
+        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFaultOS(v, n);
     }
 
@@ -72,7 +72,7 @@ namespace golang::runtime
 
     void sysMap(unsafe::Pointer v, uintptr_t n, sysMemStat* sysStat)
     {
-        add(gocpp::recv(sysStat), int64(n));
+        add(gocpp::recv(sysStat), int64_t(n));
         sysMapOS(v, n);
     }
 

@@ -13,7 +13,6 @@
 
 namespace golang::math
 {
-    bool haveArchHypot = true;
     double archHypot(double p, double q)
     /* convertBlockStmt, nil block */;
 

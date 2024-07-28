@@ -5,10 +5,5 @@
 
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/mem_windows.fwd.h"
-// #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

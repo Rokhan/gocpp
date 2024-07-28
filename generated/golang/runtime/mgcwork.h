@@ -9,7 +9,7 @@
 #include "golang/runtime/mgcwork.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -28,8 +28,6 @@
 
 namespace golang::runtime
 {
-    extern int _WorkbufSize;
-    extern int workbufAlloc;
     void init();
     struct gcWork
     {
@@ -68,7 +66,7 @@ namespace golang::runtime
     struct workbuf
     {
         sys::NotInHeap _;
-        gocpp::array<uintptr_t, (_WorkbufSize - Sizeof(gocpp::recv(unsafe), workbufhdr {})) / goarch.PtrSize> obj;
+        /* gocpp::array<uintptr_t, (_WorkbufSize - unsafe::Sizeof(workbufhdr {})) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 

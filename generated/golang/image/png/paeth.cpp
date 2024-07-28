@@ -13,7 +13,6 @@
 
 namespace golang::png
 {
-    int intSize = 32 << (^ (unsigned int)(0) >> 63);
     int abs(int x)
     {
         auto m = x >> (intSize - 1);

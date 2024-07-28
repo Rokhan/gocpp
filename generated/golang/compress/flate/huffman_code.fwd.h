@@ -3,18 +3,18 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/math/const.fwd.h"
-#include "golang/sort/sort.fwd.h"
 
 namespace golang::flate
 {
     struct hcode;
     struct huffmanEncoder;
-    struct levelInfo;
     struct literalNode;
-    using byFreq = gocpp::slice<literalNode>;
+    struct levelInfo;
+    const long maxBitsLimit = 16;
     using byLiteral = gocpp::slice<literalNode>;
+    using byFreq = gocpp::slice<literalNode>;
 }
-
+#include "golang/compress/flate/inflate.fwd.h"
+#include "golang/math/bits/bits.fwd.h"
+#include "golang/math/const.fwd.h"
+#include "golang/sort/sort.fwd.h"

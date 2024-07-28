@@ -48,7 +48,7 @@ namespace golang::sync
     void init()
     {
         notifyList n = {};
-        runtime_notifyListCheck(Sizeof(gocpp::recv(unsafe), n));
+        runtime_notifyListCheck(unsafe::Sizeof(n));
     }
 
     bool runtime_canSpin(int i)

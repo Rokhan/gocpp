@@ -3,19 +3,18 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/slice.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/write_err.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     using hex = uint64_t;
 }
-
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/slice.fwd.h"
+#include "golang/runtime/string.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+#include "golang/runtime/write_err.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

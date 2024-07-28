@@ -3,14 +3,48 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const long _PROT_NONE = 0;
+    const long _PROT_READ = 1;
+    const long _PROT_WRITE = 2;
+    const long _PROT_EXEC = 4;
+    const long _MAP_ANON = 1;
+    const long _MAP_PRIVATE = 2;
+    const long _DUPLICATE_SAME_ACCESS = 0x2;
+    const long _THREAD_PRIORITY_HIGHEST = 0x2;
+    const long _SIGINT = 0x2;
+    const long _SIGTERM = 0xF;
+    const long _CTRL_C_EVENT = 0x0;
+    const long _CTRL_BREAK_EVENT = 0x1;
+    const long _CTRL_CLOSE_EVENT = 0x2;
+    const long _CTRL_LOGOFF_EVENT = 0x5;
+    const long _CTRL_SHUTDOWN_EVENT = 0x6;
+    const long _EXCEPTION_ACCESS_VIOLATION = 0xc0000005;
+    const long _EXCEPTION_IN_PAGE_ERROR = 0xc0000006;
+    const long _EXCEPTION_BREAKPOINT = 0x80000003;
+    const long _EXCEPTION_ILLEGAL_INSTRUCTION = 0xc000001d;
+    const long _EXCEPTION_FLT_DENORMAL_OPERAND = 0xc000008d;
+    const long _EXCEPTION_FLT_DIVIDE_BY_ZERO = 0xc000008e;
+    const long _EXCEPTION_FLT_INEXACT_RESULT = 0xc000008f;
+    const long _EXCEPTION_FLT_OVERFLOW = 0xc0000091;
+    const long _EXCEPTION_FLT_UNDERFLOW = 0xc0000093;
+    const long _EXCEPTION_INT_DIVIDE_BY_ZERO = 0xc0000094;
+    const long _EXCEPTION_INT_OVERFLOW = 0xc0000095;
+    const long _INFINITE = 0xffffffff;
+    const long _WAIT_TIMEOUT = 0x102;
+    const long _EXCEPTION_CONTINUE_EXECUTION = - 0x1;
+    const long _EXCEPTION_CONTINUE_SEARCH = 0x0;
+    const long _EXCEPTION_CONTINUE_SEARCH_SEH = 0x1;
+    struct systeminfo;
+    struct exceptionrecord;
+    struct overlapped;
+    struct memoryBasicInformation;
+}
 #include "golang/runtime/defs_windows_amd64.fwd.h"
 
 namespace golang::runtime
 {
     struct exceptionpointers;
-    struct exceptionrecord;
-    struct memoryBasicInformation;
-    struct overlapped;
-    struct systeminfo;
 }
-

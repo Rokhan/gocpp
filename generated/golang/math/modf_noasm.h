@@ -11,7 +11,6 @@
 
 namespace golang::math
 {
-    extern bool haveArchModf;
     std::tuple<double, double> archModf(double f);
 }
 

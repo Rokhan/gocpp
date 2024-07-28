@@ -3,27 +3,34 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
+
+namespace golang::runtime
+{
+    const int tracebackCrash = 1 << 0;
+    const int tracebackAll = 1 << 1;
+    const int tracebackShift = 2;
+    struct gocpp_id_0;
+}
 #include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/auxv_none.fwd.h"
-#include "golang/runtime/env_posix.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/signal_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/trace2.fwd.h"
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct dbgVar;
 }
-
+#include "golang/internal/bytealg/indexbyte_native.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/auxv_none.fwd.h"
+#include "golang/runtime/env_posix.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/atomic/stubs.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+// #include "golang/runtime/signal_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/stack.fwd.h"
+#include "golang/runtime/string.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+#include "golang/runtime/trace2.fwd.h"
+#include "golang/runtime/type.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

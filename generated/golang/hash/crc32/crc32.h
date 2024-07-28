@@ -18,10 +18,6 @@
 
 namespace golang::crc32
 {
-    extern int Size;
-    extern int IEEE;
-    extern int Castagnoli;
-    extern int Koopman;
     void castagnoliInit();
     extern Table* IEEETable;
     void ieeeInit();
@@ -43,7 +39,6 @@ namespace golang::crc32
     int BlockSize(struct digest* d);
     void Reset(struct digest* d);
     extern std::string magic;
-    extern int marshaledSize;
     std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct digest* d);
     std::string UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);

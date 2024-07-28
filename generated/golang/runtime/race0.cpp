@@ -18,7 +18,6 @@
 
 namespace golang::runtime
 {
-    bool raceenabled = false;
     void raceReadObjectPC(_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race");

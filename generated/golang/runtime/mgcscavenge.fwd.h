@@ -3,40 +3,58 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goos/zgoos_windows.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-#include "golang/runtime/float.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mpagealloc.fwd.h"
-// #include "golang/runtime/mpagealloc_64bit.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/mpallocbits.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/mranges.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/pagetrace_off.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/time.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct atomicScavChunkData;
-    struct piController;
+    const long scavengePercent = 1;
+    const long retainExtraPercent = 10;
+    const long reduceExtraPercent = 5;
+    const double scavChunkHiOccFrac = 0.96875;
+    struct gocpp_id_0;
+    const double startingScavSleepRatio = 0.001;
+    const double minScavWorkTime = 1e6;
     struct scavChunkData;
+    const long scavChunkMaxFlags = 6;
     using scavChunkFlags = uint8_t;
-    struct scavengeIndex;
-    struct scavengerState;
+    struct piController;
+    const scavChunkFlags scavChunkHasFree = 1 << 0;
+    const int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
 }
+#include "golang/internal/goos/zgoos_windows.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/mpagealloc.fwd.h"
+#include "golang/runtime/mranges.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
 
+namespace golang::runtime
+{
+    const int maxPagesPerPhysPage = maxPhysPageSize / pageSize;
+    const double scavengeCostRatio = 0.7 * (goos::IsDarwin + goos::IsIos);
+    const uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
+    struct scavengerState;
+    struct scavengeIndex;
+    struct atomicScavChunkData;
+    const int logScavChunkInUseMax = logPallocChunkPages + 1;
+    const int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
+}
+#include "golang/runtime/float.fwd.h"
+#include "golang/runtime/internal/atomic/stubs.fwd.h"
+#include "golang/runtime/internal/sys/intrinsics.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mem.fwd.h"
+#include "golang/runtime/mpagealloc_64bit.fwd.h"
+#include "golang/runtime/mpallocbits.fwd.h"
+#include "golang/runtime/mstats.fwd.h"
+// #include "golang/runtime/pagetrace_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+#include "golang/runtime/proc.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time_nofake.fwd.h"
+// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

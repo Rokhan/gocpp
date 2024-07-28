@@ -11,14 +11,13 @@
 #include "golang/runtime/internal/math/math.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 
 namespace golang::math
 {
-    uintptr_t MaxUintptr = ^ uintptr(0);
     std::tuple<uintptr_t, bool> MulUintptr(uintptr_t a, uintptr_t b)
     {
-        if(a | b < (1 << (4 * goarch.PtrSize)) || a == 0)
+        if(a | b < (1 << (4 * goarch::PtrSize)) || a == 0)
         {
             return {a * b, false};
         }

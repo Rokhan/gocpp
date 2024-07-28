@@ -23,10 +23,6 @@
 
 namespace golang::runtime
 {
-    extern uintptr_t locked;
-    extern int active_spin;
-    extern int active_spin_cnt;
-    extern int passive_spin;
     bool mutexContended(mutex* l);
     void lock(mutex* l);
     void lock2(mutex* l);

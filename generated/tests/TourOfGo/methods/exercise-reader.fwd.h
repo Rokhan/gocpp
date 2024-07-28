@@ -3,10 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/golang.org/x/tour/reader/validate.fwd.h"
 
 namespace golang::main
 {
     struct MyReader;
 }
-
+#include "golang/golang.org/x/tour/reader/validate.fwd.h"

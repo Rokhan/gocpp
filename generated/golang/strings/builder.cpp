@@ -11,7 +11,7 @@
 #include "golang/strings/builder.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bytealg/bytealg.h"
+// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
 #include "golang/unicode/utf8/utf8.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -34,15 +34,15 @@ namespace golang::strings
 
     unsafe::Pointer noescape(unsafe::Pointer p)
     {
-        auto x = uintptr(p);
-        return Pointer(gocpp::recv(unsafe), x ^ 0);
+        auto x = uintptr_t(p);
+        return unsafe::Pointer(x ^ 0);
     }
 
     void copyCheck(struct Builder* b)
     {
         if(b->addr == nullptr)
         {
-            b->addr = (Builder*)(noescape(Pointer(gocpp::recv(unsafe), b)));
+            b->addr = (Builder*)(noescape(unsafe::Pointer(b)));
         }
         else
         if(b->addr != b)
@@ -53,7 +53,7 @@ namespace golang::strings
 
     std::string String(struct Builder* b)
     {
-        return String(gocpp::recv(unsafe), SliceData(gocpp::recv(unsafe), b->buf), len(b->buf));
+        return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
     }
 
     int Len(struct Builder* b)
@@ -74,7 +74,7 @@ namespace golang::strings
 
     void grow(struct Builder* b, int n)
     {
-        auto buf = MakeNoZero(gocpp::recv(bytealg), 2 * cap(b->buf) + n).make_slice(0, len(b->buf));
+        auto buf = bytealg::MakeNoZero(2 * cap(b->buf) + n).make_slice(0, len(b->buf));
         copy(buf, b->buf);
         b->buf = buf;
     }
@@ -110,7 +110,7 @@ namespace golang::strings
     {
         copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
-        b->buf = AppendRune(gocpp::recv(utf8), b->buf, r);
+        b->buf = utf8::AppendRune(b->buf, r);
         return {len(b->buf) - n, nullptr};
     }
 

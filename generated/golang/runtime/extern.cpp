@@ -65,7 +65,7 @@ namespace golang::runtime
         return buildVersion;
     }
 
-    std::string GOOS = goos.GOOS;
-    std::string GOARCH = goarch.GOARCH;
+    std::string GOOS = goos::GOOS;
+    std::string GOARCH = goarch::GOARCH;
 }
 

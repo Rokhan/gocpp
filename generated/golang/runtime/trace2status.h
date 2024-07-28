@@ -19,16 +19,6 @@
 
 namespace golang::runtime
 {
-    extern traceGoStatus traceGoBad;
-    extern traceGoStatus traceGoRunnable;
-    extern traceGoStatus traceGoRunning;
-    extern traceGoStatus traceGoSyscall;
-    extern traceGoStatus traceGoWaiting;
-    extern traceProcStatus traceProcBad;
-    extern traceProcStatus traceProcRunning;
-    extern traceProcStatus traceProcIdle;
-    extern traceProcStatus traceProcSyscall;
-    extern traceProcStatus traceProcSyscallAbandoned;
     traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist);
     traceWriter writeProcStatusForP(struct traceWriter w, p* pp, bool inSTW);
     traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep);

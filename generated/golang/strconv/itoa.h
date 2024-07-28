@@ -13,16 +13,13 @@
 
 namespace golang::strconv
 {
-    extern bool fastSmalls;
     std::string FormatUint(uint64_t i, int base);
     std::string FormatInt(int64_t i, int base);
     std::string Itoa(int i);
     gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int base);
     gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int base);
     std::string small(int i);
-    extern int nSmalls;
     extern std::string smallsString;
-    extern bool host32bit;
     extern std::string digits;
     std::tuple<gocpp::slice<unsigned char>, std::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_);
     bool isPowerOfTwo(int x);

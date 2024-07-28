@@ -13,24 +13,6 @@
 
 namespace golang::goos
 {
-    std::string GOOS = `windows`;
-    int IsAix = 0;
-    int IsAndroid = 0;
-    int IsDarwin = 0;
-    int IsDragonfly = 0;
-    int IsFreebsd = 0;
-    int IsHurd = 0;
-    int IsIllumos = 0;
-    int IsIos = 0;
-    int IsJs = 0;
-    int IsLinux = 0;
-    int IsNacl = 0;
-    int IsNetbsd = 0;
-    int IsOpenbsd = 0;
-    int IsPlan9 = 0;
-    int IsSolaris = 0;
-    int IsWasip1 = 0;
-    int IsWindows = 1;
-    int IsZos = 0;
+    std::string GOOS = "windows";
 }
 

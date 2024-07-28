@@ -10,4 +10,3 @@ namespace golang::time
 {
     struct Ticker;
 }
-

@@ -3,8 +3,38 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::utf8
 {
+    const char RuneError = '\uFFFD';
+    const long RuneSelf = 0x80;
+    const char MaxRune = '\U0010FFFF';
+    const long UTFMax = 4;
+    const long surrogateMin = 0xD800;
+    const long surrogateMax = 0xDFFF;
+    const long t1 = 0b00000000;
+    const long tx = 0b10000000;
+    const long t2 = 0b11000000;
+    const long t3 = 0b11100000;
+    const long t4 = 0b11110000;
+    const long t5 = 0b11111000;
+    const long maskx = 0b00111111;
+    const long mask2 = 0b00011111;
+    const long mask3 = 0b00001111;
+    const long mask4 = 0b00000111;
+    const int rune1Max = (1 << 7) - 1;
+    const int rune2Max = (1 << 11) - 1;
+    const int rune3Max = (1 << 16) - 1;
+    const long locb = 0b10000000;
+    const long hicb = 0b10111111;
+    const long xx = 0xF1;
+    const long as = 0xF0;
+    const long s1 = 0x02;
+    const long s2 = 0x13;
+    const long s3 = 0x03;
+    const long s4 = 0x23;
+    const long s5 = 0x34;
+    const long s6 = 0x04;
+    const long s7 = 0x44;
     struct acceptRange;
 }
-

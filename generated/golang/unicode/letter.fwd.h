@@ -3,16 +3,25 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/unicode/graphic.fwd.h"
 
 namespace golang::unicode
 {
-    struct CaseRange;
+    const char MaxRune = '\U0010FFFF';
+    const char ReplacementChar = '\uFFFD';
+    const char MaxASCII = '\u007F';
+    const char MaxLatin1 = '\u00FF';
+    struct RangeTable;
     struct Range16;
     struct Range32;
-    struct RangeTable;
-    using SpecialCase = gocpp::slice<CaseRange>;
+    struct CaseRange;
+    const int UpperCase = 0;
+    const int LowerCase = 1;
+    const int TitleCase = 2;
+    const int MaxCase = 3;
     using d = gocpp::array<gocpp::rune, MaxCase>;
+    const long linearMax = 18;
     struct foldPair;
+    using SpecialCase = gocpp::slice<CaseRange>;
+    const gocpp::rune UpperLower = MaxRune + 1;
 }
-
+#include "golang/unicode/graphic.fwd.h"

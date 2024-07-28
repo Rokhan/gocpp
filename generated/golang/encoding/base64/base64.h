@@ -30,10 +30,7 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
-    extern gocpp::rune StdPadding;
-    extern gocpp::rune NoPadding;
     extern std::string decodeMapInitialize;
-    extern char invalidIndex;
     Encoding* NewEncoding(std::string encoder);
     Encoding* WithPadding(struct Encoding enc, gocpp::rune padding);
     Encoding* Strict(struct Encoding enc);

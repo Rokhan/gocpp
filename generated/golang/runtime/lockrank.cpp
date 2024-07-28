@@ -13,62 +13,6 @@
 
 namespace golang::runtime
 {
-    lockRank lockRankUnknown = 0;
-    lockRank lockRankSysmon = 1;
-    lockRank lockRankScavenge = 2;
-    lockRank lockRankForcegc = 3;
-    lockRank lockRankDefer = 4;
-    lockRank lockRankSweepWaiters = 5;
-    lockRank lockRankAssistQueue = 6;
-    lockRank lockRankSweep = 7;
-    lockRank lockRankTestR = 8;
-    lockRank lockRankTestW = 9;
-    lockRank lockRankAllocmW = 10;
-    lockRank lockRankExecW = 11;
-    lockRank lockRankCpuprof = 12;
-    lockRank lockRankPollDesc = 13;
-    lockRank lockRankWakeableSleep = 14;
-    lockRank lockRankAllocmR = 15;
-    lockRank lockRankExecR = 16;
-    lockRank lockRankSched = 17;
-    lockRank lockRankAllg = 18;
-    lockRank lockRankAllp = 19;
-    lockRank lockRankTimers = 20;
-    lockRank lockRankNetpollInit = 21;
-    lockRank lockRankHchan = 22;
-    lockRank lockRankNotifyList = 23;
-    lockRank lockRankSudog = 24;
-    lockRank lockRankRoot = 25;
-    lockRank lockRankItab = 26;
-    lockRank lockRankReflectOffs = 27;
-    lockRank lockRankUserArenaState = 28;
-    lockRank lockRankTraceBuf = 29;
-    lockRank lockRankTraceStrings = 30;
-    lockRank lockRankFin = 31;
-    lockRank lockRankSpanSetSpine = 32;
-    lockRank lockRankMspanSpecial = 33;
-    lockRank lockRankGcBitsArenas = 34;
-    lockRank lockRankProfInsert = 35;
-    lockRank lockRankProfBlock = 36;
-    lockRank lockRankProfMemActive = 37;
-    lockRank lockRankProfMemFuture = 38;
-    lockRank lockRankGscan = 39;
-    lockRank lockRankStackpool = 40;
-    lockRank lockRankStackLarge = 41;
-    lockRank lockRankHchanLeaf = 42;
-    lockRank lockRankWbufSpans = 43;
-    lockRank lockRankMheap = 44;
-    lockRank lockRankMheapSpecial = 45;
-    lockRank lockRankGlobalAlloc = 46;
-    lockRank lockRankTrace = 47;
-    lockRank lockRankTraceStackTab = 48;
-    lockRank lockRankPanic = 49;
-    lockRank lockRankDeadlock = 50;
-    lockRank lockRankRaceFini = 51;
-    lockRank lockRankAllocmRInternal = 52;
-    lockRank lockRankExecRInternal = 53;
-    lockRank lockRankTestRInternal = 54;
-    lockRank lockRankLeafRank = 1000;
     gocpp::slice<std::string> lockNames = gocpp::Init<gocpp::slice<std::string>>([](gocpp::slice<std::string>& x) { x.lockRankSysmon = "sysmon"; x.lockRankScavenge = "scavenge"; x.lockRankForcegc = "forcegc"; x.lockRankDefer = "defer"; x.lockRankSweepWaiters = "sweepWaiters"; x.lockRankAssistQueue = "assistQueue"; x.lockRankSweep = "sweep"; x.lockRankTestR = "testR"; x.lockRankTestW = "testW"; x.lockRankAllocmW = "allocmW"; x.lockRankExecW = "execW"; x.lockRankCpuprof = "cpuprof"; x.lockRankPollDesc = "pollDesc"; x.lockRankWakeableSleep = "wakeableSleep"; x.lockRankAllocmR = "allocmR"; x.lockRankExecR = "execR"; x.lockRankSched = "sched"; x.lockRankAllg = "allg"; x.lockRankAllp = "allp"; x.lockRankTimers = "timers"; x.lockRankNetpollInit = "netpollInit"; x.lockRankHchan = "hchan"; x.lockRankNotifyList = "notifyList"; x.lockRankSudog = "sudog"; x.lockRankRoot = "root"; x.lockRankItab = "itab"; x.lockRankReflectOffs = "reflectOffs"; x.lockRankUserArenaState = "userArenaState"; x.lockRankTraceBuf = "traceBuf"; x.lockRankTraceStrings = "traceStrings"; x.lockRankFin = "fin"; x.lockRankSpanSetSpine = "spanSetSpine"; x.lockRankMspanSpecial = "mspanSpecial"; x.lockRankGcBitsArenas = "gcBitsArenas"; x.lockRankProfInsert = "profInsert"; x.lockRankProfBlock = "profBlock"; x.lockRankProfMemActive = "profMemActive"; x.lockRankProfMemFuture = "profMemFuture"; x.lockRankGscan = "gscan"; x.lockRankStackpool = "stackpool"; x.lockRankStackLarge = "stackLarge"; x.lockRankHchanLeaf = "hchanLeaf"; x.lockRankWbufSpans = "wbufSpans"; x.lockRankMheap = "mheap"; x.lockRankMheapSpecial = "mheapSpecial"; x.lockRankGlobalAlloc = "globalAlloc"; x.lockRankTrace = "trace"; x.lockRankTraceStackTab = "traceStackTab"; x.lockRankPanic = "panic"; x.lockRankDeadlock = "deadlock"; x.lockRankRaceFini = "raceFini"; x.lockRankAllocmRInternal = "allocmRInternal"; x.lockRankExecRInternal = "execRInternal"; x.lockRankTestRInternal = "testRInternal"; });
     std::string String(lockRank rank)
     {

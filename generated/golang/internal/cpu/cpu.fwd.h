@@ -3,11 +3,20 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::cpu
+{
+    struct gocpp_id_0;
+    struct gocpp_id_1;
+    struct gocpp_id_2;
+    struct gocpp_id_3;
+    struct gocpp_id_4;
+    struct gocpp_id_5;
+    struct option;
+}
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::cpu
 {
     struct CacheLinePad;
-    struct option;
 }
-

@@ -17,32 +17,32 @@ namespace golang::sort
 {
     void intsImpl(gocpp::slice<int> x)
     {
-        Sort(gocpp::recv(slices), x);
+        slices::Sort(x);
     }
 
     void float64sImpl(gocpp::slice<double> x)
     {
-        Sort(gocpp::recv(slices), x);
+        slices::Sort(x);
     }
 
     void stringsImpl(gocpp::slice<std::string> x)
     {
-        Sort(gocpp::recv(slices), x);
+        slices::Sort(x);
     }
 
     bool intsAreSortedImpl(gocpp::slice<int> x)
     {
-        return IsSorted(gocpp::recv(slices), x);
+        return slices::IsSorted(x);
     }
 
     bool float64sAreSortedImpl(gocpp::slice<double> x)
     {
-        return IsSorted(gocpp::recv(slices), x);
+        return slices::IsSorted(x);
     }
 
     bool stringsAreSortedImpl(gocpp::slice<std::string> x)
     {
-        return IsSorted(gocpp::recv(slices), x);
+        return slices::IsSorted(x);
     }
 
 }

@@ -3,16 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/sync/atomic/doc.fwd.h"  [Ignored, known errors]
+
+namespace golang::sync
+{
+    using copyChecker = uintptr_t;
+    struct noCopy;
+}
 #include "golang/sync/mutex.fwd.h"
-// #include "golang/sync/runtime.fwd.h"  [Ignored, known errors]
-// #include "golang/sync/runtime2.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
+// #include "golang/sync/runtime2.fwd.h" [Ignored, known errors]
 
 namespace golang::sync
 {
     struct Cond;
-    using copyChecker = uintptr_t;
-    struct noCopy;
 }
-
+// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
+// #include "golang/sync/runtime.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

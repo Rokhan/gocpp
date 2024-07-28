@@ -9,17 +9,17 @@
 #include "golang/runtime/mbarrier.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/cgocheck.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/msan0.h"
 // #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"

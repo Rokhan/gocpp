@@ -3,11 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
-    struct Segment;
     struct Vertex;
+    struct Segment;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

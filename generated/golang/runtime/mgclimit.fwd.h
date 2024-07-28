@@ -3,16 +3,29 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const double gcCPULimiterUpdatePeriod = 10e6;
+    const double capacityPerProc = 1e9;
+    using limiterEventType = uint8_t;
+    const long limiterEventBits = 3;
+    using limiterEventStamp = uint64_t;
+    const limiterEventType limiterEventNone = 0;
+    const limiterEventType limiterEventIdleMarkWork = 1;
+    const limiterEventType limiterEventMarkAssist = 2;
+    const limiterEventType limiterEventScavengeAssist = 3;
+    const limiterEventType limiterEventIdle = 4;
+    const uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
+    const limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
+}
 #include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {
     struct gcCPULimiterState;
     struct limiterEvent;
-    using limiterEventStamp = uint64_t;
-    using limiterEventType = uint8_t;
 }
-
+// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]

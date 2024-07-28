@@ -17,15 +17,6 @@
 
 namespace golang::math
 {
-    int uvnan = 0x7FF8000000000001;
-    int uvinf = 0x7FF0000000000000;
-    int uvneginf = 0xFFF0000000000000;
-    int uvone = 0x3FF0000000000000;
-    int mask = 0x7FF;
-    int shift = 64 - 11 - 1;
-    int bias = 1023;
-    int signMask = 1 << 63;
-    int fracMask = (1 << shift) - 1;
     double Inf(int sign)
     {
         uint64_t v = {};

@@ -47,7 +47,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     struct poolLocal
     {
-        gocpp::array<unsigned char, 128 - Sizeof(gocpp::recv(unsafe), poolLocalInternal {}) % 128> pad;
+        gocpp::array<unsigned char, 128 - unsafe::Sizeof(poolLocalInternal {}) % 128> pad;
 
         using isGoStruct = void;
 

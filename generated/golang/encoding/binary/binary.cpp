@@ -270,13 +270,13 @@ namespace golang::binary
     void PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         _ = b[1];
-        b[0] = byte(v);
-        b[1] = byte(v >> 8);
+        b[0] = unsigned char(v);
+        b[1] = unsigned char(v >> 8);
     }
 
     gocpp::slice<unsigned char> AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
-        return append(b, byte(v), byte(v >> 8));
+        return append(b, unsigned char(v), unsigned char(v >> 8));
     }
 
     uint32_t Uint32(littleEndian, gocpp::slice<unsigned char> b)
@@ -288,15 +288,15 @@ namespace golang::binary
     void PutUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         _ = b[3];
-        b[0] = byte(v);
-        b[1] = byte(v >> 8);
-        b[2] = byte(v >> 16);
-        b[3] = byte(v >> 24);
+        b[0] = unsigned char(v);
+        b[1] = unsigned char(v >> 8);
+        b[2] = unsigned char(v >> 16);
+        b[3] = unsigned char(v >> 24);
     }
 
     gocpp::slice<unsigned char> AppendUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
-        return append(b, byte(v), byte(v >> 8), byte(v >> 16), byte(v >> 24));
+        return append(b, unsigned char(v), unsigned char(v >> 8), unsigned char(v >> 16), unsigned char(v >> 24));
     }
 
     uint64_t Uint64(littleEndian, gocpp::slice<unsigned char> b)
@@ -308,19 +308,19 @@ namespace golang::binary
     void PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = byte(v);
-        b[1] = byte(v >> 8);
-        b[2] = byte(v >> 16);
-        b[3] = byte(v >> 24);
-        b[4] = byte(v >> 32);
-        b[5] = byte(v >> 40);
-        b[6] = byte(v >> 48);
-        b[7] = byte(v >> 56);
+        b[0] = unsigned char(v);
+        b[1] = unsigned char(v >> 8);
+        b[2] = unsigned char(v >> 16);
+        b[3] = unsigned char(v >> 24);
+        b[4] = unsigned char(v >> 32);
+        b[5] = unsigned char(v >> 40);
+        b[6] = unsigned char(v >> 48);
+        b[7] = unsigned char(v >> 56);
     }
 
     gocpp::slice<unsigned char> AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
-        return append(b, byte(v), byte(v >> 8), byte(v >> 16), byte(v >> 24), byte(v >> 32), byte(v >> 40), byte(v >> 48), byte(v >> 56));
+        return append(b, unsigned char(v), unsigned char(v >> 8), unsigned char(v >> 16), unsigned char(v >> 24), unsigned char(v >> 32), unsigned char(v >> 40), unsigned char(v >> 48), unsigned char(v >> 56));
     }
 
     std::string String(littleEndian)
@@ -355,13 +355,13 @@ namespace golang::binary
     void PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         _ = b[1];
-        b[0] = byte(v >> 8);
-        b[1] = byte(v);
+        b[0] = unsigned char(v >> 8);
+        b[1] = unsigned char(v);
     }
 
     gocpp::slice<unsigned char> AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
-        return append(b, byte(v >> 8), byte(v));
+        return append(b, unsigned char(v >> 8), unsigned char(v));
     }
 
     uint32_t Uint32(bigEndian, gocpp::slice<unsigned char> b)
@@ -373,15 +373,15 @@ namespace golang::binary
     void PutUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         _ = b[3];
-        b[0] = byte(v >> 24);
-        b[1] = byte(v >> 16);
-        b[2] = byte(v >> 8);
-        b[3] = byte(v);
+        b[0] = unsigned char(v >> 24);
+        b[1] = unsigned char(v >> 16);
+        b[2] = unsigned char(v >> 8);
+        b[3] = unsigned char(v);
     }
 
     gocpp::slice<unsigned char> AppendUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
-        return append(b, byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v));
+        return append(b, unsigned char(v >> 24), unsigned char(v >> 16), unsigned char(v >> 8), unsigned char(v));
     }
 
     uint64_t Uint64(bigEndian, gocpp::slice<unsigned char> b)
@@ -393,19 +393,19 @@ namespace golang::binary
     void PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = byte(v >> 56);
-        b[1] = byte(v >> 48);
-        b[2] = byte(v >> 40);
-        b[3] = byte(v >> 32);
-        b[4] = byte(v >> 24);
-        b[5] = byte(v >> 16);
-        b[6] = byte(v >> 8);
-        b[7] = byte(v);
+        b[0] = unsigned char(v >> 56);
+        b[1] = unsigned char(v >> 48);
+        b[2] = unsigned char(v >> 40);
+        b[3] = unsigned char(v >> 32);
+        b[4] = unsigned char(v >> 24);
+        b[5] = unsigned char(v >> 16);
+        b[6] = unsigned char(v >> 8);
+        b[7] = unsigned char(v);
     }
 
     gocpp::slice<unsigned char> AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
-        return append(b, byte(v >> 56), byte(v >> 48), byte(v >> 40), byte(v >> 32), byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v));
+        return append(b, unsigned char(v >> 56), unsigned char(v >> 48), unsigned char(v >> 40), unsigned char(v >> 32), unsigned char(v >> 24), unsigned char(v >> 16), unsigned char(v >> 8), unsigned char(v));
     }
 
     std::string String(bigEndian)
@@ -433,7 +433,7 @@ namespace golang::binary
         if(auto n = intDataSize(data); n != 0)
         {
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
-            if(auto [_, err] = ReadFull(gocpp::recv(io), r, bs); err != nullptr)
+            if(auto [_, err] = io::ReadFull(r, bs); err != nullptr)
             {
                 return err;
             }
@@ -474,7 +474,7 @@ namespace golang::binary
                     case 1:
                     {
                         int8_t* data = gocpp::any_cast<int8_t*>(data);
-                        *data = int8(bs[0]);
+                        *data = int8_t(bs[0]);
                         break;
                     }
                     case 2:
@@ -486,7 +486,7 @@ namespace golang::binary
                     case 3:
                     {
                         int16_t* data = gocpp::any_cast<int16_t*>(data);
-                        *data = int16(Uint16(gocpp::recv(order), bs));
+                        *data = int16_t(Uint16(gocpp::recv(order), bs));
                         break;
                     }
                     case 4:
@@ -498,7 +498,7 @@ namespace golang::binary
                     case 5:
                     {
                         int32_t* data = gocpp::any_cast<int32_t*>(data);
-                        *data = int32(Uint32(gocpp::recv(order), bs));
+                        *data = int32_t(Uint32(gocpp::recv(order), bs));
                         break;
                     }
                     case 6:
@@ -510,7 +510,7 @@ namespace golang::binary
                     case 7:
                     {
                         int64_t* data = gocpp::any_cast<int64_t*>(data);
-                        *data = int64(Uint64(gocpp::recv(order), bs));
+                        *data = int64_t(Uint64(gocpp::recv(order), bs));
                         break;
                     }
                     case 8:
@@ -545,7 +545,7 @@ namespace golang::binary
                         gocpp::slice<int8_t> data = gocpp::any_cast<gocpp::slice<int8_t>>(data);
                         for(auto [i, x] : bs)
                         {
-                            data[i] = int8(x);
+                            data[i] = int8_t(x);
                         }
                         break;
                     }
@@ -560,7 +560,7 @@ namespace golang::binary
                         gocpp::slice<int16_t> data = gocpp::any_cast<gocpp::slice<int16_t>>(data);
                         for(auto [i, gocpp_ignored] : data)
                         {
-                            data[i] = int16(Uint16(gocpp::recv(order), bs.make_slice(2 * i)));
+                            data[i] = int16_t(Uint16(gocpp::recv(order), bs.make_slice(2 * i)));
                         }
                         break;
                     }
@@ -578,7 +578,7 @@ namespace golang::binary
                         gocpp::slice<int32_t> data = gocpp::any_cast<gocpp::slice<int32_t>>(data);
                         for(auto [i, gocpp_ignored] : data)
                         {
-                            data[i] = int32(Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
+                            data[i] = int32_t(Uint32(gocpp::recv(order), bs.make_slice(4 * i)));
                         }
                         break;
                     }
@@ -596,7 +596,7 @@ namespace golang::binary
                         gocpp::slice<int64_t> data = gocpp::any_cast<gocpp::slice<int64_t>>(data);
                         for(auto [i, gocpp_ignored] : data)
                         {
-                            data[i] = int64(Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
+                            data[i] = int64_t(Uint64(gocpp::recv(order), bs.make_slice(8 * i)));
                         }
                         break;
                     }
@@ -640,14 +640,14 @@ namespace golang::binary
                 return nullptr;
             }
         }
-        auto v = ValueOf(gocpp::recv(reflect), data);
+        auto v = reflect::ValueOf(data);
         auto size = - 1;
         //Go switch emulation
         {
             auto condition = Kind(gocpp::recv(v));
             int conditionId = -1;
-            if(condition == reflect.Pointer) { conditionId = 0; }
-            else if(condition == reflect.Slice) { conditionId = 1; }
+            if(condition == reflect::Pointer) { conditionId = 0; }
+            else if(condition == reflect::Slice) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -661,10 +661,10 @@ namespace golang::binary
         }
         if(size < 0)
         {
-            return New(gocpp::recv(errors), "binary.Read: invalid type " + String(gocpp::recv(TypeOf(gocpp::recv(reflect), data))));
+            return errors::New("binary.Read: invalid type " + String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.order = order; x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size); });
-        if(auto [_, err] = ReadFull(gocpp::recv(io), r, d->buf); err != nullptr)
+        if(auto [_, err] = io::ReadFull(r, d->buf); err != nullptr)
         {
             return err;
         }
@@ -761,13 +761,13 @@ namespace golang::binary
                     case 3:
                     {
                         int8_t* v = gocpp::any_cast<int8_t*>(data);
-                        bs[0] = byte(*v);
+                        bs[0] = unsigned char(*v);
                         break;
                     }
                     case 4:
                     {
                         int8_t v = gocpp::any_cast<int8_t>(data);
-                        bs[0] = byte(v);
+                        bs[0] = unsigned char(v);
                         break;
                     }
                     case 5:
@@ -775,7 +775,7 @@ namespace golang::binary
                         gocpp::slice<int8_t> v = gocpp::any_cast<gocpp::slice<int8_t>>(data);
                         for(auto [i, x] : v)
                         {
-                            bs[i] = byte(x);
+                            bs[i] = unsigned char(x);
                         }
                         break;
                     }
@@ -970,11 +970,11 @@ namespace golang::binary
             auto [_, err] = Write(gocpp::recv(w), bs);
             return err;
         }
-        auto v = Indirect(gocpp::recv(reflect), ValueOf(gocpp::recv(reflect), data));
+        auto v = reflect::Indirect(reflect::ValueOf(data));
         auto size = dataSize(v);
         if(size < 0)
         {
-            return New(gocpp::recv(errors), "binary.Write: some values are not fixed-sized in type " + String(gocpp::recv(TypeOf(gocpp::recv(reflect), data))));
+            return errors::New("binary.Write: some values are not fixed-sized in type " + String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         auto e = gocpp::InitPtr<encoder>([](encoder& x) { x.order = order; x.buf = buf; });
@@ -985,7 +985,7 @@ namespace golang::binary
 
     int Size(go_any v)
     {
-        return dataSize(Indirect(gocpp::recv(reflect), ValueOf(gocpp::recv(reflect), v)));
+        return dataSize(reflect::Indirect(reflect::ValueOf(v)));
     }
 
     sync::Map structSize;
@@ -995,8 +995,8 @@ namespace golang::binary
         {
             auto condition = Kind(gocpp::recv(v));
             int conditionId = -1;
-            if(condition == reflect.Slice) { conditionId = 0; }
-            else if(condition == reflect.Struct) { conditionId = 1; }
+            if(condition == reflect::Slice) { conditionId = 0; }
+            else if(condition == reflect::Struct) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -1032,21 +1032,21 @@ namespace golang::binary
         {
             auto condition = Kind(gocpp::recv(t));
             int conditionId = -1;
-            if(condition == reflect.Array) { conditionId = 0; }
-            else if(condition == reflect.Struct) { conditionId = 1; }
-            else if(condition == reflect.Bool) { conditionId = 2; }
-            else if(condition == reflect.Uint8) { conditionId = 3; }
-            else if(condition == reflect.Uint16) { conditionId = 4; }
-            else if(condition == reflect.Uint32) { conditionId = 5; }
-            else if(condition == reflect.Uint64) { conditionId = 6; }
-            else if(condition == reflect.Int8) { conditionId = 7; }
-            else if(condition == reflect.Int16) { conditionId = 8; }
-            else if(condition == reflect.Int32) { conditionId = 9; }
-            else if(condition == reflect.Int64) { conditionId = 10; }
-            else if(condition == reflect.Float32) { conditionId = 11; }
-            else if(condition == reflect.Float64) { conditionId = 12; }
-            else if(condition == reflect.Complex64) { conditionId = 13; }
-            else if(condition == reflect.Complex128) { conditionId = 14; }
+            if(condition == reflect::Array) { conditionId = 0; }
+            else if(condition == reflect::Struct) { conditionId = 1; }
+            else if(condition == reflect::Bool) { conditionId = 2; }
+            else if(condition == reflect::Uint8) { conditionId = 3; }
+            else if(condition == reflect::Uint16) { conditionId = 4; }
+            else if(condition == reflect::Uint32) { conditionId = 5; }
+            else if(condition == reflect::Uint64) { conditionId = 6; }
+            else if(condition == reflect::Int8) { conditionId = 7; }
+            else if(condition == reflect::Int16) { conditionId = 8; }
+            else if(condition == reflect::Int32) { conditionId = 9; }
+            else if(condition == reflect::Int64) { conditionId = 10; }
+            else if(condition == reflect::Float32) { conditionId = 11; }
+            else if(condition == reflect::Float64) { conditionId = 12; }
+            else if(condition == reflect::Complex64) { conditionId = 13; }
+            else if(condition == reflect::Complex128) { conditionId = 14; }
             switch(conditionId)
             {
                 case 0:
@@ -1178,7 +1178,7 @@ namespace golang::binary
 
     int8_t int8(struct decoder* d)
     {
-        return int8(uint8_t(gocpp::recv(d)));
+        return int8_t(uint8_t(gocpp::recv(d)));
     }
 
     void int8(struct encoder* e, int8_t x)
@@ -1188,7 +1188,7 @@ namespace golang::binary
 
     int16_t int16(struct decoder* d)
     {
-        return int16(uint16_t(gocpp::recv(d)));
+        return int16_t(uint16_t(gocpp::recv(d)));
     }
 
     void int16(struct encoder* e, int16_t x)
@@ -1198,7 +1198,7 @@ namespace golang::binary
 
     int32_t int32(struct decoder* d)
     {
-        return int32(uint32_t(gocpp::recv(d)));
+        return int32_t(uint32_t(gocpp::recv(d)));
     }
 
     void int32(struct encoder* e, int32_t x)
@@ -1208,7 +1208,7 @@ namespace golang::binary
 
     int64_t int64(struct decoder* d)
     {
-        return int64(uint64_t(gocpp::recv(d)));
+        return int64_t(uint64_t(gocpp::recv(d)));
     }
 
     void int64(struct encoder* e, int64_t x)
@@ -1222,22 +1222,22 @@ namespace golang::binary
         {
             auto condition = Kind(gocpp::recv(v));
             int conditionId = -1;
-            if(condition == reflect.Array) { conditionId = 0; }
-            else if(condition == reflect.Struct) { conditionId = 1; }
-            else if(condition == reflect.Slice) { conditionId = 2; }
-            else if(condition == reflect.Bool) { conditionId = 3; }
-            else if(condition == reflect.Int8) { conditionId = 4; }
-            else if(condition == reflect.Int16) { conditionId = 5; }
-            else if(condition == reflect.Int32) { conditionId = 6; }
-            else if(condition == reflect.Int64) { conditionId = 7; }
-            else if(condition == reflect.Uint8) { conditionId = 8; }
-            else if(condition == reflect.Uint16) { conditionId = 9; }
-            else if(condition == reflect.Uint32) { conditionId = 10; }
-            else if(condition == reflect.Uint64) { conditionId = 11; }
-            else if(condition == reflect.Float32) { conditionId = 12; }
-            else if(condition == reflect.Float64) { conditionId = 13; }
-            else if(condition == reflect.Complex64) { conditionId = 14; }
-            else if(condition == reflect.Complex128) { conditionId = 15; }
+            if(condition == reflect::Array) { conditionId = 0; }
+            else if(condition == reflect::Struct) { conditionId = 1; }
+            else if(condition == reflect::Slice) { conditionId = 2; }
+            else if(condition == reflect::Bool) { conditionId = 3; }
+            else if(condition == reflect::Int8) { conditionId = 4; }
+            else if(condition == reflect::Int16) { conditionId = 5; }
+            else if(condition == reflect::Int32) { conditionId = 6; }
+            else if(condition == reflect::Int64) { conditionId = 7; }
+            else if(condition == reflect::Uint8) { conditionId = 8; }
+            else if(condition == reflect::Uint16) { conditionId = 9; }
+            else if(condition == reflect::Uint32) { conditionId = 10; }
+            else if(condition == reflect::Uint64) { conditionId = 11; }
+            else if(condition == reflect::Float32) { conditionId = 12; }
+            else if(condition == reflect::Float64) { conditionId = 13; }
+            else if(condition == reflect::Complex64) { conditionId = 14; }
+            else if(condition == reflect::Complex128) { conditionId = 15; }
             switch(conditionId)
             {
                 case 0:
@@ -1273,16 +1273,16 @@ namespace golang::binary
                     SetBool(gocpp::recv(v), bool(gocpp::recv(d)));
                     break;
                 case 4:
-                    SetInt(gocpp::recv(v), int64(int8(gocpp::recv(d))));
+                    SetInt(gocpp::recv(v), int64_t(int8_t(gocpp::recv(d))));
                     break;
                 case 5:
-                    SetInt(gocpp::recv(v), int64(int16(gocpp::recv(d))));
+                    SetInt(gocpp::recv(v), int64_t(int16_t(gocpp::recv(d))));
                     break;
                 case 6:
-                    SetInt(gocpp::recv(v), int64(int32(gocpp::recv(d))));
+                    SetInt(gocpp::recv(v), int64_t(int32_t(gocpp::recv(d))));
                     break;
                 case 7:
-                    SetInt(gocpp::recv(v), int64(gocpp::recv(d)));
+                    SetInt(gocpp::recv(v), int64_t(gocpp::recv(d)));
                     break;
                 case 8:
                     SetUint(gocpp::recv(v), uint64_t(uint8_t(gocpp::recv(d))));
@@ -1318,25 +1318,25 @@ namespace golang::binary
         {
             auto condition = Kind(gocpp::recv(v));
             int conditionId = -1;
-            if(condition == reflect.Array) { conditionId = 0; }
-            else if(condition == reflect.Struct) { conditionId = 1; }
-            else if(condition == reflect.Slice) { conditionId = 2; }
-            else if(condition == reflect.Bool) { conditionId = 3; }
-            else if(condition == reflect.Int) { conditionId = 4; }
-            else if(condition == reflect.Int8) { conditionId = 5; }
-            else if(condition == reflect.Int16) { conditionId = 6; }
-            else if(condition == reflect.Int32) { conditionId = 7; }
-            else if(condition == reflect.Int64) { conditionId = 8; }
-            else if(condition == reflect.Uint) { conditionId = 9; }
-            else if(condition == reflect.Uint8) { conditionId = 10; }
-            else if(condition == reflect.Uint16) { conditionId = 11; }
-            else if(condition == reflect.Uint32) { conditionId = 12; }
-            else if(condition == reflect.Uint64) { conditionId = 13; }
-            else if(condition == reflect.Uintptr) { conditionId = 14; }
-            else if(condition == reflect.Float32) { conditionId = 15; }
-            else if(condition == reflect.Float64) { conditionId = 16; }
-            else if(condition == reflect.Complex64) { conditionId = 17; }
-            else if(condition == reflect.Complex128) { conditionId = 18; }
+            if(condition == reflect::Array) { conditionId = 0; }
+            else if(condition == reflect::Struct) { conditionId = 1; }
+            else if(condition == reflect::Slice) { conditionId = 2; }
+            else if(condition == reflect::Bool) { conditionId = 3; }
+            else if(condition == reflect::Int) { conditionId = 4; }
+            else if(condition == reflect::Int8) { conditionId = 5; }
+            else if(condition == reflect::Int16) { conditionId = 6; }
+            else if(condition == reflect::Int32) { conditionId = 7; }
+            else if(condition == reflect::Int64) { conditionId = 8; }
+            else if(condition == reflect::Uint) { conditionId = 9; }
+            else if(condition == reflect::Uint8) { conditionId = 10; }
+            else if(condition == reflect::Uint16) { conditionId = 11; }
+            else if(condition == reflect::Uint32) { conditionId = 12; }
+            else if(condition == reflect::Uint64) { conditionId = 13; }
+            else if(condition == reflect::Uintptr) { conditionId = 14; }
+            else if(condition == reflect::Float32) { conditionId = 15; }
+            else if(condition == reflect::Float64) { conditionId = 16; }
+            else if(condition == reflect::Complex64) { conditionId = 17; }
+            else if(condition == reflect::Complex128) { conditionId = 18; }
             switch(conditionId)
             {
                 case 0:
@@ -1380,23 +1380,23 @@ namespace golang::binary
                     {
                         auto condition = Kind(gocpp::recv(Type(gocpp::recv(v))));
                         int conditionId = -1;
-                        if(condition == reflect.Int8) { conditionId = 0; }
-                        else if(condition == reflect.Int16) { conditionId = 1; }
-                        else if(condition == reflect.Int32) { conditionId = 2; }
-                        else if(condition == reflect.Int64) { conditionId = 3; }
+                        if(condition == reflect::Int8) { conditionId = 0; }
+                        else if(condition == reflect::Int16) { conditionId = 1; }
+                        else if(condition == reflect::Int32) { conditionId = 2; }
+                        else if(condition == reflect::Int64) { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
-                                int8(gocpp::recv(e), int8(Int(gocpp::recv(v))));
+                                int8_t(gocpp::recv(e), int8_t(Int(gocpp::recv(v))));
                                 break;
                             case 1:
-                                int16(gocpp::recv(e), int16(Int(gocpp::recv(v))));
+                                int16_t(gocpp::recv(e), int16_t(Int(gocpp::recv(v))));
                                 break;
                             case 2:
-                                int32(gocpp::recv(e), int32(Int(gocpp::recv(v))));
+                                int32_t(gocpp::recv(e), int32_t(Int(gocpp::recv(v))));
                                 break;
                             case 3:
-                                int64(gocpp::recv(e), Int(gocpp::recv(v)));
+                                int64_t(gocpp::recv(e), Int(gocpp::recv(v)));
                                 break;
                         }
                     }
@@ -1411,10 +1411,10 @@ namespace golang::binary
                     {
                         auto condition = Kind(gocpp::recv(Type(gocpp::recv(v))));
                         int conditionId = -1;
-                        if(condition == reflect.Uint8) { conditionId = 0; }
-                        else if(condition == reflect.Uint16) { conditionId = 1; }
-                        else if(condition == reflect.Uint32) { conditionId = 2; }
-                        else if(condition == reflect.Uint64) { conditionId = 3; }
+                        if(condition == reflect::Uint8) { conditionId = 0; }
+                        else if(condition == reflect::Uint16) { conditionId = 1; }
+                        else if(condition == reflect::Uint32) { conditionId = 2; }
+                        else if(condition == reflect::Uint64) { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
@@ -1438,8 +1438,8 @@ namespace golang::binary
                     {
                         auto condition = Kind(gocpp::recv(Type(gocpp::recv(v))));
                         int conditionId = -1;
-                        if(condition == reflect.Float32) { conditionId = 0; }
-                        else if(condition == reflect.Float64) { conditionId = 1; }
+                        if(condition == reflect::Float32) { conditionId = 0; }
+                        else if(condition == reflect::Float64) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
@@ -1457,8 +1457,8 @@ namespace golang::binary
                     {
                         auto condition = Kind(gocpp::recv(Type(gocpp::recv(v))));
                         int conditionId = -1;
-                        if(condition == reflect.Complex64) { conditionId = 0; }
-                        else if(condition == reflect.Complex128) { conditionId = 1; }
+                        if(condition == reflect::Complex64) { conditionId = 0; }
+                        else if(condition == reflect::Complex128) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:

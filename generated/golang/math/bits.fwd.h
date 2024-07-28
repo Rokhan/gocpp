@@ -3,11 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/abs.fwd.h"
-#include "golang/math/const.fwd.h"
-#include "golang/math/unsafe.fwd.h"
 
 namespace golang::math
 {
+    const long uvnan = 0x7FF8000000000001;
+    const long uvinf = 0x7FF0000000000000;
+    const long uvneginf = 0xFFF0000000000000;
+    const long uvone = 0x3FF0000000000000;
+    const long mask = 0x7FF;
+    const int shift = 64 - 11 - 1;
+    const long bias = 1023;
+    const int signMask = 1 << 63;
+    const int fracMask = (1 << shift) - 1;
 }
-
+#include "golang/math/abs.fwd.h"
+#include "golang/math/const.fwd.h"
+#include "golang/math/unsafe.fwd.h"

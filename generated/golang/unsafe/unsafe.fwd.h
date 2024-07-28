@@ -3,10 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::unsafe
 {
     using ArbitraryType = int;
     using IntegerType = int;
     using Pointer = ArbitraryType*;
 }
-

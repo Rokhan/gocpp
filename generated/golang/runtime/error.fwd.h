@@ -3,24 +3,36 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-// #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {
     struct Error;
-    struct TypeAssertionError;
+    using errorString = std::string;
+    struct errorAddressString;
+    using plainError = std::string;
     struct boundsError;
     using boundsErrorCode = uint8_t;
-    struct errorAddressString;
-    using errorString = std::string;
-    using plainError = std::string;
     struct stringer;
+    const boundsErrorCode boundsIndex = 0;
+    const boundsErrorCode boundsSliceAlen = 1;
+    const boundsErrorCode boundsSliceAcap = 2;
+    const boundsErrorCode boundsSliceB = 3;
+    const boundsErrorCode boundsSlice3Alen = 4;
+    const boundsErrorCode boundsSlice3Acap = 5;
+    const boundsErrorCode boundsSlice3B = 6;
+    const boundsErrorCode boundsSlice3C = 7;
+    const boundsErrorCode boundsConvert = 8;
 }
+#include "golang/runtime/type.fwd.h"
 
+namespace golang::runtime
+{
+    struct TypeAssertionError;
+}
+#include "golang/internal/bytealg/indexbyte_native.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]

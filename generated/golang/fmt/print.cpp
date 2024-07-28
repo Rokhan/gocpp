@@ -269,19 +269,19 @@ namespace golang::fmt
         {
             if(Flag(gocpp::recv(state), int(c)))
             {
-                b = append(b, byte(c));
+                b = append(b, unsigned char(c));
             }
         }
         if(auto [w, ok] = Width(gocpp::recv(state)); ok)
         {
-            b = AppendInt(gocpp::recv(strconv), b, int64(w), 10);
+            b = strconv::AppendInt(b, int64_t(w), 10);
         }
         if(auto [p, ok] = Precision(gocpp::recv(state)); ok)
         {
             b = append(b, '.');
-            b = AppendInt(gocpp::recv(strconv), b, int64(p), 10);
+            b = strconv::AppendInt(b, int64_t(p), 10);
         }
-        b = AppendRune(gocpp::recv(utf8), b, verb);
+        b = utf8::AppendRune(b, verb);
         return string(b);
     }
 
@@ -302,7 +302,7 @@ namespace golang::fmt
 
     void writeRune(buffer* b, gocpp::rune r)
     {
-        *b = AppendRune(gocpp::recv(utf8), *b, r);
+        *b = utf8::AppendRune(*b, r);
     }
 
     
@@ -441,7 +441,7 @@ namespace golang::fmt
     {
         int n;
         std::string err;
-        return Fprintf(os.Stdout, format, a);
+        return Fprintf(os::Stdout, format, a);
     }
 
     std::string Sprintf(std::string format, gocpp::slice<go_any> a)
@@ -477,7 +477,7 @@ namespace golang::fmt
     {
         int n;
         std::string err;
-        return Fprint(os.Stdout, a);
+        return Fprint(os::Stdout, a);
     }
 
     std::string Sprint(gocpp::slice<go_any> a)
@@ -513,7 +513,7 @@ namespace golang::fmt
     {
         int n;
         std::string err;
-        return Fprintln(os.Stdout, a);
+        return Fprintln(os::Stdout, a);
     }
 
     std::string Sprintln(gocpp::slice<go_any> a)
@@ -537,7 +537,7 @@ namespace golang::fmt
     reflect::Value getField(reflect::Value v, int i)
     {
         auto val = Field(gocpp::recv(v), i);
-        if(Kind(gocpp::recv(val)) == reflect.Interface && ! IsNil(gocpp::recv(val)))
+        if(Kind(gocpp::recv(val)) == reflect::Interface && ! IsNil(gocpp::recv(val)))
         {
             val = Elem(gocpp::recv(val));
         }
@@ -606,7 +606,7 @@ namespace golang::fmt
             switch(conditionId)
             {
                 case 0:
-                    writeString(gocpp::recv(p->buf), String(gocpp::recv(TypeOf(gocpp::recv(reflect), p->arg))));
+                    writeString(gocpp::recv(p->buf), String(gocpp::recv(reflect::TypeOf(p->arg))));
                     writeByte(gocpp::recv(p->buf), '=');
                     printArg(gocpp::recv(p), p->arg, 'v');
                     break;
@@ -903,7 +903,7 @@ namespace golang::fmt
                     fmtQ(gocpp::recv(p->fmt), string(v));
                     break;
                 default:
-                    printValue(gocpp::recv(p), ValueOf(gocpp::recv(reflect), v), verb, 0);
+                    printValue(gocpp::recv(p), reflect::ValueOf(v), verb, 0);
                     break;
             }
         }
@@ -916,12 +916,12 @@ namespace golang::fmt
         {
             auto condition = Kind(gocpp::recv(value));
             int conditionId = -1;
-            if(condition == reflect.Chan) { conditionId = 0; }
-            if(condition == reflect.Func) { conditionId = 1; }
-            if(condition == reflect.Map) { conditionId = 2; }
-            if(condition == reflect.Pointer) { conditionId = 3; }
-            if(condition == reflect.Slice) { conditionId = 4; }
-            if(condition == reflect.UnsafePointer) { conditionId = 5; }
+            if(condition == reflect::Chan) { conditionId = 0; }
+            if(condition == reflect::Func) { conditionId = 1; }
+            if(condition == reflect::Map) { conditionId = 2; }
+            if(condition == reflect::Pointer) { conditionId = 3; }
+            if(condition == reflect::Slice) { conditionId = 4; }
+            if(condition == reflect::UnsafePointer) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -930,7 +930,7 @@ namespace golang::fmt
                 case 3:
                 case 4:
                 case 5:
-                    u = uintptr(UnsafePointer(gocpp::recv(value)));
+                    u = uintptr_t(UnsafePointer(gocpp::recv(value)));
                     break;
                 default:
                     badVerb(gocpp::recv(p), verb);
@@ -1000,7 +1000,7 @@ namespace golang::fmt
     {
         if(auto err = recover(); err != nullptr)
         {
-            if(auto v = ValueOf(gocpp::recv(reflect), arg); Kind(gocpp::recv(v)) == reflect.Pointer && IsNil(gocpp::recv(v)))
+            if(auto v = reflect::ValueOf(arg); Kind(gocpp::recv(v)) == reflect::Pointer && IsNil(gocpp::recv(v)))
             {
                 writeString(gocpp::recv(p->buf), nilAngleString);
                 return;
@@ -1155,11 +1155,11 @@ namespace golang::fmt
             switch(conditionId)
             {
                 case 0:
-                    fmtS(gocpp::recv(p->fmt), String(gocpp::recv(TypeOf(gocpp::recv(reflect), arg))));
+                    fmtS(gocpp::recv(p->fmt), String(gocpp::recv(reflect::TypeOf(arg))));
                     return;
                     break;
                 case 1:
-                    fmtPointer(gocpp::recv(p), ValueOf(gocpp::recv(reflect), arg), 'p');
+                    fmtPointer(gocpp::recv(p), reflect::ValueOf(arg), 'p');
                     return;
                     break;
             }
@@ -1186,7 +1186,7 @@ namespace golang::fmt
             else if(gocpp_id_1 == typeid(uintptr_t)) { conditionId = 15; }
             else if(gocpp_id_1 == typeid(std::string)) { conditionId = 16; }
             else if(gocpp_id_1 == typeid(gocpp::slice<unsigned char>)) { conditionId = 17; }
-            else if(gocpp_id_1 == typeid(reflect.Value)) { conditionId = 18; }
+            else if(gocpp_id_1 == typeid(reflect::Value)) { conditionId = 18; }
             switch(conditionId)
             {
                 case 0:
@@ -1210,7 +1210,7 @@ namespace golang::fmt
                 case 3:
                 {
                     complex64 f = gocpp::any_cast<complex64>(arg);
-                    fmtComplex(gocpp::recv(p), complex128(f), 64, verb);
+                    fmtComplex(gocpp::recv(p), gocpp::complex128(f), 64, verb);
                     break;
                 }
                 case 4:
@@ -1299,7 +1299,7 @@ namespace golang::fmt
                 }
                 case 18:
                 {
-                    reflect.Value f = gocpp::any_cast<reflect.Value>(arg);
+                    reflect::Value f = gocpp::any_cast<reflect::Value>(arg);
                     if(IsValid(gocpp::recv(f)) && CanInterface(gocpp::recv(f)))
                     {
                         p->arg = Interface(gocpp::recv(f));
@@ -1316,7 +1316,7 @@ namespace golang::fmt
                     auto f = arg;
                     if(! handleMethods(gocpp::recv(p), verb))
                     {
-                        printValue(gocpp::recv(p), ValueOf(gocpp::recv(reflect), f), verb, 0);
+                        printValue(gocpp::recv(p), reflect::ValueOf(f), verb, 0);
                     }
                     break;
                 }
@@ -1341,33 +1341,33 @@ namespace golang::fmt
             auto f = value;
             auto condition = Kind(gocpp::recv(value));
             int conditionId = -1;
-            if(condition == reflect.Invalid) { conditionId = 0; }
-            else if(condition == reflect.Bool) { conditionId = 1; }
-            else if(condition == reflect.Int) { conditionId = 2; }
-            else if(condition == reflect.Int8) { conditionId = 3; }
-            else if(condition == reflect.Int16) { conditionId = 4; }
-            else if(condition == reflect.Int32) { conditionId = 5; }
-            else if(condition == reflect.Int64) { conditionId = 6; }
-            else if(condition == reflect.Uint) { conditionId = 7; }
-            else if(condition == reflect.Uint8) { conditionId = 8; }
-            else if(condition == reflect.Uint16) { conditionId = 9; }
-            else if(condition == reflect.Uint32) { conditionId = 10; }
-            else if(condition == reflect.Uint64) { conditionId = 11; }
-            else if(condition == reflect.Uintptr) { conditionId = 12; }
-            else if(condition == reflect.Float32) { conditionId = 13; }
-            else if(condition == reflect.Float64) { conditionId = 14; }
-            else if(condition == reflect.Complex64) { conditionId = 15; }
-            else if(condition == reflect.Complex128) { conditionId = 16; }
-            else if(condition == reflect.String) { conditionId = 17; }
-            else if(condition == reflect.Map) { conditionId = 18; }
-            else if(condition == reflect.Struct) { conditionId = 19; }
-            else if(condition == reflect.Interface) { conditionId = 20; }
-            else if(condition == reflect.Array) { conditionId = 21; }
-            else if(condition == reflect.Slice) { conditionId = 22; }
-            else if(condition == reflect.Pointer) { conditionId = 23; }
-            else if(condition == reflect.Chan) { conditionId = 24; }
-            else if(condition == reflect.Func) { conditionId = 25; }
-            else if(condition == reflect.UnsafePointer) { conditionId = 26; }
+            if(condition == reflect::Invalid) { conditionId = 0; }
+            else if(condition == reflect::Bool) { conditionId = 1; }
+            else if(condition == reflect::Int) { conditionId = 2; }
+            else if(condition == reflect::Int8) { conditionId = 3; }
+            else if(condition == reflect::Int16) { conditionId = 4; }
+            else if(condition == reflect::Int32) { conditionId = 5; }
+            else if(condition == reflect::Int64) { conditionId = 6; }
+            else if(condition == reflect::Uint) { conditionId = 7; }
+            else if(condition == reflect::Uint8) { conditionId = 8; }
+            else if(condition == reflect::Uint16) { conditionId = 9; }
+            else if(condition == reflect::Uint32) { conditionId = 10; }
+            else if(condition == reflect::Uint64) { conditionId = 11; }
+            else if(condition == reflect::Uintptr) { conditionId = 12; }
+            else if(condition == reflect::Float32) { conditionId = 13; }
+            else if(condition == reflect::Float64) { conditionId = 14; }
+            else if(condition == reflect::Complex64) { conditionId = 15; }
+            else if(condition == reflect::Complex128) { conditionId = 16; }
+            else if(condition == reflect::String) { conditionId = 17; }
+            else if(condition == reflect::Map) { conditionId = 18; }
+            else if(condition == reflect::Struct) { conditionId = 19; }
+            else if(condition == reflect::Interface) { conditionId = 20; }
+            else if(condition == reflect::Array) { conditionId = 21; }
+            else if(condition == reflect::Slice) { conditionId = 22; }
+            else if(condition == reflect::Pointer) { conditionId = 23; }
+            else if(condition == reflect::Chan) { conditionId = 24; }
+            else if(condition == reflect::Func) { conditionId = 25; }
+            else if(condition == reflect::UnsafePointer) { conditionId = 26; }
             switch(conditionId)
             {
                 case 0:
@@ -1442,7 +1442,7 @@ namespace golang::fmt
                     {
                         writeString(gocpp::recv(p->buf), mapString);
                     }
-                    auto sorted = Sort(gocpp::recv(fmtsort), f);
+                    auto sorted = fmtsort::Sort(f);
                     for(auto [i, key] : sorted->Key)
                     {
                         if(i > 0)
@@ -1536,10 +1536,10 @@ namespace golang::fmt
                             case 2:
                             case 3:
                                 auto t = Type(gocpp::recv(f));
-                                if(Kind(gocpp::recv(Elem(gocpp::recv(t)))) == reflect.Uint8)
+                                if(Kind(gocpp::recv(Elem(gocpp::recv(t)))) == reflect::Uint8)
                                 {
                                     gocpp::slice<unsigned char> bytes = {};
-                                    if(Kind(gocpp::recv(f)) == reflect.Slice || CanAddr(gocpp::recv(f)))
+                                    if(Kind(gocpp::recv(f)) == reflect::Slice || CanAddr(gocpp::recv(f)))
                                     {
                                         bytes = Bytes(gocpp::recv(f));
                                     }
@@ -1548,7 +1548,7 @@ namespace golang::fmt
                                         bytes = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), Len(gocpp::recv(f)));
                                         for(auto [i, gocpp_ignored] : bytes)
                                         {
-                                            bytes[i] = byte(Uint(gocpp::recv(Index(gocpp::recv(f), i))));
+                                            bytes[i] = unsigned char(Uint(gocpp::recv(Index(gocpp::recv(f), i))));
                                         }
                                     }
                                     fmtBytes(gocpp::recv(p), bytes, verb, String(gocpp::recv(t)));
@@ -1560,7 +1560,7 @@ namespace golang::fmt
                     if(p->fmt.sharpV)
                     {
                         writeString(gocpp::recv(p->buf), String(gocpp::recv(Type(gocpp::recv(f)))));
-                        if(Kind(gocpp::recv(f)) == reflect.Slice && IsNil(gocpp::recv(f)))
+                        if(Kind(gocpp::recv(f)) == reflect::Slice && IsNil(gocpp::recv(f)))
                         {
                             writeString(gocpp::recv(p->buf), nilParenString);
                             return;
@@ -1598,10 +1598,10 @@ namespace golang::fmt
                             auto a = Elem(gocpp::recv(f));
                             auto condition = Kind(gocpp::recv(a));
                             int conditionId = -1;
-                            if(condition == reflect.Array) { conditionId = 0; }
-                            if(condition == reflect.Slice) { conditionId = 1; }
-                            if(condition == reflect.Struct) { conditionId = 2; }
-                            if(condition == reflect.Map) { conditionId = 3; }
+                            if(condition == reflect::Array) { conditionId = 0; }
+                            if(condition == reflect::Slice) { conditionId = 1; }
+                            if(condition == reflect::Struct) { conditionId = 2; }
+                            if(condition == reflect::Map) { conditionId = 3; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -1646,20 +1646,20 @@ namespace golang::fmt
                 int newArgNum;
                 //Go switch emulation
                 {
-                    auto v = ValueOf(gocpp::recv(reflect), a[argNum]);
+                    auto v = reflect::ValueOf(a[argNum]);
                     auto condition = Kind(gocpp::recv(v));
                     int conditionId = -1;
-                    if(condition == reflect.Int) { conditionId = 0; }
-                    if(condition == reflect.Int8) { conditionId = 1; }
-                    if(condition == reflect.Int16) { conditionId = 2; }
-                    if(condition == reflect.Int32) { conditionId = 3; }
-                    if(condition == reflect.Int64) { conditionId = 4; }
-                    else if(condition == reflect.Uint) { conditionId = 5; }
-                    else if(condition == reflect.Uint8) { conditionId = 6; }
-                    else if(condition == reflect.Uint16) { conditionId = 7; }
-                    else if(condition == reflect.Uint32) { conditionId = 8; }
-                    else if(condition == reflect.Uint64) { conditionId = 9; }
-                    else if(condition == reflect.Uintptr) { conditionId = 10; }
+                    if(condition == reflect::Int) { conditionId = 0; }
+                    if(condition == reflect::Int8) { conditionId = 1; }
+                    if(condition == reflect::Int16) { conditionId = 2; }
+                    if(condition == reflect::Int32) { conditionId = 3; }
+                    if(condition == reflect::Int64) { conditionId = 4; }
+                    else if(condition == reflect::Uint) { conditionId = 5; }
+                    else if(condition == reflect::Uint8) { conditionId = 6; }
+                    else if(condition == reflect::Uint16) { conditionId = 7; }
+                    else if(condition == reflect::Uint32) { conditionId = 8; }
+                    else if(condition == reflect::Uint64) { conditionId = 9; }
+                    else if(condition == reflect::Uintptr) { conditionId = 10; }
                     switch(conditionId)
                     {
                         int num;
@@ -1671,7 +1671,7 @@ namespace golang::fmt
                         case 3:
                         case 4:
                             auto n = Int(gocpp::recv(v));
-                            if(int64(int(n)) == n)
+                            if(int64_t(int(n)) == n)
                             {
                                 int num;
                                 bool isInt;
@@ -1687,7 +1687,7 @@ namespace golang::fmt
                         case 9:
                         case 10:
                             auto n = Uint(gocpp::recv(v));
-                            if(int64(n) >= 0 && uint64_t(int(n)) == n)
+                            if(int64_t(n) >= 0 && uint64_t(int(n)) == n)
                             {
                                 int num;
                                 bool isInt;
@@ -1795,6 +1795,7 @@ namespace golang::fmt
         auto argNum = 0;
         auto afterIndex = false;
         p->reordered = false;
+        formatLoop:
         for(auto i = 0; i < end; )
         {
             p->goodArgNum = true;
@@ -1813,6 +1814,7 @@ namespace golang::fmt
             }
             i++;
             clearflags(gocpp::recv(p->fmt));
+            simpleFormat:
             for(; i < end; i++)
             {
                 auto c = format[i];
@@ -1948,9 +1950,9 @@ namespace golang::fmt
                 break;
             }
             auto [verb, size] = std::tuple{rune(format[i]), 1};
-            if(verb >= utf8.RuneSelf)
+            if(verb >= utf8::RuneSelf)
             {
-                std::tie(verb, size) = DecodeRuneInString(gocpp::recv(utf8), format.make_slice(i));
+                std::tie(verb, size) = utf8::DecodeRuneInString(format.make_slice(i));
             }
             i += size;
             //Go switch emulation
@@ -2008,7 +2010,7 @@ namespace golang::fmt
                 }
                 else
                 {
-                    writeString(gocpp::recv(p->buf), String(gocpp::recv(TypeOf(gocpp::recv(reflect), arg))));
+                    writeString(gocpp::recv(p->buf), String(gocpp::recv(reflect::TypeOf(arg))));
                     writeByte(gocpp::recv(p->buf), '=');
                     printArg(gocpp::recv(p), arg, 'v');
                 }
@@ -2022,7 +2024,7 @@ namespace golang::fmt
         auto prevString = false;
         for(auto [argNum, arg] : a)
         {
-            auto isString = arg != nullptr && Kind(gocpp::recv(TypeOf(gocpp::recv(reflect), arg))) == reflect.String;
+            auto isString = arg != nullptr && Kind(gocpp::recv(reflect::TypeOf(arg))) == reflect::String;
             if(argNum > 0 && ! isString && ! prevString)
             {
                 writeByte(gocpp::recv(p->buf), ' ');

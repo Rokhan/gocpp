@@ -11,12 +11,6 @@
 
 namespace golang::bytealg
 {
-    extern uintptr_t offsetX86HasSSE42;
-    extern uintptr_t offsetX86HasAVX2;
-    extern uintptr_t offsetX86HasPOPCNT;
-    extern uintptr_t offsetS390xHasVX;
-    extern uintptr_t offsetPPC64HasPOWER9;
-    extern int PrimeRK;
     std::tuple<uint32_t, uint32_t> HashStr(T sep);
     std::tuple<uint32_t, uint32_t> HashStrRev(T sep);
     int IndexRabinKarp(T s, T sep);

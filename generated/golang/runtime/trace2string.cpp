@@ -21,7 +21,6 @@
 
 namespace golang::runtime
 {
-    int maxTraceStringLen = 1024;
     
     std::ostream& traceStringTable::PrintTo(std::ostream& os) const
     {
@@ -41,7 +40,7 @@ namespace golang::runtime
     uint64_t put(struct traceStringTable* t, uintptr_t gen, std::string s)
     {
         auto ss = stringStructOf(& s);
-        auto [id, added] = put(gocpp::recv(t->tab), ss->str, uintptr(ss->len));
+        auto [id, added] = put(gocpp::recv(t->tab), ss->str, uintptr_t(ss->len));
         if(added)
         {
             systemstack([=]() mutable -> void
@@ -76,9 +75,9 @@ namespace golang::runtime
         std::tie(w, flushed) = ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
         if(flushed)
         {
-            byte(gocpp::recv(w), byte(traceEvStrings));
+            unsigned char(gocpp::recv(w), unsigned char(traceEvStrings));
         }
-        byte(gocpp::recv(w), byte(traceEvString));
+        unsigned char(gocpp::recv(w), unsigned char(traceEvString));
         varint(gocpp::recv(w), id);
         varint(gocpp::recv(w), uint64_t(len(s)));
         stringData(gocpp::recv(w), s);

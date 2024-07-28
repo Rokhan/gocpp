@@ -13,9 +13,9 @@
 
 #include "golang/bufio/bufio.h"
 #include "golang/encoding/base64/base64.h"
-// #include "golang/image/png/writer.h"  [Ignored, known errors]
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
+// #include "golang/image/png/writer.h"  [Ignored, known errors]
 // #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::pic
@@ -25,7 +25,7 @@ namespace golang::pic
         auto dx = 256;
         auto dy = 256;
         auto data = f(dx, dy);
-        auto m = NewNRGBA(gocpp::recv(image), Rect(gocpp::recv(image), 0, 0, dx, dy));
+        auto m = image::NewNRGBA(image::Rect(0, 0, dx, dy));
         for(auto y = 0; y < dy; y++)
         {
             for(auto x = 0; x < dx; x++)
@@ -44,17 +44,17 @@ namespace golang::pic
     void ShowImage(image::Image m)
     {
         gocpp::Defer defer;
-        auto w = NewWriter(gocpp::recv(bufio), os.Stdout);
+        auto w = bufio::NewWriter(os::Stdout);
         defer.push_back([=]{ Flush(gocpp::recv(w)); });
-        WriteString(gocpp::recv(io), w, "IMAGE:");
-        auto b64 = NewEncoder(gocpp::recv(base64), base64.StdEncoding, w);
-        auto err = Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png.BestCompression; }))), b64, m);
+        io::WriteString(w, "IMAGE:");
+        auto b64 = base64::NewEncoder(base64::StdEncoding, w);
+        auto err = Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
         if(err != nullptr)
         {
             gocpp::panic(err);
         }
         Close(gocpp::recv(b64));
-        WriteString(gocpp::recv(io), w, "\n");
+        io::WriteString(w, "\n");
     }
 
 }

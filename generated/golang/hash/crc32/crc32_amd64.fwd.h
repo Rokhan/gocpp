@@ -3,12 +3,17 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::crc32
+{
+    const long castagnoliK1 = 168;
+    const long castagnoliK2 = 1344;
+}
 #include "golang/hash/crc32/crc32.fwd.h"
-#include "golang/hash/crc32/crc32_generic.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::crc32
 {
     using sse42Table = gocpp::array<Table, 4>;
 }
-
+#include "golang/hash/crc32/crc32_generic.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

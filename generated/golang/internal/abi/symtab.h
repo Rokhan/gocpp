@@ -11,49 +11,5 @@
 
 namespace golang::abi
 {
-    extern FuncFlag FuncFlagTopFrame;
-    extern FuncFlag FuncFlagSPWrite;
-    extern FuncFlag FuncFlagAsm;
-    extern FuncID FuncIDNormal;
-    extern FuncID FuncID_abort;
-    extern FuncID FuncID_asmcgocall;
-    extern FuncID FuncID_asyncPreempt;
-    extern FuncID FuncID_cgocallback;
-    extern FuncID FuncID_corostart;
-    extern FuncID FuncID_debugCallV2;
-    extern FuncID FuncID_gcBgMarkWorker;
-    extern FuncID FuncID_goexit;
-    extern FuncID FuncID_gogo;
-    extern FuncID FuncID_gopanic;
-    extern FuncID FuncID_handleAsyncEvent;
-    extern FuncID FuncID_mcall;
-    extern FuncID FuncID_morestack;
-    extern FuncID FuncID_mstart;
-    extern FuncID FuncID_panicwrap;
-    extern FuncID FuncID_rt0_go;
-    extern FuncID FuncID_runfinq;
-    extern FuncID FuncID_runtime_main;
-    extern FuncID FuncID_sigpanic;
-    extern FuncID FuncID_systemstack;
-    extern FuncID FuncID_systemstack_switch;
-    extern FuncID FuncIDWrapper;
-    extern int ArgsSizeUnknown;
-    extern int PCDATA_UnsafePoint;
-    extern int PCDATA_StackMapIndex;
-    extern int PCDATA_InlTreeIndex;
-    extern int PCDATA_ArgLiveIndex;
-    extern int FUNCDATA_ArgsPointerMaps;
-    extern int FUNCDATA_LocalsPointerMaps;
-    extern int FUNCDATA_StackObjects;
-    extern int FUNCDATA_InlTree;
-    extern int FUNCDATA_OpenCodedDeferInfo;
-    extern int FUNCDATA_ArgInfo;
-    extern int FUNCDATA_ArgLiveInfo;
-    extern int FUNCDATA_WrapInfo;
-    extern int UnsafePointSafe;
-    extern int UnsafePointUnsafe;
-    extern int UnsafePointRestart1;
-    extern int UnsafePointRestart2;
-    extern int UnsafePointRestartAtEntry;
 }
 

@@ -3,9 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::strconv
 {
     struct decimal;
+    const int uintSize = 32 << (~ (unsigned int)(0) >> 63);
     struct leftCheat;
+    const int maxShift = uintSize - 4;
 }
-

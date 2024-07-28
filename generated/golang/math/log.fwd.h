@@ -7,8 +7,3 @@
 #include "golang/math/const.fwd.h"
 #include "golang/math/frexp.fwd.h"
 #include "golang/math/log_asm.fwd.h"
-
-namespace golang::math
-{
-}
-

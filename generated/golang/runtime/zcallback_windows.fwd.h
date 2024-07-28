@@ -3,7 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::runtime
 {
+    const long cb_max = 2000;
 }
-

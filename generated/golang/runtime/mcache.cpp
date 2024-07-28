@@ -20,13 +20,13 @@
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mfixalloc.h"
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
-#include "golang/runtime/mgcsweep.h"
+// #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mspanset.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]
+#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
@@ -71,7 +71,7 @@ namespace golang::runtime
 
     gclink* ptr(gclinkptr p)
     {
-        return (gclink*)(Pointer(gocpp::recv(unsafe), p));
+        return (gclink*)(unsafe::Pointer(p));
     }
 
     
@@ -116,7 +116,7 @@ namespace golang::runtime
             releaseAll(gocpp::recv(c));
             stackcache_clear(c);
             lock(& mheap_.lock);
-            free(gocpp::recv(mheap_.cachealloc), Pointer(gocpp::recv(unsafe), c));
+            free(gocpp::recv(mheap_.cachealloc), unsafe::Pointer(c));
             unlock(& mheap_.lock);
         }
 );
@@ -152,15 +152,15 @@ namespace golang::runtime
             }
             uncacheSpan(gocpp::recv(mheap_.central[spc].mcentral), s);
             auto stats = acquire(gocpp::recv(memstats.heapStats));
-            auto slotsUsed = int64(s->allocCount) - int64(s->allocCountBeforeCache);
-            Xadd64(gocpp::recv(atomic), & stats->smallAllocCount[sizeclass(gocpp::recv(spc))], slotsUsed);
+            auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
+            atomic::Xadd64(& stats->smallAllocCount[sizeclass(gocpp::recv(spc))], slotsUsed);
             if(spc == tinySpanClass)
             {
-                Xadd64(gocpp::recv(atomic), & stats->tinyAllocCount, int64(c->tinyAllocs));
+                atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
                 c->tinyAllocs = 0;
             }
             release(gocpp::recv(memstats.heapStats));
-            auto bytesAllocated = slotsUsed * int64(s->elemsize);
+            auto bytesAllocated = slotsUsed * int64_t(s->elemsize);
             Add(gocpp::recv(gcController.totalAlloc), bytesAllocated);
             s->allocCountBeforeCache = 0;
         }
@@ -175,8 +175,8 @@ namespace golang::runtime
         }
         s->sweepgen = mheap_.sweepgen + 3;
         s->allocCountBeforeCache = s->allocCount;
-        auto usedBytes = uintptr(s->allocCount) * s->elemsize;
-        update(gocpp::recv(gcController), int64(s->npages * pageSize) - int64(usedBytes), int64(c->scanAlloc));
+        auto usedBytes = uintptr_t(s->allocCount) * s->elemsize;
+        update(gocpp::recv(gcController), int64_t(s->npages * pageSize) - int64_t(usedBytes), int64_t(c->scanAlloc));
         c->scanAlloc = 0;
         c->alloc[spc] = s;
     }
@@ -200,11 +200,11 @@ namespace golang::runtime
             go_throw("out of memory");
         }
         auto stats = acquire(gocpp::recv(memstats.heapStats));
-        Xadd64(gocpp::recv(atomic), & stats->largeAlloc, int64(npages * pageSize));
-        Xadd64(gocpp::recv(atomic), & stats->largeAllocCount, 1);
+        atomic::Xadd64(& stats->largeAlloc, int64_t(npages * pageSize));
+        atomic::Xadd64(& stats->largeAllocCount, 1);
         release(gocpp::recv(memstats.heapStats));
-        Add(gocpp::recv(gcController.totalAlloc), int64(npages * pageSize));
-        update(gocpp::recv(gcController), int64(s->npages * pageSize), 0);
+        Add(gocpp::recv(gcController.totalAlloc), int64_t(npages * pageSize));
+        update(gocpp::recv(gcController), int64_t(s->npages * pageSize), 0);
         push(gocpp::recv(fullSwept(gocpp::recv(mheap_.central[spc].mcentral), mheap_.sweepgen)), s);
         s->limit = base(gocpp::recv(s)) + size;
         initHeapBits(gocpp::recv(s), false);
@@ -213,24 +213,24 @@ namespace golang::runtime
 
     void releaseAll(struct mcache* c)
     {
-        auto scanAlloc = int64(c->scanAlloc);
+        auto scanAlloc = int64_t(c->scanAlloc);
         c->scanAlloc = 0;
         auto sg = mheap_.sweepgen;
-        auto dHeapLive = int64(0);
+        auto dHeapLive = int64_t(0);
         for(auto [i, gocpp_ignored] : c->alloc)
         {
             auto s = c->alloc[i];
             if(s != & emptymspan)
             {
-                auto slotsUsed = int64(s->allocCount) - int64(s->allocCountBeforeCache);
+                auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
                 s->allocCountBeforeCache = 0;
                 auto stats = acquire(gocpp::recv(memstats.heapStats));
-                Xadd64(gocpp::recv(atomic), & stats->smallAllocCount[sizeclass(gocpp::recv(spanClass(i)))], slotsUsed);
+                atomic::Xadd64(& stats->smallAllocCount[sizeclass(gocpp::recv(spanClass(i)))], slotsUsed);
                 release(gocpp::recv(memstats.heapStats));
-                Add(gocpp::recv(gcController.totalAlloc), slotsUsed * int64(s->elemsize));
+                Add(gocpp::recv(gcController.totalAlloc), slotsUsed * int64_t(s->elemsize));
                 if(s->sweepgen != sg + 1)
                 {
-                    dHeapLive -= int64(s->nelems - s->allocCount) * int64(s->elemsize);
+                    dHeapLive -= int64_t(s->nelems - s->allocCount) * int64_t(s->elemsize);
                 }
                 uncacheSpan(gocpp::recv(mheap_.central[i].mcentral), s);
                 c->alloc[i] = & emptymspan;
@@ -239,7 +239,7 @@ namespace golang::runtime
         c->tiny = 0;
         c->tinyoffset = 0;
         auto stats = acquire(gocpp::recv(memstats.heapStats));
-        Xadd64(gocpp::recv(atomic), & stats->tinyAllocCount, int64(c->tinyAllocs));
+        atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
         c->tinyAllocs = 0;
         release(gocpp::recv(memstats.heapStats));
         update(gocpp::recv(gcController), dHeapLive, scanAlloc);

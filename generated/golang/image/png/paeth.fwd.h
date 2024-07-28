@@ -3,7 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::png
 {
+    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
 }
-

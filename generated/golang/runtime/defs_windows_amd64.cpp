@@ -15,7 +15,6 @@
 
 namespace golang::runtime
 {
-    int _CONTEXT_CONTROL = 0x100001;
     
     std::ostream& m128a::PrintTo(std::ostream& os) const
     {
@@ -92,12 +91,12 @@ namespace golang::runtime
 
     uintptr_t ip(struct context* c)
     {
-        return uintptr(c->rip);
+        return uintptr_t(c->rip);
     }
 
     uintptr_t sp(struct context* c)
     {
-        return uintptr(c->rsp);
+        return uintptr_t(c->rsp);
     }
 
     uintptr_t lr(struct context* c)

@@ -34,7 +34,7 @@ namespace golang::strconv
             return;
         }
         auto e2 = exp;
-        if(auto b = Len32(gocpp::recv(bits), mant); b < 25)
+        if(auto b = bits::Len32(mant); b < 25)
         {
             mant <<= (unsigned int)(25 - b);
             e2 += b - 25;
@@ -84,7 +84,7 @@ namespace golang::strconv
             return;
         }
         auto e2 = exp;
-        if(auto b = Len64(gocpp::recv(bits), mant); b < 55)
+        if(auto b = bits::Len64(mant); b < 55)
         {
             mant = mant << (unsigned int)(55 - b);
             e2 += b - 55;
@@ -204,7 +204,7 @@ namespace golang::strconv
             std::tie(d->nd, d->dp) = std::tuple{0, 0};
             return;
         }
-        if(exp <= 0 && TrailingZeros64(gocpp::recv(bits), mant) >= - exp)
+        if(exp <= 0 && bits::TrailingZeros64(mant) >= - exp)
         {
             mant >>= (unsigned int)(- exp);
             ryuDigits(d, mant, mant, mant, true, false);
@@ -363,7 +363,7 @@ namespace golang::strconv
                 auto [v1, v2] = std::tuple{v / 10, v % 10};
                 v = v1;
                 n--;
-                d->d[n] = byte(v2 + '0');
+                d->d[n] = unsigned char(v2 + '0');
             }
             d->d = d->d.make_slice(n);
             d->nd = int(9 - n);
@@ -431,7 +431,7 @@ namespace golang::strconv
         }
         if(n == d->nd)
         {
-            d->d[n] = byte(v + '0');
+            d->d[n] = unsigned char(v + '0');
         }
         d->nd = endindex + 1;
         d->dp = d->nd + trimmed;
@@ -464,7 +464,7 @@ namespace golang::strconv
             bool exact;
             pow += 1;
         }
-        auto [hi, lo] = Mul64(gocpp::recv(bits), uint64_t(m), pow);
+        auto [hi, lo] = bits::Mul64(uint64_t(m), pow);
         e2 += mulByLog10Log2(q) - 63 + 57;
         return {uint32_t((hi << 7) | (lo >> 57)), e2, (lo << 7) == 0};
     }
@@ -497,9 +497,9 @@ namespace golang::strconv
             pow[0] += 1;
         }
         e2 += mulByLog10Log2(q) - 127 + 119;
-        auto [l1, l0] = Mul64(gocpp::recv(bits), m, pow[0]);
-        auto [h1, h0] = Mul64(gocpp::recv(bits), m, pow[1]);
-        auto [mid, carry] = Add64(gocpp::recv(bits), l1, h0, 0);
+        auto [l1, l0] = bits::Mul64(m, pow[0]);
+        auto [h1, h0] = bits::Mul64(m, pow[1]);
+        auto [mid, carry] = bits::Add64(l1, h0, 0);
         h1 += carry;
         return {(h1 << 9) | (mid >> 55), e2, (mid << 9) == 0 && l0 == 0};
     }
@@ -527,7 +527,7 @@ namespace golang::strconv
         {
             return {uint32_t(x / 1e9), uint32_t(x % 1e9)};
         }
-        auto [hi, _] = Mul64(gocpp::recv(bits), x >> 1, 0x89705f4136b4a598);
+        auto [hi, _] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
         auto q = hi >> 28;
         return {uint32_t(q), uint32_t(x - q * 1e9)};
     }

@@ -3,7 +3,31 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::goarch
 {
+    const long Is386 = 0;
+    const long IsAmd64 = 1;
+    const long IsAmd64p32 = 0;
+    const long IsArm = 0;
+    const long IsArmbe = 0;
+    const long IsArm64 = 0;
+    const long IsArm64be = 0;
+    const long IsLoong64 = 0;
+    const long IsMips = 0;
+    const long IsMipsle = 0;
+    const long IsMips64 = 0;
+    const long IsMips64le = 0;
+    const long IsMips64p32 = 0;
+    const long IsMips64p32le = 0;
+    const long IsPpc = 0;
+    const long IsPpc64 = 0;
+    const long IsPpc64le = 0;
+    const long IsRiscv = 0;
+    const long IsRiscv64 = 0;
+    const long IsS390 = 0;
+    const long IsS390x = 0;
+    const long IsSparc = 0;
+    const long IsSparc64 = 0;
+    const long IsWasm = 0;
 }
-

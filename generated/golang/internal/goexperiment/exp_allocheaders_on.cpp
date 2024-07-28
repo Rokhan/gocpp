@@ -13,7 +13,5 @@
 
 namespace golang::goexperiment
 {
-    bool AllocHeaders = true;
-    int AllocHeadersInt = 1;
 }
 

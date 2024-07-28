@@ -87,6 +87,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 X86;
     struct gocpp_id_1
     {
@@ -110,6 +117,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_1 ARM;
     struct gocpp_id_2
     {
@@ -145,6 +159,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_2 ARM64;
     struct gocpp_id_3
     {
@@ -164,6 +185,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_3 MIPS64X;
     struct gocpp_id_4
     {
@@ -191,6 +219,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_4 PPC64;
     struct gocpp_id_5
     {
@@ -250,6 +285,13 @@ namespace golang::cpu
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_5 S390X;
     void Initialize(std::string env)
     {
@@ -277,6 +319,7 @@ namespace golang::cpu
 
     void processOptions(std::string env)
     {
+        field:
         for(; env != ""; )
         {
             auto field = "";

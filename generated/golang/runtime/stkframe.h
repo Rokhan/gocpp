@@ -9,11 +9,11 @@
 #include "golang/runtime/stkframe.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/sys/consts.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"

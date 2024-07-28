@@ -17,7 +17,7 @@ namespace golang::strconv
 {
     int index(std::string s, unsigned char c)
     {
-        return IndexByteString(gocpp::recv(bytealg), s, c);
+        return bytealg::IndexByteString(s, c);
     }
 
 }

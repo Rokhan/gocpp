@@ -3,8 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::runtime
 {
     using taggedPointer = uint64_t;
+    const long minTagBits = 10;
 }
-

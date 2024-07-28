@@ -39,41 +39,6 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    Kind Invalid = 0;
-    Kind Bool = 1;
-    Kind Int = 2;
-    Kind Int8 = 3;
-    Kind Int16 = 4;
-    Kind Int32 = 5;
-    Kind Int64 = 6;
-    Kind Uint = 7;
-    Kind Uint8 = 8;
-    Kind Uint16 = 9;
-    Kind Uint32 = 10;
-    Kind Uint64 = 11;
-    Kind Uintptr = 12;
-    Kind Float32 = 13;
-    Kind Float64 = 14;
-    Kind Complex64 = 15;
-    Kind Complex128 = 16;
-    Kind Array = 17;
-    Kind Chan = 18;
-    Kind Func = 19;
-    Kind Interface = 20;
-    Kind Map = 21;
-    Kind Pointer = 22;
-    Kind Slice = 23;
-    Kind String = 24;
-    Kind Struct = 25;
-    Kind UnsafePointer = 26;
-    int KindDirectIface = 1 << 5;
-    int KindGCProg = 1 << 6;
-    int KindMask = (1 << 5) - 1;
-    TFlag TFlagUncommon = 1 << 0;
-    TFlag TFlagExtraStar = 1 << 1;
-    TFlag TFlagNamed = 1 << 2;
-    TFlag TFlagRegularMemory = 1 << 3;
-    TFlag TFlagUnrolledBitmap = 1 << 4;
     std::string String(Kind k)
     {
         if(int(k) < len(kindNames))
@@ -111,7 +76,7 @@ namespace golang::abi
 
     gocpp::slice<unsigned char> GcSlice(struct Type* t, uintptr_t begin, uintptr_t end)
     {
-        return Slice(gocpp::recv(unsafe), t->GCData, int(end)).make_slice(begin);
+        return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
 
     
@@ -155,7 +120,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(Pointer(gocpp::recv(unsafe), t), uintptr(t->Moff), "t.mcount > 0")).make_slice(, t->Mcount, t->Mcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0")).make_slice(, t->Mcount, t->Mcount);
     }
 
     gocpp::slice<Method> ExportedMethods(struct UncommonType* t)
@@ -164,12 +129,12 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(Pointer(gocpp::recv(unsafe), t), uintptr(t->Moff), "t.xcount > 0")).make_slice(, t->Xcount, t->Xcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0")).make_slice(, t->Xcount, t->Xcount);
     }
 
     unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe)
     {
-        return Pointer(gocpp::recv(unsafe), uintptr(p) + x);
+        return unsafe::Pointer(uintptr_t(p) + x);
     }
 
     
@@ -207,7 +172,7 @@ namespace golang::abi
     {
         if(Kind(gocpp::recv(t)) == Array)
         {
-            return int((ArrayType*)(Pointer(gocpp::recv(unsafe), t))->Len);
+            return int((ArrayType*)(unsafe::Pointer(t))->Len);
         }
         return 0;
     }
@@ -217,10 +182,6 @@ namespace golang::abi
         return t;
     }
 
-    ChanDir RecvDir = 1 << 0;
-    ChanDir SendDir = 1 << 1;
-    ChanDir BothDir = RecvDir | SendDir;
-    ChanDir InvalidDir = 0;
     
     std::ostream& ChanType::PrintTo(std::ostream& os) const
     {
@@ -254,7 +215,7 @@ namespace golang::abi
     {
         if(Kind(gocpp::recv(t)) == Chan)
         {
-            auto ch = (ChanType*)(Pointer(gocpp::recv(unsafe), t));
+            auto ch = (ChanType*)(unsafe::Pointer(t));
             return ch->Dir;
         }
         return InvalidDir;
@@ -281,7 +242,7 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
-                    return & (structTypeUncommon*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (structTypeUncommon*)(unsafe::Pointer(t))->u;
                     break;
                 case 1:
                     
@@ -298,7 +259,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 2:
                     
@@ -315,7 +276,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 3:
                     
@@ -332,7 +293,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 4:
                     
@@ -349,7 +310,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 5:
                     
@@ -366,7 +327,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 6:
                     
@@ -383,7 +344,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 7:
                     
@@ -400,7 +361,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 default:
                     
@@ -417,7 +378,7 @@ namespace golang::abi
                         return value.PrintTo(os);
                     }
 
-                    return & (u*)(Pointer(gocpp::recv(unsafe), t))->u;
+                    return & (u*)(unsafe::Pointer(t))->u;
                     break;
             }
         }
@@ -437,23 +398,23 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
-                    auto tt = (ArrayType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (ArrayType*)(unsafe::Pointer(t));
                     return tt->Elem;
                     break;
                 case 1:
-                    auto tt = (ChanType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (ChanType*)(unsafe::Pointer(t));
                     return tt->Elem;
                     break;
                 case 2:
-                    auto tt = (MapType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (MapType*)(unsafe::Pointer(t));
                     return tt->Elem;
                     break;
                 case 3:
-                    auto tt = (PtrType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (PtrType*)(unsafe::Pointer(t));
                     return tt->Elem;
                     break;
                 case 4:
-                    auto tt = (SliceType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (SliceType*)(unsafe::Pointer(t));
                     return tt->Elem;
                     break;
             }
@@ -467,7 +428,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (StructType*)(Pointer(gocpp::recv(unsafe), t));
+        return (StructType*)(unsafe::Pointer(t));
     }
 
     MapType* MapType(struct Type* t)
@@ -476,7 +437,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (MapType*)(Pointer(gocpp::recv(unsafe), t));
+        return (MapType*)(unsafe::Pointer(t));
     }
 
     ArrayType* ArrayType(struct Type* t)
@@ -485,7 +446,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (ArrayType*)(Pointer(gocpp::recv(unsafe), t));
+        return (ArrayType*)(unsafe::Pointer(t));
     }
 
     FuncType* FuncType(struct Type* t)
@@ -494,7 +455,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (FuncType*)(Pointer(gocpp::recv(unsafe), t));
+        return (FuncType*)(unsafe::Pointer(t));
     }
 
     InterfaceType* InterfaceType(struct Type* t)
@@ -503,7 +464,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (InterfaceType*)(Pointer(gocpp::recv(unsafe), t));
+        return (InterfaceType*)(unsafe::Pointer(t));
     }
 
     uintptr_t Size(struct Type* t)
@@ -550,7 +511,7 @@ namespace golang::abi
     {
         if(Kind(gocpp::recv(t)) == Interface)
         {
-            auto tt = (InterfaceType*)(Pointer(gocpp::recv(unsafe), t));
+            auto tt = (InterfaceType*)(unsafe::Pointer(t));
             return NumMethod(gocpp::recv(tt));
         }
         return len(ExportedMethods(gocpp::recv(t)));
@@ -611,7 +572,7 @@ namespace golang::abi
     {
         if(Kind(gocpp::recv(t)) == Map)
         {
-            return (MapType*)(Pointer(gocpp::recv(unsafe), t))->Key;
+            return (MapType*)(unsafe::Pointer(t))->Key;
         }
         return nullptr;
     }
@@ -667,16 +628,16 @@ namespace golang::abi
 
     gocpp::slice<Type*> InSlice(struct FuncType* t)
     {
-        auto uadd = Sizeof(gocpp::recv(unsafe), *t);
+        auto uadd = unsafe::Sizeof(*t);
         if(t->TFlag & TFlagUncommon != 0)
         {
-            uadd += Sizeof(gocpp::recv(unsafe), UncommonType {});
+            uadd += unsafe::Sizeof(UncommonType {});
         }
         if(t->InCount == 0)
         {
             return nullptr;
         }
-        return (gocpp::array<Type*, 1 << 16>*)(addChecked(Pointer(gocpp::recv(unsafe), t), uadd, "t.inCount > 0")).make_slice(, t->InCount, t->InCount);
+        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0")).make_slice(, t->InCount, t->InCount);
     }
 
     gocpp::slice<Type*> OutSlice(struct FuncType* t)
@@ -686,12 +647,12 @@ namespace golang::abi
         {
             return nullptr;
         }
-        auto uadd = Sizeof(gocpp::recv(unsafe), *t);
+        auto uadd = unsafe::Sizeof(*t);
         if(t->TFlag & TFlagUncommon != 0)
         {
-            uadd += Sizeof(gocpp::recv(unsafe), UncommonType {});
+            uadd += unsafe::Sizeof(UncommonType {});
         }
-        return (gocpp::array<Type*, 1 << 17>*)(addChecked(Pointer(gocpp::recv(unsafe), t), uadd, "outCount > 0")).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
+        return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0")).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
     bool IsVariadic(struct FuncType* t)
@@ -765,12 +726,12 @@ namespace golang::abi
 
     unsigned char* DataChecked(struct Name n, int off, std::string whySafe)
     {
-        return (unsigned char*)(addChecked(Pointer(gocpp::recv(unsafe), n.Bytes), uintptr(off), whySafe));
+        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
     unsigned char* Data(struct Name n, int off)
     {
-        return (unsigned char*)(addChecked(Pointer(gocpp::recv(unsafe), n.Bytes), uintptr(off), "the runtime doesn't need to give you a reason"));
+        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"));
     }
 
     bool IsExported(struct Name n)
@@ -816,7 +777,7 @@ namespace golang::abi
     {
         for(auto i = 0; ; i++)
         {
-            auto b = byte(n & 0x7f);
+            auto b = unsigned char(n & 0x7f);
             n >>= 7;
             if(n == 0)
             {
@@ -834,7 +795,7 @@ namespace golang::abi
             return "";
         }
         auto [i, l] = ReadVarint(gocpp::recv(n), 1);
-        return String(gocpp::recv(unsafe), DataChecked(gocpp::recv(n), 1 + i, "non-empty string"), l);
+        return unsafe::String(DataChecked(gocpp::recv(n), 1 + i, "non-empty string"), l);
     }
 
     std::string Tag(struct Name n)
@@ -845,7 +806,7 @@ namespace golang::abi
         }
         auto [i, l] = ReadVarint(gocpp::recv(n), 1);
         auto [i2, l2] = ReadVarint(gocpp::recv(n), 1 + i + l);
-        return String(gocpp::recv(unsafe), DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
+        return unsafe::String(DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
     }
 
     Name NewName(std::string n, std::string tag, bool exported, bool embedded)

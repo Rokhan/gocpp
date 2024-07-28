@@ -3,8 +3,64 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::runtime
 {
     using lockRank = int;
+    const lockRank lockRankUnknown = 0;
+    const lockRank lockRankSysmon = 1;
+    const lockRank lockRankScavenge = 2;
+    const lockRank lockRankForcegc = 3;
+    const lockRank lockRankDefer = 4;
+    const lockRank lockRankSweepWaiters = 5;
+    const lockRank lockRankAssistQueue = 6;
+    const lockRank lockRankSweep = 7;
+    const lockRank lockRankTestR = 8;
+    const lockRank lockRankTestW = 9;
+    const lockRank lockRankAllocmW = 10;
+    const lockRank lockRankExecW = 11;
+    const lockRank lockRankCpuprof = 12;
+    const lockRank lockRankPollDesc = 13;
+    const lockRank lockRankWakeableSleep = 14;
+    const lockRank lockRankAllocmR = 15;
+    const lockRank lockRankExecR = 16;
+    const lockRank lockRankSched = 17;
+    const lockRank lockRankAllg = 18;
+    const lockRank lockRankAllp = 19;
+    const lockRank lockRankTimers = 20;
+    const lockRank lockRankNetpollInit = 21;
+    const lockRank lockRankHchan = 22;
+    const lockRank lockRankNotifyList = 23;
+    const lockRank lockRankSudog = 24;
+    const lockRank lockRankRoot = 25;
+    const lockRank lockRankItab = 26;
+    const lockRank lockRankReflectOffs = 27;
+    const lockRank lockRankUserArenaState = 28;
+    const lockRank lockRankTraceBuf = 29;
+    const lockRank lockRankTraceStrings = 30;
+    const lockRank lockRankFin = 31;
+    const lockRank lockRankSpanSetSpine = 32;
+    const lockRank lockRankMspanSpecial = 33;
+    const lockRank lockRankGcBitsArenas = 34;
+    const lockRank lockRankProfInsert = 35;
+    const lockRank lockRankProfBlock = 36;
+    const lockRank lockRankProfMemActive = 37;
+    const lockRank lockRankProfMemFuture = 38;
+    const lockRank lockRankGscan = 39;
+    const lockRank lockRankStackpool = 40;
+    const lockRank lockRankStackLarge = 41;
+    const lockRank lockRankHchanLeaf = 42;
+    const lockRank lockRankWbufSpans = 43;
+    const lockRank lockRankMheap = 44;
+    const lockRank lockRankMheapSpecial = 45;
+    const lockRank lockRankGlobalAlloc = 46;
+    const lockRank lockRankTrace = 47;
+    const lockRank lockRankTraceStackTab = 48;
+    const lockRank lockRankPanic = 49;
+    const lockRank lockRankDeadlock = 50;
+    const lockRank lockRankRaceFini = 51;
+    const lockRank lockRankAllocmRInternal = 52;
+    const lockRank lockRankExecRInternal = 53;
+    const lockRank lockRankTestRInternal = 54;
+    const lockRank lockRankLeafRank = 1000;
 }
-

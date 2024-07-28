@@ -3,22 +3,26 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    const long traceBytesPerNumber = 10;
+    struct traceBufQueue;
+}
 #include "golang/runtime/internal/sys/nih.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/trace2event.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
 #include "golang/runtime/trace2time.fwd.h"
 
 namespace golang::runtime
 {
-    struct traceBuf;
-    struct traceBufHeader;
-    struct traceBufQueue;
     struct traceWriter;
+    struct traceBufHeader;
+    struct traceBuf;
 }
-
+#include "golang/runtime/internal/atomic/types.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mem.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/trace2event.fwd.h"

@@ -99,18 +99,13 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    int mutexLocked = 1 << 0;
-    int mutexWoken = 1 << 1;
-    int mutexStarving = 1 << 2;
-    int mutexWaiterShift = 3;
-    double starvationThresholdNs = 1e6;
     void Lock(struct Mutex* m)
     {
-        if(CompareAndSwapInt32(gocpp::recv(atomic), & m->state, 0, mutexLocked))
+        if(atomic::CompareAndSwapInt32(& m->state, 0, mutexLocked))
         {
-            if(race.Enabled)
+            if(race::Enabled)
             {
-                Acquire(gocpp::recv(race), Pointer(gocpp::recv(unsafe), m));
+                race::Acquire(unsafe::Pointer(m));
             }
             return;
         }
@@ -124,13 +119,13 @@ namespace golang::sync
         {
             return false;
         }
-        if(! CompareAndSwapInt32(gocpp::recv(atomic), & m->state, old, old | mutexLocked))
+        if(! atomic::CompareAndSwapInt32(& m->state, old, old | mutexLocked))
         {
             return false;
         }
-        if(race.Enabled)
+        if(race::Enabled)
         {
-            Acquire(gocpp::recv(race), Pointer(gocpp::recv(unsafe), m));
+            race::Acquire(unsafe::Pointer(m));
         }
         return true;
     }
@@ -146,7 +141,7 @@ namespace golang::sync
         {
             if(old & (mutexLocked | mutexStarving) == mutexLocked && runtime_canSpin(iter))
             {
-                if(! awoke && old & mutexWoken == 0 && (old >> mutexWaiterShift) != 0 && CompareAndSwapInt32(gocpp::recv(atomic), & m->state, old, old | mutexWoken))
+                if(! awoke && old & mutexWoken == 0 && (old >> mutexWaiterShift) != 0 && atomic::CompareAndSwapInt32(& m->state, old, old | mutexWoken))
                 {
                     awoke = true;
                 }
@@ -176,7 +171,7 @@ namespace golang::sync
                 }
                 go_new &^= mutexWoken;
             }
-            if(CompareAndSwapInt32(gocpp::recv(atomic), & m->state, old, go_new))
+            if(atomic::CompareAndSwapInt32(& m->state, old, go_new))
             {
                 if(old & (mutexLocked | mutexStarving) == 0)
                 {
@@ -196,12 +191,12 @@ namespace golang::sync
                     {
                         go_throw("sync: inconsistent mutex state");
                     }
-                    auto delta = int32(mutexLocked - (1 << mutexWaiterShift));
+                    auto delta = int32_t(mutexLocked - (1 << mutexWaiterShift));
                     if(! starving || (old >> mutexWaiterShift) == 1)
                     {
                         delta -= mutexStarving;
                     }
-                    AddInt32(gocpp::recv(atomic), & m->state, delta);
+                    atomic::AddInt32(& m->state, delta);
                     break;
                 }
                 awoke = true;
@@ -212,20 +207,20 @@ namespace golang::sync
                 old = m->state;
             }
         }
-        if(race.Enabled)
+        if(race::Enabled)
         {
-            Acquire(gocpp::recv(race), Pointer(gocpp::recv(unsafe), m));
+            race::Acquire(unsafe::Pointer(m));
         }
     }
 
     void Unlock(struct Mutex* m)
     {
-        if(race.Enabled)
+        if(race::Enabled)
         {
             _ = m->state;
-            Release(gocpp::recv(race), Pointer(gocpp::recv(unsafe), m));
+            race::Release(unsafe::Pointer(m));
         }
-        auto go_new = AddInt32(gocpp::recv(atomic), & m->state, - mutexLocked);
+        auto go_new = atomic::AddInt32(& m->state, - mutexLocked);
         if(go_new != 0)
         {
             unlockSlow(gocpp::recv(m), go_new);
@@ -248,7 +243,7 @@ namespace golang::sync
                     return;
                 }
                 go_new = (old - (1 << mutexWaiterShift)) | mutexWoken;
-                if(CompareAndSwapInt32(gocpp::recv(atomic), & m->state, old, go_new))
+                if(atomic::CompareAndSwapInt32(& m->state, old, go_new))
                 {
                     runtime_Semrelease(& m->sema, false, 1);
                     return;

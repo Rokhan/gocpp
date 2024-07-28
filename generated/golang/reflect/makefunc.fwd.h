@@ -3,17 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/abi.fwd.h"  [Ignored, known errors]
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/abi/abi.fwd.h"
 #include "golang/reflect/type.fwd.h"
 #include "golang/reflect/value.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::reflect
 {
-    struct makeFuncCtxt;
     struct makeFuncImpl;
     struct methodValue;
+    struct makeFuncCtxt;
 }
-
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

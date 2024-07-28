@@ -58,7 +58,7 @@ namespace golang::slices
                 return + 1;
             }
             auto v2 = s2[i];
-            if(auto c = Compare(gocpp::recv(cmp), v1, v2); c != 0)
+            if(auto c = cmp::Compare(v1, v2); c != 0)
             {
                 return c;
             }
@@ -346,12 +346,12 @@ namespace golang::slices
         {
             return false;
         }
-        auto elemSize = Sizeof(gocpp::recv(unsafe), a[0]);
+        auto elemSize = unsafe::Sizeof(a[0]);
         if(elemSize == 0)
         {
             return false;
         }
-        return uintptr(Pointer(gocpp::recv(unsafe), & a[0])) <= uintptr(Pointer(gocpp::recv(unsafe), & b[len(b) - 1])) + (elemSize - 1) && uintptr(Pointer(gocpp::recv(unsafe), & b[0])) <= uintptr(Pointer(gocpp::recv(unsafe), & a[len(a) - 1])) + (elemSize - 1);
+        return uintptr_t(unsafe::Pointer(& a[0])) <= uintptr_t(unsafe::Pointer(& b[len(b) - 1])) + (elemSize - 1) && uintptr_t(unsafe::Pointer(& b[0])) <= uintptr_t(unsafe::Pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
 
     int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle)

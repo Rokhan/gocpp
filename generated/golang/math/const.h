@@ -11,36 +11,5 @@
 
 namespace golang::math
 {
-    extern double E;
-    extern double Pi;
-    extern double Phi;
-    extern double Sqrt2;
-    extern double SqrtE;
-    extern double SqrtPi;
-    extern double SqrtPhi;
-    extern double Ln2;
-    extern double Log2E;
-    extern double Ln10;
-    extern double Log10E;
-    extern double MaxFloat32;
-    extern double SmallestNonzeroFloat32;
-    extern double MaxFloat64;
-    extern double SmallestNonzeroFloat64;
-    extern int intSize;
-    extern int MaxInt;
-    extern int MinInt;
-    extern int MaxInt8;
-    extern int MinInt8;
-    extern int MaxInt16;
-    extern int MinInt16;
-    extern int MaxInt32;
-    extern int MinInt32;
-    extern int MaxInt64;
-    extern int MinInt64;
-    extern int MaxUint;
-    extern int MaxUint8;
-    extern int MaxUint16;
-    extern int MaxUint32;
-    extern int MaxUint64;
 }
 

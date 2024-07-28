@@ -13,10 +13,6 @@
 
 namespace golang::unicode
 {
-    extern char MaxRune;
-    extern char ReplacementChar;
-    extern char MaxASCII;
-    extern char MaxLatin1;
     struct RangeTable
     {
         gocpp::slice<Range16> R16;
@@ -65,12 +61,6 @@ namespace golang::unicode
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
-    extern int UpperCase;
-    extern int LowerCase;
-    extern int TitleCase;
-    extern int MaxCase;
-    extern untyped rune UpperLower;
-    extern int linearMax;
     bool is16(gocpp::slice<Range16> ranges, uint16_t r);
     bool is32(gocpp::slice<Range32> ranges, uint32_t r);
     bool Is(RangeTable* rangeTab, gocpp::rune r);

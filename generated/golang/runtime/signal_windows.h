@@ -10,12 +10,12 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/arena.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/consts.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/preempt.h"  [Ignored, known errors]
@@ -29,10 +29,6 @@
 
 namespace golang::runtime
 {
-    extern int _SEM_FAILCRITICALERRORS;
-    extern int _SEM_NOGPFAULTERRORBOX;
-    extern int _SEM_NOOPENFILEERRORBOX;
-    extern int _WER_FAULT_REPORTING_NO_UI;
     void preventErrorDialogs();
     void enableWER();
     void exceptiontramp();
@@ -43,9 +39,6 @@ namespace golang::runtime
     void initExceptionHandler();
     bool isAbort(context* r);
     bool isgoexception(exceptionrecord* info, context* r);
-    extern int callbackVEH;
-    extern int callbackFirstVCH;
-    extern int callbackLastVCH;
     g* sigFetchGSafe();
     g* sigFetchG();
     int32_t sigtrampgo(exceptionpointers* ep, int kind);

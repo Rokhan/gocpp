@@ -17,6 +17,7 @@ namespace golang::main
 {
     void main()
     {
+        testGoTo();
         testFor(0);
         testFor(1);
         testFor(2);
@@ -27,6 +28,7 @@ namespace golang::main
 
     void testFor(int k)
     {
+        loop1:
         for(auto i = 0; i < 3; i++)
         {
             for(auto j = 0; j < 3; j++)
@@ -62,6 +64,7 @@ namespace golang::main
 
     void testRange(int k)
     {
+        loop1:
         for(auto [i, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
         {
             for(auto [j, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
@@ -93,6 +96,42 @@ namespace golang::main
         }
         mocklib::Println("end");
         mocklib::Println();
+    }
+
+    void testGoTo()
+    {
+        auto i = 0;
+        label1:
+        i++;
+        if(i < 5)
+        {
+            mocklib::Println("goto label1");
+            goto label1;
+        }
+        label2:
+        if(i < 10)
+        {
+            i++;
+            mocklib::Println("goto label2");
+            goto label2;
+        }
+        label3:
+        for(auto j = 0; j < 10; j++)
+        {
+            i++;
+            if(i < 15)
+            {
+                mocklib::Printf("goto label3, i = %v, j = %v\n", i, j);
+                goto label3;
+            }
+            mocklib::Printf("............ i = %v, j = %v\n", i, j);
+            if(false) {
+            label3_continue:
+                continue;
+            label3_break:
+                break;
+            }
+        }
     }
 
 }

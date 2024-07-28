@@ -3,12 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/bytealg/bytealg.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::strings
 {
     struct Builder;
 }
-
+// #include "golang/internal/bytealg/bytealg.fwd.h" [Ignored, known errors]
+#include "golang/unicode/utf8/utf8.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

@@ -21,13 +21,13 @@ namespace golang::slices
     void Sort(S x)
     {
         auto n = len(x);
-        pdqsortOrdered(x, 0, n, Len(gocpp::recv(bits), (unsigned int)(n)));
+        pdqsortOrdered(x, 0, n, bits::Len((unsigned int)(n)));
     }
 
     void SortFunc(S x, std::function<int (E a, E b)> cmp)
     {
         auto n = len(x);
-        pdqsortCmpFunc(x, 0, n, Len(gocpp::recv(bits), (unsigned int)(n)), cmp);
+        pdqsortCmpFunc(x, 0, n, bits::Len((unsigned int)(n)), cmp);
     }
 
     void SortStableFunc(S x, std::function<int (E a, E b)> cmp)
@@ -39,7 +39,7 @@ namespace golang::slices
     {
         for(auto i = len(x) - 1; i > 0; i--)
         {
-            if(Less(gocpp::recv(cmp), x[i], x[i - 1]))
+            if(cmp::Less(x[i], x[i - 1]))
             {
                 return false;
             }
@@ -128,7 +128,7 @@ namespace golang::slices
         for(; i < j; )
         {
             auto h = int((unsigned int)(i + j) >> 1);
-            if(Less(gocpp::recv(cmp), x[h], target))
+            if(cmp::Less(x[h], target))
             {
                 i = h + 1;
             }
@@ -159,9 +159,6 @@ namespace golang::slices
         return {i, i < n && cmp(x[i], target) == 0};
     }
 
-    sortedHint unknownHint = 0;
-    sortedHint increasingHint = 1;
-    sortedHint decreasingHint = 2;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;
@@ -172,7 +169,7 @@ namespace golang::slices
 
     unsigned int nextPowerOfTwo(int length)
     {
-        return 1 << Len(gocpp::recv(bits), (unsigned int)(length));
+        return 1 << bits::Len((unsigned int)(length));
     }
 
     bool isNaN(T x)

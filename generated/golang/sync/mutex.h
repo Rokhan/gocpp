@@ -81,11 +81,6 @@ namespace golang::sync
     void Unlock(const gocpp::ObjRecv<Locker>& self);
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value);
-    extern int mutexLocked;
-    extern int mutexWoken;
-    extern int mutexStarving;
-    extern int mutexWaiterShift;
-    extern double starvationThresholdNs;
     void Lock(struct Mutex* m);
     bool TryLock(struct Mutex* m);
     void lockSlow(struct Mutex* m);

@@ -11,11 +11,6 @@
 
 namespace golang::flate
 {
-    extern int lengthShift;
-    extern int offsetMask;
-    extern int typeMask;
-    extern int literalType;
-    extern int matchType;
     extern gocpp::array_base<uint32_t> lengthCodes;
     extern gocpp::array_base<uint32_t> offsetCodes;
     token literalToken(uint32_t literal);

@@ -3,7 +3,25 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::goos
 {
+    const long IsAix = 0;
+    const long IsAndroid = 0;
+    const long IsDarwin = 0;
+    const long IsDragonfly = 0;
+    const long IsFreebsd = 0;
+    const long IsHurd = 0;
+    const long IsIllumos = 0;
+    const long IsIos = 0;
+    const long IsJs = 0;
+    const long IsLinux = 0;
+    const long IsNacl = 0;
+    const long IsNetbsd = 0;
+    const long IsOpenbsd = 0;
+    const long IsPlan9 = 0;
+    const long IsSolaris = 0;
+    const long IsWasip1 = 0;
+    const long IsWindows = 1;
+    const long IsZos = 0;
 }
-

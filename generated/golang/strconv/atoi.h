@@ -37,9 +37,6 @@ namespace golang::strconv
     NumError* rangeError(std::string fn, std::string str);
     NumError* baseError(std::string fn, std::string str, int base);
     NumError* bitSizeError(std::string fn, std::string str, int bitSize);
-    extern int intSize;
-    extern int IntSize;
-    extern int maxUint64;
     std::tuple<uint64_t, std::string> ParseUint(std::string s, int base, int bitSize);
     std::tuple<int64_t, std::string> ParseInt(std::string s, int base, int bitSize);
     std::tuple<int, std::string> Atoi(std::string s);

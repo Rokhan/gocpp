@@ -3,14 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/cmp/cmp.fwd.h"  [Ignored, known errors]
-#include "golang/math/bits/bits.fwd.h"
-// #include "golang/slices/zsortanyfunc.fwd.h"  [Ignored, known errors]
-// #include "golang/slices/zsortordered.fwd.h"  [Ignored, known errors]
 
 namespace golang::slices
 {
     using sortedHint = int;
     using xorshift = uint64_t;
+    const sortedHint unknownHint = 0;
+    const sortedHint increasingHint = 1;
+    const sortedHint decreasingHint = 2;
 }
-
+// #include "golang/cmp/cmp.fwd.h" [Ignored, known errors]
+#include "golang/math/bits/bits.fwd.h"
+// #include "golang/slices/zsortanyfunc.fwd.h" [Ignored, known errors]
+// #include "golang/slices/zsortordered.fwd.h" [Ignored, known errors]

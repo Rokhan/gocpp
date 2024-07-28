@@ -15,37 +15,6 @@
 
 namespace golang::runtime
 {
-    int _PROT_NONE = 0;
-    int _PROT_READ = 1;
-    int _PROT_WRITE = 2;
-    int _PROT_EXEC = 4;
-    int _MAP_ANON = 1;
-    int _MAP_PRIVATE = 2;
-    int _DUPLICATE_SAME_ACCESS = 0x2;
-    int _THREAD_PRIORITY_HIGHEST = 0x2;
-    int _SIGINT = 0x2;
-    int _SIGTERM = 0xF;
-    int _CTRL_C_EVENT = 0x0;
-    int _CTRL_BREAK_EVENT = 0x1;
-    int _CTRL_CLOSE_EVENT = 0x2;
-    int _CTRL_LOGOFF_EVENT = 0x5;
-    int _CTRL_SHUTDOWN_EVENT = 0x6;
-    int _EXCEPTION_ACCESS_VIOLATION = 0xc0000005;
-    int _EXCEPTION_IN_PAGE_ERROR = 0xc0000006;
-    int _EXCEPTION_BREAKPOINT = 0x80000003;
-    int _EXCEPTION_ILLEGAL_INSTRUCTION = 0xc000001d;
-    int _EXCEPTION_FLT_DENORMAL_OPERAND = 0xc000008d;
-    int _EXCEPTION_FLT_DIVIDE_BY_ZERO = 0xc000008e;
-    int _EXCEPTION_FLT_INEXACT_RESULT = 0xc000008f;
-    int _EXCEPTION_FLT_OVERFLOW = 0xc0000091;
-    int _EXCEPTION_FLT_UNDERFLOW = 0xc0000093;
-    int _EXCEPTION_INT_DIVIDE_BY_ZERO = 0xc0000094;
-    int _EXCEPTION_INT_OVERFLOW = 0xc0000095;
-    int _INFINITE = 0xffffffff;
-    int _WAIT_TIMEOUT = 0x102;
-    int _EXCEPTION_CONTINUE_EXECUTION = - 0x1;
-    int _EXCEPTION_CONTINUE_SEARCH = 0x0;
-    int _EXCEPTION_CONTINUE_SEARCH_SEH = 0x1;
     
     std::ostream& systeminfo::PrintTo(std::ostream& os) const
     {

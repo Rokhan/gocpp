@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/runtime/internal/atomic/stubs.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/netpoll_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -40,7 +40,6 @@
 
 namespace golang::runtime
 {
-    extern int _NSIG;
     extern gocpp::array_base<uint16_t> bcryptprimitivesdll;
     extern gocpp::array_base<uint16_t> ntdlldll;
     extern gocpp::array_base<uint16_t> powrprofdll;
@@ -77,7 +76,6 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
     void asmstdcall(unsafe::Pointer fn);
     stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
-    extern int _MAX_PATH;
     void initSysDirectory();
     std::string windows_GetSystemDirectory();
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
@@ -88,10 +86,7 @@ namespace golang::runtime
     uintptr_t getGetProcAddress();
     int32_t getproccount();
     uintptr_t getPageSize();
-    extern uintptr_t currentProcess;
-    extern uintptr_t currentThread;
     uint32_t getlasterror();
-    extern double osRelaxMinNS;
     uint32_t osRelax(bool relax);
     extern bool haveHighResTimer;
     uintptr_t createHighResTimer();
@@ -141,7 +136,6 @@ namespace golang::runtime
     void profileLoop();
     void setProcessCPUProfiler(int32_t hz);
     void setThreadCPUProfiler(int32_t hz);
-    extern bool preemptMSupported;
     void preemptM(m* mp);
     void osPreemptExtEnter(m* mp);
     void osPreemptExtExit(m* mp);

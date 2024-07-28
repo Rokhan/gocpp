@@ -5,8 +5,3 @@
 
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-
-namespace golang::runtime
-{
-}
-

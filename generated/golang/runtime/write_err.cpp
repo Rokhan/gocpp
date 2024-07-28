@@ -18,7 +18,7 @@ namespace golang::runtime
 {
     void writeErr(gocpp::slice<unsigned char> b)
     {
-        write(2, Pointer(gocpp::recv(unsafe), & b[0]), int32(len(b)));
+        write(2, unsafe::Pointer(& b[0]), int32_t(len(b)));
     }
 
 }

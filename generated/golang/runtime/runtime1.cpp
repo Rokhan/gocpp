@@ -12,13 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/bytealg/indexbyte_native.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/auxv_none.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/runtime/internal/atomic/stubs.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
@@ -32,9 +32,6 @@
 
 namespace golang::runtime
 {
-    int tracebackCrash = 1 << 0;
-    int tracebackAll = 1 << 1;
-    int tracebackShift = 2;
     uint32_t traceback_cache = 2 << tracebackShift;
     uint32_t traceback_env;
     std::tuple<int32_t, bool, bool> gotraceback()
@@ -43,7 +40,7 @@ namespace golang::runtime
         bool all;
         bool crash;
         auto gp = getg();
-        auto t = Load(gocpp::recv(atomic), & traceback_cache);
+        auto t = atomic::Load(& traceback_cache);
         crash = t & tracebackCrash != 0;
         all = gp->m->throwing >= throwTypeUser || t & tracebackAll != 0;
         if(gp->m->traceback != 0)
@@ -51,7 +48,7 @@ namespace golang::runtime
             int32_t level;
             bool all;
             bool crash;
-            level = int32(gp->m->traceback);
+            level = int32_t(gp->m->traceback);
         }
         else
         if(gp->m->throwing >= throwTypeRuntime)
@@ -66,7 +63,7 @@ namespace golang::runtime
             int32_t level;
             bool all;
             bool crash;
-            level = int32(t >> tracebackShift);
+            level = int32_t(t >> tracebackShift);
         }
         return {level, all, crash};
     }
@@ -75,7 +72,7 @@ namespace golang::runtime
     unsigned char** argv;
     unsigned char* argv_index(unsigned char** argv, int32_t i)
     {
-        return *(unsigned char**)(add(Pointer(gocpp::recv(unsafe), argv), uintptr(i) * goarch.PtrSize));
+        return *(unsigned char**)(add(unsafe::Pointer(argv), uintptr_t(i) * goarch::PtrSize));
     }
 
     void args(int32_t c, unsigned char** v)
@@ -92,7 +89,7 @@ namespace golang::runtime
             return;
         }
         argslice = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), argc);
-        for(auto i = int32(0); i < argc; i++)
+        for(auto i = int32_t(0); i < argc; i++)
         {
             argslice[i] = gostringnocopy(argv_index(argv, i));
         }
@@ -100,13 +97,13 @@ namespace golang::runtime
 
     void goenvs_unix()
     {
-        auto n = int32(0);
+        auto n = int32_t(0);
         for(; argv_index(argv, argc + 1 + n) != nullptr; )
         {
             n++;
         }
         envs = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), n);
-        for(auto i = int32(0); i < n; i++)
+        for(auto i = int32_t(0); i < n; i++)
         {
             envs[i] = gostring(argv_index(argv, argc + 1 + i));
         }
@@ -123,7 +120,7 @@ namespace golang::runtime
     {
         test_z64 = 42;
         test_x64 = 0;
-        if(Cas64(gocpp::recv(atomic), & test_z64, test_x64, 1))
+        if(atomic::Cas64(& test_z64, test_x64, 1))
         {
             go_throw("cas64 failed");
         }
@@ -132,7 +129,7 @@ namespace golang::runtime
             go_throw("cas64 failed");
         }
         test_x64 = 42;
-        if(! Cas64(gocpp::recv(atomic), & test_z64, test_x64, 1))
+        if(! atomic::Cas64(& test_z64, test_x64, 1))
         {
             go_throw("cas64 failed");
         }
@@ -140,28 +137,28 @@ namespace golang::runtime
         {
             go_throw("cas64 failed");
         }
-        if(Load64(gocpp::recv(atomic), & test_z64) != 1)
+        if(atomic::Load64(& test_z64) != 1)
         {
             go_throw("load64 failed");
         }
-        Store64(gocpp::recv(atomic), & test_z64, (1 << 40) + 1);
-        if(Load64(gocpp::recv(atomic), & test_z64) != (1 << 40) + 1)
+        atomic::Store64(& test_z64, (1 << 40) + 1);
+        if(atomic::Load64(& test_z64) != (1 << 40) + 1)
         {
             go_throw("store64 failed");
         }
-        if(Xadd64(gocpp::recv(atomic), & test_z64, (1 << 40) + 1) != (2 << 40) + 2)
+        if(atomic::Xadd64(& test_z64, (1 << 40) + 1) != (2 << 40) + 2)
         {
             go_throw("xadd64 failed");
         }
-        if(Load64(gocpp::recv(atomic), & test_z64) != (2 << 40) + 2)
+        if(atomic::Load64(& test_z64) != (2 << 40) + 2)
         {
             go_throw("xadd64 failed");
         }
-        if(Xchg64(gocpp::recv(atomic), & test_z64, (3 << 40) + 3) != (2 << 40) + 2)
+        if(atomic::Xchg64(& test_z64, (3 << 40) + 3) != (2 << 40) + 2)
         {
             go_throw("xchg64 failed");
         }
-        if(Load64(gocpp::recv(atomic), & test_z64) != (3 << 40) + 3)
+        if(atomic::Load64(& test_z64) != (3 << 40) + 3)
         {
             go_throw("xchg64 failed");
         }
@@ -215,63 +212,63 @@ namespace golang::runtime
 
         x1t x1 = {};
         y1t y1 = {};
-        if(Sizeof(gocpp::recv(unsafe), a) != 1)
+        if(unsafe::Sizeof(a) != 1)
         {
             go_throw("bad a");
         }
-        if(Sizeof(gocpp::recv(unsafe), b) != 1)
+        if(unsafe::Sizeof(b) != 1)
         {
             go_throw("bad b");
         }
-        if(Sizeof(gocpp::recv(unsafe), c) != 2)
+        if(unsafe::Sizeof(c) != 2)
         {
             go_throw("bad c");
         }
-        if(Sizeof(gocpp::recv(unsafe), d) != 2)
+        if(unsafe::Sizeof(d) != 2)
         {
             go_throw("bad d");
         }
-        if(Sizeof(gocpp::recv(unsafe), e) != 4)
+        if(unsafe::Sizeof(e) != 4)
         {
             go_throw("bad e");
         }
-        if(Sizeof(gocpp::recv(unsafe), f) != 4)
+        if(unsafe::Sizeof(f) != 4)
         {
             go_throw("bad f");
         }
-        if(Sizeof(gocpp::recv(unsafe), g) != 8)
+        if(unsafe::Sizeof(g) != 8)
         {
             go_throw("bad g");
         }
-        if(Sizeof(gocpp::recv(unsafe), h) != 8)
+        if(unsafe::Sizeof(h) != 8)
         {
             go_throw("bad h");
         }
-        if(Sizeof(gocpp::recv(unsafe), i) != 4)
+        if(unsafe::Sizeof(i) != 4)
         {
             go_throw("bad i");
         }
-        if(Sizeof(gocpp::recv(unsafe), j) != 8)
+        if(unsafe::Sizeof(j) != 8)
         {
             go_throw("bad j");
         }
-        if(Sizeof(gocpp::recv(unsafe), k) != goarch.PtrSize)
+        if(unsafe::Sizeof(k) != goarch::PtrSize)
         {
             go_throw("bad k");
         }
-        if(Sizeof(gocpp::recv(unsafe), l) != goarch.PtrSize)
+        if(unsafe::Sizeof(l) != goarch::PtrSize)
         {
             go_throw("bad l");
         }
-        if(Sizeof(gocpp::recv(unsafe), x1) != 1)
+        if(unsafe::Sizeof(x1) != 1)
         {
             go_throw("bad unsafe.Sizeof x1");
         }
-        if(Offsetof(gocpp::recv(unsafe), y1.y) != 1)
+        if(unsafe::Offsetof(y1.y) != 1)
         {
             go_throw("bad offsetof y1.y");
         }
-        if(Sizeof(gocpp::recv(unsafe), y1) != 2)
+        if(unsafe::Sizeof(y1) != 2)
         {
             go_throw("bad unsafe.Sizeof y1");
         }
@@ -281,7 +278,7 @@ namespace golang::runtime
         }
         uint32_t z = {};
         z = 1;
-        if(! Cas(gocpp::recv(atomic), & z, 1, 2))
+        if(! atomic::Cas(& z, 1, 2))
         {
             go_throw("cas1");
         }
@@ -290,7 +287,7 @@ namespace golang::runtime
             go_throw("cas2");
         }
         z = 4;
-        if(Cas(gocpp::recv(atomic), & z, 5, 6))
+        if(atomic::Cas(& z, 5, 6))
         {
             go_throw("cas3");
         }
@@ -299,7 +296,7 @@ namespace golang::runtime
             go_throw("cas4");
         }
         z = 0xffffffff;
-        if(! Cas(gocpp::recv(atomic), & z, 0xffffffff, 0xfffffffe))
+        if(! atomic::Cas(& z, 0xffffffff, 0xfffffffe))
         {
             go_throw("cas5");
         }
@@ -308,18 +305,18 @@ namespace golang::runtime
             go_throw("cas6");
         }
         m = gocpp::array<unsigned char, 4> {1, 1, 1, 1};
-        Or8(gocpp::recv(atomic), & m[1], 0xf0);
+        atomic::Or8(& m[1], 0xf0);
         if(m[0] != 1 || m[1] != 0xf1 || m[2] != 1 || m[3] != 1)
         {
             go_throw("atomicor8");
         }
         m = gocpp::array<unsigned char, 4> {0xff, 0xff, 0xff, 0xff};
-        And8(gocpp::recv(atomic), & m[1], 0x1);
+        atomic::And8(& m[1], 0x1);
         if(m[0] != 0xff || m[1] != 0x1 || m[2] != 0xff || m[3] != 0xff)
         {
             go_throw("atomicand8");
         }
-        *(uint64_t*)(Pointer(gocpp::recv(unsafe), & j)) = ^ uint64_t(0);
+        *(uint64_t*)(unsafe::Pointer(& j)) = ~ uint64_t(0);
         if(j == j)
         {
             go_throw("float64nan");
@@ -328,7 +325,7 @@ namespace golang::runtime
         {
             go_throw("float64nan1");
         }
-        *(uint64_t*)(Pointer(gocpp::recv(unsafe), & j1)) = ^ uint64_t(1);
+        *(uint64_t*)(unsafe::Pointer(& j1)) = ~ uint64_t(1);
         if(j == j1)
         {
             go_throw("float64nan2");
@@ -337,7 +334,7 @@ namespace golang::runtime
         {
             go_throw("float64nan3");
         }
-        *(uint32_t*)(Pointer(gocpp::recv(unsafe), & i)) = ^ uint32_t(0);
+        *(uint32_t*)(unsafe::Pointer(& i)) = ~ uint32_t(0);
         if(i == i)
         {
             go_throw("float32nan");
@@ -346,7 +343,7 @@ namespace golang::runtime
         {
             go_throw("float32nan1");
         }
-        *(uint32_t*)(Pointer(gocpp::recv(unsafe), & i1)) = ^ uint32_t(1);
+        *(uint32_t*)(unsafe::Pointer(& i1)) = ~ uint32_t(1);
         if(i == i1)
         {
             go_throw("float32nan2");
@@ -449,6 +446,13 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 debug;
     gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {gocpp::Init<>([](& x) { x.name = "allocfreetrace"; x.value = & debug.allocfreetrace; }), gocpp::Init<>([](& x) { x.name = "clobberfree"; x.value = & debug.clobberfree; }), gocpp::Init<>([](& x) { x.name = "cgocheck"; x.value = & debug.cgocheck; }), gocpp::Init<>([](& x) { x.name = "disablethp"; x.value = & debug.disablethp; }), gocpp::Init<>([](& x) { x.name = "dontfreezetheworld"; x.value = & debug.dontfreezetheworld; }), gocpp::Init<>([](& x) { x.name = "efence"; x.value = & debug.efence; }), gocpp::Init<>([](& x) { x.name = "gccheckmark"; x.value = & debug.gccheckmark; }), gocpp::Init<>([](& x) { x.name = "gcpacertrace"; x.value = & debug.gcpacertrace; }), gocpp::Init<>([](& x) { x.name = "gcshrinkstackoff"; x.value = & debug.gcshrinkstackoff; }), gocpp::Init<>([](& x) { x.name = "gcstoptheworld"; x.value = & debug.gcstoptheworld; }), gocpp::Init<>([](& x) { x.name = "gctrace"; x.value = & debug.gctrace; }), gocpp::Init<>([](& x) { x.name = "invalidptr"; x.value = & debug.invalidptr; }), gocpp::Init<>([](& x) { x.name = "madvdontneed"; x.value = & debug.madvdontneed; }), gocpp::Init<>([](& x) { x.name = "runtimecontentionstacks"; x.atomic = & debug.runtimeContentionStacks; }), gocpp::Init<>([](& x) { x.name = "sbrk"; x.value = & debug.sbrk; }), gocpp::Init<>([](& x) { x.name = "scavtrace"; x.value = & debug.scavtrace; }), gocpp::Init<>([](& x) { x.name = "scheddetail"; x.value = & debug.scheddetail; }), gocpp::Init<>([](& x) { x.name = "schedtrace"; x.value = & debug.schedtrace; }), gocpp::Init<>([](& x) { x.name = "tracebackancestors"; x.value = & debug.tracebackancestors; }), gocpp::Init<>([](& x) { x.name = "asyncpreemptoff"; x.value = & debug.asyncpreemptoff; }), gocpp::Init<>([](& x) { x.name = "inittrace"; x.value = & debug.inittrace; }), gocpp::Init<>([](& x) { x.name = "harddecommit"; x.value = & debug.harddecommit; }), gocpp::Init<>([](& x) { x.name = "adaptivestackstart"; x.value = & debug.adaptivestackstart; }), gocpp::Init<>([](& x) { x.name = "tracefpunwindoff"; x.value = & debug.tracefpunwindoff; }), gocpp::Init<>([](& x) { x.name = "panicnil"; x.atomic = & debug.panicnil; }), gocpp::Init<>([](& x) { x.name = "traceadvanceperiod"; x.value = & debug.traceadvanceperiod; })};
     void parsedebugvars()
@@ -508,7 +512,7 @@ namespace golang::runtime
             std::string field = {};
             if(seen == nullptr)
             {
-                auto i = IndexByteString(gocpp::recv(bytealg), p, ',');
+                auto i = bytealg::IndexByteString(p, ',');
                 if(i < 0)
                 {
                     std::tie(field, p) = std::tuple{p, ""};
@@ -534,7 +538,7 @@ namespace golang::runtime
                     std::tie(p, field) = std::tuple{p.make_slice(0, i), p.make_slice(i + 1)};
                 }
             }
-            auto i = IndexByteString(gocpp::recv(bytealg), field, '=');
+            auto i = bytealg::IndexByteString(field, '=');
             if(i < 0)
             {
                 continue;
@@ -636,21 +640,21 @@ namespace golang::runtime
             t |= tracebackCrash;
         }
         t |= traceback_env;
-        Store(gocpp::recv(atomic), & traceback_cache, t);
+        atomic::Store(& traceback_cache, t);
     }
 
     int32_t timediv(int64_t v, int32_t div, int32_t* rem)
     {
-        auto res = int32(0);
+        auto res = int32_t(0);
         for(auto bit = 30; bit >= 0; bit--)
         {
-            if(v >= (int64(div) << (unsigned int)(bit)))
+            if(v >= (int64_t(div) << (unsigned int)(bit)))
             {
-                v = v - (int64(div) << (unsigned int)(bit));
+                v = v - (int64_t(div) << (unsigned int)(bit));
                 res |= 1 << (unsigned int)(bit);
             }
         }
-        if(v >= int64(div))
+        if(v >= int64_t(div))
         {
             if(rem != nullptr)
             {
@@ -660,7 +664,7 @@ namespace golang::runtime
         }
         if(rem != nullptr)
         {
-            *rem = int32(v);
+            *rem = int32_t(v);
         }
         return res;
     }
@@ -685,11 +689,11 @@ namespace golang::runtime
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks()
     {
         auto modules = activeModules();
-        auto sections = gocpp::slice<unsafe::Pointer> {Pointer(gocpp::recv(unsafe), modules[0]->types)};
+        auto sections = gocpp::slice<unsafe::Pointer> {unsafe::Pointer(modules[0]->types)};
         auto ret = gocpp::slice<gocpp::slice<int32_t>> {modules[0]->typelinks};
         for(auto [_, md] : modules.make_slice(1))
         {
-            sections = append(sections, Pointer(gocpp::recv(unsafe), md->types));
+            sections = append(sections, unsafe::Pointer(md->types));
             ret = append(ret, md->typelinks);
         }
         return {sections, ret};
@@ -697,12 +701,12 @@ namespace golang::runtime
 
     unsafe::Pointer reflect_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), resolveNameOff(ptrInModule, nameOff(off)).Bytes);
+        return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
@@ -712,12 +716,12 @@ namespace golang::runtime
 
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), resolveNameOff(ptrInModule, nameOff(off)).Bytes);
+        return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return Pointer(gocpp::recv(unsafe), typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     int32_t reflect_addReflectOff(unsafe::Pointer ptr)

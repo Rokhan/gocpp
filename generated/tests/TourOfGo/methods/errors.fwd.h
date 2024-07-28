@@ -3,11 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 #include "golang/time/time.fwd.h"
 
 namespace golang::main
 {
     struct MyError;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

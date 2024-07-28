@@ -18,8 +18,6 @@ namespace golang::fmt
 {
     extern std::string ldigits;
     extern std::string udigits;
-    extern bool go_signed;
-    extern bool go_unsigned;
     struct fmtFlags
     {
         bool widPresent;

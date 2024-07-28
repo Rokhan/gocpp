@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
+    const long PrimeRK = 16777619;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

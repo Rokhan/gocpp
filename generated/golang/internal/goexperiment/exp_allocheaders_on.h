@@ -11,7 +11,5 @@
 
 namespace golang::goexperiment
 {
-    extern bool AllocHeaders;
-    extern int AllocHeadersInt;
 }
 

@@ -10,4 +10,3 @@ namespace golang::unsafeheader
     struct Slice;
     struct String;
 }
-

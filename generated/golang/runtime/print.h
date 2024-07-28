@@ -9,11 +9,11 @@
 #include "golang/runtime/print.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
@@ -34,7 +34,7 @@ namespace golang::runtime
     void printcomplex(gocpp::complex128 c);
     void printuint(uint64_t v);
     void printint(int64_t v);
-    extern int minhexdigits;
+    extern long minhexdigits;
     void printhex(uint64_t v);
     void printpointer(unsafe::Pointer p);
     void printuintptr(uintptr_t p);

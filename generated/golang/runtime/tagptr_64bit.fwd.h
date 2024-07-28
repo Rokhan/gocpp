@@ -3,14 +3,24 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const long addrBits = 48;
+    const long aixAddrBits = 57;
+    const long riscv64AddrBits = 56;
+    const int tagBits = 64 - addrBits + 3;
+    const int aixTagBits = 64 - aixAddrBits + 3;
+    const int riscv64TagBits = 64 - riscv64AddrBits + 3;
+}
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
+
+namespace golang::runtime
+{
+    const int taggedPointerBits = (goos::IsAix * aixTagBits) + (goarch::IsRiscv64 * riscv64TagBits) + ((1 - goos::IsAix) * (1 - goarch::IsRiscv64) * tagBits);
+}
 #include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/tagptr.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

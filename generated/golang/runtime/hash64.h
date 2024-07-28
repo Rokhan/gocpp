@@ -9,18 +9,13 @@
 #include "golang/runtime/hash64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/math/math.h"
 // #include "golang/runtime/alg.h"  [Ignored, known errors]
+#include "golang/runtime/internal/math/math.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
-    extern int m1;
-    extern int m2;
-    extern int m3;
-    extern int m4;
-    extern int m5;
     uintptr_t memhashFallback(unsafe::Pointer p, uintptr_t seed, uintptr_t s);
     uintptr_t memhash32Fallback(unsafe::Pointer p, uintptr_t seed);
     uintptr_t memhash64Fallback(unsafe::Pointer p, uintptr_t seed);

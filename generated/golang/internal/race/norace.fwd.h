@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::race
 {
+    const bool Enabled = false;
 }
-
+#include "golang/unsafe/unsafe.fwd.h"

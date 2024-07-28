@@ -6,8 +6,3 @@
 #include "golang/math/bits.fwd.h"
 #include "golang/math/modf_noasm.fwd.h"
 #include "golang/math/unsafe.fwd.h"
-
-namespace golang::math
-{
-}
-

@@ -11,10 +11,6 @@
 
 namespace golang::chacha8rand
 {
-    extern int ctrInc;
-    extern int ctrMax;
-    extern int chunk;
-    extern int reseed;
     void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter);
     struct State
     {

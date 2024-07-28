@@ -3,39 +3,41 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/errors/errors.fwd.h"
-// #include "golang/sync/pool.fwd.h"  [Ignored, known errors]
 
 namespace golang::io
 {
+    const long SeekStart = 0;
+    const long SeekCurrent = 1;
+    const long SeekEnd = 2;
+    struct Reader;
+    struct Writer;
+    struct Closer;
+    struct Seeker;
+    struct ReadWriter;
+    struct ReadCloser;
+    struct WriteCloser;
+    struct ReadWriteCloser;
+    struct ReadSeeker;
+    struct ReadSeekCloser;
+    struct WriteSeeker;
+    struct ReadWriteSeeker;
+    struct ReaderFrom;
+    struct WriterTo;
+    struct ReaderAt;
+    struct WriterAt;
     struct ByteReader;
     struct ByteScanner;
     struct ByteWriter;
-    struct Closer;
-    struct LimitedReader;
-    struct OffsetWriter;
-    struct ReadCloser;
-    struct ReadSeekCloser;
-    struct ReadSeeker;
-    struct ReadWriteCloser;
-    struct ReadWriteSeeker;
-    struct ReadWriter;
-    struct Reader;
-    struct ReaderAt;
-    struct ReaderFrom;
     struct RuneReader;
     struct RuneScanner;
-    struct SectionReader;
-    struct Seeker;
     struct StringWriter;
-    struct WriteCloser;
-    struct WriteSeeker;
-    struct Writer;
-    struct WriterAt;
-    struct WriterTo;
+    struct LimitedReader;
+    struct SectionReader;
+    struct OffsetWriter;
+    struct teeReader;
     struct discard;
     struct nopCloser;
     struct nopCloserWriterTo;
-    struct teeReader;
 }
-
+#include "golang/errors/errors.fwd.h"
+// #include "golang/sync/pool.fwd.h" [Ignored, known errors]

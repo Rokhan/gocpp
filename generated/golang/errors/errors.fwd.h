@@ -3,8 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::errors
 {
     struct errorString;
 }
-

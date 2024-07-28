@@ -10,9 +10,9 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
+#include "golang/runtime/cgocheck.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/cgocheck.h"
 #include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]

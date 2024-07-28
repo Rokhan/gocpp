@@ -73,14 +73,13 @@ namespace golang::runtime
         }
         if(auto lastUpdate = Load(gocpp::recv(l->lastUpdate)); now >= lastUpdate)
         {
-            accumulate(gocpp::recv(l), 0, (now - lastUpdate) * int64(l->nprocs));
+            accumulate(gocpp::recv(l), 0, (now - lastUpdate) * int64_t(l->nprocs));
         }
         Store(gocpp::recv(l->lastUpdate), now);
         l->transitioning = false;
         unlock(gocpp::recv(l));
     }
 
-    double gcCPULimiterUpdatePeriod = 10e6;
     bool needUpdate(struct gcCPULimiterState* l, int64_t now)
     {
         return now - Load(gocpp::recv(l->lastUpdate)) > gcCPULimiterUpdatePeriod;
@@ -117,7 +116,7 @@ namespace golang::runtime
         {
             return;
         }
-        auto windowTotalTime = (now - lastUpdate) * int64(l->nprocs);
+        auto windowTotalTime = (now - lastUpdate) * int64_t(l->nprocs);
         Store(gocpp::recv(l->lastUpdate), now);
         auto assistTime = Load(gocpp::recv(l->assistTimePool));
         if(assistTime != 0)
@@ -169,7 +168,7 @@ namespace golang::runtime
         auto windowGCTime = assistTime;
         if(l->gcEnabled)
         {
-            windowGCTime += int64(double(windowTotalTime) * gcBackgroundUtilization);
+            windowGCTime += int64_t(double(windowTotalTime) * gcBackgroundUtilization);
         }
         windowTotalTime -= idleTime;
         accumulate(gocpp::recv(l), windowTotalTime - windowGCTime, windowGCTime);
@@ -219,7 +218,6 @@ namespace golang::runtime
         }
     }
 
-    double capacityPerProc = 1e9;
     void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs)
     {
         if(! tryLock(gocpp::recv(l)))
@@ -243,14 +241,6 @@ namespace golang::runtime
         unlock(gocpp::recv(l));
     }
 
-    limiterEventType limiterEventNone = 0;
-    limiterEventType limiterEventIdleMarkWork = 1;
-    limiterEventType limiterEventMarkAssist = 2;
-    limiterEventType limiterEventScavengeAssist = 3;
-    limiterEventType limiterEventIdle = 4;
-    int limiterEventBits = 3;
-    uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
-    limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
     {
         return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));
@@ -258,7 +248,7 @@ namespace golang::runtime
 
     int64_t duration(limiterEventStamp s, int64_t now)
     {
-        auto start = int64((uint64_t(now) & limiterEventTypeMask) | (uint64_t(s) &^ limiterEventTypeMask));
+        auto start = int64_t((uint64_t(now) & limiterEventTypeMask) | (uint64_t(s) &^ limiterEventTypeMask));
         if(now < start)
         {
             return 0;

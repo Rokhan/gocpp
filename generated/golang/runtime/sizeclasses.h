@@ -11,13 +11,6 @@
 
 namespace golang::runtime
 {
-    extern int _MaxSmallSize;
-    extern int smallSizeDiv;
-    extern int smallSizeMax;
-    extern int largeSizeDiv;
-    extern int _NumSizeClasses;
-    extern int _PageShift;
-    extern int maxObjsPerSpan;
     extern gocpp::array<uint16_t, _NumSizeClasses> class_to_size;
     extern gocpp::array<uint8_t, _NumSizeClasses> class_to_allocnpages;
     extern gocpp::array<uint32_t, _NumSizeClasses> class_to_divmagic;

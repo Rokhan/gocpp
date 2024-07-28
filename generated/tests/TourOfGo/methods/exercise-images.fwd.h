@@ -3,12 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/golang.org/x/tour/pic/pic.fwd.h"  [Ignored, known errors]
-#include "golang/image/color/color.fwd.h"
-#include "golang/image/geom.fwd.h"
 
 namespace golang::main
 {
     struct Image;
 }
-
+// #include "golang/golang.org/x/tour/pic/pic.fwd.h" [Ignored, known errors]
+#include "golang/image/color/color.fwd.h"
+#include "golang/image/geom.fwd.h"

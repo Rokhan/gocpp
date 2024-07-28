@@ -3,7 +3,38 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::math
 {
+    const double E = 2.71828182845904523536028747135266249775724709369995957496696763;
+    const double Pi = 3.14159265358979323846264338327950288419716939937510582097494459;
+    const double Phi = 1.61803398874989484820458683436563811772030917980576286213544862;
+    const double Sqrt2 = 1.41421356237309504880168872420969807856967187537694807317667974;
+    const double SqrtE = 1.64872127070012814684865078781416357165377610071014801157507931;
+    const double SqrtPi = 1.77245385090551602729816748334114518279754945612238712821380779;
+    const double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
+    const double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
+    const double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
+    const double MaxFloat32 = 0x1p127 * (1 + (1 - 0x1p-23));
+    const double SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23;
+    const double MaxFloat64 = 0x1p1023 * (1 + (1 - 0x1p-52));
+    const double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
+    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
+    const int MaxInt8 = (1 << 7) - 1;
+    const int MinInt8 = - 1 << 7;
+    const int MaxInt16 = (1 << 15) - 1;
+    const int MinInt16 = - 1 << 15;
+    const int MaxInt32 = (1 << 31) - 1;
+    const int MinInt32 = - 1 << 31;
+    const int MaxInt64 = (1 << 63) - 1;
+    const int MinInt64 = - 1 << 63;
+    const int MaxUint8 = (1 << 8) - 1;
+    const int MaxUint16 = (1 << 16) - 1;
+    const int MaxUint32 = (1 << 32) - 1;
+    const int MaxUint64 = (1 << 64) - 1;
+    const double Log2E = 1 / Ln2;
+    const double Log10E = 1 / Ln10;
+    const int MaxInt = (1 << (intSize - 1)) - 1;
+    const int MinInt = - 1 << (intSize - 1);
+    const int MaxUint = (1 << intSize) - 1;
 }
-

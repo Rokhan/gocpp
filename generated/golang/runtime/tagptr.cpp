@@ -13,6 +13,5 @@
 
 namespace golang::runtime
 {
-    int minTagBits = 10;
 }
 

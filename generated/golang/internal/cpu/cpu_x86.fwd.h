@@ -3,9 +3,30 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/cpu/cpu.fwd.h"  [Ignored, known errors]
 
 namespace golang::cpu
 {
+    const long CacheLinePadSize = 64;
+    const int cpuid_SSE2 = 1 << 26;
+    const int cpuid_SSE3 = 1 << 0;
+    const int cpuid_PCLMULQDQ = 1 << 1;
+    const int cpuid_SSSE3 = 1 << 9;
+    const int cpuid_FMA = 1 << 12;
+    const int cpuid_SSE41 = 1 << 19;
+    const int cpuid_SSE42 = 1 << 20;
+    const int cpuid_POPCNT = 1 << 23;
+    const int cpuid_AES = 1 << 25;
+    const int cpuid_OSXSAVE = 1 << 27;
+    const int cpuid_AVX = 1 << 28;
+    const int cpuid_BMI1 = 1 << 3;
+    const int cpuid_AVX2 = 1 << 5;
+    const int cpuid_BMI2 = 1 << 8;
+    const int cpuid_ERMS = 1 << 9;
+    const int cpuid_AVX512F = 1 << 16;
+    const int cpuid_ADX = 1 << 19;
+    const int cpuid_SHA = 1 << 29;
+    const int cpuid_AVX512BW = 1 << 30;
+    const int cpuid_AVX512VL = 1 << 31;
+    const int cpuid_RDTSCP = 1 << 27;
 }
-
+// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]

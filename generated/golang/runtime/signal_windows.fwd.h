@@ -3,26 +3,32 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/arena.fwd.h"
-// #include "golang/runtime/defs_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/defs_windows_amd64.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/preempt.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
+    const long _SEM_FAILCRITICALERRORS = 0x0001;
+    const long _SEM_NOGPFAULTERRORBOX = 0x0002;
+    const long _SEM_NOOPENFILEERRORBOX = 0x8000;
+    const long _WER_FAULT_REPORTING_NO_UI = 0x0020;
+    const int callbackVEH = 0;
+    const int callbackFirstVCH = 1;
+    const int callbackLastVCH = 2;
     struct gsignalStack;
 }
-
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/runtime/arena.fwd.h"
+// #include "golang/runtime/defs_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/defs_windows_amd64.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/internal/sys/consts.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/preempt.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/stack.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

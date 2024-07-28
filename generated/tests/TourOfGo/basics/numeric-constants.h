@@ -13,8 +13,6 @@
 
 namespace golang::main
 {
-    extern int Big;
-    extern int Small;
     int needInt(int x);
     double needFloat(double x);
     void main();

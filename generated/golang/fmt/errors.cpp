@@ -33,7 +33,7 @@ namespace golang::fmt
             switch(conditionId)
             {
                 case 0:
-                    err = New(gocpp::recv(errors), s);
+                    err = errors::New(s);
                     break;
                 case 1:
                     auto w = gocpp::InitPtr<wrapError>([](wrapError& x) { x.msg = s; });
@@ -43,7 +43,7 @@ namespace golang::fmt
                 default:
                     if(p->reordered)
                     {
-                        Ints(gocpp::recv(sort), p->wrappedErrs);
+                        sort::Ints(p->wrappedErrs);
                     }
                     gocpp::slice<std::string> errs = {};
                     for(auto [i, argNum] : p->wrappedErrs)

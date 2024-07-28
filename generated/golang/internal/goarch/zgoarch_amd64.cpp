@@ -13,30 +13,6 @@
 
 namespace golang::goarch
 {
-    std::string GOARCH = `amd64`;
-    int Is386 = 0;
-    int IsAmd64 = 1;
-    int IsAmd64p32 = 0;
-    int IsArm = 0;
-    int IsArmbe = 0;
-    int IsArm64 = 0;
-    int IsArm64be = 0;
-    int IsLoong64 = 0;
-    int IsMips = 0;
-    int IsMipsle = 0;
-    int IsMips64 = 0;
-    int IsMips64le = 0;
-    int IsMips64p32 = 0;
-    int IsMips64p32le = 0;
-    int IsPpc = 0;
-    int IsPpc64 = 0;
-    int IsPpc64le = 0;
-    int IsRiscv = 0;
-    int IsRiscv64 = 0;
-    int IsS390 = 0;
-    int IsS390x = 0;
-    int IsSparc = 0;
-    int IsSparc64 = 0;
-    int IsWasm = 0;
+    std::string GOARCH = "amd64";
 }
 

@@ -11,7 +11,7 @@
 #include "golang/runtime/mwbbuf.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
@@ -25,7 +25,6 @@
 
 namespace golang::runtime
 {
-    bool testSmallBuf = false;
     
     std::ostream& wbBuf::PrintTo(std::ostream& os) const
     {
@@ -42,21 +41,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    int wbBufEntries = 512;
-    int wbMaxEntriesPerCall = 8;
     void reset(struct wbBuf* b)
     {
-        auto start = uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
+        auto start = uintptr_t(unsafe::Pointer(& b->buf[0]));
         b->next = start;
         if(testSmallBuf)
         {
-            b->end = uintptr(Pointer(gocpp::recv(unsafe), & b->buf[wbMaxEntriesPerCall + 1]));
+            b->end = uintptr_t(unsafe::Pointer(& b->buf[wbMaxEntriesPerCall + 1]));
         }
         else
         {
-            b->end = start + uintptr(len(b->buf)) * Sizeof(gocpp::recv(unsafe), b->buf[0]);
+            b->end = start + uintptr_t(len(b->buf)) * unsafe::Sizeof(b->buf[0]);
         }
-        if((b->end - b->next) % Sizeof(gocpp::recv(unsafe), b->buf[0]) != 0)
+        if((b->end - b->next) % unsafe::Sizeof(b->buf[0]) != 0)
         {
             go_throw("bad write barrier buffer bounds");
         }
@@ -64,33 +61,33 @@ namespace golang::runtime
 
     void discard(struct wbBuf* b)
     {
-        b->next = uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
+        b->next = uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
     bool empty(struct wbBuf* b)
     {
-        return b->next == uintptr(Pointer(gocpp::recv(unsafe), & b->buf[0]));
+        return b->next == uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
     gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b)
     {
-        if(b->next + goarch.PtrSize > b->end)
+        if(b->next + goarch::PtrSize > b->end)
         {
             wbBufFlush();
         }
-        auto p = (gocpp::array<uintptr_t, 1>*)(Pointer(gocpp::recv(unsafe), b->next));
-        b->next += goarch.PtrSize;
+        auto p = (gocpp::array<uintptr_t, 1>*)(unsafe::Pointer(b->next));
+        b->next += goarch::PtrSize;
         return p;
     }
 
     gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b)
     {
-        if(b->next + 2 * goarch.PtrSize > b->end)
+        if(b->next + 2 * goarch::PtrSize > b->end)
         {
             wbBufFlush();
         }
-        auto p = (gocpp::array<uintptr_t, 2>*)(Pointer(gocpp::recv(unsafe), b->next));
-        b->next += 2 * goarch.PtrSize;
+        auto p = (gocpp::array<uintptr_t, 2>*)(unsafe::Pointer(b->next));
+        b->next += 2 * goarch::PtrSize;
         return p;
     }
 
@@ -110,8 +107,8 @@ namespace golang::runtime
 
     void wbBufFlush1(p* pp)
     {
-        auto start = uintptr(Pointer(gocpp::recv(unsafe), & pp->wbBuf.buf[0]));
-        auto n = (pp->wbBuf.next - start) / Sizeof(gocpp::recv(unsafe), pp->wbBuf.buf[0]);
+        auto start = uintptr_t(unsafe::Pointer(& pp->wbBuf.buf[0]));
+        auto n = (pp->wbBuf.next - start) / unsafe::Sizeof(pp->wbBuf.buf[0]);
         auto ptrs = pp->wbBuf.buf.make_slice(0, n);
         pp->wbBuf.next = 0;
         if(useCheckmark)
@@ -145,7 +142,7 @@ namespace golang::runtime
             auto [arena, pageIdx, pageMask] = pageIndexOf(base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
-                Or8(gocpp::recv(atomic), & arena->pageMarks[pageIdx], pageMask);
+                atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
             }
             if(noscan(gocpp::recv(span->spanclass)))
             {

@@ -3,19 +3,21 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/sort/sort_impl_go121.fwd.h"
-#include "golang/sort/zsortinterface.fwd.h"
 
 namespace golang::sort
 {
-    using Float64Slice = gocpp::slice<double>;
-    using IntSlice = gocpp::slice<int>;
     struct Interface;
-    using StringSlice = gocpp::slice<std::string>;
-    struct lessSwap;
-    struct reverse;
     using sortedHint = int;
     using xorshift = uint64_t;
+    struct lessSwap;
+    struct reverse;
+    using IntSlice = gocpp::slice<int>;
+    using Float64Slice = gocpp::slice<double>;
+    using StringSlice = gocpp::slice<std::string>;
+    const sortedHint unknownHint = 0;
+    const sortedHint increasingHint = 1;
+    const sortedHint decreasingHint = 2;
 }
-
+#include "golang/math/bits/bits.fwd.h"
+#include "golang/sort/sort_impl_go121.fwd.h"
+#include "golang/sort/zsortinterface.fwd.h"

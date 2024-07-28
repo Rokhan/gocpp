@@ -17,13 +17,6 @@
 
 namespace golang::flate
 {
-    extern int offsetCodeCount;
-    extern int endBlockMarker;
-    extern int lengthCodesStart;
-    extern int codegenCodeCount;
-    extern int badCode;
-    extern int bufferFlushSize;
-    extern int bufferSize;
     extern gocpp::slice<int8_t> lengthExtraBits;
     extern gocpp::slice<uint32_t> lengthBase;
     extern gocpp::slice<int8_t> offsetExtraBits;

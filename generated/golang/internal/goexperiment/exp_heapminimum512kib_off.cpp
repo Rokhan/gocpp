@@ -13,7 +13,5 @@
 
 namespace golang::goexperiment
 {
-    bool HeapMinimum512KiB = false;
-    int HeapMinimum512KiBInt = 0;
 }
 

@@ -15,7 +15,6 @@
 
 namespace golang::cpu
 {
-    int CacheLinePadSize = 64;
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg)
     /* convertBlockStmt, nil block */;
 
@@ -25,27 +24,6 @@ namespace golang::cpu
     int32_t getGOAMD64level()
     /* convertBlockStmt, nil block */;
 
-    int cpuid_SSE2 = 1 << 26;
-    int cpuid_SSE3 = 1 << 0;
-    int cpuid_PCLMULQDQ = 1 << 1;
-    int cpuid_SSSE3 = 1 << 9;
-    int cpuid_FMA = 1 << 12;
-    int cpuid_SSE41 = 1 << 19;
-    int cpuid_SSE42 = 1 << 20;
-    int cpuid_POPCNT = 1 << 23;
-    int cpuid_AES = 1 << 25;
-    int cpuid_OSXSAVE = 1 << 27;
-    int cpuid_AVX = 1 << 28;
-    int cpuid_BMI1 = 1 << 3;
-    int cpuid_AVX2 = 1 << 5;
-    int cpuid_BMI2 = 1 << 8;
-    int cpuid_ERMS = 1 << 9;
-    int cpuid_AVX512F = 1 << 16;
-    int cpuid_ADX = 1 << 19;
-    int cpuid_SHA = 1 << 29;
-    int cpuid_AVX512BW = 1 << 30;
-    int cpuid_AVX512VL = 1 << 31;
-    int cpuid_RDTSCP = 1 << 27;
     uint32_t maxExtendedFunctionInformation;
     void doinit()
     {
@@ -163,7 +141,7 @@ namespace golang::cpu
     {
         for(auto [_, arg] : args)
         {
-            b = append(b, byte((arg >> 0)), byte((arg >> 8)), byte((arg >> 16)), byte((arg >> 24)));
+            b = append(b, unsigned char((arg >> 0)), unsigned char((arg >> 8)), unsigned char((arg >> 16)), unsigned char((arg >> 24)));
         }
         return b;
     }

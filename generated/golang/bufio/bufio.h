@@ -17,7 +17,6 @@
 
 namespace golang::bufio
 {
-    extern int defaultBufSize;
     extern std::string ErrInvalidUnreadByte;
     extern std::string ErrInvalidUnreadRune;
     extern std::string ErrBufferFull;
@@ -38,8 +37,6 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    extern int minReadBufferSize;
-    extern int maxConsecutiveEmptyReads;
     Reader* NewReaderSize(io::Reader rd, int size);
     Reader* NewReader(io::Reader rd);
     int Size(struct Reader* b);

@@ -9,17 +9,11 @@
 #include "golang/runtime/internal/sys/consts.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goos/zgoos_windows.h"
 #include "golang/runtime/internal/sys/consts_norace.h"
 
 namespace golang::sys
 {
-    extern int StackGuardMultiplier;
-    extern int DefaultPhysPageSize;
-    extern int PCQuantum;
-    extern int Int64Align;
-    extern int MinFrameSize;
-    extern int StackAlign;
 }
 

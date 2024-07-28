@@ -3,11 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/errors/errors.fwd.h"
-#include "golang/hash/hash.fwd.h"
 
 namespace golang::adler32
 {
+    const long mod = 65521;
+    const long nmax = 5552;
+    const long Size = 4;
     using digest = uint32_t;
+    const int marshaledSize = len(magic) + 4;
 }
-
+#include "golang/errors/errors.fwd.h"
+#include "golang/hash/hash.fwd.h"

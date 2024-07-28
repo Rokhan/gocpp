@@ -3,35 +3,42 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/runtime/iface.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/race0.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    using arraytype = abi::ArrayType;
-    using chantype = abi::ChanType;
-    using functype = abi::FuncType;
-    using interfacetype = abi::InterfaceType;
-    using maptype = abi::MapType;
-    using name = abi::Name;
+    struct gocpp_id_0;
+    struct gocpp_id_1;
+    struct _typePair;
+    struct gocpp_id_2;
+    struct gocpp_id_3;
+}
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
     using nameOff = abi::NameOff;
-    using ptrtype = abi::PtrType;
-    using slicetype = abi::SliceType;
-    using structtype = abi::StructType;
+    using typeOff = abi::TypeOff;
     using textOff = abi::TextOff;
     using _type = abi::Type;
-    using typeOff = abi::TypeOff;
-    using uncommontype = abi::UncommonType;
-    struct _typePair;
     struct rtype;
+    using uncommontype = abi::UncommonType;
+    using interfacetype = abi::InterfaceType;
+    using maptype = abi::MapType;
+    using arraytype = abi::ArrayType;
+    using chantype = abi::ChanType;
+    using slicetype = abi::SliceType;
+    using functype = abi::FuncType;
+    using ptrtype = abi::PtrType;
+    using name = abi::Name;
+    using structtype = abi::StructType;
 }
-
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/runtime/iface.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
+#include "golang/runtime/runtime2.fwd.h"
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

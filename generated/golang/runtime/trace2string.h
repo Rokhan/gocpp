@@ -19,7 +19,6 @@
 
 namespace golang::runtime
 {
-    extern int maxTraceStringLen;
     struct traceStringTable
     {
         mutex lock;

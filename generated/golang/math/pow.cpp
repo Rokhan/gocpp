@@ -31,7 +31,7 @@ namespace golang::math
             return false;
         }
         auto [xi, xf] = Modf(x);
-        return xf == 0 && int64(xi) & 1 == 1;
+        return xf == 0 && int64_t(xi) & 1 == 1;
     }
 
     double Pow(double x, double y)
@@ -179,7 +179,7 @@ namespace golang::math
             a1 = Exp(yf * Log(x));
         }
         auto [x1, xe] = Frexp(x);
-        for(auto i = int64(yi); i != 0; i >>= 1)
+        for(auto i = int64_t(yi); i != 0; i >>= 1)
         {
             if(xe < (- 1 << 12) || (1 << 12) < xe)
             {

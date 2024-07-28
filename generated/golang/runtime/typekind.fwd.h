@@ -3,9 +3,37 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
+    const int kindBool = 1 + 0;
+    const int kindInt = 1 + 1;
+    const int kindInt8 = 1 + 2;
+    const int kindInt16 = 1 + 3;
+    const int kindInt32 = 1 + 4;
+    const int kindInt64 = 1 + 5;
+    const int kindUint = 1 + 6;
+    const int kindUint8 = 1 + 7;
+    const int kindUint16 = 1 + 8;
+    const int kindUint32 = 1 + 9;
+    const int kindUint64 = 1 + 10;
+    const int kindUintptr = 1 + 11;
+    const int kindFloat32 = 1 + 12;
+    const int kindFloat64 = 1 + 13;
+    const int kindComplex64 = 1 + 14;
+    const int kindComplex128 = 1 + 15;
+    const int kindArray = 1 + 16;
+    const int kindChan = 1 + 17;
+    const int kindFunc = 1 + 18;
+    const int kindInterface = 1 + 19;
+    const int kindMap = 1 + 20;
+    const int kindPtr = 1 + 21;
+    const int kindSlice = 1 + 22;
+    const int kindString = 1 + 23;
+    const int kindStruct = 1 + 24;
+    const int kindUnsafePointer = 1 + 25;
+    const int kindDirectIface = 1 << 5;
+    const int kindGCProg = 1 << 6;
+    const int kindMask = (1 << 5) - 1;
 }
-
+#include "golang/runtime/type.fwd.h"

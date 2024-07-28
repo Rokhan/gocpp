@@ -15,7 +15,6 @@
 
 namespace golang::runtime
 {
-    extern bool staticLockRanking;
     struct lockRankStruct
     {
 

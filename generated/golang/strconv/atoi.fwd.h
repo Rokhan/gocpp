@@ -3,12 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/errors/errors.fwd.h"
-#include "golang/strconv/itoa.fwd.h"
-#include "golang/strconv/quote.fwd.h"
 
 namespace golang::strconv
 {
     struct NumError;
+    const int intSize = 32 << (~ (unsigned int)(0) >> 63);
+    const int maxUint64 = (1 << 64) - 1;
+    const int IntSize = intSize;
 }
-
+#include "golang/errors/errors.fwd.h"
+#include "golang/strconv/itoa.fwd.h"
+#include "golang/strconv/quote.fwd.h"

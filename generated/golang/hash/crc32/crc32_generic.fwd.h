@@ -3,10 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::crc32
+{
+    const long slicing8Cutoff = 16;
+}
 #include "golang/hash/crc32/crc32.fwd.h"
 
 namespace golang::crc32
 {
     using slicing8Table = gocpp::array<Table, 8>;
 }
-

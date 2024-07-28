@@ -12,18 +12,13 @@
 namespace golang::sys
 {
     extern gocpp::array<unsigned char, 32> deBruijn32tab;
-    extern int deBruijn32;
     extern gocpp::array<unsigned char, 64> deBruijn64tab;
-    extern int deBruijn64;
     extern std::string ntz8tab;
     int TrailingZeros32(uint32_t x);
     int TrailingZeros64(uint64_t x);
     int TrailingZeros8(uint8_t x);
     extern std::string len8tab;
     int Len64(uint64_t x);
-    extern int m0;
-    extern int m1;
-    extern int m2;
     int OnesCount64(uint64_t x);
     int LeadingZeros64(uint64_t x);
     int LeadingZeros8(uint8_t x);

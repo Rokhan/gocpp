@@ -64,7 +64,7 @@ namespace golang::sync
 
     void check(copyChecker* c)
     {
-        if(uintptr(*c) != uintptr(Pointer(gocpp::recv(unsafe), c)) && ! CompareAndSwapUintptr(gocpp::recv(atomic), (uintptr_t*)(c), 0, uintptr(Pointer(gocpp::recv(unsafe), c))) && uintptr(*c) != uintptr(Pointer(gocpp::recv(unsafe), c)))
+        if(uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(unsafe::Pointer(c))) && uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)))
         {
             gocpp::panic("sync.Cond is copied");
         }

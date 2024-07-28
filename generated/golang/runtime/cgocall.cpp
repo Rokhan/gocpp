@@ -11,14 +11,14 @@
 #include "golang/runtime/cgocall.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/atomic_pointer.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mfinal.h"
@@ -31,7 +31,7 @@
 // #include "golang/runtime/race0.h"  [Ignored, known errors]
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -59,8 +59,8 @@ namespace golang::runtime
 
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args)
     {
-        auto as = gocpp::Init<argset>([](argset& x) { x.args = Pointer(gocpp::recv(unsafe), & args[0]); });
-        cgocall(fn, Pointer(gocpp::recv(unsafe), & as));
+        auto as = gocpp::Init<argset>([](argset& x) { x.args = unsafe::Pointer(& args[0]); });
+        cgocall(fn, unsafe::Pointer(& as));
         return as.retval;
     }
 
@@ -77,7 +77,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racereleasemerge(Pointer(gocpp::recv(unsafe), & racecgosync));
+            racereleasemerge(unsafe::Pointer(& racecgosync));
         }
         auto mp = getg()->m;
         mp->ncgocall++;
@@ -93,7 +93,7 @@ namespace golang::runtime
         exitsyscall();
         if(raceenabled)
         {
-            raceacquire(Pointer(gocpp::recv(unsafe), & racecgosync));
+            raceacquire(unsafe::Pointer(& racecgosync));
         }
         KeepAlive(fn);
         KeepAlive(arg);
@@ -125,7 +125,7 @@ namespace golang::runtime
         if(! signal && _cgo_getstackbound != nullptr)
         {
             gocpp::array<uintptr_t, 2> bounds = {};
-            asmcgocall(_cgo_getstackbound, Pointer(gocpp::recv(unsafe), & bounds));
+            asmcgocall(_cgo_getstackbound, unsafe::Pointer(& bounds));
             if(bounds[0] != 0 && sp > bounds[0] && sp <= bounds[1])
             {
                 g0->stack.lo = bounds[0];
@@ -149,7 +149,7 @@ namespace golang::runtime
         lockOSThread();
         auto checkm = gp->m;
         auto syscall = gp->m->syscall;
-        auto savedsp = Pointer(gocpp::recv(unsafe), gp->syscallsp);
+        auto savedsp = unsafe::Pointer(gp->syscallsp);
         auto savedpc = gp->syscallpc;
         exitsyscall();
         gp->m->incgo = false;
@@ -174,7 +174,7 @@ namespace golang::runtime
             go_throw("m changed unexpectedly in cgocallbackg");
         }
         osPreemptExtEnter(gp->m);
-        reentersyscall(savedpc, uintptr(savedsp));
+        reentersyscall(savedpc, uintptr_t(savedsp));
         gp->m->syscall = syscall;
     }
 
@@ -190,13 +190,13 @@ namespace golang::runtime
         if(ctxt != 0)
         {
             auto s = append(gp->cgoCtxt, ctxt);
-            auto p = (slice*)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
-            atomicstorep(Pointer(gocpp::recv(unsafe), & p->array), Pointer(gocpp::recv(unsafe), & s[0]));
+            auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
+            atomicstorep(unsafe::Pointer(& p->array), unsafe::Pointer(& s[0]));
             p->cap = cap(s);
             p->len = len(s);
             defer.push_back([=]{ [=](g* gp) mutable -> void
             {
-                auto p = (slice*)(Pointer(gocpp::recv(unsafe), & gp->cgoCtxt));
+                auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
                 p->len--;
             }
 (gp); });
@@ -214,15 +214,15 @@ namespace golang::runtime
         defer.push_back([=]{ unwindm(& restore); });
         if(raceenabled)
         {
-            raceacquire(Pointer(gocpp::recv(unsafe), & racecgosync));
+            raceacquire(unsafe::Pointer(& racecgosync));
         }
         std::function<void (unsafe::Pointer frame)> cb = {};
-        auto cbFV = funcval {uintptr(fn)};
-        *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), & cb)) = noescape(Pointer(gocpp::recv(unsafe), & cbFV));
+        auto cbFV = funcval {uintptr_t(fn)};
+        *(unsafe::Pointer*)(unsafe::Pointer(& cb)) = noescape(unsafe::Pointer(& cbFV));
         cb(frame);
         if(raceenabled)
         {
-            racereleasemerge(Pointer(gocpp::recv(unsafe), & racecgosync));
+            racereleasemerge(unsafe::Pointer(& racecgosync));
         }
         restore = false;
     }
@@ -233,7 +233,7 @@ namespace golang::runtime
         {
             auto mp = acquirem();
             auto sched = & mp->g0->sched;
-            sched->sp = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), sched->sp + alignUp(sys.MinFrameSize, sys.StackAlign)));
+            sched->sp = *(uintptr_t*)(unsafe::Pointer(sched->sp + alignUp(sys::MinFrameSize, sys::StackAlign)));
             if(mp->ncgo > 0)
             {
                 mp->incgo = false;
@@ -258,7 +258,7 @@ namespace golang::runtime
     uint64_t racecgosync;
     void cgoCheckPointer(go_any ptr, go_any arg)
     {
-        if(! goexperiment.CgoCheck2 && debug.cgocheck == 0)
+        if(! goexperiment::CgoCheck2 && debug.cgocheck == 0)
         {
             return;
         }
@@ -291,7 +291,7 @@ namespace golang::runtime
                         {
                             break;
                         }
-                        auto pt = (ptrtype*)(Pointer(gocpp::recv(unsafe), t));
+                        auto pt = (ptrtype*)(unsafe::Pointer(t));
                         cgoCheckArg(pt->Elem, p, true, false, cgoCheckPointerFail);
                         return;
                         break;
@@ -341,7 +341,7 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (arraytype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto at = (arraytype*)(unsafe::Pointer(t));
                     if(! indir)
                     {
                         if(at->Len != 1)
@@ -351,7 +351,7 @@ namespace golang::runtime
                         cgoCheckArg(at->Elem, p, at->Elem->Kind_ & kindDirectIface == 0, top, msg);
                         return;
                     }
-                    for(auto i = uintptr(0); i < at->Len; i++)
+                    for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
                         cgoCheckArg(at->Elem, p, true, top, msg);
                         p = add(p, at->Elem->Size_);
@@ -378,11 +378,11 @@ namespace golang::runtime
                     {
                         return;
                     }
-                    if(inheap(uintptr(Pointer(gocpp::recv(unsafe), it))))
+                    if(inheap(uintptr_t(unsafe::Pointer(it))))
                     {
                         gocpp::panic(errorString(msg));
                     }
-                    p = *(unsafe::Pointer*)(add(p, goarch.PtrSize));
+                    p = *(unsafe::Pointer*)(add(p, goarch::PtrSize));
                     if(! cgoIsGoPointer(p))
                     {
                         return;
@@ -394,7 +394,7 @@ namespace golang::runtime
                     cgoCheckArg(it, p, it->Kind_ & kindDirectIface == 0, false, msg);
                     break;
                 case 5:
-                    auto st = (slicetype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (slicetype*)(unsafe::Pointer(t));
                     auto s = (slice*)(p);
                     p = s->array;
                     if(p == nullptr || ! cgoIsGoPointer(p))
@@ -427,7 +427,7 @@ namespace golang::runtime
                     }
                     break;
                 case 7:
-                    auto st = (structtype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (structtype*)(unsafe::Pointer(t));
                     if(! indir)
                     {
                         if(len(st->Fields) != 1)
@@ -474,11 +474,11 @@ namespace golang::runtime
     {
         uintptr_t base;
         uintptr_t i;
-        if(inheap(uintptr(p)))
+        if(inheap(uintptr_t(p)))
         {
             uintptr_t base;
             uintptr_t i;
-            auto [b, span, _] = findObject(uintptr(p), 0, 0);
+            auto [b, span, _] = findObject(uintptr_t(p), 0, 0);
             base = b;
             if(base == 0)
             {
@@ -486,7 +486,7 @@ namespace golang::runtime
                 uintptr_t i;
                 return {base, i};
             }
-            if(goexperiment.AllocHeaders)
+            if(goexperiment::AllocHeaders)
             {
                 uintptr_t base;
                 uintptr_t i;
@@ -502,7 +502,7 @@ namespace golang::runtime
                         uintptr_t i;
                         break;
                     }
-                    auto pp = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
+                    auto pp = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
                         uintptr_t base;
@@ -528,7 +528,7 @@ namespace golang::runtime
                         uintptr_t i;
                         break;
                     }
-                    auto pp = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
+                    auto pp = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
                         uintptr_t base;
@@ -559,7 +559,7 @@ namespace golang::runtime
         {
             return false;
         }
-        if(inHeapOrStack(uintptr(p)))
+        if(inHeapOrStack(uintptr_t(p)))
         {
             return true;
         }
@@ -575,12 +575,12 @@ namespace golang::runtime
 
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end)
     {
-        return start <= uintptr(p) && uintptr(p) < end;
+        return start <= uintptr_t(p) && uintptr_t(p) < end;
     }
 
     void cgoCheckResult(go_any val)
     {
-        if(! goexperiment.CgoCheck2 && debug.cgocheck == 0)
+        if(! goexperiment::CgoCheck2 && debug.cgocheck == 0)
         {
             return;
         }

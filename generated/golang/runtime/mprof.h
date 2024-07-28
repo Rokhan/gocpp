@@ -10,12 +10,12 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/runtime/asan0.h"
+#include "golang/runtime/cputicks.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/asan0.h"
-#include "golang/runtime/cputicks.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -32,7 +32,7 @@
 #include "golang/runtime/runtime.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sema.h"
+// #include "golang/runtime/sema.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
@@ -41,11 +41,6 @@
 
 namespace golang::runtime
 {
-    extern bucketType memProfile;
-    extern bucketType blockProfile;
-    extern bucketType mutexProfile;
-    extern int buckHashSize;
-    extern int maxStack;
     struct bucket
     {
         sys::NotInHeap _;
@@ -64,7 +59,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct bucket& value);
     struct memRecord
     {
-        memRecordCycle active;
+        /* memRecordCycle active; [Known incomplete type] */
         gocpp::array<memRecordCycle, 3> future;
 
         using isGoStruct = void;
@@ -98,10 +93,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct blockRecord& value);
-    extern uint32_t mProfCycleWrap;
     struct mProfCycleHolder
     {
-        atomic::Uint32 value;
+        /* atomic::Uint32 value; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -130,7 +124,7 @@ namespace golang::runtime
     void saveblockevent(int64_t cycles, int64_t rate, int skip, bucketType which);
     struct lockTimer
     {
-        mutex* lock;
+        /* mutex* lock; [Known incomplete type] */
         int64_t timeRate;
         int64_t timeStart;
         int64_t tickStart;
@@ -145,7 +139,7 @@ namespace golang::runtime
     void end(struct lockTimer* lt);
     struct mLockProfile
     {
-        atomic::Int64 waitTime;
+        /* atomic::Int64 waitTime; [Known incomplete type] */
         gocpp::array<uintptr_t, maxStack> stack;
         uintptr_t pending;
         int64_t cycles;
@@ -158,8 +152,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
-    void recordLock(struct mLockProfile* prof, int64_t cycles, mutex* l);
-    void recordUnlock(struct mLockProfile* prof, mutex* l);
+    /* void recordLock(struct mLockProfile* prof, int64_t cycles, mutex* l); [Ignored, known name conflict] */ 
+    /* void recordUnlock(struct mLockProfile* prof, mutex* l); [Ignored, known name conflict] */ 
     void captureStack(struct mLockProfile* prof);
     void store(struct mLockProfile* prof);
     void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, bucketType which);
@@ -214,19 +208,16 @@ namespace golang::runtime
     std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     extern gocpp_id_0 goroutineProfile;
-    extern goroutineProfileState goroutineProfileAbsent;
-    extern goroutineProfileState goroutineProfileInProgress;
-    extern goroutineProfileState goroutineProfileSatisfied;
     goroutineProfileState Load(struct goroutineProfileStateHolder* p);
     void Store(struct goroutineProfileStateHolder* p, goroutineProfileState value);
     bool CompareAndSwap(struct goroutineProfileStateHolder* p, goroutineProfileState old, goroutineProfileState go_new);
     std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
-    void tryRecordGoroutineProfileWB(g* gp1);
-    void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield);
-    void doRecordGoroutineProfile(g* gp1);
+    /* void tryRecordGoroutineProfileWB(g* gp1); [Ignored, known name conflict] */ 
+    /* void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield); [Ignored, known name conflict] */ 
+    /* void doRecordGoroutineProfile(g* gp1); [Ignored, known name conflict] */ 
     std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
-    void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r);
+    /* void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r); [Ignored, known name conflict] */ 
     int Stack(gocpp::slice<unsigned char> buf, bool all);
     void tracealloc(unsafe::Pointer p, uintptr_t size, _type* typ);
     void tracefree(unsafe::Pointer p, uintptr_t size);

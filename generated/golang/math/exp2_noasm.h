@@ -11,7 +11,6 @@
 
 namespace golang::math
 {
-    extern bool haveArchExp2;
     double archExp2(double x);
 }
 

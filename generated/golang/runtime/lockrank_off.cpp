@@ -17,7 +17,6 @@
 
 namespace golang::runtime
 {
-    bool staticLockRanking = false;
     
     std::ostream& lockRankStruct::PrintTo(std::ostream& os) const
     {

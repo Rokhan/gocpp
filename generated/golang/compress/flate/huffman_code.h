@@ -74,7 +74,6 @@ namespace golang::flate
     extern huffmanEncoder* fixedLiteralEncoding;
     extern huffmanEncoder* fixedOffsetEncoding;
     int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);
-    extern int maxBitsLimit;
     gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
     void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
     void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);

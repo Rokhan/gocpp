@@ -14,9 +14,6 @@
 
 namespace golang::io
 {
-    extern int SeekStart;
-    extern int SeekCurrent;
-    extern int SeekEnd;
     extern std::string ErrShortWrite;
     extern std::string errInvalidWrite;
     extern std::string ErrShortBuffer;

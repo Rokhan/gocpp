@@ -16,7 +16,6 @@
 
 namespace golang::runtime
 {
-    bool asanenabled = false;
     void asanread(unsafe::Pointer addr, uintptr_t sz)
     {
         go_throw("asan");

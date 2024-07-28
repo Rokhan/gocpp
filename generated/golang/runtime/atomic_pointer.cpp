@@ -12,9 +12,9 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
+#include "golang/runtime/cgocheck.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/cgocheck.h"
 #include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -24,10 +24,10 @@ namespace golang::runtime
 {
     void atomicwb(unsafe::Pointer* ptr, unsafe::Pointer go_new)
     {
-        auto slot = (uintptr_t*)(Pointer(gocpp::recv(unsafe), ptr));
+        auto slot = (uintptr_t*)(unsafe::Pointer(ptr));
         auto buf = get2(gocpp::recv(ptr(gocpp::recv(getg()->m->p))->wbBuf));
         buf[0] = *slot;
-        buf[1] = uintptr(go_new);
+        buf[1] = uintptr_t(go_new);
     }
 
     void atomicstorep(unsafe::Pointer ptr, unsafe::Pointer go_new)
@@ -36,16 +36,16 @@ namespace golang::runtime
         {
             atomicwb((unsafe::Pointer*)(ptr), go_new);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckPtrWrite((unsafe::Pointer*)(ptr), go_new);
         }
-        StorepNoWB(gocpp::recv(atomic), noescape(ptr), go_new);
+        atomic::StorepNoWB(noescape(ptr), go_new);
     }
 
     void atomic_storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
     {
-        atomicstorep(Pointer(gocpp::recv(unsafe), ptr), go_new);
+        atomicstorep(unsafe::Pointer(ptr), go_new);
     }
 
     bool atomic_casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
@@ -54,11 +54,11 @@ namespace golang::runtime
         {
             atomicwb(ptr, go_new);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        return Casp1(gocpp::recv(atomic), ptr, old, go_new);
+        return atomic::Casp1(ptr, old, go_new);
     }
 
     void sync_atomic_StoreUintptr(uintptr_t* ptr, uintptr_t go_new)
@@ -70,11 +70,11 @@ namespace golang::runtime
         {
             atomicwb(ptr, go_new);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        sync_atomic_StoreUintptr((uintptr_t*)(Pointer(gocpp::recv(unsafe), ptr)), uintptr(go_new));
+        sync_atomic_StoreUintptr((uintptr_t*)(unsafe::Pointer(ptr)), uintptr_t(go_new));
     }
 
     uintptr_t sync_atomic_SwapUintptr(uintptr_t* ptr, uintptr_t go_new)
@@ -86,11 +86,11 @@ namespace golang::runtime
         {
             atomicwb(ptr, go_new);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        auto old = Pointer(gocpp::recv(unsafe), sync_atomic_SwapUintptr((uintptr_t*)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(go_new)));
+        auto old = unsafe::Pointer(sync_atomic_SwapUintptr((uintptr_t*)(noescape(unsafe::Pointer(ptr))), uintptr_t(go_new)));
         return old;
     }
 
@@ -103,11 +103,11 @@ namespace golang::runtime
         {
             atomicwb(ptr, go_new);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        return sync_atomic_CompareAndSwapUintptr((uintptr_t*)(noescape(Pointer(gocpp::recv(unsafe), ptr))), uintptr(old), uintptr(go_new));
+        return sync_atomic_CompareAndSwapUintptr((uintptr_t*)(noescape(unsafe::Pointer(ptr))), uintptr_t(old), uintptr_t(go_new));
     }
 
 }

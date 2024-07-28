@@ -33,44 +33,9 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    extern Kind Invalid;
-    extern Kind Bool;
-    extern Kind Int;
-    extern Kind Int8;
-    extern Kind Int16;
-    extern Kind Int32;
-    extern Kind Int64;
-    extern Kind Uint;
-    extern Kind Uint8;
-    extern Kind Uint16;
-    extern Kind Uint32;
-    extern Kind Uint64;
-    extern Kind Uintptr;
-    extern Kind Float32;
-    extern Kind Float64;
-    extern Kind Complex64;
-    extern Kind Complex128;
-    extern Kind Array;
-    extern Kind Chan;
-    extern Kind Func;
-    extern Kind Interface;
-    extern Kind Map;
-    extern Kind Pointer;
-    extern Kind Slice;
-    extern Kind String;
-    extern Kind Struct;
-    extern Kind UnsafePointer;
-    extern int KindDirectIface;
-    extern int KindGCProg;
-    extern int KindMask;
-    extern TFlag TFlagUncommon;
-    extern TFlag TFlagExtraStar;
-    extern TFlag TFlagNamed;
-    extern TFlag TFlagRegularMemory;
-    extern TFlag TFlagUnrolledBitmap;
-/*     std::string String(Kind k); [Ignored, known name conflict] */ 
+    /* std::string String(Kind k); [Ignored, known name conflict] */ 
     extern gocpp::slice<std::string> kindNames;
-/*     Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
+    /* Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
     bool HasName(struct Type* t);
     bool Pointers(struct Type* t);
     bool IfaceIndir(struct Type* t);
@@ -131,10 +96,6 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     int Len(struct Type* t);
     Type* Common(struct Type* t);
-    extern ChanDir RecvDir;
-    extern ChanDir SendDir;
-    extern ChanDir BothDir;
-    extern ChanDir InvalidDir;
     struct ChanType
     {
         Type* Elem;
@@ -156,14 +117,14 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
-/*     ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
+    /* ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
     UncommonType* Uncommon(struct Type* t);
     Type* Elem(struct Type* t);
-/*     StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
-/*     MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
-/*     ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
-/*     FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
-/*     InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
+    /* StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
+    /* MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
+    /* ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
+    /* FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
+    /* InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
     uintptr_t Size(struct Type* t);
     int Align(struct Type* t);
     int FieldAlign(struct Type* t);
@@ -284,7 +245,7 @@ namespace golang::abi
     std::tuple<int, int> ReadVarint(struct Name n, int off);
     bool IsBlank(struct Name n);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
-/*     std::string Name(struct Name n); [Ignored, known name conflict] */ 
+    /* std::string Name(struct Name n); [Ignored, known name conflict] */ 
     std::string Tag(struct Name n);
     Name NewName(std::string n, std::string tag, bool exported, bool embedded);
 }

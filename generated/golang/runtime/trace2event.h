@@ -20,51 +20,6 @@
 
 namespace golang::runtime
 {
-    extern traceEv traceEvNone;
-    extern traceEv traceEvEventBatch;
-    extern traceEv traceEvStacks;
-    extern traceEv traceEvStack;
-    extern traceEv traceEvStrings;
-    extern traceEv traceEvString;
-    extern traceEv traceEvCPUSamples;
-    extern traceEv traceEvCPUSample;
-    extern traceEv traceEvFrequency;
-    extern traceEv traceEvProcsChange;
-    extern traceEv traceEvProcStart;
-    extern traceEv traceEvProcStop;
-    extern traceEv traceEvProcSteal;
-    extern traceEv traceEvProcStatus;
-    extern traceEv traceEvGoCreate;
-    extern traceEv traceEvGoCreateSyscall;
-    extern traceEv traceEvGoStart;
-    extern traceEv traceEvGoDestroy;
-    extern traceEv traceEvGoDestroySyscall;
-    extern traceEv traceEvGoStop;
-    extern traceEv traceEvGoBlock;
-    extern traceEv traceEvGoUnblock;
-    extern traceEv traceEvGoSyscallBegin;
-    extern traceEv traceEvGoSyscallEnd;
-    extern traceEv traceEvGoSyscallEndBlocked;
-    extern traceEv traceEvGoStatus;
-    extern traceEv traceEvSTWBegin;
-    extern traceEv traceEvSTWEnd;
-    extern traceEv traceEvGCActive;
-    extern traceEv traceEvGCBegin;
-    extern traceEv traceEvGCEnd;
-    extern traceEv traceEvGCSweepActive;
-    extern traceEv traceEvGCSweepBegin;
-    extern traceEv traceEvGCSweepEnd;
-    extern traceEv traceEvGCMarkAssistActive;
-    extern traceEv traceEvGCMarkAssistBegin;
-    extern traceEv traceEvGCMarkAssistEnd;
-    extern traceEv traceEvHeapAlloc;
-    extern traceEv traceEvHeapGoal;
-    extern traceEv traceEvGoLabel;
-    extern traceEv traceEvUserTaskBegin;
-    extern traceEv traceEvUserTaskEnd;
-    extern traceEv traceEvUserRegionBegin;
-    extern traceEv traceEvUserRegionEnd;
-    extern traceEv traceEvUserLog;
     struct traceEventWriter
     {
         traceWriter w;

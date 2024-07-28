@@ -15,8 +15,6 @@
 
 namespace golang::bits
 {
-    int uintSize = 32 << (^ (unsigned int)(0) >> 63);
-    int UintSize = uintSize;
     int LeadingZeros(unsigned int x)
     {
         return UintSize - Len(x);
@@ -42,9 +40,7 @@ namespace golang::bits
         return 64 - Len64(x);
     }
 
-    int deBruijn32 = 0x077CB531;
     gocpp::array<unsigned char, 32> deBruijn32tab = gocpp::array<unsigned char, 32> {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
-    int deBruijn64 = 0x03f79d71b4ca8b09;
     gocpp::array<unsigned char, 64> deBruijn64tab = gocpp::array<unsigned char, 64> {0, 1, 56, 2, 57, 49, 28, 3, 61, 58, 42, 50, 38, 29, 17, 4, 62, 47, 59, 36, 45, 43, 51, 22, 53, 39, 33, 30, 24, 18, 12, 5, 63, 55, 48, 27, 60, 41, 37, 16, 46, 35, 44, 21, 52, 32, 23, 11, 54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9, 13, 8, 7, 6};
     int TrailingZeros(unsigned int x)
     {
@@ -87,11 +83,6 @@ namespace golang::bits
         return int(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
     }
 
-    int m0 = 0x5555555555555555;
-    int m1 = 0x3333333333333333;
-    int m2 = 0x0f0f0f0f0f0f0f0f;
-    int m3 = 0x00ff00ff00ff00ff;
-    int m4 = 0x0000ffff0000ffff;
     int OnesCount(unsigned int x)
     {
         if(UintSize == 32)
@@ -353,7 +344,7 @@ namespace golang::bits
         uint32_t diff;
         uint32_t borrowOut;
         diff = x - y - borrow;
-        borrowOut = ((^ x & y) | (^ (x ^ y) & diff)) >> 31;
+        borrowOut = ((~ x & y) | (~ (x ^ y) & diff)) >> 31;
         return {diff, borrowOut};
     }
 
@@ -362,7 +353,7 @@ namespace golang::bits
         uint64_t diff;
         uint64_t borrowOut;
         diff = x - y - borrow;
-        borrowOut = ((^ x & y) | (^ (x ^ y) & diff)) >> 63;
+        borrowOut = ((~ x & y) | (~ (x ^ y) & diff)) >> 63;
         return {diff, borrowOut};
     }
 

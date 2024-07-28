@@ -3,14 +3,18 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/race/norace.fwd.h"  [Ignored, known errors]
-// #include "golang/sync/atomic/doc.fwd.h"  [Ignored, known errors]
-// #include "golang/sync/runtime.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
 {
-    struct Locker;
     struct Mutex;
+    struct Locker;
+    const int mutexLocked = 1 << 0;
+    const int mutexWoken = 1 << 1;
+    const int mutexStarving = 1 << 2;
+    const int mutexWaiterShift = 3;
+    const double starvationThresholdNs = 1e6;
 }
-
+// #include "golang/internal/race/norace.fwd.h" [Ignored, known errors]
+// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
+// #include "golang/sync/runtime.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

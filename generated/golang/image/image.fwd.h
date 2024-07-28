@@ -3,25 +3,28 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::image
+{
+    struct PalettedImage;
+}
 #include "golang/image/color/color.fwd.h"
-#include "golang/image/color/ycbcr.fwd.h"
 #include "golang/image/geom.fwd.h"
 
 namespace golang::image
 {
-    struct Alpha;
-    struct Alpha16;
-    struct CMYK;
     struct Config;
-    struct Gray;
-    struct Gray16;
     struct Image;
-    struct NRGBA;
-    struct NRGBA64;
-    struct Paletted;
-    struct PalettedImage;
+    struct RGBA64Image;
     struct RGBA;
     struct RGBA64;
-    struct RGBA64Image;
+    struct NRGBA;
+    struct NRGBA64;
+    struct Alpha;
+    struct Alpha16;
+    struct Gray;
+    struct Gray16;
+    struct CMYK;
+    struct Paletted;
 }
-
+#include "golang/image/color/ycbcr.fwd.h"

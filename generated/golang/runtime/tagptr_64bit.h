@@ -18,13 +18,6 @@
 
 namespace golang::runtime
 {
-    extern int addrBits;
-    extern int tagBits;
-    extern int aixAddrBits;
-    extern int aixTagBits;
-    extern int riscv64AddrBits;
-    extern int riscv64TagBits;
-    extern int taggedPointerBits;
     taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag);
     unsafe::Pointer pointer(taggedPointer tp);
     uintptr_t tag(taggedPointer tp);

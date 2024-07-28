@@ -11,7 +11,6 @@
 
 namespace golang::math
 {
-    extern bool haveArchLog;
     double archLog(double x);
 }
 

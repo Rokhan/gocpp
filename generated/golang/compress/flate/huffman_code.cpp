@@ -135,7 +135,7 @@ namespace golang::flate
                         break;
                 }
             }
-            codes[ch] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(bits, byte(size)); x.len = size; });
+            codes[ch] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(bits, unsigned char(size)); x.len = size; });
         }
         return h;
     }
@@ -166,14 +166,13 @@ namespace golang::flate
         return total;
     }
 
-    int maxBitsLimit = 16;
     gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
     {
         if(maxBits >= maxBitsLimit)
         {
             gocpp::panic("flate: maxBits too large");
         }
-        auto n = int32(len(list));
+        auto n = int32_t(len(list));
         list = list.make_slice(0, n + 1);
         list[n] = maxNode();
         if(maxBits > n - 1)
@@ -182,7 +181,7 @@ namespace golang::flate
         }
         gocpp::array<levelInfo, maxBitsLimit> levels = {};
         gocpp::array<gocpp::array<int32_t, maxBitsLimit>, maxBitsLimit> leafCounts = {};
-        for(auto level = int32(1); level <= maxBits; level++)
+        for(auto level = int32_t(1); level <= maxBits; level++)
         {
             levels[level] = gocpp::Init<levelInfo>([](levelInfo& x) { x.level = level; x.lastFreq = list[1].freq; x.nextCharFreq = list[2].freq; x.nextPairFreq = list[0].freq + list[1].freq; });
             leafCounts[level][level] = 2;
@@ -307,7 +306,7 @@ namespace golang::flate
     void sort(byLiteral* s, gocpp::slice<literalNode> a)
     {
         *s = byLiteral(a);
-        Sort(gocpp::recv(sort), s);
+        sort::Sort(s);
     }
 
     int Len(byLiteral s)
@@ -328,7 +327,7 @@ namespace golang::flate
     void sort(byFreq* s, gocpp::slice<literalNode> a)
     {
         *s = byFreq(a);
-        Sort(gocpp::recv(sort), s);
+        sort::Sort(s);
     }
 
     int Len(byFreq s)
@@ -352,7 +351,7 @@ namespace golang::flate
 
     uint16_t reverseBits(uint16_t number, unsigned char bitLength)
     {
-        return Reverse16(gocpp::recv(bits), number << (16 - bitLength));
+        return bits::Reverse16(number << (16 - bitLength));
     }
 
 }

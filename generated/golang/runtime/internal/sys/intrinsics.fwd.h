@@ -3,7 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::sys
 {
+    const long deBruijn32 = 0x077CB531;
+    const long deBruijn64 = 0x03f79d71b4ca8b09;
+    const long m0 = 0x5555555555555555;
+    const long m1 = 0x3333333333333333;
+    const long m2 = 0x0f0f0f0f0f0f0f0f;
 }
-

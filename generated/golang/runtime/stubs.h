@@ -9,7 +9,7 @@
 #include "golang/runtime/stubs.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/runtime/map.h"
 #include "golang/runtime/runtime.h"
@@ -28,7 +28,6 @@ namespace golang::runtime
     void reflect_memclrNoHeapPointers(unsafe::Pointer ptr, uintptr_t n);
     void memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n);
     void reflect_memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n);
-    extern float hashLoad;
     bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size);
     unsafe::Pointer noescape(unsafe::Pointer p);
     T* noEscapePtr(T* p);

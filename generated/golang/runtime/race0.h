@@ -16,7 +16,6 @@
 
 namespace golang::runtime
 {
-    extern bool raceenabled;
     void raceReadObjectPC(_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
     void raceWriteObjectPC(_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
     std::tuple<uintptr_t, uintptr_t> raceinit();

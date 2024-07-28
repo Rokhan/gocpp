@@ -3,22 +3,17 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/abi.fwd.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.fwd.h"
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.fwd.h"
 #include "golang/runtime/asan0.fwd.h"
 #include "golang/runtime/cgocheck.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
 #include "golang/runtime/msan0.fwd.h"
-// #include "golang/runtime/race0.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
+#include "golang/runtime/slice.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

@@ -3,26 +3,32 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mgcmark.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mwbbuf.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-// #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct markBits;
+    const uintptr_t clobberdeadPtr = uintptr_t(0xdeaddead | (0xdeaddead << ((~ uintptr_t(0) >> 63) * 32)));
+    struct gocpp_id_0;
 }
+#include "golang/internal/goarch/goarch.fwd.h"
 
+namespace golang::runtime
+{
+    const int ptrBits = 8 * goarch::PtrSize;
+}
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/sys/intrinsics.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
+// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mgcmark.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/mwbbuf.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/stack.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/type.fwd.h"
+// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

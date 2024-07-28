@@ -21,26 +21,6 @@
 
 namespace golang::flate
 {
-    int NoCompression = 0;
-    int BestSpeed = 1;
-    int BestCompression = 9;
-    int DefaultCompression = - 1;
-    int HuffmanOnly = - 2;
-    int logWindowSize = 15;
-    int windowSize = 1 << logWindowSize;
-    int windowMask = windowSize - 1;
-    int baseMatchLength = 3;
-    int minMatchLength = 4;
-    int maxMatchLength = 258;
-    int baseMatchOffset = 1;
-    int maxMatchOffset = 1 << 15;
-    int maxFlateBlockTokens = 1 << 14;
-    int maxStoreBlockSize = 65535;
-    int hashBits = 17;
-    int hashSize = 1 << hashBits;
-    int hashMask = (1 << hashBits) - 1;
-    int maxHashOffset = 1 << 24;
-    int skipNever = math::MaxInt32;
     
     std::ostream& compressionLevel::PrintTo(std::ostream& os) const
     {
@@ -297,7 +277,6 @@ namespace golang::flate
         return d->w->err;
     }
 
-    int hashmul = 0x1e35a7bd;
     uint32_t hash4(gocpp::slice<unsigned char> b)
     {
         return ((uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24)) * hashmul) >> (32 - hashBits);
@@ -400,6 +379,7 @@ namespace golang::flate
             return;
         }
         d->maxInsertIndex = d->windowEnd - (minMatchLength - 1);
+        Loop:
         for(; ; )
         {
             if(d->index > d->windowEnd)
@@ -783,7 +763,7 @@ namespace golang::flate
         return Write(gocpp::recv(w->w), b);
     }
 
-    std::string errWriterClosed = New(gocpp::recv(errors), "flate: closed writer");
+    std::string errWriterClosed = errors::New("flate: closed writer");
     
     std::ostream& Writer::PrintTo(std::ostream& os) const
     {

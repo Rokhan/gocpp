@@ -22,51 +22,6 @@
 
 namespace golang::runtime
 {
-    traceEv traceEvNone = 0;
-    traceEv traceEvEventBatch = 1;
-    traceEv traceEvStacks = 2;
-    traceEv traceEvStack = 3;
-    traceEv traceEvStrings = 4;
-    traceEv traceEvString = 5;
-    traceEv traceEvCPUSamples = 6;
-    traceEv traceEvCPUSample = 7;
-    traceEv traceEvFrequency = 8;
-    traceEv traceEvProcsChange = 9;
-    traceEv traceEvProcStart = 10;
-    traceEv traceEvProcStop = 11;
-    traceEv traceEvProcSteal = 12;
-    traceEv traceEvProcStatus = 13;
-    traceEv traceEvGoCreate = 14;
-    traceEv traceEvGoCreateSyscall = 15;
-    traceEv traceEvGoStart = 16;
-    traceEv traceEvGoDestroy = 17;
-    traceEv traceEvGoDestroySyscall = 18;
-    traceEv traceEvGoStop = 19;
-    traceEv traceEvGoBlock = 20;
-    traceEv traceEvGoUnblock = 21;
-    traceEv traceEvGoSyscallBegin = 22;
-    traceEv traceEvGoSyscallEnd = 23;
-    traceEv traceEvGoSyscallEndBlocked = 24;
-    traceEv traceEvGoStatus = 25;
-    traceEv traceEvSTWBegin = 26;
-    traceEv traceEvSTWEnd = 27;
-    traceEv traceEvGCActive = 28;
-    traceEv traceEvGCBegin = 29;
-    traceEv traceEvGCEnd = 30;
-    traceEv traceEvGCSweepActive = 31;
-    traceEv traceEvGCSweepBegin = 32;
-    traceEv traceEvGCSweepEnd = 33;
-    traceEv traceEvGCMarkAssistActive = 34;
-    traceEv traceEvGCMarkAssistBegin = 35;
-    traceEv traceEvGCMarkAssistEnd = 36;
-    traceEv traceEvHeapAlloc = 37;
-    traceEv traceEvHeapGoal = 38;
-    traceEv traceEvGoLabel = 39;
-    traceEv traceEvUserTaskBegin = 40;
-    traceEv traceEvUserTaskEnd = 41;
-    traceEv traceEvUserRegionBegin = 42;
-    traceEv traceEvUserRegionEnd = 43;
-    traceEv traceEvUserLog = 44;
     
     std::ostream& traceEventWriter::PrintTo(std::ostream& os) const
     {
@@ -90,7 +45,7 @@ namespace golang::runtime
         }
         if(auto gp = tl.mp->curg; gp != nullptr && ! statusWasTraced(gocpp::recv(gp->trace), tl.gen) && acquireStatus(gocpp::recv(gp->trace), tl.gen))
         {
-            w = writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64(tl.mp->procid), goStatus, gp->inMarkAssist);
+            w = writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64_t(tl.mp->procid), goStatus, gp->inMarkAssist);
         }
         return traceEventWriter {w};
     }
@@ -122,7 +77,7 @@ namespace golang::runtime
         }
         auto tsDiff = uint64_t(ts - w.traceBuf->lastTime);
         w.traceBuf->lastTime = ts;
-        byte(gocpp::recv(w), byte(ev));
+        unsigned char(gocpp::recv(w), unsigned char(ev));
         varint(gocpp::recv(w), tsDiff);
         for(auto [_, arg] : args)
         {
@@ -138,7 +93,7 @@ namespace golang::runtime
 
     traceArg startPC(struct traceLocker tl, uintptr_t pc)
     {
-        return traceArg(put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys.PCQuantum}));
+        return traceArg(put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
     }
 
     traceArg string(struct traceLocker tl, std::string s)

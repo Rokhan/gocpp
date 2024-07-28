@@ -12,29 +12,5 @@
 namespace golang::goarch
 {
     extern std::string GOARCH;
-    extern int Is386;
-    extern int IsAmd64;
-    extern int IsAmd64p32;
-    extern int IsArm;
-    extern int IsArmbe;
-    extern int IsArm64;
-    extern int IsArm64be;
-    extern int IsLoong64;
-    extern int IsMips;
-    extern int IsMipsle;
-    extern int IsMips64;
-    extern int IsMips64le;
-    extern int IsMips64p32;
-    extern int IsMips64p32le;
-    extern int IsPpc;
-    extern int IsPpc64;
-    extern int IsPpc64le;
-    extern int IsRiscv;
-    extern int IsRiscv64;
-    extern int IsS390;
-    extern int IsS390x;
-    extern int IsSparc;
-    extern int IsSparc64;
-    extern int IsWasm;
 }
 

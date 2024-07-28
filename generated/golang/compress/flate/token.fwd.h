@@ -3,8 +3,13 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::flate
 {
+    const long lengthShift = 22;
+    const int typeMask = 3 << 30;
+    const int literalType = 0 << 30;
+    const int matchType = 1 << 30;
     using token = uint32_t;
+    const int offsetMask = (1 << lengthShift) - 1;
 }
-

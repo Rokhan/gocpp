@@ -3,26 +3,33 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::png
+{
+    struct Encoder;
+    struct EncoderBufferPool;
+    using CompressionLevel = int;
+    struct opaquer;
+    const CompressionLevel DefaultCompression = 0;
+    const CompressionLevel NoCompression = - 1;
+    const CompressionLevel BestSpeed = - 2;
+    const CompressionLevel BestCompression = - 3;
+}
 #include "golang/bufio/bufio.fwd.h"
 #include "golang/compress/zlib/writer.fwd.h"
+#include "golang/image/image.fwd.h"
+#include "golang/image/png/reader.fwd.h"
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
+
+namespace golang::png
+{
+    struct encoder;
+    using EncoderBuffer = encoder;
+}
 #include "golang/encoding/binary/binary.fwd.h"
 #include "golang/hash/crc32/crc32.fwd.h"
 #include "golang/hash/hash.fwd.h"
 #include "golang/image/color/color.fwd.h"
-#include "golang/image/png/paeth.fwd.h"
-#include "golang/image/png/reader.fwd.h"
 #include "golang/image/geom.fwd.h"
-#include "golang/image/image.fwd.h"
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
+#include "golang/image/png/paeth.fwd.h"
 #include "golang/strconv/itoa.fwd.h"
-
-namespace golang::png
-{
-    using CompressionLevel = int;
-    struct Encoder;
-    using EncoderBuffer = encoder;
-    struct EncoderBufferPool;
-    struct encoder;
-    struct opaquer;
-}
-

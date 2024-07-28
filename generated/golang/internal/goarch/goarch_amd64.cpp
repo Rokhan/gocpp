@@ -11,14 +11,9 @@
 #include "golang/internal/goarch/goarch_amd64.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 
 namespace golang::goarch
 {
-    ArchFamilyType _ArchFamily = AMD64;
-    int _DefaultPhysPageSize = 4096;
-    int _PCQuantum = 1;
-    int _MinFrameSize = 0;
-    int _StackAlign = PtrSize;
 }
 

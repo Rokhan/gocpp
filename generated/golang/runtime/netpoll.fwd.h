@@ -3,30 +3,48 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/netpoll_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/tagptr_64bit.fwd.h"
-// #include "golang/runtime/time.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct pollCache;
-    struct pollDesc;
+    const long pollNoError = 0;
+    const long pollErrClosing = 1;
+    const long pollErrTimeout = 2;
+    const long pollErrNotPollable = 3;
+    const uintptr_t pdNil = 0;
+    const uintptr_t pdReady = 1;
+    const uintptr_t pdWait = 2;
+    const int pollBlockSize = 4 * 1024;
     using pollInfo = uint32_t;
+    const int pollClosing = 1 << 0;
+    const int pollEventErr = 1 << 1;
+    const int pollExpiredReadDeadline = 1 << 2;
+    const int pollExpiredWriteDeadline = 1 << 3;
+    const int pollFDSeq = 1 << 4;
+    const long pollFDSeqBits = 20;
+    const int pollFDSeqMask = (1 << pollFDSeqBits) - 1;
 }
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/internal/sys/nih.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
 
+namespace golang::runtime
+{
+    struct pollDesc;
+    struct pollCache;
+}
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/stubs.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/malloc.fwd.h"
+// #include "golang/runtime/netpoll_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+#include "golang/runtime/proc.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/tagptr_64bit.fwd.h"
+#include "golang/runtime/time_nofake.fwd.h"
+// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
+#include "golang/runtime/type.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

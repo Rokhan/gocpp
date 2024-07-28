@@ -25,13 +25,9 @@
 
 namespace golang::runtime
 {
-    uintptr_t locked = 1;
-    int active_spin = 4;
-    int active_spin_cnt = 30;
-    int passive_spin = 1;
     bool mutexContended(mutex* l)
     {
-        return Loaduintptr(gocpp::recv(atomic), & l->key) > locked;
+        return atomic::Loaduintptr(& l->key) > locked;
     }
 
     void lock(mutex* l)
@@ -47,7 +43,7 @@ namespace golang::runtime
             go_throw("runtime·lock: lock count");
         }
         gp->m->locks++;
-        if(Casuintptr(gocpp::recv(atomic), & l->key, 0, locked))
+        if(atomic::Casuintptr(& l->key, 0, locked))
         {
             return;
         }
@@ -59,12 +55,13 @@ namespace golang::runtime
         {
             spin = active_spin;
         }
+        Loop:
         for(auto i = 0; ; i++)
         {
-            auto v = Loaduintptr(gocpp::recv(atomic), & l->key);
+            auto v = atomic::Loaduintptr(& l->key);
             if(v & locked == 0)
             {
-                if(Casuintptr(gocpp::recv(atomic), & l->key, v, v | locked))
+                if(atomic::Casuintptr(& l->key, v, v | locked))
                 {
                     end(gocpp::recv(timer));
                     return;
@@ -85,11 +82,11 @@ namespace golang::runtime
                 for(; ; )
                 {
                     gp->m->nextwaitm = muintptr(v &^ locked);
-                    if(Casuintptr(gocpp::recv(atomic), & l->key, v, uintptr(Pointer(gocpp::recv(unsafe), gp->m)) | locked))
+                    if(atomic::Casuintptr(& l->key, v, uintptr_t(unsafe::Pointer(gp->m)) | locked))
                     {
                         break;
                     }
-                    v = Loaduintptr(gocpp::recv(atomic), & l->key);
+                    v = atomic::Loaduintptr(& l->key);
                     if(v & locked == 0)
                     {
                         goto Loop_continue;
@@ -121,10 +118,10 @@ namespace golang::runtime
         m* mp = {};
         for(; ; )
         {
-            auto v = Loaduintptr(gocpp::recv(atomic), & l->key);
+            auto v = atomic::Loaduintptr(& l->key);
             if(v == locked)
             {
-                if(Casuintptr(gocpp::recv(atomic), & l->key, locked, 0))
+                if(atomic::Casuintptr(& l->key, locked, 0))
                 {
                     break;
                 }
@@ -132,7 +129,7 @@ namespace golang::runtime
             else
             {
                 mp = ptr(gocpp::recv(muintptr(v &^ locked)));
-                if(Casuintptr(gocpp::recv(atomic), & l->key, v, uintptr(mp->nextwaitm)))
+                if(atomic::Casuintptr(& l->key, v, uintptr_t(mp->nextwaitm)))
                 {
                     semawakeup(mp);
                     break;
@@ -161,8 +158,8 @@ namespace golang::runtime
         uintptr_t v = {};
         for(; ; )
         {
-            v = Loaduintptr(gocpp::recv(atomic), & n->key);
-            if(Casuintptr(gocpp::recv(atomic), & n->key, v, locked))
+            v = atomic::Loaduintptr(& n->key);
+            if(atomic::Casuintptr(& n->key, v, locked))
             {
                 break;
             }
@@ -180,7 +177,7 @@ namespace golang::runtime
                     go_throw("notewakeup - double wakeup");
                     break;
                 default:
-                    semawakeup((m*)(Pointer(gocpp::recv(unsafe), v)));
+                    semawakeup((m*)(unsafe::Pointer(v)));
                     break;
             }
         }
@@ -194,7 +191,7 @@ namespace golang::runtime
             go_throw("notesleep not on g0");
         }
         semacreate(gp->m);
-        if(! Casuintptr(gocpp::recv(atomic), & n->key, 0, uintptr(Pointer(gocpp::recv(unsafe), gp->m))))
+        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
         {
             if(n->key != locked)
             {
@@ -210,7 +207,7 @@ namespace golang::runtime
         else
         {
             auto ns = 10e6;
-            for(; Loaduintptr(gocpp::recv(atomic), & n->key) == 0; )
+            for(; atomic::Loaduintptr(& n->key) == 0; )
             {
                 semasleep(ns);
                 asmcgocall(*cgo_yield, nullptr);
@@ -222,7 +219,7 @@ namespace golang::runtime
     bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline)
     {
         gp = getg();
-        if(! Casuintptr(gocpp::recv(atomic), & n->key, 0, uintptr(Pointer(gocpp::recv(unsafe), gp->m))))
+        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
         {
             if(n->key != locked)
             {
@@ -274,17 +271,17 @@ namespace golang::runtime
         }
         for(; ; )
         {
-            auto v = Loaduintptr(gocpp::recv(atomic), & n->key);
+            auto v = atomic::Loaduintptr(& n->key);
             //Go switch emulation
             {
                 auto condition = v;
                 int conditionId = -1;
-                if(condition == uintptr(Pointer(gocpp::recv(unsafe), gp->m))) { conditionId = 0; }
+                if(condition == uintptr_t(unsafe::Pointer(gp->m))) { conditionId = 0; }
                 else if(condition == locked) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
-                        if(Casuintptr(gocpp::recv(atomic), & n->key, v, 0))
+                        if(atomic::Casuintptr(& n->key, v, 0))
                         {
                             return false;
                         }

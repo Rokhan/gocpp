@@ -13,36 +13,6 @@
 
 namespace golang::utf8
 {
-    char RuneError = '\uFFFD';
-    int RuneSelf = 0x80;
-    char MaxRune = '\U0010FFFF';
-    int UTFMax = 4;
-    int surrogateMin = 0xD800;
-    int surrogateMax = 0xDFFF;
-    int t1 = 0b00000000;
-    int tx = 0b10000000;
-    int t2 = 0b11000000;
-    int t3 = 0b11100000;
-    int t4 = 0b11110000;
-    int t5 = 0b11111000;
-    int maskx = 0b00111111;
-    int mask2 = 0b00011111;
-    int mask3 = 0b00001111;
-    int mask4 = 0b00000111;
-    int rune1Max = (1 << 7) - 1;
-    int rune2Max = (1 << 11) - 1;
-    int rune3Max = (1 << 16) - 1;
-    int locb = 0b10000000;
-    int hicb = 0b10111111;
-    int xx = 0xF1;
-    int as = 0xF0;
-    int s1 = 0x02;
-    int s2 = 0x13;
-    int s3 = 0x03;
-    int s4 = 0x23;
-    int s5 = 0x34;
-    int s6 = 0x04;
-    int s7 = 0x44;
     gocpp::array<uint8_t, 256> first = gocpp::array<uint8_t, 256> {as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx};
     
     std::ostream& acceptRange::PrintTo(std::ostream& os) const
@@ -394,13 +364,13 @@ namespace golang::utf8
             switch(conditionId)
             {
                 case 0:
-                    p[0] = byte(r);
+                    p[0] = unsigned char(r);
                     return 1;
                     break;
                 case 1:
                     _ = p[1];
-                    p[0] = t2 | byte(r >> 6);
-                    p[1] = tx | byte(r) & maskx;
+                    p[0] = t2 | unsigned char(r >> 6);
+                    p[1] = tx | unsigned char(r) & maskx;
                     return 2;
                     break;
                 case 2:
@@ -408,17 +378,17 @@ namespace golang::utf8
                     r = RuneError;
                 case 4:
                     _ = p[2];
-                    p[0] = t3 | byte(r >> 12);
-                    p[1] = tx | byte(r >> 6) & maskx;
-                    p[2] = tx | byte(r) & maskx;
+                    p[0] = t3 | unsigned char(r >> 12);
+                    p[1] = tx | unsigned char(r >> 6) & maskx;
+                    p[2] = tx | unsigned char(r) & maskx;
                     return 3;
                     break;
                 default:
                     _ = p[3];
-                    p[0] = t4 | byte(r >> 18);
-                    p[1] = tx | byte(r >> 12) & maskx;
-                    p[2] = tx | byte(r >> 6) & maskx;
-                    p[3] = tx | byte(r) & maskx;
+                    p[0] = t4 | unsigned char(r >> 18);
+                    p[1] = tx | unsigned char(r >> 12) & maskx;
+                    p[2] = tx | unsigned char(r >> 6) & maskx;
+                    p[3] = tx | unsigned char(r) & maskx;
                     return 4;
                     break;
             }
@@ -429,7 +399,7 @@ namespace golang::utf8
     {
         if(uint32_t(r) <= rune1Max)
         {
-            return append(p, byte(r));
+            return append(p, unsigned char(r));
         }
         return appendRuneNonASCII(p, r);
     }
@@ -447,16 +417,16 @@ namespace golang::utf8
             switch(conditionId)
             {
                 case 0:
-                    return append(p, t2 | byte(r >> 6), tx | byte(r) & maskx);
+                    return append(p, t2 | unsigned char(r >> 6), tx | unsigned char(r) & maskx);
                     break;
                 case 1:
                 case 2:
                     r = RuneError;
                 case 3:
-                    return append(p, t3 | byte(r >> 12), tx | byte(r >> 6) & maskx, tx | byte(r) & maskx);
+                    return append(p, t3 | unsigned char(r >> 12), tx | unsigned char(r >> 6) & maskx, tx | unsigned char(r) & maskx);
                     break;
                 default:
-                    return append(p, t4 | byte(r >> 18), tx | byte(r >> 12) & maskx, tx | byte(r >> 6) & maskx, tx | byte(r) & maskx);
+                    return append(p, t4 | unsigned char(r >> 18), tx | unsigned char(r >> 12) & maskx, tx | unsigned char(r >> 6) & maskx, tx | unsigned char(r) & maskx);
                     break;
             }
         }

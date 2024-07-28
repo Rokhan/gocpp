@@ -16,5 +16,6 @@ namespace golang::main
     void main();
     void testFor(int k);
     void testRange(int k);
+    void testGoTo();
 }
 

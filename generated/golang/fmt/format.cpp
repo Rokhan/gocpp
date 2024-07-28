@@ -20,8 +20,6 @@ namespace golang::fmt
 {
     std::string ldigits = "0123456789abcdefx";
     std::string udigits = "0123456789ABCDEFX";
-    bool go_signed = true;
-    bool go_unsigned = false;
     
     std::ostream& fmtFlags::PrintTo(std::ostream& os) const
     {
@@ -86,10 +84,10 @@ namespace golang::fmt
             buf = gocpp::make(buffer, cap(buf) * 2 + n);
             copy(buf, *f->buf);
         }
-        auto padByte = byte(' ');
+        auto padByte = unsigned char(' ');
         if(f->zero)
         {
-            padByte = byte('0');
+            padByte = unsigned char('0');
         }
         auto padding = buf.make_slice(oldLen, newLen);
         for(auto [i, gocpp_ignored] : padding)
@@ -106,7 +104,7 @@ namespace golang::fmt
             write(gocpp::recv(f->buf), b);
             return;
         }
-        auto width = f->wid - RuneCount(gocpp::recv(utf8), b);
+        auto width = f->wid - utf8::RuneCount(b);
         if(! f->minus)
         {
             writePadding(gocpp::recv(f), width);
@@ -126,7 +124,7 @@ namespace golang::fmt
             writeString(gocpp::recv(f->buf), s);
             return;
         }
-        auto width = f->wid - RuneCountInString(gocpp::recv(utf8), s);
+        auto width = f->wid - utf8::RuneCountInString(s);
         if(! f->minus)
         {
             writePadding(gocpp::recv(f), width);
@@ -158,19 +156,19 @@ namespace golang::fmt
         if(f->precPresent && f->prec > 4)
         {
             prec = f->prec;
-            auto width = 2 + prec + 2 + utf8.UTFMax + 1;
+            auto width = 2 + prec + 2 + utf8::UTFMax + 1;
             if(width > len(buf))
             {
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), width);
             }
         }
         auto i = len(buf);
-        if(f->sharp && u <= utf8.MaxRune && IsPrint(gocpp::recv(strconv), rune(u)))
+        if(f->sharp && u <= utf8::MaxRune && strconv::IsPrint(rune(u)))
         {
             i--;
             buf[i] = '\'';
-            i -= RuneLen(gocpp::recv(utf8), rune(u));
-            EncodeRune(gocpp::recv(utf8), buf.make_slice(i), rune(u));
+            i -= utf8::RuneLen(rune(u));
+            utf8::EncodeRune(buf.make_slice(i), rune(u));
             i--;
             buf[i] = '\'';
             i--;
@@ -204,7 +202,7 @@ namespace golang::fmt
 
     void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
     {
-        auto negative = isSigned && int64(u) < 0;
+        auto negative = isSigned && int64_t(u) < 0;
         if(negative)
         {
             u = - u;
@@ -256,7 +254,7 @@ namespace golang::fmt
                     {
                         i--;
                         auto next = u / 10;
-                        buf[i] = byte('0' + u - next * 10);
+                        buf[i] = unsigned char('0' + u - next * 10);
                         u = next;
                     }
                     break;
@@ -272,7 +270,7 @@ namespace golang::fmt
                     for(; u >= 8; )
                     {
                         i--;
-                        buf[i] = byte('0' + u & 7);
+                        buf[i] = unsigned char('0' + u & 7);
                         u >>= 3;
                     }
                     break;
@@ -280,7 +278,7 @@ namespace golang::fmt
                     for(; u >= 2; )
                     {
                         i--;
-                        buf[i] = byte('0' + u & 1);
+                        buf[i] = unsigned char('0' + u & 1);
                         u >>= 1;
                     }
                     break;
@@ -389,9 +387,9 @@ namespace golang::fmt
                     return b.make_slice(0, i);
                 }
                 auto wid = 1;
-                if(b[i] >= utf8.RuneSelf)
+                if(b[i] >= utf8::RuneSelf)
                 {
-                    std::tie(_, wid) = DecodeRune(gocpp::recv(utf8), b.make_slice(i));
+                    std::tie(_, wid) = utf8::DecodeRune(b.make_slice(i));
                 }
                 i += wid;
             }
@@ -497,7 +495,7 @@ namespace golang::fmt
     void fmtQ(struct fmt* f, std::string s)
     {
         s = truncateString(gocpp::recv(f), s);
-        if(f->sharp && CanBackquote(gocpp::recv(strconv), s))
+        if(f->sharp && strconv::CanBackquote(s))
         {
             padString(gocpp::recv(f), "`" + s + "`");
             return;
@@ -505,40 +503,40 @@ namespace golang::fmt
         auto buf = f->intbuf.make_slice(0, 0);
         if(f->plus)
         {
-            pad(gocpp::recv(f), AppendQuoteToASCII(gocpp::recv(strconv), buf, s));
+            pad(gocpp::recv(f), strconv::AppendQuoteToASCII(buf, s));
         }
         else
         {
-            pad(gocpp::recv(f), AppendQuote(gocpp::recv(strconv), buf, s));
+            pad(gocpp::recv(f), strconv::AppendQuote(buf, s));
         }
     }
 
     void fmtC(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
-        if(c > utf8.MaxRune)
+        if(c > utf8::MaxRune)
         {
-            r = utf8.RuneError;
+            r = utf8::RuneError;
         }
         auto buf = f->intbuf.make_slice(0, 0);
-        pad(gocpp::recv(f), AppendRune(gocpp::recv(utf8), buf, r));
+        pad(gocpp::recv(f), utf8::AppendRune(buf, r));
     }
 
     void fmtQc(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
-        if(c > utf8.MaxRune)
+        if(c > utf8::MaxRune)
         {
-            r = utf8.RuneError;
+            r = utf8::RuneError;
         }
         auto buf = f->intbuf.make_slice(0, 0);
         if(f->plus)
         {
-            pad(gocpp::recv(f), AppendQuoteRuneToASCII(gocpp::recv(strconv), buf, r));
+            pad(gocpp::recv(f), strconv::AppendQuoteRuneToASCII(buf, r));
         }
         else
         {
-            pad(gocpp::recv(f), AppendQuoteRune(gocpp::recv(strconv), buf, r));
+            pad(gocpp::recv(f), strconv::AppendQuoteRune(buf, r));
         }
     }
 
@@ -548,7 +546,7 @@ namespace golang::fmt
         {
             prec = f->prec;
         }
-        auto num = AppendFloat(gocpp::recv(strconv), f->intbuf.make_slice(0, 1), v, byte(verb), prec, size);
+        auto num = strconv::AppendFloat(f->intbuf.make_slice(0, 1), v, unsigned char(verb), prec, size);
         if(num[1] == '-' || num[1] == '+')
         {
             num = num.make_slice(1);

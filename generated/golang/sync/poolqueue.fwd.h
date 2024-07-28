@@ -3,16 +3,22 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/sync/atomic/doc.fwd.h"  [Ignored, known errors]
+
+namespace golang::sync
+{
+    const long dequeueBits = 32;
+    struct gocpp_id_0;
+    using dequeueNil = gocpp_id_0*;
+    struct poolChain;
+    struct poolChainElt;
+    const int dequeueLimit = (1 << dequeueBits) / 4;
+}
 #include "golang/sync/atomic/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
 {
-    using dequeueNil = gocpp_id_0*;
-    struct eface;
-    struct poolChain;
-    struct poolChainElt;
     struct poolDequeue;
+    struct eface;
 }
-
+// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]

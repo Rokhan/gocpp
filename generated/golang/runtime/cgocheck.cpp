@@ -11,7 +11,7 @@
 #include "golang/runtime/cgocheck.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -40,7 +40,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(cgoIsGoPointer(Pointer(gocpp::recv(unsafe), dst)))
+        if(cgoIsGoPointer(unsafe::Pointer(dst)))
         {
             return;
         }
@@ -57,13 +57,13 @@ namespace golang::runtime
         {
             return;
         }
-        if(inPersistentAlloc(uintptr(Pointer(gocpp::recv(unsafe), dst))))
+        if(inPersistentAlloc(uintptr_t(unsafe::Pointer(dst))))
         {
             return;
         }
         systemstack([=]() mutable -> void
         {
-            println("write of unpinned Go pointer", hex(uintptr(src)), "to non-Go memory", hex(uintptr(Pointer(gocpp::recv(unsafe), dst))));
+            println("write of unpinned Go pointer", hex(uintptr_t(src)), "to non-Go memory", hex(uintptr_t(unsafe::Pointer(dst))));
             go_throw(cgoWriteBarrierFail);
         }
 );
@@ -132,18 +132,18 @@ namespace golang::runtime
         {
             if(cgoInRange(src, datap->data, datap->edata))
             {
-                auto doff = uintptr(src) - datap->data;
+                auto doff = uintptr_t(src) - datap->data;
                 cgoCheckBits(add(src, - doff), datap->gcdatamask.bytedata, off + doff, size);
                 return;
             }
             if(cgoInRange(src, datap->bss, datap->ebss))
             {
-                auto boff = uintptr(src) - datap->bss;
+                auto boff = uintptr_t(src) - datap->bss;
                 cgoCheckBits(add(src, - boff), datap->gcbssmask.bytedata, off + boff, size);
                 return;
             }
         }
-        auto s = spanOfUnchecked(uintptr(src));
+        auto s = spanOfUnchecked(uintptr_t(src));
         if(get(gocpp::recv(s->state)) == mSpanManual)
         {
             systemstack([=]() mutable -> void
@@ -153,17 +153,17 @@ namespace golang::runtime
 );
             return;
         }
-        if(goexperiment.AllocHeaders)
+        if(goexperiment::AllocHeaders)
         {
-            auto tp = typePointersOf(gocpp::recv(s), uintptr(src), size);
+            auto tp = typePointersOf(gocpp::recv(s), uintptr_t(src), size);
             for(; ; )
             {
                 uintptr_t addr = {};
-                if(std::tie(tp, addr) = next(gocpp::recv(tp), uintptr(src) + size); addr == 0)
+                if(std::tie(tp, addr) = next(gocpp::recv(tp), uintptr_t(src) + size); addr == 0)
                 {
                     break;
                 }
-                auto v = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
+                auto v = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -172,7 +172,7 @@ namespace golang::runtime
         }
         else
         {
-            auto hbits = heapBitsForAddr(uintptr(src), size);
+            auto hbits = heapBitsForAddr(uintptr_t(src), size);
             for(; ; )
             {
                 uintptr_t addr = {};
@@ -180,7 +180,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                auto v = *(unsafe::Pointer*)(Pointer(gocpp::recv(unsafe), addr));
+                auto v = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -191,16 +191,16 @@ namespace golang::runtime
 
     void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size)
     {
-        auto skipMask = off / goarch.PtrSize / 8;
-        auto skipBytes = skipMask * goarch.PtrSize * 8;
+        auto skipMask = off / goarch::PtrSize / 8;
+        auto skipBytes = skipMask * goarch::PtrSize * 8;
         auto ptrmask = addb(gcbits, skipMask);
         src = add(src, skipBytes);
         off -= skipBytes;
         size += off;
         uint32_t bits = {};
-        for(auto i = uintptr(0); i < size; i += goarch.PtrSize)
+        for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
-            if(i & (goarch.PtrSize * 8 - 1) == 0)
+            if(i & (goarch::PtrSize * 8 - 1) == 0)
             {
                 bits = uint32_t(*ptrmask);
                 ptrmask = addb(ptrmask, 1);
@@ -211,7 +211,7 @@ namespace golang::runtime
             }
             if(off > 0)
             {
-                off -= goarch.PtrSize;
+                off -= goarch::PtrSize;
             }
             else
             {
@@ -258,8 +258,8 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (arraytype*)(Pointer(gocpp::recv(unsafe), typ));
-                    for(auto i = uintptr(0); i < at->Len; i++)
+                    auto at = (arraytype*)(unsafe::Pointer(typ));
+                    for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
                         if(off < at->Elem->Size_)
                         {
@@ -281,7 +281,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
-                    auto st = (structtype*)(Pointer(gocpp::recv(unsafe), typ));
+                    auto st = (structtype*)(unsafe::Pointer(typ));
                     for(auto [_, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)

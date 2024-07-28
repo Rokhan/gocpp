@@ -11,17 +11,17 @@
 #include "golang/runtime/mbarrier.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/cgocheck.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/msan0.h"
 // #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
@@ -36,10 +36,10 @@ namespace golang::runtime
         }
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
-            bulkBarrierPreWrite(uintptr(dst), uintptr(src), typ->PtrBytes, typ);
+            bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
         }
         memmove(dst, src, typ->Size_);
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckMemmove2(typ, dst, src, 0, typ->Size_);
         }
@@ -47,20 +47,20 @@ namespace golang::runtime
 
     void wbZero(_type* typ, unsafe::Pointer dst)
     {
-        bulkBarrierPreWrite(uintptr(dst), 0, typ->PtrBytes, typ);
+        bulkBarrierPreWrite(uintptr_t(dst), 0, typ->PtrBytes, typ);
     }
 
     void wbMove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
-        bulkBarrierPreWrite(uintptr(dst), uintptr(src), typ->PtrBytes, typ);
+        bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
     }
 
     void reflect_typedmemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(raceenabled)
         {
-            raceWriteObjectPC(typ, dst, getcallerpc(), FuncPCABIInternal(gocpp::recv(abi), reflect_typedmemmove));
-            raceReadObjectPC(typ, src, getcallerpc(), FuncPCABIInternal(gocpp::recv(abi), reflect_typedmemmove));
+            raceWriteObjectPC(typ, dst, getcallerpc(), abi::FuncPCABIInternal(reflect_typedmemmove));
+            raceReadObjectPC(typ, src, getcallerpc(), abi::FuncPCABIInternal(reflect_typedmemmove));
         }
         if(msanenabled)
         {
@@ -82,16 +82,16 @@ namespace golang::runtime
 
     void reflectcallmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, abi::RegArgs* regs)
     {
-        if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch.PtrSize)
+        if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
         {
-            bulkBarrierPreWrite(uintptr(dst), uintptr(src), size, nullptr);
+            bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), size, nullptr);
         }
         memmove(dst, src, size);
         for(auto [i, gocpp_ignored] : regs->Ints)
         {
             if(Get(gocpp::recv(regs->ReturnIsPtr), i))
             {
-                regs->Ptrs[i] = Pointer(gocpp::recv(unsafe), regs->Ints[i]);
+                regs->Ptrs[i] = unsafe::Pointer(regs->Ints[i]);
             }
         }
     }
@@ -110,21 +110,21 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            auto pc = FuncPCABIInternal(gocpp::recv(abi), slicecopy);
-            racewriterangepc(dstPtr, uintptr(n) * typ->Size_, callerpc, pc);
-            racereadrangepc(srcPtr, uintptr(n) * typ->Size_, callerpc, pc);
+            auto pc = abi::FuncPCABIInternal(slicecopy);
+            racewriterangepc(dstPtr, uintptr_t(n) * typ->Size_, callerpc, pc);
+            racereadrangepc(srcPtr, uintptr_t(n) * typ->Size_, callerpc, pc);
         }
         if(msanenabled)
         {
-            msanwrite(dstPtr, uintptr(n) * typ->Size_);
-            msanread(srcPtr, uintptr(n) * typ->Size_);
+            msanwrite(dstPtr, uintptr_t(n) * typ->Size_);
+            msanread(srcPtr, uintptr_t(n) * typ->Size_);
         }
         if(asanenabled)
         {
-            asanwrite(dstPtr, uintptr(n) * typ->Size_);
-            asanread(srcPtr, uintptr(n) * typ->Size_);
+            asanwrite(dstPtr, uintptr_t(n) * typ->Size_);
+            asanread(srcPtr, uintptr_t(n) * typ->Size_);
         }
-        if(goexperiment.CgoCheck2)
+        if(goexperiment::CgoCheck2)
         {
             cgoCheckSliceCopy(typ, dstPtr, srcPtr, n);
         }
@@ -132,11 +132,11 @@ namespace golang::runtime
         {
             return n;
         }
-        auto size = uintptr(n) * typ->Size_;
+        auto size = uintptr_t(n) * typ->Size_;
         if(writeBarrier.enabled)
         {
             auto pwsize = size - typ->Size_ + typ->PtrBytes;
-            bulkBarrierPreWrite(uintptr(dstPtr), uintptr(srcPtr), pwsize, typ);
+            bulkBarrierPreWrite(uintptr_t(dstPtr), uintptr_t(srcPtr), pwsize, typ);
         }
         memmove(dstPtr, srcPtr, size);
         return n;
@@ -155,7 +155,7 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
-            bulkBarrierPreWrite(uintptr(ptr), 0, typ->PtrBytes, typ);
+            bulkBarrierPreWrite(uintptr_t(ptr), 0, typ->PtrBytes, typ);
         }
         memclrNoHeapPointers(ptr, typ->Size_);
     }
@@ -169,24 +169,24 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
-            bulkBarrierPreWrite(uintptr(ptr), 0, size, nullptr);
+            bulkBarrierPreWrite(uintptr_t(ptr), 0, size, nullptr);
         }
         memclrNoHeapPointers(ptr, size);
     }
 
     void reflect_typedarrayclear(_type* typ, unsafe::Pointer ptr, int len)
     {
-        auto size = typ->Size_ * uintptr(len);
+        auto size = typ->Size_ * uintptr_t(len);
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
-            bulkBarrierPreWrite(uintptr(ptr), 0, size, typ);
+            bulkBarrierPreWrite(uintptr_t(ptr), 0, size, typ);
         }
         memclrNoHeapPointers(ptr, size);
     }
 
     void memclrHasPointers(unsafe::Pointer ptr, uintptr_t n)
     {
-        bulkBarrierPreWrite(uintptr(ptr), 0, n, nullptr);
+        bulkBarrierPreWrite(uintptr_t(ptr), 0, n, nullptr);
         memclrNoHeapPointers(ptr, n);
     }
 

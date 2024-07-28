@@ -9,7 +9,7 @@
 #include "golang/runtime/cgocheck.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"

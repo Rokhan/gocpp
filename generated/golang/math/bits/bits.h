@@ -13,27 +13,18 @@
 
 namespace golang::bits
 {
-    extern int uintSize;
-    extern int UintSize;
     int LeadingZeros(unsigned int x);
     int LeadingZeros8(uint8_t x);
     int LeadingZeros16(uint16_t x);
     int LeadingZeros32(uint32_t x);
     int LeadingZeros64(uint64_t x);
-    extern int deBruijn32;
     extern gocpp::array<unsigned char, 32> deBruijn32tab;
-    extern int deBruijn64;
     extern gocpp::array<unsigned char, 64> deBruijn64tab;
     int TrailingZeros(unsigned int x);
     int TrailingZeros8(uint8_t x);
     int TrailingZeros16(uint16_t x);
     int TrailingZeros32(uint32_t x);
     int TrailingZeros64(uint64_t x);
-    extern int m0;
-    extern int m1;
-    extern int m2;
-    extern int m3;
-    extern int m4;
     int OnesCount(unsigned int x);
     int OnesCount8(uint8_t x);
     int OnesCount16(uint16_t x);

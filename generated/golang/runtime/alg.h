@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/hash64.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
@@ -25,8 +25,6 @@
 
 namespace golang::runtime
 {
-    extern uintptr_t c0;
-    extern uintptr_t c1;
     uintptr_t memhash0(unsafe::Pointer p, uintptr_t h);
     uintptr_t memhash8(unsafe::Pointer p, uintptr_t h);
     uintptr_t memhash16(unsafe::Pointer p, uintptr_t h);
@@ -114,7 +112,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed);
-    extern int hashRandomBytes;
     void alginit();
     void initAlgAES();
     uint32_t readUnaligned32(unsafe::Pointer p);

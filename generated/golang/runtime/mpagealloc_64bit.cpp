@@ -16,20 +16,16 @@
 #include "golang/runtime/mem.h"
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mpagealloc.h"
-// #include "golang/runtime/mranges.h"  [Ignored, known errors]
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
-    int summaryLevels = 5;
-    int pageAlloc32Bit = 0;
-    int pageAlloc64Bit = 1;
-    int pallocChunksL1Bits = 13;
     gocpp::array<unsigned int, summaryLevels> levelBits = gocpp::array<unsigned int, summaryLevels> {summaryL0Bits, summaryLevelBits, summaryLevelBits, summaryLevelBits, summaryLevelBits};
     gocpp::array<unsigned int, summaryLevels> levelShift = gocpp::array<unsigned int, summaryLevels> {heapAddrBits - summaryL0Bits, heapAddrBits - summaryL0Bits - 1 * summaryLevelBits, heapAddrBits - summaryL0Bits - 2 * summaryLevelBits, heapAddrBits - summaryL0Bits - 3 * summaryLevelBits, heapAddrBits - summaryL0Bits - 4 * summaryLevelBits};
     gocpp::array<unsigned int, summaryLevels> levelLogPages = gocpp::array<unsigned int, summaryLevels> {logPallocChunkPages + 4 * summaryLevelBits, logPallocChunkPages + 3 * summaryLevelBits, logPallocChunkPages + 2 * summaryLevelBits, logPallocChunkPages + 1 * summaryLevelBits, logPallocChunkPages};
@@ -38,14 +34,14 @@ namespace golang::runtime
         for(auto [l, shift] : levelShift)
         {
             auto entries = 1 << (heapAddrBits - shift);
-            auto b = alignUp(uintptr(entries) * pallocSumBytes, physPageSize);
+            auto b = alignUp(uintptr_t(entries) * pallocSumBytes, physPageSize);
             auto r = sysReserve(nullptr, b);
             if(r == nullptr)
             {
                 go_throw("failed to reserve page summary memory");
             }
             auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
-            p->summary[l] = *(gocpp::slice<pallocSum>*)(Pointer(gocpp::recv(unsafe), & sl));
+            p->summary[l] = *(gocpp::slice<pallocSum>*)(unsafe::Pointer(& sl));
         }
     }
 
@@ -64,10 +60,10 @@ namespace golang::runtime
 ;
         auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> addrRange
         {
-            auto baseOffset = alignDown(uintptr(sumIdxBase) * pallocSumBytes, physPageSize);
-            auto limitOffset = alignUp(uintptr(sumIdxLimit) * pallocSumBytes, physPageSize);
-            auto base = Pointer(gocpp::recv(unsafe), & p->summary[level][0]);
-            return addrRange {offAddr {uintptr(add(base, baseOffset))}, offAddr {uintptr(add(base, limitOffset))}};
+            auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
+            auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
+            auto base = unsafe::Pointer(& p->summary[level][0]);
+            return addrRange {offAddr {uintptr_t(add(base, baseOffset))}, offAddr {uintptr_t(add(base, limitOffset))}};
         }
 ;
         auto addrRangeToSumAddrRange = [=](int level, addrRange r) mutable -> addrRange
@@ -97,8 +93,8 @@ namespace golang::runtime
             {
                 continue;
             }
-            sysMap(Pointer(gocpp::recv(unsafe), addr(gocpp::recv(need.base))), size(gocpp::recv(need)), p->sysStat);
-            sysUsed(Pointer(gocpp::recv(unsafe), addr(gocpp::recv(need.base))), size(gocpp::recv(need)), size(gocpp::recv(need)));
+            sysMap(unsafe::Pointer(addr(gocpp::recv(need.base))), size(gocpp::recv(need)), p->sysStat);
+            sysUsed(unsafe::Pointer(addr(gocpp::recv(need.base))), size(gocpp::recv(need)), size(gocpp::recv(need)));
             p->summaryMappedReady += size(gocpp::recv(need));
         }
         p->summaryMappedReady += sysGrow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
@@ -111,11 +107,11 @@ namespace golang::runtime
             print("runtime: base = ", hex(base), ", limit = ", hex(limit), "\n");
             go_throw("sysGrow bounds not aligned to pallocChunkBytes");
         }
-        auto scSize = Sizeof(gocpp::recv(unsafe), atomicScavChunkData {});
+        auto scSize = unsafe::Sizeof(atomicScavChunkData {});
         auto haveMin = Load(gocpp::recv(s->min));
         auto haveMax = Load(gocpp::recv(s->max));
-        auto needMin = alignDown(uintptr(chunkIndex(base)), physPageSize / scSize);
-        auto needMax = alignUp(uintptr(chunkIndex(limit)), physPageSize / scSize);
+        auto needMin = alignDown(uintptr_t(chunkIndex(base)), physPageSize / scSize);
+        auto needMax = alignUp(uintptr_t(chunkIndex(limit)), physPageSize / scSize);
         if(needMax < haveMin)
         {
             needMax = haveMin;
@@ -124,14 +120,14 @@ namespace golang::runtime
         {
             needMin = haveMax;
         }
-        auto chunksBase = uintptr(Pointer(gocpp::recv(unsafe), & s->chunks[0]));
+        auto chunksBase = uintptr_t(unsafe::Pointer(& s->chunks[0]));
         auto have = makeAddrRange(chunksBase + haveMin * scSize, chunksBase + haveMax * scSize);
         auto need = makeAddrRange(chunksBase + needMin * scSize, chunksBase + needMax * scSize);
         need = subtract(gocpp::recv(need), have);
         if(size(gocpp::recv(need)) != 0)
         {
-            sysMap(Pointer(gocpp::recv(unsafe), addr(gocpp::recv(need.base))), size(gocpp::recv(need)), sysStat);
-            sysUsed(Pointer(gocpp::recv(unsafe), addr(gocpp::recv(need.base))), size(gocpp::recv(need)), size(gocpp::recv(need)));
+            sysMap(unsafe::Pointer(addr(gocpp::recv(need.base))), size(gocpp::recv(need)), sysStat);
+            sysUsed(unsafe::Pointer(addr(gocpp::recv(need.base))), size(gocpp::recv(need)), size(gocpp::recv(need)));
             if(haveMax == 0 || needMin < haveMin)
             {
                 Store(gocpp::recv(s->min), needMin);
@@ -146,11 +142,11 @@ namespace golang::runtime
 
     uintptr_t sysInit(struct scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
-        auto n = uintptr(1 << heapAddrBits) / pallocChunkBytes;
-        auto nbytes = n * Sizeof(gocpp::recv(unsafe), atomicScavChunkData {});
+        auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
+        auto nbytes = n * unsafe::Sizeof(atomicScavChunkData {});
         auto r = sysReserve(nullptr, nbytes);
         auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
-        s->chunks = *(gocpp::slice<atomicScavChunkData>*)(Pointer(gocpp::recv(unsafe), & sl));
+        s->chunks = *(gocpp::slice<atomicScavChunkData>*)(unsafe::Pointer(& sl));
         return 0;
     }
 

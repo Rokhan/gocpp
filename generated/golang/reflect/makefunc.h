@@ -9,7 +9,7 @@
 #include "golang/reflect/makefunc.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"

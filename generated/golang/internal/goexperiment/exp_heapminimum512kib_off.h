@@ -11,7 +11,5 @@
 
 namespace golang::goexperiment
 {
-    extern bool HeapMinimum512KiB;
-    extern int HeapMinimum512KiBInt;
 }
 

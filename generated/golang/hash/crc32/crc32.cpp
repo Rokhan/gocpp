@@ -20,10 +20,6 @@
 
 namespace golang::crc32
 {
-    int Size = 4;
-    int IEEE = 0xedb88320;
-    int Castagnoli = 0x82f63b78;
-    int Koopman = 0xeb31d82e;
     Table* castagnoliTable;
     slicing8Table* castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
@@ -141,7 +137,6 @@ namespace golang::crc32
     }
 
     std::string magic = "crc\x01";
-    int marshaledSize = len(magic) + 4 + 4;
     std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
@@ -155,15 +150,15 @@ namespace golang::crc32
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
-            return New(gocpp::recv(errors), "hash/crc32: invalid hash state identifier");
+            return errors::New("hash/crc32: invalid hash state identifier");
         }
         if(len(b) != marshaledSize)
         {
-            return New(gocpp::recv(errors), "hash/crc32: invalid hash state size");
+            return errors::New("hash/crc32: invalid hash state size");
         }
         if(tableSum(d->tab) != readUint32(b.make_slice(4)))
         {
-            return New(gocpp::recv(errors), "hash/crc32: tables do not match");
+            return errors::New("hash/crc32: tables do not match");
         }
         d->crc = readUint32(b.make_slice(8));
         return nullptr;
@@ -171,7 +166,7 @@ namespace golang::crc32
 
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
     {
-        return append(b, byte(x >> 24), byte(x >> 16), byte(x >> 8), byte(x));
+        return append(b, unsigned char(x >> 24), unsigned char(x >> 16), unsigned char(x >> 8), unsigned char(x));
     }
 
     uint32_t readUint32(gocpp::slice<unsigned char> b)
@@ -227,7 +222,7 @@ namespace golang::crc32
     gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = Sum32(gocpp::recv(d));
-        return append(in, byte(s >> 24), byte(s >> 16), byte(s >> 8), byte(s));
+        return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));
     }
 
     uint32_t Checksum(gocpp::slice<unsigned char> data, Table* tab)

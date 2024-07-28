@@ -3,14 +3,24 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/compress/flate/deflate.fwd.h"
+
+namespace golang::flate
+{
+    const long offsetCodeCount = 30;
+    const long endBlockMarker = 256;
+    const long lengthCodesStart = 257;
+    const long codegenCodeCount = 19;
+    const long badCode = 255;
+    const long bufferFlushSize = 240;
+    const int bufferSize = bufferFlushSize + 8;
+}
 #include "golang/compress/flate/huffman_code.fwd.h"
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/compress/flate/token.fwd.h"
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
 
 namespace golang::flate
 {
     struct huffmanBitWriter;
 }
-
+#include "golang/compress/flate/deflate.fwd.h"
+#include "golang/compress/flate/inflate.fwd.h"
+#include "golang/compress/flate/token.fwd.h"

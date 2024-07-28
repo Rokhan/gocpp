@@ -14,24 +14,5 @@
 
 namespace golang::goarch
 {
-    extern ArchFamilyType AMD64;
-    extern ArchFamilyType ARM;
-    extern ArchFamilyType ARM64;
-    extern ArchFamilyType I386;
-    extern ArchFamilyType LOONG64;
-    extern ArchFamilyType MIPS;
-    extern ArchFamilyType MIPS64;
-    extern ArchFamilyType PPC64;
-    extern ArchFamilyType RISCV64;
-    extern ArchFamilyType S390X;
-    extern ArchFamilyType WASM;
-    extern int PtrSize;
-    extern ArchFamilyType ArchFamily;
-    extern bool BigEndian;
-    extern int DefaultPhysPageSize;
-    extern int PCQuantum;
-    extern int Int64Align;
-    extern int MinFrameSize;
-    extern int StackAlign;
 }
 

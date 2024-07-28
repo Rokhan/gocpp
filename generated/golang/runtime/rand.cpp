@@ -45,6 +45,13 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 globalRand;
     bool readRandomFailed;
     void randinit()
@@ -92,7 +99,7 @@ namespace golang::runtime
             }
             for(auto i = 0; i < size; i++)
             {
-                r[i] ^= byte(v >> (8 * i));
+                r[i] ^= unsigned char(v >> (8 * i));
             }
             r = r.make_slice(size);
             v = (v >> 32) | (v << 32);
@@ -170,13 +177,13 @@ namespace golang::runtime
     uint32_t cheaprand()
     {
         auto mp = getg()->m;
-        if(goarch.IsAmd64 | goarch.IsArm64 | goarch.IsPpc64 | goarch.IsPpc64le | goarch.IsMips64 | goarch.IsMips64le | goarch.IsS390x | goarch.IsRiscv64 | goarch.IsLoong64 == 1)
+        if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 | goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le | goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
         {
             mp->cheaprand += 0xa0761d6478bd642f;
             auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);
             return uint32_t(hi ^ lo);
         }
-        auto t = (gocpp::array<uint32_t, 2>*)(Pointer(gocpp::recv(unsafe), & mp->cheaprand));
+        auto t = (gocpp::array<uint32_t, 2>*)(unsafe::Pointer(& mp->cheaprand));
         auto [s1, s0] = std::tuple{t[0], t[1]};
         s1 ^= s1 << 17;
         s1 = s1 ^ s0 ^ (s1 >> 7) ^ (s0 >> 16);
@@ -186,7 +193,7 @@ namespace golang::runtime
 
     int64_t cheaprand64()
     {
-        return (int64(cheaprand()) << 31) ^ int64(cheaprand());
+        return (int64_t(cheaprand()) << 31) ^ int64_t(cheaprand());
     }
 
     uint32_t cheaprandn(uint32_t n)

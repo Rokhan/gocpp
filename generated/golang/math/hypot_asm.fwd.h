@@ -3,7 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::math
 {
+    const bool haveArchHypot = true;
 }
-

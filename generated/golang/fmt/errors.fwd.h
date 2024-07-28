@@ -3,13 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/errors/errors.fwd.h"
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/sort/sort.fwd.h"
 
 namespace golang::fmt
 {
     struct wrapError;
     struct wrapErrors;
 }
-
+#include "golang/errors/errors.fwd.h"
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/sort/sort.fwd.h"

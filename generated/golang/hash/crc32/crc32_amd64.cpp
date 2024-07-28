@@ -26,18 +26,16 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
-    int castagnoliK1 = 168;
-    int castagnoliK2 = 1344;
     sse42Table* castagnoliSSE42TableK1;
     sse42Table* castagnoliSSE42TableK2;
     bool archAvailableCastagnoli()
     {
-        return cpu.X86.HasSSE42;
+        return cpu::X86.HasSSE42;
     }
 
     void archInitCastagnoli()
     {
-        if(! cpu.X86.HasSSE42)
+        if(! cpu::X86.HasSSE42)
         {
             gocpp::panic("arch-specific Castagnoli not available");
         }
@@ -62,14 +60,14 @@ namespace golang::crc32
 
     uint32_t archUpdateCastagnoli(uint32_t crc, gocpp::slice<unsigned char> p)
     {
-        if(! cpu.X86.HasSSE42)
+        if(! cpu::X86.HasSSE42)
         {
             gocpp::panic("not available");
         }
-        crc = ^ crc;
+        crc = ~ crc;
         if(len(p) >= castagnoliK1 * 3)
         {
-            auto delta = int(uintptr(Pointer(gocpp::recv(unsafe), & p[0])) & 7);
+            auto delta = int(uintptr_t(unsafe::Pointer(& p[0])) & 7);
             if(delta != 0)
             {
                 delta = 8 - delta;
@@ -92,18 +90,18 @@ namespace golang::crc32
             p = p.make_slice(castagnoliK1 * 3);
         }
         crc = castagnoliSSE42(crc, p);
-        return ^ crc;
+        return ~ crc;
     }
 
     bool archAvailableIEEE()
     {
-        return cpu.X86.HasPCLMULQDQ && cpu.X86.HasSSE41;
+        return cpu::X86.HasPCLMULQDQ && cpu::X86.HasSSE41;
     }
 
     slicing8Table* archIeeeTable8;
     void archInitIEEE()
     {
-        if(! cpu.X86.HasPCLMULQDQ || ! cpu.X86.HasSSE41)
+        if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)
         {
             gocpp::panic("not available");
         }
@@ -112,7 +110,7 @@ namespace golang::crc32
 
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p)
     {
-        if(! cpu.X86.HasPCLMULQDQ || ! cpu.X86.HasSSE41)
+        if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)
         {
             gocpp::panic("not available");
         }
@@ -120,7 +118,7 @@ namespace golang::crc32
         {
             auto left = len(p) & 15;
             auto go_do = len(p) - left;
-            crc = ^ ieeeCLMUL(^ crc, p.make_slice(0, go_do));
+            crc = ~ ieeeCLMUL(~ crc, p.make_slice(0, go_do));
             p = p.make_slice(go_do);
         }
         if(len(p) == 0)

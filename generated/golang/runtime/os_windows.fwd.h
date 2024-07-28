@@ -3,39 +3,48 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/defs_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/defs_windows_amd64.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/netpoll_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/preempt.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/rand.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
+
+namespace golang::runtime
+{
+    const long _NSIG = 65;
+    struct sigset;
+    const long _MAX_PATH = 260;
+    const uintptr_t currentProcess = ~ uintptr_t(0);
+    const uintptr_t currentThread = ~ uintptr_t(1);
+    const double osRelaxMinNS = 60 * 1e6;
+    const bool preemptMSupported = true;
+}
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/select.fwd.h"
-// #include "golang/runtime/signal_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/sigqueue.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/stubs_amd64.fwd.h"
-// #include "golang/runtime/syscall_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/runtime/utf8.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct mOS;
-    struct sigset;
     using stdFunction = unsafe::Pointer;
+    struct mOS;
 }
-
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+// #include "golang/runtime/defs_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/defs_windows_amd64.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/atomic/stubs.fwd.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/netpoll_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/preempt.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+#include "golang/runtime/proc.fwd.h"
+// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
+#include "golang/runtime/select.fwd.h"
+// #include "golang/runtime/signal_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/sigqueue.fwd.h"
+#include "golang/runtime/stack.fwd.h"
+#include "golang/runtime/string.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/stubs_amd64.fwd.h"
+// #include "golang/runtime/syscall_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time_nofake.fwd.h"
+#include "golang/runtime/utf8.fwd.h"

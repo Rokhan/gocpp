@@ -13,7 +13,6 @@
 
 namespace golang::math
 {
-    bool haveArchLog = true;
     double archLog(double x)
     /* convertBlockStmt, nil block */;
 

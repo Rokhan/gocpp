@@ -3,7 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::sys
 {
+    const long isRace = 0;
 }
-

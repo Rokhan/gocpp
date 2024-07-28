@@ -13,36 +13,5 @@
 
 namespace golang::math
 {
-    double E = 2.71828182845904523536028747135266249775724709369995957496696763;
-    double Pi = 3.14159265358979323846264338327950288419716939937510582097494459;
-    double Phi = 1.61803398874989484820458683436563811772030917980576286213544862;
-    double Sqrt2 = 1.41421356237309504880168872420969807856967187537694807317667974;
-    double SqrtE = 1.64872127070012814684865078781416357165377610071014801157507931;
-    double SqrtPi = 1.77245385090551602729816748334114518279754945612238712821380779;
-    double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
-    double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
-    double Log2E = 1 / Ln2;
-    double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
-    double Log10E = 1 / Ln10;
-    double MaxFloat32 = 0x1p127 * (1 + (1 - 0x1p-23));
-    double SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23;
-    double MaxFloat64 = 0x1p1023 * (1 + (1 - 0x1p-52));
-    double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
-    int intSize = 32 << (^ (unsigned int)(0) >> 63);
-    int MaxInt = (1 << (intSize - 1)) - 1;
-    int MinInt = - 1 << (intSize - 1);
-    int MaxInt8 = (1 << 7) - 1;
-    int MinInt8 = - 1 << 7;
-    int MaxInt16 = (1 << 15) - 1;
-    int MinInt16 = - 1 << 15;
-    int MaxInt32 = (1 << 31) - 1;
-    int MinInt32 = - 1 << 31;
-    int MaxInt64 = (1 << 63) - 1;
-    int MinInt64 = - 1 << 63;
-    int MaxUint = (1 << intSize) - 1;
-    int MaxUint8 = (1 << 8) - 1;
-    int MaxUint16 = (1 << 16) - 1;
-    int MaxUint32 = (1 << 32) - 1;
-    int MaxUint64 = (1 << 64) - 1;
 }
 

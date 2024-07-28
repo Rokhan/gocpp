@@ -11,7 +11,7 @@
 #include "golang/runtime/trace2region.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
@@ -54,14 +54,14 @@ namespace golang::runtime
 
     notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n)
     {
-        n = alignUp(n, goarch.PtrSize);
-        if(a->head == nullptr || a->off + n > uintptr(len(a->head->data)))
+        n = alignUp(n, goarch::PtrSize);
+        if(a->head == nullptr || a->off + n > uintptr_t(len(a->head->data)))
         {
-            if(n > uintptr(len(a->head->data)))
+            if(n > uintptr_t(len(a->head->data)))
             {
                 go_throw("traceRegion: alloc too large");
             }
-            auto block = (traceRegionAllocBlock*)(sysAlloc(Sizeof(gocpp::recv(unsafe), traceRegionAllocBlock {}), & memstats.other_sys));
+            auto block = (traceRegionAllocBlock*)(sysAlloc(unsafe::Sizeof(traceRegionAllocBlock {}), & memstats.other_sys));
             if(block == nullptr)
             {
                 go_throw("traceRegion: out of memory");
@@ -72,7 +72,7 @@ namespace golang::runtime
         }
         auto p = & a->head->data[a->off];
         a->off += n;
-        return (notInHeap*)(Pointer(gocpp::recv(unsafe), p));
+        return (notInHeap*)(unsafe::Pointer(p));
     }
 
     void drop(struct traceRegionAlloc* a)
@@ -81,7 +81,7 @@ namespace golang::runtime
         {
             auto block = a->head;
             a->head = block->next;
-            sysFree(Pointer(gocpp::recv(unsafe), block), Sizeof(gocpp::recv(unsafe), traceRegionAllocBlock {}), & memstats.other_sys);
+            sysFree(unsafe::Pointer(block), unsafe::Sizeof(traceRegionAllocBlock {}), & memstats.other_sys);
         }
     }
 

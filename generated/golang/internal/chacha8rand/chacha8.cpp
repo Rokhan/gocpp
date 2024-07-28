@@ -13,10 +13,6 @@
 
 namespace golang::chacha8rand
 {
-    int ctrInc = 4;
-    int ctrMax = 16;
-    int chunk = 32;
-    int reseed = 4;
     void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter)
     /* convertBlockStmt, nil block */;
 
@@ -168,14 +164,14 @@ namespace golang::chacha8rand
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = byte(v >> 56);
-        b[1] = byte(v >> 48);
-        b[2] = byte(v >> 40);
-        b[3] = byte(v >> 32);
-        b[4] = byte(v >> 24);
-        b[5] = byte(v >> 16);
-        b[6] = byte(v >> 8);
-        b[7] = byte(v);
+        b[0] = unsigned char(v >> 56);
+        b[1] = unsigned char(v >> 48);
+        b[2] = unsigned char(v >> 40);
+        b[3] = unsigned char(v >> 32);
+        b[4] = unsigned char(v >> 24);
+        b[5] = unsigned char(v >> 16);
+        b[6] = unsigned char(v >> 8);
+        b[7] = unsigned char(v);
     }
 
     uint64_t leUint64(gocpp::slice<unsigned char> b)
@@ -187,14 +183,14 @@ namespace golang::chacha8rand
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = byte(v);
-        b[1] = byte(v >> 8);
-        b[2] = byte(v >> 16);
-        b[3] = byte(v >> 24);
-        b[4] = byte(v >> 32);
-        b[5] = byte(v >> 40);
-        b[6] = byte(v >> 48);
-        b[7] = byte(v >> 56);
+        b[0] = unsigned char(v);
+        b[1] = unsigned char(v >> 8);
+        b[2] = unsigned char(v >> 16);
+        b[3] = unsigned char(v >> 24);
+        b[4] = unsigned char(v >> 32);
+        b[5] = unsigned char(v >> 40);
+        b[6] = unsigned char(v >> 48);
+        b[7] = unsigned char(v >> 56);
     }
 
 }

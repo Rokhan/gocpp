@@ -11,18 +11,13 @@
 #include "golang/runtime/hash64.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/math/math.h"
 // #include "golang/runtime/alg.h"  [Ignored, known errors]
+#include "golang/runtime/internal/math/math.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
-    int m1 = 0xa0761d6478bd642f;
-    int m2 = 0xe7037ed1a0b428db;
-    int m3 = 0x8ebc6af09c88c6e3;
-    int m4 = 0x589965cc75374cc3;
-    int m5 = 0x1d8e4e27c47d124f;
     uintptr_t memhashFallback(unsafe::Pointer p, uintptr_t seed, uintptr_t s)
     {
         uintptr_t a = {};
@@ -43,9 +38,9 @@ namespace golang::runtime
                     return seed;
                     break;
                 case 1:
-                    a = uintptr(*(unsigned char*)(p));
-                    a |= uintptr(*(unsigned char*)(add(p, s >> 1))) << 8;
-                    a |= uintptr(*(unsigned char*)(add(p, s - 1))) << 16;
+                    a = uintptr_t(*(unsigned char*)(p));
+                    a |= uintptr_t(*(unsigned char*)(add(p, s >> 1))) << 8;
+                    a |= uintptr_t(*(unsigned char*)(add(p, s - 1))) << 16;
                     break;
                 case 2:
                     a = r4(p);
@@ -106,17 +101,17 @@ namespace golang::runtime
     uintptr_t mix(uintptr_t a, uintptr_t b)
     {
         auto [hi, lo] = math::Mul64(uint64_t(a), uint64_t(b));
-        return uintptr(hi ^ lo);
+        return uintptr_t(hi ^ lo);
     }
 
     uintptr_t r4(unsafe::Pointer p)
     {
-        return uintptr(readUnaligned32(p));
+        return uintptr_t(readUnaligned32(p));
     }
 
     uintptr_t r8(unsafe::Pointer p)
     {
-        return uintptr(readUnaligned64(p));
+        return uintptr_t(readUnaligned64(p));
     }
 
 }

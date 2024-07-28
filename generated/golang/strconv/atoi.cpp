@@ -22,8 +22,8 @@ namespace golang::strconv
         return c | ('x' - 'X');
     }
 
-    std::string ErrRange = New(gocpp::recv(errors), "value out of range");
-    std::string ErrSyntax = New(gocpp::recv(errors), "invalid syntax");
+    std::string ErrRange = errors::New("value out of range");
+    std::string ErrSyntax = errors::New("invalid syntax");
     
     std::ostream& NumError::PrintTo(std::ostream& os) const
     {
@@ -67,17 +67,14 @@ namespace golang::strconv
 
     NumError* baseError(std::string fn, std::string str, int base)
     {
-        return new NumError {fn, cloneString(str), New(gocpp::recv(errors), "invalid base " + Itoa(base))};
+        return new NumError {fn, cloneString(str), errors::New("invalid base " + Itoa(base))};
     }
 
     NumError* bitSizeError(std::string fn, std::string str, int bitSize)
     {
-        return new NumError {fn, cloneString(str), New(gocpp::recv(errors), "invalid bit size " + Itoa(bitSize))};
+        return new NumError {fn, cloneString(str), errors::New("invalid bit size " + Itoa(bitSize))};
     }
 
-    int intSize = 32 << (^ (unsigned int)(0) >> 63);
-    int IntSize = intSize;
-    int maxUint64 = (1 << 64) - 1;
     std::tuple<uint64_t, std::string> ParseUint(std::string s, int base, int bitSize)
     {
         auto fnParseUint = "ParseUint";
@@ -191,7 +188,7 @@ namespace golang::strconv
                         break;
                 }
             }
-            if(d >= byte(base))
+            if(d >= unsigned char(base))
             {
                 return {0, syntaxError(fnParseUint, s0)};
             }
@@ -262,15 +259,15 @@ namespace golang::strconv
         {
             int64_t i;
             std::string err;
-            return {int64(cutoff - 1), rangeError(fnParseInt, s0)};
+            return {int64_t(cutoff - 1), rangeError(fnParseInt, s0)};
         }
         if(neg && un > cutoff)
         {
             int64_t i;
             std::string err;
-            return {- int64(cutoff), rangeError(fnParseInt, s0)};
+            return {- int64_t(cutoff), rangeError(fnParseInt, s0)};
         }
-        auto n = int64(un);
+        auto n = int64_t(un);
         if(neg)
         {
             int64_t i;

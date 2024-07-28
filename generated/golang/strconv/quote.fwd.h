@@ -5,8 +5,3 @@
 
 #include "golang/strconv/bytealg.fwd.h"
 #include "golang/unicode/utf8/utf8.fwd.h"
-
-namespace golang::strconv
-{
-}
-

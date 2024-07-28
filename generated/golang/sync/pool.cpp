@@ -75,9 +75,9 @@ namespace golang::sync
     gocpp::array<uint64_t, 128> poolRaceHash;
     unsafe::Pointer poolRaceAddr(go_any x)
     {
-        auto ptr = uintptr((gocpp::array<unsafe::Pointer, 2>*)(Pointer(gocpp::recv(unsafe), & x))[1]);
+        auto ptr = uintptr_t((gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& x))[1]);
         auto h = uint32_t((uint64_t(uint32_t(ptr)) * 0x85ebca6b) >> 16);
-        return Pointer(gocpp::recv(unsafe), & poolRaceHash[h % uint32_t(len(poolRaceHash))]);
+        return unsafe::Pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
     void Put(struct Pool* p, go_any x)
@@ -86,14 +86,14 @@ namespace golang::sync
         {
             return;
         }
-        if(race.Enabled)
+        if(race::Enabled)
         {
             if(runtime_randn(4) == 0)
             {
                 return;
             }
-            ReleaseMerge(gocpp::recv(race), poolRaceAddr(x));
-            Disable(gocpp::recv(race));
+            race::ReleaseMerge(poolRaceAddr(x));
+            race::Disable();
         }
         auto [l, _] = pin(gocpp::recv(p));
         if(l->private == nullptr)
@@ -105,17 +105,17 @@ namespace golang::sync
             pushHead(gocpp::recv(l->shared), x);
         }
         runtime_procUnpin();
-        if(race.Enabled)
+        if(race::Enabled)
         {
-            Enable(gocpp::recv(race));
+            race::Enable();
         }
     }
 
     go_any Get(struct Pool* p)
     {
-        if(race.Enabled)
+        if(race::Enabled)
         {
-            Disable(gocpp::recv(race));
+            race::Disable();
         }
         auto [l, pid] = pin(gocpp::recv(p));
         auto x = l->private;
@@ -129,12 +129,12 @@ namespace golang::sync
             }
         }
         runtime_procUnpin();
-        if(race.Enabled)
+        if(race::Enabled)
         {
-            Enable(gocpp::recv(race));
+            race::Enable();
             if(x != nullptr)
             {
-                Acquire(gocpp::recv(race), poolRaceAddr(x));
+                race::Acquire(poolRaceAddr(x));
             }
         }
         if(x == nullptr && p->New != nullptr)
@@ -156,8 +156,8 @@ namespace golang::sync
                 return x;
             }
         }
-        size = LoadUintptr(gocpp::recv(atomic), & p->victimSize);
-        if(uintptr(pid) >= size)
+        size = atomic::LoadUintptr(& p->victimSize);
+        if(uintptr_t(pid) >= size)
         {
             return nullptr;
         }
@@ -176,7 +176,7 @@ namespace golang::sync
                 return x;
             }
         }
-        StoreUintptr(gocpp::recv(atomic), & p->victimSize, 0);
+        atomic::StoreUintptr(& p->victimSize, 0);
         return nullptr;
     }
 
@@ -189,7 +189,7 @@ namespace golang::sync
         auto pid = runtime_procPin();
         auto s = runtime_LoadAcquintptr(& p->localSize);
         auto l = p->local;
-        if(uintptr(pid) < s)
+        if(uintptr_t(pid) < s)
         {
             return {indexLocal(l, pid), pid};
         }
@@ -205,7 +205,7 @@ namespace golang::sync
         auto pid = runtime_procPin();
         auto s = p->localSize;
         auto l = p->local;
-        if(uintptr(pid) < s)
+        if(uintptr_t(pid) < s)
         {
             return {indexLocal(l, pid), pid};
         }
@@ -215,8 +215,8 @@ namespace golang::sync
         }
         auto size = runtime::GOMAXPROCS(0);
         auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
-        StorePointer(gocpp::recv(atomic), & p->local, Pointer(gocpp::recv(unsafe), & local[0]));
-        runtime_StoreReluintptr(& p->localSize, uintptr(size));
+        atomic::StorePointer(& p->local, unsafe::Pointer(& local[0]));
+        runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
         return {& local[pid], pid};
     }
 
@@ -247,7 +247,7 @@ namespace golang::sync
 
     poolLocal* indexLocal(unsafe::Pointer l, int i)
     {
-        auto lp = Pointer(gocpp::recv(unsafe), uintptr(l) + uintptr(i) * Sizeof(gocpp::recv(unsafe), poolLocal {}));
+        auto lp = unsafe::Pointer(uintptr_t(l) + uintptr_t(i) * unsafe::Sizeof(poolLocal {}));
         return (poolLocal*)(lp);
     }
 

@@ -13,6 +13,5 @@
 
 namespace golang::runtime
 {
-    int cb_max = 2000;
 }
 

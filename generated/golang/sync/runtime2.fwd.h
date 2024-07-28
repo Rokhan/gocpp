@@ -9,4 +9,3 @@ namespace golang::sync
 {
     struct notifyList;
 }
-

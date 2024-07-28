@@ -3,12 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {
-    struct _DISPATCHER_CONTEXT;
-    struct context;
+    const long _CONTEXT_CONTROL = 0x100001;
     struct m128a;
+    struct context;
+    struct _DISPATCHER_CONTEXT;
 }
-
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]

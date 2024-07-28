@@ -3,16 +3,22 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/bytes/bytes.fwd.h"
-#include "golang/errors/errors.fwd.h"
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
-#include "golang/strings/builder.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
 
 namespace golang::bufio
 {
+    const long defaultBufSize = 4096;
+    const long minReadBufferSize = 16;
+    const long maxConsecutiveEmptyReads = 100;
     struct ReadWriter;
+}
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
+
+namespace golang::bufio
+{
     struct Reader;
     struct Writer;
 }
-
+#include "golang/bytes/bytes.fwd.h"
+#include "golang/errors/errors.fwd.h"
+#include "golang/strings/builder.fwd.h"
+#include "golang/unicode/utf8/utf8.fwd.h"

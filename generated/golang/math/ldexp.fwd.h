@@ -7,8 +7,3 @@
 #include "golang/math/copysign.fwd.h"
 #include "golang/math/stubs.fwd.h"
 #include "golang/math/unsafe.fwd.h"
-
-namespace golang::math
-{
-}
-

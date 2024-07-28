@@ -13,7 +13,6 @@
 
 namespace golang::race
 {
-    extern bool Enabled;
     void Acquire(unsafe::Pointer addr);
     void Release(unsafe::Pointer addr);
     void ReleaseMerge(unsafe::Pointer addr);

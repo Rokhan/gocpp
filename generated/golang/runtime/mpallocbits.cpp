@@ -46,10 +46,10 @@ namespace golang::runtime
             return;
         }
         _ = b[j / 64];
-        b[i / 64] |= ^ uint64_t(0) << (i % 64);
+        b[i / 64] |= ~ uint64_t(0) << (i % 64);
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
-            b[k] = ^ uint64_t(0);
+            b[k] = ~ uint64_t(0);
         }
         b[j / 64] |= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
@@ -58,7 +58,7 @@ namespace golang::runtime
     {
         for(auto [i, gocpp_ignored] : b)
         {
-            b[i] = ^ uint64_t(0);
+            b[i] = ~ uint64_t(0);
         }
     }
 
@@ -87,7 +87,7 @@ namespace golang::runtime
             return;
         }
         _ = b[j / 64];
-        b[i / 64] &^= ^ uint64_t(0) << (i % 64);
+        b[i / 64] &^= ~ uint64_t(0) << (i % 64);
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
             b[k] = 0;
@@ -121,16 +121,16 @@ namespace golang::runtime
         if(i / 64 == j / 64)
         {
             unsigned int s;
-            return (unsigned int)(OnesCount64(gocpp::recv(sys), (b[i / 64] >> (i % 64)) & ((1 << n) - 1)));
+            return (unsigned int)(sys::OnesCount64((b[i / 64] >> (i % 64)) & ((1 << n) - 1)));
         }
         _ = b[j / 64];
-        s += (unsigned int)(OnesCount64(gocpp::recv(sys), b[i / 64] >> (i % 64)));
+        s += (unsigned int)(sys::OnesCount64(b[i / 64] >> (i % 64)));
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
             unsigned int s;
-            s += (unsigned int)(OnesCount64(gocpp::recv(sys), b[k]));
+            s += (unsigned int)(sys::OnesCount64(b[k]));
         }
-        s += (unsigned int)(OnesCount64(gocpp::recv(sys), b[j / 64] & ((1 << (j % 64 + 1)) - 1)));
+        s += (unsigned int)(sys::OnesCount64(b[j / 64] & ((1 << (j % 64 + 1)) - 1)));
         return s;
     }
 
@@ -139,7 +139,7 @@ namespace golang::runtime
         unsigned int start = {};
         unsigned int most = {};
         unsigned int cur = {};
-        auto notSetYet = ^ (unsigned int)(0);
+        auto notSetYet = ~ (unsigned int)(0);
         start = notSetYet;
         for(auto i = 0; i < len(b); i++)
         {
@@ -149,8 +149,8 @@ namespace golang::runtime
                 cur += 64;
                 continue;
             }
-            auto t = (unsigned int)(TrailingZeros64(gocpp::recv(sys), x));
-            auto l = (unsigned int)(LeadingZeros64(gocpp::recv(sys), x));
+            auto t = (unsigned int)(sys::TrailingZeros64(x));
+            auto l = (unsigned int)(sys::LeadingZeros64(x));
             cur += t;
             if(start == notSetYet)
             {
@@ -169,10 +169,11 @@ namespace golang::runtime
         {
             return packPallocSum(start, most, cur);
         }
+        outer:
         for(auto i = 0; i < len(b); i++)
         {
             auto x = b[i];
-            x >>= TrailingZeros64(gocpp::recv(sys), x) & 63;
+            x >>= sys::TrailingZeros64(x) & 63;
             if(x & (x + 1) == 0)
             {
                 continue;
@@ -200,9 +201,9 @@ namespace golang::runtime
                     p -= k;
                     k *= 2;
                 }
-                auto j = (unsigned int)(TrailingZeros64(gocpp::recv(sys), ^ x));
+                auto j = (unsigned int)(sys::TrailingZeros64(~ x));
                 x >>= j & 63;
-                j = (unsigned int)(TrailingZeros64(gocpp::recv(sys), x));
+                j = (unsigned int)(sys::TrailingZeros64(x));
                 x >>= j & 63;
                 most += j;
                 if(x & (x + 1) == 0)
@@ -242,67 +243,67 @@ namespace golang::runtime
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
         {
             auto x = b[i];
-            if(^ x == 0)
+            if(~ x == 0)
             {
                 continue;
             }
-            return i * 64 + (unsigned int)(TrailingZeros64(gocpp::recv(sys), ^ x));
+            return i * 64 + (unsigned int)(sys::TrailingZeros64(~ x));
         }
-        return ^ (unsigned int)(0);
+        return ~ (unsigned int)(0);
     }
 
     std::tuple<unsigned int, unsigned int> findSmallN(pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
-        auto [end, newSearchIdx] = std::tuple{(unsigned int)(0), ^ (unsigned int)(0)};
+        auto [end, newSearchIdx] = std::tuple{(unsigned int)(0), ~ (unsigned int)(0)};
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
         {
             auto bi = b[i];
-            if(^ bi == 0)
+            if(~ bi == 0)
             {
                 end = 0;
                 continue;
             }
-            if(newSearchIdx == ^ (unsigned int)(0))
+            if(newSearchIdx == ~ (unsigned int)(0))
             {
-                newSearchIdx = i * 64 + (unsigned int)(TrailingZeros64(gocpp::recv(sys), ^ bi));
+                newSearchIdx = i * 64 + (unsigned int)(sys::TrailingZeros64(~ bi));
             }
-            auto start = (unsigned int)(TrailingZeros64(gocpp::recv(sys), bi));
+            auto start = (unsigned int)(sys::TrailingZeros64(bi));
             if(end + start >= (unsigned int)(npages))
             {
                 return {i * 64 - end, newSearchIdx};
             }
-            auto j = findBitRange64(^ bi, (unsigned int)(npages));
+            auto j = findBitRange64(~ bi, (unsigned int)(npages));
             if(j < 64)
             {
                 return {i * 64 + j, newSearchIdx};
             }
-            end = (unsigned int)(LeadingZeros64(gocpp::recv(sys), bi));
+            end = (unsigned int)(sys::LeadingZeros64(bi));
         }
-        return {^ (unsigned int)(0), newSearchIdx};
+        return {~ (unsigned int)(0), newSearchIdx};
     }
 
     std::tuple<unsigned int, unsigned int> findLargeN(pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
-        auto [start, size, newSearchIdx] = std::tuple{^ (unsigned int)(0), (unsigned int)(0), ^ (unsigned int)(0)};
+        auto [start, size, newSearchIdx] = std::tuple{~ (unsigned int)(0), (unsigned int)(0), ~ (unsigned int)(0)};
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
         {
             auto x = b[i];
-            if(x == ^ uint64_t(0))
+            if(x == ~ uint64_t(0))
             {
                 size = 0;
                 continue;
             }
-            if(newSearchIdx == ^ (unsigned int)(0))
+            if(newSearchIdx == ~ (unsigned int)(0))
             {
-                newSearchIdx = i * 64 + (unsigned int)(TrailingZeros64(gocpp::recv(sys), ^ x));
+                newSearchIdx = i * 64 + (unsigned int)(sys::TrailingZeros64(~ x));
             }
             if(size == 0)
             {
-                size = (unsigned int)(LeadingZeros64(gocpp::recv(sys), x));
+                size = (unsigned int)(sys::LeadingZeros64(x));
                 start = i * 64 + 64 - size;
                 continue;
             }
-            auto s = (unsigned int)(TrailingZeros64(gocpp::recv(sys), x));
+            auto s = (unsigned int)(sys::TrailingZeros64(x));
             if(s + size >= (unsigned int)(npages))
             {
                 size += s;
@@ -310,7 +311,7 @@ namespace golang::runtime
             }
             if(s < 64)
             {
-                size = (unsigned int)(LeadingZeros64(gocpp::recv(sys), x));
+                size = (unsigned int)(sys::LeadingZeros64(x));
                 start = i * 64 + 64 - size;
                 continue;
             }
@@ -318,7 +319,7 @@ namespace golang::runtime
         }
         if(size < (unsigned int)(npages))
         {
-            return {^ (unsigned int)(0), newSearchIdx};
+            return {~ (unsigned int)(0), newSearchIdx};
         }
         return {start, newSearchIdx};
     }
@@ -377,7 +378,7 @@ namespace golang::runtime
             p -= k;
             k *= 2;
         }
-        return (unsigned int)(TrailingZeros64(gocpp::recv(sys), c));
+        return (unsigned int)(sys::TrailingZeros64(c));
     }
 
     

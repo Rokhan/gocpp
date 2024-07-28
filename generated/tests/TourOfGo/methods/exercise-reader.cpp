@@ -36,7 +36,7 @@ namespace golang::main
 
     void main()
     {
-        Validate(gocpp::recv(reader), MyReader {});
+        reader::Validate(MyReader {});
     }
 
 }

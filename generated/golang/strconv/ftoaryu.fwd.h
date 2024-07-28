@@ -7,8 +7,3 @@
 #include "golang/strconv/eisel_lemire.fwd.h"
 #include "golang/strconv/ftoa.fwd.h"
 #include "golang/strconv/itoa.fwd.h"
-
-namespace golang::strconv
-{
-}
-

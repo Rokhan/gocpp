@@ -44,15 +44,14 @@ namespace golang::crc32
 
     uint32_t simpleUpdate(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p)
     {
-        crc = ^ crc;
+        crc = ~ crc;
         for(auto [_, v] : p)
         {
-            crc = tab[byte(crc) ^ v] ^ (crc >> 8);
+            crc = tab[unsigned char(crc) ^ v] ^ (crc >> 8);
         }
-        return ^ crc;
+        return ~ crc;
     }
 
-    int slicing8Cutoff = 16;
     slicing8Table* slicingMakeTable(uint32_t poly)
     {
         auto t = go_new(slicing8Table);
@@ -73,14 +72,14 @@ namespace golang::crc32
     {
         if(len(p) >= slicing8Cutoff)
         {
-            crc = ^ crc;
+            crc = ~ crc;
             for(; len(p) > 8; )
             {
                 crc ^= uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
                 crc = tab[0][p[7]] ^ tab[1][p[6]] ^ tab[2][p[5]] ^ tab[3][p[4]] ^ tab[4][crc >> 24] ^ tab[5][(crc >> 16) & 0xFF] ^ tab[6][(crc >> 8) & 0xFF] ^ tab[7][crc & 0xFF];
                 p = p.make_slice(8);
             }
-            crc = ^ crc;
+            crc = ~ crc;
         }
         if(len(p) == 0)
         {

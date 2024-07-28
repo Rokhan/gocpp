@@ -22,7 +22,6 @@
 
 namespace golang::runtime
 {
-    extern int traceBytesPerNumber;
     struct traceWriter
     {
 
@@ -68,7 +67,7 @@ namespace golang::runtime
     struct traceBuf
     {
         sys::NotInHeap _;
-        gocpp::array<unsigned char, (64 << 10) - Sizeof(gocpp::recv(unsafe), traceBufHeader {})> arr;
+        gocpp::array<unsigned char, (64 << 10) - unsafe::Sizeof(traceBufHeader {})> arr;
 
         using isGoStruct = void;
 

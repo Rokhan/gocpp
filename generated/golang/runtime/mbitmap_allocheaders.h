@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
@@ -21,9 +21,9 @@
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/stkframe.h"  [Ignored, known errors]
+#include "golang/runtime/stkframe.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
@@ -33,8 +33,6 @@
 
 namespace golang::runtime
 {
-    extern int mallocHeaderSize;
-    extern int minSizeForMallocHeader;
     bool heapBitsInSpan(uintptr_t userSize);
     struct heapArenaPtrScalar
     {

@@ -15,15 +15,6 @@
 
 namespace golang::math
 {
-    extern int uvnan;
-    extern int uvinf;
-    extern int uvneginf;
-    extern int uvone;
-    extern int mask;
-    extern int shift;
-    extern int bias;
-    extern int signMask;
-    extern int fracMask;
     double Inf(int sign);
     double NaN();
     bool IsNaN(double f);

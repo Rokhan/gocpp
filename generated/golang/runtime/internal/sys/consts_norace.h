@@ -11,6 +11,5 @@
 
 namespace golang::sys
 {
-    extern int isRace;
 }
 

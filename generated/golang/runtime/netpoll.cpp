@@ -11,10 +11,10 @@
 #include "golang/runtime/netpoll.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -33,14 +33,6 @@
 
 namespace golang::runtime
 {
-    int pollNoError = 0;
-    int pollErrClosing = 1;
-    int pollErrTimeout = 2;
-    int pollErrNotPollable = 3;
-    uintptr_t pdNil = 0;
-    uintptr_t pdReady = 1;
-    uintptr_t pdWait = 2;
-    int pollBlockSize = 4 * 1024;
     
     std::ostream& pollDesc::PrintTo(std::ostream& os) const
     {
@@ -71,13 +63,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    int pollClosing = 1 << 0;
-    int pollEventErr = 1 << 1;
-    int pollExpiredReadDeadline = 1 << 2;
-    int pollExpiredWriteDeadline = 1 << 3;
-    int pollFDSeq = 1 << 4;
-    int pollFDSeqBits = 20;
-    int pollFDSeqMask = (1 << pollFDSeqBits) - 1;
     bool closing(pollInfo i)
     {
         return i & pollClosing != 0;
@@ -270,7 +255,7 @@ namespace golang::runtime
 
     int poll_runtime_pollReset(pollDesc* pd, int mode)
     {
-        auto errcode = netpollcheckerr(pd, int32(mode));
+        auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
         {
             return errcode;
@@ -289,7 +274,7 @@ namespace golang::runtime
 
     int poll_runtime_pollWait(pollDesc* pd, int mode)
     {
-        auto errcode = netpollcheckerr(pd, int32(mode));
+        auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
         {
             return errcode;
@@ -298,9 +283,9 @@ namespace golang::runtime
         {
             netpollarm(pd, mode);
         }
-        for(; ! netpollblock(pd, int32(mode), false); )
+        for(; ! netpollblock(pd, int32_t(mode), false); )
         {
-            errcode = netpollcheckerr(pd, int32(mode));
+            errcode = netpollcheckerr(pd, int32_t(mode));
             if(errcode != pollNoError)
             {
                 return errcode;
@@ -311,7 +296,7 @@ namespace golang::runtime
 
     void poll_runtime_pollWaitCanceled(pollDesc* pd, int mode)
     {
-        for(; ! netpollblock(pd, int32(mode), true); )
+        for(; ! netpollblock(pd, int32_t(mode), true); )
         {
         }
     }
@@ -397,7 +382,7 @@ namespace golang::runtime
                 pd->wt.f = nullptr;
             }
         }
-        auto delta = int32(0);
+        auto delta = int32_t(0);
         g* rg = {};
         g* wg = {};
         if(pd->rd < 0)
@@ -433,7 +418,7 @@ namespace golang::runtime
         g* rg = {};
         g* wg = {};
         publishInfo(gocpp::recv(pd));
-        auto delta = int32(0);
+        auto delta = int32_t(0);
         rg = netpollunblock(pd, 'r', false, & delta);
         wg = netpollunblock(pd, 'w', false, & delta);
         if(pd->rt.f != nullptr)
@@ -460,7 +445,7 @@ namespace golang::runtime
 
     int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode)
     {
-        auto delta = int32(0);
+        auto delta = int32_t(0);
         g* rg = {};
         g* wg = {};
         if(mode == 'r' || mode == 'r' + 'w')
@@ -502,7 +487,7 @@ namespace golang::runtime
 
     bool netpollblockcommit(g* gp, unsafe::Pointer gpp)
     {
-        auto r = Casuintptr(gocpp::recv(atomic), (uintptr_t*)(gpp), pdWait, uintptr(Pointer(gocpp::recv(unsafe), gp)));
+        auto r = atomic::Casuintptr((uintptr_t*)(gpp), pdWait, uintptr_t(unsafe::Pointer(gp)));
         if(r)
         {
             netpollAdjustWaiters(1);
@@ -539,7 +524,7 @@ namespace golang::runtime
         }
         if(waitio || netpollcheckerr(pd, mode) == pollNoError)
         {
-            gopark(netpollblockcommit, Pointer(gocpp::recv(unsafe), gpp), waitReasonIOWait, traceBlockNet, 5);
+            gopark(netpollblockcommit, unsafe::Pointer(gpp), waitReasonIOWait, traceBlockNet, 5);
         }
         auto old = Swap(gocpp::recv(gpp), pdNil);
         if(old > pdWait)
@@ -583,7 +568,7 @@ namespace golang::runtime
                 {
                     *delta -= 1;
                 }
-                return (g*)(Pointer(gocpp::recv(unsafe), old));
+                return (g*)(unsafe::Pointer(old));
             }
         }
     }
@@ -601,7 +586,7 @@ namespace golang::runtime
             unlock(& pd->lock);
             return;
         }
-        auto delta = int32(0);
+        auto delta = int32_t(0);
         g* rg = {};
         if(read)
         {
@@ -669,14 +654,14 @@ namespace golang::runtime
         lock(& c->lock);
         if(c->first == nullptr)
         {
-            auto pdSize = Sizeof(gocpp::recv(unsafe), pollDesc {});
+            auto pdSize = unsafe::Sizeof(pollDesc {});
             auto n = pollBlockSize / pdSize;
             if(n == 0)
             {
                 n = 1;
             }
             auto mem = persistentalloc(n * pdSize, 0, & memstats.other_sys);
-            for(auto i = uintptr(0); i < n; i++)
+            for(auto i = uintptr_t(0); i < n; i++)
             {
                 auto pd = (pollDesc*)(add(mem, i * pdSize));
                 pd->link = c->first;
@@ -693,9 +678,9 @@ namespace golang::runtime
     go_any makeArg(struct pollDesc* pd)
     {
         go_any i;
-        auto x = (eface*)(Pointer(gocpp::recv(unsafe), & i));
+        auto x = (eface*)(unsafe::Pointer(& i));
         x->_type = pdType;
-        x->data = Pointer(gocpp::recv(unsafe), & pd->self);
+        x->data = unsafe::Pointer(& pd->self);
         return i;
     }
 

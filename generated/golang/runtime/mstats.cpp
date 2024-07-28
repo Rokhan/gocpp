@@ -21,7 +21,7 @@
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]
+#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 
@@ -105,12 +105,12 @@ namespace golang::runtime
 
     void init()
     {
-        if(auto offset = Offsetof(gocpp::recv(unsafe), memstats.heapStats); offset % 8 != 0)
+        if(auto offset = unsafe::Offsetof(memstats.heapStats); offset % 8 != 0)
         {
             println(offset);
             go_throw("memstats.heapStats not aligned to 8 bytes");
         }
-        if(auto size = Sizeof(gocpp::recv(unsafe), heapStatsDelta {}); size % 8 != 0)
+        if(auto size = unsafe::Sizeof(heapStatsDelta {}); size % 8 != 0)
         {
             println(size);
             go_throw("heapStatsDelta not a multiple of 8 bytes in size");
@@ -130,17 +130,7 @@ namespace golang::runtime
     }
 
     bool doubleCheckReadMemStats = false;
-    void readmemstats_m(MemStats* stats)
-    {
-        assertWorldStopped();
-        systemstack(flushallmcaches);
-        heapStatsDelta consStats = {};
-        unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
-        auto totalAlloc = consStats.largeAlloc;
-        auto nMalloc = consStats.largeAllocCount;
-        auto totalFree = consStats.largeFree;
-        auto nFree = consStats.largeFreeCount;
-        struct gocpp_id_1
+    struct gocpp_id_1
         {
             uint32_t Size;
             uint64_t Mallocs;
@@ -158,6 +148,23 @@ namespace golang::runtime
                 return os;
             }
         };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
+    void readmemstats_m(MemStats* stats)
+    {
+        assertWorldStopped();
+        systemstack(flushallmcaches);
+        heapStatsDelta consStats = {};
+        unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
+        auto totalAlloc = consStats.largeAlloc;
+        auto nMalloc = consStats.largeAllocCount;
+        auto totalFree = consStats.largeFree;
+        auto nFree = consStats.largeFreeCount;
         gocpp::array<gocpp_id_1, _NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
@@ -317,13 +324,13 @@ namespace golang::runtime
 
     uint64_t load(sysMemStat* s)
     {
-        return Load64(gocpp::recv(atomic), (uint64_t*)(s));
+        return atomic::Load64((uint64_t*)(s));
     }
 
     void add(sysMemStat* s, int64_t n)
     {
-        auto val = Xadd64(gocpp::recv(atomic), (uint64_t*)(s), n);
-        if((n > 0 && int64(val) < n) || (n < 0 && int64(val) + n < n))
+        auto val = atomic::Xadd64((uint64_t*)(s), n);
+        if((n > 0 && int64_t(val) < n) || (n < 0 && int64_t(val) + n < n))
         {
             print("runtime: val=", val, " n=", n, "\n");
             go_throw("sysMemStat overflow");
@@ -519,7 +526,7 @@ namespace golang::runtime
         s->scavengeAssistTime += scavAssistCpu;
         s->scavengeBgTime += scavBgCpu;
         s->scavengeTotalTime += scavAssistCpu + scavBgCpu;
-        s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64(gomaxprocs);
+        s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
         s->idleTime += Load(gocpp::recv(sched.idleTime));
         s->userTime = s->totalTime - (s->gcTotalTime + s->scavengeTotalTime + s->idleTime);
     }

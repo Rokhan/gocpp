@@ -18,12 +18,12 @@ namespace golang::reflect
     double archFloat32FromReg(uint64_t reg)
     {
         auto i = uint32_t(reg);
-        return *(float*)(Pointer(gocpp::recv(unsafe), & i));
+        return *(float*)(unsafe::Pointer(& i));
     }
 
     uint64_t archFloat32ToReg(double val)
     {
-        return uint64_t(*(uint32_t*)(Pointer(gocpp::recv(unsafe), & val)));
+        return uint64_t(*(uint32_t*)(unsafe::Pointer(& val)));
     }
 
 }

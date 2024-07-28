@@ -11,9 +11,9 @@
 
 #include "golang/internal/abi/funcpc.h"
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"

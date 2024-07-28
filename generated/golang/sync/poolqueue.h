@@ -37,8 +37,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
-    extern int dequeueBits;
-    extern int dequeueLimit;
     std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs);
     uint64_t pack(struct poolDequeue* d, uint32_t head, uint32_t tail);
     bool pushHead(struct poolDequeue* d, go_any val);

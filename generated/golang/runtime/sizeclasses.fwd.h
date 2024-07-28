@@ -3,7 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::runtime
 {
+    const long _MaxSmallSize = 32768;
+    const long smallSizeDiv = 8;
+    const long smallSizeMax = 1024;
+    const long largeSizeDiv = 128;
+    const long _NumSizeClasses = 68;
+    const long _PageShift = 13;
+    const long maxObjsPerSpan = 1024;
 }
-

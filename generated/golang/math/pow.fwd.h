@@ -13,8 +13,3 @@
 #include "golang/math/signbit.fwd.h"
 #include "golang/math/sqrt.fwd.h"
 #include "golang/math/stubs.fwd.h"
-
-namespace golang::math
-{
-}
-

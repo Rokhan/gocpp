@@ -3,12 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
+
+namespace golang::hash
+{
+    struct Hash32;
+    struct Hash64;
+}
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
 
 namespace golang::hash
 {
     struct Hash;
-    struct Hash32;
-    struct Hash64;
 }
-

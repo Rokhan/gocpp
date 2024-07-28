@@ -3,18 +3,22 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
-#include "golang/runtime/cputicks.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/runtime/trace2buf.fwd.h"
-#include "golang/runtime/trace2event.fwd.h"
 
 namespace golang::runtime
 {
     using traceTime = uint64_t;
 }
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+#include "golang/runtime/proc.fwd.h"
 
+namespace golang::runtime
+{
+    const int traceTimeDiv = (1 - osHasLowResClockInt) * 64 + osHasLowResClockInt * (256 - 224 * (goarch::IsPpc64 | goarch::IsPpc64le));
+}
+#include "golang/runtime/cputicks.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+#include "golang/runtime/runtime.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time_nofake.fwd.h"
+#include "golang/runtime/trace2buf.fwd.h"
+#include "golang/runtime/trace2event.fwd.h"

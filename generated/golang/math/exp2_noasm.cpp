@@ -13,7 +13,6 @@
 
 namespace golang::math
 {
-    bool haveArchExp2 = false;
     double archExp2(double x)
     {
         gocpp::panic("not implemented");

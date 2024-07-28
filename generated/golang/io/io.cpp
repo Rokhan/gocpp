@@ -16,15 +16,12 @@
 
 namespace golang::io
 {
-    int SeekStart = 0;
-    int SeekCurrent = 1;
-    int SeekEnd = 2;
-    std::string ErrShortWrite = New(gocpp::recv(errors), "short write");
-    std::string errInvalidWrite = New(gocpp::recv(errors), "invalid write result");
-    std::string ErrShortBuffer = New(gocpp::recv(errors), "short buffer");
-    std::string go_EOF = New(gocpp::recv(errors), "EOF");
-    std::string ErrUnexpectedEOF = New(gocpp::recv(errors), "unexpected EOF");
-    std::string ErrNoProgress = New(gocpp::recv(errors), "multiple Read calls return no data or error");
+    std::string ErrShortWrite = errors::New("short write");
+    std::string errInvalidWrite = errors::New("invalid write result");
+    std::string ErrShortBuffer = errors::New("short buffer");
+    std::string go_EOF = errors::New("EOF");
+    std::string ErrUnexpectedEOF = errors::New("unexpected EOF");
+    std::string ErrNoProgress = errors::New("multiple Read calls return no data or error");
     
     template<typename T>
     Reader::Reader(T& ref)
@@ -1010,7 +1007,7 @@ namespace golang::io
             int64_t written;
             std::string err;
             auto size = 32 * 1024;
-            if(auto [l, ok] = gocpp::getValue<LimitedReader*>(src); ok && int64(size) > l->N)
+            if(auto [l, ok] = gocpp::getValue<LimitedReader*>(src); ok && int64_t(size) > l->N)
             {
                 int64_t written;
                 std::string err;
@@ -1051,7 +1048,7 @@ namespace golang::io
                         ew = errInvalidWrite;
                     }
                 }
-                written += int64(nw);
+                written += int64_t(nw);
                 if(ew != nullptr)
                 {
                     int64_t written;
@@ -1113,14 +1110,14 @@ namespace golang::io
             std::string err;
             return {0, go_EOF};
         }
-        if(int64(len(p)) > l->N)
+        if(int64_t(len(p)) > l->N)
         {
             int n;
             std::string err;
             p = p.make_slice(0, l->N);
         }
         std::tie(n, err) = Read(gocpp::recv(l->R), p);
-        l->N -= int64(n);
+        l->N -= int64_t(n);
         return {n, err};
     }
 
@@ -1167,19 +1164,19 @@ namespace golang::io
             std::string err;
             return {0, go_EOF};
         }
-        if(auto max = s->limit - s->off; int64(len(p)) > max)
+        if(auto max = s->limit - s->off; int64_t(len(p)) > max)
         {
             int n;
             std::string err;
             p = p.make_slice(0, max);
         }
         std::tie(n, err) = ReadAt(gocpp::recv(s->r), p, s->off);
-        s->off += int64(n);
+        s->off += int64_t(n);
         return {n, err};
     }
 
-    std::string errWhence = New(gocpp::recv(errors), "Seek: invalid whence");
-    std::string errOffset = New(gocpp::recv(errors), "Seek: invalid offset");
+    std::string errWhence = errors::New("Seek: invalid whence");
+    std::string errOffset = errors::New("Seek: invalid offset");
     std::tuple<int64_t, std::string> Seek(struct SectionReader* s, int64_t offset, int whence)
     {
         //Go switch emulation
@@ -1224,7 +1221,7 @@ namespace golang::io
             return {0, go_EOF};
         }
         off += s->base;
-        if(auto max = s->limit - off; int64(len(p)) > max)
+        if(auto max = s->limit - off; int64_t(len(p)) > max)
         {
             int n;
             std::string err;
@@ -1280,7 +1277,7 @@ namespace golang::io
         int n;
         std::string err;
         std::tie(n, err) = WriteAt(gocpp::recv(o->w), p, o->off);
-        o->off += int64(n);
+        o->off += int64_t(n);
         return {n, err};
     }
 
@@ -1408,7 +1405,7 @@ namespace golang::io
             int64_t n;
             std::string err;
             std::tie(readSize, err) = Read(gocpp::recv(r), *bufp);
-            n += int64(readSize);
+            n += int64_t(readSize);
             if(err != nullptr)
             {
                 int64_t n;

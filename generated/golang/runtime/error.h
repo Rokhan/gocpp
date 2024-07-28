@@ -113,15 +113,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
-    extern boundsErrorCode boundsIndex;
-    extern boundsErrorCode boundsSliceAlen;
-    extern boundsErrorCode boundsSliceAcap;
-    extern boundsErrorCode boundsSliceB;
-    extern boundsErrorCode boundsSlice3Alen;
-    extern boundsErrorCode boundsSlice3Acap;
-    extern boundsErrorCode boundsSlice3B;
-    extern boundsErrorCode boundsSlice3C;
-    extern boundsErrorCode boundsConvert;
     extern gocpp::array_base<std::string> boundsErrorFmts;
     extern gocpp::array_base<std::string> boundsNegErrorFmts;
     void RuntimeError(struct boundsError e);

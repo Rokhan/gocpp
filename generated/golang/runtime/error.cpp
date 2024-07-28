@@ -125,11 +125,11 @@ namespace golang::runtime
         auto i = len(buf) - 1;
         for(; val >= 10; )
         {
-            buf[i] = byte(val % 10 + '0');
+            buf[i] = unsigned char(val % 10 + '0');
             i--;
             val /= 10;
         }
-        buf[i] = byte(val + '0');
+        buf[i] = unsigned char(val + '0');
         return buf.make_slice(i);
     }
 
@@ -197,15 +197,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    boundsErrorCode boundsIndex = 0;
-    boundsErrorCode boundsSliceAlen = 1;
-    boundsErrorCode boundsSliceAcap = 2;
-    boundsErrorCode boundsSliceB = 3;
-    boundsErrorCode boundsSlice3Alen = 4;
-    boundsErrorCode boundsSlice3Acap = 5;
-    boundsErrorCode boundsSlice3B = 6;
-    boundsErrorCode boundsSlice3C = 7;
-    boundsErrorCode boundsConvert = 8;
     gocpp::array_base<std::string> boundsErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x] with length %y"; x.boundsSliceAlen = "slice bounds out of range [:%x] with length %y"; x.boundsSliceAcap = "slice bounds out of range [:%x] with capacity %y"; x.boundsSliceB = "slice bounds out of range [%x:%y]"; x.boundsSlice3Alen = "slice bounds out of range [::%x] with length %y"; x.boundsSlice3Acap = "slice bounds out of range [::%x] with capacity %y"; x.boundsSlice3B = "slice bounds out of range [:%x:%y]"; x.boundsSlice3C = "slice bounds out of range [%x:%y:]"; x.boundsConvert = "cannot convert slice with length %y to array or pointer to array with length %x"; });
     gocpp::array_base<std::string> boundsNegErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x]"; x.boundsSliceAlen = "slice bounds out of range [:%x]"; x.boundsSliceAcap = "slice bounds out of range [:%x]"; x.boundsSliceB = "slice bounds out of range [%x:]"; x.boundsSlice3Alen = "slice bounds out of range [::%x]"; x.boundsSlice3Acap = "slice bounds out of range [::%x]"; x.boundsSlice3B = "slice bounds out of range [:%x:]"; x.boundsSlice3C = "slice bounds out of range [%x::]"; });
     void RuntimeError(struct boundsError e)
@@ -254,7 +245,7 @@ namespace golang::runtime
                         b = appendIntStr(b, e.x, e.go_signed);
                         break;
                     case 1:
-                        b = appendIntStr(b, int64(e.y), true);
+                        b = appendIntStr(b, int64_t(e.y), true);
                         break;
                 }
             }
@@ -479,7 +470,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    print(typestring, `("`, *(std::string*)(eface->data), `")`);
+                    print(typestring, "("", *(std::string*)(eface->data), "")");
                     break;
                 case 1:
                     print(typestring, "(", *(bool*)(eface->data), ")");
@@ -540,7 +531,7 @@ namespace golang::runtime
     {
         auto pc = getcallerpc();
         auto name = funcNameForPrint(funcname(findfunc(pc)));
-        auto i = IndexByteString(gocpp::recv(bytealg), name, '(');
+        auto i = bytealg::IndexByteString(name, '(');
         if(i < 0)
         {
             go_throw("panicwrap: no ( in " + name);
@@ -551,7 +542,7 @@ namespace golang::runtime
             go_throw("panicwrap: unexpected string after package name: " + name);
         }
         name = name.make_slice(i + 2);
-        i = IndexByteString(gocpp::recv(bytealg), name, ')');
+        i = bytealg::IndexByteString(name, ')');
         if(i < 0)
         {
             go_throw("panicwrap: no ) in " + name);

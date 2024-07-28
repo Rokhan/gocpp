@@ -11,7 +11,6 @@
 
 namespace golang::png
 {
-    extern int intSize;
     int abs(int x);
     uint8_t paeth(uint8_t a, uint8_t b, uint8_t c);
     void filterPaeth(gocpp::slice<unsigned char> cdat, gocpp::slice<unsigned char> pdat, int bytesPerPixel);

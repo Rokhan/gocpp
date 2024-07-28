@@ -34,15 +34,15 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     std::string string(struct rtype t);
     uncommontype* uncommon(struct rtype t);
-/*     std::string name(struct rtype t); [Ignored, known name conflict] */ 
+    /* std::string name(struct rtype t); [Ignored, known name conflict] */ 
     std::string pkgpath(struct rtype t);
     void reflectOffsLock();
     void reflectOffsUnlock();
     name resolveNameOff(unsafe::Pointer ptrInModule, nameOff off);
-/*     name nameOff(struct rtype t, nameOff off); [Ignored, known name conflict] */ 
+    /* name nameOff(struct rtype t, nameOff off); [Ignored, known name conflict] */ 
     _type* resolveTypeOff(unsafe::Pointer ptrInModule, typeOff off);
-/*     _type* typeOff(struct rtype t, typeOff off); [Ignored, known name conflict] */ 
-/*     unsafe::Pointer textOff(struct rtype t, textOff off); [Ignored, known name conflict] */ 
+    /* _type* typeOff(struct rtype t, typeOff off); [Ignored, known name conflict] */ 
+    /* unsafe::Pointer textOff(struct rtype t, textOff off); [Ignored, known name conflict] */ 
     std::string pkgPath(name n);
     void typelinksinit();
     struct _typePair
@@ -57,6 +57,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
     rtype toRType(abi::Type* t);
-/*     bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen); [Ignored, known name conflict] */ 
+    /* bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen); [Ignored, known name conflict] */ 
 }
 

@@ -3,9 +3,13 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
+    struct gocpp_id_0;
+    using semTable1 = gocpp::array<gocpp_id_0, 10>;
+    const int ten = 10;
+    struct gocpp_id_1;
+    using semTable2 = gocpp::array<gocpp_id_1, ten>;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

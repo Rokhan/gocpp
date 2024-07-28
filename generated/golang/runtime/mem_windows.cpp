@@ -18,22 +18,14 @@
 
 namespace golang::runtime
 {
-    int _MEM_COMMIT = 0x1000;
-    int _MEM_RESERVE = 0x2000;
-    int _MEM_DECOMMIT = 0x4000;
-    int _MEM_RELEASE = 0x8000;
-    int _PAGE_READWRITE = 0x0004;
-    int _PAGE_NOACCESS = 0x0001;
-    int _ERROR_NOT_ENOUGH_MEMORY = 8;
-    int _ERROR_COMMITMENT_LIMIT = 1455;
     unsafe::Pointer sysAllocOS(uintptr_t n)
     {
-        return Pointer(gocpp::recv(unsafe), stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
+        return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
     }
 
     void sysUnusedOS(unsafe::Pointer v, uintptr_t n)
     {
-        auto r = stdcall3(_VirtualFree, uintptr(v), n, _MEM_DECOMMIT);
+        auto r = stdcall3(_VirtualFree, uintptr_t(v), n, _MEM_DECOMMIT);
         if(r != 0)
         {
             return;
@@ -41,7 +33,7 @@ namespace golang::runtime
         for(; n > 0; )
         {
             auto small = n;
-            for(; small >= 4096 && stdcall3(_VirtualFree, uintptr(v), small, _MEM_DECOMMIT) == 0; )
+            for(; small >= 4096 && stdcall3(_VirtualFree, uintptr_t(v), small, _MEM_DECOMMIT) == 0; )
             {
                 small /= 2;
                 small &^= 4096 - 1;
@@ -58,8 +50,8 @@ namespace golang::runtime
 
     void sysUsedOS(unsafe::Pointer v, uintptr_t n)
     {
-        auto p = stdcall4(_VirtualAlloc, uintptr(v), n, _MEM_COMMIT, _PAGE_READWRITE);
-        if(p == uintptr(v))
+        auto p = stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_COMMIT, _PAGE_READWRITE);
+        if(p == uintptr_t(v))
         {
             return;
         }
@@ -67,7 +59,7 @@ namespace golang::runtime
         for(; k > 0; )
         {
             auto small = k;
-            for(; small >= 4096 && stdcall4(_VirtualAlloc, uintptr(v), small, _MEM_COMMIT, _PAGE_READWRITE) == 0; )
+            for(; small >= 4096 && stdcall4(_VirtualAlloc, uintptr_t(v), small, _MEM_COMMIT, _PAGE_READWRITE) == 0; )
             {
                 small /= 2;
                 small &^= 4096 - 1;
@@ -114,7 +106,7 @@ namespace golang::runtime
 
     void sysFreeOS(unsafe::Pointer v, uintptr_t n)
     {
-        auto r = stdcall3(_VirtualFree, uintptr(v), 0, _MEM_RELEASE);
+        auto r = stdcall3(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);
         if(r == 0)
         {
             print("runtime: VirtualFree of ", n, " bytes failed with errno=", getlasterror(), "\n");
@@ -129,12 +121,12 @@ namespace golang::runtime
 
     unsafe::Pointer sysReserveOS(unsafe::Pointer v, uintptr_t n)
     {
-        v = Pointer(gocpp::recv(unsafe), stdcall4(_VirtualAlloc, uintptr(v), n, _MEM_RESERVE, _PAGE_READWRITE));
+        v = unsafe::Pointer(stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
         if(v != nullptr)
         {
             return v;
         }
-        return Pointer(gocpp::recv(unsafe), stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
+        return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
     }
 
     void sysMapOS(unsafe::Pointer v, uintptr_t n)

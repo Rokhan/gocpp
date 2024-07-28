@@ -15,35 +15,6 @@
 
 namespace golang::runtime
 {
-    int kindBool = 1 + 0;
-    int kindInt = 1 + 1;
-    int kindInt8 = 1 + 2;
-    int kindInt16 = 1 + 3;
-    int kindInt32 = 1 + 4;
-    int kindInt64 = 1 + 5;
-    int kindUint = 1 + 6;
-    int kindUint8 = 1 + 7;
-    int kindUint16 = 1 + 8;
-    int kindUint32 = 1 + 9;
-    int kindUint64 = 1 + 10;
-    int kindUintptr = 1 + 11;
-    int kindFloat32 = 1 + 12;
-    int kindFloat64 = 1 + 13;
-    int kindComplex64 = 1 + 14;
-    int kindComplex128 = 1 + 15;
-    int kindArray = 1 + 16;
-    int kindChan = 1 + 17;
-    int kindFunc = 1 + 18;
-    int kindInterface = 1 + 19;
-    int kindMap = 1 + 20;
-    int kindPtr = 1 + 21;
-    int kindSlice = 1 + 22;
-    int kindString = 1 + 23;
-    int kindStruct = 1 + 24;
-    int kindUnsafePointer = 1 + 25;
-    int kindDirectIface = 1 << 5;
-    int kindGCProg = 1 << 6;
-    int kindMask = (1 << 5) - 1;
     bool isDirectIface(_type* t)
     {
         return t->Kind_ & kindDirectIface != 0;

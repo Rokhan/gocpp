@@ -15,7 +15,6 @@
 
 namespace golang::strconv
 {
-    bool fastSmalls = true;
     std::string FormatUint(uint64_t i, int base)
     {
         if(fastSmalls && i < nSmalls && base == 10)
@@ -38,7 +37,7 @@ namespace golang::strconv
 
     std::string Itoa(int i)
     {
-        return FormatInt(int64(i), 10);
+        return FormatInt(int64_t(i), 10);
     }
 
     gocpp::slice<unsigned char> AppendInt(gocpp::slice<unsigned char> dst, int64_t i, int base)
@@ -70,9 +69,7 @@ namespace golang::strconv
         return smallsString.make_slice(i * 2, i * 2 + 2);
     }
 
-    int nSmalls = 100;
     std::string smallsString = "00010203040506070809" + "10111213141516171819" + "20212223242526272829" + "30313233343536373839" + "40414243444546474849" + "50515253545556575859" + "60616263646566676869" + "70717273747576777879" + "80818283848586878889" + "90919293949596979899";
-    bool host32bit = (^ (unsigned int)(0) >> 32) == 0;
     std::string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
     std::tuple<gocpp::slice<unsigned char>, std::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_)
     {
@@ -148,7 +145,7 @@ namespace golang::strconv
         {
             gocpp::slice<unsigned char> d;
             std::string s;
-            auto shift = (unsigned int)(TrailingZeros(gocpp::recv(bits), (unsigned int)(base))) & 7;
+            auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(base))) & 7;
             auto b = uint64_t(base);
             auto m = (unsigned int)(base) - 1;
             for(; u >= b; )

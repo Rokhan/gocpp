@@ -13,8 +13,5 @@
 
 namespace golang::abi
 {
-    int IntArgRegs = 9;
-    int FloatArgRegs = 15;
-    int EffectiveFloatRegSize = 8;
 }
 

@@ -74,9 +74,6 @@ namespace golang::sort
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void Sort(Interface data);
-    extern sortedHint unknownHint;
-    extern sortedHint increasingHint;
-    extern sortedHint decreasingHint;
     uint64_t Next(xorshift* r);
     unsigned int nextPowerOfTwo(int length);
     struct lessSwap

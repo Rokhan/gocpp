@@ -4,8 +4,3 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/unicode/letter.fwd.h"
-
-namespace golang::unicode
-{
-}
-

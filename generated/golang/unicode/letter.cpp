@@ -15,10 +15,6 @@
 
 namespace golang::unicode
 {
-    char MaxRune = '\U0010FFFF';
-    char ReplacementChar = '\uFFFD';
-    char MaxASCII = '\u007F';
-    char MaxLatin1 = '\u00FF';
     
     std::ostream& RangeTable::PrintTo(std::ostream& os) const
     {
@@ -83,12 +79,6 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
-    int UpperCase = 0;
-    int LowerCase = 1;
-    int TitleCase = 2;
-    int MaxCase = 3;
-    untyped rune UpperLower = MaxRune + 1;
-    int linearMax = 18;
     bool is16(gocpp::slice<Range16> ranges, uint16_t r)
     {
         if(len(ranges) <= linearMax || r <= MaxLatin1)

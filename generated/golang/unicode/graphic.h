@@ -13,17 +13,6 @@
 
 namespace golang::unicode
 {
-    extern int pC;
-    extern int pP;
-    extern int pN;
-    extern int pS;
-    extern int pZ;
-    extern int pLu;
-    extern int pLl;
-    extern int pp;
-    extern int pg;
-    extern int pLo;
-    extern int pLmask;
     extern gocpp::slice<RangeTable*> GraphicRanges;
     extern gocpp::slice<RangeTable*> PrintRanges;
     bool IsGraphic(gocpp::rune r);

@@ -13,7 +13,7 @@
 
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
@@ -64,7 +64,7 @@ namespace golang::runtime
         {
             go_throw("runtime: fixalloc size too large");
         }
-        size = max(size, Sizeof(gocpp::recv(unsafe), mlink {}));
+        size = max(size, unsafe::Sizeof(mlink {}));
         f->size = size;
         f->first = first;
         f->arg = arg;
@@ -86,7 +86,7 @@ namespace golang::runtime
         }
         if(f->list != nullptr)
         {
-            auto v = Pointer(gocpp::recv(unsafe), f->list);
+            auto v = unsafe::Pointer(f->list);
             f->list = f->list->next;
             f->inuse += f->size;
             if(f->zero)
@@ -95,12 +95,12 @@ namespace golang::runtime
             }
             return v;
         }
-        if(uintptr(f->nchunk) < f->size)
+        if(uintptr_t(f->nchunk) < f->size)
         {
-            f->chunk = uintptr(persistentalloc(uintptr(f->nalloc), 0, f->stat));
+            f->chunk = uintptr_t(persistentalloc(uintptr_t(f->nalloc), 0, f->stat));
             f->nchunk = f->nalloc;
         }
-        auto v = Pointer(gocpp::recv(unsafe), f->chunk);
+        auto v = unsafe::Pointer(f->chunk);
         if(f->first != nullptr)
         {
             first(gocpp::recv(f), f->arg, v);

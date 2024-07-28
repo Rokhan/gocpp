@@ -13,7 +13,7 @@
 
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-// #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]
+#include "golang/runtime/sizeclasses.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 
 namespace golang::runtime
@@ -33,9 +33,9 @@ namespace golang::runtime
             if(reqSize <= smallSizeMax - 8)
             {
                 uintptr_t reqSize;
-                return uintptr(class_to_size[size_to_class8[divRoundUp(reqSize, smallSizeDiv)]]) - (reqSize - size);
+                return uintptr_t(class_to_size[size_to_class8[divRoundUp(reqSize, smallSizeDiv)]]) - (reqSize - size);
             }
-            return uintptr(class_to_size[size_to_class128[divRoundUp(reqSize - smallSizeMax, largeSizeDiv)]]) - (reqSize - size);
+            return uintptr_t(class_to_size[size_to_class128[divRoundUp(reqSize - smallSizeMax, largeSizeDiv)]]) - (reqSize - size);
         }
         reqSize += pageSize - 1;
         if(reqSize < size)

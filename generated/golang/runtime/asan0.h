@@ -14,7 +14,6 @@
 
 namespace golang::runtime
 {
-    extern bool asanenabled;
     void asanread(unsafe::Pointer addr, uintptr_t sz);
     void asanwrite(unsafe::Pointer addr, uintptr_t sz);
     void asanunpoison(unsafe::Pointer addr, uintptr_t sz);

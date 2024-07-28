@@ -3,11 +3,33 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::goarch
+{
+    using ArchFamilyType = int;
+    const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
+    const ArchFamilyType AMD64 = 0;
+    const ArchFamilyType ARM = 1;
+    const ArchFamilyType ARM64 = 2;
+    const ArchFamilyType I386 = 3;
+    const ArchFamilyType LOONG64 = 4;
+    const ArchFamilyType MIPS = 5;
+    const ArchFamilyType MIPS64 = 6;
+    const ArchFamilyType PPC64 = 7;
+    const ArchFamilyType RISCV64 = 8;
+    const ArchFamilyType S390X = 9;
+    const ArchFamilyType WASM = 10;
+    const int Int64Align = PtrSize;
+}
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
 namespace golang::goarch
 {
-    using ArchFamilyType = int;
+    const ArchFamilyType ArchFamily = _ArchFamily;
+    const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
+    const int DefaultPhysPageSize = _DefaultPhysPageSize;
+    const int PCQuantum = _PCQuantum;
+    const int MinFrameSize = _MinFrameSize;
+    const int StackAlign = _StackAlign;
 }
-

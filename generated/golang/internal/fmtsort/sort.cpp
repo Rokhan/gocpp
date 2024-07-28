@@ -50,7 +50,7 @@ namespace golang::fmtsort
 
     SortedMap* Sort(reflect::Value mapValue)
     {
-        if(Kind(gocpp::recv(Type(gocpp::recv(mapValue)))) != reflect.Map)
+        if(Kind(gocpp::recv(Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
             return nullptr;
         }
@@ -64,7 +64,7 @@ namespace golang::fmtsort
             value = append(value, Value(gocpp::recv(iter)));
         }
         auto sorted = gocpp::InitPtr<SortedMap>([](SortedMap& x) { x.Key = key; x.Value = value; });
-        Stable(gocpp::recv(sort), sorted);
+        sort::Stable(sorted);
         return sorted;
     }
 
@@ -79,29 +79,29 @@ namespace golang::fmtsort
         {
             auto condition = Kind(gocpp::recv(aVal));
             int conditionId = -1;
-            if(condition == reflect.Int) { conditionId = 0; }
-            if(condition == reflect.Int8) { conditionId = 1; }
-            if(condition == reflect.Int16) { conditionId = 2; }
-            if(condition == reflect.Int32) { conditionId = 3; }
-            if(condition == reflect.Int64) { conditionId = 4; }
-            else if(condition == reflect.Uint) { conditionId = 5; }
-            else if(condition == reflect.Uint8) { conditionId = 6; }
-            else if(condition == reflect.Uint16) { conditionId = 7; }
-            else if(condition == reflect.Uint32) { conditionId = 8; }
-            else if(condition == reflect.Uint64) { conditionId = 9; }
-            else if(condition == reflect.Uintptr) { conditionId = 10; }
-            else if(condition == reflect.String) { conditionId = 11; }
-            else if(condition == reflect.Float32) { conditionId = 12; }
-            else if(condition == reflect.Float64) { conditionId = 13; }
-            else if(condition == reflect.Complex64) { conditionId = 14; }
-            else if(condition == reflect.Complex128) { conditionId = 15; }
-            else if(condition == reflect.Bool) { conditionId = 16; }
-            else if(condition == reflect.Pointer) { conditionId = 17; }
-            else if(condition == reflect.UnsafePointer) { conditionId = 18; }
-            else if(condition == reflect.Chan) { conditionId = 19; }
-            else if(condition == reflect.Struct) { conditionId = 20; }
-            else if(condition == reflect.Array) { conditionId = 21; }
-            else if(condition == reflect.Interface) { conditionId = 22; }
+            if(condition == reflect::Int) { conditionId = 0; }
+            if(condition == reflect::Int8) { conditionId = 1; }
+            if(condition == reflect::Int16) { conditionId = 2; }
+            if(condition == reflect::Int32) { conditionId = 3; }
+            if(condition == reflect::Int64) { conditionId = 4; }
+            else if(condition == reflect::Uint) { conditionId = 5; }
+            else if(condition == reflect::Uint8) { conditionId = 6; }
+            else if(condition == reflect::Uint16) { conditionId = 7; }
+            else if(condition == reflect::Uint32) { conditionId = 8; }
+            else if(condition == reflect::Uint64) { conditionId = 9; }
+            else if(condition == reflect::Uintptr) { conditionId = 10; }
+            else if(condition == reflect::String) { conditionId = 11; }
+            else if(condition == reflect::Float32) { conditionId = 12; }
+            else if(condition == reflect::Float64) { conditionId = 13; }
+            else if(condition == reflect::Complex64) { conditionId = 14; }
+            else if(condition == reflect::Complex128) { conditionId = 15; }
+            else if(condition == reflect::Bool) { conditionId = 16; }
+            else if(condition == reflect::Pointer) { conditionId = 17; }
+            else if(condition == reflect::UnsafePointer) { conditionId = 18; }
+            else if(condition == reflect::Chan) { conditionId = 19; }
+            else if(condition == reflect::Struct) { conditionId = 20; }
+            else if(condition == reflect::Array) { conditionId = 21; }
+            else if(condition == reflect::Interface) { conditionId = 22; }
             switch(conditionId)
             {
                 case 0:
@@ -282,7 +282,7 @@ namespace golang::fmtsort
                     {
                         return c;
                     }
-                    auto c = compare(ValueOf(gocpp::recv(reflect), Type(gocpp::recv(Elem(gocpp::recv(aVal))))), ValueOf(gocpp::recv(reflect), Type(gocpp::recv(Elem(gocpp::recv(bVal))))));
+                    auto c = compare(reflect::ValueOf(Type(gocpp::recv(Elem(gocpp::recv(aVal))))), reflect::ValueOf(Type(gocpp::recv(Elem(gocpp::recv(bVal))))));
                     if(c != 0)
                     {
                         return c;

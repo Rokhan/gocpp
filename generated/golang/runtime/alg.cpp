@@ -12,13 +12,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/hash64.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
@@ -27,8 +27,6 @@
 
 namespace golang::runtime
 {
-    uintptr_t c0 = uintptr((8 - goarch.PtrSize) / 4 * 2860486313 + (goarch.PtrSize - 4) / 4 * 33054211828000289);
-    uintptr_t c1 = uintptr((8 - goarch.PtrSize) / 4 * 3267000013 + (goarch.PtrSize - 4) / 4 * 23344194077549503);
     uintptr_t memhash0(unsafe::Pointer p, uintptr_t h)
     {
         return h;
@@ -52,7 +50,7 @@ namespace golang::runtime
     uintptr_t memhash_varlen(unsafe::Pointer p, uintptr_t h)
     {
         auto ptr = getclosureptr();
-        auto size = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), ptr + Sizeof(gocpp::recv(unsafe), h)));
+        auto size = *(uintptr_t*)(unsafe::Pointer(ptr + unsafe::Sizeof(h)));
         return memhash(p, h, size);
     }
 
@@ -72,7 +70,7 @@ namespace golang::runtime
     uintptr_t strhashFallback(unsafe::Pointer a, uintptr_t h)
     {
         auto x = (stringStruct*)(a);
-        return memhashFallback(x->str, h, uintptr(x->len));
+        return memhashFallback(x->str, h, uintptr_t(x->len));
     }
 
     uintptr_t f32hash(unsafe::Pointer p, uintptr_t h)
@@ -89,7 +87,7 @@ namespace golang::runtime
                     return c1 * (c0 ^ h);
                     break;
                 case 1:
-                    return c1 * (c0 ^ h ^ uintptr(rand()));
+                    return c1 * (c0 ^ h ^ uintptr_t(rand()));
                     break;
                 default:
                     return memhash(p, h, 4);
@@ -112,7 +110,7 @@ namespace golang::runtime
                     return c1 * (c0 ^ h);
                     break;
                 case 1:
-                    return c1 * (c0 ^ h ^ uintptr(rand()));
+                    return c1 * (c0 ^ h ^ uintptr_t(rand()));
                     break;
                 default:
                     return memhash(p, h, 8);
@@ -124,13 +122,13 @@ namespace golang::runtime
     uintptr_t c64hash(unsafe::Pointer p, uintptr_t h)
     {
         auto x = (gocpp::array<float, 2>*)(p);
-        return f32hash(Pointer(gocpp::recv(unsafe), & x[1]), f32hash(Pointer(gocpp::recv(unsafe), & x[0]), h));
+        return f32hash(unsafe::Pointer(& x[1]), f32hash(unsafe::Pointer(& x[0]), h));
     }
 
     uintptr_t c128hash(unsafe::Pointer p, uintptr_t h)
     {
         auto x = (gocpp::array<double, 2>*)(p);
-        return f64hash(Pointer(gocpp::recv(unsafe), & x[1]), f64hash(Pointer(gocpp::recv(unsafe), & x[0]), h));
+        return f64hash(unsafe::Pointer(& x[1]), f64hash(unsafe::Pointer(& x[0]), h));
     }
 
     uintptr_t interhash(unsafe::Pointer p, uintptr_t h)
@@ -148,7 +146,7 @@ namespace golang::runtime
         }
         if(isDirectIface(t))
         {
-            return c1 * typehash(t, Pointer(gocpp::recv(unsafe), & a->data), h ^ c0);
+            return c1 * typehash(t, unsafe::Pointer(& a->data), h ^ c0);
         }
         else
         {
@@ -170,7 +168,7 @@ namespace golang::runtime
         }
         if(isDirectIface(t))
         {
-            return c1 * typehash(t, Pointer(gocpp::recv(unsafe), & a->data), h ^ c0);
+            return c1 * typehash(t, unsafe::Pointer(& a->data), h ^ c0);
         }
         else
         {
@@ -180,7 +178,7 @@ namespace golang::runtime
 
     uintptr_t typehash(_type* t, unsafe::Pointer p, uintptr_t h)
     {
-        if(t->TFlag & abi.TFlagRegularMemory != 0)
+        if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
             //Go switch emulation
             {
@@ -232,7 +230,7 @@ namespace golang::runtime
                     return strhash(p, h);
                     break;
                 case 5:
-                    auto i = (interfacetype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto i = (interfacetype*)(unsafe::Pointer(t));
                     if(len(i->Methods) == 0)
                     {
                         return nilinterhash(p, h);
@@ -240,15 +238,15 @@ namespace golang::runtime
                     return interhash(p, h);
                     break;
                 case 6:
-                    auto a = (arraytype*)(Pointer(gocpp::recv(unsafe), t));
-                    for(auto i = uintptr(0); i < a->Len; i++)
+                    auto a = (arraytype*)(unsafe::Pointer(t));
+                    for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
                         h = typehash(a->Elem, add(p, i * a->Elem->Size_), h);
                     }
                     return h;
                     break;
                 case 7:
-                    auto s = (structtype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto s = (structtype*)(unsafe::Pointer(t));
                     for(auto [_, f] : s->Fields)
                     {
                         if(IsBlank(gocpp::recv(f.Name)))
@@ -277,7 +275,7 @@ namespace golang::runtime
 
     std::string mapKeyError2(_type* t, unsafe::Pointer p)
     {
-        if(t->TFlag & abi.TFlagRegularMemory != 0)
+        if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
             return nullptr;
         }
@@ -303,7 +301,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 case 5:
-                    auto i = (interfacetype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto i = (interfacetype*)(unsafe::Pointer(t));
                     _type* t = {};
                     unsafe::Pointer* pdata = {};
                     if(len(i->Methods) == 0)
@@ -332,7 +330,7 @@ namespace golang::runtime
                     }
                     if(isDirectIface(t))
                     {
-                        return mapKeyError2(t, Pointer(gocpp::recv(unsafe), pdata));
+                        return mapKeyError2(t, unsafe::Pointer(pdata));
                     }
                     else
                     {
@@ -340,8 +338,8 @@ namespace golang::runtime
                     }
                     break;
                 case 6:
-                    auto a = (arraytype*)(Pointer(gocpp::recv(unsafe), t));
-                    for(auto i = uintptr(0); i < a->Len; i++)
+                    auto a = (arraytype*)(unsafe::Pointer(t));
+                    for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
                         if(auto err = mapKeyError2(a->Elem, add(p, i * a->Elem->Size_)); err != nullptr)
                         {
@@ -351,7 +349,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 case 7:
-                    auto s = (structtype*)(Pointer(gocpp::recv(unsafe), t));
+                    auto s = (structtype*)(unsafe::Pointer(t));
                     for(auto [_, f] : s->Fields)
                     {
                         if(IsBlank(gocpp::recv(f.Name)))
@@ -485,28 +483,28 @@ namespace golang::runtime
 
     uintptr_t stringHash(std::string s, uintptr_t seed)
     {
-        return strhash(noescape(Pointer(gocpp::recv(unsafe), & s)), seed);
+        return strhash(noescape(unsafe::Pointer(& s)), seed);
     }
 
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed)
     {
-        auto s = (slice*)(Pointer(gocpp::recv(unsafe), & b));
-        return memhash(s->array, seed, uintptr(s->len));
+        auto s = (slice*)(unsafe::Pointer(& b));
+        return memhash(s->array, seed, uintptr_t(s->len));
     }
 
     uintptr_t int32Hash(uint32_t i, uintptr_t seed)
     {
-        return memhash32(noescape(Pointer(gocpp::recv(unsafe), & i)), seed);
+        return memhash32(noescape(unsafe::Pointer(& i)), seed);
     }
 
     uintptr_t int64Hash(uint64_t i, uintptr_t seed)
     {
-        return memhash64(noescape(Pointer(gocpp::recv(unsafe), & i)), seed);
+        return memhash64(noescape(unsafe::Pointer(& i)), seed);
     }
 
     uintptr_t efaceHash(go_any i, uintptr_t seed)
     {
-        return nilinterhash(noescape(Pointer(gocpp::recv(unsafe), & i)), seed);
+        return nilinterhash(noescape(unsafe::Pointer(& i)), seed);
     }
 
     
@@ -557,34 +555,33 @@ namespace golang::runtime
 
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed)
     {
-        return interhash(noescape(Pointer(gocpp::recv(unsafe), & i)), seed);
+        return interhash(noescape(unsafe::Pointer(& i)), seed);
     }
 
-    int hashRandomBytes = goarch.PtrSize / 4 * 64;
     gocpp::array<unsigned char, hashRandomBytes> aeskeysched;
     gocpp::array<uintptr_t, 4> hashkey;
     void alginit()
     {
-        if((GOARCH == "386" || GOARCH == "amd64") && cpu.X86.HasAES && cpu.X86.HasSSSE3 && cpu.X86.HasSSE41)
+        if((GOARCH == "386" || GOARCH == "amd64") && cpu::X86.HasAES && cpu::X86.HasSSSE3 && cpu::X86.HasSSE41)
         {
             initAlgAES();
             return;
         }
-        if(GOARCH == "arm64" && cpu.ARM64.HasAES)
+        if(GOARCH == "arm64" && cpu::ARM64.HasAES)
         {
             initAlgAES();
             return;
         }
         for(auto [i, gocpp_ignored] : hashkey)
         {
-            hashkey[i] = uintptr(rand()) | 1;
+            hashkey[i] = uintptr_t(rand()) | 1;
         }
     }
 
     void initAlgAES()
     {
         useAeshash = true;
-        auto key = (gocpp::array<uint64_t, hashRandomBytes / 8>*)(Pointer(gocpp::recv(unsafe), & aeskeysched));
+        auto key = (gocpp::array<uint64_t, hashRandomBytes / 8>*)(unsafe::Pointer(& aeskeysched));
         for(auto [i, gocpp_ignored] : key)
         {
             key[i] = bootstrapRand();
@@ -594,7 +591,7 @@ namespace golang::runtime
     uint32_t readUnaligned32(unsafe::Pointer p)
     {
         auto q = (gocpp::array<unsigned char, 4>*)(p);
-        if(goarch.BigEndian)
+        if(goarch::BigEndian)
         {
             return uint32_t(q[3]) | (uint32_t(q[2]) << 8) | (uint32_t(q[1]) << 16) | (uint32_t(q[0]) << 24);
         }
@@ -604,7 +601,7 @@ namespace golang::runtime
     uint64_t readUnaligned64(unsafe::Pointer p)
     {
         auto q = (gocpp::array<unsigned char, 8>*)(p);
-        if(goarch.BigEndian)
+        if(goarch::BigEndian)
         {
             return uint64_t(q[7]) | (uint64_t(q[6]) << 8) | (uint64_t(q[5]) << 16) | (uint64_t(q[4]) << 24) | (uint64_t(q[3]) << 32) | (uint64_t(q[2]) << 40) | (uint64_t(q[1]) << 48) | (uint64_t(q[0]) << 56);
         }

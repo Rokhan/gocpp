@@ -12,12 +12,12 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/runtime/asan0.h"
+#include "golang/runtime/cputicks.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/asan0.h"
-#include "golang/runtime/cputicks.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
@@ -34,7 +34,7 @@
 #include "golang/runtime/runtime.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/sema.h"
+// #include "golang/runtime/sema.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
@@ -47,11 +47,6 @@ namespace golang::runtime
     mutex profBlockLock;
     mutex profMemActiveLock;
     gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
-    bucketType memProfile = 1 + 0;
-    bucketType blockProfile = 1 + 1;
-    bucketType mutexProfile = 1 + 2;
-    int buckHashSize = 179999;
-    int maxStack = 32;
     
     std::ostream& bucket::PrintTo(std::ostream& os) const
     {
@@ -132,7 +127,6 @@ namespace golang::runtime
     atomic::UnsafePointer xbuckets;
     atomic::UnsafePointer buckhash;
     mProfCycleHolder mProfCycle;
-    uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24);
     
     std::ostream& mProfCycleHolder::PrintTo(std::ostream& os) const
     {
@@ -193,7 +187,7 @@ namespace golang::runtime
 
     bucket* newBucket(bucketType typ, int nstk)
     {
-        auto size = Sizeof(gocpp::recv(unsafe), bucket {}) + uintptr(nstk) * Sizeof(gocpp::recv(unsafe), uintptr(0));
+        auto size = unsafe::Sizeof(bucket {}) + uintptr_t(nstk) * unsafe::Sizeof(uintptr_t(0));
         //Go switch emulation
         {
             auto condition = typ;
@@ -207,23 +201,23 @@ namespace golang::runtime
                     go_throw("invalid profile bucket type");
                     break;
                 case 0:
-                    size += Sizeof(gocpp::recv(unsafe), memRecord {});
+                    size += unsafe::Sizeof(memRecord {});
                     break;
                 case 1:
                 case 2:
-                    size += Sizeof(gocpp::recv(unsafe), blockRecord {});
+                    size += unsafe::Sizeof(blockRecord {});
                     break;
             }
         }
         auto b = (bucket*)(persistentalloc(size, 0, & memstats.buckhash_sys));
         b->typ = typ;
-        b->nstk = uintptr(nstk);
+        b->nstk = uintptr_t(nstk);
         return b;
     }
 
     gocpp::slice<uintptr_t> stk(struct bucket* b)
     {
-        auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(Pointer(gocpp::recv(unsafe), b), Sizeof(gocpp::recv(unsafe), *b)));
+        auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), unsafe::Sizeof(*b)));
         if(b->nstk > maxStack)
         {
             go_throw("bad profile stack count");
@@ -237,7 +231,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.mp");
         }
-        auto data = add(Pointer(gocpp::recv(unsafe), b), Sizeof(gocpp::recv(unsafe), *b) + b->nstk * Sizeof(gocpp::recv(unsafe), uintptr(0)));
+        auto data = add(unsafe::Pointer(b), unsafe::Sizeof(*b) + b->nstk * unsafe::Sizeof(uintptr_t(0)));
         return (memRecord*)(data);
     }
 
@@ -247,7 +241,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.bp");
         }
-        auto data = add(Pointer(gocpp::recv(unsafe), b), Sizeof(gocpp::recv(unsafe), *b) + b->nstk * Sizeof(gocpp::recv(unsafe), uintptr(0)));
+        auto data = add(unsafe::Pointer(b), unsafe::Sizeof(*b) + b->nstk * unsafe::Sizeof(uintptr_t(0)));
         return (blockRecord*)(data);
     }
 
@@ -260,12 +254,12 @@ namespace golang::runtime
             bh = (buckhashArray*)(Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (buckhashArray*)(sysAlloc(Sizeof(gocpp::recv(unsafe), buckhashArray {}), & memstats.buckhash_sys));
+                bh = (buckhashArray*)(sysAlloc(unsafe::Sizeof(buckhashArray {}), & memstats.buckhash_sys));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory");
                 }
-                StoreNoWB(gocpp::recv(buckhash), Pointer(gocpp::recv(unsafe), bh));
+                StoreNoWB(gocpp::recv(buckhash), unsafe::Pointer(bh));
             }
             unlock(& profInsertLock);
         }
@@ -322,8 +316,8 @@ namespace golang::runtime
         }
         b->next = (bucket*)(Load(gocpp::recv(bh[i])));
         b->allnext = (bucket*)(Load(gocpp::recv(allnext)));
-        StoreNoWB(gocpp::recv(bh[i]), Pointer(gocpp::recv(unsafe), b));
-        StoreNoWB(gocpp::recv(allnext), Pointer(gocpp::recv(unsafe), b));
+        StoreNoWB(gocpp::recv(bh[i]), unsafe::Pointer(b));
+        StoreNoWB(gocpp::recv(allnext), unsafe::Pointer(b));
         unlock(& profInsertLock);
         return b;
     }
@@ -434,13 +428,13 @@ namespace golang::runtime
         }
         else
         {
-            r = int64(double(rate) * double(ticksPerSecond()) / (1000 * 1000 * 1000));
+            r = int64_t(double(rate) * double(ticksPerSecond()) / (1000 * 1000 * 1000));
             if(r == 0)
             {
                 r = 1;
             }
         }
-        Store64(gocpp::recv(atomic), & blockprofilerate, uint64_t(r));
+        atomic::Store64(& blockprofilerate, uint64_t(r));
     }
 
     void blockevent(int64_t cycles, int skip)
@@ -449,7 +443,7 @@ namespace golang::runtime
         {
             cycles = 1;
         }
-        auto rate = int64(Load64(gocpp::recv(atomic), & blockprofilerate));
+        auto rate = int64_t(atomic::Load64(& blockprofilerate));
         if(blocksampled(cycles, rate))
         {
             saveblockevent(cycles, rate, skip + 1, blockProfile);
@@ -500,17 +494,17 @@ namespace golang::runtime
 
     void begin(struct lockTimer* lt)
     {
-        auto rate = int64(Load64(gocpp::recv(atomic), & mutexprofilerate));
+        auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         lt->timeRate = gTrackingPeriod;
         if(rate != 0 && rate < lt->timeRate)
         {
             lt->timeRate = rate;
         }
-        if(int64(cheaprand()) % lt->timeRate == 0)
+        if(int64_t(cheaprand()) % lt->timeRate == 0)
         {
             lt->timeStart = nanotime();
         }
-        if(rate > 0 && int64(cheaprand()) % rate == 0)
+        if(rate > 0 && int64_t(cheaprand()) % rate == 0)
         {
             lt->tickStart = cputicks();
         }
@@ -561,7 +555,7 @@ namespace golang::runtime
             prof->cyclesLost += cycles;
             return;
         }
-        if(uintptr(Pointer(gocpp::recv(unsafe), l)) == prof->pending)
+        if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
         {
             prof->cycles += cycles;
             return;
@@ -580,13 +574,13 @@ namespace golang::runtime
                 prof->cyclesLost += prev;
             }
         }
-        prof->pending = uintptr(Pointer(gocpp::recv(unsafe), l));
+        prof->pending = uintptr_t(unsafe::Pointer(l));
         prof->cycles = cycles;
     }
 
     void recordUnlock(struct mLockProfile* prof, mutex* l)
     {
-        if(uintptr(Pointer(gocpp::recv(unsafe), l)) == prof->pending)
+        if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
         {
             captureStack(gocpp::recv(prof));
         }
@@ -606,7 +600,7 @@ namespace golang::runtime
         prof->pending = 0;
         if(Load(gocpp::recv(debug.runtimeContentionStacks)) == 0)
         {
-            prof->stack[0] = FuncPCABIInternal(gocpp::recv(abi), _LostContendedRuntimeLock) + sys.PCQuantum;
+            prof->stack[0] = abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum;
             prof->stack[1] = 0;
             return;
         }
@@ -642,11 +636,11 @@ namespace golang::runtime
         }
         auto [cycles, lost] = std::tuple{prof->cycles, prof->cyclesLost};
         std::tie(prof->cycles, prof->cyclesLost) = std::tuple{0, 0};
-        auto rate = int64(Load64(gocpp::recv(atomic), & mutexprofilerate));
+        auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         saveBlockEventStack(cycles, rate, prof->stack.make_slice(0, nstk), mutexProfile);
         if(lost > 0)
         {
-            auto lostStk = gocpp::array_base<uintptr_t> {FuncPCABIInternal(gocpp::recv(abi), _LostContendedRuntimeLock) + sys.PCQuantum};
+            auto lostStk = gocpp::array_base<uintptr_t> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
             saveBlockEventStack(lost, rate, lostStk.make_slice(0, ), mutexProfile);
         }
         prof->disabled = false;
@@ -685,7 +679,7 @@ namespace golang::runtime
             return int(mutexprofilerate);
         }
         auto old = mutexprofilerate;
-        Store64(gocpp::recv(atomic), & mutexprofilerate, uint64_t(rate));
+        atomic::Store64(& mutexprofilerate, uint64_t(rate));
         return int(old);
     }
 
@@ -695,7 +689,7 @@ namespace golang::runtime
         {
             cycles = 0;
         }
-        auto rate = int64(Load64(gocpp::recv(atomic), & mutexprofilerate));
+        auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         if(rate > 0 && cheaprand64() % rate == 0)
         {
             saveblockevent(cycles, rate, skip + 1, mutexProfile);
@@ -854,21 +848,21 @@ namespace golang::runtime
     void record(MemProfileRecord* r, bucket* b)
     {
         auto mp = mp(gocpp::recv(b));
-        r->AllocBytes = int64(mp->active.alloc_bytes);
-        r->FreeBytes = int64(mp->active.free_bytes);
-        r->AllocObjects = int64(mp->active.allocs);
-        r->FreeObjects = int64(mp->active.frees);
+        r->AllocBytes = int64_t(mp->active.alloc_bytes);
+        r->FreeBytes = int64_t(mp->active.free_bytes);
+        r->AllocObjects = int64_t(mp->active.allocs);
+        r->FreeObjects = int64_t(mp->active.frees);
         if(raceenabled)
         {
-            racewriterangepc(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0), getcallerpc(), FuncPCABIInternal(gocpp::recv(abi), MemProfile));
+            racewriterangepc(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
         }
         if(msanenabled)
         {
-            msanwrite(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0));
+            msanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
         }
         if(asanenabled)
         {
-            asanwrite(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0));
+            asanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
         }
         copy(r->Stack0.make_slice(0, ), stk(gocpp::recv(b)));
         for(auto i = int(b->nstk); i < len(r->Stack0); i++)
@@ -927,7 +921,7 @@ namespace golang::runtime
                 bool ok;
                 auto bp = bp(gocpp::recv(b));
                 auto r = & p[0];
-                r->Count = int64(bp->count);
+                r->Count = int64_t(bp->count);
                 if(r->Count == 0)
                 {
                     int n;
@@ -939,19 +933,19 @@ namespace golang::runtime
                 {
                     int n;
                     bool ok;
-                    racewriterangepc(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0), getcallerpc(), FuncPCABIInternal(gocpp::recv(abi), BlockProfile));
+                    racewriterangepc(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
                 }
                 if(msanenabled)
                 {
                     int n;
                     bool ok;
-                    msanwrite(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0));
+                    msanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
                 }
                 if(asanenabled)
                 {
                     int n;
                     bool ok;
-                    asanwrite(Pointer(gocpp::recv(unsafe), & r->Stack0[0]), Sizeof(gocpp::recv(unsafe), r->Stack0));
+                    asanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
                 }
                 auto i = copy(r->Stack0.make_slice(0, ), stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
@@ -990,7 +984,7 @@ namespace golang::runtime
                 bool ok;
                 auto bp = bp(gocpp::recv(b));
                 auto r = & p[0];
-                r->Count = int64(bp->count);
+                r->Count = int64_t(bp->count);
                 r->Cycles = bp->cycles;
                 auto i = copy(r->Stack0.make_slice(0, ), stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
@@ -1010,7 +1004,7 @@ namespace golang::runtime
     {
         int n;
         bool ok;
-        auto first = (m*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm)));
+        auto first = (m*)(atomic::Loadp(unsafe::Pointer(& allm)));
         for(auto mp = first; mp != nullptr; mp = mp->alllink)
         {
             int n;
@@ -1076,6 +1070,13 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     struct gocpp_id_0
     {
         uint32_t sema;
@@ -1098,10 +1099,14 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](gocpp_id_0& x) { x.sema = 1; });
-    goroutineProfileState goroutineProfileAbsent = 0;
-    goroutineProfileState goroutineProfileInProgress = 1;
-    goroutineProfileState goroutineProfileSatisfied = 2;
     goroutineProfileState Load(struct goroutineProfileStateHolder* p)
     {
         return goroutineProfileState(Load(gocpp::recv((atomic::Uint32*)(p))));
@@ -1190,7 +1195,7 @@ namespace golang::runtime
         {
             int n;
             bool ok;
-            raceacquire(Pointer(gocpp::recv(unsafe), & labelSync));
+            raceacquire(unsafe::Pointer(& labelSync));
         }
         if(n != int(endOffset))
         {
@@ -1256,7 +1261,7 @@ namespace golang::runtime
         }
         systemstack([=]() mutable -> void
         {
-            saveg(^ uintptr(0), ^ uintptr(0), gp1, & goroutineProfile.records[offset]);
+            saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & goroutineProfile.records[offset]);
         }
 );
         if(goroutineProfile.labels != nullptr)
@@ -1318,7 +1323,7 @@ namespace golang::runtime
                 }
                 systemstack([=]() mutable -> void
                 {
-                    saveg(^ uintptr(0), ^ uintptr(0), gp1, & r[0]);
+                    saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & r[0]);
                 }
 );
                 if(labels != nullptr)
@@ -1334,7 +1339,7 @@ namespace golang::runtime
         {
             int n;
             bool ok;
-            raceacquire(Pointer(gocpp::recv(unsafe), & labelSync));
+            raceacquire(unsafe::Pointer(& labelSync));
         }
         startTheWorld(stw);
         return {n, ok};
@@ -1423,7 +1428,7 @@ namespace golang::runtime
         else
         {
             goroutineheader(gp->m->curg);
-            traceback(^ uintptr(0), ^ uintptr(0), 0, gp->m->curg);
+            traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, gp->m->curg);
         }
         print("\n");
         gp->m->traceback = 0;

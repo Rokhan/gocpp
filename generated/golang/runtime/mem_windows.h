@@ -16,14 +16,6 @@
 
 namespace golang::runtime
 {
-    extern int _MEM_COMMIT;
-    extern int _MEM_RESERVE;
-    extern int _MEM_DECOMMIT;
-    extern int _MEM_RELEASE;
-    extern int _PAGE_READWRITE;
-    extern int _PAGE_NOACCESS;
-    extern int _ERROR_NOT_ENOUGH_MEMORY;
-    extern int _ERROR_COMMITMENT_LIMIT;
     unsafe::Pointer sysAllocOS(uintptr_t n);
     void sysUnusedOS(unsafe::Pointer v, uintptr_t n);
     void sysUsedOS(unsafe::Pointer v, uintptr_t n);

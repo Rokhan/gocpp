@@ -5,8 +5,3 @@
 
 #include "golang/runtime/time_nofake.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

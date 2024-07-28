@@ -35,31 +35,31 @@ namespace golang::strings
 
     int Len(struct Reader* r)
     {
-        if(r->i >= int64(len(r->s)))
+        if(r->i >= int64_t(len(r->s)))
         {
             return 0;
         }
-        return int(int64(len(r->s)) - r->i);
+        return int(int64_t(len(r->s)) - r->i);
     }
 
     int64_t Size(struct Reader* r)
     {
-        return int64(len(r->s));
+        return int64_t(len(r->s));
     }
 
     std::tuple<int, std::string> Read(struct Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
         std::string err;
-        if(r->i >= int64(len(r->s)))
+        if(r->i >= int64_t(len(r->s)))
         {
             int n;
             std::string err;
-            return {0, io.go_EOF};
+            return {0, io::go_EOF};
         }
         r->prevRune = - 1;
         n = copy(b, r->s.make_slice(r->i));
-        r->i += int64(n);
+        r->i += int64_t(n);
         return {n, err};
     }
 
@@ -71,20 +71,20 @@ namespace golang::strings
         {
             int n;
             std::string err;
-            return {0, New(gocpp::recv(errors), "strings.Reader.ReadAt: negative offset")};
+            return {0, errors::New("strings.Reader.ReadAt: negative offset")};
         }
-        if(off >= int64(len(r->s)))
+        if(off >= int64_t(len(r->s)))
         {
             int n;
             std::string err;
-            return {0, io.go_EOF};
+            return {0, io::go_EOF};
         }
         n = copy(b, r->s.make_slice(off));
         if(n < len(b))
         {
             int n;
             std::string err;
-            err = io.go_EOF;
+            err = io::go_EOF;
         }
         return {n, err};
     }
@@ -92,9 +92,9 @@ namespace golang::strings
     std::tuple<unsigned char, std::string> ReadByte(struct Reader* r)
     {
         r->prevRune = - 1;
-        if(r->i >= int64(len(r->s)))
+        if(r->i >= int64_t(len(r->s)))
         {
-            return {0, io.go_EOF};
+            return {0, io::go_EOF};
         }
         auto b = r->s[r->i];
         r->i++;
@@ -105,7 +105,7 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return New(gocpp::recv(errors), "strings.Reader.UnreadByte: at beginning of string");
+            return errors::New("strings.Reader.UnreadByte: at beginning of string");
         }
         r->prevRune = - 1;
         r->i--;
@@ -117,16 +117,16 @@ namespace golang::strings
         gocpp::rune ch;
         int size;
         std::string err;
-        if(r->i >= int64(len(r->s)))
+        if(r->i >= int64_t(len(r->s)))
         {
             gocpp::rune ch;
             int size;
             std::string err;
             r->prevRune = - 1;
-            return {0, 0, io.go_EOF};
+            return {0, 0, io::go_EOF};
         }
         r->prevRune = int(r->i);
-        if(auto c = r->s[r->i]; c < utf8.RuneSelf)
+        if(auto c = r->s[r->i]; c < utf8::RuneSelf)
         {
             gocpp::rune ch;
             int size;
@@ -134,8 +134,8 @@ namespace golang::strings
             r->i++;
             return {rune(c), 1, nullptr};
         }
-        std::tie(ch, size) = DecodeRuneInString(gocpp::recv(utf8), r->s.make_slice(r->i));
-        r->i += int64(size);
+        std::tie(ch, size) = utf8::DecodeRuneInString(r->s.make_slice(r->i));
+        r->i += int64_t(size);
         return {ch, size, err};
     }
 
@@ -143,13 +143,13 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return New(gocpp::recv(errors), "strings.Reader.UnreadRune: at beginning of string");
+            return errors::New("strings.Reader.UnreadRune: at beginning of string");
         }
         if(r->prevRune < 0)
         {
-            return New(gocpp::recv(errors), "strings.Reader.UnreadRune: previous operation was not ReadRune");
+            return errors::New("strings.Reader.UnreadRune: previous operation was not ReadRune");
         }
-        r->i = int64(r->prevRune);
+        r->i = int64_t(r->prevRune);
         r->prevRune = - 1;
         return nullptr;
     }
@@ -162,9 +162,9 @@ namespace golang::strings
         {
             auto condition = whence;
             int conditionId = -1;
-            if(condition == io.SeekStart) { conditionId = 0; }
-            else if(condition == io.SeekCurrent) { conditionId = 1; }
-            else if(condition == io.SeekEnd) { conditionId = 2; }
+            if(condition == io::SeekStart) { conditionId = 0; }
+            else if(condition == io::SeekCurrent) { conditionId = 1; }
+            else if(condition == io::SeekEnd) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -174,16 +174,16 @@ namespace golang::strings
                     abs = r->i + offset;
                     break;
                 case 2:
-                    abs = int64(len(r->s)) + offset;
+                    abs = int64_t(len(r->s)) + offset;
                     break;
                 default:
-                    return {0, New(gocpp::recv(errors), "strings.Reader.Seek: invalid whence")};
+                    return {0, errors::New("strings.Reader.Seek: invalid whence")};
                     break;
             }
         }
         if(abs < 0)
         {
-            return {0, New(gocpp::recv(errors), "strings.Reader.Seek: negative position")};
+            return {0, errors::New("strings.Reader.Seek: negative position")};
         }
         r->i = abs;
         return {abs, nullptr};
@@ -194,27 +194,27 @@ namespace golang::strings
         int64_t n;
         std::string err;
         r->prevRune = - 1;
-        if(r->i >= int64(len(r->s)))
+        if(r->i >= int64_t(len(r->s)))
         {
             int64_t n;
             std::string err;
             return {0, nullptr};
         }
         auto s = r->s.make_slice(r->i);
-        auto [m, err] = WriteString(gocpp::recv(io), w, s);
+        auto [m, err] = io::WriteString(w, s);
         if(m > len(s))
         {
             int64_t n;
             std::string err;
             gocpp::panic("strings.Reader.WriteTo: invalid WriteString count");
         }
-        r->i += int64(m);
-        n = int64(m);
+        r->i += int64_t(m);
+        n = int64_t(m);
         if(m != len(s) && err == nullptr)
         {
             int64_t n;
             std::string err;
-            err = io.ErrShortWrite;
+            err = io::ErrShortWrite;
         }
         return {n, err};
     }

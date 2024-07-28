@@ -11,7 +11,6 @@
 
 namespace golang::math
 {
-    extern bool haveArchHypot;
     double archHypot(double p, double q);
 }
 

@@ -3,8 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/math/sqrt.fwd.h"
 
 namespace golang::main
 {
@@ -12,4 +10,5 @@ namespace golang::main
     struct T;
     struct Vertex;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/math/sqrt.fwd.h"

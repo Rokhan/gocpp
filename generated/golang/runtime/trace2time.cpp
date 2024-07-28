@@ -23,7 +23,6 @@
 
 namespace golang::runtime
 {
-    int traceTimeDiv = (1 - osHasLowResClockInt) * 64 + osHasLowResClockInt * (256 - 224 * (goarch.IsPpc64 | goarch.IsPpc64le));
     traceTime traceClockNow()
     {
         if(osHasLowResClock)
@@ -46,7 +45,7 @@ namespace golang::runtime
     {
         auto w = unsafeTraceWriter(gen, nullptr);
         std::tie(w, _) = ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
-        byte(gocpp::recv(w), byte(traceEvFrequency));
+        unsigned char(gocpp::recv(w), unsigned char(traceEvFrequency));
         varint(gocpp::recv(w), traceClockUnitsPerSecond());
         systemstack([=]() mutable -> void
         {

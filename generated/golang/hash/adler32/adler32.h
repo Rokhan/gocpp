@@ -14,15 +14,11 @@
 
 namespace golang::adler32
 {
-    extern int mod;
-    extern int nmax;
-    extern int Size;
     void Reset(digest* d);
     hash::Hash32 New();
     int Size(digest* d);
     int BlockSize(digest* d);
     extern std::string magic;
-    extern int marshaledSize;
     std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(digest* d);
     std::string UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);

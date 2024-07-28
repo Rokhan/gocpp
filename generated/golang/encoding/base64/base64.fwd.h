@@ -3,18 +3,24 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/encoding/binary/binary.fwd.h"
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
-#include "golang/slices/slices.fwd.h"
-#include "golang/strconv/atoi.fwd.h"
-#include "golang/strconv/itoa.fwd.h"
 
 namespace golang::base64
 {
-    using CorruptInputError = int64_t;
     struct Encoding;
-    struct decoder;
+    const gocpp::rune StdPadding = '=';
+    const gocpp::rune NoPadding = - 1;
+    const char invalidIndex = '\xff';
+    using CorruptInputError = int64_t;
+}
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
+
+namespace golang::base64
+{
     struct encoder;
+    struct decoder;
     struct newlineFilteringReader;
 }
-
+#include "golang/encoding/binary/binary.fwd.h"
+#include "golang/slices/slices.fwd.h"
+#include "golang/strconv/atoi.fwd.h"
+#include "golang/strconv/itoa.fwd.h"

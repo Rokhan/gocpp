@@ -3,7 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::abi
 {
+    const long IntArgRegs = 9;
+    const long FloatArgRegs = 15;
+    const long EffectiveFloatRegSize = 8;
 }
-

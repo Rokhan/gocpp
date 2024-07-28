@@ -34,7 +34,7 @@ namespace golang::image
 
     std::string String(struct Point p)
     {
-        return "(" + Itoa(gocpp::recv(strconv), p.X) + "," + Itoa(gocpp::recv(strconv), p.Y) + ")";
+        return "(" + strconv::Itoa(p.X) + "," + strconv::Itoa(p.Y) + ")";
     }
 
     Point Add(struct Point p, Point q)
@@ -255,9 +255,9 @@ namespace golang::image
     {
         if(In(gocpp::recv((Point {x, y})), r))
         {
-            return color.Opaque;
+            return color::Opaque;
         }
-        return color.Transparent;
+        return color::Transparent;
     }
 
     color::RGBA64 RGBA64At(struct Rectangle r, int x, int y)
@@ -276,7 +276,7 @@ namespace golang::image
 
     color::Model ColorModel(struct Rectangle r)
     {
-        return color.Alpha16Model;
+        return color::Alpha16Model;
     }
 
     Rectangle ZR;
@@ -299,12 +299,12 @@ namespace golang::image
         {
             return - 1;
         }
-        auto [hi, lo] = Mul64(gocpp::recv(bits), uint64_t(x), uint64_t(y));
+        auto [hi, lo] = bits::Mul64(uint64_t(x), uint64_t(y));
         if(hi != 0)
         {
             return - 1;
         }
-        std::tie(hi, lo) = Mul64(gocpp::recv(bits), lo, uint64_t(z));
+        std::tie(hi, lo) = bits::Mul64(lo, uint64_t(z));
         if(hi != 0)
         {
             return - 1;

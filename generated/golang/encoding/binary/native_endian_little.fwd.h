@@ -9,4 +9,3 @@ namespace golang::binary
 {
     struct nativeEndian;
 }
-

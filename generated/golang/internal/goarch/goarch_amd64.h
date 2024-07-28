@@ -9,14 +9,9 @@
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 
 namespace golang::goarch
 {
-    extern ArchFamilyType _ArchFamily;
-    extern int _DefaultPhysPageSize;
-    extern int _PCQuantum;
-    extern int _MinFrameSize;
-    extern int _StackAlign;
 }
 

@@ -11,7 +11,5 @@
 
 namespace golang::goexperiment
 {
-    extern bool CgoCheck2;
-    extern int CgoCheck2Int;
 }
 

@@ -13,7 +13,6 @@
 
 namespace golang::math
 {
-    bool haveArchModf = false;
     std::tuple<double, double> archModf(double f)
     {
         double int;

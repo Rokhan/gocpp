@@ -11,6 +11,5 @@
 
 namespace golang::runtime
 {
-    extern int cb_max;
 }
 

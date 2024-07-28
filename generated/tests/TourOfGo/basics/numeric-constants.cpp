@@ -15,8 +15,6 @@
 
 namespace golang::main
 {
-    int Big = 1 << 100;
-    int Small = Big >> 99;
     int needInt(int x)
     {
         return x * 10 + 1;

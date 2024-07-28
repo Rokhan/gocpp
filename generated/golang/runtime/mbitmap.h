@@ -9,10 +9,10 @@
 #include "golang/runtime/mbitmap.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/extern.h"
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 #include "golang/runtime/mgcmark.h"
@@ -60,11 +60,9 @@ namespace golang::runtime
     void clearMarked(struct markBits m);
     markBits markBitsForSpan(uintptr_t base);
     void advance(struct markBits* m);
-    extern uintptr_t clobberdeadPtr;
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     bool reflect_verifyNotInHeapPtr(uintptr_t p);
-    extern int ptrBits;
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
     void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
     int countAlloc(struct mspan* s);

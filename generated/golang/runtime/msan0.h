@@ -14,7 +14,6 @@
 
 namespace golang::runtime
 {
-    extern bool msanenabled;
     void msanread(unsafe::Pointer addr, uintptr_t sz);
     void msanwrite(unsafe::Pointer addr, uintptr_t sz);
     void msanmalloc(unsafe::Pointer addr, uintptr_t sz);

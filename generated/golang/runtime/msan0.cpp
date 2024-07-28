@@ -16,7 +16,6 @@
 
 namespace golang::runtime
 {
-    bool msanenabled = false;
     void msanread(unsafe::Pointer addr, uintptr_t sz)
     {
         go_throw("msan");

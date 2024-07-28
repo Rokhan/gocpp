@@ -3,9 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/bits/bits.fwd.h"
 
 namespace golang::strconv
 {
+    const bool fastSmalls = true;
+    const long nSmalls = 100;
+    const bool host32bit = (~ (unsigned int)(0) >> 32) == 0;
 }
-
+#include "golang/math/bits/bits.fwd.h"

@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/bytealg/indexbyte_native.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/auxv_none.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/runtime/internal/atomic/stubs.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
@@ -30,9 +30,6 @@
 
 namespace golang::runtime
 {
-    extern int tracebackCrash;
-    extern int tracebackAll;
-    extern int tracebackShift;
     extern uint32_t traceback_cache;
     std::tuple<int32_t, bool, bool> gotraceback();
     unsigned char* argv_index(unsigned char** argv, int32_t i);

@@ -3,10 +3,37 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
+    const int c0 = 0;
+    const int c1 = 1;
+    const int c2 = 2;
+    const int c3 = 3;
+    const int c4 = 4;
+    const int c5 = 5;
     using Kind = unsigned int;
+    const int a = 1 << 0;
+    const int b = 1 << 1;
+    const int c = 1 << 2;
+    const long z0 = 0;
+    const int za = 1 << 1;
+    const int zb = 1 << 2;
+    const int zc = 1 << 3;
+    const int u = 0 * 42;
+    const double v = 1 * 42;
+    const int w = 2 * 42;
+    const int x = 0;
+    const int y = 0;
+    const int bit0 = 1 << 0;
+    const int mask0 = (1 << 0) - 1;
+    const int bit1 = 1 << 1;
+    const int mask1 = (1 << 1) - 1;
+    const int bit3 = 1 << 3;
+    const int mask3 = (1 << 3) - 1;
+    const Kind Invalid = 0;
+    const Kind Bool = 1;
+    const Kind Int = 2;
+    const Kind Int8 = 3;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

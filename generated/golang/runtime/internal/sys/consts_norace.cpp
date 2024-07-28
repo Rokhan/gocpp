@@ -13,6 +13,5 @@
 
 namespace golang::sys
 {
-    int isRace = 0;
 }
 

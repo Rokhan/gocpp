@@ -19,7 +19,7 @@
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/sizeclasses.h"  [Ignored, known errors]
+#include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 
@@ -27,7 +27,7 @@ namespace golang::runtime
 {
     struct mstats
     {
-        consistentHeapStats heapStats;
+        /* consistentHeapStats heapStats; [Known incomplete type] */
         sysMemStat stacks_sys;
         sysMemStat mspan_sys;
         sysMemStat mcache_sys;

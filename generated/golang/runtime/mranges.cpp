@@ -11,13 +11,13 @@
 #include "golang/runtime/mranges.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
@@ -89,7 +89,7 @@ namespace golang::runtime
 
     std::tuple<uintptr_t, bool> takeFromFront(struct addrRange* a, uintptr_t len, uint8_t align)
     {
-        auto base = alignUp(addr(gocpp::recv(a->base)), uintptr(align)) + len;
+        auto base = alignUp(addr(gocpp::recv(a->base)), uintptr_t(align)) + len;
         if(base > addr(gocpp::recv(a->limit)))
         {
             return {0, false};
@@ -100,7 +100,7 @@ namespace golang::runtime
 
     std::tuple<uintptr_t, bool> takeFromBack(struct addrRange* a, uintptr_t len, uint8_t align)
     {
-        auto limit = alignDown(addr(gocpp::recv(a->limit)) - len, uintptr(align));
+        auto limit = alignDown(addr(gocpp::recv(a->limit)) - len, uintptr_t(align));
         if(addr(gocpp::recv(a->base)) > limit)
         {
             return {0, false};
@@ -196,7 +196,7 @@ namespace golang::runtime
             {
                 return;
             }
-            if(CompareAndSwap(gocpp::recv(b->a), old, int64(addr(gocpp::recv(minOffAddr)) - arenaBaseOffset)))
+            if(CompareAndSwap(gocpp::recv(b->a), old, int64_t(addr(gocpp::recv(minOffAddr)) - arenaBaseOffset)))
             {
                 return;
             }
@@ -205,7 +205,7 @@ namespace golang::runtime
 
     void StoreMin(struct atomicOffAddr* b, uintptr_t addr)
     {
-        auto go_new = int64(addr - arenaBaseOffset);
+        auto go_new = int64_t(addr - arenaBaseOffset);
         for(; ; )
         {
             auto old = Load(gocpp::recv(b->a));
@@ -222,12 +222,12 @@ namespace golang::runtime
 
     void StoreUnmark(struct atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr)
     {
-        CompareAndSwap(gocpp::recv(b->a), - int64(markedAddr - arenaBaseOffset), int64(newAddr - arenaBaseOffset));
+        CompareAndSwap(gocpp::recv(b->a), - int64_t(markedAddr - arenaBaseOffset), int64_t(newAddr - arenaBaseOffset));
     }
 
     void StoreMarked(struct atomicOffAddr* b, uintptr_t addr)
     {
-        Store(gocpp::recv(b->a), - int64(addr - arenaBaseOffset));
+        Store(gocpp::recv(b->a), - int64_t(addr - arenaBaseOffset));
     }
 
     std::tuple<uintptr_t, bool> Load(struct atomicOffAddr* b)
@@ -239,7 +239,7 @@ namespace golang::runtime
             wasMarked = true;
             v = - v;
         }
-        return {uintptr(v) + arenaBaseOffset, wasMarked};
+        return {uintptr_t(v) + arenaBaseOffset, wasMarked};
     }
 
     
@@ -260,10 +260,10 @@ namespace golang::runtime
 
     void init(struct addrRanges* a, sysMemStat* sysStat)
     {
-        auto ranges = (notInHeapSlice*)(Pointer(gocpp::recv(unsafe), & a->ranges));
+        auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
         ranges->len = 0;
         ranges->cap = 16;
-        ranges->array = (notInHeap*)(persistentalloc(Sizeof(gocpp::recv(unsafe), addrRange {}) * uintptr(ranges->cap), goarch.PtrSize, sysStat));
+        ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
         a->sysStat = sysStat;
         a->totalBytes = 0;
     }
@@ -358,10 +358,10 @@ namespace golang::runtime
             if(len(a->ranges) + 1 > cap(a->ranges))
             {
                 auto oldRanges = a->ranges;
-                auto ranges = (notInHeapSlice*)(Pointer(gocpp::recv(unsafe), & a->ranges));
+                auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
-                ranges->array = (notInHeap*)(persistentalloc(Sizeof(gocpp::recv(unsafe), addrRange {}) * uintptr(ranges->cap), goarch.PtrSize, a->sysStat));
+                ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
                 copy(a->ranges.make_slice(i + 1), oldRanges.make_slice(i));
             }
@@ -404,7 +404,7 @@ namespace golang::runtime
             a->ranges = a->ranges.make_slice(0, 0);
             return;
         }
-        auto removed = uintptr(0);
+        auto removed = uintptr_t(0);
         for(auto [_, r] : a->ranges.make_slice(pivot))
         {
             removed += size(gocpp::recv(r));
@@ -431,10 +431,10 @@ namespace golang::runtime
     {
         if(len(a->ranges) > cap(b->ranges))
         {
-            auto ranges = (notInHeapSlice*)(Pointer(gocpp::recv(unsafe), & b->ranges));
+            auto ranges = (notInHeapSlice*)(unsafe::Pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);
-            ranges->array = (notInHeap*)(persistentalloc(Sizeof(gocpp::recv(unsafe), addrRange {}) * uintptr(ranges->cap), goarch.PtrSize, b->sysStat));
+            ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
         }
         b->ranges = b->ranges.make_slice(0, len(a->ranges));
         b->totalBytes = a->totalBytes;

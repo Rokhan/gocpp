@@ -13,16 +13,16 @@
 
 // #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/env_posix.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lfstack.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
-#include "golang/runtime/mgcsweep.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
@@ -35,15 +35,6 @@
 
 namespace golang::runtime
 {
-    double gcGoalUtilization = gcBackgroundUtilization;
-    double gcBackgroundUtilization = 0.25;
-    int gcCreditSlack = 2000;
-    int gcAssistTimeSlack = 5000;
-    int gcOverAssistWork = 64 << 10;
-    int defaultHeapMinimum = (goexperiment.HeapMinimum512KiBInt) * (512 << 10) + (1 - goexperiment.HeapMinimum512KiBInt) * (4 << 20);
-    int maxStackScanSlack = 8 << 10;
-    int memoryLimitMinHeapGoalHeadroom = 1 << 20;
-    int memoryLimitHeapGoalHeadroomPercent = 3;
     gcControllerState gcController;
     
     std::ostream& gcControllerState::PrintTo(std::ostream& os) const
@@ -100,7 +91,7 @@ namespace golang::runtime
     void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit)
     {
         c->heapMinimum = defaultHeapMinimum;
-        c->triggered = ^ uint64_t(0);
+        c->triggered = ~ uint64_t(0);
         setGCPercent(gocpp::recv(c), gcPercent);
         setMemoryLimit(gocpp::recv(c), memoryLimit);
         commit(gocpp::recv(c), true);
@@ -119,7 +110,7 @@ namespace golang::runtime
         c->markStartTime = markStartTime;
         c->triggered = Load(gocpp::recv(c->heapLive));
         auto totalUtilizationGoal = double(procs) * gcBackgroundUtilization;
-        auto dedicatedMarkWorkersNeeded = int64(totalUtilizationGoal + 0.5);
+        auto dedicatedMarkWorkersNeeded = int64_t(totalUtilizationGoal + 0.5);
         auto utilError = double(dedicatedMarkWorkersNeeded) / totalUtilizationGoal - 1;
         auto maxUtilError = 0.3;
         if(utilError < - maxUtilError || utilError > maxUtilError)
@@ -136,7 +127,7 @@ namespace golang::runtime
         }
         if(debug.gcstoptheworld > 0)
         {
-            dedicatedMarkWorkersNeeded = int64(procs);
+            dedicatedMarkWorkersNeeded = int64_t(procs);
             c->fractionalUtilizationGoal = 0;
         }
         for(auto [_, p] : allp)
@@ -157,7 +148,7 @@ namespace golang::runtime
         }
         else
         {
-            setMaxIdleMarkWorkers(gocpp::recv(c), int32(procs) - int32(dedicatedMarkWorkersNeeded));
+            setMaxIdleMarkWorkers(gocpp::recv(c), int32_t(procs) - int32_t(dedicatedMarkWorkersNeeded));
         }
         Store(gocpp::recv(c->dedicatedMarkWorkersNeeded), dedicatedMarkWorkersNeeded);
         revise(gocpp::recv(c));
@@ -179,25 +170,25 @@ namespace golang::runtime
         auto live = Load(gocpp::recv(c->heapLive));
         auto scan = Load(gocpp::recv(c->heapScan));
         auto work = Load(gocpp::recv(c->heapScanWork)) + Load(gocpp::recv(c->stackScanWork)) + Load(gocpp::recv(c->globalsScanWork));
-        auto heapGoal = int64(heapGoal(gocpp::recv(c)));
-        auto scanWorkExpected = int64(c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)));
+        auto heapGoal = int64_t(heapGoal(gocpp::recv(c)));
+        auto scanWorkExpected = int64_t(c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)));
         auto maxStackScan = Load(gocpp::recv(c->maxStackScan));
-        auto maxScanWork = int64(scan + maxStackScan + Load(gocpp::recv(c->globalsScan)));
+        auto maxScanWork = int64_t(scan + maxStackScan + Load(gocpp::recv(c->globalsScan)));
         if(work > scanWorkExpected)
         {
-            auto extHeapGoal = int64(double(heapGoal - int64(c->triggered)) / double(scanWorkExpected) * double(maxScanWork)) + int64(c->triggered);
+            auto extHeapGoal = int64_t(double(heapGoal - int64_t(c->triggered)) / double(scanWorkExpected) * double(maxScanWork)) + int64_t(c->triggered);
             scanWorkExpected = maxScanWork;
-            auto hardGoal = int64((1.0 + double(gcPercent) / 100.0) * double(heapGoal));
+            auto hardGoal = int64_t((1.0 + double(gcPercent) / 100.0) * double(heapGoal));
             if(extHeapGoal > hardGoal)
             {
                 extHeapGoal = hardGoal;
             }
             heapGoal = extHeapGoal;
         }
-        if(int64(live) > heapGoal)
+        if(int64_t(live) > heapGoal)
         {
             auto maxOvershoot = 1.1;
-            heapGoal = int64(double(heapGoal) * maxOvershoot);
+            heapGoal = int64_t(double(heapGoal) * maxOvershoot);
             scanWorkExpected = maxScanWork;
         }
         auto scanWorkRemaining = scanWorkExpected - work;
@@ -205,7 +196,7 @@ namespace golang::runtime
         {
             scanWorkRemaining = 1000;
         }
-        auto heapRemaining = heapGoal - int64(live);
+        auto heapRemaining = heapGoal - int64_t(live);
         if(heapRemaining <= 0)
         {
             heapRemaining = 1;
@@ -223,7 +214,7 @@ namespace golang::runtime
         auto utilization = gcBackgroundUtilization;
         if(assistDuration > 0)
         {
-            utilization += double(Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64(procs));
+            utilization += double(Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64_t(procs));
         }
         if(Load(gocpp::recv(c->heapLive)) <= c->triggered)
         {
@@ -232,7 +223,7 @@ namespace golang::runtime
         auto idleUtilization = 0.0;
         if(assistDuration > 0)
         {
-            idleUtilization = double(Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64(procs));
+            idleUtilization = double(Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64_t(procs));
         }
         auto scanWork = Load(gocpp::recv(c->heapScanWork)) + Load(gocpp::recv(c->stackScanWork)) + Load(gocpp::recv(c->globalsScanWork));
         auto currentConsMark = (double(Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
@@ -254,7 +245,7 @@ namespace golang::runtime
             print("pacer: ", int(utilization * 100), "% CPU (", int(goal), " exp.) for ");
             print(Load(gocpp::recv(c->heapScanWork)), "+", Load(gocpp::recv(c->stackScanWork)), "+", Load(gocpp::recv(c->globalsScanWork)), " B work (", c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)), " B exp.) ");
             auto live = Load(gocpp::recv(c->heapLive));
-            print("in ", c->triggered, " B -> ", live, " B (∆goal ", int64(live) - int64(c->lastHeapGoal), ", cons/mark ", oldConsMark, ")");
+            print("in ", c->triggered, " B -> ", live, " B (∆goal ", int64_t(live) - int64_t(c->lastHeapGoal), ", cons/mark ", oldConsMark, ")");
             println();
             printunlock();
         }
@@ -278,7 +269,7 @@ namespace golang::runtime
         auto myID = ptr(gocpp::recv(gp->m->p))->id;
         for(auto tries = 0; tries < 5; tries++)
         {
-            auto id = int32(cheaprandn(uint32_t(gomaxprocs - 1)));
+            auto id = int32_t(cheaprandn(uint32_t(gomaxprocs - 1)));
             if(id >= myID)
             {
                 id++;
@@ -372,7 +363,7 @@ namespace golang::runtime
         Store(gocpp::recv(c->heapScan), uint64_t(Load(gocpp::recv(c->heapScanWork))));
         c->lastHeapScan = uint64_t(Load(gocpp::recv(c->heapScanWork)));
         Store(gocpp::recv(c->lastStackScan), uint64_t(Load(gocpp::recv(c->stackScanWork))));
-        c->triggered = ^ uint64_t(0);
+        c->triggered = ~ uint64_t(0);
         auto trace = traceAcquire();
         if(ok(gocpp::recv(trace)))
         {
@@ -485,7 +476,7 @@ namespace golang::runtime
             }
             minTrigger = sweepDistTrigger;
             auto minRunway = 64 << 10;
-            if(c->triggered != ^ uint64_t(0) && goal < c->triggered + minRunway)
+            if(c->triggered != ~ uint64_t(0) && goal < c->triggered + minRunway)
             {
                 uint64_t goal;
                 uint64_t minTrigger;
@@ -542,9 +533,6 @@ namespace golang::runtime
         return goal;
     }
 
-    int triggerRatioDen = 64;
-    int minTriggerRatioNum = 45;
-    int maxTriggerRatioNum = 61;
     std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c)
     {
         auto [goal, minTrigger] = heapGoalInternal(gocpp::recv(c));
@@ -602,7 +590,7 @@ namespace golang::runtime
         {
             Store(gocpp::recv(c->sweepDistMinTrigger), Load(gocpp::recv(c->heapLive)) + sweepMinHeapDistance);
         }
-        auto gcPercentHeapGoal = ^ uint64_t(0);
+        auto gcPercentHeapGoal = ~ uint64_t(0);
         if(auto gcPercent = Load(gocpp::recv(c->gcPercent)); gcPercent >= 0)
         {
             gcPercentHeapGoal = c->heapMarked + (c->heapMarked + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan))) * uint64_t(gcPercent) / 100;
@@ -718,7 +706,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto old = Load(gocpp::recv(c->idleMarkWorkers));
-            auto [n, max] = std::tuple{int32(old & uint64_t(^ uint32_t(0))), int32(old >> 32)};
+            auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n >= max)
             {
                 return false;
@@ -739,7 +727,7 @@ namespace golang::runtime
     bool needIdleMarkWorker(struct gcControllerState* c)
     {
         auto p = Load(gocpp::recv(c->idleMarkWorkers));
-        auto [n, max] = std::tuple{int32(p & uint64_t(^ uint32_t(0))), int32(p >> 32)};
+        auto [n, max] = std::tuple{int32_t(p & uint64_t(~ uint32_t(0))), int32_t(p >> 32)};
         return n < max;
     }
 
@@ -748,7 +736,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto old = Load(gocpp::recv(c->idleMarkWorkers));
-            auto [n, max] = std::tuple{int32(old & uint64_t(^ uint32_t(0))), int32(old >> 32)};
+            auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n - 1 < 0)
             {
                 print("n=", n, " max=", max, "\n");
@@ -767,7 +755,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto old = Load(gocpp::recv(c->idleMarkWorkers));
-            auto n = int32(old & uint64_t(^ uint32_t(0)));
+            auto n = int32_t(old & uint64_t(~ uint32_t(0)));
             if(n < 0)
             {
                 print("n=", n, " max=", max, "\n");

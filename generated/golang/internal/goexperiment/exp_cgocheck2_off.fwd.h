@@ -3,7 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::goexperiment
 {
+    const bool CgoCheck2 = false;
+    const long CgoCheck2Int = 0;
 }
-

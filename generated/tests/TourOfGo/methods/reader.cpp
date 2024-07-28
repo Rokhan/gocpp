@@ -25,7 +25,7 @@ namespace golang::main
             auto [n, err] = Read(gocpp::recv(r), b);
             mocklib::Printf("n = %v err = %v b = %v\n", n, err, b);
             mocklib::Printf("b[:n] = %q\n", b.make_slice(0, n));
-            if(err == io.go_EOF)
+            if(err == io::go_EOF)
             {
                 break;
             }

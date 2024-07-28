@@ -15,45 +15,16 @@
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
-#include "golang/image/png/paeth.h"
 #include "golang/image/format.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
+#include "golang/image/png/paeth.h"
 // #include "golang/io/io.h"  [Ignored, known errors]
 
 namespace golang::png
 {
-    extern int ctGrayscale;
-    extern int ctTrueColor;
-    extern int ctPaletted;
-    extern int ctGrayscaleAlpha;
-    extern int ctTrueColorAlpha;
-    extern int cbInvalid;
-    extern int cbG1;
-    extern int cbG2;
-    extern int cbG4;
-    extern int cbG8;
-    extern int cbGA8;
-    extern int cbTC8;
-    extern int cbP1;
-    extern int cbP2;
-    extern int cbP4;
-    extern int cbP8;
-    extern int cbTCA8;
-    extern int cbG16;
-    extern int cbGA16;
-    extern int cbTC16;
-    extern int cbTCA16;
     bool cbPaletted(int cb);
     bool cbTrueColor(int cb);
-    extern int ftNone;
-    extern int ftSub;
-    extern int ftUp;
-    extern int ftAverage;
-    extern int ftPaeth;
-    extern int nFilter;
-    extern int itNone;
-    extern int itAdam7;
     struct interlaceScan
     {
         int xFactor;
@@ -68,12 +39,6 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
     extern gocpp::slice<interlaceScan> interlacing;
-    extern int dsStart;
-    extern int dsSeenIHDR;
-    extern int dsSeenPLTE;
-    extern int dsSeentRNS;
-    extern int dsSeenIDAT;
-    extern int dsSeenIEND;
     extern std::string pngHeader;
     struct decoder
     {

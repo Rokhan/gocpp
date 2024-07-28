@@ -13,37 +13,6 @@
 
 namespace golang::runtime
 {
-    extern int _PROT_NONE;
-    extern int _PROT_READ;
-    extern int _PROT_WRITE;
-    extern int _PROT_EXEC;
-    extern int _MAP_ANON;
-    extern int _MAP_PRIVATE;
-    extern int _DUPLICATE_SAME_ACCESS;
-    extern int _THREAD_PRIORITY_HIGHEST;
-    extern int _SIGINT;
-    extern int _SIGTERM;
-    extern int _CTRL_C_EVENT;
-    extern int _CTRL_BREAK_EVENT;
-    extern int _CTRL_CLOSE_EVENT;
-    extern int _CTRL_LOGOFF_EVENT;
-    extern int _CTRL_SHUTDOWN_EVENT;
-    extern int _EXCEPTION_ACCESS_VIOLATION;
-    extern int _EXCEPTION_IN_PAGE_ERROR;
-    extern int _EXCEPTION_BREAKPOINT;
-    extern int _EXCEPTION_ILLEGAL_INSTRUCTION;
-    extern int _EXCEPTION_FLT_DENORMAL_OPERAND;
-    extern int _EXCEPTION_FLT_DIVIDE_BY_ZERO;
-    extern int _EXCEPTION_FLT_INEXACT_RESULT;
-    extern int _EXCEPTION_FLT_OVERFLOW;
-    extern int _EXCEPTION_FLT_UNDERFLOW;
-    extern int _EXCEPTION_INT_DIVIDE_BY_ZERO;
-    extern int _EXCEPTION_INT_OVERFLOW;
-    extern int _INFINITE;
-    extern int _WAIT_TIMEOUT;
-    extern int _EXCEPTION_CONTINUE_EXECUTION;
-    extern int _EXCEPTION_CONTINUE_SEARCH;
-    extern int _EXCEPTION_CONTINUE_SEARCH_SEH;
     struct systeminfo
     {
         gocpp::array<unsigned char, 4> anon0;

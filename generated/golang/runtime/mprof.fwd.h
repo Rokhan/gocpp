@@ -3,51 +3,65 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    const long buckHashSize = 179999;
+    const long maxStack = 32;
+    using bucketType = int;
+    struct memRecord;
+    struct memRecordCycle;
+    struct blockRecord;
+    struct StackRecord;
+    struct MemProfileRecord;
+    struct BlockProfileRecord;
+    struct gocpp_id_0;
+    struct gocpp_id_0;
+    using goroutineProfileState = uint32_t;
+    const bucketType memProfile = 1 + 0;
+    const bucketType blockProfile = 1 + 1;
+    const bucketType mutexProfile = 1 + 2;
+    /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
+    const goroutineProfileState goroutineProfileAbsent = 0;
+    const goroutineProfileState goroutineProfileInProgress = 1;
+    const goroutineProfileState goroutineProfileSatisfied = 2;
+}
 #include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    struct bucket;
+    /* using buckhashArray = gocpp::array<atomic::UnsafePointer, buckHashSize> */;
+    struct mProfCycleHolder;
+    struct lockTimer;
+    struct mLockProfile;
+    /* using goroutineProfileStateHolder = atomic::Uint32 */;
+}
+#include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/runtime/asan0.fwd.h"
 #include "golang/runtime/cputicks.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h"  [Ignored, known errors]
+#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
+#include "golang/runtime/internal/sys/consts.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mem.fwd.h"
 #include "golang/runtime/mfinal.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/msan0.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
 #include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
 #include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/rand.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
 #include "golang/runtime/runtime.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/sema.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/sema.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
 #include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/traceback.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-    struct BlockProfileRecord;
-    struct MemProfileRecord;
-    struct StackRecord;
-    struct blockRecord;
-    struct bucket;
-    using bucketType = int;
-    using buckhashArray = gocpp::array<atomic::UnsafePointer, buckHashSize>;
-    using goroutineProfileState = uint32_t;
-    using goroutineProfileStateHolder = atomic::Uint32;
-    struct lockTimer;
-    struct mLockProfile;
-    struct mProfCycleHolder;
-    struct memRecord;
-    struct memRecordCycle;
-}
-

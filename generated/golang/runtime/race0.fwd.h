@@ -3,12 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const bool raceenabled = false;
+}
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

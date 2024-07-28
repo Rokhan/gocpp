@@ -13,10 +13,5 @@
 
 namespace golang::abi
 {
-    int MapBucketCountBits = 3;
-    int MapBucketCount = 1 << MapBucketCountBits;
-    int MapMaxKeyBytes = 128;
-    int MapMaxElemBytes = 128;
-    int ZeroValSize = 1024;
 }
 

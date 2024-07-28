@@ -3,19 +3,67 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    using traceEv = uint8_t;
+    using traceArg = uint64_t;
+    const traceEv traceEvNone = 0;
+    const traceEv traceEvEventBatch = 1;
+    const traceEv traceEvStacks = 2;
+    const traceEv traceEvStack = 3;
+    const traceEv traceEvStrings = 4;
+    const traceEv traceEvString = 5;
+    const traceEv traceEvCPUSamples = 6;
+    const traceEv traceEvCPUSample = 7;
+    const traceEv traceEvFrequency = 8;
+    const traceEv traceEvProcsChange = 9;
+    const traceEv traceEvProcStart = 10;
+    const traceEv traceEvProcStop = 11;
+    const traceEv traceEvProcSteal = 12;
+    const traceEv traceEvProcStatus = 13;
+    const traceEv traceEvGoCreate = 14;
+    const traceEv traceEvGoCreateSyscall = 15;
+    const traceEv traceEvGoStart = 16;
+    const traceEv traceEvGoDestroy = 17;
+    const traceEv traceEvGoDestroySyscall = 18;
+    const traceEv traceEvGoStop = 19;
+    const traceEv traceEvGoBlock = 20;
+    const traceEv traceEvGoUnblock = 21;
+    const traceEv traceEvGoSyscallBegin = 22;
+    const traceEv traceEvGoSyscallEnd = 23;
+    const traceEv traceEvGoSyscallEndBlocked = 24;
+    const traceEv traceEvGoStatus = 25;
+    const traceEv traceEvSTWBegin = 26;
+    const traceEv traceEvSTWEnd = 27;
+    const traceEv traceEvGCActive = 28;
+    const traceEv traceEvGCBegin = 29;
+    const traceEv traceEvGCEnd = 30;
+    const traceEv traceEvGCSweepActive = 31;
+    const traceEv traceEvGCSweepBegin = 32;
+    const traceEv traceEvGCSweepEnd = 33;
+    const traceEv traceEvGCMarkAssistActive = 34;
+    const traceEv traceEvGCMarkAssistBegin = 35;
+    const traceEv traceEvGCMarkAssistEnd = 36;
+    const traceEv traceEvHeapAlloc = 37;
+    const traceEv traceEvHeapGoal = 38;
+    const traceEv traceEvGoLabel = 39;
+    const traceEv traceEvUserTaskBegin = 40;
+    const traceEv traceEvUserTaskEnd = 41;
+    const traceEv traceEvUserRegionBegin = 42;
+    const traceEv traceEvUserRegionEnd = 43;
+    const traceEv traceEvUserLog = 44;
+}
+#include "golang/runtime/trace2buf.fwd.h"
+
+namespace golang::runtime
+{
+    struct traceEventWriter;
+}
 #include "golang/runtime/internal/sys/consts.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/trace2buf.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
 #include "golang/runtime/trace2stack.fwd.h"
 #include "golang/runtime/trace2status.fwd.h"
 #include "golang/runtime/trace2string.fwd.h"
 #include "golang/runtime/trace2time.fwd.h"
-
-namespace golang::runtime
-{
-    using traceArg = uint64_t;
-    using traceEv = uint8_t;
-    struct traceEventWriter;
-}
-

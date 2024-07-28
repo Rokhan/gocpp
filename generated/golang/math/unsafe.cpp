@@ -17,22 +17,22 @@ namespace golang::math
 {
     uint32_t Float32bits(double f)
     {
-        return *(uint32_t*)(Pointer(gocpp::recv(unsafe), & f));
+        return *(uint32_t*)(unsafe::Pointer(& f));
     }
 
     double Float32frombits(uint32_t b)
     {
-        return *(float*)(Pointer(gocpp::recv(unsafe), & b));
+        return *(float*)(unsafe::Pointer(& b));
     }
 
     uint64_t Float64bits(double f)
     {
-        return *(uint64_t*)(Pointer(gocpp::recv(unsafe), & f));
+        return *(uint64_t*)(unsafe::Pointer(& f));
     }
 
     double Float64frombits(uint64_t b)
     {
-        return *(double*)(Pointer(gocpp::recv(unsafe), & b));
+        return *(double*)(unsafe::Pointer(& b));
     }
 
 }

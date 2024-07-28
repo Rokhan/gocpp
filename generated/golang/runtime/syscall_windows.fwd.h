@@ -3,32 +3,43 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/abi.fwd.h"  [Ignored, known errors]
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/cgocall.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mfinal.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h"  [Ignored, known errors]
+
+namespace golang::runtime
+{
+    struct gocpp_id_0;
+    using abiPartKind = int;
+    struct abiPart;
+    struct abiDesc;
+    const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+    struct gocpp_id_1;
+    const long maxArgs = 42;
+    const abiPartKind abiPartBad = 0;
+    const abiPartKind abiPartStack = 1;
+    const abiPartKind abiPartReg = 2;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-// #include "golang/runtime/typekind.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/zcallback_windows.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    struct abiDesc;
-    struct abiPart;
-    using abiPartKind = int;
-    struct callbackArgs;
     struct winCallback;
     struct winCallbackKey;
+    const int callbackMaxFrame = 64 * goarch::PtrSize;
+    struct callbackArgs;
 }
-
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+// #include "golang/runtime/cgocall.fwd.h" [Ignored, known errors]
+#include "golang/runtime/extern.fwd.h"
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mfinal.fwd.h"
+// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
+#include "golang/runtime/panic.fwd.h"
+#include "golang/runtime/proc.fwd.h"
+// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/runtime/type.fwd.h"
+// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
+#include "golang/runtime/zcallback_windows.fwd.h"

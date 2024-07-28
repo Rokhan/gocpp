@@ -9,13 +9,13 @@
 #include "golang/runtime/mranges.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
@@ -24,8 +24,8 @@ namespace golang::runtime
 {
     struct addrRange
     {
-        offAddr base;
-        offAddr limit;
+        /* offAddr base; [Known incomplete type] */
+        /* offAddr limit; [Known incomplete type] */
 
         using isGoStruct = void;
 

@@ -19,13 +19,6 @@
 
 namespace golang::flate
 {
-    int offsetCodeCount = 30;
-    int endBlockMarker = 256;
-    int lengthCodesStart = 257;
-    int codegenCodeCount = 19;
-    int badCode = 255;
-    int bufferFlushSize = 240;
-    int bufferSize = bufferFlushSize + 8;
     gocpp::slice<int8_t> lengthExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
     gocpp::slice<uint32_t> lengthBase = gocpp::slice<uint32_t> {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 255};
     gocpp::slice<int8_t> offsetExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
@@ -78,7 +71,7 @@ namespace golang::flate
         auto n = w->nbytes;
         for(; w->nbits != 0; )
         {
-            w->bytes[n] = byte(w->bits);
+            w->bytes[n] = unsigned char(w->bits);
             w->bits >>= 8;
             if(w->nbits > 8)
             {
@@ -119,12 +112,12 @@ namespace golang::flate
             w->nbits -= 48;
             auto n = w->nbytes;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = byte(bits);
-            bytes[1] = byte(bits >> 8);
-            bytes[2] = byte(bits >> 16);
-            bytes[3] = byte(bits >> 24);
-            bytes[4] = byte(bits >> 32);
-            bytes[5] = byte(bits >> 40);
+            bytes[0] = unsigned char(bits);
+            bytes[1] = unsigned char(bits >> 8);
+            bytes[2] = unsigned char(bits >> 16);
+            bytes[3] = unsigned char(bits >> 24);
+            bytes[4] = unsigned char(bits >> 32);
+            bytes[5] = unsigned char(bits >> 40);
             n += 6;
             if(n >= bufferFlushSize)
             {
@@ -149,7 +142,7 @@ namespace golang::flate
         }
         for(; w->nbits != 0; )
         {
-            w->bytes[n] = byte(w->bits);
+            w->bytes[n] = unsigned char(w->bits);
             w->bits >>= 8;
             w->nbits -= 8;
             n++;
@@ -300,12 +293,12 @@ namespace golang::flate
             w->nbits -= 48;
             auto n = w->nbytes;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = byte(bits);
-            bytes[1] = byte(bits >> 8);
-            bytes[2] = byte(bits >> 16);
-            bytes[3] = byte(bits >> 24);
-            bytes[4] = byte(bits >> 32);
-            bytes[5] = byte(bits >> 40);
+            bytes[0] = unsigned char(bits);
+            bytes[1] = unsigned char(bits >> 8);
+            bytes[2] = unsigned char(bits >> 16);
+            bytes[3] = unsigned char(bits >> 24);
+            bytes[4] = unsigned char(bits >> 32);
+            bytes[5] = unsigned char(bits >> 40);
             n += 6;
             if(n >= bufferFlushSize)
             {
@@ -328,13 +321,13 @@ namespace golang::flate
             firstBits = 5;
         }
         writeBits(gocpp::recv(w), firstBits, 3);
-        writeBits(gocpp::recv(w), int32(numLiterals - 257), 5);
-        writeBits(gocpp::recv(w), int32(numOffsets - 1), 5);
-        writeBits(gocpp::recv(w), int32(numCodegens - 4), 4);
+        writeBits(gocpp::recv(w), int32_t(numLiterals - 257), 5);
+        writeBits(gocpp::recv(w), int32_t(numOffsets - 1), 5);
+        writeBits(gocpp::recv(w), int32_t(numCodegens - 4), 4);
         for(auto i = 0; i < numCodegens; i++)
         {
             auto value = (unsigned int)(w->codegenEncoding->codes[codegenOrder[i]].len);
-            writeBits(gocpp::recv(w), int32(value), 3);
+            writeBits(gocpp::recv(w), int32_t(value), 3);
         }
         auto i = 0;
         for(; ; )
@@ -356,15 +349,15 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     case 0:
-                        writeBits(gocpp::recv(w), int32(w->codegen[i]), 2);
+                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 2);
                         i++;
                         break;
                     case 1:
-                        writeBits(gocpp::recv(w), int32(w->codegen[i]), 3);
+                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 3);
                         i++;
                         break;
                     case 2:
-                        writeBits(gocpp::recv(w), int32(w->codegen[i]), 7);
+                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 7);
                         i++;
                         break;
                 }
@@ -385,8 +378,8 @@ namespace golang::flate
         }
         writeBits(gocpp::recv(w), flag, 3);
         flush(gocpp::recv(w));
-        writeBits(gocpp::recv(w), int32(length), 16);
-        writeBits(gocpp::recv(w), int32(^ uint16_t(length)), 16);
+        writeBits(gocpp::recv(w), int32_t(length), 16);
+        writeBits(gocpp::recv(w), int32_t(~ uint16_t(length)), 16);
     }
 
     void writeFixedHeader(struct huffmanBitWriter* w, bool isEof)
@@ -552,7 +545,7 @@ namespace golang::flate
             auto extraLengthBits = (unsigned int)(lengthExtraBits[lengthCode]);
             if(extraLengthBits > 0)
             {
-                auto extraLength = int32(length - lengthBase[lengthCode]);
+                auto extraLength = int32_t(length - lengthBase[lengthCode]);
                 writeBits(gocpp::recv(w), extraLength, extraLengthBits);
             }
             auto offset = offset(gocpp::recv(t));
@@ -561,7 +554,7 @@ namespace golang::flate
             auto extraOffsetBits = (unsigned int)(offsetExtraBits[offsetCode]);
             if(extraOffsetBits > 0)
             {
-                auto extraOffset = int32(offset - offsetBase[offsetCode]);
+                auto extraOffset = int32_t(offset - offsetBase[offsetCode]);
                 writeBits(gocpp::recv(w), extraOffset, extraOffsetBits);
             }
         }
@@ -618,12 +611,12 @@ namespace golang::flate
             w->bits >>= 48;
             w->nbits -= 48;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = byte(bits);
-            bytes[1] = byte(bits >> 8);
-            bytes[2] = byte(bits >> 16);
-            bytes[3] = byte(bits >> 24);
-            bytes[4] = byte(bits >> 32);
-            bytes[5] = byte(bits >> 40);
+            bytes[0] = unsigned char(bits);
+            bytes[1] = unsigned char(bits >> 8);
+            bytes[2] = unsigned char(bits >> 16);
+            bytes[3] = unsigned char(bits >> 24);
+            bytes[4] = unsigned char(bits >> 32);
+            bytes[5] = unsigned char(bits >> 40);
             n += 6;
             if(n < bufferFlushSize)
             {

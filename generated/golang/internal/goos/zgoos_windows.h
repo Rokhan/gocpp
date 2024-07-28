@@ -12,23 +12,5 @@
 namespace golang::goos
 {
     extern std::string GOOS;
-    extern int IsAix;
-    extern int IsAndroid;
-    extern int IsDarwin;
-    extern int IsDragonfly;
-    extern int IsFreebsd;
-    extern int IsHurd;
-    extern int IsIllumos;
-    extern int IsIos;
-    extern int IsJs;
-    extern int IsLinux;
-    extern int IsNacl;
-    extern int IsNetbsd;
-    extern int IsOpenbsd;
-    extern int IsPlan9;
-    extern int IsSolaris;
-    extern int IsWasip1;
-    extern int IsWindows;
-    extern int IsZos;
 }
 

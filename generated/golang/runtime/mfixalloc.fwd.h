@@ -4,10 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/runtime/internal/sys/nih.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
@@ -15,4 +12,6 @@ namespace golang::runtime
     struct fixalloc;
     struct mlink;
 }
-
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

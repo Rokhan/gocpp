@@ -20,7 +20,7 @@ namespace golang::slices
     {
         for(auto i = a + 1; i < b; i++)
         {
-            for(auto j = i; j > a && Less(gocpp::recv(cmp), data[j], data[j - 1]); j--)
+            for(auto j = i; j > a && cmp::Less(data[j], data[j - 1]); j--)
             {
                 std::tie(data[j], data[j - 1]) = std::tuple{data[j - 1], data[j]};
             }
@@ -37,11 +37,11 @@ namespace golang::slices
             {
                 break;
             }
-            if(child + 1 < hi && Less(gocpp::recv(cmp), data[first + child], data[first + child + 1]))
+            if(child + 1 < hi && cmp::Less(data[first + child], data[first + child + 1]))
             {
                 child++;
             }
-            if(! Less(gocpp::recv(cmp), data[first + root], data[first + child]))
+            if(! cmp::Less(data[first + root], data[first + child]))
             {
                 return;
             }
@@ -103,7 +103,7 @@ namespace golang::slices
                     return;
                 }
             }
-            if(a > 0 && ! Less(gocpp::recv(cmp), data[a - 1], data[pivot]))
+            if(a > 0 && ! cmp::Less(data[a - 1], data[pivot]))
             {
                 auto mid = partitionEqualOrdered(data, a, b, pivot);
                 a = mid;
@@ -134,13 +134,13 @@ namespace golang::slices
         bool alreadyPartitioned;
         std::tie(data[a], data[pivot]) = std::tuple{data[pivot], data[a]};
         auto [i, j] = std::tuple{a + 1, b - 1};
-        for(; i <= j && Less(gocpp::recv(cmp), data[i], data[a]); )
+        for(; i <= j && cmp::Less(data[i], data[a]); )
         {
             int newpivot;
             bool alreadyPartitioned;
             i++;
         }
-        for(; i <= j && ! Less(gocpp::recv(cmp), data[j], data[a]); )
+        for(; i <= j && ! cmp::Less(data[j], data[a]); )
         {
             int newpivot;
             bool alreadyPartitioned;
@@ -160,13 +160,13 @@ namespace golang::slices
         {
             int newpivot;
             bool alreadyPartitioned;
-            for(; i <= j && Less(gocpp::recv(cmp), data[i], data[a]); )
+            for(; i <= j && cmp::Less(data[i], data[a]); )
             {
                 int newpivot;
                 bool alreadyPartitioned;
                 i++;
             }
-            for(; i <= j && ! Less(gocpp::recv(cmp), data[j], data[a]); )
+            for(; i <= j && ! cmp::Less(data[j], data[a]); )
             {
                 int newpivot;
                 bool alreadyPartitioned;
@@ -194,12 +194,12 @@ namespace golang::slices
         for(; ; )
         {
             int newpivot;
-            for(; i <= j && ! Less(gocpp::recv(cmp), data[a], data[i]); )
+            for(; i <= j && ! cmp::Less(data[a], data[i]); )
             {
                 int newpivot;
                 i++;
             }
-            for(; i <= j && Less(gocpp::recv(cmp), data[a], data[j]); )
+            for(; i <= j && cmp::Less(data[a], data[j]); )
             {
                 int newpivot;
                 j--;
@@ -223,7 +223,7 @@ namespace golang::slices
         auto i = a + 1;
         for(auto j = 0; j < maxSteps; j++)
         {
-            for(; i < b && ! Less(gocpp::recv(cmp), data[i], data[i - 1]); )
+            for(; i < b && ! cmp::Less(data[i], data[i - 1]); )
             {
                 i++;
             }
@@ -240,7 +240,7 @@ namespace golang::slices
             {
                 for(auto j = i - 1; j >= 1; j--)
                 {
-                    if(! Less(gocpp::recv(cmp), data[j], data[j - 1]))
+                    if(! cmp::Less(data[j], data[j - 1]))
                     {
                         break;
                     }
@@ -251,7 +251,7 @@ namespace golang::slices
             {
                 for(auto j = i + 1; j < b; j++)
                 {
-                    if(! Less(gocpp::recv(cmp), data[j], data[j - 1]))
+                    if(! cmp::Less(data[j], data[j - 1]))
                     {
                         break;
                     }
@@ -331,7 +331,7 @@ namespace golang::slices
 
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps)
     {
-        if(Less(gocpp::recv(cmp), data[b], data[a]))
+        if(cmp::Less(data[b], data[a]))
         {
             *swaps++;
             return {b, a};
@@ -409,7 +409,7 @@ namespace golang::slices
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(Less(gocpp::recv(cmp), data[h], data[a]))
+                if(cmp::Less(data[h], data[a]))
                 {
                     i = h + 1;
                 }
@@ -431,7 +431,7 @@ namespace golang::slices
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(! Less(gocpp::recv(cmp), data[m], data[h]))
+                if(! cmp::Less(data[m], data[h]))
                 {
                     i = h + 1;
                 }
@@ -464,7 +464,7 @@ namespace golang::slices
         for(; start < r; )
         {
             auto c = int((unsigned int)(start + r) >> 1);
-            if(! Less(gocpp::recv(cmp), data[p - c], data[c]))
+            if(! cmp::Less(data[p - c], data[c]))
             {
                 start = c + 1;
             }

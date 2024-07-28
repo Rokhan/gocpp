@@ -3,7 +3,32 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::math
 {
+    const bool haveArchAcos = false;
+    const bool haveArchAcosh = false;
+    const bool haveArchAsin = false;
+    const bool haveArchAsinh = false;
+    const bool haveArchAtan = false;
+    const bool haveArchAtan2 = false;
+    const bool haveArchAtanh = false;
+    const bool haveArchCbrt = false;
+    const bool haveArchCos = false;
+    const bool haveArchCosh = false;
+    const bool haveArchErf = false;
+    const bool haveArchErfc = false;
+    const bool haveArchExpm1 = false;
+    const bool haveArchFrexp = false;
+    const bool haveArchLdexp = false;
+    const bool haveArchLog10 = false;
+    const bool haveArchLog2 = false;
+    const bool haveArchLog1p = false;
+    const bool haveArchMod = false;
+    const bool haveArchPow = false;
+    const bool haveArchRemainder = false;
+    const bool haveArchSin = false;
+    const bool haveArchSinh = false;
+    const bool haveArchTan = false;
+    const bool haveArchTanh = false;
 }
-

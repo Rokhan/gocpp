@@ -29,8 +29,6 @@ namespace golang::strconv
     int digitZero(gocpp::slice<unsigned char> dst);
     void trim(decimal* a);
     void Assign(struct decimal* a, uint64_t v);
-    extern int uintSize;
-    extern int maxShift;
     void rightShift(decimal* a, unsigned int k);
     struct leftCheat
     {

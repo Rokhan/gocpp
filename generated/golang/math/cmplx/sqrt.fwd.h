@@ -8,8 +8,3 @@
 #include "golang/math/copysign.fwd.h"
 #include "golang/math/hypot.fwd.h"
 #include "golang/math/sqrt.fwd.h"
-
-namespace golang::cmplx
-{
-}
-

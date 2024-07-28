@@ -3,9 +3,17 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
 
 namespace golang::goarch
 {
+    const long _DefaultPhysPageSize = 4096;
+    const long _PCQuantum = 1;
+    const long _MinFrameSize = 0;
 }
+#include "golang/internal/goarch/goarch.fwd.h"
 
+namespace golang::goarch
+{
+    const ArchFamilyType _ArchFamily = AMD64;
+    const int _StackAlign = PtrSize;
+}

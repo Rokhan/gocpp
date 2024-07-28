@@ -13,9 +13,9 @@
 
 #include "golang/internal/abi/funcpc.h"
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.h"
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
@@ -208,14 +208,14 @@ namespace golang::runtime
         gp->asyncSafePoint = false;
     }
 
-    uintptr_t asyncPreemptStack = ^ uintptr(0);
+    uintptr_t asyncPreemptStack = ~ uintptr_t(0);
     void init()
     {
-        auto f = findfunc(FuncPCABI0(gocpp::recv(abi), asyncPreempt));
+        auto f = findfunc(abi::FuncPCABI0(asyncPreempt));
         auto total = funcMaxSPDelta(f);
-        f = findfunc(FuncPCABIInternal(gocpp::recv(abi), asyncPreempt2));
+        f = findfunc(abi::FuncPCABIInternal(asyncPreempt2));
         total += funcMaxSPDelta(f);
-        asyncPreemptStack = uintptr(total) + 8 * goarch.PtrSize;
+        asyncPreemptStack = uintptr_t(total) + 8 * goarch::PtrSize;
         if(asyncPreemptStack > stackNosplit)
         {
             print("runtime: asyncPreemptStack=", asyncPreemptStack, "\n");
@@ -252,12 +252,12 @@ namespace golang::runtime
         {
             return {false, 0};
         }
-        auto [up, startpc] = pcdatavalue2(f, abi.PCDATA_UnsafePoint, pc);
-        if(up == abi.UnsafePointUnsafe)
+        auto [up, startpc] = pcdatavalue2(f, abi::PCDATA_UnsafePoint, pc);
+        if(up == abi::UnsafePointUnsafe)
         {
             return {false, 0};
         }
-        if(auto fd = funcdata(f, abi.FUNCDATA_LocalsPointerMaps); fd == nullptr || f.flag & abi.FuncFlagAsm != 0)
+        if(auto fd = funcdata(f, abi::FUNCDATA_LocalsPointerMaps); fd == nullptr || f.flag & abi::FuncFlagAsm != 0)
         {
             return {false, 0};
         }
@@ -271,9 +271,9 @@ namespace golang::runtime
         {
             auto condition = up;
             int conditionId = -1;
-            if(condition == abi.UnsafePointRestart1) { conditionId = 0; }
-            if(condition == abi.UnsafePointRestart2) { conditionId = 1; }
-            else if(condition == abi.UnsafePointRestartAtEntry) { conditionId = 2; }
+            if(condition == abi::UnsafePointRestart1) { conditionId = 0; }
+            if(condition == abi::UnsafePointRestart2) { conditionId = 1; }
+            else if(condition == abi::UnsafePointRestartAtEntry) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:

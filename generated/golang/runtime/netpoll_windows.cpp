@@ -11,8 +11,8 @@
 #include "golang/runtime/netpoll_windows.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/netpoll.h"  [Ignored, known errors]
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -22,8 +22,6 @@
 
 namespace golang::runtime
 {
-    int _DWORD_MAX = 0xffffffff;
-    uintptr_t _INVALID_HANDLE_VALUE = ^ uintptr(0);
     
     std::ostream& net_op::PrintTo(std::ostream& os) const
     {
@@ -78,9 +76,9 @@ namespace golang::runtime
 
     int32_t netpollopen(uintptr_t fd, pollDesc* pd)
     {
-        if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr(Pointer(gocpp::recv(unsafe), pd)), 0) == 0)
+        if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(unsafe::Pointer(pd)), 0) == 0)
         {
-            return int32(getlasterror());
+            return int32_t(getlasterror());
         }
         return 0;
     }
@@ -156,10 +154,10 @@ namespace golang::runtime
         {
             mp->blocked = true;
         }
-        if(stdcall6(_GetQueuedCompletionStatusEx, iocphandle, uintptr(Pointer(gocpp::recv(unsafe), & entries[0])), uintptr(n), uintptr(Pointer(gocpp::recv(unsafe), & n)), uintptr(wait), 0) == 0)
+        if(stdcall6(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(unsafe::Pointer(& entries[0])), uintptr_t(n), uintptr_t(unsafe::Pointer(& n)), uintptr_t(wait), 0) == 0)
         {
             mp->blocked = false;
-            errno = int32(getlasterror());
+            errno = int32_t(getlasterror());
             if(errno == _WAIT_TIMEOUT)
             {
                 return {gList {}, 0};
@@ -168,7 +166,7 @@ namespace golang::runtime
             go_throw("runtime: netpoll failed");
         }
         mp->blocked = false;
-        auto delta = int32(0);
+        auto delta = int32_t(0);
         for(i = 0; i < n; i++)
         {
             op = entries[i].op;
@@ -176,9 +174,9 @@ namespace golang::runtime
             {
                 errno = 0;
                 qty = 0;
-                if(stdcall5(_WSAGetOverlappedResult, op->pd->fd, uintptr(Pointer(gocpp::recv(unsafe), op)), uintptr(Pointer(gocpp::recv(unsafe), & qty)), 0, uintptr(Pointer(gocpp::recv(unsafe), & flags))) == 0)
+                if(stdcall5(_WSAGetOverlappedResult, op->pd->fd, uintptr_t(unsafe::Pointer(op)), uintptr_t(unsafe::Pointer(& qty)), 0, uintptr_t(unsafe::Pointer(& flags))) == 0)
                 {
-                    errno = int32(getlasterror());
+                    errno = int32_t(getlasterror());
                 }
                 delta += handlecompletion(& toRun, op, errno, qty);
             }

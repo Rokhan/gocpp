@@ -11,9 +11,9 @@
 #include "golang/runtime/debug.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
@@ -37,7 +37,7 @@ namespace golang::runtime
             return ret;
         }
         auto stw = stopTheWorldGC(stwGOMAXPROCS);
-        newprocs = int32(n);
+        newprocs = int32_t(n);
         startTheWorldGC(stw);
         return ret;
     }
@@ -49,10 +49,10 @@ namespace golang::runtime
 
     int64_t NumCgoCall()
     {
-        auto n = int64(Load64(gocpp::recv(atomic), & ncgocall));
-        for(auto mp = (m*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
+        auto n = int64_t(atomic::Load64(& ncgocall));
+        for(auto mp = (m*)(atomic::Loadp(unsafe::Pointer(& allm))); mp != nullptr; mp = mp->alllink)
         {
-            n += int64(mp->ncgocall);
+            n += int64_t(mp->ncgocall);
         }
         return n;
     }
@@ -61,7 +61,7 @@ namespace golang::runtime
     {
         auto total = Load(gocpp::recv(sched.totalMutexWaitTime));
         total += Load(gocpp::recv(sched.totalRuntimeLockWaitTime));
-        for(auto mp = (m*)(Loadp(gocpp::recv(atomic), Pointer(gocpp::recv(unsafe), & allm))); mp != nullptr; mp = mp->alllink)
+        for(auto mp = (m*)(atomic::Loadp(unsafe::Pointer(& allm))); mp != nullptr; mp = mp->alllink)
         {
             total += Load(gocpp::recv(mp->mLockProfile.waitTime));
         }

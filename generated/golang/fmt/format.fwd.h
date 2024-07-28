@@ -3,14 +3,19 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/strconv/ftoa.fwd.h"
-#include "golang/strconv/quote.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
+
+namespace golang::fmt
+{
+    const bool go_signed = true;
+    const bool go_unsigned = false;
+    struct fmtFlags;
+}
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
 
 namespace golang::fmt
 {
     struct fmt;
-    struct fmtFlags;
 }
-
+#include "golang/strconv/ftoa.fwd.h"
+#include "golang/strconv/quote.fwd.h"
+#include "golang/unicode/utf8/utf8.fwd.h"

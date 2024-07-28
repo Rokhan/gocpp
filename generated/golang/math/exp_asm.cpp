@@ -13,7 +13,6 @@
 
 namespace golang::math
 {
-    bool haveArchExp = true;
     double archExp(double x)
     /* convertBlockStmt, nil block */;
 

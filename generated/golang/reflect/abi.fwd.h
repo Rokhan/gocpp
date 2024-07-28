@@ -3,20 +3,28 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/abi.fwd.h"  [Ignored, known errors]
-#include "golang/internal/abi/abi_amd64.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
-#include "golang/reflect/float32reg_generic.fwd.h"
+
+namespace golang::reflect
+{
+    struct abiStep;
+    using abiStepKind = int;
+    struct abiSeq;
+    const abiStepKind abiStepBad = 0;
+    const abiStepKind abiStepStack = 1;
+    const abiStepKind abiStepIntReg = 2;
+    const abiStepKind abiStepPointer = 3;
+    const abiStepKind abiStepFloatReg = 4;
+}
+#include "golang/internal/abi/abi.fwd.h"
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::reflect
 {
     struct abiDesc;
-    struct abiSeq;
-    struct abiStep;
-    using abiStepKind = int;
 }
-
+#include "golang/internal/abi/abi_amd64.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/reflect/float32reg_generic.fwd.h"
+#include "golang/reflect/value.fwd.h"
+#include "golang/unsafe/unsafe.fwd.h"

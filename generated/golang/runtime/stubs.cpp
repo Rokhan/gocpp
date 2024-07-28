@@ -11,7 +11,7 @@
 #include "golang/runtime/stubs.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/runtime/map.h"
 #include "golang/runtime/runtime.h"
@@ -23,7 +23,7 @@ namespace golang::runtime
 {
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x)
     {
-        return Pointer(gocpp::recv(unsafe), uintptr(p) + x);
+        return unsafe::Pointer(uintptr_t(p) + x);
     }
 
     g* getg()
@@ -56,20 +56,19 @@ namespace golang::runtime
         memmove(to, from, n);
     }
 
-    float hashLoad = float(loadFactorNum) / float(loadFactorDen);
     bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size)
     /* convertBlockStmt, nil block */;
 
     unsafe::Pointer noescape(unsafe::Pointer p)
     {
-        auto x = uintptr(p);
-        return Pointer(gocpp::recv(unsafe), x ^ 0);
+        auto x = uintptr_t(p);
+        return unsafe::Pointer(x ^ 0);
     }
 
     T* noEscapePtr(T* p)
     {
-        auto x = uintptr(Pointer(gocpp::recv(unsafe), p));
-        return (T*)(Pointer(gocpp::recv(unsafe), x ^ 0));
+        auto x = uintptr_t(unsafe::Pointer(p));
+        return (T*)(unsafe::Pointer(x ^ 0));
     }
 
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt)
@@ -243,7 +242,7 @@ namespace golang::runtime
 
     int bool2int(bool x)
     {
-        return int(*(uint8_t*)(Pointer(gocpp::recv(unsafe), & x)));
+        return int(*(uint8_t*)(unsafe::Pointer(& x)));
     }
 
     void abort()
@@ -285,6 +284,6 @@ namespace golang::runtime
     void sigpanic0()
     /* convertBlockStmt, nil block */;
 
-    int intArgRegs = abi.IntArgRegs;
+    int intArgRegs = abi::IntArgRegs;
 }
 

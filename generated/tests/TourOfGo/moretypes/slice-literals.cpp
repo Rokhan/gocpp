@@ -15,13 +15,7 @@
 
 namespace golang::main
 {
-    void main()
-    {
-        auto q = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
-        mocklib::Println(q);
-        auto r = gocpp::slice<bool> {true, false, true, true, false, true};
-        mocklib::Println(r);
-        struct gocpp_id_0
+    struct gocpp_id_0
         {
             int i;
             bool b;
@@ -38,6 +32,18 @@ namespace golang::main
             }
         };
 
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
+    void main()
+    {
+        auto q = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
+        mocklib::Println(q);
+        auto r = gocpp::slice<bool> {true, false, true, true, false, true};
+        mocklib::Println(r);
         auto s = gocpp::slice<gocpp_id_0> { {2, true},  {3, false},  {5, true},  {7, true},  {11, false},  {13, true}};
         mocklib::Println(s);
     }

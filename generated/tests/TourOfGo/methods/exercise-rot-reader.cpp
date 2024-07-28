@@ -48,7 +48,7 @@ namespace golang::main
     {
         auto s = strings::NewReader("Lbh penpxrq gur pbqr!");
         auto r = rot13Reader {s};
-        Copy(gocpp::recv(io), os.Stdout, & r);
+        io::Copy(os::Stdout, & r);
     }
 
 }

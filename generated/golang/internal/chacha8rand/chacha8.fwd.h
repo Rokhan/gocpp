@@ -3,9 +3,13 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::chacha8rand
 {
+    const long ctrInc = 4;
+    const long ctrMax = 16;
+    const long chunk = 32;
+    const long reseed = 4;
     struct State;
     struct errUnmarshalChaCha8;
 }
-

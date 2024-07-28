@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/goarch/goarch.fwd.h"  [Ignored, known errors]
 
 namespace golang::math
 {
+    const uintptr_t MaxUintptr = ~ uintptr_t(0);
 }
-
+#include "golang/internal/goarch/goarch.fwd.h"

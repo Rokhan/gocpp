@@ -11,36 +11,6 @@
 
 namespace golang::utf8
 {
-    extern char RuneError;
-    extern int RuneSelf;
-    extern char MaxRune;
-    extern int UTFMax;
-    extern int surrogateMin;
-    extern int surrogateMax;
-    extern int t1;
-    extern int tx;
-    extern int t2;
-    extern int t3;
-    extern int t4;
-    extern int t5;
-    extern int maskx;
-    extern int mask2;
-    extern int mask3;
-    extern int mask4;
-    extern int rune1Max;
-    extern int rune2Max;
-    extern int rune3Max;
-    extern int locb;
-    extern int hicb;
-    extern int xx;
-    extern int as;
-    extern int s1;
-    extern int s2;
-    extern int s3;
-    extern int s4;
-    extern int s5;
-    extern int s6;
-    extern int s7;
     extern gocpp::array<uint8_t, 256> first;
     struct acceptRange
     {

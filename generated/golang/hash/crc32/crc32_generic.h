@@ -16,7 +16,6 @@ namespace golang::crc32
     Table* simpleMakeTable(uint32_t poly);
     void simplePopulateTable(uint32_t poly, Table* t);
     uint32_t simpleUpdate(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p);
-    extern int slicing8Cutoff;
     slicing8Table* slicingMakeTable(uint32_t poly);
     uint32_t slicingUpdate(uint32_t crc, slicing8Table* tab, gocpp::slice<unsigned char> p);
 }

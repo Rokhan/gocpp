@@ -11,11 +11,11 @@
 #include "golang/runtime/print.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/slice.h"  [Ignored, known errors]
+#include "golang/runtime/slice.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
@@ -27,7 +27,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> bytes(std::string s)
     {
         gocpp::slice<unsigned char> ret;
-        auto rp = (slice*)(Pointer(gocpp::recv(unsafe), & ret));
+        auto rp = (slice*)(unsafe::Pointer(& ret));
         auto sp = stringStructOf(& s);
         rp->array = sp->str;
         rp->len = sp->len;
@@ -182,7 +182,7 @@ namespace golang::runtime
         for(auto i = 0; i < n; i++)
         {
             auto s = int(v);
-            buf[i + 2] = byte(s + '0');
+            buf[i + 2] = unsigned char(s + '0');
             v -= double(s);
             v *= 10;
         }
@@ -195,9 +195,9 @@ namespace golang::runtime
             e = - e;
             buf[n + 3] = '-';
         }
-        buf[n + 4] = byte(e / 100) + '0';
-        buf[n + 5] = byte(e / 10) % 10 + '0';
-        buf[n + 6] = byte(e % 10) + '0';
+        buf[n + 4] = unsigned char(e / 100) + '0';
+        buf[n + 5] = unsigned char(e / 10) % 10 + '0';
+        buf[n + 6] = unsigned char(e % 10) + '0';
         gwrite(buf.make_slice(0, ));
     }
 
@@ -212,7 +212,7 @@ namespace golang::runtime
         auto i = len(buf);
         for(i--; i > 0; i--)
         {
-            buf[i] = byte(v % 10 + '0');
+            buf[i] = unsigned char(v % 10 + '0');
             if(v < 10)
             {
                 break;
@@ -232,7 +232,7 @@ namespace golang::runtime
         printuint(uint64_t(v));
     }
 
-    int minhexdigits = 0;
+    long minhexdigits = 0;
     void printhex(uint64_t v)
     {
         auto dig = "0123456789abcdef";
@@ -256,7 +256,7 @@ namespace golang::runtime
 
     void printpointer(unsafe::Pointer p)
     {
-        printhex(uint64_t(uintptr(p)));
+        printhex(uint64_t(uintptr_t(p)));
     }
 
     void printuintptr(uintptr_t p)
@@ -271,7 +271,7 @@ namespace golang::runtime
 
     void printslice(gocpp::slice<unsigned char> s)
     {
-        auto sp = (slice*)(Pointer(gocpp::recv(unsafe), & s));
+        auto sp = (slice*)(unsafe::Pointer(& s));
         print("[", len(s), "/", cap(s), "]");
         printpointer(sp->array);
     }
@@ -291,8 +291,8 @@ namespace golang::runtime
         printlock();
         gocpp::array<unsigned char, 1> markbuf = {};
         markbuf[0] = ' ';
-        minhexdigits = int(Sizeof(gocpp::recv(unsafe), uintptr(0)) * 2);
-        for(auto i = uintptr(0); p + i < end; i += goarch.PtrSize)
+        minhexdigits = int(unsafe::Sizeof(uintptr_t(0)) * 2);
+        for(auto i = uintptr_t(0); p + i < end; i += goarch::PtrSize)
         {
             if(i % 16 == 0)
             {
@@ -311,7 +311,7 @@ namespace golang::runtime
                 }
             }
             gwrite(markbuf.make_slice(0, ));
-            auto val = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), p + i));
+            auto val = *(uintptr_t*)(unsafe::Pointer(p + i));
             print(hex(val));
             print(" ");
             auto fn = findfunc(val);

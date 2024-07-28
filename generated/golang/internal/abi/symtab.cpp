@@ -13,49 +13,5 @@
 
 namespace golang::abi
 {
-    FuncFlag FuncFlagTopFrame = 1 << 0;
-    FuncFlag FuncFlagSPWrite = 1 << 1;
-    FuncFlag FuncFlagAsm = 1 << 2;
-    FuncID FuncIDNormal = 0;
-    FuncID FuncID_abort = 1;
-    FuncID FuncID_asmcgocall = 2;
-    FuncID FuncID_asyncPreempt = 3;
-    FuncID FuncID_cgocallback = 4;
-    FuncID FuncID_corostart = 5;
-    FuncID FuncID_debugCallV2 = 6;
-    FuncID FuncID_gcBgMarkWorker = 7;
-    FuncID FuncID_goexit = 8;
-    FuncID FuncID_gogo = 9;
-    FuncID FuncID_gopanic = 10;
-    FuncID FuncID_handleAsyncEvent = 11;
-    FuncID FuncID_mcall = 12;
-    FuncID FuncID_morestack = 13;
-    FuncID FuncID_mstart = 14;
-    FuncID FuncID_panicwrap = 15;
-    FuncID FuncID_rt0_go = 16;
-    FuncID FuncID_runfinq = 17;
-    FuncID FuncID_runtime_main = 18;
-    FuncID FuncID_sigpanic = 19;
-    FuncID FuncID_systemstack = 20;
-    FuncID FuncID_systemstack_switch = 21;
-    FuncID FuncIDWrapper = 22;
-    int ArgsSizeUnknown = - 0x80000000;
-    int PCDATA_UnsafePoint = 0;
-    int PCDATA_StackMapIndex = 1;
-    int PCDATA_InlTreeIndex = 2;
-    int PCDATA_ArgLiveIndex = 3;
-    int FUNCDATA_ArgsPointerMaps = 0;
-    int FUNCDATA_LocalsPointerMaps = 1;
-    int FUNCDATA_StackObjects = 2;
-    int FUNCDATA_InlTree = 3;
-    int FUNCDATA_OpenCodedDeferInfo = 4;
-    int FUNCDATA_ArgInfo = 5;
-    int FUNCDATA_ArgLiveInfo = 6;
-    int FUNCDATA_WrapInfo = 7;
-    int UnsafePointSafe = - 1;
-    int UnsafePointUnsafe = - 2;
-    int UnsafePointRestart1 = - 3;
-    int UnsafePointRestart2 = - 4;
-    int UnsafePointRestartAtEntry = - 5;
 }
 

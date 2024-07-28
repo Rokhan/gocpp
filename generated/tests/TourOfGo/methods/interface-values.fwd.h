@@ -3,13 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/math/const.fwd.h"
 
 namespace golang::main
 {
-    using F = double;
     struct I;
     struct T;
+    using F = double;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/math/const.fwd.h"

@@ -20,13 +20,6 @@
 
 namespace golang::runtime
 {
-    int addrBits = 48;
-    int tagBits = 64 - addrBits + 3;
-    int aixAddrBits = 57;
-    int aixTagBits = 64 - aixAddrBits + 3;
-    int riscv64AddrBits = 56;
-    int riscv64TagBits = 64 - riscv64AddrBits + 3;
-    int taggedPointerBits = (goos.IsAix * aixTagBits) + (goarch.IsRiscv64 * riscv64TagBits) + ((1 - goos.IsAix) * (1 - goarch.IsRiscv64) * tagBits);
     taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
     {
         if(GOOS == "aix")
@@ -35,35 +28,35 @@ namespace golang::runtime
             {
                 go_throw("check this code for aix on non-ppc64");
             }
-            return taggedPointer((uint64_t(uintptr(ptr)) << (64 - aixAddrBits)) | uint64_t(tag & ((1 << aixTagBits) - 1)));
+            return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - aixAddrBits)) | uint64_t(tag & ((1 << aixTagBits) - 1)));
         }
         if(GOARCH == "riscv64")
         {
-            return taggedPointer((uint64_t(uintptr(ptr)) << (64 - riscv64AddrBits)) | uint64_t(tag & ((1 << riscv64TagBits) - 1)));
+            return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - riscv64AddrBits)) | uint64_t(tag & ((1 << riscv64TagBits) - 1)));
         }
-        return taggedPointer((uint64_t(uintptr(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
+        return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
     }
 
     unsafe::Pointer pointer(taggedPointer tp)
     {
         if(GOARCH == "amd64")
         {
-            return Pointer(gocpp::recv(unsafe), uintptr((int64(tp) >> tagBits) << 3));
+            return unsafe::Pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
         }
         if(GOOS == "aix")
         {
-            return Pointer(gocpp::recv(unsafe), uintptr(((tp >> aixTagBits) << 3) | (0xa << 56)));
+            return unsafe::Pointer(uintptr_t(((tp >> aixTagBits) << 3) | (0xa << 56)));
         }
         if(GOARCH == "riscv64")
         {
-            return Pointer(gocpp::recv(unsafe), uintptr((tp >> riscv64TagBits) << 3));
+            return unsafe::Pointer(uintptr_t((tp >> riscv64TagBits) << 3));
         }
-        return Pointer(gocpp::recv(unsafe), uintptr((tp >> tagBits) << 3));
+        return unsafe::Pointer(uintptr_t((tp >> tagBits) << 3));
     }
 
     uintptr_t tag(taggedPointer tp)
     {
-        return uintptr(tp & ((1 << taggedPointerBits) - 1));
+        return uintptr_t(tp & ((1 << taggedPointerBits) - 1));
     }
 
 }

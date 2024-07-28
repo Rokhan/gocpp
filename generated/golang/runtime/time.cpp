@@ -50,18 +50,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    int timerNoStatus = 0;
-    int timerWaiting = 1;
-    int timerRunning = 2;
-    int timerDeleted = 3;
-    int timerRemoving = 4;
-    int timerRemoved = 5;
-    int timerModifying = 6;
-    int timerModifiedEarlier = 7;
-    int timerModifiedLater = 8;
-    int timerMoving = 9;
-    int maxWhen = (1 << 63) - 1;
-    bool verifyTimers = false;
     void timeSleep(int64_t ns)
     {
         if(ns <= 0)
@@ -82,7 +70,7 @@ namespace golang::runtime
         {
             t->nextwhen = maxWhen;
         }
-        gopark(resetForSleep, Pointer(gocpp::recv(unsafe), t), waitReasonSleep, traceBlockSleep, 1);
+        gopark(resetForSleep, unsafe::Pointer(t), waitReasonSleep, traceBlockSleep, 1);
     }
 
     bool resetForSleep(g* gp, unsafe::Pointer ut)
@@ -96,7 +84,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(Pointer(gocpp::recv(unsafe), t));
+            racerelease(unsafe::Pointer(t));
         }
         addtimer(t);
     }
@@ -110,7 +98,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(Pointer(gocpp::recv(unsafe), t));
+            racerelease(unsafe::Pointer(t));
         }
         return resettimer(t, when);
     }
@@ -331,6 +319,7 @@ namespace golang::runtime
         auto wasRemoved = false;
         bool pending = {};
         m* mp = {};
+        loop:
         for(; ; )
         {
             //Go switch emulation
@@ -517,6 +506,7 @@ namespace golang::runtime
     {
         for(auto [_, t] : timers)
         {
+            loop:
             for(; ; )
             {
                 //Go switch emulation
@@ -805,9 +795,9 @@ namespace golang::runtime
             auto ppcur = ptr(gocpp::recv(getg()->m->p));
             if(ppcur->timerRaceCtx == 0)
             {
-                ppcur->timerRaceCtx = racegostart(FuncPCABIInternal(gocpp::recv(abi), runtimer) + sys.PCQuantum);
+                ppcur->timerRaceCtx = racegostart(abi::FuncPCABIInternal(runtimer) + sys::PCQuantum);
             }
-            raceacquirectx(ppcur->timerRaceCtx, Pointer(gocpp::recv(unsafe), t));
+            raceacquirectx(ppcur->timerRaceCtx, unsafe::Pointer(t));
         }
         auto f = t->f;
         auto arg = t->arg;
@@ -857,10 +847,11 @@ namespace golang::runtime
     void clearDeletedTimers(p* pp)
     {
         Store(gocpp::recv(pp->timerModifiedEarliest), 0);
-        auto cdel = int32(0);
+        auto cdel = int32_t(0);
         auto to = 0;
         auto changedHeap = false;
         auto timers = pp->timers;
+        nextTimer:
         for(auto [_, t] : timers)
         {
             for(; ; )
@@ -1012,7 +1003,7 @@ namespace golang::runtime
 
     int64_t timeSleepUntil()
     {
-        auto next = int64(maxWhen);
+        auto next = int64_t(maxWhen);
         lock(& allpLock);
         for(auto [_, pp] : allp)
         {

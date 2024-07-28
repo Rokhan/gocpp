@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
+#include "golang/runtime/atomic_pointer.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/atomic_pointer.h"
-#include "golang/runtime/extern.h"
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -196,8 +196,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct textsect& value);
-    extern int minfunc;
-    extern int pcbucketsize;
     struct findfuncbucket
     {
         uint32_t idx;
@@ -210,7 +208,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value);
     void moduledataverify();
-    extern bool debugPcln;
     void moduledataverify1(moduledata* datap);
     uintptr_t textAddr(struct moduledata* md, uint32_t off32);
     std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc);

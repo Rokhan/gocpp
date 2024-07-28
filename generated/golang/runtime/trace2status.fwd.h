@@ -3,18 +3,31 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    using traceGoStatus = uint8_t;
+    using traceProcStatus = uint8_t;
+    const traceGoStatus traceGoBad = 0;
+    const traceGoStatus traceGoRunnable = 1;
+    const traceGoStatus traceGoRunning = 2;
+    const traceGoStatus traceGoSyscall = 3;
+    const traceGoStatus traceGoWaiting = 4;
+    const traceProcStatus traceProcBad = 0;
+    const traceProcStatus traceProcRunning = 1;
+    const traceProcStatus traceProcIdle = 2;
+    const traceProcStatus traceProcSyscall = 3;
+    const traceProcStatus traceProcSyscallAbandoned = 4;
+}
 #include "golang/runtime/internal/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    struct traceSchedResourceState;
+}
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/trace2.fwd.h"
 #include "golang/runtime/trace2buf.fwd.h"
 #include "golang/runtime/trace2event.fwd.h"
-
-namespace golang::runtime
-{
-    using traceGoStatus = uint8_t;
-    using traceProcStatus = uint8_t;
-    struct traceSchedResourceState;
-}
-

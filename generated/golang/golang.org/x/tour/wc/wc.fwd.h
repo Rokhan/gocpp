@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::wc
 {
+    struct gocpp_id_0;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

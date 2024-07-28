@@ -3,15 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
     using ArbitraryType = int;
     using IntegerType = int;
-    using Pointer = ArbitraryType*;
     struct Vertex;
+    using Pointer = ArbitraryType*;
     using VertexAlias = Vertex;
     using VertexPtr = Vertex*;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

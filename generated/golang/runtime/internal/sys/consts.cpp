@@ -11,17 +11,11 @@
 #include "golang/runtime/internal/sys/consts.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goos/zgoos_windows.h"
 #include "golang/runtime/internal/sys/consts_norace.h"
 
 namespace golang::sys
 {
-    int StackGuardMultiplier = 1 + goos.IsAix + isRace;
-    int DefaultPhysPageSize = goarch.DefaultPhysPageSize;
-    int PCQuantum = goarch.PCQuantum;
-    int Int64Align = goarch.PtrSize;
-    int MinFrameSize = goarch.MinFrameSize;
-    int StackAlign = goarch.StackAlign;
 }
 

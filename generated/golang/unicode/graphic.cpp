@@ -15,17 +15,6 @@
 
 namespace golang::unicode
 {
-    int pC = 1 << 0;
-    int pP = 1 << 1;
-    int pN = 1 << 2;
-    int pS = 1 << 3;
-    int pZ = 1 << 4;
-    int pLu = 1 << 5;
-    int pLl = 1 << 6;
-    int pp = 1 << 7;
-    int pg = pp | pZ;
-    int pLo = pLl | pLu;
-    int pLmask = pLo;
     gocpp::slice<RangeTable*> GraphicRanges = gocpp::slice<RangeTable*> {L, M, N, P, S, Zs};
     gocpp::slice<RangeTable*> PrintRanges = gocpp::slice<RangeTable*> {L, M, N, P, S};
     bool IsGraphic(gocpp::rune r)

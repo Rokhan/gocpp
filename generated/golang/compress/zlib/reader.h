@@ -19,8 +19,6 @@
 
 namespace golang::zlib
 {
-    extern int zlibDeflate;
-    extern int zlibMaxWindow;
     extern std::string ErrChecksum;
     extern std::string ErrDictionary;
     extern std::string ErrHeader;

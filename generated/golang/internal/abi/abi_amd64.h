@@ -11,8 +11,5 @@
 
 namespace golang::abi
 {
-    extern int IntArgRegs;
-    extern int FloatArgRegs;
-    extern int EffectiveFloatRegSize;
 }
 

@@ -11,10 +11,10 @@
 #include "golang/runtime/sigqueue.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -53,10 +53,14 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 sig;
-    int sigIdle = 0;
-    int sigReceiving = 1;
-    int sigSending = 2;
     bool sigsend(uint32_t s)
     {
         auto bit = uint32_t(1) << (unsigned int)(s & 31);
@@ -65,7 +69,7 @@ namespace golang::runtime
             return false;
         }
         Add(gocpp::recv(sig.delivering), 1);
-        if(auto w = Load(gocpp::recv(atomic), & sig.wanted[s / 32]); w & bit == 0)
+        if(auto w = atomic::Load(& sig.wanted[s / 32]); w & bit == 0)
         {
             Add(gocpp::recv(sig.delivering), - 1);
             return false;
@@ -78,11 +82,12 @@ namespace golang::runtime
                 Add(gocpp::recv(sig.delivering), - 1);
                 return true;
             }
-            if(Cas(gocpp::recv(atomic), & sig.mask[s / 32], mask, mask | bit))
+            if(atomic::Cas(& sig.mask[s / 32], mask, mask | bit))
             {
                 break;
             }
         }
+        Send:
         for(; ; )
         {
             //Go switch emulation
@@ -143,6 +148,7 @@ namespace golang::runtime
                     return i;
                 }
             }
+            Receive:
             for(; ; )
             {
                 //Go switch emulation
@@ -186,7 +192,7 @@ namespace golang::runtime
             }
             for(auto [i, gocpp_ignored] : sig.mask)
             {
-                sig.recv[i] = Xchg(gocpp::recv(atomic), & sig.mask[i], 0);
+                sig.recv[i] = atomic::Xchg(& sig.mask[i], 0);
             }
         }
     }
@@ -223,10 +229,10 @@ namespace golang::runtime
         }
         auto w = sig.wanted[s / 32];
         w |= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.wanted[s / 32], w);
+        atomic::Store(& sig.wanted[s / 32], w);
         auto i = sig.ignored[s / 32];
         i &^= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.ignored[s / 32], i);
+        atomic::Store(& sig.ignored[s / 32], i);
         sigenable(s);
     }
 
@@ -239,7 +245,7 @@ namespace golang::runtime
         sigdisable(s);
         auto w = sig.wanted[s / 32];
         w &^= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.wanted[s / 32], w);
+        atomic::Store(& sig.wanted[s / 32], w);
     }
 
     void signal_ignore(uint32_t s)
@@ -251,22 +257,22 @@ namespace golang::runtime
         sigignore(s);
         auto w = sig.wanted[s / 32];
         w &^= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.wanted[s / 32], w);
+        atomic::Store(& sig.wanted[s / 32], w);
         auto i = sig.ignored[s / 32];
         i |= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.ignored[s / 32], i);
+        atomic::Store(& sig.ignored[s / 32], i);
     }
 
     void sigInitIgnored(uint32_t s)
     {
         auto i = sig.ignored[s / 32];
         i |= 1 << (s & 31);
-        Store(gocpp::recv(atomic), & sig.ignored[s / 32], i);
+        atomic::Store(& sig.ignored[s / 32], i);
     }
 
     bool signal_ignored(uint32_t s)
     {
-        auto i = Load(gocpp::recv(atomic), & sig.ignored[s / 32]);
+        auto i = atomic::Load(& sig.ignored[s / 32]);
         return i & (1 << (s & 31)) != 0;
     }
 

@@ -9,7 +9,7 @@
 #include "golang/runtime/trace2region.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
@@ -34,7 +34,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _;
         traceRegionAllocBlock* next;
-        gocpp::array<unsigned char, (64 << 10) - goarch.PtrSize> data;
+        gocpp::array<unsigned char, (64 << 10) - goarch::PtrSize> data;
 
         using isGoStruct = void;
 

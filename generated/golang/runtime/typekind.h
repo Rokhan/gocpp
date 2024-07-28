@@ -13,35 +13,6 @@
 
 namespace golang::runtime
 {
-    extern int kindBool;
-    extern int kindInt;
-    extern int kindInt8;
-    extern int kindInt16;
-    extern int kindInt32;
-    extern int kindInt64;
-    extern int kindUint;
-    extern int kindUint8;
-    extern int kindUint16;
-    extern int kindUint32;
-    extern int kindUint64;
-    extern int kindUintptr;
-    extern int kindFloat32;
-    extern int kindFloat64;
-    extern int kindComplex64;
-    extern int kindComplex128;
-    extern int kindArray;
-    extern int kindChan;
-    extern int kindFunc;
-    extern int kindInterface;
-    extern int kindMap;
-    extern int kindPtr;
-    extern int kindSlice;
-    extern int kindString;
-    extern int kindStruct;
-    extern int kindUnsafePointer;
-    extern int kindDirectIface;
-    extern int kindGCProg;
-    extern int kindMask;
     bool isDirectIface(_type* t);
 }
 

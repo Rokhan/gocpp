@@ -3,11 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
-#include "golang/strings/reader.fwd.h"
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
 
 namespace golang::main
 {
     struct rot13Reader;
 }
-
+#include "golang/strings/reader.fwd.h"

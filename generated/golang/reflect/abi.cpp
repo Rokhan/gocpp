@@ -11,10 +11,10 @@
 #include "golang/reflect/abi.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/float32reg_generic.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
@@ -22,9 +22,9 @@
 
 namespace golang::reflect
 {
-    int intArgRegs = abi.IntArgRegs;
-    int floatArgRegs = abi.FloatArgRegs;
-    uintptr_t floatRegSize = uintptr(abi.EffectiveFloatRegSize);
+    int intArgRegs = abi::IntArgRegs;
+    int floatArgRegs = abi::FloatArgRegs;
+    uintptr_t floatRegSize = uintptr_t(abi::EffectiveFloatRegSize);
     
     std::ostream& abiStep::PrintTo(std::ostream& os) const
     {
@@ -44,11 +44,6 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    abiStepKind abiStepBad = 0;
-    abiStepKind abiStepStack = 1;
-    abiStepKind abiStepIntReg = 2;
-    abiStepKind abiStepPointer = 3;
-    abiStepKind abiStepFloatReg = 4;
     
     std::ostream& abiSeq::PrintTo(std::ostream& os) const
     {
@@ -105,14 +100,14 @@ namespace golang::reflect
         a->valueStart = append(a->valueStart, pStart);
         if(Size(gocpp::recv(t)) == 0)
         {
-            a->stackBytes = align(a->stackBytes, uintptr(Align(gocpp::recv(t))));
+            a->stackBytes = align(a->stackBytes, uintptr_t(Align(gocpp::recv(t))));
             return nullptr;
         }
         auto aOld = *a;
         if(! regAssign(gocpp::recv(a), t, 0))
         {
             *a = aOld;
-            stackAssign(gocpp::recv(a), Size(gocpp::recv(t)), uintptr(Align(gocpp::recv(t))));
+            stackAssign(gocpp::recv(a), Size(gocpp::recv(t)), uintptr_t(Align(gocpp::recv(t))));
             return & a->steps[len(a->steps) - 1];
         }
         return nullptr;
@@ -125,17 +120,17 @@ namespace golang::reflect
         bool ptr = {};
         if(ifaceIndir(rcvr) || Pointers(gocpp::recv(rcvr)))
         {
-            ok = assignIntN(gocpp::recv(a), 0, goarch.PtrSize, 1, 0b1);
+            ok = assignIntN(gocpp::recv(a), 0, goarch::PtrSize, 1, 0b1);
             ptr = true;
         }
         else
         {
-            ok = assignIntN(gocpp::recv(a), 0, goarch.PtrSize, 1, 0b0);
+            ok = assignIntN(gocpp::recv(a), 0, goarch::PtrSize, 1, 0b0);
             ptr = false;
         }
         if(! ok)
         {
-            stackAssign(gocpp::recv(a), goarch.PtrSize, goarch.PtrSize);
+            stackAssign(gocpp::recv(a), goarch::PtrSize, goarch::PtrSize);
             return {& a->steps[len(a->steps) - 1], ptr};
         }
         return {nullptr, ptr};
@@ -198,7 +193,7 @@ namespace golang::reflect
                 case 16:
                     //Go switch emulation
                     {
-                        auto condition = goarch.PtrSize;
+                        auto condition = goarch::PtrSize;
                         int conditionId = -1;
                         if(condition == 4) { conditionId = 0; }
                         else if(condition == 8) { conditionId = 1; }
@@ -224,16 +219,16 @@ namespace golang::reflect
                     return assignFloatN(gocpp::recv(a), offset, 8, 2);
                     break;
                 case 21:
-                    return assignIntN(gocpp::recv(a), offset, goarch.PtrSize, 2, 0b01);
+                    return assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 2, 0b01);
                     break;
                 case 22:
-                    return assignIntN(gocpp::recv(a), offset, goarch.PtrSize, 2, 0b10);
+                    return assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 2, 0b10);
                     break;
                 case 23:
-                    return assignIntN(gocpp::recv(a), offset, goarch.PtrSize, 3, 0b001);
+                    return assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 3, 0b001);
                     break;
                 case 24:
-                    auto tt = (arrayType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto tt = (arrayType*)(unsafe::Pointer(t));
                     //Go switch emulation
                     {
                         auto condition = tt->Len;
@@ -255,7 +250,7 @@ namespace golang::reflect
                     }
                     break;
                 case 25:
-                    auto st = (structType*)(Pointer(gocpp::recv(unsafe), t));
+                    auto st = (structType*)(unsafe::Pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -281,7 +276,7 @@ namespace golang::reflect
         {
             gocpp::panic("invalid n");
         }
-        if(ptrMap != 0 && size != goarch.PtrSize)
+        if(ptrMap != 0 && size != goarch::PtrSize)
         {
             gocpp::panic("non-empty pointer map passed for non-pointer-size values");
         }
@@ -296,7 +291,7 @@ namespace golang::reflect
             {
                 kind = abiStepPointer;
             }
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = kind; x.offset = offset + uintptr(i) * size; x.size = size; x.ireg = a->iregs; }));
+            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = kind; x.offset = offset + uintptr_t(i) * size; x.size = size; x.ireg = a->iregs; }));
             a->iregs++;
         }
         return true;
@@ -314,7 +309,7 @@ namespace golang::reflect
         }
         for(auto i = 0; i < n; i++)
         {
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = abiStepFloatReg; x.offset = offset + uintptr(i) * size; x.size = size; x.freg = a->fregs; }));
+            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = abiStepFloatReg; x.offset = offset + uintptr_t(i) * size; x.size = size; x.freg = a->fregs; }));
             a->fregs++;
         }
         return true;
@@ -381,7 +376,7 @@ namespace golang::reflect
 
     abiDesc newAbiDesc(funcType* t, abi::Type* rcvr)
     {
-        auto spill = uintptr(0);
+        auto spill = uintptr_t(0);
         auto stackPtrs = go_new(bitVector);
         auto inRegPtrs = abi::IntArgRegBitmap {};
         abiSeq in = {};
@@ -401,7 +396,7 @@ namespace golang::reflect
             }
             else
             {
-                spill += goarch.PtrSize;
+                spill += goarch::PtrSize;
             }
         }
         for(auto [i, arg] : InSlice(gocpp::recv(t)))
@@ -413,7 +408,7 @@ namespace golang::reflect
             }
             else
             {
-                spill = align(spill, uintptr(Align(gocpp::recv(arg))));
+                spill = align(spill, uintptr_t(Align(gocpp::recv(arg))));
                 spill += Size(gocpp::recv(arg));
                 for(auto [_, st] : stepsForValue(gocpp::recv(in), i))
                 {
@@ -424,9 +419,9 @@ namespace golang::reflect
                 }
             }
         }
-        spill = align(spill, goarch.PtrSize);
+        spill = align(spill, goarch::PtrSize);
         auto stackCallArgsSize = in.stackBytes;
-        auto retOffset = align(in.stackBytes, goarch.PtrSize);
+        auto retOffset = align(in.stackBytes, goarch::PtrSize);
         auto outRegPtrs = abi::IntArgRegBitmap {};
         abiSeq out = {};
         out.stackBytes = retOffset;
@@ -476,7 +471,7 @@ namespace golang::reflect
                     *(float*)(to) = archFloat32FromReg(r->Floats[reg]);
                     break;
                 case 1:
-                    *(double*)(to) = *(double*)(Pointer(gocpp::recv(unsafe), & r->Floats[reg]));
+                    *(double*)(to) = *(double*)(unsafe::Pointer(& r->Floats[reg]));
                     break;
                 default:
                     gocpp::panic("bad argSize");

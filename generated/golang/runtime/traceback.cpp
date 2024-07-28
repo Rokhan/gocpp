@@ -13,13 +13,13 @@
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
 #include "golang/internal/bytealg/indexbyte_native.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/alg.h"  [Ignored, known errors]
 #include "golang/runtime/asan0.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/panic.h"
@@ -27,7 +27,7 @@
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/stkframe.h"  [Ignored, known errors]
+#include "golang/runtime/stkframe.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
@@ -37,13 +37,6 @@
 
 namespace golang::runtime
 {
-    bool usesLR = sys.MinFrameSize > 0;
-    int tracebackInnerFrames = 50;
-    int tracebackOuterFrames = 50;
-    unwindFlags unwindPrintErrors = 1 << 0;
-    unwindFlags unwindSilentErrors = 1 << 1;
-    unwindFlags unwindTrap = 1 << 2;
-    unwindFlags unwindJumpStack = 1 << 3;
     
     std::ostream& unwinder::PrintTo(std::ostream& os) const
     {
@@ -64,7 +57,7 @@ namespace golang::runtime
 
     void init(struct unwinder* u, g* gp, unwindFlags flags)
     {
-        initAt(gocpp::recv(u), ^ uintptr(0), ^ uintptr(0), ^ uintptr(0), gp, flags);
+        initAt(gocpp::recv(u), ~ uintptr_t(0), ~ uintptr_t(0), ~ uintptr_t(0), gp, flags);
     }
 
     void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, g* gp, unwindFlags flags)
@@ -73,7 +66,7 @@ namespace golang::runtime
         {
             go_throw("cannot trace user goroutine on its own stack");
         }
-        if(pc0 == ^ uintptr(0) && sp0 == ^ uintptr(0))
+        if(pc0 == ~ uintptr_t(0) && sp0 == ~ uintptr_t(0))
         {
             if(gp->syscallsp != 0)
             {
@@ -105,13 +98,13 @@ namespace golang::runtime
         {
             if(usesLR)
             {
-                frame.pc = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), frame.sp));
+                frame.pc = *(uintptr_t*)(unsafe::Pointer(frame.sp));
                 frame.lr = 0;
             }
             else
             {
-                frame.pc = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), frame.sp));
-                frame.sp += goarch.PtrSize;
+                frame.pc = *(uintptr_t*)(unsafe::Pointer(frame.sp));
+                frame.sp += goarch::PtrSize;
             }
         }
         if(GOARCH == "arm" && goarm < 7 && GOOS == "linux" && frame.pc & 0xffff0000 == 0xffff0000)
@@ -135,7 +128,7 @@ namespace golang::runtime
             return;
         }
         frame.fn = f;
-        *u = gocpp::Init<unwinder>([](unwinder& x) { x.frame = frame; x.g = guintptr(gocpp::recv(gp)); x.cgoCtxt = len(gp->cgoCtxt) - 1; x.calleeFuncID = abi.FuncIDNormal; x.flags = flags; });
+        *u = gocpp::Init<unwinder>([](unwinder& x) { x.frame = frame; x.g = guintptr(gocpp::recv(gp)); x.cgoCtxt = len(gp->cgoCtxt) - 1; x.calleeFuncID = abi::FuncIDNormal; x.flags = flags; });
         auto isSyscall = frame.pc == pc0 && frame.sp == sp0 && pc0 == gp->syscallpc && sp0 == gp->syscallsp;
         resolveInternal(gocpp::recv(u), true, isSyscall);
     }
@@ -156,13 +149,13 @@ namespace golang::runtime
             return;
         }
         auto flag = f.flag;
-        if(f.funcID == abi.FuncID_cgocallback)
+        if(f.funcID == abi::FuncID_cgocallback)
         {
-            flag &^= abi.FuncFlagSPWrite;
+            flag &^= abi::FuncFlagSPWrite;
         }
         if(isSyscall)
         {
-            flag &^= abi.FuncFlagSPWrite;
+            flag &^= abi::FuncFlagSPWrite;
         }
         if(frame->fp == 0)
         {
@@ -172,8 +165,8 @@ namespace golang::runtime
                 {
                     auto condition = f.funcID;
                     int conditionId = -1;
-                    if(condition == abi.FuncID_morestack) { conditionId = 0; }
-                    else if(condition == abi.FuncID_systemstack) { conditionId = 1; }
+                    if(condition == abi::FuncID_morestack) { conditionId = 0; }
+                    else if(condition == abi::FuncID_systemstack) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
@@ -190,30 +183,30 @@ namespace golang::runtime
                         case 1:
                             if(usesLR && funcspdelta(f, frame->pc) == 0)
                             {
-                                flag &^= abi.FuncFlagSPWrite;
+                                flag &^= abi::FuncFlagSPWrite;
                                 break;
                             }
                             gp = gp->m->curg;
                             set(gocpp::recv(u->g), gp);
                             frame->sp = gp->sched.sp;
                             u->cgoCtxt = len(gp->cgoCtxt) - 1;
-                            flag &^= abi.FuncFlagSPWrite;
+                            flag &^= abi::FuncFlagSPWrite;
                             break;
                     }
                 }
             }
-            frame->fp = frame->sp + uintptr(funcspdelta(f, frame->pc));
+            frame->fp = frame->sp + uintptr_t(funcspdelta(f, frame->pc));
             if(! usesLR)
             {
-                frame->fp += goarch.PtrSize;
+                frame->fp += goarch::PtrSize;
             }
         }
-        if(flag & abi.FuncFlagTopFrame != 0)
+        if(flag & abi::FuncFlagTopFrame != 0)
         {
             frame->lr = 0;
         }
         else
-        if(flag & abi.FuncFlagSPWrite != 0 && (! innermost || u->flags & (unwindPrintErrors | unwindSilentErrors) != 0))
+        if(flag & abi::FuncFlagSPWrite != 0 && (! innermost || u->flags & (unwindPrintErrors | unwindSilentErrors) != 0))
         {
             if(u->flags & (unwindPrintErrors | unwindSilentErrors) == 0 && ! innermost)
             {
@@ -230,34 +223,34 @@ namespace golang::runtime
                 if(innermost && frame->sp < frame->fp || frame->lr == 0)
                 {
                     lrPtr = frame->sp;
-                    frame->lr = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), lrPtr));
+                    frame->lr = *(uintptr_t*)(unsafe::Pointer(lrPtr));
                 }
             }
             else
             {
                 if(frame->lr == 0)
                 {
-                    lrPtr = frame->fp - goarch.PtrSize;
-                    frame->lr = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), lrPtr));
+                    lrPtr = frame->fp - goarch::PtrSize;
+                    frame->lr = *(uintptr_t*)(unsafe::Pointer(lrPtr));
                 }
             }
         }
         frame->varp = frame->fp;
         if(! usesLR)
         {
-            frame->varp -= goarch.PtrSize;
+            frame->varp -= goarch::PtrSize;
         }
         if(frame->varp > frame->sp && framepointer_enabled)
         {
-            frame->varp -= goarch.PtrSize;
+            frame->varp -= goarch::PtrSize;
         }
-        frame->argp = frame->fp + sys.MinFrameSize;
+        frame->argp = frame->fp + sys::MinFrameSize;
         frame->continpc = frame->pc;
-        if(u->calleeFuncID == abi.FuncID_sigpanic)
+        if(u->calleeFuncID == abi::FuncID_sigpanic)
         {
             if(frame->fn.deferreturn != 0)
             {
-                frame->continpc = entry(gocpp::recv(frame->fn)) + uintptr(frame->fn.deferreturn) + 1;
+                frame->continpc = entry(gocpp::recv(frame->fn)) + uintptr_t(frame->fn.deferreturn) + 1;
             }
             else
             {
@@ -281,7 +274,7 @@ namespace golang::runtime
         {
             auto fail = u->flags & (unwindPrintErrors | unwindSilentErrors) == 0;
             auto doPrint = u->flags & unwindSilentErrors == 0;
-            if(doPrint && gp->m->incgo && f.funcID == abi.FuncID_sigpanic)
+            if(doPrint && gp->m->incgo && f.funcID == abi::FuncID_sigpanic)
             {
                 doPrint = false;
             }
@@ -304,7 +297,7 @@ namespace golang::runtime
             tracebackHexdump(gp->stack, frame, frame->sp);
             go_throw("traceback stuck");
         }
-        auto injectedCall = f.funcID == abi.FuncID_sigpanic || f.funcID == abi.FuncID_asyncPreempt || f.funcID == abi.FuncID_debugCallV2;
+        auto injectedCall = f.funcID == abi::FuncID_sigpanic || f.funcID == abi::FuncID_asyncPreempt || f.funcID == abi::FuncID_debugCallV2;
         if(injectedCall)
         {
             u->flags |= unwindTrap;
@@ -321,8 +314,8 @@ namespace golang::runtime
         frame->fp = 0;
         if(usesLR && injectedCall)
         {
-            auto x = *(uintptr_t*)(Pointer(gocpp::recv(unsafe), frame->sp));
-            frame->sp += alignUp(sys.MinFrameSize, sys.StackAlign);
+            auto x = *(uintptr_t*)(unsafe::Pointer(frame->sp));
+            frame->sp += alignUp(sys::MinFrameSize, sys::StackAlign);
             f = findfunc(frame->pc);
             frame->fn = f;
             if(! valid(gocpp::recv(f)))
@@ -361,7 +354,7 @@ namespace golang::runtime
 
     int cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
-        if(cgoTraceback == nullptr || u->frame.fn.funcID != abi.FuncID_cgocallback || u->cgoCtxt < 0)
+        if(cgoTraceback == nullptr || u->frame.fn.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
         {
             return 0;
         }
@@ -389,7 +382,7 @@ namespace golang::runtime
             for(auto [iu, uf] = newInlineUnwinder(f, symPC(gocpp::recv(u))); n < len(pcBuf) && valid(gocpp::recv(uf)); uf = next(gocpp::recv(iu), uf))
             {
                 auto sf = srcFunc(gocpp::recv(iu), uf);
-                if(sf.funcID == abi.FuncIDWrapper && elideWrapperCalling(u->calleeFuncID))
+                if(sf.funcID == abi::FuncIDWrapper && elideWrapperCalling(u->calleeFuncID))
                 {
                 }
                 else
@@ -422,13 +415,13 @@ namespace golang::runtime
         auto limit = 10;
         auto maxDepth = 5;
         auto maxLen = (maxDepth * 3 + 2) * limit + 1;
-        auto p = (gocpp::array<uint8_t, maxLen>*)(funcdata(f, abi.FUNCDATA_ArgInfo));
+        auto p = (gocpp::array<uint8_t, maxLen>*)(funcdata(f, abi::FUNCDATA_ArgInfo));
         if(p == nullptr)
         {
             return;
         }
-        auto liveInfo = funcdata(f, abi.FUNCDATA_ArgLiveInfo);
-        auto liveIdx = pcdatavalue(f, abi.PCDATA_ArgLiveIndex, pc);
+        auto liveInfo = funcdata(f, abi::FUNCDATA_ArgLiveInfo);
+        auto liveIdx = pcdatavalue(f, abi::PCDATA_ArgLiveIndex, pc);
         auto startOffset = uint8_t(0xff);
         if(liveInfo != nullptr)
         {
@@ -444,17 +437,17 @@ namespace golang::runtime
             {
                 return true;
             }
-            auto bits = *(uint8_t*)(add(liveInfo, uintptr(liveIdx) + uintptr(slotIdx / 8)));
+            auto bits = *(uint8_t*)(add(liveInfo, uintptr_t(liveIdx) + uintptr_t(slotIdx / 8)));
             return bits & (1 << (slotIdx % 8)) != 0;
         }
 ;
         auto print1 = [=](uint8_t off, uint8_t sz, uint8_t slotIdx) mutable -> void
         {
-            auto x = readUnaligned64(add(argp, uintptr(off)));
+            auto x = readUnaligned64(add(argp, uintptr_t(off)));
             if(sz < 8)
             {
                 auto shift = 64 - sz * 8;
-                if(goarch.BigEndian)
+                if(goarch::BigEndian)
                 {
                     x = x >> shift;
                 }
@@ -481,6 +474,7 @@ namespace golang::runtime
 ;
         auto pi = 0;
         auto slotIdx = uint8_t(0);
+        printloop:
         for(; ; )
         {
             auto o = p[pi];
@@ -540,7 +534,7 @@ namespace golang::runtime
 
     std::tuple<std::string, std::string, std::string> funcNamePiecesForPrint(std::string name)
     {
-        auto i = IndexByteString(gocpp::recv(bytealg), name, '[');
+        auto i = bytealg::IndexByteString(name, '[');
         if(i < 0)
         {
             return {name, "", ""};
@@ -578,7 +572,7 @@ namespace golang::runtime
     {
         auto pc = gp->gopc;
         auto f = findfunc(pc);
-        if(valid(gocpp::recv(f)) && showframe(srcFunc(gocpp::recv(f)), gp, false, abi.FuncIDNormal) && gp->goid != 1)
+        if(valid(gocpp::recv(f)) && showframe(srcFunc(gocpp::recv(f)), gp, false, abi::FuncIDNormal) && gp->goid != 1)
         {
             printcreatedby1(f, pc, gp->parentGoid);
         }
@@ -596,7 +590,7 @@ namespace golang::runtime
         auto tracepc = pc;
         if(pc > entry(gocpp::recv(f)))
         {
-            tracepc -= sys.PCQuantum;
+            tracepc -= sys::PCQuantum;
         }
         auto [file, line] = funcline(f, tracepc);
         print("\t", file, ":", line);
@@ -765,7 +759,7 @@ namespace golang::runtime
                 {
                     int n;
                     int lastN;
-                    auto argp = Pointer(gocpp::recv(unsafe), u->frame.argp);
+                    auto argp = unsafe::Pointer(u->frame.argp);
                     printArgs(f, argp, symPC(gocpp::recv(u)));
                 }
                 print(")\n");
@@ -856,7 +850,7 @@ namespace golang::runtime
         for(auto [fidx, pc] : ancestor.pcs)
         {
             auto f = findfunc(pc);
-            if(showfuncinfo(srcFunc(gocpp::recv(f)), fidx == 0, abi.FuncIDNormal))
+            if(showfuncinfo(srcFunc(gocpp::recv(f)), fidx == 0, abi::FuncIDNormal))
             {
                 printAncestorTracebackFuncInfo(f, pc);
             }
@@ -866,7 +860,7 @@ namespace golang::runtime
             print("...additional frames elided...\n");
         }
         auto f = findfunc(ancestor.gopc);
-        if(valid(gocpp::recv(f)) && showfuncinfo(srcFunc(gocpp::recv(f)), false, abi.FuncIDNormal) && ancestor.goid != 1)
+        if(valid(gocpp::recv(f)) && showfuncinfo(srcFunc(gocpp::recv(f)), false, abi::FuncIDNormal) && ancestor.goid != 1)
         {
             printcreatedby1(f, ancestor.gopc, 0);
         }
@@ -929,7 +923,7 @@ namespace golang::runtime
         {
             return true;
         }
-        if(sf.funcID == abi.FuncIDWrapper && elideWrapperCalling(calleeID))
+        if(sf.funcID == abi::FuncIDWrapper && elideWrapperCalling(calleeID))
         {
             return false;
         }
@@ -938,7 +932,7 @@ namespace golang::runtime
         {
             return true;
         }
-        return IndexByteString(gocpp::recv(bytealg), name, '.') >= 0 && (! hasPrefix(name, "runtime.") || isExportedRuntime(name));
+        return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime.") || isExportedRuntime(name));
     }
 
     bool isExportedRuntime(std::string name)
@@ -949,7 +943,7 @@ namespace golang::runtime
 
     bool elideWrapperCalling(abi::FuncID id)
     {
-        return ! (id == abi.FuncID_gopanic || id == abi.FuncID_sigpanic || id == abi.FuncID_panicwrap);
+        return ! (id == abi::FuncID_gopanic || id == abi::FuncID_sigpanic || id == abi::FuncID_panicwrap);
     }
 
     gocpp::array_base<std::string> gStatusStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x._Gidle = "idle"; x._Grunnable = "runnable"; x._Grunning = "running"; x._Gsyscall = "syscall"; x._Gwaiting = "waiting"; x._Gdead = "dead"; x._Gcopystack = "copystack"; x._Gpreempted = "preempted"; });
@@ -1020,7 +1014,7 @@ namespace golang::runtime
         {
             print("\n");
             goroutineheader(curgp);
-            traceback(^ uintptr(0), ^ uintptr(0), 0, curgp);
+            traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, curgp);
         }
         forEachGRace([=](g* gp) mutable -> void
         {
@@ -1037,7 +1031,7 @@ namespace golang::runtime
             }
             else
             {
-                traceback(^ uintptr(0), ^ uintptr(0), 0, gp);
+                traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, gp);
             }
         }
 );
@@ -1045,8 +1039,8 @@ namespace golang::runtime
 
     void tracebackHexdump(stack stk, stkframe* frame, uintptr_t bad)
     {
-        auto expand = 32 * goarch.PtrSize;
-        auto maxExpand = 256 * goarch.PtrSize;
+        auto expand = 32 * goarch::PtrSize;
+        auto maxExpand = 256 * goarch::PtrSize;
         auto [lo, hi] = std::tuple{frame->sp, frame->sp};
         if(frame->fp != 0 && frame->fp < lo)
         {
@@ -1108,11 +1102,11 @@ namespace golang::runtime
         {
             return false;
         }
-        if(f.funcID == abi.FuncID_runtime_main || f.funcID == abi.FuncID_corostart || f.funcID == abi.FuncID_handleAsyncEvent)
+        if(f.funcID == abi::FuncID_runtime_main || f.funcID == abi::FuncID_corostart || f.funcID == abi::FuncID_handleAsyncEvent)
         {
             return false;
         }
-        if(f.funcID == abi.FuncID_runfinq)
+        if(f.funcID == abi::FuncID_runfinq)
         {
             if(fixed)
             {
@@ -1275,13 +1269,13 @@ namespace golang::runtime
         }
         if(msanenabled)
         {
-            msanwrite(Pointer(gocpp::recv(unsafe), arg), Sizeof(gocpp::recv(unsafe), cgoSymbolizerArg {}));
+            msanwrite(unsafe::Pointer(arg), unsafe::Sizeof(cgoSymbolizerArg {}));
         }
         if(asanenabled)
         {
-            asanwrite(Pointer(gocpp::recv(unsafe), arg), Sizeof(gocpp::recv(unsafe), cgoSymbolizerArg {}));
+            asanwrite(unsafe::Pointer(arg), unsafe::Sizeof(cgoSymbolizerArg {}));
         }
-        call(cgoSymbolizer, noescape(Pointer(gocpp::recv(unsafe), arg)));
+        call(cgoSymbolizer, noescape(unsafe::Pointer(arg)));
     }
 
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf)
@@ -1295,16 +1289,16 @@ namespace golang::runtime
         {
             call = asmcgocall;
         }
-        auto arg = gocpp::Init<cgoTracebackArg>([](cgoTracebackArg& x) { x.context = ctxt; x.buf = (uintptr_t*)(noescape(Pointer(gocpp::recv(unsafe), & buf[0]))); x.max = uintptr(len(buf)); });
+        auto arg = gocpp::Init<cgoTracebackArg>([](cgoTracebackArg& x) { x.context = ctxt; x.buf = (uintptr_t*)(noescape(unsafe::Pointer(& buf[0]))); x.max = uintptr_t(len(buf)); });
         if(msanenabled)
         {
-            msanwrite(Pointer(gocpp::recv(unsafe), & arg), Sizeof(gocpp::recv(unsafe), arg));
+            msanwrite(unsafe::Pointer(& arg), unsafe::Sizeof(arg));
         }
         if(asanenabled)
         {
-            asanwrite(Pointer(gocpp::recv(unsafe), & arg), Sizeof(gocpp::recv(unsafe), arg));
+            asanwrite(unsafe::Pointer(& arg), unsafe::Sizeof(arg));
         }
-        call(cgoTraceback, noescape(Pointer(gocpp::recv(unsafe), & arg)));
+        call(cgoTraceback, noescape(unsafe::Pointer(& arg)));
     }
 
 }

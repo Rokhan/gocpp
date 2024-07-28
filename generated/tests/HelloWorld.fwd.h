@@ -3,11 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 #include "golang/image/color/color.fwd.h"
 
 namespace golang::main
 {
     using Zzz = color::Color;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

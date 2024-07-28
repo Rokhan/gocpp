@@ -9,10 +9,10 @@
 #include "golang/runtime/netpoll.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -31,14 +31,6 @@
 
 namespace golang::runtime
 {
-    extern int pollNoError;
-    extern int pollErrClosing;
-    extern int pollErrTimeout;
-    extern int pollErrNotPollable;
-    extern uintptr_t pdNil;
-    extern uintptr_t pdReady;
-    extern uintptr_t pdWait;
-    extern int pollBlockSize;
     struct pollDesc
     {
         sys::NotInHeap _;
@@ -65,13 +57,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    extern int pollClosing;
-    extern int pollEventErr;
-    extern int pollExpiredReadDeadline;
-    extern int pollExpiredWriteDeadline;
-    extern int pollFDSeq;
-    extern int pollFDSeqBits;
-    extern int pollFDSeqMask;
     bool closing(pollInfo i);
     bool eventErr(pollInfo i);
     bool expiredReadDeadline(pollInfo i);

@@ -12,10 +12,10 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goos/zgoos_windows.h"
+#include "golang/runtime/float.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/float.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -23,10 +23,10 @@
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
-// #include "golang/runtime/mpagealloc_64bit.h"  [Ignored, known errors]
-// #include "golang/runtime/mpallocbits.h"  [Ignored, known errors]
-// #include "golang/runtime/mranges.h"  [Ignored, known errors]
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+#include "golang/runtime/mpagealloc_64bit.h"
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mstats.h"
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
@@ -40,13 +40,6 @@
 
 namespace golang::runtime
 {
-    int scavengePercent = 1;
-    int retainExtraPercent = 10;
-    int reduceExtraPercent = 5;
-    int maxPagesPerPhysPage = maxPhysPageSize / pageSize;
-    double scavengeCostRatio = 0.7 * (goos.IsDarwin + goos.IsIos);
-    double scavChunkHiOccFrac = 0.96875;
-    uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
     uint64_t heapRetained()
     {
         return load(gocpp::recv(gcController.heapInUse)) + load(gocpp::recv(gcController.heapFree));
@@ -59,7 +52,7 @@ namespace golang::runtime
         auto mappedReady = Load(gocpp::recv(gcController.mappedReady));
         if(mappedReady <= memoryLimitGoal)
         {
-            Store(gocpp::recv(scavenge.memoryLimitGoal), ^ uint64_t(0));
+            Store(gocpp::recv(scavenge.memoryLimitGoal), ~ uint64_t(0));
         }
         else
         {
@@ -67,7 +60,7 @@ namespace golang::runtime
         }
         if(lastHeapGoal == 0)
         {
-            Store(gocpp::recv(scavenge.gcPercentGoal), ^ uint64_t(0));
+            Store(gocpp::recv(scavenge.gcPercentGoal), ~ uint64_t(0));
             return;
         }
         auto goalRatio = double(heapGoal) / double(lastHeapGoal);
@@ -77,7 +70,7 @@ namespace golang::runtime
         auto heapRetainedNow = heapRetained();
         if(heapRetainedNow <= gcPercentGoal || heapRetainedNow - gcPercentGoal < uint64_t(physPageSize))
         {
-            Store(gocpp::recv(scavenge.gcPercentGoal), ^ uint64_t(0));
+            Store(gocpp::recv(scavenge.gcPercentGoal), ~ uint64_t(0));
         }
         else
         {
@@ -105,9 +98,14 @@ namespace golang::runtime
             return os;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     gocpp_id_0 scavenge;
-    double startingScavSleepRatio = 0.001;
-    double minScavWorkTime = 1e6;
     scavengerState scavenger;
     
     std::ostream& scavengerState::PrintTo(std::ostream& os) const
@@ -229,7 +227,7 @@ namespace golang::runtime
             worked = minScavWorkTime;
         }
         worked *= 1 + scavengeCostRatio;
-        auto sleepTime = int64(worked / s->sleepRatio);
+        auto sleepTime = int64_t(worked / s->sleepRatio);
         int64_t slept = {};
         if(s->sleepStub == nullptr)
         {
@@ -249,7 +247,7 @@ namespace golang::runtime
         }
         if(s->controllerCooldown > 0)
         {
-            auto t = slept + int64(worked);
+            auto t = slept + int64_t(worked);
             if(t > s->controllerCooldown)
             {
                 s->controllerCooldown = 0;
@@ -359,7 +357,7 @@ namespace golang::runtime
 
     uintptr_t scavenge(struct pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
     {
-        auto released = uintptr(0);
+        auto released = uintptr_t(0);
         for(; released < nbytes; )
         {
             auto [ci, pageIdx] = find(gocpp::recv(p->scav.index), force);
@@ -417,20 +415,20 @@ namespace golang::runtime
             auto [base, npages] = findScavengeCandidate(gocpp::recv(chunkOf(gocpp::recv(p), ci)), searchIdx, minPages, maxPages);
             if(npages != 0)
             {
-                auto addr = chunkBase(ci) + uintptr(base) * pageSize;
+                auto addr = chunkBase(ci) + uintptr_t(base) * pageSize;
                 allocRange(gocpp::recv(chunkOf(gocpp::recv(p), ci)), base, npages);
-                update(gocpp::recv(p), addr, uintptr(npages), true, true);
+                update(gocpp::recv(p), addr, uintptr_t(npages), true, true);
                 unlock(p->mheapLock);
                 if(! p->test)
                 {
-                    pageTraceScav(ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr(npages));
-                    sysUnused(Pointer(gocpp::recv(unsafe), addr), uintptr(npages) * pageSize);
-                    auto nbytes = int64(npages * pageSize);
+                    pageTraceScav(ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr_t(npages));
+                    sysUnused(unsafe::Pointer(addr), uintptr_t(npages) * pageSize);
+                    auto nbytes = int64_t(npages * pageSize);
                     add(gocpp::recv(gcController.heapReleased), nbytes);
                     add(gocpp::recv(gcController.heapFree), - nbytes);
                     auto stats = acquire(gocpp::recv(memstats.heapStats));
-                    Xaddint64(gocpp::recv(atomic), & stats->committed, - nbytes);
-                    Xaddint64(gocpp::recv(atomic), & stats->released, nbytes);
+                    atomic::Xaddint64(& stats->committed, - nbytes);
+                    atomic::Xaddint64(& stats->released, nbytes);
                     release(gocpp::recv(memstats.heapStats));
                 }
                 lock(p->mheapLock);
@@ -439,10 +437,10 @@ namespace golang::runtime
                     p->searchAddr = b;
                 }
                 free(gocpp::recv(chunkOf(gocpp::recv(p), ci)), base, npages);
-                update(gocpp::recv(p), addr, uintptr(npages), true, false);
+                update(gocpp::recv(p), addr, uintptr_t(npages), true, false);
                 setRange(gocpp::recv(chunkOf(gocpp::recv(p), ci)->scavenged), base, npages);
                 unlock(p->mheapLock);
-                return uintptr(npages) * pageSize;
+                return uintptr_t(npages) * pageSize;
             }
         }
         setEmpty(gocpp::recv(p->scav.index), ci);
@@ -454,7 +452,7 @@ namespace golang::runtime
     {
         auto apply = [=](uint64_t x, uint64_t c) mutable -> uint64_t
         {
-            return ^ ((((x & c) + c) | x) | c);
+            return ~ ((((x & c) + c) | x) | c);
         }
 ;
         //Go switch emulation
@@ -496,7 +494,7 @@ namespace golang::runtime
                     break;
             }
         }
-        return ^ ((x - (x >> (m - 1))) | x);
+        return ~ ((x - (x >> (m - 1))) | x);
     }
 
     std::tuple<unsigned int, unsigned int> findScavengeCandidate(struct pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
@@ -524,7 +522,7 @@ namespace golang::runtime
         for(; i >= 0; i--)
         {
             auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (unsigned int)(minimum));
-            if(x != ^ uint64_t(0))
+            if(x != ~ uint64_t(0))
             {
                 break;
             }
@@ -534,11 +532,11 @@ namespace golang::runtime
             return {0, 0};
         }
         auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (unsigned int)(minimum));
-        auto z1 = (unsigned int)(LeadingZeros64(gocpp::recv(sys), ^ x));
+        auto z1 = (unsigned int)(sys::LeadingZeros64(~ x));
         auto [run, end] = std::tuple{(unsigned int)(0), (unsigned int)(i) * 64 + (64 - z1)};
         if((x << z1) != 0)
         {
-            run = (unsigned int)(LeadingZeros64(gocpp::recv(sys), x << z1));
+            run = (unsigned int)(sys::LeadingZeros64(x << z1));
         }
         else
         {
@@ -546,7 +544,7 @@ namespace golang::runtime
             for(auto j = i - 1; j >= 0; j--)
             {
                 auto x = fillAligned(m->scavenged[j] | m->pallocBits[j], (unsigned int)(minimum));
-                run += (unsigned int)(LeadingZeros64(gocpp::recv(sys), x));
+                run += (unsigned int)(sys::LeadingZeros64(x));
                 if(x != 0)
                 {
                     break;
@@ -558,10 +556,10 @@ namespace golang::runtime
         if(physHugePageSize > pageSize && physHugePageSize > physPageSize)
         {
             auto pagesPerHugePage = physHugePageSize / pageSize;
-            auto hugePageAbove = (unsigned int)(alignUp(uintptr(start), pagesPerHugePage));
+            auto hugePageAbove = (unsigned int)(alignUp(uintptr_t(start), pagesPerHugePage));
             if(hugePageAbove <= end)
             {
-                auto hugePageBelow = (unsigned int)(alignDown(uintptr(start), pagesPerHugePage));
+                auto hugePageBelow = (unsigned int)(alignDown(uintptr_t(start), pagesPerHugePage));
                 if(hugePageBelow >= end - run)
                 {
                     size = size + (start - hugePageBelow);
@@ -606,7 +604,7 @@ namespace golang::runtime
     uintptr_t grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
     {
         auto minHeapIdx = Load(gocpp::recv(s->minHeapIdx));
-        if(auto baseIdx = uintptr(chunkIndex(base)); minHeapIdx == 0 || baseIdx < minHeapIdx)
+        if(auto baseIdx = uintptr_t(chunkIndex(base)); minHeapIdx == 0 || baseIdx < minHeapIdx)
         {
             Store(gocpp::recv(s->minHeapIdx), baseIdx);
         }
@@ -665,7 +663,7 @@ namespace golang::runtime
         auto sc = load(gocpp::recv(s->chunks[ci]));
         free(gocpp::recv(sc), npages, s->gen);
         store(gocpp::recv(s->chunks[ci]), sc);
-        auto addr = chunkBase(ci) + uintptr(page + npages - 1) * pageSize;
+        auto addr = chunkBase(ci) + uintptr_t(page + npages - 1) * pageSize;
         if(lessThan(gocpp::recv(s->freeHWM), offAddr {addr}))
         {
             s->freeHWM = offAddr {addr};
@@ -745,11 +743,6 @@ namespace golang::runtime
         return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
     }
 
-    scavChunkFlags scavChunkHasFree = 1 << 0;
-    int scavChunkMaxFlags = 6;
-    int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
-    int logScavChunkInUseMax = logPallocChunkPages + 1;
-    int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
     bool isEmpty(scavChunkFlags* sc)
     {
         return (*sc) & scavChunkHasFree == 0;

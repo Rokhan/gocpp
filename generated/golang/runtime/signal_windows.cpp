@@ -12,12 +12,12 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/arena.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/consts.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/preempt.h"  [Ignored, known errors]
@@ -31,16 +31,12 @@
 
 namespace golang::runtime
 {
-    int _SEM_FAILCRITICALERRORS = 0x0001;
-    int _SEM_NOGPFAULTERRORBOX = 0x0002;
-    int _SEM_NOOPENFILEERRORBOX = 0x8000;
-    int _WER_FAULT_REPORTING_NO_UI = 0x0020;
     void preventErrorDialogs()
     {
         auto errormode = stdcall0(_GetErrorMode);
         stdcall1(_SetErrorMode, errormode | _SEM_FAILCRITICALERRORS | _SEM_NOGPFAULTERRORBOX | _SEM_NOOPENFILEERRORBOX);
         uintptr_t werflags = {};
-        stdcall2(_WerGetFlags, currentProcess, uintptr(Pointer(gocpp::recv(unsafe), & werflags)));
+        stdcall2(_WerGetFlags, currentProcess, uintptr_t(unsafe::Pointer(& werflags)));
         stdcall1(_WerSetFlags, werflags | _WER_FAULT_REPORTING_NO_UI);
     }
 
@@ -70,15 +66,15 @@ namespace golang::runtime
 
     void initExceptionHandler()
     {
-        stdcall2(_AddVectoredExceptionHandler, 1, FuncPCABI0(gocpp::recv(abi), exceptiontramp));
+        stdcall2(_AddVectoredExceptionHandler, 1, abi::FuncPCABI0(exceptiontramp));
         if(GOARCH == "386")
         {
-            stdcall1(_SetUnhandledExceptionFilter, FuncPCABI0(gocpp::recv(abi), lastcontinuetramp));
+            stdcall1(_SetUnhandledExceptionFilter, abi::FuncPCABI0(lastcontinuetramp));
         }
         else
         {
-            stdcall2(_AddVectoredContinueHandler, 1, FuncPCABI0(gocpp::recv(abi), firstcontinuetramp));
-            stdcall2(_AddVectoredContinueHandler, 0, FuncPCABI0(gocpp::recv(abi), lastcontinuetramp));
+            stdcall2(_AddVectoredContinueHandler, 1, abi::FuncPCABI0(firstcontinuetramp));
+            stdcall2(_AddVectoredContinueHandler, 0, abi::FuncPCABI0(lastcontinuetramp));
         }
     }
 
@@ -145,9 +141,6 @@ namespace golang::runtime
         return true;
     }
 
-    int callbackVEH = 0;
-    int callbackFirstVCH = 1;
-    int callbackLastVCH = 2;
     g* sigFetchGSafe()
     /* convertBlockStmt, nil block */;
 
@@ -208,13 +201,13 @@ namespace golang::runtime
         {
             return ret;
         }
-        if(ip(gocpp::recv(ep->context)) == FuncPCABI0(gocpp::recv(abi), sigresume))
+        if(ip(gocpp::recv(ep->context)) == abi::FuncPCABI0(sigresume))
         {
             return ret;
         }
         prepareContextForSigResume(ep->context);
         set_sp(gocpp::recv(ep->context), gp->m->g0->sched.sp);
-        set_ip(gocpp::recv(ep->context), FuncPCABI0(gocpp::recv(abi), sigresume));
+        set_ip(gocpp::recv(ep->context), abi::FuncPCABI0(sigresume));
         return ret;
     }
 
@@ -232,12 +225,12 @@ namespace golang::runtime
         gp->sigcode0 = info->exceptioninformation[0];
         gp->sigcode1 = info->exceptioninformation[1];
         gp->sigpc = ip(gocpp::recv(r));
-        if(ip(gocpp::recv(r)) != 0 && ip(gocpp::recv(r)) != FuncPCABI0(gocpp::recv(abi), asyncPreempt))
+        if(ip(gocpp::recv(r)) != 0 && ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
         {
-            auto sp = Pointer(gocpp::recv(unsafe), sp(gocpp::recv(r)));
-            auto delta = uintptr(sys.StackAlign);
+            auto sp = unsafe::Pointer(sp(gocpp::recv(r)));
+            auto delta = uintptr_t(sys::StackAlign);
             sp = add(sp, - delta);
-            set_sp(gocpp::recv(r), uintptr(sp));
+            set_sp(gocpp::recv(r), uintptr_t(sp));
             if(usesLR)
             {
                 *((uintptr_t*)(sp)) = lr(gocpp::recv(r));
@@ -248,7 +241,7 @@ namespace golang::runtime
                 *((uintptr_t*)(sp)) = ip(gocpp::recv(r));
             }
         }
-        set_ip(gocpp::recv(r), FuncPCABI0(gocpp::recv(abi), sigpanic0));
+        set_ip(gocpp::recv(r), abi::FuncPCABI0(sigpanic0));
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
@@ -265,12 +258,12 @@ namespace golang::runtime
         uintptr_t sp = {};
         for(; ; )
         {
-            auto entry = stdcall3(_RtlLookupFunctionEntry, ip(gocpp::recv(ctxt)), uintptr(Pointer(gocpp::recv(unsafe), & base)), 0);
+            auto entry = stdcall3(_RtlLookupFunctionEntry, ip(gocpp::recv(ctxt)), uintptr_t(unsafe::Pointer(& base)), 0);
             if(entry == 0)
             {
                 break;
             }
-            stdcall8(_RtlVirtualUnwind, 0, base, ip(gocpp::recv(ctxt)), entry, uintptr(Pointer(gocpp::recv(unsafe), ctxt)), 0, uintptr(Pointer(gocpp::recv(unsafe), & sp)), 0);
+            stdcall8(_RtlVirtualUnwind, 0, base, ip(gocpp::recv(ctxt)), entry, uintptr_t(unsafe::Pointer(ctxt)), 0, uintptr_t(unsafe::Pointer(& sp)), 0);
             if(sp < gp->stack.lo || gp->stack.hi <= sp)
             {
                 break;
@@ -443,7 +436,7 @@ namespace golang::runtime
             }
         }
         auto FAIL_FAST_GENERATE_EXCEPTION_ADDRESS = 0x1;
-        stdcall3(_RaiseFailFastException, uintptr(Pointer(gocpp::recv(unsafe), info)), uintptr(Pointer(gocpp::recv(unsafe), r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
+        stdcall3(_RaiseFailFastException, uintptr_t(unsafe::Pointer(info)), uintptr_t(unsafe::Pointer(r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
     }
 
     

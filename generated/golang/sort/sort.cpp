@@ -99,13 +99,10 @@ namespace golang::sort
         {
             return;
         }
-        auto limit = Len(gocpp::recv(bits), (unsigned int)(n));
+        auto limit = bits::Len((unsigned int)(n));
         pdqsort(data, 0, n, limit);
     }
 
-    sortedHint unknownHint = 0;
-    sortedHint increasingHint = 1;
-    sortedHint decreasingHint = 2;
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;
@@ -116,7 +113,7 @@ namespace golang::sort
 
     unsigned int nextPowerOfTwo(int length)
     {
-        auto shift = (unsigned int)(Len(gocpp::recv(bits), (unsigned int)(length)));
+        auto shift = (unsigned int)(bits::Len((unsigned int)(length)));
         return (unsigned int)(1 << shift);
     }
 

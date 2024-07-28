@@ -41,7 +41,6 @@ namespace golang::runtime
     bool limiting(struct gcCPULimiterState* l);
     void startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now);
     void finishGCTransition(struct gcCPULimiterState* l, int64_t now);
-    extern double gcCPULimiterUpdatePeriod;
     bool needUpdate(struct gcCPULimiterState* l, int64_t now);
     void addAssistTime(struct gcCPULimiterState* l, int64_t t);
     void addIdleTime(struct gcCPULimiterState* l, int64_t t);
@@ -50,16 +49,7 @@ namespace golang::runtime
     void accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
     bool tryLock(struct gcCPULimiterState* l);
     void unlock(struct gcCPULimiterState* l);
-    extern double capacityPerProc;
     void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
-    extern limiterEventType limiterEventNone;
-    extern limiterEventType limiterEventIdleMarkWork;
-    extern limiterEventType limiterEventMarkAssist;
-    extern limiterEventType limiterEventScavengeAssist;
-    extern limiterEventType limiterEventIdle;
-    extern int limiterEventBits;
-    extern uint64_t limiterEventTypeMask;
-    extern limiterEventStamp limiterEventStampNone;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
     int64_t duration(limiterEventStamp s, int64_t now);
     limiterEventType typ(limiterEventStamp s);

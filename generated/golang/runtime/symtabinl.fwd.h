@@ -3,13 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/internal/abi/symtab.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {
     struct inlineFrame;
-    struct inlineUnwinder;
-    struct inlinedCall;
 }
+// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
 
+namespace golang::runtime
+{
+    struct inlinedCall;
+    struct inlineUnwinder;
+}

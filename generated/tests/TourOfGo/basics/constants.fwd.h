@@ -3,9 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
 
 namespace golang::main
 {
+    const double Pi = 3.14;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

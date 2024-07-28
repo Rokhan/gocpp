@@ -15,6 +15,48 @@
 
 namespace golang::main
 {
+    struct gocpp_id_0
+    {
+        int value;
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << "" << value;
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    struct gocpp_id_1
+    {
+        int value;
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << "" << value;
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     void main()
     {
         gocpp::array<std::string, 2> a = {};
@@ -26,6 +68,10 @@ namespace golang::main
         mocklib::Println(primes);
         auto ints = gocpp::array_base<int> {1, 2, 3};
         mocklib::Println(ints);
+        auto st1 = semTable1 { {1},  {1}};
+        mocklib::Println(st1);
+        auto st2 = semTable2 { {1},  {1}};
+        mocklib::Println(st2);
     }
 
 }

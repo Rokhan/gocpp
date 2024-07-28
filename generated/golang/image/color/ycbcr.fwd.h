@@ -3,12 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/image/color/color.fwd.h"
 
 namespace golang::color
 {
-    struct CMYK;
-    struct NYCbCrA;
     struct YCbCr;
+    struct NYCbCrA;
+    struct CMYK;
 }
-
+#include "golang/image/color/color.fwd.h"

@@ -11,16 +11,16 @@
 
 // #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/env_posix.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lfstack.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
-#include "golang/runtime/mgcsweep.h"
-// #include "golang/runtime/mstats.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
@@ -33,15 +33,6 @@
 
 namespace golang::runtime
 {
-    extern double gcGoalUtilization;
-    extern double gcBackgroundUtilization;
-    extern int gcCreditSlack;
-    extern int gcAssistTimeSlack;
-    extern int gcOverAssistWork;
-    extern int defaultHeapMinimum;
-    extern int maxStackScanSlack;
-    extern int memoryLimitMinHeapGoalHeadroom;
-    extern int memoryLimitHeapGoalHeadroomPercent;
     struct gcControllerState
     {
         atomic::Int32 gcPercent;
@@ -104,9 +95,6 @@ namespace golang::runtime
     uint64_t heapGoal(struct gcControllerState* c);
     std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c);
     uint64_t memoryLimitHeapGoal(struct gcControllerState* c);
-    extern int triggerRatioDen;
-    extern int minTriggerRatioNum;
-    extern int maxTriggerRatioNum;
     std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c);
     void commit(struct gcControllerState* c, bool isSweepDone);
     int32_t setGCPercent(struct gcControllerState* c, int32_t in);

@@ -13,7 +13,5 @@
 
 namespace golang::goexperiment
 {
-    bool CgoCheck2 = false;
-    int CgoCheck2Int = 0;
 }
 

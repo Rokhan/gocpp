@@ -3,23 +3,61 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/compress/zlib/reader.fwd.h"
-#include "golang/encoding/binary/binary.fwd.h"
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/hash/crc32/crc32.fwd.h"
-#include "golang/hash/hash.fwd.h"
-#include "golang/image/color/color.fwd.h"
-#include "golang/image/png/paeth.fwd.h"
-#include "golang/image/format.fwd.h"
-#include "golang/image/geom.fwd.h"
-#include "golang/image/image.fwd.h"
-// #include "golang/io/io.fwd.h"  [Ignored, known errors]
 
 namespace golang::png
 {
+    const long ctGrayscale = 0;
+    const long ctTrueColor = 2;
+    const long ctPaletted = 3;
+    const long ctGrayscaleAlpha = 4;
+    const long ctTrueColorAlpha = 6;
+    const int cbInvalid = 0;
+    const int cbG1 = 1;
+    const int cbG2 = 2;
+    const int cbG4 = 3;
+    const int cbG8 = 4;
+    const int cbGA8 = 5;
+    const int cbTC8 = 6;
+    const int cbP1 = 7;
+    const int cbP2 = 8;
+    const int cbP4 = 9;
+    const int cbP8 = 10;
+    const int cbTCA8 = 11;
+    const int cbG16 = 12;
+    const int cbGA16 = 13;
+    const int cbTC16 = 14;
+    const int cbTCA16 = 15;
+    const long ftNone = 0;
+    const long ftSub = 1;
+    const long ftUp = 2;
+    const long ftAverage = 3;
+    const long ftPaeth = 4;
+    const long nFilter = 5;
+    const long itNone = 0;
+    const long itAdam7 = 1;
+    struct interlaceScan;
+    const int dsStart = 0;
+    const int dsSeenIHDR = 1;
+    const int dsSeenPLTE = 2;
+    const int dsSeentRNS = 3;
+    const int dsSeenIDAT = 4;
+    const int dsSeenIEND = 5;
     using FormatError = std::string;
     using UnsupportedError = std::string;
-    struct decoder;
-    struct interlaceScan;
 }
+#include "golang/hash/hash.fwd.h"
+#include "golang/image/color/color.fwd.h"
+#include "golang/image/image.fwd.h"
+// #include "golang/io/io.fwd.h" [Ignored, known errors]
 
+namespace golang::png
+{
+    struct decoder;
+}
+#include "golang/compress/zlib/reader.fwd.h"
+#include "golang/encoding/binary/binary.fwd.h"
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/hash/crc32/crc32.fwd.h"
+#include "golang/image/format.fwd.h"
+#include "golang/image/geom.fwd.h"
+#include "golang/image/png/paeth.fwd.h"

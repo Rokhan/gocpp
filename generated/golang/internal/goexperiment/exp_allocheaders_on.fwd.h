@@ -3,7 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::goexperiment
 {
+    const bool AllocHeaders = true;
+    const long AllocHeadersInt = 1;
 }
-

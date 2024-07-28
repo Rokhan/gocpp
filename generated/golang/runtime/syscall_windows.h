@@ -9,10 +9,10 @@
 #include "golang/runtime/syscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
@@ -44,9 +44,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
-    extern abiPartKind abiPartBad;
-    extern abiPartKind abiPartStack;
-    extern abiPartKind abiPartReg;
     struct abiPart
     {
         abiPartKind kind;
@@ -93,7 +90,6 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
-    extern int callbackMaxFrame;
     uintptr_t compileCallback(eface fn, bool cdecl);
     struct callbackArgs
     {
@@ -109,7 +105,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
     void callbackWrap(callbackArgs* a);
-    extern int _LOAD_LIBRARY_SEARCH_SYSTEM32;
     std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname);
@@ -119,7 +114,6 @@ namespace golang::runtime
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall12(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12);
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall15(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall18(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
-    extern int maxArgs;
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, Args... args)

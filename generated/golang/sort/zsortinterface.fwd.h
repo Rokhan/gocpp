@@ -4,8 +4,3 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/sort/sort.fwd.h"
-
-namespace golang::sort
-{
-}
-

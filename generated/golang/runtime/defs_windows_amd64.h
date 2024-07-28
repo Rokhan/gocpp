@@ -13,7 +13,6 @@
 
 namespace golang::runtime
 {
-    extern int _CONTEXT_CONTROL;
     struct m128a
     {
         uint64_t low;

@@ -20,11 +20,6 @@
 
 namespace golang::zlib
 {
-    int NoCompression = flate.NoCompression;
-    int BestSpeed = flate.BestSpeed;
-    int BestCompression = flate.BestCompression;
-    int DefaultCompression = flate.DefaultCompression;
-    int HuffmanOnly = flate.HuffmanOnly;
     
     std::ostream& Writer::PrintTo(std::ostream& os) const
     {
@@ -136,7 +131,7 @@ namespace golang::zlib
             std::string err;
             z->scratch[1] |= 1 << 5;
         }
-        z->scratch[1] += uint8_t(31 - Uint16(gocpp::recv(binary.BigEndian), z->scratch.make_slice(0, 2)) % 31);
+        z->scratch[1] += uint8_t(31 - Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
         if(std::tie(_, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
         {
             std::string err;
@@ -145,7 +140,7 @@ namespace golang::zlib
         if(z->dict != nullptr)
         {
             std::string err;
-            PutUint32(gocpp::recv(binary.BigEndian), z->scratch.make_slice(0, ), Checksum(gocpp::recv(adler32), z->dict));
+            PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), adler32::Checksum(z->dict));
             if(std::tie(_, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
                 std::string err;
@@ -155,13 +150,13 @@ namespace golang::zlib
         if(z->compressor == nullptr)
         {
             std::string err;
-            std::tie(z->compressor, err) = NewWriterDict(gocpp::recv(flate), z->w, z->level, z->dict);
+            std::tie(z->compressor, err) = flate::NewWriterDict(z->w, z->level, z->dict);
             if(err != nullptr)
             {
                 std::string err;
                 return err;
             }
-            z->digest = New(gocpp::recv(adler32));
+            z->digest = adler32::New();
         }
         return nullptr;
     }
@@ -230,7 +225,7 @@ namespace golang::zlib
             return z->err;
         }
         auto checksum = Sum32(gocpp::recv(z->digest));
-        PutUint32(gocpp::recv(binary.BigEndian), z->scratch.make_slice(0, ), checksum);
+        PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), checksum);
         std::tie(_, z->err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
         return z->err;
     }

@@ -20,7 +20,7 @@ namespace golang::main
 {
     void main()
     {
-        auto m = NewRGBA(gocpp::recv(image), Rect(gocpp::recv(image), 0, 0, 100, 100));
+        auto m = image::NewRGBA(image::Rect(0, 0, 100, 100));
         mocklib::Println(Bounds(gocpp::recv(m)));
         mocklib::Println(RGBA(gocpp::recv(At(gocpp::recv(m), 0, 0))));
     }

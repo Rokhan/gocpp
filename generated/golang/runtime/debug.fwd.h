@@ -3,17 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
+#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
 #include "golang/runtime/proc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
 #include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-}
-

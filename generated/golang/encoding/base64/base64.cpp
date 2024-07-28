@@ -36,10 +36,7 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    gocpp::rune StdPadding = '=';
-    gocpp::rune NoPadding = - 1;
     std::string decodeMapInitialize = "" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff";
-    char invalidIndex = '\xff';
     Encoding* NewEncoding(std::string encoder)
     {
         if(len(encoder) != 64)
@@ -78,7 +75,7 @@ namespace golang::base64
         {
             int conditionId = -1;
             if(padding < NoPadding || padding == '\r' || padding == '\n' || padding > 0xff) { conditionId = 0; }
-            else if(padding != NoPadding && enc.decodeMap[byte(padding)] != invalidIndex) { conditionId = 1; }
+            else if(padding != NoPadding && enc.decodeMap[unsigned char(padding)] != invalidIndex) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -146,14 +143,14 @@ namespace golang::base64
                     dst[di + 2] = enc->encode[(val >> 6) & 0x3F];
                     if(enc->padChar != NoPadding)
                     {
-                        dst[di + 3] = byte(enc->padChar);
+                        dst[di + 3] = unsigned char(enc->padChar);
                     }
                     break;
                 case 1:
                     if(enc->padChar != NoPadding)
                     {
-                        dst[di + 2] = byte(enc->padChar);
-                        dst[di + 3] = byte(enc->padChar);
+                        dst[di + 2] = unsigned char(enc->padChar);
+                        dst[di + 3] = unsigned char(enc->padChar);
                     }
                     break;
             }
@@ -163,7 +160,7 @@ namespace golang::base64
     gocpp::slice<unsigned char> AppendEncode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = EncodedLen(gocpp::recv(enc), len(src));
-        dst = Grow(gocpp::recv(slices), dst, n);
+        dst = slices::Grow(dst, n);
         Encode(gocpp::recv(enc), dst.make_slice(len(dst)).make_slice(0, n), src);
         return dst.make_slice(0, len(dst) + n);
     }
@@ -288,7 +285,7 @@ namespace golang::base64
 
     std::string Error(CorruptInputError e)
     {
-        return "illegal base64 data at input byte " + FormatInt(gocpp::recv(strconv), int64(e), 10);
+        return "illegal base64 data at input byte " + strconv::FormatInt(int64_t(e), 10);
     }
 
     std::tuple<int, int, std::string> decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
@@ -418,7 +415,7 @@ namespace golang::base64
             break;
         }
         auto val = ((unsigned int)(dbuf[0]) << 18) | ((unsigned int)(dbuf[1]) << 12) | ((unsigned int)(dbuf[2]) << 6) | (unsigned int)(dbuf[3]);
-        std::tie(dbuf[2], dbuf[1], dbuf[0]) = std::tuple{byte(val >> 0), byte(val >> 8), byte(val >> 16)};
+        std::tie(dbuf[2], dbuf[1], dbuf[0]) = std::tuple{unsigned char(val >> 0), unsigned char(val >> 8), unsigned char(val >> 16)};
         //Go switch emulation
         {
             auto condition = dlen;
@@ -467,7 +464,7 @@ namespace golang::base64
             n--;
         }
         n = decodedLen(n, NoPadding);
-        dst = Grow(gocpp::recv(slices), dst, n);
+        dst = slices::Grow(dst, n);
         std::string err;
         std::tie(n, err) = Decode(gocpp::recv(enc), dst.make_slice(len(dst)).make_slice(0, n), src);
         return {dst.make_slice(0, len(dst) + n), err};
@@ -567,11 +564,11 @@ namespace golang::base64
                 }
             }
             d->err = d->readErr;
-            if(d->err == io.go_EOF && d->nbuf > 0)
+            if(d->err == io::go_EOF && d->nbuf > 0)
             {
                 int n;
                 std::string err;
-                d->err = io.ErrUnexpectedEOF;
+                d->err = io::ErrUnexpectedEOF;
             }
             return {0, d->err};
         }
@@ -609,7 +606,7 @@ namespace golang::base64
         }
         _ = enc->decodeMap;
         auto si = 0;
-        for(; strconv.IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
+        for(; strconv::IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
         {
             int n;
             std::string err;
@@ -618,7 +615,7 @@ namespace golang::base64
             {
                 int n;
                 std::string err;
-                PutUint64(gocpp::recv(binary.BigEndian), dst.make_slice(n), dn);
+                PutUint64(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
                 n += 6;
                 si += 8;
             }
@@ -646,7 +643,7 @@ namespace golang::base64
             {
                 int n;
                 std::string err;
-                PutUint32(gocpp::recv(binary.BigEndian), dst.make_slice(n), dn);
+                PutUint32(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
                 n += 3;
                 si += 4;
             }

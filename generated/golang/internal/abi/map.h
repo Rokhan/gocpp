@@ -11,10 +11,5 @@
 
 namespace golang::abi
 {
-    extern int MapBucketCountBits;
-    extern int MapBucketCount;
-    extern int MapMaxKeyBytes;
-    extern int MapMaxElemBytes;
-    extern int ZeroValSize;
 }
 

@@ -19,26 +19,6 @@
 
 namespace golang::flate
 {
-    extern int NoCompression;
-    extern int BestSpeed;
-    extern int BestCompression;
-    extern int DefaultCompression;
-    extern int HuffmanOnly;
-    extern int logWindowSize;
-    extern int windowSize;
-    extern int windowMask;
-    extern int baseMatchLength;
-    extern int minMatchLength;
-    extern int maxMatchLength;
-    extern int baseMatchOffset;
-    extern int maxMatchOffset;
-    extern int maxFlateBlockTokens;
-    extern int maxStoreBlockSize;
-    extern int hashBits;
-    extern int hashSize;
-    extern int hashMask;
-    extern int maxHashOffset;
-    extern int skipNever;
     struct compressionLevel
     {
         int level;
@@ -90,7 +70,6 @@ namespace golang::flate
     void fillWindow(struct compressor* d, gocpp::slice<unsigned char> b);
     std::tuple<int, int, bool> findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead);
     std::string writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf);
-    extern int hashmul;
     uint32_t hash4(gocpp::slice<unsigned char> b);
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);

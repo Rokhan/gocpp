@@ -9,7 +9,7 @@
 #include "golang/runtime/mwbbuf.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
@@ -23,7 +23,6 @@
 
 namespace golang::runtime
 {
-    extern bool testSmallBuf;
     struct wbBuf
     {
         uintptr_t next;
@@ -36,8 +35,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wbBuf& value);
-    extern int wbBufEntries;
-    extern int wbMaxEntriesPerCall;
     void reset(struct wbBuf* b);
     void discard(struct wbBuf* b);
     bool empty(struct wbBuf* b);

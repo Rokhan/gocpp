@@ -18,11 +18,6 @@
 
 namespace golang::zlib
 {
-    extern int NoCompression;
-    extern int BestSpeed;
-    extern int BestCompression;
-    extern int DefaultCompression;
-    extern int HuffmanOnly;
     struct Writer
     {
         io::Writer w;

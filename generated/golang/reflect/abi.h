@@ -9,10 +9,10 @@
 #include "golang/reflect/abi.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/abi.h"  [Ignored, known errors]
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/float32reg_generic.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
@@ -38,11 +38,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiStep& value);
-    extern abiStepKind abiStepBad;
-    extern abiStepKind abiStepStack;
-    extern abiStepKind abiStepIntReg;
-    extern abiStepKind abiStepPointer;
-    extern abiStepKind abiStepFloatReg;
     struct abiSeq
     {
         gocpp::slice<abiStep> steps;

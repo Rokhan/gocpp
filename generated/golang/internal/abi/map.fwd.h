@@ -3,7 +3,12 @@
 
 #include "gocpp/support.fwd.h"
 
+
 namespace golang::abi
 {
+    const long MapBucketCountBits = 3;
+    const long MapMaxKeyBytes = 128;
+    const long MapMaxElemBytes = 128;
+    const long ZeroValSize = 1024;
+    const int MapBucketCount = 1 << MapBucketCountBits;
 }
-

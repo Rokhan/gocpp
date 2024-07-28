@@ -3,11 +3,10 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h"  [Ignored, known errors]
-#include "golang/math/const.fwd.h"
 
 namespace golang::main
 {
     using MyFloat = double;
 }
-
+// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/math/const.fwd.h"

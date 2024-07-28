@@ -13,151 +13,126 @@
 
 namespace golang::math
 {
-    bool haveArchAcos = false;
     double archAcos(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAcosh = false;
     double archAcosh(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAsin = false;
     double archAsin(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAsinh = false;
     double archAsinh(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAtan = false;
     double archAtan(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAtan2 = false;
     double archAtan2(double y, double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchAtanh = false;
     double archAtanh(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchCbrt = false;
     double archCbrt(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchCos = false;
     double archCos(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchCosh = false;
     double archCosh(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchErf = false;
     double archErf(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchErfc = false;
     double archErfc(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchExpm1 = false;
     double archExpm1(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchFrexp = false;
     std::tuple<double, int> archFrexp(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchLdexp = false;
     double archLdexp(double frac, int exp)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchLog10 = false;
     double archLog10(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchLog2 = false;
     double archLog2(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchLog1p = false;
     double archLog1p(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchMod = false;
     double archMod(double x, double y)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchPow = false;
     double archPow(double x, double y)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchRemainder = false;
     double archRemainder(double x, double y)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchSin = false;
     double archSin(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchSinh = false;
     double archSinh(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchTan = false;
     double archTan(double x)
     {
         gocpp::panic("not implemented");
     }
 
-    bool haveArchTanh = false;
     double archTanh(double x)
     {
         gocpp::panic("not implemented");

@@ -11,7 +11,7 @@
 #include "golang/runtime/mgcwork.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -30,8 +30,6 @@
 
 namespace golang::runtime
 {
-    int _WorkbufSize = 2048;
-    int workbufAlloc = 32 << 10;
     void init()
     {
         if(workbufAlloc % pageSize != 0 || workbufAlloc % _WorkbufSize != 0)
@@ -214,7 +212,7 @@ namespace golang::runtime
         }
         if(w->bytesMarked != 0)
         {
-            Xadd64(gocpp::recv(atomic), & work.bytesMarked, int64(w->bytesMarked));
+            atomic::Xadd64(& work.bytesMarked, int64_t(w->bytesMarked));
             w->bytesMarked = 0;
         }
         if(w->heapScanWork != 0)
@@ -345,9 +343,9 @@ namespace golang::runtime
                 insert(gocpp::recv(work.wbufSpans.busy), s);
                 unlock(& work.wbufSpans.lock);
             }
-            for(auto i = uintptr(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
+            for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
-                auto newb = (workbuf*)(Pointer(gocpp::recv(unsafe), base(gocpp::recv(s)) + i));
+                auto newb = (workbuf*)(unsafe::Pointer(base(gocpp::recv(s)) + i));
                 newb->nobj = 0;
                 lfnodeValidate(& newb->node);
                 if(i == 0)
@@ -392,7 +390,7 @@ namespace golang::runtime
         auto n = b->nobj / 2;
         b->nobj -= n;
         b1->nobj = n;
-        memmove(Pointer(gocpp::recv(unsafe), & b1->obj[0]), Pointer(gocpp::recv(unsafe), & b->obj[b->nobj]), uintptr(n) * Sizeof(gocpp::recv(unsafe), b1->obj[0]));
+        memmove(unsafe::Pointer(& b1->obj[0]), unsafe::Pointer(& b->obj[b->nobj]), uintptr_t(n) * unsafe::Sizeof(b1->obj[0]));
         putfull(b);
         return b1;
     }

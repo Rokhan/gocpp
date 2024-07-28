@@ -10,4 +10,3 @@ namespace golang::sync
 {
     struct Once;
 }
-

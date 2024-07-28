@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
@@ -27,8 +27,6 @@
 
 namespace golang::runtime
 {
-    extern int traceStackSize;
-    extern uintptr_t logicalStackSentinel;
     uint64_t traceStack(int skip, m* mp, uintptr_t gen);
     struct traceStackTable
     {

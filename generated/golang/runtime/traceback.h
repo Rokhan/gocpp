@@ -11,13 +11,13 @@
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
 #include "golang/internal/bytealg/indexbyte_native.h"
-// #include "golang/internal/goarch/goarch.h"  [Ignored, known errors]
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/consts.h"
+#include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/alg.h"  [Ignored, known errors]
 #include "golang/runtime/asan0.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/panic.h"
@@ -25,7 +25,7 @@
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/stkframe.h"  [Ignored, known errors]
+#include "golang/runtime/stkframe.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
@@ -35,13 +35,6 @@
 
 namespace golang::runtime
 {
-    extern bool usesLR;
-    extern int tracebackInnerFrames;
-    extern int tracebackOuterFrames;
-    extern unwindFlags unwindPrintErrors;
-    extern unwindFlags unwindSilentErrors;
-    extern unwindFlags unwindTrap;
-    extern unwindFlags unwindJumpStack;
     struct unwinder
     {
         stkframe frame;

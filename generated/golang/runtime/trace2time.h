@@ -21,7 +21,6 @@
 
 namespace golang::runtime
 {
-    extern int traceTimeDiv;
     traceTime traceClockNow();
     uint64_t traceClockUnitsPerSecond();
     void traceFrequency(uintptr_t gen);

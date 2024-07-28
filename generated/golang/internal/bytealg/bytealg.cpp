@@ -13,13 +13,7 @@
 
 namespace golang::bytealg
 {
-    uintptr_t offsetX86HasSSE42 = Offsetof(gocpp::recv(unsafe), cpu.X86.HasSSE42);
-    uintptr_t offsetX86HasAVX2 = Offsetof(gocpp::recv(unsafe), cpu.X86.HasAVX2);
-    uintptr_t offsetX86HasPOPCNT = Offsetof(gocpp::recv(unsafe), cpu.X86.HasPOPCNT);
-    uintptr_t offsetS390xHasVX = Offsetof(gocpp::recv(unsafe), cpu.S390X.HasVX);
-    uintptr_t offsetPPC64HasPOWER9 = Offsetof(gocpp::recv(unsafe), cpu.PPC64.IsPOWER9);
     int MaxLen;
-    int PrimeRK = 16777619;
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
         auto hash = uint32_t(0);

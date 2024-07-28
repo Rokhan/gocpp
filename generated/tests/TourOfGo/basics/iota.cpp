@@ -15,36 +15,8 @@
 
 namespace golang::main
 {
-    int c0 = 0;
-    int c1 = 1;
-    int c2 = 2;
-    int c3 = 3;
-    int c4 = 4;
-    int c5 = 5;
-    Kind Invalid = 0;
-    Kind Bool = 1;
-    Kind Int = 2;
-    Kind Int8 = 3;
-    int a = 1 << 0;
-    int b = 1 << 1;
-    int c = 1 << 2;
-    int z0 = 0;
-    int za = 1 << 1;
-    int zb = 1 << 2;
-    int zc = 1 << 3;
-    int u = 0 * 42;
-    double v = 1 * 42;
-    int w = 2 * 42;
-    int x = 0;
-    int y = 0;
-    int bit0 = 1 << 0;
-    int mask0 = (1 << 0) - 1;
-    int bit1 = 1 << 1;
-    int mask1 = (1 << 1) - 1;
     int gocpp_id_0 = 1 << 2;
     int gocpp_id_1 = (1 << 2) - 1;
-    int bit3 = 1 << 3;
-    int mask3 = (1 << 3) - 1;
     void main()
     {
         mocklib::Printf("%v %v %v // %v %v %v\n", c0, c1, c2, c3, c4, c5);

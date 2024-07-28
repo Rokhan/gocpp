@@ -3,20 +3,23 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mem.fwd.h"
-// #include "golang/runtime/mgcscavenge.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/mpagealloc.fwd.h"
-// #include "golang/runtime/mranges.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/mstats.fwd.h"  [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/slice.fwd.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
+    const long summaryLevels = 5;
+    const long pageAlloc32Bit = 0;
+    const long pageAlloc64Bit = 1;
+    const long pallocChunksL1Bits = 13;
 }
-
+#include "golang/runtime/internal/atomic/types.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/mem.fwd.h"
+// #include "golang/runtime/mgcscavenge.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mpagealloc.fwd.h"
+#include "golang/runtime/mranges.fwd.h"
+#include "golang/runtime/mstats.fwd.h"
+#include "golang/runtime/panic.fwd.h"
+// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
+#include "golang/runtime/slice.fwd.h"
+// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
+#include "golang/unsafe/unsafe.fwd.h"

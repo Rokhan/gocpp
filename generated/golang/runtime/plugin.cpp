@@ -143,11 +143,11 @@ namespace golang::runtime
             gocpp::map<std::string, go_any> syms;
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
-            auto symName = resolveNameOff(Pointer(gocpp::recv(unsafe), md->types), ptab.name);
-            auto t = typeOff(gocpp::recv(toRType((_type*)(Pointer(gocpp::recv(unsafe), md->types)))), ptab.typ);
+            auto symName = resolveNameOff(unsafe::Pointer(md->types), ptab.name);
+            auto t = typeOff(gocpp::recv(toRType((_type*)(unsafe::Pointer(md->types)))), ptab.typ);
             go_any val = {};
-            auto valp = (gocpp::array<unsafe::Pointer, 2>*)(Pointer(gocpp::recv(unsafe), & val));
-            (*valp)[0] = Pointer(gocpp::recv(unsafe), t);
+            auto valp = (gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& val));
+            (*valp)[0] = unsafe::Pointer(t);
             auto name = Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
@@ -172,10 +172,10 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto f = funcInfo {(_func*)(Pointer(gocpp::recv(unsafe), & md->pclntable[md->ftab[i].funcoff])), md};
+            auto f = funcInfo {(_func*)(unsafe::Pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
             auto name2 = "none";
-            auto entry2 = uintptr(0);
+            auto entry2 = uintptr_t(0);
             auto f2 = findfunc(entry);
             if(valid(gocpp::recv(f2)))
             {

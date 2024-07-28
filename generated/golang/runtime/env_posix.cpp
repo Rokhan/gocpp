@@ -72,7 +72,7 @@ namespace golang::runtime
             return;
         }
         auto arg = gocpp::array<unsafe::Pointer, 2> {cstring(k), cstring(v)};
-        asmcgocall(_cgo_setenv, Pointer(gocpp::recv(unsafe), & arg));
+        asmcgocall(_cgo_setenv, unsafe::Pointer(& arg));
     }
 
     void unsetenv_c(std::string k)
@@ -82,14 +82,14 @@ namespace golang::runtime
             return;
         }
         auto arg = gocpp::array<unsafe::Pointer, 1> {cstring(k)};
-        asmcgocall(_cgo_unsetenv, Pointer(gocpp::recv(unsafe), & arg));
+        asmcgocall(_cgo_unsetenv, unsafe::Pointer(& arg));
     }
 
     unsafe::Pointer cstring(std::string s)
     {
         auto p = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s) + 1);
         copy(p, s);
-        return Pointer(gocpp::recv(unsafe), & p[0]);
+        return unsafe::Pointer(& p[0]);
     }
 
 }

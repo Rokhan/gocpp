@@ -9,10 +9,10 @@
 #include "golang/runtime/sigqueue.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/extern.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
@@ -23,9 +23,6 @@
 
 namespace golang::runtime
 {
-    extern int sigIdle;
-    extern int sigReceiving;
-    extern int sigSending;
     bool sigsend(uint32_t s);
     uint32_t signal_recv();
     void signalWaitUntilIdle();

@@ -2028,6 +2028,12 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
+			if s.Comment != nil {
+				for _, comment := range s.Comment.List {
+					result = append(result, inlineStrf("// %s\n", comment.Text)...)
+				}
+			}
+
 			t := cv.convertTypeSpec(s, end, isNamespace)
 			result = append(result, t.defs...)
 			if t.str != "" {

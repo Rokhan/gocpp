@@ -12,16 +12,37 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/goarch.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 // #include "golang/runtime/defs_windows.h"  [Ignored, known errors]
 #include "golang/runtime/defs_windows_amd64.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/malloc.h"
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mgc.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/netpoll_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/pinner.h"
 // #include "golang/runtime/preempt.h"  [Ignored, known errors]
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
@@ -35,8 +56,14 @@
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/stubs_amd64.h"
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/syscall_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 #include "golang/runtime/utf8.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -305,7 +332,7 @@ namespace golang::runtime
         if(ret != 0)
         {
             auto n = 0;
-            auto maskbits = int(unsafe::Sizeof(mask) * 8);
+            auto maskbits = int(gocpp::Sizeof<uintptr_t>() * 8);
             for(auto i = 0; i < maskbits; i++)
             {
                 if(mask & (1 << (unsigned int)(i)) != 0)
@@ -769,7 +796,7 @@ namespace golang::runtime
         }
         unlock(& mp->threadLock);
         memoryBasicInformation mbi = {};
-        auto res = stdcall3(_VirtualQuery, uintptr_t(unsafe::Pointer(& mbi)), uintptr_t(unsafe::Pointer(& mbi)), unsafe::Sizeof(mbi));
+        auto res = stdcall3(_VirtualQuery, uintptr_t(unsafe::Pointer(& mbi)), uintptr_t(unsafe::Pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
         {
             print("runtime: VirtualQuery failed; errno=", getlasterror(), "\n");
@@ -1013,7 +1040,7 @@ namespace golang::runtime
     void profilem(m* mp, uintptr_t thread)
     {
         context* c = {};
-        gocpp::array<unsigned char, unsafe::Sizeof(*c) + 15> cbuf = {};
+        gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
         stdcall2(_GetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
@@ -1142,7 +1169,7 @@ namespace golang::runtime
         }
         unlock(& mp->threadLock);
         context* c = {};
-        gocpp::array<unsigned char, unsafe::Sizeof(*c) + 15> cbuf = {};
+        gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
         lock(& suspendLock);

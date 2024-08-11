@@ -14,6 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/map.h"
+// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/itoa/itoa.h"
@@ -23,10 +24,16 @@
 #include "golang/reflect/makefunc.h"
 #include "golang/reflect/type.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mgc.h"
+#include "golang/runtime/plugin.h"
+#include "golang/runtime/proc.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/stack.h"
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/sync/pool.h"  [Ignored, known errors]
+// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
@@ -285,7 +292,7 @@ namespace golang::reflect
         mustBe(gocpp::recv(v), Bool);
     }
 
-    internal/abi::Type* bytesType = rtypeOf((gocpp::slice<unsigned char>)(nullptr));
+    abi::Type* bytesType = rtypeOf((gocpp::slice<unsigned char>)(nullptr));
     gocpp::slice<unsigned char> Bytes(struct Value v)
     {
         if(v.typ_ == bytesType)
@@ -689,7 +696,7 @@ namespace golang::reflect
         }
         auto ftyp = ctxt->ftyp;
         auto f = ctxt->fn;
-        internal/abi::Type* _;
+        abi::Type* _;
         sync::Pool* _;
         abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
@@ -956,7 +963,7 @@ namespace golang::reflect
     {
         auto rcvr = ctxt->rcvr;
         auto [rcvrType, valueFuncType, methodFn] = methodReceiver("call", rcvr, ctxt->method);
-        internal/abi::Type* _;
+        abi::Type* _;
         sync::Pool* _;
         abiDesc valueABI;
         std::tie(_, _, valueABI) = funcLayout(valueFuncType, nullptr);

@@ -19,12 +19,3 @@ namespace golang::registry
     const long RESOURCE_REQUIREMENTS_LIST = 10;
     const long QWORD = 11;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/internal/syscall/windows/registry/key.fwd.h"
-#include "golang/internal/syscall/windows/registry/syscall.fwd.h"
-#include "golang/internal/syscall/windows/registry/zsyscall_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/unicode/utf16/utf16.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

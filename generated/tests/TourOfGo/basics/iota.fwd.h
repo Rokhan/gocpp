@@ -36,4 +36,3 @@ namespace golang::main
     const Kind Int = 2;
     const Kind Int8 = 3;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

@@ -8,4 +8,3 @@ namespace golang::runtime
 {
     struct pageTraceBuf;
 }
-#include "golang/runtime/runtime2.fwd.h"

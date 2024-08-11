@@ -8,4 +8,3 @@ namespace golang::syscall
 {
     const bool asanenabled = false;
 }
-#include "golang/unsafe/unsafe.fwd.h"

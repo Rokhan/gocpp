@@ -3,8 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
-#include "golang/internal/goos/zgoos_windows.fwd.h"
-#include "golang/runtime/env_posix.fwd.h"
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]

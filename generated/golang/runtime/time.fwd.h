@@ -26,16 +26,3 @@ namespace golang::runtime
 {
     struct timer;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/netpoll.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

@@ -9,7 +9,6 @@
 #include "golang/runtime/internal/math/math.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
 
 namespace golang::math
 {

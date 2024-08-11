@@ -9,7 +9,6 @@
 #include "golang/runtime/float.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

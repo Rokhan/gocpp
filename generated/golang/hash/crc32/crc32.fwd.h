@@ -14,9 +14,3 @@ namespace golang::crc32
     struct digest;
     const int marshaledSize = len(magic) + 4 + 4;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/hash/crc32/crc32_amd64.fwd.h"
-#include "golang/hash/crc32/crc32_generic.fwd.h"
-#include "golang/hash/hash.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/once.fwd.h"

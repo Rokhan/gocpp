@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/moretypes/slices-of-slice.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/strings/strings.h"
 
 namespace golang::main

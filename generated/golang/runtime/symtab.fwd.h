@@ -35,20 +35,3 @@ namespace golang::runtime
     struct funcInfo;
     struct srcFunc;
 }
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/atomic_pointer.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

@@ -10,26 +10,14 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mfinal.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
+#include "golang/runtime/mranges.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
-#include "golang/runtime/stkframe.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/traceback.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

@@ -3,5 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/golang.org/x/tour/wc/wc.fwd.h" [Ignored, known errors]
-#include "golang/strings/strings.fwd.h"

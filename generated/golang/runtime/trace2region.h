@@ -9,13 +9,8 @@
 #include "golang/runtime/trace2region.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mem.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

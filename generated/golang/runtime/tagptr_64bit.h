@@ -9,12 +9,7 @@
 #include "golang/runtime/tagptr_64bit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.h"
-#include "golang/internal/goos/zgoos_windows.h"
-#include "golang/runtime/extern.h"
-#include "golang/runtime/panic.h"
 #include "golang/runtime/tagptr.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

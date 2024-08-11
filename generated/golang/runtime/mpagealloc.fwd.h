@@ -28,7 +28,7 @@ namespace golang::runtime
 {
     const int logPallocChunkBytes = logPallocChunkPages + pageShift;
     struct pageAlloc;
-    /*const uintptr_t pallocSumBytes = unsafe::Sizeof(pallocSum(0)) [known mising deps] */;
+    /*const uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
     const int logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
     const int pallocChunkBytes = pallocChunkPages * pageSize;
     const int summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;
@@ -37,10 +37,3 @@ namespace golang::runtime
     const pallocSum freeChunkSum = pallocSum(uint64_t(pallocChunkPages) | uint64_t(pallocChunkPages << logMaxPackedValue) | uint64_t(pallocChunkPages << (2 * logMaxPackedValue)));
     const int pallocChunksL1Shift = pallocChunksL2Bits;
 }
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

@@ -9,4 +9,3 @@ namespace golang::main
     struct I;
     struct T;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

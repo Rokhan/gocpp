@@ -50,7 +50,7 @@ namespace golang::runtime
     uintptr_t memhash_varlen(unsafe::Pointer p, uintptr_t h)
     {
         auto ptr = getclosureptr();
-        auto size = *(uintptr_t*)(unsafe::Pointer(ptr + unsafe::Sizeof(h)));
+        auto size = *(uintptr_t*)(unsafe::Pointer(ptr + gocpp::Sizeof<uintptr_t>()));
         return memhash(p, h, size);
     }
 

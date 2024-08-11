@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/basics/named-results.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

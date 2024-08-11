@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/methods/exercise-images.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/pic/pic.h"  [Ignored, known errors]
 #include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 

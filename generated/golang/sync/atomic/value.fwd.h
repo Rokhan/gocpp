@@ -14,4 +14,3 @@ namespace golang::atomic
 {
     struct efaceWords;
 }
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]

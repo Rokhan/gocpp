@@ -10,4 +10,3 @@ namespace golang::color
     struct NYCbCrA;
     struct CMYK;
 }
-#include "golang/image/color/color.fwd.h"

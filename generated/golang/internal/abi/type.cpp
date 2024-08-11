@@ -628,10 +628,10 @@ namespace golang::abi
 
     gocpp::slice<Type*> InSlice(struct FuncType* t)
     {
-        auto uadd = unsafe::Sizeof(*t);
+        auto uadd = gocpp::Sizeof<FuncType>();
         if(t->TFlag & TFlagUncommon != 0)
         {
-            uadd += unsafe::Sizeof(UncommonType {});
+            uadd += gocpp::Sizeof<UncommonType>();
         }
         if(t->InCount == 0)
         {
@@ -647,10 +647,10 @@ namespace golang::abi
         {
             return nullptr;
         }
-        auto uadd = unsafe::Sizeof(*t);
+        auto uadd = gocpp::Sizeof<FuncType>();
         if(t->TFlag & TFlagUncommon != 0)
         {
-            uadd += unsafe::Sizeof(UncommonType {});
+            uadd += gocpp::Sizeof<UncommonType>();
         }
         return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0")).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }

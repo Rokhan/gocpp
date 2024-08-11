@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings

@@ -12,15 +12,27 @@
 #include "gocpp/support.h"
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/atomic_pointer.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/mstats.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
@@ -28,10 +40,16 @@
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtabinl.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
@@ -725,7 +743,7 @@ namespace golang::runtime
         auto x = uintptr_t(pcOff) + datap->text - datap->minpc;
         auto b = x / pcbucketsize;
         auto i = x % pcbucketsize / (pcbucketsize / nsub);
-        auto ffb = (findfuncbucket*)(add(unsafe::Pointer(datap->findfunctab), b * unsafe::Sizeof(findfuncbucket {})));
+        auto ffb = (findfuncbucket*)(add(unsafe::Pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
         for(; datap->ftab[idx + 1].entryoff <= pcOff; )
         {
@@ -1030,7 +1048,7 @@ namespace golang::runtime
 
     uint32_t pcdatastart(funcInfo f, uint32_t table)
     {
-        return *(uint32_t*)(add(unsafe::Pointer(& f.nfuncdata), unsafe::Sizeof(f.nfuncdata) + uintptr_t(table) * 4));
+        return *(uint32_t*)(add(unsafe::Pointer(& f.nfuncdata), gocpp::Sizeof<uint8_t>() + uintptr_t(table) * 4));
     }
 
     int32_t pcdatavalue(funcInfo f, uint32_t table, uintptr_t targetpc)
@@ -1069,7 +1087,7 @@ namespace golang::runtime
             return nullptr;
         }
         auto base = f.datap->gofunc;
-        auto p = uintptr_t(unsafe::Pointer(& f.nfuncdata)) + unsafe::Sizeof(f.nfuncdata) + uintptr_t(f.npcdata) * 4 + uintptr_t(i) * 4;
+        auto p = uintptr_t(unsafe::Pointer(& f.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f.npcdata) * 4 + uintptr_t(i) * 4;
         auto off = *(uint32_t*)(unsafe::Pointer(p));
         uintptr_t mask = {};
         if(off == ~ uint32_t(0))

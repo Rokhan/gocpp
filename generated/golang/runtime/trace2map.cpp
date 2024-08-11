@@ -16,6 +16,7 @@
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -127,7 +128,7 @@ namespace golang::runtime
     {
         auto sl = gocpp::Init<notInHeapSlice>([](notInHeapSlice& x) { x.array = alloc(gocpp::recv(tab->mem), size); x.len = int(size); x.cap = int(size); });
         memmove(unsafe::Pointer(sl.array), data, size);
-        auto meta = (traceMapNode*)(unsafe::Pointer(alloc(gocpp::recv(tab->mem), unsafe::Sizeof(traceMapNode {}))));
+        auto meta = (traceMapNode*)(unsafe::Pointer(alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
         *(notInHeapSlice*)(unsafe::Pointer(& meta->data)) = sl;
         meta->id = id;
         meta->hash = hash;
@@ -139,7 +140,7 @@ namespace golang::runtime
         assertLockHeld(& tab->lock);
         drop(gocpp::recv(tab->mem));
         Store(gocpp::recv(tab->seq), 0);
-        memclrNoHeapPointers(unsafe::Pointer(& tab->tab), unsafe::Sizeof(tab->tab));
+        memclrNoHeapPointers(unsafe::Pointer(& tab->tab), gocpp::Sizeof<atomic::UnsafePointer, 8192>>());
     }
 
 }

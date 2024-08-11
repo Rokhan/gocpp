@@ -24,4 +24,3 @@ namespace golang::runtime
     struct stackObject;
     struct stackScanState;
 }
-#include "golang/runtime/panic.fwd.h"

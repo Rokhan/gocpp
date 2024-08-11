@@ -9,12 +9,7 @@
 #include "golang/internal/syscall/windows/registry/key.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/syscall/windows/registry/syscall.h"
-#include "golang/internal/syscall/windows/registry/zsyscall_windows.h"
-#include "golang/runtime/proc.h"
-#include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
 
 namespace golang::registry
 {

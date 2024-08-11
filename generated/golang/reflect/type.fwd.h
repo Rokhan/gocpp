@@ -56,7 +56,7 @@ namespace golang::reflect
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/reflect/abi.fwd.h"
 #include "golang/reflect/value.fwd.h"
-// #include "golang/sync/pool.fwd.h" [Ignored, known errors]
+#include "golang/sync/pool.fwd.h"
 
 namespace golang::reflect
 {
@@ -86,13 +86,3 @@ namespace golang::reflect
     const Kind Ptr = Pointer;
     const ChanDir BothDir = RecvDir | SendDir;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/strconv/itoa.fwd.h"
-#include "golang/strconv/quote.fwd.h"
-#include "golang/sync/map.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/unicode/digit.fwd.h"
-#include "golang/unicode/graphic.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

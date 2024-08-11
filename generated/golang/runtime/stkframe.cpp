@@ -13,11 +13,15 @@
 
 #include "golang/internal/abi/abi.h"
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/sys/consts.h"
+#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -284,7 +288,7 @@ namespace golang::runtime
                 args = stackmapdata(stackmap, pcdata);
             }
         }
-        if((GOARCH == "amd64" || GOARCH == "arm64" || GOARCH == "loong64" || GOARCH == "ppc64" || GOARCH == "ppc64le" || GOARCH == "riscv64") && unsafe::Sizeof(abi::RegArgs {}) > 0 && isReflect)
+        if((GOARCH == "amd64" || GOARCH == "arm64" || GOARCH == "loong64" || GOARCH == "ppc64" || GOARCH == "ppc64le" || GOARCH == "riscv64") && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
             bitvector locals;
             bitvector args;

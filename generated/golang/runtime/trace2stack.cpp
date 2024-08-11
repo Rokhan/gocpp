@@ -12,18 +12,39 @@
 #include "gocpp/support.h"
 
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/goarch.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/mprof.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+#include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+#include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/stubs_amd64.h"
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/symtabinl.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2event.h"
 // #include "golang/runtime/trace2map.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2region.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2string.h"
+#include "golang/runtime/trace2time.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
@@ -94,7 +115,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        auto [id, _] = put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * unsafe::Sizeof(uintptr_t(0)));
+        auto [id, _] = put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
         return id;
     }
 
@@ -106,7 +127,7 @@ namespace golang::runtime
             auto stk = bucket(gocpp::recv(t->tab), i);
             for(; stk != nullptr; stk = next(gocpp::recv(stk)))
             {
-                auto stack = unsafe::Slice((uintptr_t*)(unsafe::Pointer(& stk->data[0])), uintptr_t(len(stk->data)) / unsafe::Sizeof(uintptr_t(0)));
+                auto stack = unsafe::Slice((uintptr_t*)(unsafe::Pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
                 bool flushed = {};

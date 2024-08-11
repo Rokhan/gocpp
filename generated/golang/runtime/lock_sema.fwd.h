@@ -11,14 +11,3 @@ namespace golang::runtime
     const long active_spin_cnt = 30;
     const long passive_spin = 1;
 }
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mprof.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

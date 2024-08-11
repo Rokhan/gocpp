@@ -48,16 +48,9 @@ namespace golang::png
 #include "golang/hash/hash.fwd.h"
 #include "golang/image/color/color.fwd.h"
 #include "golang/image/image.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::png
 {
     struct decoder;
 }
-#include "golang/compress/zlib/reader.fwd.h"
-#include "golang/encoding/binary/binary.fwd.h"
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/hash/crc32/crc32.fwd.h"
-#include "golang/image/format.fwd.h"
-#include "golang/image/geom.fwd.h"
-#include "golang/image/png/paeth.fwd.h"

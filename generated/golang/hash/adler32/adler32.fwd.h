@@ -12,5 +12,3 @@ namespace golang::adler32
     using digest = uint32_t;
     const int marshaledSize = len(magic) + 4;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/hash/hash.fwd.h"

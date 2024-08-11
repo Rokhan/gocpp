@@ -13,7 +13,7 @@
 
 #include "golang/compress/zlib/reader.h"
 #include "golang/encoding/binary/binary.h"
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
@@ -21,7 +21,7 @@
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
 #include "golang/image/png/paeth.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::png
 {
@@ -412,7 +412,7 @@ namespace golang::png
                     }
                     for(auto i = 0; i < n; i++)
                     {
-                        auto rgba = gocpp::getValue<image/color::RGBA>(d->palette[i]);
+                        auto rgba = gocpp::getValue<color::RGBA>(d->palette[i]);
                         d->palette[i] = color::NRGBA {rgba.R, rgba.G, rgba.B, d->tmp[i]};
                     }
                     break;

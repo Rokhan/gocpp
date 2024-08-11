@@ -9,21 +9,15 @@
 #include "golang/reflect/type.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/funcpc.h"
-#include "golang/internal/abi/map.h"
+#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/abi.h"
 #include "golang/reflect/value.h"
-#include "golang/strconv/itoa.h"
-#include "golang/strconv/quote.h"
+#include "golang/sync/atomic/type.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
-// #include "golang/sync/pool.h"  [Ignored, known errors]
-#include "golang/unicode/digit.h"
-#include "golang/unicode/graphic.h"
-#include "golang/unicode/utf8/utf8.h"
-#include "golang/unsafe/unsafe.h"
+#include "golang/sync/pool.h"
 
 namespace golang::reflect
 {
@@ -431,6 +425,7 @@ namespace golang::reflect
     abi::Type* ptrTo(struct rtype* t);
     abi::Type* ptrTo(abi::Type* t);
     uint32_t fnv1(uint32_t x, gocpp::slice<unsigned char> list);
+
     template<typename... Args>
     uint32_t fnv1(uint32_t x, Args... list)
     {

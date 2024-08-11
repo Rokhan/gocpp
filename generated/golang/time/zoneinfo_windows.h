@@ -9,14 +9,8 @@
 #include "golang/time/zoneinfo_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
 #include "golang/internal/syscall/windows/registry/key.h"
-#include "golang/internal/syscall/windows/registry/value.h"
-#include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {

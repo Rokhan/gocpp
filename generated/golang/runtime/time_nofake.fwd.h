@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/stubs3.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

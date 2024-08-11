@@ -21,6 +21,3 @@ namespace golang::runtime
     struct timeHistogram;
     const int timeHistTotalBuckets = timeHistNumBuckets * timeHistNumSubBuckets + 2;
 }
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-#include "golang/runtime/metrics.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

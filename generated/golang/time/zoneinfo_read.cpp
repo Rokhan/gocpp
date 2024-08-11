@@ -13,6 +13,7 @@
 
 #include "golang/errors/errors.h"
 #include "golang/runtime/extern.h"
+#include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/time/sys_windows.h"
 #include "golang/time/time.h"

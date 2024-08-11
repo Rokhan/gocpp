@@ -9,13 +9,9 @@
 #include "golang/compress/zlib/reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bufio/bufio.h"
 #include "golang/compress/flate/inflate.h"
-#include "golang/encoding/binary/binary.h"
-#include "golang/errors/errors.h"
-#include "golang/hash/adler32/adler32.h"
 #include "golang/hash/hash.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::zlib
 {

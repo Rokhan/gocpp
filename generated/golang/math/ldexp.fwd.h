@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/bits.fwd.h"
-#include "golang/math/copysign.fwd.h"
-#include "golang/math/stubs.fwd.h"
-#include "golang/math/unsafe.fwd.h"

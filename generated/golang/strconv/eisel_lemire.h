@@ -9,8 +9,6 @@
 #include "golang/strconv/eisel_lemire.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits/bits.h"
-#include "golang/math/unsafe.h"
 
 namespace golang::strconv
 {

@@ -8,4 +8,3 @@ namespace golang::main
 {
     struct gocpp_id_0;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

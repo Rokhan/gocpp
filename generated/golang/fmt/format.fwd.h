@@ -10,12 +10,9 @@ namespace golang::fmt
     const bool go_unsigned = false;
     struct fmtFlags;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
+#include "golang/fmt/print.fwd.h"
 
 namespace golang::fmt
 {
     struct fmt;
 }
-#include "golang/strconv/ftoa.fwd.h"
-#include "golang/strconv/quote.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"

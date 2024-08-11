@@ -4,14 +4,10 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/image/image.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::image
 {
     struct format;
     struct reader;
 }
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/sync/atomic/value.fwd.h"
-#include "golang/sync/mutex.fwd.h"

@@ -8,4 +8,3 @@ namespace golang::main
 {
     struct Person;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

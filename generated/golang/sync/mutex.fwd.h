@@ -14,7 +14,3 @@ namespace golang::sync
     const int mutexWaiterShift = 3;
     const double starvationThresholdNs = 1e6;
 }
-// #include "golang/internal/race/norace.fwd.h" [Ignored, known errors]
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
-// #include "golang/sync/runtime.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

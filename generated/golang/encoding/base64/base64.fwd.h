@@ -12,7 +12,7 @@ namespace golang::base64
     const char invalidIndex = '\xff';
     using CorruptInputError = int64_t;
 }
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::base64
 {
@@ -20,7 +20,3 @@ namespace golang::base64
     struct decoder;
     struct newlineFilteringReader;
 }
-#include "golang/encoding/binary/binary.fwd.h"
-#include "golang/slices/slices.fwd.h"
-#include "golang/strconv/atoi.fwd.h"
-#include "golang/strconv/itoa.fwd.h"

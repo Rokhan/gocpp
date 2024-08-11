@@ -89,7 +89,3 @@ namespace golang::syscall
 {
     using Token = Handle;
 }
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

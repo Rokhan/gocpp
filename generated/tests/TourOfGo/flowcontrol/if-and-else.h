@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/flowcontrol/if-and-else.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/math/pow.h"
 
 namespace golang::main
 {

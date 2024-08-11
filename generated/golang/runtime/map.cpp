@@ -26,7 +26,7 @@
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/msize_allocheaders.h"
 #include "golang/runtime/panic.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+#include "golang/runtime/race0.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
@@ -877,7 +877,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(unsafe::Sizeof(hiter {}) / goarch::PtrSize != 12)
+        if(gocpp::Sizeof<hiter>() / goarch::PtrSize != 12)
         {
             go_throw("hash_iter size incorrect");
         }

@@ -3,6 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/math/pow.fwd.h"
-#include "golang/math/sqrt.fwd.h"

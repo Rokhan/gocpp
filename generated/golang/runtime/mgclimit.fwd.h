@@ -26,6 +26,3 @@ namespace golang::runtime
     struct gcCPULimiterState;
     struct limiterEvent;
 }
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]

@@ -11,4 +11,3 @@ namespace golang::runtime
     struct context;
     struct _DISPATCHER_CONTEXT;
 }
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]

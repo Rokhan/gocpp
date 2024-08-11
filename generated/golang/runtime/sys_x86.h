@@ -9,9 +9,7 @@
 #include "golang/runtime/sys_x86.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

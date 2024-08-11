@@ -17,7 +17,7 @@
 #include "golang/errors/errors.h"
 #include "golang/hash/adler32/adler32.h"
 #include "golang/hash/hash.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::zlib
 {
@@ -147,7 +147,7 @@ namespace golang::zlib
     std::string Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
-        if(auto [fr, ok] = gocpp::getValue<compress/flate::Reader>(r); ok)
+        if(auto [fr, ok] = gocpp::getValue<flate::Reader>(r); ok)
         {
             z->r = fr;
         }
@@ -202,7 +202,7 @@ namespace golang::zlib
         }
         else
         {
-            Reset(gocpp::recv(gocpp::getValue<compress/flate::Resetter>(z->decompressor)), z->r, dict);
+            Reset(gocpp::recv(gocpp::getValue<flate::Resetter>(z->decompressor)), z->r, dict);
         }
         z->digest = adler32::New();
         return nullptr;

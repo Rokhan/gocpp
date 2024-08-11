@@ -25,9 +25,3 @@ namespace golang::runtime
 {
     struct traceSchedResourceState;
 }
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/trace2.fwd.h"
-#include "golang/runtime/trace2buf.fwd.h"
-#include "golang/runtime/trace2event.fwd.h"

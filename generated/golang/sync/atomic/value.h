@@ -9,8 +9,6 @@
 #include "golang/sync/atomic/value.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::atomic
 {

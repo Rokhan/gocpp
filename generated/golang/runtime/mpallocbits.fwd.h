@@ -15,4 +15,3 @@ namespace golang::runtime
     using pageBits = gocpp::array<uint64_t, pallocChunkPages / 64>;
     using pallocBits = pageBits;
 }
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"

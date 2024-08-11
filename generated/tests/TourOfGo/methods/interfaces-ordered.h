@@ -9,9 +9,6 @@
 #include "tests/TourOfGo/methods/interfaces-ordered.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/math/const.h"
-#include "golang/math/sqrt.h"
 
 namespace golang::main
 {

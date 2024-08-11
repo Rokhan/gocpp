@@ -9,19 +9,16 @@
 #include "golang/sync/pool.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
-#include "golang/runtime/debug.h"
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/type.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-// #include "golang/sync/poolqueue.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
+#include "golang/sync/poolqueue.h"
 
 namespace golang::sync
 {
     struct Pool
     {
-        noCopy noCopy;
+        /* noCopy noCopy; [Known incomplete type] */
         unsafe::Pointer local;
         uintptr_t localSize;
         unsafe::Pointer victim;
@@ -36,7 +33,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct Pool& value);
     struct poolLocalInternal
     {
-        go_any private;
+        go_any go_private;
         poolChain shared;
 
         using isGoStruct = void;
@@ -47,7 +44,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     struct poolLocal
     {
-        gocpp::array<unsigned char, 128 - unsafe::Sizeof(poolLocalInternal {}) % 128> pad;
+        gocpp::array<unsigned char, 128 - gocpp::Sizeof<poolLocalInternal>() % 128> pad;
 
         using isGoStruct = void;
 

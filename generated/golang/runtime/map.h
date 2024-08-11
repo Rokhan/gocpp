@@ -9,28 +9,8 @@
 #include "golang/runtime/map.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/funcpc.h"
-#include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-// #include "golang/runtime/alg.h"  [Ignored, known errors]
-#include "golang/runtime/asan0.h"
-#include "golang/runtime/error.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/map_faststr.h"
-#include "golang/runtime/mbarrier.h"
-#include "golang/runtime/msan0.h"
-#include "golang/runtime/msize_allocheaders.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

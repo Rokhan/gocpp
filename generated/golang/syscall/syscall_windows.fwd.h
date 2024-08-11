@@ -37,20 +37,8 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
-    const uintptr_t ptrSize = unsafe::Sizeof(uintptr_t(0));
+    const uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
     struct Sockaddr;
     struct RawSockaddrUnix;
     struct Rusage;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-#include "golang/internal/itoa/itoa.fwd.h"
-// #include "golang/internal/race/norace.fwd.h" [Ignored, known errors]
-#include "golang/runtime/extern.fwd.h"
-#include "golang/sync/once.fwd.h"
-#include "golang/syscall/asan0.fwd.h"
-#include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/msan0.fwd.h"
-#include "golang/syscall/wtf8_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"

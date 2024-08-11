@@ -9,22 +9,7 @@
 #include "golang/runtime/metrics.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/debug.h"
-#include "golang/runtime/float.h"
-#include "golang/runtime/histogram.h"
-#include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mstats.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/proc.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.h"
-// #include "golang/runtime/sema.h"  [Ignored, known errors]
-#include "golang/runtime/sizeclasses.h"
-#include "golang/runtime/slice.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
@@ -51,10 +36,11 @@ namespace golang::runtime
     void compute(metricReader f, statAggregate* _, metricValue* out);
     void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
     statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
+
     template<typename... Args>
     statDepSet makeStatDepSet(Args... deps)
     {
-        return makeStatDepSet(, gocpp::ToSlice<statDep>(deps...));
+        return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
     }
 
     statDepSet difference(statDepSet s, statDepSet b);
@@ -131,4 +117,30 @@ namespace golang::runtime
         cpuStatsAggregate cpuStats;
         gcStatsAggregate gcStats;
 
-        using i
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
+    void ensure(struct statAggregate* a, statDepSet* deps);
+    struct metricSample
+    {
+        std::string name;
+        metricValue value;
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+    struct metricValue
+    {
+        metricKind kind;
+        uint64_t scalar;
+        unsafe::Pointer pointer;
+
+        using isGoStruct = void;
+
+        std::ostream& PrintTo(std::ostream& os) co

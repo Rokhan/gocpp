@@ -9,7 +9,6 @@
 #include "golang/runtime/stubs_amd64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

@@ -11,16 +11,18 @@
 #include "golang/runtime/metrics.h"
 #include "gocpp/support.h"
 
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/runtime/debug.h"
 #include "golang/runtime/float.h"
 #include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+#include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/sema.h"  [Ignored, known errors]
 #include "golang/runtime/sizeclasses.h"

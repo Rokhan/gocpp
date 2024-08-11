@@ -10,18 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/error.h"
-#include "golang/runtime/extern.h"
-#include "golang/runtime/hash64.h"
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

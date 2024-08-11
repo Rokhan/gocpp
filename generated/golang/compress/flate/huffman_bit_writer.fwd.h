@@ -15,12 +15,9 @@ namespace golang::flate
     const int bufferSize = bufferFlushSize + 8;
 }
 #include "golang/compress/flate/huffman_code.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::flate
 {
     struct huffmanBitWriter;
 }
-#include "golang/compress/flate/deflate.fwd.h"
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/compress/flate/token.fwd.h"

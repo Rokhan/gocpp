@@ -9,14 +9,7 @@
 #include "golang/runtime/error.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bytealg/indexbyte_native.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/traceback.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
 
 namespace golang::runtime
 {

@@ -9,7 +9,6 @@
 #include "golang/strconv/bytealg.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bytealg/indexbyte_native.h"
 
 namespace golang::strconv
 {

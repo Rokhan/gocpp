@@ -9,7 +9,6 @@
 #include "tests/HelloWorld.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/image/color/color.h"
 
 namespace golang::main

@@ -11,10 +11,12 @@
 #include "tests/TourOfGo/generics/generics.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 
 namespace golang::main
 {
+
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
         auto hash = uint32_t(0);
@@ -33,6 +35,29 @@ namespace golang::main
             sq *= sq;
         }
         return {hash, pow};
+    }
+
+    
+    template<typename T>
+    std::ostream& Wrapper<T>::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << value;
+        os << '}';
+        return os;
+    }
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    template<typename T>
+    T Get(struct Wrapper<T>* p)
+    {
+        return p->value;
     }
 
     void main()

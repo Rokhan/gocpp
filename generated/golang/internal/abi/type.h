@@ -9,7 +9,6 @@
 #include "golang/internal/abi/type.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::abi
 {

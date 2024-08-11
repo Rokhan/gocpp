@@ -3,5 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/cmp/cmp.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

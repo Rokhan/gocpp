@@ -9,10 +9,6 @@
 #include "golang/compress/flate/huffman_code.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/flate/inflate.h"
-#include "golang/math/bits/bits.h"
-#include "golang/math/const.h"
-#include "golang/sort/sort.h"
 
 namespace golang::flate
 {

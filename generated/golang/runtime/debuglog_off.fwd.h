@@ -9,4 +9,3 @@ namespace golang::runtime
     const bool dlogEnabled = false;
     struct dlogPerM;
 }
-#include "golang/runtime/debuglog.fwd.h"

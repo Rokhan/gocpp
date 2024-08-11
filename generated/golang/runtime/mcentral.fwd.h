@@ -11,13 +11,3 @@ namespace golang::runtime
 {
     struct mcentral;
 }
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcsweep.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/sizeclasses.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]

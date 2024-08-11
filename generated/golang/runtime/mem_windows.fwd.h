@@ -15,7 +15,3 @@ namespace golang::runtime
     const long _ERROR_NOT_ENOUGH_MEMORY = 8;
     const long _ERROR_COMMITMENT_LIMIT = 1455;
 }
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

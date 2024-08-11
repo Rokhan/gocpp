@@ -9,20 +9,9 @@
 #include "golang/runtime/slice.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/funcpc.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/asan0.h"
-#include "golang/runtime/error.h"
-#include "golang/runtime/internal/math/math.h"
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-#include "golang/runtime/msan0.h"
-#include "golang/runtime/msize_allocheaders.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

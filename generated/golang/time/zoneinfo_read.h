@@ -9,13 +9,7 @@
 #include "golang/time/zoneinfo_read.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
-#include "golang/runtime/extern.h"
-#include "golang/syscall/zerrors_windows.h"
-#include "golang/time/sys_windows.h"
-#include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
-#include "golang/time/zoneinfo_goroot.h"
 
 namespace golang::time
 {

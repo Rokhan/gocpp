@@ -16,4 +16,3 @@ namespace golang::bits
     const long m4 = 0x0000ffff0000ffff;
     const int UintSize = uintSize;
 }
-#include "golang/math/bits/bits_tables.fwd.h"

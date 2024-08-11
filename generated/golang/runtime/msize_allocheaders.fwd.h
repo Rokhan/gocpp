@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-#include "golang/runtime/sizeclasses.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

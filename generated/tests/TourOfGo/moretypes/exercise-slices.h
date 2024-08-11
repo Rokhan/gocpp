@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/moretypes/exercise-slices.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/pic/pic.h"  [Ignored, known errors]
 
 namespace golang::main
 {

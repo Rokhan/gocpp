@@ -182,7 +182,7 @@ namespace golang::runtime
         {
             if(p->chunks[l1(gocpp::recv(c))] == nullptr)
             {
-                auto l2Size = unsafe::Sizeof(*p->chunks[0]);
+                auto l2Size = gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>();
                 auto r = sysAlloc(l2Size, p->sysStat);
                 if(r == nullptr)
                 {
@@ -223,7 +223,7 @@ namespace golang::runtime
         {
             for(auto i = l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.base))))); i < l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.limit)) - 1))); i++)
             {
-                sysHugePage(unsafe::Pointer(p->chunks[i]), unsafe::Sizeof(*p->chunks[0]));
+                sysHugePage(unsafe::Pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>());
             }
         }
     }

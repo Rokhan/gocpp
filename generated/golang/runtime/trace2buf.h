@@ -9,15 +9,25 @@
 #include "golang/runtime/trace2buf.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-#include "golang/runtime/mem.h"
+#include "golang/runtime/mprof.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/trace2event.h"
+#include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
@@ -67,7 +77,7 @@ namespace golang::runtime
     struct traceBuf
     {
         sys::NotInHeap _;
-        gocpp::array<unsigned char, (64 << 10) - unsafe::Sizeof(traceBufHeader {})> arr;
+        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<traceBufHeader>()> arr;
 
         using isGoStruct = void;
 

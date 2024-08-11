@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/basics/variables-with-initializers.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

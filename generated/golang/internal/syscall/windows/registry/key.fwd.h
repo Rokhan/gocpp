@@ -32,7 +32,3 @@ namespace golang::registry
     const Key USERS = Key(syscall::HKEY_USERS);
     const Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
 }
-#include "golang/internal/syscall/windows/registry/syscall.fwd.h"
-#include "golang/internal/syscall/windows/registry/zsyscall_windows.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"

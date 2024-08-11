@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/basics/ellipsis.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/math/cmplx/sqrt.h"
 
 namespace golang::main
 {
@@ -19,6 +17,7 @@ namespace golang::main
     extern gocpp::complex128 z;
     void DummyPrintList(std::string format, gocpp::slice<std::any> elts);
     void DummyPrintf(std::string format, gocpp::slice<std::any> a);
+
     template<typename... Args>
     void DummyPrintf(std::string format, Args... a)
     {

@@ -9,9 +9,6 @@
 #include "golang/strconv/atoi.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
-#include "golang/strconv/itoa.h"
-#include "golang/strconv/quote.h"
 
 namespace golang::strconv
 {

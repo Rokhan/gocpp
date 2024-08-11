@@ -115,7 +115,7 @@ namespace golang::syscall
         }
         defer.push_back([=]{ FreeEnvironmentStrings(envp); });
         auto r = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 50);
-        auto size = unsafe::Sizeof(*envp);
+        auto size = gocpp::Sizeof<uint16_t>();
         for(; *envp != 0; )
         {
             auto end = unsafe::Pointer(envp);

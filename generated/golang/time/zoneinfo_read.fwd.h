@@ -13,10 +13,3 @@ namespace golang::time
     const long seekEnd = 2;
     struct dataIO;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/time/sys_windows.fwd.h"
-#include "golang/time/time.fwd.h"
-#include "golang/time/zoneinfo.fwd.h"
-#include "golang/time/zoneinfo_goroot.fwd.h"

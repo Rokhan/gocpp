@@ -27,4 +27,3 @@ namespace golang::image
     struct CMYK;
     struct Paletted;
 }
-#include "golang/image/color/ycbcr.fwd.h"

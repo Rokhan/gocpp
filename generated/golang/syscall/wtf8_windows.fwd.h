@@ -16,5 +16,3 @@ namespace golang::syscall
     const int rune1Max = (1 << 7) - 1;
     const int rune2Max = (1 << 11) - 1;
 }
-#include "golang/unicode/utf16/utf16.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"

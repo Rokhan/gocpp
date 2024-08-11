@@ -12,6 +12,11 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
+#include "golang/compress/flate/deflate.h"
+#include "golang/compress/flate/deflatefast.h"
+#include "golang/compress/flate/huffman_bit_writer.h"
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/compress/flate/token.h"
 #include "golang/compress/zlib/writer.h"
 #include "golang/encoding/binary/binary.h"
 #include "golang/hash/crc32/crc32.h"
@@ -21,7 +26,7 @@
 #include "golang/image/image.h"
 #include "golang/image/png/paeth.h"
 #include "golang/image/png/reader.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 #include "golang/strconv/itoa.h"
 
 namespace golang::png
@@ -319,7 +324,7 @@ namespace golang::png
         auto last = - 1;
         for(auto [i, c] : p)
         {
-            auto c1 = gocpp::getValue<image/color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), c));
+            auto c1 = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), c));
             e->tmp[3 * i + 0] = c1.R;
             e->tmp[3 * i + 1] = c1.G;
             e->tmp[3 * i + 2] = c1.B;
@@ -575,7 +580,7 @@ namespace golang::png
                         {
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<image/color::Gray>(Convert(gocpp::recv(color::GrayModel), At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), At(gocpp::recv(m), x, y)));
                                 cr[0][i] = c.Y;
                                 i++;
                             }
@@ -704,7 +709,7 @@ namespace golang::png
                         {
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<image/color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = c.R;
                                 cr[0][i + 1] = c.G;
                                 cr[0][i + 2] = c.B;
@@ -716,7 +721,7 @@ namespace golang::png
                     case 7:
                         for(auto x = b.Min.X; x < b.Max.X; x++)
                         {
-                            auto c = gocpp::getValue<image/color::Gray16>(Convert(gocpp::recv(color::Gray16Model), At(gocpp::recv(m), x, y)));
+                            auto c = gocpp::getValue<color::Gray16>(Convert(gocpp::recv(color::Gray16Model), At(gocpp::recv(m), x, y)));
                             cr[0][i + 0] = uint8_t(c.Y >> 8);
                             cr[0][i + 1] = uint8_t(c.Y);
                             i += 2;
@@ -738,7 +743,7 @@ namespace golang::png
                     case 9:
                         for(auto x = b.Min.X; x < b.Max.X; x++)
                         {
-                            auto c = gocpp::getValue<image/color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), At(gocpp::recv(m), x, y)));
+                            auto c = gocpp::getValue<color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), At(gocpp::recv(m), x, y)));
                             cr[0][i + 0] = uint8_t(c.R >> 8);
                             cr[0][i + 1] = uint8_t(c.R);
                             cr[0][i + 2] = uint8_t(c.G >> 8);
@@ -859,7 +864,7 @@ namespace golang::png
         color::Palette pal = {};
         if(auto [_, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
         {
-            std::tie(pal, _) = gocpp::getValue<image/color::Palette>(ColorModel(gocpp::recv(m)));
+            std::tie(pal, _) = gocpp::getValue<color::Palette>(ColorModel(gocpp::recv(m)));
         }
         if(pal != nullptr)
         {

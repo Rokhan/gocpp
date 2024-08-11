@@ -14,8 +14,11 @@
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
+#include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
@@ -44,7 +47,7 @@ namespace golang::reflect
         auto t = common(gocpp::recv(typ));
         auto ftyp = (funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
-        internal/abi::Type* _;
+        abi::Type* _;
         sync::Pool* _;
         abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
@@ -81,7 +84,7 @@ namespace golang::reflect
         auto rcvr = Value {typ(gocpp::recv(v)), v.ptr, fl};
         auto ftyp = (funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
-        internal/abi::Type* _;
+        abi::Type* _;
         sync::Pool* _;
         abiDesc abid;
         std::tie(_, _, abid) = funcLayout(ftyp, nullptr);

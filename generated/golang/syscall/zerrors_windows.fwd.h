@@ -146,4 +146,3 @@ namespace golang::syscall
     const Errno ENOENT = ERROR_FILE_NOT_FOUND;
     const Errno ENOTDIR = ERROR_PATH_NOT_FOUND;
 }
-#include "golang/syscall/syscall_windows.fwd.h"

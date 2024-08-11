@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/concurrency/exercise-web-crawler.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/errors.h"
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

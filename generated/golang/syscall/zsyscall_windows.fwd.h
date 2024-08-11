@@ -8,12 +8,3 @@ namespace golang::syscall
 {
     const long errnoERROR_IO_PENDING = 997;
 }
-#include "golang/internal/syscall/windows/sysdll/sysdll.fwd.h"
-#include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/types_windows_amd64.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

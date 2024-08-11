@@ -11,4 +11,3 @@ namespace golang::registry
     const long _REG_OPENED_EXISTING_KEY = 2;
     const syscall::Errno _ERROR_NO_MORE_ITEMS = 259;
 }
-#include "golang/syscall/syscall_windows.fwd.h"

@@ -16,6 +16,8 @@
 
 namespace golang::slices
 {
+
+    template<typename S>
     bool Equal(S s1, S s2)
     {
         if(len(s1) != len(s2))
@@ -32,6 +34,8 @@ namespace golang::slices
         return true;
     }
 
+
+    template<typename S2, typename S1>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq)
     {
         if(len(s1) != len(s2))
@@ -49,6 +53,8 @@ namespace golang::slices
         return true;
     }
 
+
+    template<typename S>
     int Compare(S s1, S s2)
     {
         for(auto [i, v1] : s1)
@@ -70,6 +76,8 @@ namespace golang::slices
         return 0;
     }
 
+
+    template<typename S2, typename S1>
     int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp)
     {
         for(auto [i, v1] : s1)
@@ -91,6 +99,8 @@ namespace golang::slices
         return 0;
     }
 
+
+    template<typename S, typename E>
     int Index(S s, E v)
     {
         for(auto [i, gocpp_ignored] : s)
@@ -103,6 +113,8 @@ namespace golang::slices
         return - 1;
     }
 
+
+    template<typename S>
     int IndexFunc(S s, std::function<bool (E)> f)
     {
         for(auto [i, gocpp_ignored] : s)
@@ -115,16 +127,22 @@ namespace golang::slices
         return - 1;
     }
 
+
+    template<typename S, typename E>
     bool Contains(S s, E v)
     {
         return Index(s, v) >= 0;
     }
 
+
+    template<typename S>
     bool ContainsFunc(S s, std::function<bool (E)> f)
     {
         return IndexFunc(s, f) >= 0;
     }
 
+
+    template<typename S>
     S Insert(S s, int i, gocpp::slice<E> v)
     {
         _ = s.make_slice(i);
@@ -157,6 +175,8 @@ namespace golang::slices
         return s;
     }
 
+
+    template<typename S>
     S Delete(S s, int i, int j)
     {
         _ = s.make_slice(i, j, len(s));
@@ -170,6 +190,8 @@ namespace golang::slices
         return s;
     }
 
+
+    template<typename S>
     S DeleteFunc(S s, std::function<bool (E)> del)
     {
         auto i = IndexFunc(s, del);
@@ -189,6 +211,8 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+
+    template<typename S>
     S Replace(S s, int i, int j, gocpp::slice<E> v)
     {
         _ = s.make_slice(i, j);
@@ -243,11 +267,15 @@ namespace golang::slices
         return r;
     }
 
+
+    template<typename S>
     S Clone(S s)
     {
         return append(s.make_slice(, 0, 0), s);
     }
 
+
+    template<typename S>
     S Compact(S s)
     {
         if(len(s) < 2)
@@ -270,6 +298,8 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+
+    template<typename S>
     S CompactFunc(S s, std::function<bool (E, E)> eq)
     {
         if(len(s) < 2)
@@ -292,6 +322,8 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+
+    template<typename S>
     S Grow(S s, int n)
     {
         if(n < 0)
@@ -305,6 +337,8 @@ namespace golang::slices
         return s;
     }
 
+
+    template<typename S>
     S Clip(S s)
     {
         return s.make_slice(, len(s), len(s));
@@ -346,7 +380,7 @@ namespace golang::slices
         {
             return false;
         }
-        auto elemSize = unsafe::Sizeof(a[0]);
+        auto elemSize = gocpp::Sizeof<E>();
         if(elemSize == 0)
         {
             return false;
@@ -367,6 +401,8 @@ namespace golang::slices
         gocpp::panic("needle not found");
     }
 
+
+    template<typename S>
     void Reverse(S s)
     {
         for(auto [i, j] = std::tuple{0, len(s) - 1}; i < j; std::tie(i, j) = std::tuple{i + 1, j - 1})

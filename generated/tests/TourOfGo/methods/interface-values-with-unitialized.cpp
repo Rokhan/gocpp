@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/interface-values-with-unitialized.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 
 namespace golang::main
 {

@@ -39,29 +39,3 @@ namespace golang::runtime
     struct mLockProfile;
     /* using goroutineProfileStateHolder = atomic::Uint32 */;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/cputicks.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mfinal.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/msan0.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

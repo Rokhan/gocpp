@@ -19,18 +19,3 @@ namespace golang::runtime
 {
     struct mcache;
 }
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mcentral.fwd.h"
-#include "golang/runtime/mfixalloc.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcsweep.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mspanset.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/sizeclasses.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

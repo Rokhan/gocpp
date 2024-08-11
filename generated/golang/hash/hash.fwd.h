@@ -9,7 +9,7 @@ namespace golang::hash
     struct Hash32;
     struct Hash64;
 }
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::hash
 {

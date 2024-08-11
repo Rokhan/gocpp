@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/strconv/eisel_lemire.fwd.h"
-#include "golang/strconv/ftoa.fwd.h"
-#include "golang/strconv/itoa.fwd.h"

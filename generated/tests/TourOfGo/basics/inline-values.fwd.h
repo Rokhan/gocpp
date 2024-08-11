@@ -10,4 +10,3 @@ namespace golang::main
     struct fakeResult;
     using fakeFetcher = gocpp::map<std::string, fakeResult*>;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

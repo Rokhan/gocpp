@@ -18,6 +18,3 @@ namespace golang::sort
     const sortedHint increasingHint = 1;
     const sortedHint decreasingHint = 2;
 }
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/sort/sort_impl_go121.fwd.h"
-#include "golang/sort/zsortinterface.fwd.h"

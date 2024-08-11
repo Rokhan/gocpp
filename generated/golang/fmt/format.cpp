@@ -11,7 +11,7 @@
 #include "golang/fmt/format.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/strconv/ftoa.h"
 #include "golang/strconv/quote.h"
 #include "golang/unicode/utf8/utf8.h"

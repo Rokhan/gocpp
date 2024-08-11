@@ -9,19 +9,15 @@
 #include "golang/runtime/mcentral.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-// #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mranges.h"
 #include "golang/runtime/mspanset.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/sizeclasses.h"
-// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {

@@ -11,6 +11,7 @@
 #include "golang/internal/fmtsort/sort.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 #include "golang/sort/sort.h"

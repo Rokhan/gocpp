@@ -3,5 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"

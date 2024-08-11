@@ -9,8 +9,6 @@
 #include "golang/runtime/fastlog2.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/fastlog2table.h"
-#include "golang/runtime/float.h"
 
 namespace golang::runtime
 {

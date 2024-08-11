@@ -3,5 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/moretypes/exercise-maps.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/wc/wc.h"  [Ignored, known errors]
-#include "golang/strings/strings.h"
 
 namespace golang::main
 {

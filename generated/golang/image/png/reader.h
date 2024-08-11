@@ -9,17 +9,11 @@
 #include "golang/image/png/reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/zlib/reader.h"
-#include "golang/encoding/binary/binary.h"
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/hash/crc32/crc32.h"
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
-#include "golang/image/format.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-#include "golang/image/png/paeth.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::png
 {

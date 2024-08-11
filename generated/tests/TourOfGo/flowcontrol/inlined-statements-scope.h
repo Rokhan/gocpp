@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/flowcontrol/inlined-statements-scope.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 
 namespace golang::main
 {

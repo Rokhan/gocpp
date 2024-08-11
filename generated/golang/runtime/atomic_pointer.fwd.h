@@ -3,11 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goexperiment/exp_cgocheck2_off.fwd.h"
-#include "golang/runtime/cgocheck.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/mwbbuf.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

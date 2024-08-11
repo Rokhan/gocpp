@@ -9,15 +9,12 @@
 #include "golang/syscall/zsyscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/syscall/windows/sysdll/sysdll.h"
+#include "golang/sync/mutex.h"
 #include "golang/syscall/dll_windows.h"
 #include "golang/syscall/security_windows.h"
-#include "golang/syscall/syscall.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/types_windows_amd64.h"
-#include "golang/syscall/zerrors_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

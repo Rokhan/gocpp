@@ -9,8 +9,6 @@
 #include "golang/runtime/write_err.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/time_nofake.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

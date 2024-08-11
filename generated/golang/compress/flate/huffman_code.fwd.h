@@ -14,7 +14,3 @@ namespace golang::flate
     using byLiteral = gocpp::slice<literalNode>;
     using byFreq = gocpp::slice<literalNode>;
 }
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/math/const.fwd.h"
-#include "golang/sort/sort.fwd.h"

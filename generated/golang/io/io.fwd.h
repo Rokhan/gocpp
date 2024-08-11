@@ -39,5 +39,3 @@ namespace golang::io
     struct nopCloser;
     struct nopCloserWriterTo;
 }
-#include "golang/errors/errors.fwd.h"
-// #include "golang/sync/pool.fwd.h" [Ignored, known errors]

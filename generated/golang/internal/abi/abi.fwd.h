@@ -11,4 +11,3 @@ namespace golang::abi
     struct RegArgs;
     using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
 }
-#include "golang/internal/goarch/goarch.fwd.h"

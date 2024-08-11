@@ -9,7 +9,6 @@
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/cpu/cpu_x86.h"
 
 namespace golang::cpu
 {

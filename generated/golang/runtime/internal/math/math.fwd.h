@@ -8,4 +8,3 @@ namespace golang::math
 {
     const uintptr_t MaxUintptr = ~ uintptr_t(0);
 }
-#include "golang/internal/goarch/goarch.fwd.h"

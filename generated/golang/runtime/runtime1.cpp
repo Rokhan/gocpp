@@ -11,22 +11,40 @@
 #include "golang/runtime/runtime1.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/auxv_none.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/mprof.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/trace2.h"
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -212,55 +230,55 @@ namespace golang::runtime
 
         x1t x1 = {};
         y1t y1 = {};
-        if(unsafe::Sizeof(a) != 1)
+        if(gocpp::Sizeof<int8_t>() != 1)
         {
             go_throw("bad a");
         }
-        if(unsafe::Sizeof(b) != 1)
+        if(gocpp::Sizeof<uint8_t>() != 1)
         {
             go_throw("bad b");
         }
-        if(unsafe::Sizeof(c) != 2)
+        if(gocpp::Sizeof<int16_t>() != 2)
         {
             go_throw("bad c");
         }
-        if(unsafe::Sizeof(d) != 2)
+        if(gocpp::Sizeof<uint16_t>() != 2)
         {
             go_throw("bad d");
         }
-        if(unsafe::Sizeof(e) != 4)
+        if(gocpp::Sizeof<int32_t>() != 4)
         {
             go_throw("bad e");
         }
-        if(unsafe::Sizeof(f) != 4)
+        if(gocpp::Sizeof<uint32_t>() != 4)
         {
             go_throw("bad f");
         }
-        if(unsafe::Sizeof(g) != 8)
+        if(gocpp::Sizeof<int64_t>() != 8)
         {
             go_throw("bad g");
         }
-        if(unsafe::Sizeof(h) != 8)
+        if(gocpp::Sizeof<uint64_t>() != 8)
         {
             go_throw("bad h");
         }
-        if(unsafe::Sizeof(i) != 4)
+        if(gocpp::Sizeof<float>() != 4)
         {
             go_throw("bad i");
         }
-        if(unsafe::Sizeof(j) != 8)
+        if(gocpp::Sizeof<double>() != 8)
         {
             go_throw("bad j");
         }
-        if(unsafe::Sizeof(k) != goarch::PtrSize)
+        if(gocpp::Sizeof<unsafe::Pointer>() != goarch::PtrSize)
         {
             go_throw("bad k");
         }
-        if(unsafe::Sizeof(l) != goarch::PtrSize)
+        if(gocpp::Sizeof<uint16_t*>() != goarch::PtrSize)
         {
             go_throw("bad l");
         }
-        if(unsafe::Sizeof(x1) != 1)
+        if(gocpp::Sizeof<x1t>() != 1)
         {
             go_throw("bad unsafe.Sizeof x1");
         }
@@ -268,7 +286,7 @@ namespace golang::runtime
         {
             go_throw("bad offsetof y1.y");
         }
-        if(unsafe::Sizeof(y1) != 2)
+        if(gocpp::Sizeof<y1t>() != 2)
         {
             go_throw("bad unsafe.Sizeof y1");
         }

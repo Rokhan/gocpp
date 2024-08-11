@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/golang.org/x/tour/reader/validate.h"
+#include "golang/io/io.h"
 
 namespace golang::main
 {

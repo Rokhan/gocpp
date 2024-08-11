@@ -10,13 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/format.h"
-// #include "golang/internal/fmtsort/sort.h"  [Ignored, known errors]
-// #include "golang/io/io.h"  [Ignored, known errors]
-#include "golang/reflect/type.h"
+#include "golang/internal/abi/type.h"
+#include "golang/io/io.h"
 #include "golang/reflect/value.h"
-#include "golang/strconv/itoa.h"
-// #include "golang/sync/pool.h"  [Ignored, known errors]
-#include "golang/unicode/utf8/utf8.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/pool.h"
 
 namespace golang::fmt
 {
@@ -269,6 +267,7 @@ namespace golang::fmt
     std::tuple<int, std::string> Write(struct pp* p, gocpp::slice<unsigned char> b);
     std::tuple<int, std::string> WriteString(struct pp* p, std::string s);
     std::tuple<int, std::string> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Fprintf(io::Writer w, std::string format, Args... a)
     {
@@ -276,6 +275,7 @@ namespace golang::fmt
     }
 
     std::tuple<int, std::string> Printf(std::string format, gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Printf(std::string format, Args... a)
     {
@@ -283,6 +283,7 @@ namespace golang::fmt
     }
 
     std::string Sprintf(std::string format, gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::string Sprintf(std::string format, Args... a)
     {
@@ -290,6 +291,7 @@ namespace golang::fmt
     }
 
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, std::string format, gocpp::slice<go_any> a);
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, std::string format, Args... a)
     {
@@ -297,6 +299,7 @@ namespace golang::fmt
     }
 
     std::tuple<int, std::string> Fprint(io::Writer w, gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Fprint(io::Writer w, Args... a)
     {
@@ -304,20 +307,23 @@ namespace golang::fmt
     }
 
     std::tuple<int, std::string> Print(gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Print(Args... a)
     {
-        return Print(, gocpp::ToSlice<go_any>(a...));
+        return Print(gocpp::ToSlice<go_any>(a...));
     }
 
     std::string Sprint(gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::string Sprint(Args... a)
     {
-        return Sprint(, gocpp::ToSlice<go_any>(a...));
+        return Sprint(gocpp::ToSlice<go_any>(a...));
     }
 
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a);
+
     template<typename... Args>
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, Args... a)
     {
@@ -325,6 +331,7 @@ namespace golang::fmt
     }
 
     std::tuple<int, std::string> Fprintln(io::Writer w, gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Fprintln(io::Writer w, Args... a)
     {
@@ -332,20 +339,23 @@ namespace golang::fmt
     }
 
     std::tuple<int, std::string> Println(gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::tuple<int, std::string> Println(Args... a)
     {
-        return Println(, gocpp::ToSlice<go_any>(a...));
+        return Println(gocpp::ToSlice<go_any>(a...));
     }
 
     std::string Sprintln(gocpp::slice<go_any> a);
+
     template<typename... Args>
     std::string Sprintln(Args... a)
     {
-        return Sprintln(, gocpp::ToSlice<go_any>(a...));
+        return Sprintln(gocpp::ToSlice<go_any>(a...));
     }
 
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a);
+
     template<typename... Args>
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, Args... a)
     {

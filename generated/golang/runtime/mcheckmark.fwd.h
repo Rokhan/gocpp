@@ -11,12 +11,3 @@ namespace golang::runtime
 {
     struct checkmarksMap;
 }
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mbitmap.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-#include "golang/runtime/mgcmark.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

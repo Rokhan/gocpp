@@ -10,5 +10,3 @@ namespace golang::main
     struct T;
     using F = double;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/math/const.fwd.h"

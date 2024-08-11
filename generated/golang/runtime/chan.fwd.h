@@ -17,25 +17,5 @@ namespace golang::runtime
 {
     struct hchan;
     struct waitq;
-    /*const uintptr_t hchanSize = unsafe::Sizeof(hchan {}) + uintptr_t(- int(unsafe::Sizeof(hchan {})) & (maxAlign - 1)) [known mising deps] */;
+    /*const uintptr_t hchanSize = gocpp::Sizeof<hchan>() + uintptr_t(- int(gocpp::Sizeof<hchan>()) & (maxAlign - 1)) [known mising deps] */;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/runtime/cputicks.fwd.h"
-#include "golang/runtime/error.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/math/math.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbarrier.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-#include "golang/runtime/mfinal.fwd.h"
-#include "golang/runtime/mprof.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]

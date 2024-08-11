@@ -9,11 +9,6 @@
 #include "golang/syscall/env_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

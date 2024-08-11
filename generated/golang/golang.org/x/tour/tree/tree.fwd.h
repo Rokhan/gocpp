@@ -8,5 +8,3 @@ namespace golang::tree
 {
     struct Tree;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/math/rand/rand.fwd.h"

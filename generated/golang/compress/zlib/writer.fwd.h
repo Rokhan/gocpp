@@ -5,7 +5,7 @@
 
 #include "golang/compress/flate/deflate.fwd.h"
 #include "golang/hash/hash.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::zlib
 {
@@ -16,6 +16,3 @@ namespace golang::zlib
     const int HuffmanOnly = flate::HuffmanOnly;
     struct Writer;
 }
-#include "golang/encoding/binary/binary.fwd.h"
-#include "golang/fmt/errors.fwd.h"
-#include "golang/hash/adler32/adler32.fwd.h"

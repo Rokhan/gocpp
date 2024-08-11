@@ -18,23 +18,31 @@
 
 namespace golang::slices
 {
+
+    template<typename S>
     void Sort(S x)
     {
         auto n = len(x);
         pdqsortOrdered(x, 0, n, bits::Len((unsigned int)(n)));
     }
 
+
+    template<typename S>
     void SortFunc(S x, std::function<int (E a, E b)> cmp)
     {
         auto n = len(x);
         pdqsortCmpFunc(x, 0, n, bits::Len((unsigned int)(n)), cmp);
     }
 
+
+    template<typename S>
     void SortStableFunc(S x, std::function<int (E a, E b)> cmp)
     {
         stableCmpFunc(x, len(x), cmp);
     }
 
+
+    template<typename S>
     bool IsSorted(S x)
     {
         for(auto i = len(x) - 1; i > 0; i--)
@@ -47,6 +55,8 @@ namespace golang::slices
         return true;
     }
 
+
+    template<typename S>
     bool IsSortedFunc(S x, std::function<int (E a, E b)> cmp)
     {
         for(auto i = len(x) - 1; i > 0; i--)
@@ -59,6 +69,8 @@ namespace golang::slices
         return true;
     }
 
+
+    template<typename S>
     E Min(S x)
     {
         if(len(x) < 1)
@@ -73,6 +85,8 @@ namespace golang::slices
         return m;
     }
 
+
+    template<typename S>
     E MinFunc(S x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)
@@ -90,6 +104,8 @@ namespace golang::slices
         return m;
     }
 
+
+    template<typename S>
     E Max(S x)
     {
         if(len(x) < 1)
@@ -104,6 +120,8 @@ namespace golang::slices
         return m;
     }
 
+
+    template<typename S>
     E MaxFunc(S x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)
@@ -121,6 +139,8 @@ namespace golang::slices
         return m;
     }
 
+
+    template<typename S, typename E>
     std::tuple<int, bool> BinarySearch(S x, E target)
     {
         auto n = len(x);
@@ -140,6 +160,8 @@ namespace golang::slices
         return {i, i < n && (x[i] == target || (isNaN(x[i]) && isNaN(target)))};
     }
 
+
+    template<typename S, typename T>
     std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp)
     {
         auto n = len(x);
@@ -159,6 +181,7 @@ namespace golang::slices
         return {i, i < n && cmp(x[i], target) == 0};
     }
 
+    // // hint for pdqsort when choosing the pivot
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;
@@ -172,6 +195,8 @@ namespace golang::slices
         return 1 << bits::Len((unsigned int)(length));
     }
 
+
+    template<typename T>
     bool isNaN(T x)
     {
         return x != x;

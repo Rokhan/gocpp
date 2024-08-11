@@ -16,6 +16,3 @@ namespace golang::math
     const int signMask = 1 << 63;
     const int fracMask = (1 << shift) - 1;
 }
-#include "golang/math/abs.fwd.h"
-#include "golang/math/const.fwd.h"
-#include "golang/math/unsafe.fwd.h"

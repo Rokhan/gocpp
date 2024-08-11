@@ -9,7 +9,6 @@
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 
 namespace golang::cpu
 {
@@ -20,6 +19,7 @@ namespace golang::cpu
     bool isSet(uint32_t hwc, uint32_t value);
     std::string Name();
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args);
+
     template<typename... Args>
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, Args... args)
     {

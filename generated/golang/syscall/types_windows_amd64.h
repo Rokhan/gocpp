@@ -9,7 +9,6 @@
 #include "golang/syscall/types_windows_amd64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/types_windows.h"
 
 namespace golang::syscall
 {

@@ -3,4 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/mheap.fwd.h"

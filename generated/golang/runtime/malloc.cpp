@@ -11,11 +11,18 @@
 #include "golang/runtime/malloc.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/internal/goos/zgoos_windows.h"
 #include "golang/runtime/asan0.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/fastlog2.h"
@@ -31,32 +38,52 @@
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 #include "golang/runtime/mgcmark.h"
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
+#include "golang/runtime/mranges.h"
 #include "golang/runtime/msan0.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
+#include "golang/runtime/mwbbuf.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/pinner.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+#include "golang/runtime/race0.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/runtime/stubs_nonlinux.h"
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
 #include "golang/runtime/tagptr.h"
 #include "golang/runtime/tagptr_64bit.h"
+// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -206,7 +233,7 @@ namespace golang::runtime
         }
         else
         {
-            auto arenaMetaSize = (1 << arenaBits) * unsafe::Sizeof(heapArena {});
+            auto arenaMetaSize = (1 << arenaBits) * gocpp::Sizeof<heapArena>();
             auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize));
             if(meta != 0)
             {
@@ -244,7 +271,7 @@ namespace golang::runtime
         Store(gocpp::recv(gcController.memoryLimit), maxInt64);
     }
 
-    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, arenaHint** hintList, bool register)
+    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, arenaHint** hintList, bool go_register)
     {
         unsafe::Pointer v;
         uintptr_t size;
@@ -390,7 +417,7 @@ namespace golang::runtime
             {
                 unsafe::Pointer v;
                 uintptr_t size;
-                l2 = (gocpp::array<heapArena*, 1 << arenaL2Bits>*)(sysAllocOS(unsafe::Sizeof(*l2)));
+                l2 = (gocpp::array<heapArena*, 1 << arenaL2Bits>*)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
                 if(l2 == nullptr)
                 {
                     unsafe::Pointer v;
@@ -401,13 +428,13 @@ namespace golang::runtime
                 {
                     unsafe::Pointer v;
                     uintptr_t size;
-                    sysHugePage(unsafe::Pointer(l2), unsafe::Sizeof(*l2));
+                    sysHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
                 }
                 else
                 {
                     unsafe::Pointer v;
                     uintptr_t size;
-                    sysNoHugePage(unsafe::Pointer(l2), unsafe::Sizeof(*l2));
+                    sysNoHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
                 }
                 atomic::StorepNoWB(unsafe::Pointer(& h->arenas[l1(gocpp::recv(ri))]), unsafe::Pointer(l2));
             }
@@ -418,12 +445,12 @@ namespace golang::runtime
                 go_throw("arena already initialized");
             }
             heapArena* r = {};
-            r = (heapArena*)(alloc(gocpp::recv(h->heapArenaAlloc), unsafe::Sizeof(*r), goarch::PtrSize, & memstats.gcMiscSys));
+            r = (heapArena*)(alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
             if(r == nullptr)
             {
                 unsafe::Pointer v;
                 uintptr_t size;
-                r = (heapArena*)(persistentalloc(unsafe::Sizeof(*r), goarch::PtrSize, & memstats.gcMiscSys));
+                r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
                 if(r == nullptr)
                 {
                     unsafe::Pointer v;
@@ -431,7 +458,7 @@ namespace golang::runtime
                     go_throw("out of memory allocating heap arena metadata");
                 }
             }
-            if(register)
+            if(go_register)
             {
                 unsafe::Pointer v;
                 uintptr_t size;
@@ -544,7 +571,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            sysHugePage(unsafe::Pointer(l2), unsafe::Sizeof(*l2));
+            sysHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
         }
     }
 

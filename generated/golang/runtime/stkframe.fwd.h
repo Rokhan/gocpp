@@ -11,15 +11,3 @@ namespace golang::runtime
     struct stkframe;
     struct reflectMethodValue;
 }
-#include "golang/internal/abi/abi.fwd.h"
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

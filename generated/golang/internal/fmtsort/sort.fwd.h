@@ -9,5 +9,3 @@ namespace golang::fmtsort
 {
     struct SortedMap;
 }
-#include "golang/reflect/type.fwd.h"
-#include "golang/sort/sort.fwd.h"

@@ -9,10 +9,6 @@
 #include "golang/runtime/msize_allocheaders.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/malloc.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-#include "golang/runtime/sizeclasses.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

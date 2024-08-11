@@ -24,4 +24,3 @@ namespace golang::unicode
     using SpecialCase = gocpp::slice<CaseRange>;
     const gocpp::rune UpperLower = MaxRune + 1;
 }
-#include "golang/unicode/graphic.fwd.h"

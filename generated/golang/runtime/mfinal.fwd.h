@@ -24,23 +24,3 @@ namespace golang::runtime
     struct finblock;
     struct finalizer;
 }
-#include "golang/internal/abi/abi.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.fwd.h"
-#include "golang/runtime/arena.fwd.h"
-#include "golang/runtime/iface.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]

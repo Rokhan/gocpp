@@ -12,6 +12,3 @@ namespace golang::runtime
     struct fixalloc;
     struct mlink;
 }
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

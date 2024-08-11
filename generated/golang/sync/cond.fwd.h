@@ -16,6 +16,3 @@ namespace golang::sync
 {
     struct Cond;
 }
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
-// #include "golang/sync/runtime.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

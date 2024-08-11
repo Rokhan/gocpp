@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/methods/methods-funcs.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/math/sqrt.h"
 
 namespace golang::main
 {

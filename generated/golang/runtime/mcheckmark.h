@@ -9,18 +9,8 @@
 #include "golang/runtime/mcheckmark.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgcmark.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

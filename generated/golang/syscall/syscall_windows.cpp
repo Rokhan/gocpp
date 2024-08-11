@@ -16,6 +16,8 @@
 #include "golang/internal/itoa/itoa.h"
 // #include "golang/internal/race/norace.h"  [Ignored, known errors]
 #include "golang/runtime/extern.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/asan0.h"
 #include "golang/syscall/dll_windows.h"
@@ -92,7 +94,7 @@ namespace golang::syscall
         auto n = 0;
         for(; *(uint16_t*)(end) != 0; )
         {
-            end = unsafe::Pointer(uintptr_t(end) + unsafe::Sizeof(*p));
+            end = unsafe::Pointer(uintptr_t(end) + gocpp::Sizeof<uint16_t>());
             n++;
         }
         return UTF16ToString(unsafe::Slice(p, n));
@@ -204,7 +206,7 @@ namespace golang::syscall
     SecurityAttributes* makeInheritSa()
     {
         SecurityAttributes sa = {};
-        sa.Length = uint32_t(unsafe::Sizeof(sa));
+        sa.Length = uint32_t(gocpp::Sizeof<SecurityAttributes>());
         sa.InheritHandle = 1;
         return & sa;
     }
@@ -433,7 +435,7 @@ namespace golang::syscall
     std::string setFilePointerEx(Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
     {
         Errno e1 = {};
-        if(unsafe::Sizeof(uintptr_t(0)) == 8)
+        if(gocpp::Sizeof<uintptr_t>() == 8)
         {
             std::tie(_, _, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 4, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0, 0);
         }
@@ -937,7 +939,7 @@ namespace golang::syscall
         p[0] = unsigned char(sa->Port >> 8);
         p[1] = unsigned char(sa->Port);
         sa->raw.Addr = sa->Addr;
-        return {unsafe::Pointer(& sa->raw), int32_t(unsafe::Sizeof(sa->raw)), nullptr};
+        return {unsafe::Pointer(& sa->raw), int32_t(gocpp::Sizeof<RawSockaddrInet4>()), nullptr};
     }
 
     
@@ -969,7 +971,7 @@ namespace golang::syscall
         p[1] = unsigned char(sa->Port);
         sa->raw.Scope_id = sa->ZoneId;
         sa->raw.Addr = sa->Addr;
-        return {unsafe::Pointer(& sa->raw), int32_t(unsafe::Sizeof(sa->raw)), nullptr};
+        return {unsafe::Pointer(& sa->raw), int32_t(gocpp::Sizeof<RawSockaddrInet6>()), nullptr};
     }
 
     
@@ -1097,7 +1099,7 @@ namespace golang::syscall
     {
         std::string err;
         auto v = int32_t(value);
-        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& v)), int32_t(unsafe::Sizeof(v)));
+        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& v)), int32_t(gocpp::Sizeof<int32_t>()));
     }
 
     std::string Bind(Handle fd, Sockaddr sa)
@@ -1129,7 +1131,7 @@ namespace golang::syscall
         Sockaddr sa;
         std::string err;
         RawSockaddrAny rsa = {};
-        auto l = int32_t(unsafe::Sizeof(rsa));
+        auto l = int32_t(gocpp::Sizeof<RawSockaddrAny>());
         if(err = getsockname(fd, & rsa, & l); err != nullptr)
         {
             Sockaddr sa;
@@ -1144,7 +1146,7 @@ namespace golang::syscall
         Sockaddr sa;
         std::string err;
         RawSockaddrAny rsa = {};
-        auto l = int32_t(unsafe::Sizeof(rsa));
+        auto l = int32_t(gocpp::Sizeof<RawSockaddrAny>());
         if(err = getpeername(fd, & rsa, & l); err != nullptr)
         {
             Sockaddr sa;
@@ -1297,7 +1299,7 @@ namespace golang::syscall
             }
             defer.push_back([=]{ CloseHandle(s); });
             uint32_t n = {};
-            connectExFunc.err = WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_CONNECTEX)), uint32_t(unsafe::Sizeof(WSAID_CONNECTEX)), (unsigned char*)(unsafe::Pointer(& connectExFunc.addr)), uint32_t(unsafe::Sizeof(connectExFunc.addr)), & n, nullptr, 0);
+            connectExFunc.err = WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_CONNECTEX)), uint32_t(gocpp::Sizeof<GUID>()), (unsigned char*)(unsafe::Pointer(& connectExFunc.addr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
         }
 );
         return connectExFunc.err;
@@ -1542,7 +1544,7 @@ namespace golang::syscall
     {
         std::string err;
         auto sys = gocpp::Init<sysLinger>([](sysLinger& x) { x.Onoff = uint16_t(l->Onoff); x.Linger = uint16_t(l->Linger); });
-        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& sys)), int32_t(unsafe::Sizeof(sys)));
+        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& sys)), int32_t(gocpp::Sizeof<sysLinger>()));
     }
 
     std::string SetsockoptInet4Addr(Handle fd, int level, int opt, gocpp::array<unsigned char, 4> value)
@@ -1554,7 +1556,7 @@ namespace golang::syscall
     std::string SetsockoptIPMreq(Handle fd, int level, int opt, IPMreq* mreq)
     {
         std::string err;
-        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(mreq)), int32_t(unsafe::Sizeof(*mreq)));
+        return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(mreq)), int32_t(gocpp::Sizeof<IPMreq>()));
     }
 
     std::string SetsockoptIPv6Mreq(Handle fd, int level, int opt, IPv6Mreq* mreq)
@@ -1607,7 +1609,7 @@ namespace golang::syscall
         }
         defer.push_back([=]{ CloseHandle(snapshot); });
         ProcessEntry32 procEntry = {};
-        procEntry.Size = uint32_t(unsafe::Sizeof(procEntry));
+        procEntry.Size = uint32_t(gocpp::Sizeof<ProcessEntry32>());
         if(err = Process32First(snapshot, & procEntry); err != nullptr)
         {
             return {nullptr, err};

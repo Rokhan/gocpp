@@ -12,7 +12,3 @@ namespace golang::slices
     const sortedHint increasingHint = 1;
     const sortedHint decreasingHint = 2;
 }
-// #include "golang/cmp/cmp.fwd.h" [Ignored, known errors]
-#include "golang/math/bits/bits.fwd.h"
-// #include "golang/slices/zsortanyfunc.fwd.h" [Ignored, known errors]
-// #include "golang/slices/zsortordered.fwd.h" [Ignored, known errors]

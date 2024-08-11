@@ -3,4 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"

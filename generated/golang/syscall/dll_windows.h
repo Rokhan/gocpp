@@ -9,12 +9,8 @@
 #include "golang/syscall/dll_windows.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-#include "golang/syscall/syscall.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {
@@ -39,6 +35,7 @@ namespace golang::syscall
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
     std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
+
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, Args... args)
     {
@@ -78,6 +75,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Proc& value);
     uintptr_t Addr(struct Proc* p);
     std::tuple<uintptr_t, uintptr_t, std::string> Call(struct Proc* p, gocpp::slice<uintptr_t> a);
+
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, std::string> Call(struct Proc* p, Args... a)
     {
@@ -118,6 +116,7 @@ namespace golang::syscall
     void mustFind(struct LazyProc* p);
     uintptr_t Addr(struct LazyProc* p);
     std::tuple<uintptr_t, uintptr_t, std::string> Call(struct LazyProc* p, gocpp::slice<uintptr_t> a);
+
     template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, std::string> Call(struct LazyProc* p, Args... a)
     {

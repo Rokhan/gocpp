@@ -79,6 +79,7 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // // to make the CaseRanges text shorter
     bool is16(gocpp::slice<Range16> ranges, uint16_t r)
     {
         if(len(ranges) <= linearMax || r <= MaxLatin1)

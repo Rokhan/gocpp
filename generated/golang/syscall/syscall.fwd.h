@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"

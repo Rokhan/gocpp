@@ -12,4 +12,3 @@ namespace golang::main
     struct gocpp_id_1;
     using semTable2 = gocpp::array<gocpp_id_1, ten>;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

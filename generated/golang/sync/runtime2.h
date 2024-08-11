@@ -9,7 +9,6 @@
 #include "golang/sync/runtime2.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
 {

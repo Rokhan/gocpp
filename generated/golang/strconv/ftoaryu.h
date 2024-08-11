@@ -9,10 +9,7 @@
 #include "golang/strconv/ftoaryu.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits/bits.h"
-#include "golang/strconv/eisel_lemire.h"
 #include "golang/strconv/ftoa.h"
-#include "golang/strconv/itoa.h"
 
 namespace golang::strconv
 {

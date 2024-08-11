@@ -3,4 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/slices/sort.fwd.h" [Ignored, known errors]

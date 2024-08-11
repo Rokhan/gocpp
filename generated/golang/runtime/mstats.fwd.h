@@ -21,13 +21,3 @@ namespace golang::runtime
     struct heapStatsDelta;
     struct consistentHeapStats;
 }
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mcache.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

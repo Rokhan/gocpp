@@ -3,5 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/fastlog2table.fwd.h"
-#include "golang/runtime/float.fwd.h"

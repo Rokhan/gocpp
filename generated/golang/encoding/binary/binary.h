@@ -10,12 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/encoding/binary/native_endian_little.h"
-#include "golang/errors/errors.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
-#include "golang/math/unsafe.h"
+#include "golang/internal/abi/type.h"
+#include "golang/io/io.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
+#include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
+#include "golang/sync/mutex.h"
 
 namespace golang::binary
 {

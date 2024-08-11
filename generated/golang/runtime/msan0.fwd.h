@@ -8,5 +8,3 @@ namespace golang::runtime
 {
     const bool msanenabled = false;
 }
-#include "golang/runtime/panic.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

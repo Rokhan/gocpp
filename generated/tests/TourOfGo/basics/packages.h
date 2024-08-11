@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/basics/packages.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/math/rand/rand.h"
 
 namespace golang::main
 {

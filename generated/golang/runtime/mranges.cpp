@@ -13,6 +13,7 @@
 
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
@@ -263,7 +264,7 @@ namespace golang::runtime
         auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
         ranges->len = 0;
         ranges->cap = 16;
-        ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
+        ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
         a->sysStat = sysStat;
         a->totalBytes = 0;
     }
@@ -361,7 +362,7 @@ namespace golang::runtime
                 auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
-                ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
+                ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
                 copy(a->ranges.make_slice(i + 1), oldRanges.make_slice(i));
             }
@@ -434,7 +435,7 @@ namespace golang::runtime
             auto ranges = (notInHeapSlice*)(unsafe::Pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);
-            ranges->array = (notInHeap*)(persistentalloc(unsafe::Sizeof(addrRange {}) * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
+            ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
         }
         b->ranges = b->ranges.make_slice(0, len(a->ranges));
         b->totalBytes = a->totalBytes;

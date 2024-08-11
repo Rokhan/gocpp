@@ -9,11 +9,7 @@
 #include "golang/encoding/base64/base64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/binary/binary.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
-#include "golang/slices/slices.h"
-#include "golang/strconv/atoi.h"
-#include "golang/strconv/itoa.h"
+#include "golang/io/io.h"
 
 namespace golang::base64
 {

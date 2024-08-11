@@ -9,20 +9,11 @@
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
-#include "golang/internal/bytealg/indexbyte_native.h"
-#include "golang/internal/itoa/itoa.h"
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
-#include "golang/runtime/extern.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
-#include "golang/syscall/asan0.h"
 #include "golang/syscall/dll_windows.h"
-#include "golang/syscall/msan0.h"
 #include "golang/syscall/types_windows.h"
-#include "golang/syscall/wtf8_windows.h"
-#include "golang/syscall/zerrors_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

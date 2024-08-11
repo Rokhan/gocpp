@@ -8,4 +8,3 @@ namespace golang::race
 {
     const bool Enabled = false;
 }
-#include "golang/unsafe/unsafe.fwd.h"

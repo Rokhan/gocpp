@@ -3,7 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/bits.fwd.h"
-#include "golang/math/exp2_noasm.fwd.h"
-#include "golang/math/exp_asm.fwd.h"
-#include "golang/math/ldexp.fwd.h"

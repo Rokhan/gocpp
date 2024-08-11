@@ -15,9 +15,11 @@
 #include "golang/compress/flate/deflate.h"
 #include "golang/compress/flate/dict_decoder.h"
 #include "golang/compress/flate/huffman_bit_writer.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 #include "golang/math/bits/bits.h"
 #include "golang/strconv/itoa.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
 namespace golang::flate

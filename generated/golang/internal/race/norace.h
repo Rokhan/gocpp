@@ -9,7 +9,6 @@
 #include "golang/internal/race/norace.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::race
 {

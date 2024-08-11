@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/images.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"

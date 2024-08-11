@@ -10,9 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

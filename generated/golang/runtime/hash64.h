@@ -9,10 +9,6 @@
 #include "golang/runtime/hash64.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/alg.h"  [Ignored, known errors]
-#include "golang/runtime/internal/math/math.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

@@ -12,31 +12,59 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/funcpc.h"
+// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/runtime/asan0.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
 #include "golang/runtime/cputicks.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mfinal.h"
+#include "golang/runtime/mgc.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mranges.h"
 #include "golang/runtime/msan0.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/pinner.h"
+#include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+#include "golang/runtime/race0.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
 #include "golang/runtime/runtime.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/sema.h"  [Ignored, known errors]
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+#include "golang/runtime/stack.h"
+#include "golang/runtime/stkframe.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
@@ -127,6 +155,7 @@ namespace golang::runtime
     atomic::UnsafePointer xbuckets;
     atomic::UnsafePointer buckhash;
     mProfCycleHolder mProfCycle;
+    // // *bucket
     
     std::ostream& mProfCycleHolder::PrintTo(std::ostream& os) const
     {
@@ -187,7 +216,7 @@ namespace golang::runtime
 
     bucket* newBucket(bucketType typ, int nstk)
     {
-        auto size = unsafe::Sizeof(bucket {}) + uintptr_t(nstk) * unsafe::Sizeof(uintptr_t(0));
+        auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
         //Go switch emulation
         {
             auto condition = typ;
@@ -201,11 +230,11 @@ namespace golang::runtime
                     go_throw("invalid profile bucket type");
                     break;
                 case 0:
-                    size += unsafe::Sizeof(memRecord {});
+                    size += gocpp::Sizeof<memRecord>();
                     break;
                 case 1:
                 case 2:
-                    size += unsafe::Sizeof(blockRecord {});
+                    size += gocpp::Sizeof<blockRecord>();
                     break;
             }
         }
@@ -217,7 +246,7 @@ namespace golang::runtime
 
     gocpp::slice<uintptr_t> stk(struct bucket* b)
     {
-        auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), unsafe::Sizeof(*b)));
+        auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), gocpp::Sizeof<bucket>()));
         if(b->nstk > maxStack)
         {
             go_throw("bad profile stack count");
@@ -231,7 +260,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.mp");
         }
-        auto data = add(unsafe::Pointer(b), unsafe::Sizeof(*b) + b->nstk * unsafe::Sizeof(uintptr_t(0)));
+        auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (memRecord*)(data);
     }
 
@@ -241,7 +270,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.bp");
         }
-        auto data = add(unsafe::Pointer(b), unsafe::Sizeof(*b) + b->nstk * unsafe::Sizeof(uintptr_t(0)));
+        auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (blockRecord*)(data);
     }
 
@@ -254,7 +283,7 @@ namespace golang::runtime
             bh = (buckhashArray*)(Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (buckhashArray*)(sysAlloc(unsafe::Sizeof(buckhashArray {}), & memstats.buckhash_sys));
+                bh = (buckhashArray*)(sysAlloc(gocpp::Sizeof<buckhashArray>(), & memstats.buckhash_sys));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory");
@@ -854,15 +883,15 @@ namespace golang::runtime
         r->FreeObjects = int64_t(mp->active.frees);
         if(raceenabled)
         {
-            racewriterangepc(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
+            racewriterangepc(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
         }
         if(msanenabled)
         {
-            msanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
+            msanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
         if(asanenabled)
         {
-            asanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
+            asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
         copy(r->Stack0.make_slice(0, ), stk(gocpp::recv(b)));
         for(auto i = int(b->nstk); i < len(r->Stack0); i++)
@@ -933,19 +962,19 @@ namespace golang::runtime
                 {
                     int n;
                     bool ok;
-                    racewriterangepc(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
+                    racewriterangepc(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
                 }
                 if(msanenabled)
                 {
                     int n;
                     bool ok;
-                    msanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
+                    msanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 if(asanenabled)
                 {
                     int n;
                     bool ok;
-                    asanwrite(unsafe::Pointer(& r->Stack0[0]), unsafe::Sizeof(r->Stack0));
+                    asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 auto i = copy(r->Stack0.make_slice(0, ), stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)

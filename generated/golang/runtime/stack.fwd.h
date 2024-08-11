@@ -47,35 +47,3 @@ namespace golang::runtime
     const int fixedStack6 = fixedStack5 | (fixedStack5 >> 16);
     const int fixedStack = fixedStack6 + 1;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-#include "golang/internal/cpu/cpu_x86.fwd.h"
-#include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/chan.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mcache.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/os_nonopenbsd.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/preempt.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-#include "golang/runtime/sizeclasses.fwd.h"
-#include "golang/runtime/stkframe.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-#include "golang/runtime/sys_x86.fwd.h"
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

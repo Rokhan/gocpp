@@ -9,7 +9,6 @@
 #include "golang/math/bits/bits.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits/bits_tables.h"
 
 namespace golang::bits
 {

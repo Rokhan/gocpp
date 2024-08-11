@@ -9,8 +9,7 @@
 #include "golang/golang.org/x/tour/reader/validate.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::reader
 {

@@ -13,6 +13,7 @@
 
 #include "golang/errors/errors.h"
 #include "golang/hash/hash.h"
+#include "golang/io/io.h"
 
 namespace golang::adler32
 {

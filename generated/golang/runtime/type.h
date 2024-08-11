@@ -9,17 +9,9 @@
 #include "golang/runtime/type.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
-#include "golang/runtime/iface.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

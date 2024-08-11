@@ -9,7 +9,6 @@
 #include "golang/internal/unsafeheader/unsafeheader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::unsafeheader
 {

@@ -11,11 +11,17 @@
 #include "golang/runtime/mheap.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 // #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/cpu/cpu_x86.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/runtime/asan0.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
@@ -37,28 +43,44 @@
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 #include "golang/runtime/mgcmark.h"
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/mgcstack.h"
 // #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
 #include "golang/runtime/msan0.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
+#include "golang/runtime/mwbbuf.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/pinner.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/slice.h"
+#include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
+#include "golang/runtime/trace2buf.h"
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
+    /* bool physPageAlignedStacks = GOOS == "openbsd" [known mising deps] */;
     
     std::ostream& mheap::PrintTo(std::ostream& os) const
     {
@@ -276,7 +298,7 @@ namespace golang::runtime
             *(notInHeapSlice*)(unsafe::Pointer(& h->allspans)) = *(notInHeapSlice*)(unsafe::Pointer(& go_new));
             if(len(oldAllspans) != 0)
             {
-                sysFree(unsafe::Pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * unsafe::Sizeof(oldAllspans[0]), & memstats.other_sys);
+                sysFree(unsafe::Pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::Sizeof<mspan*>(), & memstats.other_sys);
             }
         }
         h->allspans = h->allspans.make_slice(0, len(h->allspans) + 1);
@@ -425,13 +447,13 @@ namespace golang::runtime
     {
         lockInit(& h->lock, lockRankMheap);
         lockInit(& h->speciallock, lockRankMheapSpecial);
-        init(gocpp::recv(h->spanalloc), unsafe::Sizeof(mspan {}), recordspan, unsafe::Pointer(h), & memstats.mspan_sys);
-        init(gocpp::recv(h->cachealloc), unsafe::Sizeof(mcache {}), nullptr, nullptr, & memstats.mcache_sys);
-        init(gocpp::recv(h->specialfinalizeralloc), unsafe::Sizeof(specialfinalizer {}), nullptr, nullptr, & memstats.other_sys);
-        init(gocpp::recv(h->specialprofilealloc), unsafe::Sizeof(specialprofile {}), nullptr, nullptr, & memstats.other_sys);
-        init(gocpp::recv(h->specialReachableAlloc), unsafe::Sizeof(specialReachable {}), nullptr, nullptr, & memstats.other_sys);
-        init(gocpp::recv(h->specialPinCounterAlloc), unsafe::Sizeof(specialPinCounter {}), nullptr, nullptr, & memstats.other_sys);
-        init(gocpp::recv(h->arenaHintAlloc), unsafe::Sizeof(arenaHint {}), nullptr, nullptr, & memstats.other_sys);
+        init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, unsafe::Pointer(h), & memstats.mspan_sys);
+        init(gocpp::recv(h->cachealloc), gocpp::Sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
+        init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
+        init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
+        init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
+        init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
         h->spanalloc.zero = false;
         for(auto [i, gocpp_ignored] : h->central)
         {

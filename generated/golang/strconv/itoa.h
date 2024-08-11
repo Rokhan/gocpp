@@ -9,7 +9,6 @@
 #include "golang/strconv/itoa.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits/bits.h"
 
 namespace golang::strconv
 {

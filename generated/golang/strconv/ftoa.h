@@ -9,12 +9,7 @@
 #include "golang/strconv/ftoa.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/unsafe.h"
-#include "golang/strconv/atoi.h"
 #include "golang/strconv/decimal.h"
-#include "golang/strconv/ftoaryu.h"
-#include "golang/strconv/itoa.h"
-#include "golang/strconv/quote.h"
 
 namespace golang::strconv
 {

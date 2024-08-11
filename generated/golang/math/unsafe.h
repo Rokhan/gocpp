@@ -9,7 +9,6 @@
 #include "golang/math/unsafe.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::math
 {

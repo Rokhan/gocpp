@@ -17,11 +17,3 @@ namespace golang::runtime
     struct atomicOffAddr;
     struct addrRanges;
 }
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/slice.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

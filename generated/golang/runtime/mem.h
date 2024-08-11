@@ -9,10 +9,7 @@
 #include "golang/runtime/mem.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mstats.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

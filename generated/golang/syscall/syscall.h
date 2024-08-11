@@ -9,10 +9,8 @@
 #include "golang/syscall/syscall.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
-#include "golang/syscall/zerrors_windows.h"
 
 namespace golang::syscall
 {

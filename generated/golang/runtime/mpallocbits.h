@@ -9,7 +9,6 @@
 #include "golang/runtime/mpallocbits.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/mpagealloc.h"
 
 namespace golang::runtime

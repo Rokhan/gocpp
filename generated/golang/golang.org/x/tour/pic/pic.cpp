@@ -12,11 +12,19 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
+#include "golang/compress/flate/deflate.h"
+#include "golang/compress/flate/deflatefast.h"
+#include "golang/compress/flate/huffman_bit_writer.h"
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/compress/flate/token.h"
+#include "golang/compress/zlib/writer.h"
 #include "golang/encoding/base64/base64.h"
+#include "golang/hash/hash.h"
+#include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
 // #include "golang/image/png/writer.h"  [Ignored, known errors]
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::pic
 {

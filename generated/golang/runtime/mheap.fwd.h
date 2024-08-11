@@ -33,7 +33,6 @@ namespace golang::runtime
 }
 // #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
 #include "golang/internal/cpu/cpu_x86.fwd.h"
-#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
@@ -53,7 +52,6 @@ namespace golang::runtime
 namespace golang::runtime
 {
     const int maxPhysHugePageSize = pallocChunkBytes;
-    /*const bool physPageAlignedStacks = GOOS == "openbsd" [known mising deps] */;
     struct mheap;
     struct heapArena;
     struct arenaHint;
@@ -66,33 +64,6 @@ namespace golang::runtime
     struct specialfinalizer;
     struct specialprofile;
     struct gcBits;
-    /*const uintptr_t gcBitsHeaderBytes = unsafe::Sizeof(gcBitsHeader {}) [known mising deps] */;
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
     struct gcBitsArena;
 }
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.fwd.h"
-#include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mbitmap.fwd.h"
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mfinal.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgclimit.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mgcmark.fwd.h"
-// #include "golang/runtime/mgcscavenge.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcsweep.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mpagecache.fwd.h"
-#include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
-// #include "golang/runtime/pagetrace_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-#include "golang/runtime/slice.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]

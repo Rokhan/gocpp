@@ -3,8 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/syscall/syscall.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

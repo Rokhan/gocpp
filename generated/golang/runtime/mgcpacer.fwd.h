@@ -28,20 +28,3 @@ namespace golang::runtime
     const int defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) + (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);
     struct gcControllerState;
 }
-#include "golang/runtime/env_posix.fwd.h"
-#include "golang/runtime/lfstack.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgclimit.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcscavenge.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcsweep.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]

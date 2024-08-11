@@ -3,8 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/math/abs.fwd.h"
-#include "golang/math/bits.fwd.h"
-#include "golang/math/copysign.fwd.h"
-#include "golang/math/hypot.fwd.h"
-#include "golang/math/sqrt.fwd.h"

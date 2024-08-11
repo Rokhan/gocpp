@@ -9,5 +9,3 @@ namespace golang::strconv
     const long detailedPowersOfTenMinExp10 = - 348;
     const long detailedPowersOfTenMaxExp10 = + 347;
 }
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/math/unsafe.fwd.h"

@@ -15,8 +15,3 @@ namespace golang::runtime
 {
     struct traceRegionAllocBlock;
 }
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

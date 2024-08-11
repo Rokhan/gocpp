@@ -13,27 +13,56 @@
 
 #include "golang/internal/abi/funcpc.h"
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/malloc.h"
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mgc.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
+#include "golang/runtime/pinner.h"
+#include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
+#include "golang/runtime/race0.h"
 #include "golang/runtime/runtime.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/security_nonunix.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+#include "golang/runtime/stack.h"
+#include "golang/runtime/stkframe.h"
 #include "golang/runtime/string.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 // #include "golang/runtime/traceback.h"  [Ignored, known errors]
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
@@ -302,7 +331,7 @@ namespace golang::runtime
 
     void deferprocat(std::function<void ()> fn, go_any frame)
     {
-        auto head = gocpp::getValue<runtime/internal/atomic::Pointer[runtime::_defer]*>(frame);
+        auto head = gocpp::getValue<atomic::Pointer[runtime::_defer]*>(frame);
         if(raceenabled)
         {
             racewritepc(unsafe::Pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferprocat));
@@ -586,7 +615,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto b = *(uint8_t*)(fd);
-            fd = add(fd, unsafe::Sizeof(b));
+            fd = add(fd, gocpp::Sizeof<uint8_t>());
             if(b < 128)
             {
                 return {r + (uint32_t(b) << shift), fd};

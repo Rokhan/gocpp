@@ -9,20 +9,17 @@
 #include "golang/runtime/mgcstack.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mgcwork.h"
-#include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
     struct stackWorkBuf
     {
         sys::NotInHeap _;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - unsafe::Sizeof(stackWorkBufHdr {})) / goarch::PtrSize> obj; [Known incomplete type] */
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -44,7 +41,7 @@ namespace golang::runtime
     struct stackObjectBuf
     {
         sys::NotInHeap _;
-        /* gocpp::array<stackObject, (_WorkbufSize - unsafe::Sizeof(stackObjectBufHdr {})) / unsafe::Sizeof(stackObject {})> obj; [Known incomplete type] */
+        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 

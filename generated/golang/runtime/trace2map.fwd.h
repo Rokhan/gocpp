@@ -13,9 +13,3 @@ namespace golang::runtime
     struct traceMap;
     struct traceMapNode;
 }
-// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/slice.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

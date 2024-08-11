@@ -12,7 +12,3 @@ namespace golang::runtime
     const long m4 = 0x589965cc75374cc3;
     const long m5 = 0x1d8e4e27c47d124f;
 }
-// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
-#include "golang/runtime/internal/math/math.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

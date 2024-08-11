@@ -13,4 +13,3 @@ namespace golang::main
     using VertexAlias = Vertex;
     using VertexPtr = Vertex*;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

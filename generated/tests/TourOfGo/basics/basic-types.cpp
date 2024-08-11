@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/basics/basic-types.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/math/cmplx/sqrt.h"
 
 namespace golang::main

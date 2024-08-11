@@ -40,21 +40,3 @@ namespace golang::runtime
     const int logScavChunkInUseMax = logPallocChunkPages + 1;
     const int scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
 }
-#include "golang/runtime/float.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mem.fwd.h"
-#include "golang/runtime/mpagealloc_64bit.fwd.h"
-#include "golang/runtime/mpallocbits.fwd.h"
-#include "golang/runtime/mstats.fwd.h"
-// #include "golang/runtime/pagetrace_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

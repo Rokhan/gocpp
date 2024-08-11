@@ -7,14 +7,5 @@
 namespace golang::runtime
 {
     struct pageCache;
-    /*const uintptr_t pageCachePages = 8 * unsafe::Sizeof(pageCache {}.cache) [known mising deps] */;
+    /*const uintptr_t pageCachePages = 8 * gocpp::Sizeof<uint64_t>() [known mising deps] */;
 }
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mgcscavenge.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mpagealloc.fwd.h"
-#include "golang/runtime/mpallocbits.fwd.h"
-#include "golang/runtime/mranges.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

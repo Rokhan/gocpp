@@ -22,7 +22,7 @@ namespace golang::flate
 }
 #include "golang/bufio/bufio.fwd.h"
 #include "golang/compress/flate/dict_decoder.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::flate
 {
@@ -30,8 +30,3 @@ namespace golang::flate
     struct Reader;
     struct decompressor;
 }
-#include "golang/compress/flate/deflate.fwd.h"
-#include "golang/compress/flate/huffman_bit_writer.fwd.h"
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/strconv/itoa.fwd.h"
-#include "golang/sync/once.fwd.h"

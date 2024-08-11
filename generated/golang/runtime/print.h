@@ -9,16 +9,9 @@
 #include "golang/runtime/print.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
+#include "golang/internal/abi/type.h"
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/write_err.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

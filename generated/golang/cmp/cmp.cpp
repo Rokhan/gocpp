@@ -43,11 +43,15 @@ namespace golang::cmp
         return value.PrintTo(os);
     }
 
+
+    template<typename T>
     bool Less(T x, T y)
     {
         return (isNaN(x) && ! isNaN(y)) || x < y;
     }
 
+
+    template<typename T>
     int Compare(T x, T y)
     {
         auto xNaN = isNaN(x);
@@ -67,6 +71,8 @@ namespace golang::cmp
         return 0;
     }
 
+
+    template<typename T>
     bool isNaN(T x)
     {
         return x != x;

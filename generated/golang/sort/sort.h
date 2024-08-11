@@ -9,9 +9,6 @@
 #include "golang/sort/sort.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/bits/bits.h"
-#include "golang/sort/sort_impl_go121.h"
-#include "golang/sort/zsortinterface.h"
 
 namespace golang::sort
 {

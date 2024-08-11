@@ -20,7 +20,3 @@ namespace golang::runtime
 {
     const int taggedPointerBits = (goos::IsAix * aixTagBits) + (goarch::IsRiscv64 * riscv64TagBits) + ((1 - goos::IsAix) * (1 - goarch::IsRiscv64) * tagBits);
 }
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/tagptr.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

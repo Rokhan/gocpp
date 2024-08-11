@@ -31,7 +31,7 @@ namespace golang::flate
 #include "golang/compress/flate/deflatefast.fwd.h"
 #include "golang/compress/flate/huffman_bit_writer.fwd.h"
 #include "golang/compress/flate/token.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 #include "golang/math/const.fwd.h"
 
 namespace golang::flate
@@ -41,5 +41,3 @@ namespace golang::flate
     struct dictWriter;
     const int windowMask = windowSize - 1;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/fmt/errors.fwd.h"

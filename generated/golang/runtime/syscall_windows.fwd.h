@@ -28,18 +28,3 @@ namespace golang::runtime
     const int callbackMaxFrame = 64 * goarch::PtrSize;
     struct callbackArgs;
 }
-#include "golang/internal/abi/abi.fwd.h"
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-// #include "golang/runtime/cgocall.fwd.h" [Ignored, known errors]
-#include "golang/runtime/extern.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mfinal.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
-#include "golang/runtime/zcallback_windows.fwd.h"

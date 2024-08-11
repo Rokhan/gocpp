@@ -12,12 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/format.h"
+#include "golang/internal/abi/type.h"
 // #include "golang/internal/fmtsort/sort.h"  [Ignored, known errors]
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 #include "golang/strconv/itoa.h"
-// #include "golang/sync/pool.h"  [Ignored, known errors]
+// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/pool.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::fmt

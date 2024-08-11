@@ -11,7 +11,7 @@
 #include "golang/hash/hash.h"
 #include "gocpp/support.h"
 
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::hash
 {

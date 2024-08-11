@@ -17,9 +17,3 @@ namespace golang::runtime
     struct net_op;
     struct overlappedEntry;
 }
-#include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

@@ -11,8 +11,9 @@
 #include "tests/TourOfGo/welcome/sandbox.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/time/time.h"
+#include "golang/time/zoneinfo.h"
 
 namespace golang::main
 {

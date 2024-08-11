@@ -3,8 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/errors/errors.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/time/zoneinfo_read.fwd.h"

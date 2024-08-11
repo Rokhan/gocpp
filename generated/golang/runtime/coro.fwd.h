@@ -9,8 +9,3 @@ namespace golang::runtime
 {
     struct coro;
 }
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

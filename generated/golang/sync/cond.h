@@ -9,11 +9,8 @@
 #include "golang/sync/cond.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-// #include "golang/sync/runtime.h"  [Ignored, known errors]
 // #include "golang/sync/runtime2.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
 {

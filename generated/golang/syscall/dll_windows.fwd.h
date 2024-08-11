@@ -18,7 +18,3 @@ namespace golang::syscall
     struct LazyDLL;
     struct LazyProc;
 }
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
-#include "golang/syscall/syscall.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

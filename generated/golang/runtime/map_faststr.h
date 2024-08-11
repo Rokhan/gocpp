@@ -9,19 +9,8 @@
 #include "golang/runtime/map_faststr.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/funcpc.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/runtime/error.h"
-#include "golang/runtime/malloc.h"
+#include "golang/internal/abi/type.h"
 #include "golang/runtime/map.h"
-#include "golang/runtime/mbarrier.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
-#include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

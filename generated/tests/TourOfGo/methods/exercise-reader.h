@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/methods/exercise-reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tour/reader/validate.h"
 
 namespace golang::main
 {

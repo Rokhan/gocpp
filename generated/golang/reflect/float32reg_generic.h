@@ -9,7 +9,6 @@
 #include "golang/reflect/float32reg_generic.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
 {

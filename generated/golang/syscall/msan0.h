@@ -9,7 +9,6 @@
 #include "golang/syscall/msan0.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

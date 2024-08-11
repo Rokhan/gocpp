@@ -9,6 +9,3 @@ namespace golang::image
     struct Point;
     struct Rectangle;
 }
-#include "golang/image/color/color.fwd.h"
-#include "golang/math/bits/bits.fwd.h"
-#include "golang/strconv/itoa.fwd.h"

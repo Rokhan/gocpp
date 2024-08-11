@@ -10,11 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/unsafe/unsafe.h"
+// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/pool.h"
 
 namespace golang::reflect
 {

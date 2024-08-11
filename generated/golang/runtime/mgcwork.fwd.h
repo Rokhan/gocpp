@@ -20,15 +20,3 @@ namespace golang::runtime
     struct workbufhdr;
     struct workbuf;
 }
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/lfstack.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

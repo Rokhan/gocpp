@@ -9,10 +9,6 @@
 #include "golang/math/hypot.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/abs.h"
-#include "golang/math/bits.h"
-#include "golang/math/hypot_asm.h"
-#include "golang/math/sqrt.h"
 
 namespace golang::math
 {

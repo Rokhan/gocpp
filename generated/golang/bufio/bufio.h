@@ -9,11 +9,7 @@
 #include "golang/bufio/bufio.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bytes/bytes.h"
-#include "golang/errors/errors.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
-#include "golang/strings/builder.h"
-#include "golang/unicode/utf8/utf8.h"
+#include "golang/io/io.h"
 
 namespace golang::bufio
 {

@@ -10,12 +10,27 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.h"
-#include "golang/runtime/map.h"
-#include "golang/runtime/runtime.h"
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
+// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/mprof.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+#include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -30,6 +45,8 @@ namespace golang::runtime
     void reflect_memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n);
     bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size);
     unsafe::Pointer noescape(unsafe::Pointer p);
+
+    template<typename T>
     T* noEscapePtr(T* p);
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt);
     void gogo(gobuf* buf);

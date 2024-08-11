@@ -103,6 +103,7 @@ namespace golang::sort
         pdqsort(data, 0, n, limit);
     }
 
+    // // hint for pdqsort when choosing the pivot
     uint64_t Next(xorshift* r)
     {
         *r ^= *r << 13;

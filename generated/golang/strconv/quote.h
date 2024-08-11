@@ -9,8 +9,6 @@
 #include "golang/strconv/quote.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/strconv/bytealg.h"
-#include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strconv
 {

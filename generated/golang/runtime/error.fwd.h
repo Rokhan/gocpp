@@ -29,10 +29,3 @@ namespace golang::runtime
 {
     struct TypeAssertionError;
 }
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]

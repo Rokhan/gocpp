@@ -16,7 +16,3 @@ namespace golang::runtime
 {
     struct traceStringTable;
 }
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/trace2event.fwd.h"

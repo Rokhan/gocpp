@@ -19,36 +19,3 @@ namespace golang::runtime
     const gcDrainFlags gcDrainIdle = 1 << 2;
     const gcDrainFlags gcDrainFractional = 1 << 3;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.fwd.h"
-#include "golang/internal/goexperiment/exp_exectracer2_on.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/internal/sys/intrinsics.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mbitmap.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mcheckmark.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgclimit.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mgcpacer.fwd.h" [Ignored, known errors]
-#include "golang/runtime/mgcstack.fwd.h"
-#include "golang/runtime/mgcwork.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/mwbbuf.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/preempt.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/stkframe.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

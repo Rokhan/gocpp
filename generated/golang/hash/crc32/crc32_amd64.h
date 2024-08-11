@@ -11,7 +11,6 @@
 
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/crc32/crc32_generic.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::crc32
 {

@@ -9,10 +9,6 @@
 #include "tests/TourOfGo/concurrency/default-selection.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/time/sleep.h"
-// #include "golang/time/tick.h"  [Ignored, known errors]
-#include "golang/time/time.h"
 
 namespace golang::main
 {

@@ -9,21 +9,7 @@
 #include "golang/runtime/cgocheck.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
-// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
+#include "golang/internal/abi/type.h"
 
 namespace golang::runtime
 {

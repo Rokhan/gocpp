@@ -10,13 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.h"
 #include "golang/internal/abi/type.h"
-#include "golang/internal/goarch/goarch.h"
-#include "golang/reflect/float32reg_generic.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
 {

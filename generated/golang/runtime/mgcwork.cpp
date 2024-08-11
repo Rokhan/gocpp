@@ -11,7 +11,14 @@
 #include "golang/runtime/mgcwork.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
+#include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
+// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/chan.h"
+#include "golang/runtime/coro.h"
+#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -20,12 +27,32 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
+#include "golang/runtime/mstats.h"
+// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
+// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
+// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2buf.h"
+// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2time.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -390,7 +417,7 @@ namespace golang::runtime
         auto n = b->nobj / 2;
         b->nobj -= n;
         b1->nobj = n;
-        memmove(unsafe::Pointer(& b1->obj[0]), unsafe::Pointer(& b->obj[b->nobj]), uintptr_t(n) * unsafe::Sizeof(b1->obj[0]));
+        memmove(unsafe::Pointer(& b1->obj[0]), unsafe::Pointer(& b->obj[b->nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
         putfull(b);
         return b1;
     }

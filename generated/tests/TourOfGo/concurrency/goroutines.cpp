@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/concurrency/goroutines.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/time/sleep.h"
 #include "golang/time/time.h"
 

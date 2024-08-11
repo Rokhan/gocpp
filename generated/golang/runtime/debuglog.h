@@ -9,23 +9,8 @@
 #include "golang/runtime/debuglog.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/cputicks.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/mem_windows.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-#include "golang/runtime/time_nofake.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

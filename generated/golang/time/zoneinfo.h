@@ -9,13 +9,10 @@
 #include "golang/time/zoneinfo.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/errors/errors.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
-#include "golang/syscall/env_windows.h"
-#include "golang/syscall/zerrors_windows.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo_read.h"
-#include "golang/time/zoneinfo_windows.h"
 
 namespace golang::time
 {
@@ -27,7 +24,7 @@ namespace golang::time
         std::string extend;
         int64_t cacheStart;
         int64_t cacheEnd;
-        zone* cacheZone;
+        /* zone* cacheZone; [Known incomplete type] */
 
         using isGoStruct = void;
 

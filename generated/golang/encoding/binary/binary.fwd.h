@@ -14,10 +14,3 @@ namespace golang::binary
     using decoder = coder;
     using encoder = coder;
 }
-#include "golang/encoding/binary/native_endian_little.fwd.h"
-#include "golang/errors/errors.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
-#include "golang/math/unsafe.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/sync/map.fwd.h"

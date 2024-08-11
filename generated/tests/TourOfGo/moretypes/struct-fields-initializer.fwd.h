@@ -9,4 +9,3 @@ namespace golang::main
     struct Vertex;
     struct Segment;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

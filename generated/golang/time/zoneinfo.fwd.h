@@ -17,10 +17,3 @@ namespace golang::time
     const ruleKind ruleDOY = 1;
     const ruleKind ruleMonthWeekDay = 2;
 }
-#include "golang/errors/errors.fwd.h"
-#include "golang/sync/once.fwd.h"
-#include "golang/syscall/env_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/time/time.fwd.h"
-#include "golang/time/zoneinfo_read.fwd.h"
-#include "golang/time/zoneinfo_windows.fwd.h"

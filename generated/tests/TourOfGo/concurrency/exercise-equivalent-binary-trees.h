@@ -9,7 +9,6 @@
 #include "tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
 #include "golang/golang.org/x/tour/tree/tree.h"
 
 namespace golang::main

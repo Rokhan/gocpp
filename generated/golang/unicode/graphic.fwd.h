@@ -18,4 +18,3 @@ namespace golang::unicode
     const int pLo = pLl | pLu;
     const int pLmask = pLo;
 }
-#include "golang/unicode/letter.fwd.h"

@@ -19,9 +19,3 @@ namespace golang::fmt
 {
     struct pp;
 }
-// #include "golang/internal/fmtsort/sort.fwd.h" [Ignored, known errors]
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
-#include "golang/reflect/type.fwd.h"
-#include "golang/strconv/itoa.fwd.h"
-// #include "golang/sync/pool.fwd.h" [Ignored, known errors]
-#include "golang/unicode/utf8/utf8.fwd.h"

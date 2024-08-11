@@ -9,4 +9,3 @@ namespace golang::main
     const int Big = 1 << 100;
     const int Small = Big >> 99;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

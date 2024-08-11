@@ -36,4 +36,3 @@ namespace golang::runtime
     const int kindGCProg = 1 << 6;
     const int kindMask = (1 << 5) - 1;
 }
-#include "golang/runtime/type.fwd.h"

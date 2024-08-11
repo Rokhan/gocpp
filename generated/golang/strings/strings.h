@@ -9,17 +9,7 @@
 #include "golang/strings/strings.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
-#include "golang/internal/bytealg/count_native.h"
-#include "golang/internal/bytealg/index_amd64.h"
-#include "golang/internal/bytealg/index_native.h"
-#include "golang/internal/bytealg/indexbyte_native.h"
-#include "golang/internal/bytealg/lastindexbyte_generic.h"
-#include "golang/strings/builder.h"
-#include "golang/unicode/digit.h"
-#include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
-#include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strings
 {

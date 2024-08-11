@@ -7,5 +7,5 @@
 namespace golang::main
 {
     const long PrimeRK = 16777619;
+    template<typename T> struct Wrapper;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]

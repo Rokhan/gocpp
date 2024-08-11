@@ -39,21 +39,3 @@ namespace golang::runtime
     struct evacDst;
     const int loadFactorNum = loadFactorDen * bucketCnt * 13 / 16;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
-#include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/error.fwd.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
-#include "golang/runtime/internal/math/math.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/map_faststr.fwd.h"
-#include "golang/runtime/mbarrier.fwd.h"
-#include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/msize_allocheaders.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/slice.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]

@@ -9,15 +9,14 @@
 #include "golang/runtime/mpagecache.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/intrinsics.h"
+#include "golang/runtime/internal/atomic/types.h"
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-#include "golang/runtime/malloc.h"
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {

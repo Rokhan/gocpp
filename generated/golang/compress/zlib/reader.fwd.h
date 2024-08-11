@@ -11,14 +11,10 @@ namespace golang::zlib
 }
 #include "golang/compress/flate/inflate.fwd.h"
 #include "golang/hash/hash.fwd.h"
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::zlib
 {
     struct reader;
     struct Resetter;
 }
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/encoding/binary/binary.fwd.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/hash/adler32/adler32.fwd.h"

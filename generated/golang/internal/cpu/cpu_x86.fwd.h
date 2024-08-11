@@ -29,4 +29,3 @@ namespace golang::cpu
     const int cpuid_AVX512VL = 1 << 31;
     const int cpuid_RDTSCP = 1 << 27;
 }
-// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]

@@ -9,7 +9,6 @@
 #include "golang/math/signbit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/unsafe.h"
 
 namespace golang::math
 {

@@ -9,9 +9,6 @@
 #include "golang/strings/builder.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
-#include "golang/unicode/utf8/utf8.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::strings
 {

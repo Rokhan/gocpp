@@ -14,6 +14,7 @@
 // #include "golang/golang.org/x/tour/pic/pic.h"  [Ignored, known errors]
 #include "golang/image/color/color.h"
 #include "golang/image/geom.h"
+#include "golang/image/image.h"
 
 namespace golang::main
 {

@@ -9,7 +9,6 @@
 #include "golang/slices/zsortordered.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/cmp/cmp.h"  [Ignored, known errors]
 // #include "golang/slices/sort.h"  [Ignored, known errors]
 
 namespace golang::slices

@@ -9,8 +9,6 @@
 #include "golang/syscall/wtf8_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unicode/utf16/utf16.h"
-#include "golang/unicode/utf8/utf8.h"
 
 namespace golang::syscall
 {

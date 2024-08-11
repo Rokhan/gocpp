@@ -9,43 +9,25 @@
 #include "golang/runtime/arena.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
-#include "golang/internal/goexperiment/exp_allocheaders_on.h"
-#include "golang/runtime/asan0.h"
-#include "golang/runtime/error.h"
-#include "golang/runtime/internal/atomic/atomic_amd64.h"
-#include "golang/runtime/internal/atomic/stubs.h"
+#include "golang/internal/abi/type.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/math/math.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+#include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mbarrier.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mcentral.h"
-#include "golang/runtime/mem.h"
-#include "golang/runtime/mfinal.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgcmark.h"
-// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+#include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfixalloc.h"
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/mprof.h"
+#include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"
-#include "golang/runtime/msan0.h"
 #include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
-#include "golang/runtime/panic.h"
-// #include "golang/runtime/race0.h"  [Ignored, known errors]
-// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-#include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

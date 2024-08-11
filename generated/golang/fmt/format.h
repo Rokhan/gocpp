@@ -9,10 +9,7 @@
 #include "golang/fmt/format.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/strconv/ftoa.h"
-#include "golang/strconv/quote.h"
-#include "golang/unicode/utf8/utf8.h"
+#include "golang/fmt/print.h"
 
 namespace golang::fmt
 {

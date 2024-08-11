@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/interfaces.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/math/const.h"
 #include "golang/math/sqrt.h"
 

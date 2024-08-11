@@ -15,7 +15,7 @@
 #include "golang/compress/flate/huffman_code.h"
 #include "golang/compress/flate/inflate.h"
 #include "golang/compress/flate/token.h"
-// #include "golang/io/io.h"  [Ignored, known errors]
+#include "golang/io/io.h"
 
 namespace golang::flate
 {

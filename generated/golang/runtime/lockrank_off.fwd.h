@@ -9,6 +9,3 @@ namespace golang::runtime
     const bool staticLockRanking = false;
     struct lockRankStruct;
 }
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"

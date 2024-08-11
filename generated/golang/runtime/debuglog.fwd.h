@@ -34,18 +34,3 @@ namespace golang::runtime
     struct debugLogWriter;
     struct debugLogBuf;
 }
-#include "golang/runtime/cputicks.fwd.h"
-#include "golang/runtime/debuglog_off.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-#include "golang/runtime/mem_windows.fwd.h"
-#include "golang/runtime/mgc.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/slice.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

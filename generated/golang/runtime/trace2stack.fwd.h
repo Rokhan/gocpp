@@ -16,17 +16,3 @@ namespace golang::runtime
 {
     struct traceStackTable;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-#include "golang/internal/goarch/goarch.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/stubs_amd64.fwd.h"
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
-#include "golang/runtime/trace2buf.fwd.h"
-#include "golang/runtime/trace2event.fwd.h"
-#include "golang/runtime/trace2string.fwd.h"
-// #include "golang/runtime/traceback.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

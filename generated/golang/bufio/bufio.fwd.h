@@ -11,14 +11,10 @@ namespace golang::bufio
     const long maxConsecutiveEmptyReads = 100;
     struct ReadWriter;
 }
-// #include "golang/io/io.fwd.h" [Ignored, known errors]
+#include "golang/io/io.fwd.h"
 
 namespace golang::bufio
 {
     struct Reader;
     struct Writer;
 }
-#include "golang/bytes/bytes.fwd.h"
-#include "golang/errors/errors.fwd.h"
-#include "golang/strings/builder.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"

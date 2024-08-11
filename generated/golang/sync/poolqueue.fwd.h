@@ -21,4 +21,3 @@ namespace golang::sync
     struct poolDequeue;
     struct eface;
 }
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]

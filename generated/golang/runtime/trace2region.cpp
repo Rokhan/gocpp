@@ -15,6 +15,7 @@
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
@@ -61,7 +62,7 @@ namespace golang::runtime
             {
                 go_throw("traceRegion: alloc too large");
             }
-            auto block = (traceRegionAllocBlock*)(sysAlloc(unsafe::Sizeof(traceRegionAllocBlock {}), & memstats.other_sys));
+            auto block = (traceRegionAllocBlock*)(sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys));
             if(block == nullptr)
             {
                 go_throw("traceRegion: out of memory");
@@ -81,7 +82,7 @@ namespace golang::runtime
         {
             auto block = a->head;
             a->head = block->next;
-            sysFree(unsafe::Pointer(block), unsafe::Sizeof(traceRegionAllocBlock {}), & memstats.other_sys);
+            sysFree(unsafe::Pointer(block), gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
         }
     }
 

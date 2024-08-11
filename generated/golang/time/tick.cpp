@@ -13,6 +13,7 @@
 
 #include "golang/time/sleep.h"
 #include "golang/time/time.h"
+#include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {

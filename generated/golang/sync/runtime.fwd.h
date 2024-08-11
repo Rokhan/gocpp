@@ -3,4 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/sync/runtime2.fwd.h" [Ignored, known errors]

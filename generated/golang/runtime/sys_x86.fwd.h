@@ -3,6 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

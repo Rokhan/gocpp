@@ -3,16 +3,3 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/error.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/map.fwd.h"
-#include "golang/runtime/mbarrier.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/race0.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

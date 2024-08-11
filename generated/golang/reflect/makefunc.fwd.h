@@ -13,6 +13,3 @@ namespace golang::reflect
     struct methodValue;
     struct makeFuncCtxt;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

@@ -15,7 +15,9 @@
 #include "golang/hash/crc32/crc32_amd64.h"
 #include "golang/hash/crc32/crc32_generic.h"
 #include "golang/hash/hash.h"
+#include "golang/io/io.h"
 #include "golang/sync/atomic/type.h"
+#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
 namespace golang::crc32

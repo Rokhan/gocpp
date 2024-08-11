@@ -9,6 +9,3 @@ namespace golang::main
 {
     struct SafeCounter;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/time/sleep.fwd.h"
-#include "golang/time/time.fwd.h"

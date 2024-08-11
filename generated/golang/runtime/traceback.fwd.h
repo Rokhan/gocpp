@@ -27,22 +27,3 @@ namespace golang::runtime
     const bool usesLR = sys::MinFrameSize > 0;
     struct unwinder;
 }
-#include "golang/internal/bytealg/indexbyte_native.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-// #include "golang/runtime/alg.fwd.h" [Ignored, known errors]
-#include "golang/runtime/asan0.fwd.h"
-// #include "golang/runtime/cgocall.fwd.h" [Ignored, known errors]
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-#include "golang/runtime/mfinal.fwd.h"
-#include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/panic.fwd.h"
-// #include "golang/runtime/print.fwd.h" [Ignored, known errors]
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/runtime1.fwd.h" [Ignored, known errors]
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

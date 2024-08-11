@@ -14,9 +14,3 @@ namespace golang::runtime
 {
     const float hashLoad = float(loadFactorNum) / float(loadFactorDen);
 }
-#include "golang/internal/abi/abi.fwd.h"
-#include "golang/internal/abi/abi_amd64.fwd.h"
-#include "golang/runtime/runtime.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

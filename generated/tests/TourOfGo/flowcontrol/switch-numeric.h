@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/flowcontrol/switch-numeric.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
-#include "golang/time/time.h"
 
 namespace golang::main
 {

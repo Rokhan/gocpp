@@ -22,4 +22,3 @@ namespace golang::flate
     const int bufferReset = math::MaxInt32 - maxStoreBlockSize * 2;
     const int tableMask = tableSize - 1;
 }
-#include "golang/compress/flate/token.fwd.h"

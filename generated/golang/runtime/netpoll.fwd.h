@@ -33,18 +33,3 @@ namespace golang::runtime
     struct pollDesc;
     struct pollCache;
 }
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/stubs.fwd.h"
-// #include "golang/runtime/lock_sema.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
-#include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/netpoll_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/tagptr_64bit.fwd.h"
-#include "golang/runtime/time_nofake.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

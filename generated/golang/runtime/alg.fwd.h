@@ -11,15 +11,3 @@ namespace golang::runtime
     const uintptr_t c1 = uintptr_t((8 - goarch::PtrSize) / 4 * 3267000013 + (goarch::PtrSize - 4) / 4 * 23344194077549503);
     const int hashRandomBytes = goarch::PtrSize / 4 * 64;
 }
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/runtime/error.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/hash64.fwd.h"
-// #include "golang/runtime/rand.fwd.h" [Ignored, known errors]
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/slice.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-#include "golang/runtime/type.fwd.h"
-// #include "golang/runtime/typekind.fwd.h" [Ignored, known errors]
-#include "golang/unsafe/unsafe.fwd.h"

@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/reader.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/strings/reader.h"
 
 namespace golang::main

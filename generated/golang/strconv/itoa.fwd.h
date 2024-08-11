@@ -10,4 +10,3 @@ namespace golang::strconv
     const long nSmalls = 100;
     const bool host32bit = (~ (unsigned int)(0) >> 32) == 0;
 }
-#include "golang/math/bits/bits.fwd.h"

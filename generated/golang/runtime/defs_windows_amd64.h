@@ -9,7 +9,6 @@
 #include "golang/runtime/defs_windows_amd64.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/print.h"  [Ignored, known errors]
 
 namespace golang::runtime
 {

@@ -9,17 +9,3 @@ namespace golang::runtime
 {
     struct suspendGState;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-#include "golang/runtime/panic.fwd.h"
-#include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/stack.fwd.h"
-#include "golang/runtime/string.fwd.h"
-// #include "golang/runtime/stubs.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtabinl.fwd.h" [Ignored, known errors]
-#include "golang/runtime/time_nofake.fwd.h"

@@ -277,7 +277,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::RGBA>(Convert(gocpp::recv(color::RGBAModel), c));
+        auto c1 = gocpp::getValue<color::RGBA>(Convert(gocpp::recv(color::RGBAModel), c));
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
         s[1] = c1.G;
@@ -405,7 +405,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::RGBA64>(Convert(gocpp::recv(color::RGBA64Model), c));
+        auto c1 = gocpp::getValue<color::RGBA64>(Convert(gocpp::recv(color::RGBA64Model), c));
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
         s[1] = uint8_t(c1.R);
@@ -533,7 +533,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), c));
+        auto c1 = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), c));
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
         s[1] = c1.G;
@@ -674,7 +674,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), c));
+        auto c1 = gocpp::getValue<color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), c));
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
         s[1] = uint8_t(c1.R);
@@ -827,7 +827,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = gocpp::getValue<image/color::Alpha>(Convert(gocpp::recv(color::AlphaModel), c)).A;
+        p->Pix[i] = gocpp::getValue<color::Alpha>(Convert(gocpp::recv(color::AlphaModel), c)).A;
     }
 
     void SetRGBA64(struct Alpha* p, int x, int y, color::RGBA64 c)
@@ -947,7 +947,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::Alpha16>(Convert(gocpp::recv(color::Alpha16Model), c));
+        auto c1 = gocpp::getValue<color::Alpha16>(Convert(gocpp::recv(color::Alpha16Model), c));
         p->Pix[i + 0] = uint8_t(c1.A >> 8);
         p->Pix[i + 1] = uint8_t(c1.A);
     }
@@ -1072,7 +1072,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = gocpp::getValue<image/color::Gray>(Convert(gocpp::recv(color::GrayModel), c)).Y;
+        p->Pix[i] = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), c)).Y;
     }
 
     void SetRGBA64(struct Gray* p, int x, int y, color::RGBA64 c)
@@ -1176,7 +1176,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::Gray16>(Convert(gocpp::recv(color::Gray16Model), c));
+        auto c1 = gocpp::getValue<color::Gray16>(Convert(gocpp::recv(color::Gray16Model), c));
         p->Pix[i + 0] = uint8_t(c1.Y >> 8);
         p->Pix[i + 1] = uint8_t(c1.Y);
     }
@@ -1285,7 +1285,7 @@ namespace golang::image
             return;
         }
         auto i = PixOffset(gocpp::recv(p), x, y);
-        auto c1 = gocpp::getValue<image/color::CMYK>(Convert(gocpp::recv(color::CMYKModel), c));
+        auto c1 = gocpp::getValue<color::CMYK>(Convert(gocpp::recv(color::CMYKModel), c));
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.C;
         s[1] = c1.M;

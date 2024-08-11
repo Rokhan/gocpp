@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/basics/packages.h"
 #include "gocpp/support.h"
 
-// #include "golang/fmt/print.h"  [Ignored, known errors]
+#include "golang/fmt/print.h"
 #include "golang/math/rand/rand.h"
 
 namespace golang::main

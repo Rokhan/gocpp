@@ -4,7 +4,7 @@
 #include "gocpp/support.fwd.h"
 
 // #include "golang/sync/cond.fwd.h" [Ignored, known errors]
-// #include "golang/sync/poolqueue.fwd.h" [Ignored, known errors]
+#include "golang/sync/poolqueue.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
@@ -13,7 +13,3 @@ namespace golang::sync
     struct poolLocalInternal;
     struct poolLocal;
 }
-// #include "golang/internal/race/norace.fwd.h" [Ignored, known errors]
-#include "golang/runtime/debug.fwd.h"
-// #include "golang/sync/atomic/doc.fwd.h" [Ignored, known errors]
-#include "golang/sync/mutex.fwd.h"

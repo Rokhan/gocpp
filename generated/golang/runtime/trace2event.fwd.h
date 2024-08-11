@@ -60,10 +60,3 @@ namespace golang::runtime
 {
     struct traceEventWriter;
 }
-#include "golang/runtime/internal/sys/consts.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
-#include "golang/runtime/trace2stack.fwd.h"
-#include "golang/runtime/trace2status.fwd.h"
-#include "golang/runtime/trace2string.fwd.h"
-#include "golang/runtime/trace2time.fwd.h"

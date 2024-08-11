@@ -14,9 +14,10 @@
 // #include "golang/internal/race/norace.h"  [Ignored, known errors]
 #include "golang/runtime/debug.h"
 // #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/type.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
-// #include "golang/sync/poolqueue.h"  [Ignored, known errors]
+#include "golang/sync/poolqueue.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
@@ -44,7 +45,7 @@ namespace golang::sync
     std::ostream& poolLocalInternal::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << private;
+        os << "" << go_private;
         os << " " << shared;
         os << '}';
         return os;
@@ -96,9 +97,9 @@ namespace golang::sync
             race::Disable();
         }
         auto [l, _] = pin(gocpp::recv(p));
-        if(l->private == nullptr)
+        if(l->go_private == nullptr)
         {
-            l->private = x;
+            l->go_private = x;
         }
         else
         {
@@ -118,8 +119,8 @@ namespace golang::sync
             race::Disable();
         }
         auto [l, pid] = pin(gocpp::recv(p));
-        auto x = l->private;
-        l->private = nullptr;
+        auto x = l->go_private;
+        l->go_private = nullptr;
         if(x == nullptr)
         {
             std::tie(x, _) = popHead(gocpp::recv(l->shared));
@@ -163,9 +164,9 @@ namespace golang::sync
         }
         locals = p->victim;
         auto l = indexLocal(locals, pid);
-        if(auto x = l->private; x != nullptr)
+        if(auto x = l->go_private; x != nullptr)
         {
-            l->private = nullptr;
+            l->go_private = nullptr;
             return x;
         }
         for(auto i = 0; i < int(size); i++)
@@ -247,7 +248,7 @@ namespace golang::sync
 
     poolLocal* indexLocal(unsafe::Pointer l, int i)
     {
-        auto lp = unsafe::Pointer(uintptr_t(l) + uintptr_t(i) * unsafe::Sizeof(poolLocal {}));
+        auto lp = unsafe::Pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
         return (poolLocal*)(lp);
     }
 

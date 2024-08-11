@@ -10,6 +10,3 @@ namespace golang::main
     using MyFloat = double;
     struct Vertex;
 }
-// #include "golang/fmt/print.fwd.h" [Ignored, known errors]
-#include "golang/math/const.fwd.h"
-#include "golang/math/sqrt.fwd.h"

@@ -15,5 +15,3 @@ namespace golang::crc32
 {
     using sse42Table = gocpp::array<Table, 4>;
 }
-#include "golang/hash/crc32/crc32_generic.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"

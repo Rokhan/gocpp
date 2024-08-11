@@ -13,7 +13,7 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/metrics.h"
+// #include "golang/runtime/metrics.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

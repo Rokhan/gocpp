@@ -9,9 +9,7 @@
 #include "golang/compress/flate/deflatefast.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/flate/deflate.h"
 #include "golang/compress/flate/token.h"
-#include "golang/math/const.h"
 
 namespace golang::flate
 {

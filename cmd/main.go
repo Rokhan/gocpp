@@ -3060,35 +3060,42 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 			return cv.convertExprCppType(n.X)
 		}
 
-	// case *ast.BinaryExpr, *ast.Ident:
-	// 	return convertGoToCppType(cv.convertExprType(n))
-
-	// case *ast.IndexExpr:
-	// 	objType := convertExprType(n.X)
-	// 	indexType := convertExprType(n.Index)
-	// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
-
-	// default:
-	// 	panic(fmt.Sprintf("Unmanaged type in convert type %v, input: %v", reflect.TypeOf(node), cv.Position(node)))
-
-	default:
-		exprType := cv.convertExprType(n)
-		if exprType != nil {
-			typeStr := convertGoToCppType(exprType, cv.Position(node))
-			typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
-			typeStr = strings.ReplaceAll(typeStr, ".", "::")
-			cppType := mkCppType(typeStr, nil)
-
-			switch typeStr {
-			case "std::string":
-				cppType.canFwd = false
-			case "gocpp::complex128":
-				cppType.canFwd = false
-			}
-			return cppType
-		} else {
-			Panicf("convertExprCppType, [%T, %s, %s]", n, types.ExprString(n), cv.Position(n))
+	case *ast.CallExpr:
+		switch fun := n.Fun.(type) {
+		// Type conversion expression
+		case *ast.ParenExpr:
+			return cv.convertTypeExpr(fun.X)
 		}
+
+		// case *ast.BinaryExpr, *ast.Ident:
+		// 	return convertGoToCppType(cv.convertExprType(n))
+
+		// case *ast.IndexExpr:
+		// 	objType := convertExprType(n.X)
+		// 	indexType := convertExprType(n.Index)
+		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+	}
+
+	// Generic fallback to guess type
+	exprType := cv.convertExprType(node)
+	if exprType != nil {
+		typeStr := convertGoToCppType(exprType, cv.Position(node))
+		// Probably this steps should only be done for named types
+		// Move code to 'GetCppGoType' ?
+		typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
+		typeStr = strings.ReplaceAll(typeStr, ".", "::")
+		typeStr, _ = Last(strings.Split(typeStr, "/"))
+		cppType := mkCppType(typeStr, nil)
+
+		switch typeStr {
+		case "std::string":
+			cppType.canFwd = false
+		case "gocpp::complex128":
+			cppType.canFwd = false
+		}
+		return cppType
+	} else {
+		Panicf("convertExprCppType, [%T, %s, %s]", node, types.ExprString(node), cv.Position(node))
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
@@ -3133,6 +3140,9 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	}
 
 	switch subType := goType.(type) {
+	case *types.Array:
+		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem()), subType.Len())
+
 	case *types.Basic:
 		return GetCppGoType(subType)
 
@@ -3148,8 +3158,8 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	case *types.Slice:
 		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem()))
 
-	case *types.Array:
-		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem()), subType.Len())
+	case *types.TypeParam:
+		return fmt.Sprintf("%s", subType)
 
 	// TODO
 	// case *types.Signature:
@@ -3302,11 +3312,19 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	case *ast.CallExpr:
 		buf := mkCppBuffer()
 		var sep = ""
+		var isSizeOf bool = false
 		switch fun := n.Fun.(type) {
 		case *ast.SelectorExpr:
 			if cv.isNameSpace(fun.X) {
 				funcName := ExprPrintf("%s::%s", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
-				cv.BuffExprPrintf(buf, "%v(", GetCppExprFunc(funcName))
+				funcName = GetCppExprFunc(funcName)
+				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
+				if funcName.str == "gocpp::Sizeof" {
+					isSizeOf = true
+					cv.BuffExprPrintf(buf, "%v<", funcName)
+				} else {
+					cv.BuffExprPrintf(buf, "%v(", funcName)
+				}
 			} else {
 				cv.BuffExprPrintf(buf, "%v(gocpp::recv(%v)", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				sep = ", "
@@ -3318,10 +3336,18 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		}
 
 		for _, arg := range n.Args {
-			cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(arg))
+			if isSizeOf {
+				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExprCppType(arg))
+			} else {
+				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(arg))
+			}
 			sep = ", "
 		}
-		cv.BuffExprPrintf(buf, ")")
+		if isSizeOf {
+			cv.BuffExprPrintf(buf, ">()")
+		} else {
+			cv.BuffExprPrintf(buf, ")")
+		}
 		return buf.Expr()
 
 	case *ast.Ident:

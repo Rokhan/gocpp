@@ -36,17 +36,23 @@ var stdTypeMapping = map[string]string{
 
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
-	"any":      "go_any",      // just to avoid confusion with std::any used in support lib
-	"class":    "go_class",    // keyword
-	"do":       "go_do",       // keyword
-	"EOF":      "go_EOF",      // Macro of <cstdio>
-	"new":      "go_new",      // keyword
-	"signed":   "go_signed",   // keyword
-	"template": "go_template", // keyword
-	"throw":    "go_throw",    // keyword
-	"typeid":   "go_typeid",   // keyword
-	"unsigned": "go_unsigned", // keyword
-	"while":    "go_while",    // keyword
+	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
+	"class":     "go_class",     // keyword
+	"do":        "go_do",        // keyword
+	"delete":    "go_delete",    // keyword
+	"enum":      "go_enum",      // keyword
+	"EOF":       "go_EOF",       // Macro of <cstdio>
+	"new":       "go_new",       // keyword
+	"private":   "go_private",   // keyword
+	"protected": "go_protected", // keyword
+	"public":    "go_public",    // keyword
+	"register":  "go_register",  // keyword
+	"signed":    "go_signed",    // keyword
+	"template":  "go_template",  // keyword
+	"throw":     "go_throw",     // keyword
+	"typeid":    "go_typeid",    // keyword
+	"unsigned":  "go_unsigned",  // keyword
+	"while":     "go_while",     // keyword
 }
 
 var stdFuncMapping = map[string]string{
@@ -88,10 +94,12 @@ var stdFuncMapping = map[string]string{
 	"wc::Test": "mocklib::wcTest",
 
 	// Predefined functions
-	"delete": "remove",
-	"make":   "gocpp::make",
-	"panic":  "gocpp::panic",
-	"nil":    "nullptr",
+	"delete":         "remove",
+	"go_delete":      "remove", // if already renamed by keyword mapping
+	"make":           "gocpp::make",
+	"panic":          "gocpp::panic",
+	"nil":            "nullptr",
+	"unsafe::Sizeof": "gocpp::Sizeof",
 
 	// type conversions
 	"byte":       "unsigned char",

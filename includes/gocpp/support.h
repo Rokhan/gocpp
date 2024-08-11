@@ -930,6 +930,17 @@ namespace gocpp
     }
 }
 
+
+// unsafe/unsafe.go implementations
+namespace gocpp
+{
+    template<typename T> 
+    constexpr int Sizeof()
+    {
+        return sizeof(T);
+    }
+}
+
 namespace std
 {
     template <typename V>

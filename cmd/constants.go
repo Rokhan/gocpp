@@ -125,9 +125,7 @@ var knownCompilationErrors = []*errorFilter{
 	{"cmp", "cmp/cmp.go"},
 	{"cpu", "internal/cpu/cpu.go"},
 	{"atomic", "sync/atomic/doc.go"},
-	{"fmt", "fmt/print.go"},
 	{"fmtsort", "internal/fmtsort/sort.go"},
-	{"io", "io/io.go"},
 	{"pic", "golang.org/x/tour@v0.1.0/pic/pic.go"},
 	{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 	{"png", "image/png/writer.go"},
@@ -139,6 +137,7 @@ var knownCompilationErrors = []*errorFilter{
 	{"runtime", "runtime/lockrank_off.go"},
 	{"runtime", "runtime/lock_sema.go"},
 	{"runtime", "runtime/mbitmap_allocheaders.go"},
+	{"runtime", "runtime/metrics.go"},
 	{"runtime", "runtime/mgclimit.go"},
 	{"runtime", "runtime/mgcscavenge.go"},
 	{"runtime", "runtime/mgcpacer.go"},
@@ -151,7 +150,6 @@ var knownCompilationErrors = []*errorFilter{
 	{"runtime", "runtime/preempt.go"},
 	{"runtime", "runtime/print.go"},
 	{"runtime", "runtime/rand.go"},
-	{"runtime", "runtime/race0.go"},
 	{"runtime", "runtime/runtime1.go"},
 	{"runtime", "runtime/sema.go"},
 	{"runtime", "runtime/sigqueue_note.go"},
@@ -170,8 +168,6 @@ var knownCompilationErrors = []*errorFilter{
 	{"slices", "slices/zsortanyfunc.go"},
 	{"slices", "slices/zsortordered.go"},
 	{"sync", "sync/cond.go"},
-	{"sync", "sync/pool.go"},
-	{"sync", "sync/poolqueue.go"},
 	{"sync", "sync/runtime.go"},
 	{"sync", "sync/runtime2.go"},
 	{"time", "time/tick.go"},
@@ -217,9 +213,6 @@ var knownNameConflicts = []*errorFilter{
 }
 
 var knownMissingDeps = []*errorFilter{
-	// {"pageBits", "runtime/mpallocbits"},
-	// {"pallocBits", "runtime/mpallocbits"},
-
 	{"buckhashArray", "runtime/mprof"},
 	{"goroutineProfileStateHolder", "runtime/mprof"},
 	{"mProfCycleWrap", "runtime/mprof"}, // constant using incomplete type
@@ -284,4 +277,39 @@ var knownIncomplete = []*errorFilter{
 	{"stackObjectBuf::obj", "runtime/mgcstack"}, // Multi header Declaration order problem with runtime/malloc
 
 	{"workbuf::obj", "runtime/mgcwork"}, // Need special case to manage unsafe::Sizeof
+
+	{"Int32::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
+	{"Int64::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
+	{"Int64::_", "runtime/internal/atomic/types"},              // Declaration order problem
+	{"Uint8::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
+	{"Uint32::noCopy", "runtime/internal/atomic/types"},        // Declaration order problem
+	{"Uint64::noCopy", "runtime/internal/atomic/types"},        // Declaration order problem
+	{"Uint64::_", "runtime/internal/atomic/types"},             // Declaration order problem
+	{"Uintptr::noCopy", "runtime/internal/atomic/types"},       // Declaration order problem
+	{"UnsafePointer::noCopy", "runtime/internal/atomic/types"}, // Declaration order problem
+
+	{"spanSet::spineLock", "runtime/mspanset"},       // Multi header Declaration order problem with runtime/malloc
+	{"spanSet::spine", "runtime/mspanset"},           // Declaration order problem
+	{"spanSet::index", "runtime/mspanset"},           // Declaration order problem
+	{"spanSetBlockAlloc::stack", "runtime/mspanset"}, // Type not declared, included files not generated
+
+	{"cpuProfile::lock", "runtime/cpuprof"}, // Multi header Declaration order problem with runtime/malloc
+
+	{"profBuf::wait", "runtime/profbuf"}, // Multi header Declaration order problem with runtime/malloc
+
+	{"traceEventWriter::w", "runtime/trace2event"}, // Multi header Declaration order problem with runtime/malloc
+
+	{"Bool::_", "sync/atomic/type"},    // Declaration order problem
+	{"Pointer::_", "sync/atomic/type"}, // Declaration order problem
+	{"Int32::_", "sync/atomic/type"},   // Declaration order problem
+	{"Int64::_", "sync/atomic/type"},   // Declaration order problem
+	{"Uint32::_", "sync/atomic/type"},  // Declaration order problem
+	{"Uint64::_", "sync/atomic/type"},  // Declaration order problem
+	{"Uintptr::_", "sync/atomic/type"}, // Declaration order problem
+
+	{"Pool::noCopy", "sync/pool"}, // Declaration order problem
+
+	{"Matcher::dedup", "internal/bisect/bisect"}, // Declaration order problem
+
+	{"Location::cacheZone", "time/zoneinfo"}, // Declaration order problem
 }

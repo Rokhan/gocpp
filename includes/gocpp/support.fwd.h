@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+// TODO: try to not need this 
+#include <string>
+
 // Temporary definitions to mock broken include files
 namespace golang
 {
@@ -9,7 +12,6 @@ namespace golang
     {
         struct g;
         struct sudog;
-        struct mutex;
 
         struct funcval;
         struct gobuf;

@@ -21,6 +21,11 @@
 // Temporary definitions to mock broken include files
 namespace golang
 {
+    namespace reflect
+    {
+        struct Value{};
+    }
+
     namespace runtime
     {
         struct g {};
@@ -28,24 +33,17 @@ namespace golang
         struct m {};
 
         struct sudog{};
-        struct mutex{};
         struct stack{};
         struct funcInfo{};
         struct gclinkptr{};
         struct lfnode{};
+        struct metricValue{};
+        struct lockRank{};
+        struct traceMap{};
+        struct Frame{};
+        struct traceBlockReason{};
     }
     
-    namespace atomic
-    {
-        struct Bool{};
-        struct Int32{};
-        struct Int64{};
-        struct Uint8{};
-        struct Uint32{};
-        struct Uint64{};
-        struct Uintptr{};
-    }
-
     namespace cpu
     {
         struct CacheLinePad{};

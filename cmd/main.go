@@ -1990,6 +1990,35 @@ func buildOutType(outTypes []string) string {
 	return resultType
 }
 
+type CanForward struct {
+	cv    *cppConverter
+	value bool
+}
+
+func (visitor *CanForward) Visit(node ast.Node) ast.Visitor {
+	switch n := node.(type) {
+	case ast.Expr:
+		exprType := visitor.cv.typeInfo.Types[n].Type
+		switch t := exprType.(type) {
+		case *types.Basic:
+			switch t.Kind() {
+			case types.String, types.Complex64, types.Complex128:
+				visitor.value = false
+				return nil
+			}
+		}
+	case nil:
+		return nil
+	}
+	return visitor
+}
+
+func (cv *cppConverter) canForward(expr ast.Expr) bool {
+	cf := &CanForward{cv: cv, value: true}
+	ast.Walk(cf, expr)
+	return cf.value
+}
+
 func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamespace bool, end string) []place {
 	var result []place
 
@@ -2019,9 +2048,10 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
 						name := GetCppName(s.Names[i].Name)
+						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
 							result = append(result, inlineStrf("%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
-						} else if tok == token.CONST && exprType.canFwd {
+						} else if tok == token.CONST && canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 							} else {

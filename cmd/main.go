@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -221,7 +222,7 @@ func (pkgInfo *pkgInfo) basePath() string {
 	return "### UNDEFINED PATH ###"
 }
 
-func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, suffix string) {
+func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, tag tagType, suffix string) {
 	if pkgInfos == nil {
 		return
 	}
@@ -233,6 +234,9 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 	})
 
 	for _, pkgInfo := range pkgInfos {
+		if (pkgInfo.tag & tag) != tag {
+			continue
+		}
 		if _, done := alreadyIncluded[pkgInfo.filePath]; done {
 			continue
 		}
@@ -308,7 +312,7 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".h")
+	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, UsesTag, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
@@ -358,7 +362,7 @@ func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "\n")
 
 	// Can we do something with ".fwd.h" in some situations ?
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, ".h")
+	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, DefsTag, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
@@ -657,7 +661,19 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		cv.Logf("Fwd header decl: Sorting.\n")
 		cv.topoSort(fwdHeaderElts)
 
-		for _, place := range fwdHeaderElts {
+		maxDecIndex := -1
+		for i, place := range fwdHeaderElts {
+			if !place.isInclude {
+				maxDecIndex = i
+			}
+		}
+
+		for i, place := range fwdHeaderElts {
+
+			// Skip includes not needed by any definitions
+			if i > maxDecIndex {
+				break
+			}
 
 			// Close namespace for includes
 			if place.isInclude && inNamespace {
@@ -763,9 +779,6 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 		elts[0][elt] = true
 	}
 
-	// Hack to push "neutral elements" as far as possible in the result
-	//direction := -1
-
 	for len(elts[maxIndex]) > 0 {
 		curentIndex := maxIndex
 		maxIndex++
@@ -808,7 +821,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 	// Add intermedite space netween existing ranks
 	splitElts := map[int]map[*place]bool{}
 	for i, rankElts := range elts {
-		for elt, _ := range rankElts {
+		for elt := range rankElts {
 			elt.depInfo.rank = 2*i + 0
 		}
 		splitElts[2*i+0] = rankElts
@@ -891,13 +904,13 @@ func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 
-	usedTypes := cv.getReferencedTypesFrom(cv.typeInfo.Uses, map[string]bool{cv.inputName: true})
+	usedTypes := cv.getReferencedTypesFor(cv.inputName)
 	cv.logReferencedTypesFrom(usedTypes, "Used")
 
 	cv.shared.usedFiles[cv.inputName] = true
 
-	for usedType := range usedTypes {
-		result := cv.getPackageFromType(usedType)
+	for usedType, tag := range usedTypes {
+		result := cv.getPackageFromType(usedType, tag)
 		if result != nil {
 			pkgInfos = append(pkgInfos, result)
 		}
@@ -905,7 +918,7 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 	return
 }
 
-func (cv *cppConverter) getPackageFromType(usedType types.Object) *pkgInfo {
+func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *pkgInfo {
 	if usedType == nil {
 		return nil
 	}
@@ -923,55 +936,164 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object) *pkgInfo {
 	}
 
 	if file == "" || file == cv.inputName {
+		pkgName := "<pkgName>"
+		pkgPath := "<pkgPath>"
+		if usedType.Pkg() != nil {
+			pkgName = usedType.Pkg().Name()
+			pkgPath = usedType.Pkg().Path()
+		}
+		cv.Logf("SKIPPED, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v, tag: %v ---\n", pkgName, pkgPath, file, usedType.Name(), tag)
 		return nil
 	}
 
 	cv.shared.usedFiles[file] = true
 	pkg := usedType.Pkg()
 	if pkg != nil {
-		cv.Logf("pkginfo, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v ---\n", usedType.Pkg().Name(), usedType.Pkg().Path(), file, usedType.Name())
+		cv.Logf("pkginfo, pkgName: %v, pkgPath: %v, file: %v, usedTypeName: %v, tag: %v ---\n", pkg.Name(), pkg.Path(), file, usedType.Name(), tag)
 
 		// usedType.Pkg().Path() doesn't return the full path, using value stored when loading packages
 		pkgPath, ok := cv.shared.packagePaths[file]
 		if ok {
-			return &pkgInfo{usedType.Pkg().Name(), pkgPath, file, GoFiles}
+			return &pkgInfo{pkg.Name(), pkgPath, file, tag, GoFiles}
 		} else {
 			cv.Logf("  -> pkgPath is null, file: %v\n", file)
-			return &pkgInfo{usedType.Pkg().Name(), usedType.Pkg().Path(), file, GoFiles}
+			return &pkgInfo{pkg.Name(), pkg.Path(), file, tag, GoFiles}
 		}
 	} else {
-		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v ---\n", file, usedType.Name())
+		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v, tag:%v ---\n", file, usedType.Name(), tag)
 	}
 	return nil
 }
 
-func (cv *cppConverter) getReferencedTypesFrom(objects map[*ast.Ident]types.Object, files map[string]bool) (usedTypes map[types.Object]bool) {
-	usedTypes = make(map[types.Object]bool)
-	for id, obj := range objects {
+func (cv *cppConverter) getReferencedTypesFor(file string) (usedTypes map[types.Object]tagType) {
+	usedTypes = make(map[types.Object]tagType)
 
+	/*
+	 * We need to manage dependecies in header and cpp like we do in forward header.
+	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
+	 */
+	uses := cv.typeInfo.Uses
+	cv.filtereUsedObjects(uses, file, usedTypes, UsesTag)
+	defs := cv.typeInfo.Defs
+	cv.filtereUsedObjects(defs, file, usedTypes, DefsTag)
+	return
+}
+
+func (cv *cppConverter) filtereUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
+	for id, obj := range objs {
 		var filePos = cv.Position(id)
-		if !files[filePos.Filename] {
+		if file != filePos.Filename {
 			continue
 		}
 
 		switch t := obj.(type) {
-		case *types.TypeName, *types.Const, *types.Func:
-			usedTypes[t] = true
+		case *types.TypeName, *types.Const:
+			usedTypes[t] |= tag
+			for _, o := range GetObjectsOfType(t.Type()) {
+				usedTypes[o] |= tag
+			}
+
+		case *types.Func:
+			usedTypes[t] |= tag
+			for _, o := range GetObjectsOfType(t.Type()) {
+				usedTypes[o] |= tag
+			}
+
+		case *types.Var:
+			switch tag {
+			case DefsTag:
+				scopeCount := getScopeCounts(obj)
+				// len(scopeCount) == 0  --> member of structs
+				// len(scopeCount) == 1  --> ? ? ?
+				// len(scopeCount) == 2  --> global variable
+				if len(scopeCount) <= 2 {
+					for _, o := range GetObjectsOfType(t.Type()) {
+						usedTypes[o] |= tag
+					}
+				}
+			default:
+				// We will probably need need at some point.
+				// usedTypes[t] |= tag
+			}
 		}
 	}
-	return
 }
 
-func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]bool, name string) {
-	cv.Logf("\n")
-	cv.Logf(" --- %s types by %s ---\n", name, cv.inputName)
-	for usedType := range usedTypes {
-		pkg := usedType.Pkg()
-		if pkg != nil {
-			var file = cv.shared.fileSet.Position(usedType.Pos()).Filename
-			cv.Logf("path: %s.%s, id: %s, exported: %v, file: %v\n", pkg.Name(), usedType.Name(), usedType.Id(), usedType.Exported(), file)
+func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
+	switch typ := t.(type) {
+	case *types.Basic:
+		// Basic types do not have associated objects
+	case *types.Named:
+		obj := typ.Obj()
+		if !seen[obj] {
+			seen[obj] = true
+			internalGetObjectsOfType(typ.Underlying(), seen)
+		}
+	case *types.Pointer:
+		internalGetObjectsOfType(typ.Elem(), seen)
+	case *types.Array:
+		internalGetObjectsOfType(typ.Elem(), seen)
+	case *types.Slice:
+		internalGetObjectsOfType(typ.Elem(), seen)
+	case *types.Map:
+		internalGetObjectsOfType(typ.Key(), seen)
+		internalGetObjectsOfType(typ.Elem(), seen)
+	case *types.Chan:
+		internalGetObjectsOfType(typ.Elem(), seen)
+	case *types.Struct:
+		for i := 0; i < typ.NumFields(); i++ {
+			field := typ.Field(i)
+			if !seen[field] {
+				seen[field] = true
+				internalGetObjectsOfType(field.Type(), seen)
+			}
+		}
+	case *types.Interface:
+		for i := 0; i < typ.NumMethods(); i++ {
+			method := typ.Method(i)
+			if !seen[method] {
+				seen[method] = true
+				internalGetObjectsOfType(method.Type(), seen)
+			}
+		}
+	case *types.Signature:
+		if recv := typ.Recv(); recv != nil {
+			internalGetObjectsOfType(recv.Type(), seen)
+		}
+		for i := 0; i < typ.Params().Len(); i++ {
+			internalGetObjectsOfType(typ.Params().At(i).Type(), seen)
+		}
+		for i := 0; i < typ.Results().Len(); i++ {
+			internalGetObjectsOfType(typ.Results().At(i).Type(), seen)
+		}
+	case *types.Tuple:
+		for i := 0; i < typ.Len(); i++ {
+			internalGetObjectsOfType(typ.At(i).Type(), seen)
 		}
 	}
+}
+
+// GetObjectsOfType returns a list of types.Object used to define the given type.
+func GetObjectsOfType(t types.Type) []types.Object {
+	seen := make(map[types.Object]bool)
+	internalGetObjectsOfType(t, seen)
+	return maps.Keys(seen)
+}
+
+func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]tagType, name string) {
+	cv.Logf("\n")
+	cv.Logf(" --- %s types by %s ---\n", name, cv.inputName)
+
+	for usedType, tag := range usedTypes {
+		pkg := usedType.Pkg()
+		pkgName := "<nill pkg>"
+		if pkg != nil {
+			pkgName = pkg.Name()
+		}
+		var file = cv.shared.fileSet.Position(usedType.Pos())
+		cv.Logf("path: %s.%s, objType:%T, id: %s, exported: %v, tag: %v, file: %v\n", pkgName, usedType.Name(), usedType, usedType.Id(), usedType.Exported(), tag, file)
+	}
+
 	cv.Logf("\n")
 	cv.Logf(" --- ---\n")
 }
@@ -2014,10 +2136,24 @@ const (
 	EmbedFiles      pkgType = iota
 )
 
+/*
+ * We need to manage dependecies in header and cpp like we do in forward header.
+ * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
+ */
+
+type tagType int
+
+const (
+	UnknwonTag tagType = 0
+	UsesTag    tagType = 1
+	DefsTag    tagType = 2
+)
+
 type pkgInfo struct {
 	name     string
 	pkgPath  string
 	filePath string
+	tag      tagType
 	fileType pkgType
 }
 
@@ -2121,7 +2257,7 @@ func includeStr(str string, depInfo depInfo) place {
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, pkgType}}
+	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}}
 }
 
 func inlineStrf(format string, params ...any) []place {
@@ -2294,7 +2430,7 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]bool {
 	for ident := range getAllIdentifiers(expr) {
 		defObj := cv.typeInfo.Uses[ident]
 		if defObj != nil {
-			pkg := cv.getPackageFromType(defObj)
+			pkg := cv.getPackageFromType(defObj, UnknwonTag)
 			if pkg != nil {
 				result[pkg.basePath()] = true
 			}
@@ -3322,14 +3458,36 @@ func (cv *cppConverter) PrintDefsUsage() {
 	fmt.Println(" --  Info.Defs -- ")
 	for id, obj := range cv.typeInfo.Defs {
 		var filePos = cv.Position(id)
-		cv.Logf("%s (%3d,%3d) => %15q defines [%15T] %v\n", filePos.Filename, filePos.Line, filePos.Column, id.Name, obj, obj)
+		// printing scopes is too big, just get number of elements
+		scopeCounts := getScopeCounts(obj)
+		cv.Logf("%s (%3d,%3d) => %15q defines [%15T] %v, scopes: %v\n", filePos.Filename, filePos.Line, filePos.Column, id.Name, obj, obj, scopeCounts)
 	}
 
 	fmt.Println(" --  Info.Uses -- ")
 	for id, obj := range cv.typeInfo.Uses {
 		var filePos = cv.Position(id)
-		cv.Logf("%s (%3d,%3d) => %15q uses [%15T] %v\n", filePos.Filename, filePos.Line, filePos.Column, id.Name, obj, obj)
+		// printing scopes is too big, just get number of elements
+		scopeCounts := getScopeCounts(obj)
+		cv.Logf("%s (%3d,%3d) => %15q uses [%15T] %v, scopes: %v\n", filePos.Filename, filePos.Line, filePos.Column, id.Name, obj, obj, scopeCounts)
 	}
+}
+
+func getScopeCounts(obj types.Object) []int {
+	var scopeCounts []int
+	if obj == nil {
+		return scopeCounts
+	}
+
+	scope := obj.Parent()
+	for {
+		if scope == nil {
+			break
+		}
+
+		scopeCounts = append(scopeCounts, len(scope.Names()))
+		scope = scope.Parent()
+	}
+	return scopeCounts
 }
 
 func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInfos []*pkgInfo, toBeConverted []*cppConverter) {

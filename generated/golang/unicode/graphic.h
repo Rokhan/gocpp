@@ -19,6 +19,7 @@ namespace golang::unicode
     bool IsPrint(gocpp::rune r);
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r);
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges);
+
     template<typename... Args>
     bool In(gocpp::rune r, Args... ranges)
     {

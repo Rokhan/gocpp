@@ -27,6 +27,14 @@ func HashStr[T string | []byte](sep T) (uint32, uint32) {
 	return hash, pow
 }
 
+type Wrapper[T any] struct {
+	value T
+}
+
+func (p *Wrapper[T]) Get() T {
+	return p.value
+}
+
 func main() {
 	h1, h2 := HashStr("toto")
 	fmt.Printf("Hash: %v, %v\n", h1, h2)

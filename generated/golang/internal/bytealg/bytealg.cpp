@@ -14,6 +14,8 @@
 namespace golang::bytealg
 {
     int MaxLen;
+
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
         auto hash = uint32_t(0);
@@ -34,6 +36,8 @@ namespace golang::bytealg
         return {hash, pow};
     }
 
+
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStrRev(T sep)
     {
         auto hash = uint32_t(0);
@@ -54,6 +58,8 @@ namespace golang::bytealg
         return {hash, pow};
     }
 
+
+    template<typename T>
     int IndexRabinKarp(T s, T sep)
     {
         auto [hashss, pow] = HashStr(sep);
@@ -81,6 +87,8 @@ namespace golang::bytealg
         return - 1;
     }
 
+
+    template<typename T>
     int LastIndexRabinKarp(T s, T sep)
     {
         auto [hashss, pow] = HashStrRev(sep);

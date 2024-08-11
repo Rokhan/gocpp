@@ -11,9 +11,17 @@
 
 namespace golang::bytealg
 {
+
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep);
+
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStrRev(T sep);
+
+    template<typename T>
     int IndexRabinKarp(T s, T sep);
+
+    template<typename T>
     int LastIndexRabinKarp(T s, T sep);
     gocpp::slice<unsigned char> MakeNoZero(int n);
 }

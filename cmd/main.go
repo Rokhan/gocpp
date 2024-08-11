@@ -1314,13 +1314,14 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			for _, params := range varidicParams {
 				strs = append(strs, params.names...)
 			}
+			strs = append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType, last.names[0]))
 			callParams := strings.Join(strs, ", ")
 			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil), false})
 
 			fmt.Fprintf(cv.hpp.out, "%stemplate<typename... Args>\n", cv.cpp.Indent())
 			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, varidicParams)
 			fmt.Fprintf(cv.hpp.out, "%s{\n", cv.cpp.Indent())
-			fmt.Fprintf(cv.hpp.out, "%s    return %s(%s, gocpp::ToSlice<%s>(%s...));\n", cv.cpp.Indent(), name, callParams, last.Type.eltType, last.names[0])
+			fmt.Fprintf(cv.hpp.out, "%s    return %s(%s);\n", cv.cpp.Indent(), name, callParams)
 			fmt.Fprintf(cv.hpp.out, "%s}\n\n", cv.cpp.Indent())
 		}
 

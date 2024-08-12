@@ -259,7 +259,7 @@
 | $(ImportDir)/runtime/internal/sys/consts_norace.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts_norace.cpp), [h](generated/golang/runtime/internal/sys/consts_norace.h))|
 | $(ImportDir)/runtime/internal/sys/intrinsics.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/intrinsics.cpp), [h](generated/golang/runtime/internal/sys/intrinsics.h))|
 | $(ImportDir)/runtime/internal/sys/nih.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/nih.cpp), [h](generated/golang/runtime/internal/sys/nih.h))|
-| $(ImportDir)/runtime/lfstack.go | ❌ |
+| $(ImportDir)/runtime/lfstack.go | ✔️ ([cpp](generated/golang/runtime/lfstack.cpp), [h](generated/golang/runtime/lfstack.h))|
 | $(ImportDir)/runtime/lock_sema.go | ✔️ ([cpp](generated/golang/runtime/lock_sema.cpp), [h](generated/golang/runtime/lock_sema.h))|
 | $(ImportDir)/runtime/lockrank.go | ✔️ ([cpp](generated/golang/runtime/lockrank.cpp), [h](generated/golang/runtime/lockrank.h))|
 | $(ImportDir)/runtime/lockrank_off.go | ✔️ ([cpp](generated/golang/runtime/lockrank_off.cpp), [h](generated/golang/runtime/lockrank_off.h))|
@@ -277,7 +277,7 @@
 | $(ImportDir)/runtime/metrics.go | ❌ |
 | $(ImportDir)/runtime/mfinal.go | ✔️ ([cpp](generated/golang/runtime/mfinal.cpp), [h](generated/golang/runtime/mfinal.h))|
 | $(ImportDir)/runtime/mfixalloc.go | ✔️ ([cpp](generated/golang/runtime/mfixalloc.cpp), [h](generated/golang/runtime/mfixalloc.h))|
-| $(ImportDir)/runtime/mgc.go | ❌ |
+| $(ImportDir)/runtime/mgc.go | ✔️ ([cpp](generated/golang/runtime/mgc.cpp), [h](generated/golang/runtime/mgc.h))|
 | $(ImportDir)/runtime/mgclimit.go | ✔️ ([cpp](generated/golang/runtime/mgclimit.cpp), [h](generated/golang/runtime/mgclimit.h))|
 | $(ImportDir)/runtime/mgcmark.go | ✔️ ([cpp](generated/golang/runtime/mgcmark.cpp), [h](generated/golang/runtime/mgcmark.h))|
 | $(ImportDir)/runtime/mgcpacer.go | ✔️ ([cpp](generated/golang/runtime/mgcpacer.cpp), [h](generated/golang/runtime/mgcpacer.h))|
@@ -339,6 +339,7 @@
 | $(ImportDir)/runtime/tagptr_64bit.go | ✔️ ([cpp](generated/golang/runtime/tagptr_64bit.cpp), [h](generated/golang/runtime/tagptr_64bit.h))|
 | $(ImportDir)/runtime/time.go | ✔️ ([cpp](generated/golang/runtime/time.cpp), [h](generated/golang/runtime/time.h))|
 | $(ImportDir)/runtime/time_nofake.go | ✔️ ([cpp](generated/golang/runtime/time_nofake.cpp), [h](generated/golang/runtime/time_nofake.h))|
+| $(ImportDir)/runtime/timeasm.go | ✔️ ([cpp](generated/golang/runtime/timeasm.cpp), [h](generated/golang/runtime/timeasm.h))|
 | $(ImportDir)/runtime/tls_windows_amd64.go | ✔️ ([cpp](generated/golang/runtime/tls_windows_amd64.cpp), [h](generated/golang/runtime/tls_windows_amd64.h))|
 | $(ImportDir)/runtime/trace2.go | ❌ |
 | $(ImportDir)/runtime/trace2buf.go | ✔️ ([cpp](generated/golang/runtime/trace2buf.cpp), [h](generated/golang/runtime/trace2buf.h))|
@@ -399,10 +400,12 @@
 | $(ImportDir)/syscall/wtf8_windows.go | ✔️ ([cpp](generated/golang/syscall/wtf8_windows.cpp), [h](generated/golang/syscall/wtf8_windows.h))|
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))|
 | $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))|
+| $(ImportDir)/time/format.go | ❌ |
+| $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))|
 | $(ImportDir)/time/sleep.go | ❌ |
 | $(ImportDir)/time/sys_windows.go | ✔️ ([cpp](generated/golang/time/sys_windows.cpp), [h](generated/golang/time/sys_windows.h))|
 | $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))|
-| $(ImportDir)/time/time.go | ❌ |
+| $(ImportDir)/time/time.go | ✔️ ([cpp](generated/golang/time/time.cpp), [h](generated/golang/time/time.h))|
 | $(ImportDir)/time/zoneinfo.go | ✔️ ([cpp](generated/golang/time/zoneinfo.cpp), [h](generated/golang/time/zoneinfo.h))|
 | $(ImportDir)/time/zoneinfo_goroot.go | ✔️ ([cpp](generated/golang/time/zoneinfo_goroot.cpp), [h](generated/golang/time/zoneinfo_goroot.h))|
 | $(ImportDir)/time/zoneinfo_read.go | ✔️ ([cpp](generated/golang/time/zoneinfo_read.cpp), [h](generated/golang/time/zoneinfo_read.h))|

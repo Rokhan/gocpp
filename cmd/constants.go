@@ -210,6 +210,16 @@ var knownNameConflicts = []*errorFilter{
 	{"tryRecordGoroutineProfile", "runtime/mprof"},   // missing type from broken include
 	{"doRecordGoroutineProfile", "runtime/mprof"},    // missing type from broken include
 	{"saveg", "runtime/mprof"},                       // missing type from broken include
+
+	{"Month", "time/time"},      // func vs type
+	{"Weekday", "time/time"},    // func vs type
+	{"Location", "time/time"},   // func vs type
+	{"Hour", "time/time"},       // func vs constant
+	{"Minute", "time/time"},     // func vs constant
+	{"Second", "time/time"},     // func vs constant
+	{"Nanosecond", "time/time"}, // func vs constant
+	{"UTC", "time/time"},        // func vs global var
+	{"Local", "time/time"},      // func vs global var
 }
 
 var knownMissingDeps = []*errorFilter{

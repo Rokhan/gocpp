@@ -1451,6 +1451,9 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			var toDeclare []string
 			// first step, just check if there is already declared names
 			for _, varName := range exprList {
+				if varName.str == "_" {
+					varName.str = cv.GenerateId()
+				}
 				if !slices.Contains(*env.varNames, varName.str) {
 					toDeclare = append(toDeclare, varName.str)
 					*env.varNames = append(*env.varNames, varName.str)
@@ -1942,11 +1945,18 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 
 	case *ast.AssignStmt:
 		assignStmts := cv.convertAssignStmt(s, env)
-		switch len(assignStmts) {
+		switch nbStmts := len(assignStmts); nbStmts {
+		case 0:
+			Panicf("inlineStmt, unmanaged multiple assignements: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		case 1:
 			return assignStmts[0]
 		default:
-			Panicf("inlineStmt, unmanaged multiple assignements [%v], input [%v]", reflect.TypeOf(s.Tok), cv.Position(s))
+			result = assignStmts[nbStmts-1]
+			for i := 0; i < nbStmts-1; i++ {
+				result.defs = append(result.defs, assignStmts[i].defs...)
+				result.defs = append(result.defs, inlineStr(assignStmts[i].str))
+			}
+			return
 		}
 
 	default:
@@ -3554,6 +3564,9 @@ func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
 	strs := []string{}
 	for _, expr := range cppExprs {
 		defs = append(defs, expr.defs...)
+		if expr.str == "_" {
+			expr.str = cv.GenerateId()
+		}
 		strs = append(strs, expr.str)
 	}
 

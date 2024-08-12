@@ -496,7 +496,7 @@ namespace golang::runtime
         {
             uintptr_t base;
             uintptr_t i;
-            auto [b, span, _] = findObject(uintptr_t(p), 0, 0);
+            auto [b, span, gocpp_id_1] = findObject(uintptr_t(p), 0, 0);
             base = b;
             if(base == 0)
             {

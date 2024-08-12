@@ -696,10 +696,7 @@ namespace golang::reflect
         }
         auto ftyp = ctxt->ftyp;
         auto f = ctxt->fn;
-        abi::Type* _;
-        sync::Pool* _;
-        abiDesc abid;
-        std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_3, gocpp_id_4, abid] = funcLayout(ftyp, nullptr);
         auto ptr = frame;
         auto in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), 0, int(ftyp->InCount));
         for(auto [i, typ] : InSlice(gocpp::recv(ftyp)))
@@ -963,10 +960,7 @@ namespace golang::reflect
     {
         auto rcvr = ctxt->rcvr;
         auto [rcvrType, valueFuncType, methodFn] = methodReceiver("call", rcvr, ctxt->method);
-        abi::Type* _;
-        sync::Pool* _;
-        abiDesc valueABI;
-        std::tie(_, _, valueABI) = funcLayout(valueFuncType, nullptr);
+        auto [gocpp_id_7, gocpp_id_8, valueABI] = funcLayout(valueFuncType, nullptr);
         auto [valueFrame, valueRegs] = std::tuple{frame, regs};
         auto [methodFrameType, methodFramePool, methodABI] = funcLayout(valueFuncType, rcvrType);
         auto methodFrame = gocpp::getValue<unsafe::Pointer>(Get(gocpp::recv(methodFramePool)));

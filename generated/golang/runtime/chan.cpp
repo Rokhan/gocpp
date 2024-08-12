@@ -421,7 +421,7 @@ namespace golang::runtime
     bool chanrecv2(hchan* c, unsafe::Pointer elem)
     {
         bool received;
-        std::tie(_, received) = chanrecv(c, elem, true);
+        std::tie(gocpp_id_0, received) = chanrecv(c, elem, true);
         return received;
     }
 

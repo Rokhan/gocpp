@@ -313,10 +313,7 @@ namespace golang::time
             tx = append(tx, gocpp::Init<zoneTrans>([](zoneTrans& x) { x.when = alpha; x.index = 0; }));
         }
         auto l = gocpp::InitPtr<Location>([](Location& x) { x.zone = zones; x.tx = tx; x.name = name; x.extend = extend; });
-        int64_t sec;
-        int32_t _;
-        int64_t _;
-        std::tie(sec, _, _) = now();
+        auto [sec, gocpp_id_2, gocpp_id_3] = now();
         for(auto [i, gocpp_ignored] : tx)
         {
             if(tx[i].when <= sec && (i + 1 == len(tx) || sec < tx[i + 1].when))

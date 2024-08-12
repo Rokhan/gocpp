@@ -258,7 +258,7 @@ namespace golang::runtime
 
     void buildIndex(struct stackScanState* s)
     {
-        std::tie(s->root, _, _) = binarySearchTree(s->head, 0, s->nobjs);
+        std::tie(s->root, gocpp_id_0, gocpp_id_1) = binarySearchTree(s->head, 0, s->nobjs);
     }
 
     std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n)

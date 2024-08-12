@@ -266,7 +266,7 @@ namespace golang::unicode
 
     gocpp::rune To(int _case, gocpp::rune r)
     {
-        std::tie(r, _) = to(_case, r, CaseRanges);
+        std::tie(r, gocpp_id_0) = to(_case, r, CaseRanges);
         return r;
     }
 

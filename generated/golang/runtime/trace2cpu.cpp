@@ -112,7 +112,7 @@ namespace golang::runtime
             go_throw("traceStartReadCPU called with trace disabled");
         }
         trace.cpuSleep = newWakeableSleep();
-        auto done = gocpp::make(gocpp::Tag<gocpp::channel<&{%!s(token.Pos=32028503) %!s(*ast.FieldList=&{32028509 [] 32028510}) %!s(bool=false)}>>(), 1);
+        auto done = gocpp::make(gocpp::Tag<gocpp::channel<&{%!s(token.Pos=34767375) %!s(*ast.FieldList=&{34767381 [] 34767382}) %!s(bool=false)}>>(), 1);
         gocpp::go([&]{ [=]() mutable -> void
         {
             for(; traceEnabled(); )

@@ -40,7 +40,7 @@ namespace golang::slices
     template<typename S>
     E MaxFunc(S x, std::function<int (E a, E b)> cmp);
 
-    template<typename S, typename E>
+    template<typename E, typename S>
     std::tuple<int, bool> BinarySearch(S x, E target);
 
     template<typename S, typename T>

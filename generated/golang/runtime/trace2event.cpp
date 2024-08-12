@@ -99,7 +99,7 @@ namespace golang::runtime
 
     traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
     {
-        std::tie(w, _) = ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
+        std::tie(w, gocpp_id_0) = ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->lastTime)
         {

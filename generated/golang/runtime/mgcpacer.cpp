@@ -473,7 +473,7 @@ namespace golang::runtime
 
     uint64_t heapGoal(struct gcControllerState* c)
     {
-        auto [goal, _] = heapGoalInternal(gocpp::recv(c));
+        auto [goal, gocpp_id_1] = heapGoalInternal(gocpp::recv(c));
         return goal;
     }
 

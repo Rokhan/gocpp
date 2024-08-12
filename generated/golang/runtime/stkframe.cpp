@@ -75,7 +75,7 @@ namespace golang::runtime
         {
             return uintptr_t(frame->fn.args);
         }
-        auto [argMap, _] = argMapInternal(gocpp::recv(frame));
+        auto [argMap, gocpp_id_1] = argMapInternal(gocpp::recv(frame));
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
 

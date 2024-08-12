@@ -389,7 +389,7 @@ namespace golang::fmt
                 auto wid = 1;
                 if(b[i] >= utf8::RuneSelf)
                 {
-                    std::tie(_, wid) = utf8::DecodeRune(b.make_slice(i));
+                    std::tie(gocpp_id_0, wid) = utf8::DecodeRune(b.make_slice(i));
                 }
                 i += wid;
             }

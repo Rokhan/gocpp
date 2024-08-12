@@ -116,7 +116,7 @@ namespace golang::zlib
         {
             return {n, z->err};
         }
-        if(auto [_, err] = io::ReadFull(z->r, z->scratch.make_slice(0, 4)); err != nullptr)
+        if(auto [gocpp_id_1, err] = io::ReadFull(z->r, z->scratch.make_slice(0, 4)); err != nullptr)
         {
             if(err == io::go_EOF)
             {
@@ -155,7 +155,7 @@ namespace golang::zlib
         {
             z->r = bufio::NewReader(r);
         }
-        std::tie(_, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 2));
+        std::tie(gocpp_id_2, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 2));
         if(z->err != nullptr)
         {
             if(z->err == io::go_EOF)
@@ -173,7 +173,7 @@ namespace golang::zlib
         auto haveDict = z->scratch[1] & 0x20 != 0;
         if(haveDict)
         {
-            std::tie(_, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 4));
+            std::tie(gocpp_id_3, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 4));
             if(z->err != nullptr)
             {
                 if(z->err == io::go_EOF)

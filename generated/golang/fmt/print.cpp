@@ -1038,7 +1038,7 @@ namespace golang::fmt
         if(verb == 'w')
         {
             bool handled;
-            auto [_, ok] = gocpp::getValue<std::string>(p->arg);
+            auto [gocpp_id_1, ok] = gocpp::getValue<std::string>(p->arg);
             if(! ok || ! p->wrapErrs)
             {
                 bool handled;
@@ -1089,10 +1089,10 @@ namespace golang::fmt
                     case 4:
                         //Go type switch emulation
                         {
-                            const auto& gocpp_id_0 = gocpp::type_info(p->arg);
+                            const auto& gocpp_id_2 = gocpp::type_info(p->arg);
                             int conditionId = -1;
-                            if(gocpp_id_0 == typeid(std::string)) { conditionId = 0; }
-                            else if(gocpp_id_0 == typeid(Stringer)) { conditionId = 1; }
+                            if(gocpp_id_2 == typeid(std::string)) { conditionId = 0; }
+                            else if(gocpp_id_2 == typeid(Stringer)) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 bool handled;
@@ -1168,27 +1168,27 @@ namespace golang::fmt
         }
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(arg);
+            const auto& gocpp_id_3 = gocpp::type_info(arg);
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(bool)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(float)) { conditionId = 1; }
-            else if(gocpp_id_1 == typeid(double)) { conditionId = 2; }
-            else if(gocpp_id_1 == typeid(complex64)) { conditionId = 3; }
-            else if(gocpp_id_1 == typeid(gocpp::complex128)) { conditionId = 4; }
-            else if(gocpp_id_1 == typeid(int)) { conditionId = 5; }
-            else if(gocpp_id_1 == typeid(int8_t)) { conditionId = 6; }
-            else if(gocpp_id_1 == typeid(int16_t)) { conditionId = 7; }
-            else if(gocpp_id_1 == typeid(int32_t)) { conditionId = 8; }
-            else if(gocpp_id_1 == typeid(int64_t)) { conditionId = 9; }
-            else if(gocpp_id_1 == typeid(unsigned int)) { conditionId = 10; }
-            else if(gocpp_id_1 == typeid(uint8_t)) { conditionId = 11; }
-            else if(gocpp_id_1 == typeid(uint16_t)) { conditionId = 12; }
-            else if(gocpp_id_1 == typeid(uint32_t)) { conditionId = 13; }
-            else if(gocpp_id_1 == typeid(uint64_t)) { conditionId = 14; }
-            else if(gocpp_id_1 == typeid(uintptr_t)) { conditionId = 15; }
-            else if(gocpp_id_1 == typeid(std::string)) { conditionId = 16; }
-            else if(gocpp_id_1 == typeid(gocpp::slice<unsigned char>)) { conditionId = 17; }
-            else if(gocpp_id_1 == typeid(reflect::Value)) { conditionId = 18; }
+            if(gocpp_id_3 == typeid(bool)) { conditionId = 0; }
+            else if(gocpp_id_3 == typeid(float)) { conditionId = 1; }
+            else if(gocpp_id_3 == typeid(double)) { conditionId = 2; }
+            else if(gocpp_id_3 == typeid(complex64)) { conditionId = 3; }
+            else if(gocpp_id_3 == typeid(gocpp::complex128)) { conditionId = 4; }
+            else if(gocpp_id_3 == typeid(int)) { conditionId = 5; }
+            else if(gocpp_id_3 == typeid(int8_t)) { conditionId = 6; }
+            else if(gocpp_id_3 == typeid(int16_t)) { conditionId = 7; }
+            else if(gocpp_id_3 == typeid(int32_t)) { conditionId = 8; }
+            else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 9; }
+            else if(gocpp_id_3 == typeid(unsigned int)) { conditionId = 10; }
+            else if(gocpp_id_3 == typeid(uint8_t)) { conditionId = 11; }
+            else if(gocpp_id_3 == typeid(uint16_t)) { conditionId = 12; }
+            else if(gocpp_id_3 == typeid(uint32_t)) { conditionId = 13; }
+            else if(gocpp_id_3 == typeid(uint64_t)) { conditionId = 14; }
+            else if(gocpp_id_3 == typeid(uintptr_t)) { conditionId = 15; }
+            else if(gocpp_id_3 == typeid(std::string)) { conditionId = 16; }
+            else if(gocpp_id_3 == typeid(gocpp::slice<unsigned char>)) { conditionId = 17; }
+            else if(gocpp_id_3 == typeid(reflect::Value)) { conditionId = 18; }
             switch(conditionId)
             {
                 case 0:

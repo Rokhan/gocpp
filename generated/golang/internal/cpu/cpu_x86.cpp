@@ -41,18 +41,13 @@ namespace golang::cpu
         {
             options = append(options, gocpp::Init<option>([](option& x) { x.Name = "avx512f"; x.Feature = & X86.HasAVX512F; }), gocpp::Init<option>([](option& x) { x.Name = "avx512bw"; x.Feature = & X86.HasAVX512BW; }), gocpp::Init<option>([](option& x) { x.Name = "avx512vl"; x.Feature = & X86.HasAVX512VL; }));
         }
-        uint32_t maxID;
-        uint32_t _;
-        uint32_t _;
-        uint32_t _;
-        std::tie(maxID, _, _, _) = cpuid(0, 0);
+        auto [maxID, gocpp_id_3, gocpp_id_4, gocpp_id_5] = cpuid(0, 0);
         if(maxID < 1)
         {
             return;
         }
-        std::tie(maxExtendedFunctionInformation, _, _, _) = cpuid(0x80000000, 0);
-        uint32_t ecx1;
-        std::tie(_, _, ecx1, _) = cpuid(1, 0);
+        std::tie(maxExtendedFunctionInformation, gocpp_id_6, gocpp_id_7, gocpp_id_8) = cpuid(0x80000000, 0);
+        auto [gocpp_id_12, gocpp_id_13, ecx1, gocpp_id_14] = cpuid(1, 0);
         X86.HasSSE3 = isSet(ecx1, cpuid_SSE3);
         X86.HasPCLMULQDQ = isSet(ecx1, cpuid_PCLMULQDQ);
         X86.HasSSSE3 = isSet(ecx1, cpuid_SSSE3);
@@ -66,7 +61,7 @@ namespace golang::cpu
         auto osSupportsAVX512 = false;
         if(X86.HasOSXSAVE)
         {
-            auto [eax, _] = xgetbv();
+            auto [eax, gocpp_id_16] = xgetbv();
             osSupportsAVX = isSet(eax, 1 << 1) && isSet(eax, 1 << 2);
             osSupportsAVX512 = osSupportsAVX && isSet(eax, 1 << 5) && isSet(eax, 1 << 6) && isSet(eax, 1 << 7);
         }
@@ -75,8 +70,7 @@ namespace golang::cpu
         {
             return;
         }
-        uint32_t ebx7;
-        std::tie(_, ebx7, _, _) = cpuid(7, 0);
+        auto [gocpp_id_20, ebx7, gocpp_id_21, gocpp_id_22] = cpuid(7, 0);
         X86.HasBMI1 = isSet(ebx7, cpuid_BMI1);
         X86.HasAVX2 = isSet(ebx7, cpuid_AVX2) && osSupportsAVX;
         X86.HasBMI2 = isSet(ebx7, cpuid_BMI2);
@@ -90,13 +84,12 @@ namespace golang::cpu
             X86.HasAVX512VL = isSet(ebx7, cpuid_AVX512VL);
         }
         uint32_t maxExtendedInformation = {};
-        std::tie(maxExtendedInformation, _, _, _) = cpuid(0x80000000, 0);
+        std::tie(maxExtendedInformation, gocpp_id_23, gocpp_id_24, gocpp_id_25) = cpuid(0x80000000, 0);
         if(maxExtendedInformation < 0x80000001)
         {
             return;
         }
-        uint32_t edxExt1;
-        std::tie(_, _, _, edxExt1) = cpuid(0x80000001, 0);
+        auto [gocpp_id_29, gocpp_id_30, gocpp_id_31, edxExt1] = cpuid(0x80000001, 0);
         X86.HasRDTSCP = isSet(edxExt1, cpuid_RDTSCP);
     }
 

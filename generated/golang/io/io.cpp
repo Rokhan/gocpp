@@ -1425,7 +1425,7 @@ namespace golang::io
 
     ReadCloser NopCloser(Reader r)
     {
-        if(auto [_, ok] = gocpp::getValue<WriterTo>(r); ok)
+        if(auto [gocpp_id_1, ok] = gocpp::getValue<WriterTo>(r); ok)
         {
             return nopCloserWriterTo {r};
         }

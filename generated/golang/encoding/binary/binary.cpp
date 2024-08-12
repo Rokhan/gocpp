@@ -436,36 +436,36 @@ namespace golang::binary
         if(auto n = intDataSize(data); n != 0)
         {
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
-            if(auto [_, err] = io::ReadFull(r, bs); err != nullptr)
+            if(auto [gocpp_id_1, err] = io::ReadFull(r, bs); err != nullptr)
             {
                 return err;
             }
             //Go type switch emulation
             {
-                const auto& gocpp_id_0 = gocpp::type_info(data);
+                const auto& gocpp_id_2 = gocpp::type_info(data);
                 int conditionId = -1;
-                if(gocpp_id_0 == typeid(bool*)) { conditionId = 0; }
-                else if(gocpp_id_0 == typeid(int8_t*)) { conditionId = 1; }
-                else if(gocpp_id_0 == typeid(uint8_t*)) { conditionId = 2; }
-                else if(gocpp_id_0 == typeid(int16_t*)) { conditionId = 3; }
-                else if(gocpp_id_0 == typeid(uint16_t*)) { conditionId = 4; }
-                else if(gocpp_id_0 == typeid(int32_t*)) { conditionId = 5; }
-                else if(gocpp_id_0 == typeid(uint32_t*)) { conditionId = 6; }
-                else if(gocpp_id_0 == typeid(int64_t*)) { conditionId = 7; }
-                else if(gocpp_id_0 == typeid(uint64_t*)) { conditionId = 8; }
-                else if(gocpp_id_0 == typeid(float*)) { conditionId = 9; }
-                else if(gocpp_id_0 == typeid(double*)) { conditionId = 10; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<bool>)) { conditionId = 11; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<int8_t>)) { conditionId = 12; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<uint8_t>)) { conditionId = 13; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<int16_t>)) { conditionId = 14; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<uint16_t>)) { conditionId = 15; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<int32_t>)) { conditionId = 16; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<uint32_t>)) { conditionId = 17; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<int64_t>)) { conditionId = 18; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<uint64_t>)) { conditionId = 19; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<float>)) { conditionId = 20; }
-                else if(gocpp_id_0 == typeid(gocpp::slice<double>)) { conditionId = 21; }
+                if(gocpp_id_2 == typeid(bool*)) { conditionId = 0; }
+                else if(gocpp_id_2 == typeid(int8_t*)) { conditionId = 1; }
+                else if(gocpp_id_2 == typeid(uint8_t*)) { conditionId = 2; }
+                else if(gocpp_id_2 == typeid(int16_t*)) { conditionId = 3; }
+                else if(gocpp_id_2 == typeid(uint16_t*)) { conditionId = 4; }
+                else if(gocpp_id_2 == typeid(int32_t*)) { conditionId = 5; }
+                else if(gocpp_id_2 == typeid(uint32_t*)) { conditionId = 6; }
+                else if(gocpp_id_2 == typeid(int64_t*)) { conditionId = 7; }
+                else if(gocpp_id_2 == typeid(uint64_t*)) { conditionId = 8; }
+                else if(gocpp_id_2 == typeid(float*)) { conditionId = 9; }
+                else if(gocpp_id_2 == typeid(double*)) { conditionId = 10; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<bool>)) { conditionId = 11; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<int8_t>)) { conditionId = 12; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<uint8_t>)) { conditionId = 13; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<int16_t>)) { conditionId = 14; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<uint16_t>)) { conditionId = 15; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<int32_t>)) { conditionId = 16; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<uint32_t>)) { conditionId = 17; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<int64_t>)) { conditionId = 18; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<uint64_t>)) { conditionId = 19; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<float>)) { conditionId = 20; }
+                else if(gocpp_id_2 == typeid(gocpp::slice<double>)) { conditionId = 21; }
                 switch(conditionId)
                 {
                     case 0:
@@ -667,7 +667,7 @@ namespace golang::binary
             return errors::New("binary.Read: invalid type " + String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.order = order; x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size); });
-        if(auto [_, err] = io::ReadFull(r, d->buf); err != nullptr)
+        if(auto [gocpp_id_4, err] = io::ReadFull(r, d->buf); err != nullptr)
         {
             return err;
         }
@@ -682,41 +682,41 @@ namespace golang::binary
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             //Go type switch emulation
             {
-                const auto& gocpp_id_1 = gocpp::type_info(data);
+                const auto& gocpp_id_5 = gocpp::type_info(data);
                 int conditionId = -1;
-                if(gocpp_id_1 == typeid(bool*)) { conditionId = 0; }
-                else if(gocpp_id_1 == typeid(bool)) { conditionId = 1; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<bool>)) { conditionId = 2; }
-                else if(gocpp_id_1 == typeid(int8_t*)) { conditionId = 3; }
-                else if(gocpp_id_1 == typeid(int8_t)) { conditionId = 4; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int8_t>)) { conditionId = 5; }
-                else if(gocpp_id_1 == typeid(uint8_t*)) { conditionId = 6; }
-                else if(gocpp_id_1 == typeid(uint8_t)) { conditionId = 7; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
-                else if(gocpp_id_1 == typeid(int16_t*)) { conditionId = 9; }
-                else if(gocpp_id_1 == typeid(int16_t)) { conditionId = 10; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int16_t>)) { conditionId = 11; }
-                else if(gocpp_id_1 == typeid(uint16_t*)) { conditionId = 12; }
-                else if(gocpp_id_1 == typeid(uint16_t)) { conditionId = 13; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
-                else if(gocpp_id_1 == typeid(int32_t*)) { conditionId = 15; }
-                else if(gocpp_id_1 == typeid(int32_t)) { conditionId = 16; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int32_t>)) { conditionId = 17; }
-                else if(gocpp_id_1 == typeid(uint32_t*)) { conditionId = 18; }
-                else if(gocpp_id_1 == typeid(uint32_t)) { conditionId = 19; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
-                else if(gocpp_id_1 == typeid(int64_t*)) { conditionId = 21; }
-                else if(gocpp_id_1 == typeid(int64_t)) { conditionId = 22; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<int64_t>)) { conditionId = 23; }
-                else if(gocpp_id_1 == typeid(uint64_t*)) { conditionId = 24; }
-                else if(gocpp_id_1 == typeid(uint64_t)) { conditionId = 25; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
-                else if(gocpp_id_1 == typeid(float*)) { conditionId = 27; }
-                else if(gocpp_id_1 == typeid(float)) { conditionId = 28; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<float>)) { conditionId = 29; }
-                else if(gocpp_id_1 == typeid(double*)) { conditionId = 30; }
-                else if(gocpp_id_1 == typeid(double)) { conditionId = 31; }
-                else if(gocpp_id_1 == typeid(gocpp::slice<double>)) { conditionId = 32; }
+                if(gocpp_id_5 == typeid(bool*)) { conditionId = 0; }
+                else if(gocpp_id_5 == typeid(bool)) { conditionId = 1; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<bool>)) { conditionId = 2; }
+                else if(gocpp_id_5 == typeid(int8_t*)) { conditionId = 3; }
+                else if(gocpp_id_5 == typeid(int8_t)) { conditionId = 4; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<int8_t>)) { conditionId = 5; }
+                else if(gocpp_id_5 == typeid(uint8_t*)) { conditionId = 6; }
+                else if(gocpp_id_5 == typeid(uint8_t)) { conditionId = 7; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
+                else if(gocpp_id_5 == typeid(int16_t*)) { conditionId = 9; }
+                else if(gocpp_id_5 == typeid(int16_t)) { conditionId = 10; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<int16_t>)) { conditionId = 11; }
+                else if(gocpp_id_5 == typeid(uint16_t*)) { conditionId = 12; }
+                else if(gocpp_id_5 == typeid(uint16_t)) { conditionId = 13; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
+                else if(gocpp_id_5 == typeid(int32_t*)) { conditionId = 15; }
+                else if(gocpp_id_5 == typeid(int32_t)) { conditionId = 16; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<int32_t>)) { conditionId = 17; }
+                else if(gocpp_id_5 == typeid(uint32_t*)) { conditionId = 18; }
+                else if(gocpp_id_5 == typeid(uint32_t)) { conditionId = 19; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
+                else if(gocpp_id_5 == typeid(int64_t*)) { conditionId = 21; }
+                else if(gocpp_id_5 == typeid(int64_t)) { conditionId = 22; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<int64_t>)) { conditionId = 23; }
+                else if(gocpp_id_5 == typeid(uint64_t*)) { conditionId = 24; }
+                else if(gocpp_id_5 == typeid(uint64_t)) { conditionId = 25; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
+                else if(gocpp_id_5 == typeid(float*)) { conditionId = 27; }
+                else if(gocpp_id_5 == typeid(float)) { conditionId = 28; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<float>)) { conditionId = 29; }
+                else if(gocpp_id_5 == typeid(double*)) { conditionId = 30; }
+                else if(gocpp_id_5 == typeid(double)) { conditionId = 31; }
+                else if(gocpp_id_5 == typeid(gocpp::slice<double>)) { conditionId = 32; }
                 switch(conditionId)
                 {
                     case 0:
@@ -970,7 +970,7 @@ namespace golang::binary
                     }
                 }
             }
-            auto [_, err] = Write(gocpp::recv(w), bs);
+            auto [gocpp_id_7, err] = Write(gocpp::recv(w), bs);
             return err;
         }
         auto v = reflect::Indirect(reflect::ValueOf(data));
@@ -982,7 +982,7 @@ namespace golang::binary
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         auto e = gocpp::InitPtr<encoder>([](encoder& x) { x.order = order; x.buf = buf; });
         value(gocpp::recv(e), v);
-        auto [_, err] = Write(gocpp::recv(w), buf);
+        auto [gocpp_id_9, err] = Write(gocpp::recv(w), buf);
         return err;
     }
 
@@ -1501,41 +1501,41 @@ namespace golang::binary
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_2 = gocpp::type_info(data);
+            const auto& gocpp_id_10 = gocpp::type_info(data);
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(bool)) { conditionId = 0; }
-            if(gocpp_id_2 == typeid(int8_t)) { conditionId = 1; }
-            if(gocpp_id_2 == typeid(uint8_t)) { conditionId = 2; }
-            if(gocpp_id_2 == typeid(bool*)) { conditionId = 3; }
-            if(gocpp_id_2 == typeid(int8_t*)) { conditionId = 4; }
-            if(gocpp_id_2 == typeid(uint8_t*)) { conditionId = 5; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
-            else if(gocpp_id_2 == typeid(int16_t)) { conditionId = 9; }
-            else if(gocpp_id_2 == typeid(uint16_t)) { conditionId = 10; }
-            else if(gocpp_id_2 == typeid(int16_t*)) { conditionId = 11; }
-            else if(gocpp_id_2 == typeid(uint16_t*)) { conditionId = 12; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<int16_t>)) { conditionId = 13; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
-            else if(gocpp_id_2 == typeid(int32_t)) { conditionId = 15; }
-            else if(gocpp_id_2 == typeid(uint32_t)) { conditionId = 16; }
-            else if(gocpp_id_2 == typeid(int32_t*)) { conditionId = 17; }
-            else if(gocpp_id_2 == typeid(uint32_t*)) { conditionId = 18; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<int32_t>)) { conditionId = 19; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
-            else if(gocpp_id_2 == typeid(int64_t)) { conditionId = 21; }
-            else if(gocpp_id_2 == typeid(uint64_t)) { conditionId = 22; }
-            else if(gocpp_id_2 == typeid(int64_t*)) { conditionId = 23; }
-            else if(gocpp_id_2 == typeid(uint64_t*)) { conditionId = 24; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<int64_t>)) { conditionId = 25; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
-            else if(gocpp_id_2 == typeid(float)) { conditionId = 27; }
-            else if(gocpp_id_2 == typeid(float*)) { conditionId = 28; }
-            else if(gocpp_id_2 == typeid(double)) { conditionId = 29; }
-            else if(gocpp_id_2 == typeid(double*)) { conditionId = 30; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<float>)) { conditionId = 31; }
-            else if(gocpp_id_2 == typeid(gocpp::slice<double>)) { conditionId = 32; }
+            if(gocpp_id_10 == typeid(bool)) { conditionId = 0; }
+            if(gocpp_id_10 == typeid(int8_t)) { conditionId = 1; }
+            if(gocpp_id_10 == typeid(uint8_t)) { conditionId = 2; }
+            if(gocpp_id_10 == typeid(bool*)) { conditionId = 3; }
+            if(gocpp_id_10 == typeid(int8_t*)) { conditionId = 4; }
+            if(gocpp_id_10 == typeid(uint8_t*)) { conditionId = 5; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }
+            else if(gocpp_id_10 == typeid(int16_t)) { conditionId = 9; }
+            else if(gocpp_id_10 == typeid(uint16_t)) { conditionId = 10; }
+            else if(gocpp_id_10 == typeid(int16_t*)) { conditionId = 11; }
+            else if(gocpp_id_10 == typeid(uint16_t*)) { conditionId = 12; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int16_t>)) { conditionId = 13; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint16_t>)) { conditionId = 14; }
+            else if(gocpp_id_10 == typeid(int32_t)) { conditionId = 15; }
+            else if(gocpp_id_10 == typeid(uint32_t)) { conditionId = 16; }
+            else if(gocpp_id_10 == typeid(int32_t*)) { conditionId = 17; }
+            else if(gocpp_id_10 == typeid(uint32_t*)) { conditionId = 18; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int32_t>)) { conditionId = 19; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint32_t>)) { conditionId = 20; }
+            else if(gocpp_id_10 == typeid(int64_t)) { conditionId = 21; }
+            else if(gocpp_id_10 == typeid(uint64_t)) { conditionId = 22; }
+            else if(gocpp_id_10 == typeid(int64_t*)) { conditionId = 23; }
+            else if(gocpp_id_10 == typeid(uint64_t*)) { conditionId = 24; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<int64_t>)) { conditionId = 25; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<uint64_t>)) { conditionId = 26; }
+            else if(gocpp_id_10 == typeid(float)) { conditionId = 27; }
+            else if(gocpp_id_10 == typeid(float*)) { conditionId = 28; }
+            else if(gocpp_id_10 == typeid(double)) { conditionId = 29; }
+            else if(gocpp_id_10 == typeid(double*)) { conditionId = 30; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<float>)) { conditionId = 31; }
+            else if(gocpp_id_10 == typeid(gocpp::slice<double>)) { conditionId = 32; }
             switch(conditionId)
             {
                 case 0:

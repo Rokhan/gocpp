@@ -668,7 +668,7 @@ namespace golang::runtime
                 return n;
             }
             auto u2 = u;
-            auto [remaining, _] = traceback2(& u, showRuntime, maxInt, 0);
+            auto [remaining, gocpp_id_1] = traceback2(& u, showRuntime, maxInt, 0);
             auto elide = remaining - lastN - tracebackOuterFrames;
             if(elide > 0)
             {
@@ -726,10 +726,7 @@ namespace golang::runtime
         }
 ;
         auto gp = ptr(gocpp::recv(u->g));
-        int32_t level;
-        bool _;
-        bool _;
-        std::tie(level, _, _) = gotraceback();
+        auto [level, gocpp_id_4, gocpp_id_5] = gotraceback();
         gocpp::array<uintptr_t, 32> cgoBuf = {};
         for(; valid(gocpp::recv(u)); next(gocpp::recv(u)))
         {
@@ -933,10 +930,7 @@ namespace golang::runtime
 
     bool showfuncinfo(srcFunc sf, bool firstFrame, abi::FuncID calleeID)
     {
-        int32_t level;
-        bool _;
-        bool _;
-        std::tie(level, _, _) = gotraceback();
+        auto [level, gocpp_id_8, gocpp_id_9] = gotraceback();
         if(level > 1)
         {
             return true;
@@ -967,10 +961,7 @@ namespace golang::runtime
     gocpp::array_base<std::string> gStatusStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x._Gidle = "idle"; x._Grunnable = "runnable"; x._Grunning = "running"; x._Gsyscall = "syscall"; x._Gwaiting = "waiting"; x._Gdead = "dead"; x._Gcopystack = "copystack"; x._Gpreempted = "preempted"; });
     void goroutineheader(g* gp)
     {
-        int32_t level;
-        bool _;
-        bool _;
-        std::tie(level, _, _) = gotraceback();
+        auto [level, gocpp_id_12, gocpp_id_13] = gotraceback();
         auto gpstatus = readgstatus(gp);
         auto isScan = gpstatus & _Gscan != 0;
         gpstatus &^= _Gscan;
@@ -1023,10 +1014,7 @@ namespace golang::runtime
 
     void tracebackothers(g* me)
     {
-        int32_t level;
-        bool _;
-        bool _;
-        std::tie(level, _, _) = gotraceback();
+        auto [level, gocpp_id_16, gocpp_id_17] = gotraceback();
         auto curgp = getg()->m->curg;
         if(curgp != nullptr && curgp != me)
         {

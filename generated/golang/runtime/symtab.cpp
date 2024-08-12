@@ -997,8 +997,8 @@ namespace golang::runtime
             int32_t line;
             return {"?", 0};
         }
-        auto [fileno, _] = pcvalue(f, f.pcfile, targetpc, strict);
-        std::tie(line, _) = pcvalue(f, f.pcln, targetpc, strict);
+        auto [fileno, gocpp_id_2] = pcvalue(f, f.pcfile, targetpc, strict);
+        std::tie(line, gocpp_id_3) = pcvalue(f, f.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
             std::string file;
@@ -1018,7 +1018,7 @@ namespace golang::runtime
 
     int32_t funcspdelta(funcInfo f, uintptr_t targetpc)
     {
-        auto [x, _] = pcvalue(f, f.pcsp, targetpc, true);
+        auto [x, gocpp_id_5] = pcvalue(f, f.pcsp, targetpc, true);
         if(debugPcln && x & (goarch::PtrSize - 1) != 0)
         {
             print("invalid spdelta ", funcname(f), " ", hex(entry(gocpp::recv(f))), " ", hex(targetpc), " ", hex(f.pcsp), " ", x, "\n");
@@ -1057,7 +1057,7 @@ namespace golang::runtime
         {
             return - 1;
         }
-        auto [r, _] = pcvalue(f, pcdatastart(f, table), targetpc, true);
+        auto [r, gocpp_id_7] = pcvalue(f, pcdatastart(f, table), targetpc, true);
         return r;
     }
 
@@ -1067,7 +1067,7 @@ namespace golang::runtime
         {
             return - 1;
         }
-        auto [r, _] = pcvalue(f, pcdatastart(f, table), targetpc, strict);
+        auto [r, gocpp_id_9] = pcvalue(f, pcdatastart(f, table), targetpc, strict);
         return r;
     }
 

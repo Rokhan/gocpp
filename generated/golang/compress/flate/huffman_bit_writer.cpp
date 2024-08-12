@@ -94,7 +94,7 @@ namespace golang::flate
         {
             return;
         }
-        std::tie(_, w->err) = Write(gocpp::recv(w->writer), b);
+        std::tie(gocpp_id_0, w->err) = Write(gocpp::recv(w->writer), b);
     }
 
     void writeBits(struct huffmanBitWriter* w, int32_t b, unsigned int nb)

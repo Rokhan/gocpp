@@ -371,7 +371,7 @@ namespace golang::color
     Model Gray16Model = ModelFunc(gray16Model);
     Color rgbaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<RGBA>(c); ok)
+        if(auto [gocpp_id_1, ok] = gocpp::getValue<RGBA>(c); ok)
         {
             return c;
         }
@@ -381,7 +381,7 @@ namespace golang::color
 
     Color rgba64Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<RGBA64>(c); ok)
+        if(auto [gocpp_id_3, ok] = gocpp::getValue<RGBA64>(c); ok)
         {
             return c;
         }
@@ -391,7 +391,7 @@ namespace golang::color
 
     Color nrgbaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<NRGBA>(c); ok)
+        if(auto [gocpp_id_5, ok] = gocpp::getValue<NRGBA>(c); ok)
         {
             return c;
         }
@@ -412,7 +412,7 @@ namespace golang::color
 
     Color nrgba64Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<NRGBA64>(c); ok)
+        if(auto [gocpp_id_7, ok] = gocpp::getValue<NRGBA64>(c); ok)
         {
             return c;
         }
@@ -433,50 +433,42 @@ namespace golang::color
 
     Color alphaModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<Alpha>(c); ok)
+        if(auto [gocpp_id_9, ok] = gocpp::getValue<Alpha>(c); ok)
         {
             return c;
         }
-        uint32_t _;
-        uint32_t _;
-        uint32_t _;
-        uint32_t a;
-        std::tie(_, _, _, a) = RGBA(gocpp::recv(c));
+        auto [gocpp_id_13, gocpp_id_14, gocpp_id_15, a] = RGBA(gocpp::recv(c));
         return Alpha {uint8_t(a >> 8)};
     }
 
     Color alpha16Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<Alpha16>(c); ok)
+        if(auto [gocpp_id_17, ok] = gocpp::getValue<Alpha16>(c); ok)
         {
             return c;
         }
-        uint32_t _;
-        uint32_t _;
-        uint32_t _;
-        uint32_t a;
-        std::tie(_, _, _, a) = RGBA(gocpp::recv(c));
+        auto [gocpp_id_21, gocpp_id_22, gocpp_id_23, a] = RGBA(gocpp::recv(c));
         return Alpha16 {uint16_t(a)};
     }
 
     Color grayModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<Gray>(c); ok)
+        if(auto [gocpp_id_25, ok] = gocpp::getValue<Gray>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, _] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_27] = RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
         return Gray {uint8_t(y)};
     }
 
     Color gray16Model(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<Gray16>(c); ok)
+        if(auto [gocpp_id_29, ok] = gocpp::getValue<Gray16>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, _] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_31] = RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
         return Gray16 {uint16_t(y)};
     }

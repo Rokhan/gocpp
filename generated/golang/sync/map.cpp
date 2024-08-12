@@ -126,7 +126,7 @@ namespace golang::sync
 
     void Store(struct Map* m, go_any key, go_any value)
     {
-        std::tie(_, _) = Swap(gocpp::recv(m), key, value);
+        std::tie(gocpp_id_0, gocpp_id_1) = Swap(gocpp::recv(m), key, value);
     }
 
     bool tryCompareAndSwap(struct entry* e, go_any old, go_any go_new)
@@ -191,14 +191,14 @@ namespace golang::sync
                 bool loaded;
                 m->dirty[key] = e;
             }
-            std::tie(actual, loaded, _) = tryLoadOrStore(gocpp::recv(e), value);
+            std::tie(actual, loaded, gocpp_id_2) = tryLoadOrStore(gocpp::recv(e), value);
         }
         else
         if(auto [e, ok] = m->dirty[key]; ok)
         {
             go_any actual;
             bool loaded;
-            std::tie(actual, loaded, _) = tryLoadOrStore(gocpp::recv(e), value);
+            std::tie(actual, loaded, gocpp_id_3) = tryLoadOrStore(gocpp::recv(e), value);
             missLocked(gocpp::recv(m));
         }
         else

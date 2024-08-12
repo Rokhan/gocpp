@@ -18,7 +18,7 @@ namespace golang::syscall
     struct SockaddrInet4;
     struct SockaddrInet6;
     struct SockaddrUnix;
-    struct gocpp_id_0;
+    struct gocpp_id_15;
     struct WaitStatus;
     struct Timespec;
     struct Linger;

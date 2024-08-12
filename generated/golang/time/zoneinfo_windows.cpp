@@ -49,13 +49,13 @@ namespace golang::time
         {
             bool matched;
             std::string err2;
-            if(std::tie(std, _, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
+            if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
             {
                 bool matched;
                 std::string err2;
                 return {false, err};
             }
-            if(std::tie(dlt, _, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
+            if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
             {
                 bool matched;
                 std::string err2;
@@ -230,7 +230,7 @@ namespace golang::time
     void initLocal()
     {
         syscall::Timezoneinformation i = {};
-        if(auto [_, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
+        if(auto [gocpp_id_3, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
         {
             localLoc.name = "UTC";
             return;

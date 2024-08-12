@@ -131,11 +131,11 @@ namespace golang::color
     Model YCbCrModel = ModelFunc(yCbCrModel);
     Color yCbCrModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<YCbCr>(c); ok)
+        if(auto [gocpp_id_1, ok] = gocpp::getValue<YCbCr>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, _] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_3] = RGBA(gocpp::recv(c));
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
         return YCbCr {y, u, v};
     }
@@ -195,10 +195,10 @@ namespace golang::color
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_0 = gocpp::type_info(c);
+            const auto& gocpp_id_4 = gocpp::type_info(c);
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(NYCbCrA)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(YCbCr)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(NYCbCrA)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(YCbCr)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -288,11 +288,11 @@ namespace golang::color
     Model CMYKModel = ModelFunc(cmykModel);
     Color cmykModel(Color c)
     {
-        if(auto [_, ok] = gocpp::getValue<CMYK>(c); ok)
+        if(auto [gocpp_id_6, ok] = gocpp::getValue<CMYK>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, _] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_8] = RGBA(gocpp::recv(c));
         auto [cc, mm, yy, kk] = RGBToCMYK(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
         return CMYK {cc, mm, yy, kk};
     }

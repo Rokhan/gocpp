@@ -1317,7 +1317,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto [_, span, objIndex] = findObject(c->tiny, 0, 0);
+            auto [gocpp_id_1, span, objIndex] = findObject(c->tiny, 0, 0);
             auto gcw = & p->gcw;
             greyobject(c->tiny, 0, 0, span, gcw, objIndex);
         }

@@ -1237,7 +1237,7 @@ namespace golang::reflect
 
     std::string Get(StructTag tag, std::string key)
     {
-        auto [v, _] = Lookup(gocpp::recv(tag), key);
+        auto [v, gocpp_id_1] = Lookup(gocpp::recv(tag), key);
         return v;
     }
 
@@ -1570,7 +1570,7 @@ namespace golang::reflect
             {
                 continue;
             }
-            auto [pi, _] = LoadOrStore(gocpp::recv(ptrMap), t, p);
+            auto [pi, gocpp_id_3] = LoadOrStore(gocpp::recv(ptrMap), t, p);
             return & gocpp::getValue<ptrType*>(pi)->Type;
         }
         go_any iptr = (unsafe::Pointer*)(nullptr);
@@ -1580,7 +1580,7 @@ namespace golang::reflect
         pp.PtrToThis = 0;
         pp.Hash = fnv1(t->t.Hash, '*');
         pp.Elem = at;
-        auto [pi, _] = LoadOrStore(gocpp::recv(ptrMap), t, & pp);
+        auto [pi, gocpp_id_5] = LoadOrStore(gocpp::recv(ptrMap), t, & pp);
         return & gocpp::getValue<ptrType*>(pi)->Type;
     }
 
@@ -1935,7 +1935,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    struct gocpp_id_6
     {
         sync::Map m;
 
@@ -1950,13 +1950,13 @@ namespace golang::reflect
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 funcLookupCache;
+    gocpp_id_6 funcLookupCache;
     Type ChanOf(ChanDir dir, Type t)
     {
         auto typ = common(gocpp::recv(t));
@@ -2006,7 +2006,7 @@ namespace golang::reflect
             auto ch = (chanType*)(unsafe::Pointer(tt));
             if(ch->Elem == typ && ch->Dir == abi::ChanDir(dir))
             {
-                auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
+                auto [ti, gocpp_id_8] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
             }
         }
@@ -2018,7 +2018,7 @@ namespace golang::reflect
         ch.Str = resolveReflectName(newName(s, "", false, false));
         ch.Hash = fnv1(typ->Hash, 'c', unsigned char(dir));
         ch.Elem = typ;
-        auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& ch.Type));
+        auto [ti, gocpp_id_10] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& ch.Type));
         return gocpp::getValue<Type>(ti);
     }
 
@@ -2041,7 +2041,7 @@ namespace golang::reflect
             auto mt = (mapType*)(unsafe::Pointer(tt));
             if(mt->Key == ktyp && mt->Elem == etyp)
             {
-                auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
+                auto [ti, gocpp_id_12] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
             }
         }
@@ -2091,7 +2091,7 @@ namespace golang::reflect
             mt.Flags |= 16;
         }
         mt.PtrToThis = 0;
-        auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.Type));
+        auto [ti, gocpp_id_14] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.Type));
         return gocpp::getValue<Type>(ti);
     }
 
@@ -2560,7 +2560,7 @@ namespace golang::reflect
             auto slice = (sliceType*)(unsafe::Pointer(tt));
             if(slice->Elem == typ)
             {
-                auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
+                auto [ti, gocpp_id_16] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
             }
         }
@@ -2572,11 +2572,11 @@ namespace golang::reflect
         slice.Hash = fnv1(typ->Hash, '[');
         slice.Elem = typ;
         slice.PtrToThis = 0;
-        auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.Type));
+        auto [ti, gocpp_id_18] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.Type));
         return gocpp::getValue<Type>(ti);
     }
 
-    struct gocpp_id_1
+    struct gocpp_id_19
     {
         sync::Map m;
 
@@ -2591,13 +2591,13 @@ namespace golang::reflect
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_19& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_1 structLookupCache;
+    gocpp_id_19 structLookupCache;
     
     std::ostream& structTypeUncommon::PrintTo(std::ostream& os) const
     {
@@ -2633,7 +2633,7 @@ namespace golang::reflect
         return len(fieldName) > 0;
     }
 
-    struct gocpp_id_2
+    struct gocpp_id_20
         {
 
             using isGoStruct = void;
@@ -2646,13 +2646,13 @@ namespace golang::reflect
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_20& value)
         {
             return value.PrintTo(os);
         }
 
 
-    struct gocpp_id_3
+    struct gocpp_id_23
             {
 
                 using isGoStruct = void;
@@ -2665,13 +2665,13 @@ namespace golang::reflect
                 }
             };
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_23& value)
             {
                 return value.PrintTo(os);
             }
 
 
-    struct gocpp_id_4
+    struct gocpp_id_24
         {
 
             using isGoStruct = void;
@@ -2684,7 +2684,7 @@ namespace golang::reflect
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_24& value)
         {
             return value.PrintTo(os);
         }
@@ -2700,7 +2700,7 @@ namespace golang::reflect
         gocpp::slice<abi::Method> methods = true;
         auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
         auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
-        auto fset = gocpp::map<std::string, gocpp_id_2> {};
+        auto fset = gocpp::map<std::string, gocpp_id_20> {};
         auto hasGCProg = false;
         auto lastzero = uintptr_t(0);
         repr = append(repr, "struct {");
@@ -2830,11 +2830,11 @@ namespace golang::reflect
                     }
                 }
             }
-            if(auto [_, dup] = fset[name]; dup && name != "_")
+            if(auto [gocpp_id_22, dup] = fset[name]; dup && name != "_")
             {
                 gocpp::panic("reflect.StructOf: duplicate field " + name);
             }
-            fset[name] = gocpp_id_3 {};
+            fset[name] = gocpp_id_23 {};
             hash = fnv1(hash, unsigned char(ft->Hash >> 24), unsigned char(ft->Hash >> 16), unsigned char(ft->Hash >> 8), unsigned char(ft->Hash));
             repr = append(repr, (" " + stringFor(ft)));
             if(HasTag(gocpp::recv(f.Name)))
@@ -2907,7 +2907,7 @@ namespace golang::reflect
             gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
         }
         size = s;
-        go_any istruct = gocpp_id_4 {};
+        go_any istruct = gocpp_id_24 {};
         auto prototype = *(structType**)(unsafe::Pointer(& istruct));
         *typ = *prototype;
         typ->Fields = fs;
@@ -3131,7 +3131,7 @@ namespace golang::reflect
             auto array = (arrayType*)(unsafe::Pointer(tt));
             if(array->Elem == typ)
             {
-                auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
+                auto [ti, gocpp_id_26] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
             }
         }
@@ -3255,7 +3255,7 @@ namespace golang::reflect
                     break;
             }
         }
-        auto [ti, _] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& array.Type));
+        auto [ti, gocpp_id_28] = LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& array.Type));
         return gocpp::getValue<Type>(ti);
     }
 
@@ -3368,7 +3368,7 @@ namespace golang::reflect
             return unsafe_New(x);
         }
 ; });
-        auto [lti, _] = LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([](layoutType& x) { x.t = x; x.framePool = framePool; x.abid = abid; }));
+        auto [lti, gocpp_id_30] = LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([](layoutType& x) { x.t = x; x.framePool = framePool; x.abid = abid; }));
         auto lt = gocpp::getValue<layoutType>(lti);
         return {lt.t, lt.framePool, lt.abid};
     }

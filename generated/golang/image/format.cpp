@@ -45,7 +45,7 @@ namespace golang::image
     void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<Image, std::string> (io::Reader)> decode, std::function<std::tuple<Config, std::string> (io::Reader)> decodeConfig)
     {
         Lock(gocpp::recv(formatsMu));
-        auto [formats, _] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
         Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
         Unlock(gocpp::recv(formatsMu));
     }
@@ -122,7 +122,7 @@ namespace golang::image
 
     format sniff(reader r)
     {
-        auto [formats, _] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_3] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
         for(auto [_, f] : formats)
         {
             auto [b, err] = Peek(gocpp::recv(r), len(f.magic));

@@ -22,7 +22,7 @@ namespace golang::runtime
     struct specialsIter;
     const uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
     struct gcBitsHeader;
-    struct gocpp_id_3;
+    struct gocpp_id_7;
     const mSpanState mSpanDead = 0;
     const mSpanState mSpanInUse = 1;
     const mSpanState mSpanManual = 2;

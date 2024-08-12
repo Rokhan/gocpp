@@ -1010,7 +1010,7 @@ namespace golang::runtime
                 return mask;
             }
         }
-        if(auto [base, s, _] = findObject(uintptr_t(p), 0, 0); base != 0)
+        if(auto [base, s, gocpp_id_1] = findObject(uintptr_t(p), 0, 0); base != 0)
         {
             gocpp::slice<unsigned char> mask;
             if(noscan(gocpp::recv(s->spanclass)))
@@ -1117,10 +1117,7 @@ namespace golang::runtime
             if(found)
             {
                 gocpp::slice<unsigned char> mask;
-                bitvector locals;
-                bitvector _;
-                gocpp::slice<runtime::stackObjectRecord> _;
-                std::tie(locals, _, _) = getStackMap(gocpp::recv(u.frame), false);
+                auto [locals, gocpp_id_4, gocpp_id_5] = getStackMap(gocpp::recv(u.frame), false);
                 if(locals.n == 0)
                 {
                     gocpp::slice<unsigned char> mask;

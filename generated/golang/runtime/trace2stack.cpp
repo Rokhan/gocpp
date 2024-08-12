@@ -115,7 +115,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        auto [id, _] = put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
+        auto [id, gocpp_id_1] = put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
         return id;
     }
 

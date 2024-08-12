@@ -1479,11 +1479,7 @@ namespace golang::image
             {
                 continue;
             }
-            uint32_t _;
-            uint32_t _;
-            uint32_t _;
-            uint32_t a;
-            std::tie(_, _, _, a) = RGBA(gocpp::recv(c));
+            auto [gocpp_id_3, gocpp_id_4, gocpp_id_5, a] = RGBA(gocpp::recv(c));
             if(a != 0xffff)
             {
                 return false;

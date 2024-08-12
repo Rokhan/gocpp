@@ -42,7 +42,7 @@ namespace golang::runtime
             bool ok;
             return {pc, file, line, ok};
         }
-        auto [frame, _] = Next(gocpp::recv(CallersFrames(rpc)));
+        auto [frame, gocpp_id_1] = Next(gocpp::recv(CallersFrames(rpc)));
         return {frame.PC, frame.File, frame.Line, frame.PC != 0};
     }
 

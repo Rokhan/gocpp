@@ -769,7 +769,7 @@ namespace golang::abi
         {
             return false;
         }
-        auto [_, l] = ReadVarint(gocpp::recv(n), 1);
+        auto [gocpp_id_1, l] = ReadVarint(gocpp::recv(n), 1);
         return l == 1 && *Data(gocpp::recv(n), 2) == '_';
     }
 

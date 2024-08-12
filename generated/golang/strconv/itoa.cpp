@@ -21,7 +21,7 @@ namespace golang::strconv
         {
             return small(int(i));
         }
-        auto [_, s] = formatBits(nullptr, i, base, false, false);
+        auto [gocpp_id_1, s] = formatBits(nullptr, i, base, false, false);
         return s;
     }
 
@@ -31,7 +31,7 @@ namespace golang::strconv
         {
             return small(int(i));
         }
-        auto [_, s] = formatBits(nullptr, uint64_t(i), base, i < 0, false);
+        auto [gocpp_id_3, s] = formatBits(nullptr, uint64_t(i), base, i < 0, false);
         return s;
     }
 
@@ -46,7 +46,7 @@ namespace golang::strconv
         {
             return append(dst, small(int(i)));
         }
-        std::tie(dst, _) = formatBits(dst, uint64_t(i), base, i < 0, true);
+        std::tie(dst, gocpp_id_4) = formatBits(dst, uint64_t(i), base, i < 0, true);
         return dst;
     }
 
@@ -56,7 +56,7 @@ namespace golang::strconv
         {
             return append(dst, small(int(i)));
         }
-        std::tie(dst, _) = formatBits(dst, i, base, false, true);
+        std::tie(dst, gocpp_id_5) = formatBits(dst, i, base, false, true);
         return dst;
     }
 

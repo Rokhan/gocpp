@@ -222,7 +222,7 @@ namespace golang::base64
                 return {n, err};
             }
             Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), e->buf.make_slice(0, ));
-            if(std::tie(_, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
+            if(std::tie(gocpp_id_0, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
             {
                 int n;
                 std::string err;
@@ -243,7 +243,7 @@ namespace golang::base64
                 nn -= nn % 3;
             }
             Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), p.make_slice(0, nn));
-            if(std::tie(_, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
+            if(std::tie(gocpp_id_1, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
             {
                 int n;
                 std::string err;
@@ -263,7 +263,7 @@ namespace golang::base64
         if(e->err == nullptr && e->nbuf > 0)
         {
             Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), e->buf.make_slice(0, e->nbuf));
-            std::tie(_, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, EncodedLen(gocpp::recv(e->enc), e->nbuf)));
+            std::tie(gocpp_id_2, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, EncodedLen(gocpp::recv(e->enc), e->nbuf)));
             e->nbuf = 0;
         }
         return e->err;

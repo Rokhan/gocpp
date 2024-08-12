@@ -47,10 +47,7 @@ namespace golang::reflect
         auto t = common(gocpp::recv(typ));
         auto ftyp = (funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
-        abi::Type* _;
-        sync::Pool* _;
-        abiDesc abid;
-        std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([](makeFuncImpl& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.ftyp = ftyp; x.fn = fn; });
         return Value {t, unsafe::Pointer(impl), flag(Func)};
     }
@@ -84,10 +81,7 @@ namespace golang::reflect
         auto rcvr = Value {typ(gocpp::recv(v)), v.ptr, fl};
         auto ftyp = (funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
-        abi::Type* _;
-        sync::Pool* _;
-        abiDesc abid;
-        std::tie(_, _, abid) = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_6, gocpp_id_7, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([](methodValue& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.method = int(v.flag) >> flagMethodShift; x.rcvr = rcvr; });
         methodReceiver(op, fv->rcvr, fv->method);
         return Value {Common(gocpp::recv(ftyp)), unsafe::Pointer(fv), v.flag & flagRO | flag(Func)};

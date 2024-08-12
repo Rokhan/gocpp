@@ -228,15 +228,15 @@ namespace golang::strconv
             uint32_t dl32 = {};
             uint32_t dc32 = {};
             uint32_t du32 = {};
-            std::tie(dl32, _, dl0) = mult64bitPow10(uint32_t(ml), e2, q);
-            std::tie(dc32, _, dc0) = mult64bitPow10(uint32_t(mc), e2, q);
+            std::tie(dl32, gocpp_id_0, dl0) = mult64bitPow10(uint32_t(ml), e2, q);
+            std::tie(dc32, gocpp_id_1, dc0) = mult64bitPow10(uint32_t(mc), e2, q);
             std::tie(du32, e2, du0) = mult64bitPow10(uint32_t(mu), e2, q);
             std::tie(dl, dc, du) = std::tuple{uint64_t(dl32), uint64_t(dc32), uint64_t(du32)};
         }
         else
         {
-            std::tie(dl, _, dl0) = mult128bitPow10(ml, e2, q);
-            std::tie(dc, _, dc0) = mult128bitPow10(mc, e2, q);
+            std::tie(dl, gocpp_id_2, dl0) = mult128bitPow10(ml, e2, q);
+            std::tie(dc, gocpp_id_3, dc0) = mult128bitPow10(mc, e2, q);
             std::tie(du, e2, du0) = mult128bitPow10(mu, e2, q);
         }
         if(e2 >= 0)
@@ -527,7 +527,7 @@ namespace golang::strconv
         {
             return {uint32_t(x / 1e9), uint32_t(x % 1e9)};
         }
-        auto [hi, _] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
+        auto [hi, gocpp_id_5] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
         auto q = hi >> 28;
         return {uint32_t(q), uint32_t(x - q * 1e9)};
     }

@@ -54,7 +54,7 @@ namespace golang::time
         {
             whence = seekEnd;
         }
-        if(auto [_, err] = syscall::Seek(syscall::Handle(fd), int64_t(off), whence); err != nullptr)
+        if(auto [gocpp_id_1, err] = syscall::Seek(syscall::Handle(fd), int64_t(off), whence); err != nullptr)
         {
             return err;
         }

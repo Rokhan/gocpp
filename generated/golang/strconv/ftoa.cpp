@@ -558,14 +558,14 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
-        std::tie(dst, _) = formatBits(dst, mant, 10, false, true);
+        std::tie(dst, gocpp_id_0) = formatBits(dst, mant, 10, false, true);
         dst = append(dst, 'p');
         exp -= int(flt->mantbits);
         if(exp >= 0)
         {
             dst = append(dst, '+');
         }
-        std::tie(dst, _) = formatBits(dst, uint64_t(exp), 10, exp < 0, true);
+        std::tie(dst, gocpp_id_1) = formatBits(dst, uint64_t(exp), 10, exp < 0, true);
         return dst;
     }
 

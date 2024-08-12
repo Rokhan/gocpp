@@ -541,7 +541,7 @@ namespace golang::strconv
 
     std::tuple<std::string, std::string> QuotedPrefix(std::string s)
     {
-        auto [out, _, err] = unquote(s, false);
+        auto [out, gocpp_id_1, err] = unquote(s, false);
         return {out, err};
     }
 

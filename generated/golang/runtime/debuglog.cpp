@@ -835,7 +835,7 @@ namespace golang::runtime
                 print(" <<\n");
                 s->first = false;
             }
-            auto [end, _, nano, p] = header(gocpp::recv(s));
+            auto [end, gocpp_id_2, nano, p] = header(gocpp::recv(s));
             auto oldEnd = s->end;
             s->end = end;
             print("[");

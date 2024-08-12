@@ -437,7 +437,7 @@ namespace golang::syscall
         Errno e1 = {};
         if(gocpp::Sizeof<uintptr_t>() == 8)
         {
-            std::tie(_, _, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 4, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0, 0);
+            std::tie(gocpp_id_0, gocpp_id_1, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 4, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0, 0);
         }
         else
         {
@@ -453,10 +453,10 @@ namespace golang::syscall
                         gocpp::panic("unsupported 32-bit architecture");
                         break;
                     case 0:
-                        std::tie(_, _, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0);
+                        std::tie(gocpp_id_2, gocpp_id_3, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0);
                         break;
                     case 1:
-                        std::tie(_, _, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 6, uintptr_t(handle), 0, uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence));
+                        std::tie(gocpp_id_4, gocpp_id_5, e1) = Syscall6(Addr(gocpp::recv(procSetFilePointerEx)), 6, uintptr_t(handle), 0, uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence));
                         break;
                 }
             }
@@ -511,7 +511,7 @@ namespace golang::syscall
     Handle getStdHandle(int h)
     {
         Handle fd;
-        auto [r, _] = GetStdHandle(h);
+        auto [r, gocpp_id_7] = GetStdHandle(h);
         return r;
     }
 
@@ -635,7 +635,7 @@ namespace golang::syscall
             return e;
         }
         defer.push_back([=]{ Seek(fd, curoffset, 0); });
-        std::tie(_, e) = Seek(fd, length, 0);
+        std::tie(gocpp_id_8, e) = Seek(fd, length, 0);
         if(e != nullptr)
         {
             std::string err;
@@ -1183,7 +1183,7 @@ namespace golang::syscall
                 return err;
             }
         }
-        auto [r1, _, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
+        auto [r1, gocpp_id_10, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
             std::string err;
@@ -1210,7 +1210,7 @@ namespace golang::syscall
             std::string err;
             return err;
         }
-        auto [r1, _, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
+        auto [r1, gocpp_id_12, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
             std::string err;
@@ -1237,7 +1237,7 @@ namespace golang::syscall
             std::string err;
             return err;
         }
-        auto [r1, _, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
+        auto [r1, gocpp_id_14, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(len), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
             std::string err;
@@ -1260,7 +1260,7 @@ namespace golang::syscall
         return Find(gocpp::recv(procGetAddrInfoW));
     }
 
-    struct gocpp_id_0
+    struct gocpp_id_15
     {
         sync::Once once;
         uintptr_t addr;
@@ -1279,13 +1279,13 @@ namespace golang::syscall
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_15& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 connectExFunc;
+    gocpp_id_15 connectExFunc;
     std::string LoadConnectEx()
     {
         Do(gocpp::recv(connectExFunc.once), [=]() mutable -> void
@@ -1308,7 +1308,7 @@ namespace golang::syscall
     std::string connectEx(Handle s, unsafe::Pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped)
     {
         std::string err;
-        auto [r1, _, e1] = Syscall9(connectExFunc.addr, 7, uintptr_t(s), uintptr_t(name), uintptr_t(namelen), uintptr_t(unsafe::Pointer(sendBuf)), uintptr_t(sendDataLen), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), 0, 0);
+        auto [r1, gocpp_id_17, e1] = Syscall9(connectExFunc.addr, 7, uintptr_t(s), uintptr_t(name), uintptr_t(namelen), uintptr_t(unsafe::Pointer(sendBuf)), uintptr_t(sendDataLen), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), 0, 0);
         if(r1 == 0)
         {
             std::string err;

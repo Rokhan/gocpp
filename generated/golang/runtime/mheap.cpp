@@ -762,7 +762,7 @@ namespace golang::runtime
         {
             mspan* s;
             auto extraPages = physPageSize / pageSize;
-            std::tie(base, _) = find(gocpp::recv(h->pages), npages + extraPages);
+            std::tie(base, gocpp_id_3) = find(gocpp::recv(h->pages), npages + extraPages);
             if(base == 0)
             {
                 mspan* s;
@@ -774,7 +774,7 @@ namespace golang::runtime
                     unlock(& h->lock);
                     return nullptr;
                 }
-                std::tie(base, _) = find(gocpp::recv(h->pages), npages + extraPages);
+                std::tie(base, gocpp_id_4) = find(gocpp::recv(h->pages), npages + extraPages);
                 if(base == 0)
                 {
                     mspan* s;
@@ -1416,7 +1416,7 @@ namespace golang::runtime
         {
             if(gcphase != _GCoff)
             {
-                auto [base, span, _] = findObject(uintptr_t(p), 0, 0);
+                auto [base, span, gocpp_id_6] = findObject(uintptr_t(p), 0, 0);
                 auto mp = acquirem();
                 auto gcw = & ptr(gocpp::recv(mp->p))->gcw;
                 if(! noscan(gocpp::recv(span->spanclass)))
@@ -1647,7 +1647,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_3
+    struct gocpp_id_7
     {
         mutex lock;
         gcBitsArena* free;
@@ -1670,13 +1670,13 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_3 gcBitsArenas;
+    gocpp_id_7 gcBitsArenas;
     gcBits* tryAlloc(struct gcBitsArena* b, uintptr_t bytes)
     {
         if(b == nullptr || atomic::Loaduintptr(& b->free) + bytes > uintptr_t(len(b->bits)))

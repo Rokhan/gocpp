@@ -63,7 +63,7 @@ namespace golang::runtime
     void traceFrequency(uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
-        std::tie(w, _) = ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
+        std::tie(w, gocpp_id_0) = ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
         unsigned char(gocpp::recv(w), unsigned char(traceEvFrequency));
         varint(gocpp::recv(w), traceClockUnitsPerSecond());
         systemstack([=]() mutable -> void

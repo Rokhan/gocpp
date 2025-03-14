@@ -302,8 +302,7 @@ namespace golang::runtime
                 }
             }
             return 0;
-        }
-;
+        };
         auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([](_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS& x) { x.callback = compileCallback(*efaceOf(& fn), true); });
         auto handle = uintptr_t(0);
         stdcall3(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(unsafe::Pointer(& params)), uintptr_t(unsafe::Pointer(& handle)));
@@ -660,24 +659,21 @@ namespace golang::runtime
                     systemstack([=]() mutable -> void
                     {
                         go_throw("runtime.semasleep wait_abandoned");
-                    }
-);
+                    });
                     break;
                 case 3:
                     systemstack([=]() mutable -> void
                     {
                         print("runtime: waitforsingleobject wait_failed; errno=", getlasterror(), "\n");
                         go_throw("runtime.semasleep wait_failed");
-                    }
-);
+                    });
                     break;
                 default:
                     systemstack([=]() mutable -> void
                     {
                         print("runtime: waitforsingleobject unexpected; result=", result, "\n");
                         go_throw("runtime.semasleep unexpected");
-                    }
-);
+                    });
                     break;
             }
         }
@@ -692,8 +688,7 @@ namespace golang::runtime
             {
                 print("runtime: setevent failed; errno=", getlasterror(), "\n");
                 go_throw("runtime.semawakeup");
-            }
-);
+            });
         }
     }
 
@@ -710,8 +705,7 @@ namespace golang::runtime
             {
                 print("runtime: createevent failed; errno=", getlasterror(), "\n");
                 go_throw("runtime.semacreate");
-            }
-);
+            });
         }
         mp->resumesema = stdcall4(_CreateEventA, 0, 0, 0, 0);
         if(mp->resumesema == 0)
@@ -720,8 +714,7 @@ namespace golang::runtime
             {
                 print("runtime: createevent failed; errno=", getlasterror(), "\n");
                 go_throw("runtime.semacreate");
-            }
-);
+            });
             stdcall1(_CloseHandle, mp->waitsema);
             mp->waitsema = 0;
         }
@@ -960,8 +953,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             stdcall0(_SwitchToThread);
-        }
-);
+        });
     }
 
     void usleep_no_g(uint32_t us)
@@ -990,8 +982,7 @@ namespace golang::runtime
                 timeout = uintptr_t(us) / 1000;
             }
             stdcall2(_WaitForSingleObject, h, timeout);
-        }
-);
+        });
     }
 
     uintptr_t ctrlHandler(uint32_t _type)

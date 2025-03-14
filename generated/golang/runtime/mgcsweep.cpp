@@ -389,8 +389,7 @@ namespace golang::runtime
                     Add(gocpp::recv(mheap_.pages.scav.releasedBg), - releasedBg);
                     Add(gocpp::recv(mheap_.pages.scav.releasedEager), - releasedEager);
                     unlock(& mheap_.lock);
-                }
-);
+                });
             }
             ready(gocpp::recv(scavenger));
         }
@@ -615,8 +614,7 @@ namespace golang::runtime
                 remove(gocpp::recv(mheap_.userArena.quarantineList), s);
                 insert(gocpp::recv(mheap_.userArena.readyList), s);
                 unlock(& mheap_.lock);
-            }
-);
+            });
             return false;
         }
         if(sizeclass(gocpp::recv(spc)) != 0)
@@ -666,8 +664,7 @@ namespace golang::runtime
                     {
                         auto s = spanOf(uintptr_t(unsafe::Pointer(s->largeType)));
                         freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
-                    }
-);
+                    });
                     *(uintptr_t*)(unsafe::Pointer(& s->largeType)) = 0;
                 }
                 auto stats = acquire(gocpp::recv(memstats.heapStats));

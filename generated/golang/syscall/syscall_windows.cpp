@@ -1300,8 +1300,7 @@ namespace golang::syscall
             defer.push_back([=]{ CloseHandle(s); });
             uint32_t n = {};
             connectExFunc.err = WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_CONNECTEX)), uint32_t(gocpp::Sizeof<GUID>()), (unsigned char*)(unsafe::Pointer(& connectExFunc.addr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
-        }
-);
+        });
         return connectExFunc.err;
     }
 

@@ -1524,8 +1524,7 @@ namespace golang::reflect
         return FieldByNameFunc(gocpp::recv(t), [=](std::string s) mutable -> bool
         {
             return s == name;
-        }
-);
+        });
     }
 
     Type TypeOf(go_any i)
@@ -2056,8 +2055,7 @@ namespace golang::reflect
         mt.Hasher = [=](unsafe::Pointer p, uintptr_t seed) mutable -> uintptr_t
         {
             return typehash(ktyp, p, seed);
-        }
-;
+        };
         mt.Flags = 0;
         if(ktyp->Size_ > maxKeySize)
         {
@@ -2191,8 +2189,7 @@ namespace golang::reflect
             }
             Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
             return toType(tt);
-        }
-;
+        };
         auto str = funcStr(ft);
         for(auto [_, tt] : typesByString(str))
         {
@@ -2948,8 +2945,7 @@ namespace golang::reflect
             }
             Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
             return t;
-        }
-;
+        };
         for(auto [_, t] : typesByString(str))
         {
             if(haveIdenticalUnderlyingType(& typ->Type, t, true))
@@ -3035,8 +3031,7 @@ namespace golang::reflect
                     }
                 }
                 return true;
-            }
-;
+            };
         }
         //Go switch emulation
         {
@@ -3238,8 +3233,7 @@ namespace golang::reflect
                     }
                 }
                 return true;
-            }
-;
+            };
         }
         //Go switch emulation
         {
@@ -3366,8 +3360,7 @@ namespace golang::reflect
         framePool = gocpp::InitPtr<sync::Pool>([](sync::Pool& x) { x.New = [=]() mutable -> go_any
         {
             return unsafe_New(x);
-        }
-; });
+        }; });
         auto [lti, gocpp_id_30] = LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([](layoutType& x) { x.t = x; x.framePool = framePool; x.abid = abid; }));
         auto lt = gocpp::getValue<layoutType>(lti);
         return {lt.t, lt.framePool, lt.abid};

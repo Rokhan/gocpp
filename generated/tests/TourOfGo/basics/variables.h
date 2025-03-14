@@ -15,6 +15,9 @@ namespace golang::main
     extern int ii;
     extern int jj;
     extern int kk;
+    extern std::function<void (void)> funcVar1;
+    extern std::function<int (int)> funcVar2;
+    extern std::function<std::tuple<int, std::string> (int)> funcVar3;
     void main();
     void dummy_vars();
     void dummy_funcs();

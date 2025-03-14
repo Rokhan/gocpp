@@ -30,13 +30,11 @@ namespace golang::main
             {
                 mocklib::Println("Recovered in f", r);
             }
-        }
-(); });
+        }(); });
         defer.push_back([=]{ [=]() mutable -> void
         {
             mocklib::Println("Simple defer in f");
-        }
-(); });
+        }(); });
         mocklib::Println("Calling g.");
         g(0);
         mocklib::Println("Returned normally from g.");

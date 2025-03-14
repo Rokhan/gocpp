@@ -152,8 +152,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             readmemstats_m(m);
-        }
-);
+        });
         startTheWorld(stw);
     }
 
@@ -297,8 +296,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             readGCStats_m(pauses);
-        }
-);
+        });
     }
 
     void readGCStats_m(gocpp::slice<uint64_t>* pauses)

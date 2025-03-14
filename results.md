@@ -303,7 +303,7 @@
 | $(ImportDir)/runtime/os_windows.go | ✔️ ([cpp](generated/golang/runtime/os_windows.cpp), [h](generated/golang/runtime/os_windows.h))|
 | $(ImportDir)/runtime/pagetrace_off.go | ✔️ ([cpp](generated/golang/runtime/pagetrace_off.cpp), [h](generated/golang/runtime/pagetrace_off.h))|
 | $(ImportDir)/runtime/panic.go | ✔️ ([cpp](generated/golang/runtime/panic.cpp), [h](generated/golang/runtime/panic.h))|
-| $(ImportDir)/runtime/pinner.go | ❌ |
+| $(ImportDir)/runtime/pinner.go | ✔️ ([cpp](generated/golang/runtime/pinner.cpp), [h](generated/golang/runtime/pinner.h))|
 | $(ImportDir)/runtime/plugin.go | ✔️ ([cpp](generated/golang/runtime/plugin.cpp), [h](generated/golang/runtime/plugin.h))|
 | $(ImportDir)/runtime/preempt.go | ✔️ ([cpp](generated/golang/runtime/preempt.cpp), [h](generated/golang/runtime/preempt.h))|
 | $(ImportDir)/runtime/print.go | ✔️ ([cpp](generated/golang/runtime/print.cpp), [h](generated/golang/runtime/print.h))|
@@ -325,7 +325,7 @@
 | $(ImportDir)/runtime/slice.go | ✔️ ([cpp](generated/golang/runtime/slice.cpp), [h](generated/golang/runtime/slice.h))|
 | $(ImportDir)/runtime/stack.go | ✔️ ([cpp](generated/golang/runtime/stack.cpp), [h](generated/golang/runtime/stack.h))|
 | $(ImportDir)/runtime/stkframe.go | ✔️ ([cpp](generated/golang/runtime/stkframe.cpp), [h](generated/golang/runtime/stkframe.h))|
-| $(ImportDir)/runtime/string.go | ❌ |
+| $(ImportDir)/runtime/string.go | ✔️ ([cpp](generated/golang/runtime/string.cpp), [h](generated/golang/runtime/string.h))|
 | $(ImportDir)/runtime/stubs.go | ✔️ ([cpp](generated/golang/runtime/stubs.cpp), [h](generated/golang/runtime/stubs.h))|
 | $(ImportDir)/runtime/stubs3.go | ✔️ ([cpp](generated/golang/runtime/stubs3.cpp), [h](generated/golang/runtime/stubs3.h))|
 | $(ImportDir)/runtime/stubs_amd64.go | ✔️ ([cpp](generated/golang/runtime/stubs_amd64.cpp), [h](generated/golang/runtime/stubs_amd64.h))|
@@ -355,7 +355,7 @@
 | $(ImportDir)/runtime/traceback.go | ✔️ ([cpp](generated/golang/runtime/traceback.cpp), [h](generated/golang/runtime/traceback.h))|
 | $(ImportDir)/runtime/type.go | ✔️ ([cpp](generated/golang/runtime/type.cpp), [h](generated/golang/runtime/type.h))|
 | $(ImportDir)/runtime/typekind.go | ✔️ ([cpp](generated/golang/runtime/typekind.cpp), [h](generated/golang/runtime/typekind.h))|
-| $(ImportDir)/runtime/utf8.go | ❌ |
+| $(ImportDir)/runtime/utf8.go | ✔️ ([cpp](generated/golang/runtime/utf8.cpp), [h](generated/golang/runtime/utf8.h))|
 | $(ImportDir)/runtime/vdso_in_none.go | ✔️ ([cpp](generated/golang/runtime/vdso_in_none.cpp), [h](generated/golang/runtime/vdso_in_none.h))|
 | $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))|
 | $(ImportDir)/runtime/zcallback_windows.go | ✔️ ([cpp](generated/golang/runtime/zcallback_windows.cpp), [h](generated/golang/runtime/zcallback_windows.h))|

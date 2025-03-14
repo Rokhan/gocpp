@@ -118,8 +118,7 @@ namespace golang::godebug
             {
                 gocpp::panic("godebug: Value of name not listed in godebugs.All: " + s->name);
             }
-        }
-);
+        });
         auto v = *Load(gocpp::recv(s->value));
         if(v.bisect != nullptr && ! Stack(gocpp::recv(v.bisect), & stderr))
         {
@@ -182,8 +181,7 @@ namespace golang::godebug
                 Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
             }
             return true;
-        }
-);
+        });
     }
 
     void parse(gocpp::map<std::string, bool> did, std::string s)

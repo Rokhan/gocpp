@@ -21,6 +21,20 @@ namespace golang::main
     int ii = 3;
     int jj = 4;
     int kk = 5;
+    std::function<void (void)> funcVar1 = []() mutable -> void
+    {
+        mocklib::Println("funcVar");
+    };
+    std::function<int (int)> funcVar2 = [](int i) mutable -> int
+    {
+        mocklib::Println("funcVar,", i);
+        return 3;
+    };
+    std::function<std::tuple<int, std::string> (int)> funcVar3 = [](int i) mutable -> std::tuple<int, std::string>
+    {
+        mocklib::Println("funcVar,", i);
+        return {3, "zz"};
+    };
     void main()
     {
         int i = {};
@@ -44,6 +58,11 @@ namespace golang::main
         auto [go_do, go_while, go_template, go_class] = std::tuple{"do", "while", "template", "class"};
         mocklib::Println(go_do, go_while, go_template, go_class);
         dummy_vars();
+        funcVar1();
+        ii = funcVar2(3);
+        std::string s = {};
+        std::tie(ii, s) = funcVar3(3);
+        mocklib::Println(ii, s);
     }
 
     void dummy_vars()

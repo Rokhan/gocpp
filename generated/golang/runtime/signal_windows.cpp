@@ -206,8 +206,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 ret = fn(ep->record, ep->context, gp);
-            }
-);
+            });
         }
         else
         {

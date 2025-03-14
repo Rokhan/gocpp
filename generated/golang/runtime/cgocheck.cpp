@@ -88,8 +88,7 @@ namespace golang::runtime
         {
             println("write of unpinned Go pointer", hex(uintptr_t(src)), "to non-Go memory", hex(uintptr_t(unsafe::Pointer(dst))));
             go_throw(cgoWriteBarrierFail);
-        }
-);
+        });
     }
 
     void cgoCheckMemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
@@ -172,8 +171,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 cgoCheckUsingType(typ, src, off, size);
-            }
-);
+            });
             return;
         }
         if(goexperiment::AllocHeaders)

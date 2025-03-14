@@ -71,8 +71,7 @@ namespace golang::runtime
             lock(& trace.lock);
             traceBufFlush(w.traceBuf, gen);
             unlock(& trace.lock);
-        }
-);
+        });
     }
 
 }

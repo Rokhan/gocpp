@@ -66,8 +66,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 writeString(gocpp::recv(t), gen, id, s);
-            }
-);
+            });
         }
         return id;
     }
@@ -78,8 +77,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             writeString(gocpp::recv(t), gen, id, s);
-        }
-);
+        });
         return id;
     }
 

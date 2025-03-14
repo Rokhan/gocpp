@@ -77,12 +77,10 @@ namespace golang::runtime
                 {
                     caughtPanic = true;
                 }
-            }
-(); });
+            }(); });
             f();
             return caughtPanic;
-        }
-;
+        };
         finishPageTrace();
         for(auto [i, gocpp_ignored] : exitHooks.hooks)
         {

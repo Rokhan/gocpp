@@ -116,8 +116,7 @@ namespace golang::time
                 {
                     unnamedFixedZones[hr + hoursBeforeUTC] = fixedZone("", hr * 60 * 60);
                 }
-            }
-);
+            });
             return unnamedFixedZones[hour + hoursBeforeUTC];
         }
         return fixedZone(name, offset);
@@ -908,8 +907,7 @@ namespace golang::time
         {
             auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO");
             zoneinfo = & env;
-        }
-);
+        });
         std::string firstErr = {};
         if(*zoneinfo != "")
         {

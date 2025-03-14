@@ -360,8 +360,7 @@ namespace golang::runtime
                 systemstack([=]() mutable -> void
                 {
                     s = allocManual(gocpp::recv(mheap_), workbufAlloc / pageSize, spanAllocWorkBuf);
-                }
-);
+                });
                 if(s == nullptr)
                 {
                     go_throw("out of memory");
@@ -456,8 +455,7 @@ namespace golang::runtime
                 remove(gocpp::recv(work.wbufSpans.free), span);
                 freeManual(gocpp::recv(mheap_), span, spanAllocWorkBuf);
             }
-        }
-);
+        });
         auto more = ! isEmpty(gocpp::recv(work.wbufSpans.free));
         unlock(& work.wbufSpans.lock);
         return more;

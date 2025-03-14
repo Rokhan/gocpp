@@ -74,8 +74,7 @@ namespace golang::runtime
         auto nBlocks = [=](uintptr_t bytes) mutable -> int
         {
             return int(divRoundUp(bytes, rootBlockBytes));
-        }
-;
+        };
         work.nDataRoots = 0;
         work.nBSSRoots = 0;
         for(auto [_, datap] : activeModules())
@@ -127,8 +126,7 @@ namespace golang::runtime
                 go_throw("scan missed a g");
             }
             i++;
-        }
-);
+        });
     }
 
     gocpp::array_base<uint8_t> oneptrmask = gocpp::array_base<uint8_t> {1};
@@ -212,8 +210,7 @@ namespace golang::runtime
                         {
                             casgstatus(userG, _Gwaiting, _Grunning);
                         }
-                    }
-);
+                    });
                     break;
             }
         }
@@ -424,8 +421,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             gcAssistAlloc1(gp, scanWork);
-        }
-);
+        });
         auto completed = gp->param != nullptr;
         gp->param = nullptr;
         if(completed)
@@ -1140,8 +1136,7 @@ namespace golang::runtime
                     return ' ';
                 }
                 return '*';
-            }
-);
+            });
             printunlock();
         }
         for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)

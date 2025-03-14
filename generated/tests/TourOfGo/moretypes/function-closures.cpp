@@ -22,8 +22,7 @@ namespace golang::main
         {
             sum += x;
             return sum;
-        }
-;
+        };
     }
 
     void main()

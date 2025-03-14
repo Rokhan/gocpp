@@ -216,8 +216,7 @@ namespace golang::runtime
             {
                 auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
                 p->len--;
-            }
-(gp); });
+            }(gp); });
         }
         if(gp->m->ncgo == 0)
         {

@@ -26,8 +26,7 @@ namespace golang::main
             f0 = f1;
             f1 = f2;
             return result;
-        }
-;
+        };
     }
 
     void main()

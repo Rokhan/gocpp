@@ -364,8 +364,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 removefinalizer(e->data);
-            }
-);
+            });
             return;
         }
         if(ftyp->Kind_ & kindMask != kindFunc)
@@ -427,8 +426,7 @@ namespace golang::runtime
             {
                 go_throw("runtime.SetFinalizer: finalizer already set");
             }
-        }
-);
+        });
     }
 
     void KeepAlive(go_any x)

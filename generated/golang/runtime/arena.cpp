@@ -233,8 +233,7 @@ namespace golang::runtime
         SetFinalizer(a, [=](userArena* a) mutable -> void
         {
             free(gocpp::recv(a));
-        }
-);
+        });
         refill(gocpp::recv(a));
         return a;
     }
@@ -524,8 +523,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             span = allocUserArenaChunk(gocpp::recv(mheap_));
-        }
-);
+        });
         if(span == nullptr)
         {
             go_throw("out of memory");
@@ -631,8 +629,7 @@ namespace golang::runtime
             lock(& mheap_.lock);
             insert(gocpp::recv(mheap_.userArena.quarantineList), s);
             unlock(& mheap_.lock);
-        }
-);
+        });
     }
 
     bool inUserArenaChunk(uintptr_t p)

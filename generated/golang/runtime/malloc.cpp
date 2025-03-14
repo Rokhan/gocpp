@@ -1113,8 +1113,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             p = persistentalloc1(size, align, sysStat);
-        }
-);
+        });
         return unsafe::Pointer(p);
     }
 

@@ -66,8 +66,7 @@ namespace golang::time
         auto num2 = [=](gocpp::slice<unsigned char> b) mutable -> unsigned char
         {
             return 10 * (b[0] - '0') + (b[1] - '0');
-        }
-;
+        };
         //Go switch emulation
         {
             int conditionId = -1;
@@ -116,8 +115,7 @@ namespace golang::time
                 return min;
             }
             return x;
-        }
-;
+        };
         if(len(s) < len("2006-01-02T15:04:05"))
         {
             return {Time {}, false};
@@ -187,8 +185,7 @@ namespace golang::time
             auto num2 = [=](gocpp::slice<unsigned char> b) mutable -> unsigned char
             {
                 return 10 * (b[0] - '0') + (b[1] - '0');
-            }
-;
+            };
             //Go switch emulation
             {
                 int conditionId = -1;

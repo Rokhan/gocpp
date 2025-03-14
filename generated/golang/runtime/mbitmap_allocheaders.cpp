@@ -688,8 +688,7 @@ namespace golang::runtime
                 {
                     progSpan = allocManual(gocpp::recv(mheap_), npages, spanAllocPtrScalarBits);
                     memclrNoHeapPointers(unsafe::Pointer(base(gocpp::recv(progSpan))), progSpan->npages * pageSize);
-                }
-);
+                });
                 gctyp = (_type*)(unsafe::Pointer(base(gocpp::recv(progSpan))));
                 gctyp->Size_ = typ->Size_;
                 gctyp->PtrBytes = typ->PtrBytes;

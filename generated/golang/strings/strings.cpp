@@ -822,8 +822,7 @@ namespace golang::strings
             }
             prev = r;
             return r;
-        }
-, s);
+        }, s);
     }
 
     std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune)> f)

@@ -130,8 +130,7 @@ namespace golang::runtime
             c = (mcache*)(alloc(gocpp::recv(mheap_.cachealloc)));
             Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
             unlock(& mheap_.lock);
-        }
-);
+        });
         for(auto [i, gocpp_ignored] : c->alloc)
         {
             c->alloc[i] = & emptymspan;
@@ -149,8 +148,7 @@ namespace golang::runtime
             lock(& mheap_.lock);
             free(gocpp::recv(mheap_.cachealloc), unsafe::Pointer(c));
             unlock(& mheap_.lock);
-        }
-);
+        });
     }
 
     mcache* getMCache(m* mp)

@@ -534,8 +534,7 @@ namespace golang::runtime
                 }
             }
             unlock(& trace.lock);
-        }
-);
+        });
         auto seq1 = Add(gocpp::recv(mp->trace.seqlock), 1);
         if(seq1 != seq + 1)
         {

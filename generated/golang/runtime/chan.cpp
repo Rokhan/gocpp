@@ -210,8 +210,7 @@ namespace golang::runtime
             send(c, sg, ep, [=]() mutable -> void
             {
                 unlock(& c->lock);
-            }
-, 3);
+            }, 3);
             return true;
         }
         if(c->qcount < c->dataqsiz)
@@ -520,8 +519,7 @@ namespace golang::runtime
                 recv(c, sg, ep, [=]() mutable -> void
                 {
                     unlock(& c->lock);
-                }
-, 3);
+                }, 3);
                 return {true, true};
             }
         }

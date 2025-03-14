@@ -41,8 +41,7 @@ namespace golang::crc32
             updateCastagnoli = [=](uint32_t crc, gocpp::slice<unsigned char> p) mutable -> uint32_t
             {
                 return slicingUpdate(crc, castagnoliTable8, p);
-            }
-;
+            };
         }
         Store(gocpp::recv(haveCastagnoli), true);
     }
@@ -64,8 +63,7 @@ namespace golang::crc32
             updateIEEE = [=](uint32_t crc, gocpp::slice<unsigned char> p) mutable -> uint32_t
             {
                 return slicingUpdate(crc, ieeeTable8, p);
-            }
-;
+            };
         }
     }
 

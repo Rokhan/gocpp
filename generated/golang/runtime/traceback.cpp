@@ -457,8 +457,7 @@ namespace golang::runtime
             }
             auto bits = *(uint8_t*)(add(liveInfo, uintptr_t(liveIdx) + uintptr_t(slotIdx / 8)));
             return bits & (1 << (slotIdx % 8)) != 0;
-        }
-;
+        };
         auto print1 = [=](uint8_t off, uint8_t sz, uint8_t slotIdx) mutable -> void
         {
             auto x = readUnaligned64(add(argp, uintptr_t(off)));
@@ -479,8 +478,7 @@ namespace golang::runtime
             {
                 print("?");
             }
-        }
-;
+        };
         auto start = true;
         auto printcomma = [=]() mutable -> void
         {
@@ -488,8 +486,7 @@ namespace golang::runtime
             {
                 print(", ");
             }
-        }
-;
+        };
         auto pi = 0;
         auto slotIdx = uint8_t(0);
         printloop:
@@ -681,8 +678,7 @@ namespace golang::runtime
                 traceback2(& u2, showRuntime, lastN, tracebackOuterFrames);
             }
             return n;
-        }
-;
+        };
         if(tracebackWithRuntime(false) == 0)
         {
             tracebackWithRuntime(true);
@@ -723,8 +719,7 @@ namespace golang::runtime
             }
             max--;
             return {true, false};
-        }
-;
+        };
         auto gp = ptr(gocpp::recv(u->g));
         auto [level, gocpp_id_4, gocpp_id_5] = gotraceback();
         gocpp::array<uintptr_t, 32> cgoBuf = {};
@@ -906,8 +901,7 @@ namespace golang::runtime
             unwinder u = {};
             initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors);
             n = tracebackPCs(& u, skip, pcbuf);
-        }
-);
+        });
         return n;
     }
 
@@ -1039,8 +1033,7 @@ namespace golang::runtime
             {
                 traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, gp);
             }
-        }
-);
+        });
     }
 
     void tracebackHexdump(stack stk, stkframe* frame, uintptr_t bad)
@@ -1097,8 +1090,7 @@ namespace golang::runtime
                 }
             }
             return 0;
-        }
-);
+        });
     }
 
     bool isSystemGoroutine(g* gp, bool fixed)
@@ -1215,8 +1207,7 @@ namespace golang::runtime
             bool pr;
             bool stop;
             return {true, false};
-        }
-;
+        };
         cgoSymbolizerArg arg = {};
         for(auto [_, c] : callers)
         {

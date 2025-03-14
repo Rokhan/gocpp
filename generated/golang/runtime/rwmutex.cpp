@@ -90,8 +90,7 @@ namespace golang::runtime
                     notesleep(& m->park);
                     noteclear(& m->park);
                 }
-            }
-);
+            });
         }
     }
 
@@ -132,8 +131,7 @@ namespace golang::runtime
                 unlock(& rw->rLock);
                 notesleep(& m->park);
                 noteclear(& m->park);
-            }
-);
+            });
         }
         else
         {

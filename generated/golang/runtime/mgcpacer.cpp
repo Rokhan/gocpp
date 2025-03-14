@@ -348,8 +348,7 @@ namespace golang::runtime
                     return true;
                 }
             }
-        }
-;
+        };
         if(decIfPositive(& c->dedicatedMarkWorkersNeeded))
         {
             pp->gcMarkWorkerMode = gcMarkWorkerDedicatedMode;
@@ -653,8 +652,7 @@ namespace golang::runtime
             out = setGCPercent(gocpp::recv(gcController), in);
             gcControllerCommit();
             unlock(& mheap_.lock);
-        }
-);
+        });
         if(in < 0)
         {
             int32_t out;
@@ -705,8 +703,7 @@ namespace golang::runtime
             }
             gcControllerCommit();
             unlock(& mheap_.lock);
-        }
-);
+        });
         return out;
     }
 

@@ -51,8 +51,7 @@ namespace golang::main
                 mocklib::Println(c.recv());
             }
             quit.send(0);
-        }
-(); });
+        }(); });
         fibonacci(c, quit);
     }
 

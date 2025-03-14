@@ -98,8 +98,7 @@ namespace golang::runtime
             StoreNoWB(gocpp::recv(tab->tab[part]), unsafe::Pointer(vd));
             unlock(& tab->lock);
             added = true;
-        }
-);
+        });
         return {id, added};
     }
 

@@ -244,8 +244,7 @@ namespace golang::runtime
                 newPCBuf = append(newPCBuf, retPC);
             }
             return len(newPCBuf) < cap(newPCBuf);
-        }
-;
+        };
         outer:
         for(auto [_, retPC] : pcBuf.make_slice(1))
         {

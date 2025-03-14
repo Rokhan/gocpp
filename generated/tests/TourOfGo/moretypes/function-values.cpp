@@ -27,8 +27,7 @@ namespace golang::main
         auto hypot = [=](double x, double y) mutable -> double
         {
             return std::sqrt(x * x + y * y);
-        }
-;
+        };
         mocklib::Println(hypot(5, 12));
         mocklib::Println(compute(hypot));
         mocklib::Println(compute(mocklib::Pow));

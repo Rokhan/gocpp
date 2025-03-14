@@ -330,11 +330,10 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    sync::Pool ppFree = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = [=]() mutable -> go_any
+    sync::Pool ppFree = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = []() mutable -> go_any
     {
         return go_new(pp);
-    }
-; });
+    }; });
     pp* newPrinter()
     {
         auto p = gocpp::getValue<pp*>(Get(gocpp::recv(ppFree)));

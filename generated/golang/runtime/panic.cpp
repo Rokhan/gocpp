@@ -555,8 +555,7 @@ namespace golang::runtime
                     }
                 }
             }
-        }
-(); });
+        }(); });
         for(; p != nullptr; )
         {
             //Go type switch emulation
@@ -831,8 +830,7 @@ namespace golang::runtime
             p->sp = unsafe::Pointer(u.frame.sp);
             p->fp = unsafe::Pointer(u.frame.fp);
             ok = true;
-        }
-);
+        });
         return ok;
     }
 
@@ -889,8 +887,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             print("fatal error: ", s, "\n");
-        }
-);
+        });
         fatalthrow(throwTypeRuntime);
     }
 
@@ -899,8 +896,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             print("fatal error: ", s, "\n");
-        }
-);
+        });
         fatalthrow(throwTypeUser);
     }
 
@@ -983,8 +979,7 @@ namespace golang::runtime
                 crash();
             }
             exit(2);
-        }
-);
+        });
         *(int*)(nullptr) = 0;
     }
 
@@ -1002,8 +997,7 @@ namespace golang::runtime
                 printpanics(msgs);
             }
             docrash = dopanic_m(gp, pc, sp);
-        }
-);
+        });
         if(docrash)
         {
             crash();
@@ -1011,8 +1005,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             exit(2);
-        }
-);
+        });
         *(int*)(nullptr) = 0;
     }
 

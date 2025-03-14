@@ -427,8 +427,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             setprofilebucket(p, b);
-        }
-);
+        });
     }
 
     void mProf_Free(bucket* b, uintptr_t size)
@@ -642,8 +641,7 @@ namespace golang::runtime
             unwinder u = {};
             initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors | unwindJumpStack);
             nstk = tracebackPCs(& u, skip, prof->stack.make_slice(0, ));
-        }
-);
+        });
         if(nstk < len(prof->stack))
         {
             prof->stack[nstk] = 0;
@@ -1178,8 +1176,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             saveg(pc, sp, ourg, & p[0]);
-        }
-);
+        });
         if(labels != nullptr)
         {
             int n;
@@ -1207,8 +1204,7 @@ namespace golang::runtime
         forEachGRace([=](g* gp1) mutable -> void
         {
             tryRecordGoroutineProfile(gp1, Gosched);
-        }
-);
+        });
         stw = stopTheWorld(stwGoroutineProfileCleanup);
         auto endOffset = Swap(gocpp::recv(goroutineProfile.offset), 0);
         goroutineProfile.active = false;
@@ -1218,8 +1214,7 @@ namespace golang::runtime
         forEachGRace([=](g* gp1) mutable -> void
         {
             Store(gocpp::recv(gp1->goroutineProfiled), goroutineProfileAbsent);
-        }
-);
+        });
         if(raceenabled)
         {
             int n;
@@ -1291,8 +1286,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & goroutineProfile.records[offset]);
-        }
-);
+        });
         if(goroutineProfile.labels != nullptr)
         {
             goroutineProfile.labels[offset] = gp1->labels;
@@ -1307,8 +1301,7 @@ namespace golang::runtime
         auto isOK = [=](g* gp1) mutable -> bool
         {
             return gp1 != gp && readgstatus(gp1) != _Gdead && ! isSystemGoroutine(gp1, false);
-        }
-;
+        };
         auto stw = stopTheWorld(stwGoroutineProfile);
         n = 1;
         forEachGRace([=](g* gp1) mutable -> void
@@ -1317,8 +1310,7 @@ namespace golang::runtime
             {
                 n++;
             }
-        }
-);
+        });
         if(n <= len(p))
         {
             int n;
@@ -1330,8 +1322,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 saveg(pc, sp, gp, & r[0]);
-            }
-);
+            });
             r = r.make_slice(1);
             if(labels != nullptr)
             {
@@ -1353,16 +1344,14 @@ namespace golang::runtime
                 systemstack([=]() mutable -> void
                 {
                     saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & r[0]);
-                }
-);
+                });
                 if(labels != nullptr)
                 {
                     lbl[0] = gp1->labels;
                     lbl = lbl.make_slice(1);
                 }
                 r = r.make_slice(1);
-            }
-);
+            });
         }
         if(raceenabled)
         {
@@ -1419,8 +1408,7 @@ namespace golang::runtime
                 g0->m->traceback = 0;
                 n = len(g0->writebuf);
                 g0->writebuf = nullptr;
-            }
-);
+            });
         }
         if(all)
         {
@@ -1451,8 +1439,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 traceback(pc, sp, 0, gp);
-            }
-);
+            });
         }
         else
         {
@@ -1476,8 +1463,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             traceback(pc, sp, 0, gp);
-        }
-);
+        });
         print("\n");
         gp->m->traceback = 0;
         unlock(& tracelock);

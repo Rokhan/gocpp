@@ -414,8 +414,7 @@ namespace golang::runtime
                 print("runtime: base = ", hex(addr(gocpp::recv(firstFree.base))), ", bound = ", hex(addr(gocpp::recv(firstFree.bound))), "\n");
                 go_throw("range partially overlaps");
             }
-        }
-;
+        };
         auto lastSum = packPallocSum(0, 0, 0);
         auto lastSumIdx = - 1;
         nextLevel:

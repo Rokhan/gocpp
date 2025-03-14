@@ -60,22 +60,19 @@ namespace golang::runtime
         {
             auto [sumIdxBase, sumIdxLimit] = addrsToSummaryRange(level, addr(gocpp::recv(r.base)), addr(gocpp::recv(r.limit)));
             return blockAlignSummaryRange(level, sumIdxBase, sumIdxLimit);
-        }
-;
+        };
         auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> addrRange
         {
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
             auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
             auto base = unsafe::Pointer(& p->summary[level][0]);
             return addrRange {offAddr {uintptr_t(add(base, baseOffset))}, offAddr {uintptr_t(add(base, limitOffset))}};
-        }
-;
+        };
         auto addrRangeToSumAddrRange = [=](int level, addrRange r) mutable -> addrRange
         {
             auto [sumIdxBase, sumIdxLimit] = addrRangeToSummaryRange(level, r);
             return summaryRangeToSumAddrRange(level, sumIdxBase, sumIdxLimit);
-        }
-;
+        };
         auto inUseIndex = findSucc(gocpp::recv(p->inUse), base);
         for(auto [l, gocpp_ignored] : p->summary)
         {

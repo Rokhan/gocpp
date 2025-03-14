@@ -130,8 +130,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             wbBufFlush1(ptr(gocpp::recv(getg()->m->p)));
-        }
-);
+        });
     }
 
     void wbBufFlush1(p* pp)

@@ -168,8 +168,7 @@ namespace golang::runtime
         s->timer->f = [=](go_any s, uintptr_t _) mutable -> void
         {
             wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
-        }
-;
+        };
         s->sleepController = gocpp::Init<piController>([](piController& x) { x.kp = 0.3375; x.ti = 3.2e6; x.tt = 1e9; x.min = 0.001; x.max = 1000.0; });
         s->sleepRatio = startingScavSleepRatio;
         if(s->scavenge == nullptr)
@@ -185,24 +184,21 @@ namespace golang::runtime
                 }
                 Add(gocpp::recv(scavenge.backgroundTime), end - start);
                 return {r, end - start};
-            }
-;
+            };
         }
         if(s->shouldStop == nullptr)
         {
             s->shouldStop = [=]() mutable -> bool
             {
                 return heapRetained() <= Load(gocpp::recv(scavenge.gcPercentGoal)) && Load(gocpp::recv(gcController.mappedReady)) <= Load(gocpp::recv(scavenge.memoryLimitGoal));
-            }
-;
+            };
         }
         if(s->gomaxprocs == nullptr)
         {
             s->gomaxprocs = [=]() mutable -> int32_t
             {
                 return gomaxprocs;
-            }
-;
+            };
         }
     }
 
@@ -389,8 +385,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 released += scavengeOne(gocpp::recv(p), ci, pageIdx, nbytes - released);
-            }
-);
+            });
             if(shouldStop != nullptr && shouldStop())
             {
                 break;
@@ -474,8 +469,7 @@ namespace golang::runtime
         auto apply = [=](uint64_t x, uint64_t c) mutable -> uint64_t
         {
             return ~ ((((x & c) + c) | x) | c);
-        }
-;
+        };
         //Go switch emulation
         {
             auto condition = m;

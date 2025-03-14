@@ -900,8 +900,7 @@ namespace golang::flate
                 bits[i] = 8;
             }
             init(gocpp::recv(fixedHuffmanDecoder), bits.make_slice(0, ));
-        }
-);
+        });
     }
 
     std::string Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)

@@ -63,8 +63,7 @@ namespace golang::runtime
             auto start = corostart;
             auto startfv = *(funcval**)(unsafe::Pointer(& start));
             gp = newproc1(startfv, gp, pc);
-        }
-);
+        });
         gp->coroarg = c;
         gp->waitreason = waitReasonCoroutine;
         casgstatus(gp, _Grunnable, _Gwaiting);

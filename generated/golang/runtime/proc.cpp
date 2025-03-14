@@ -136,8 +136,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 newm(sysmon, nullptr, - 1);
-            }
-);
+            });
         }
         lockOSThread();
         if(mp != & m0)
@@ -162,8 +161,7 @@ namespace golang::runtime
             {
                 unlockOSThread();
             }
-        }
-(); });
+        }(); });
         gcenable();
         main_init_done = gocpp::make(gocpp::Tag<gocpp::channel<bool>>());
         if(iscgo)
@@ -330,8 +328,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             ready(gp, traceskip, true);
-        }
-);
+        });
     }
 
     sudog* acquireSudog()
@@ -458,8 +455,7 @@ namespace golang::runtime
             traceback1(g->sched.pc, g->sched.sp, g->sched.lr, g, 0);
             print("\n");
             go_throw("morestack on g0");
-        }
-);
+        });
     }
 
     void badmorestackgsignal()
@@ -954,8 +950,7 @@ namespace golang::runtime
             {
                 print("runtime: casgstatus: oldval=", hex(oldval), " newval=", hex(newval), "\n");
                 go_throw("casgstatus: bad incoming values");
-            }
-);
+            });
         }
         acquireLockRank(lockRankGscan);
         releaseLockRank(lockRankGscan);
@@ -1131,8 +1126,7 @@ namespace golang::runtime
             casGToWaiting(gp, _Grunning, waitReasonStoppingTheWorld);
             stopTheWorldContext = stopTheWorldWithSema(reason);
             casgstatus(gp, _Gwaiting, _Grunning);
-        }
-);
+        });
         return stopTheWorldContext;
     }
 
@@ -1141,8 +1135,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             startTheWorldWithSema(0, w);
-        }
-);
+        });
         auto mp = acquirem();
         mp->preemptoff = "";
         semrelease1(& worldsema, true, 0);
@@ -1536,8 +1529,7 @@ namespace golang::runtime
             casGToWaiting(gp, _Grunning, reason);
             forEachPInternal(fn);
             casgstatus(gp, _Gwaiting, _Grunning);
-        }
-);
+        });
     }
 
     void forEachPInternal(std::function<void (p*)> fn)
@@ -1687,8 +1679,7 @@ namespace golang::runtime
                     systemstack([=]() mutable -> void
                     {
                         stackfree(freem->g0->stack);
-                    }
-);
+                    });
                 }
                 freem = freem->freelink;
             }
@@ -3125,8 +3116,7 @@ namespace golang::runtime
                 unlock(& sched.lock);
                 releasem(mp);
             }
-        }
-;
+        };
         auto pp = ptr(gocpp::recv(getg()->m->p));
         if(pp == nullptr)
         {
@@ -3566,8 +3556,7 @@ namespace golang::runtime
             {
                 print("entersyscall inconsistent ", hex(gp->syscallsp), " [", hex(gp->stack.lo), ",", hex(gp->stack.hi), "]\n");
                 go_throw("entersyscall");
-            }
-);
+            });
         }
         if(ok(gocpp::recv(trace)))
         {
@@ -3575,8 +3564,7 @@ namespace golang::runtime
             {
                 GoSysCall(gocpp::recv(trace));
                 traceRelease(trace);
-            }
-);
+            });
             save(pc, sp);
         }
         if(Load(gocpp::recv(sched.sysmonwait)))
@@ -3676,8 +3664,7 @@ namespace golang::runtime
             {
                 print("entersyscallblock inconsistent ", hex(sp1), " ", hex(sp2), " ", hex(sp3), " [", hex(gp->stack.lo), ",", hex(gp->stack.hi), "]\n");
                 go_throw("entersyscallblock");
-            }
-);
+            });
         }
         casgstatus(gp, _Grunning, _Gsyscall);
         if(gp->syscallsp < gp->stack.lo || gp->stack.hi < gp->syscallsp)
@@ -3686,8 +3673,7 @@ namespace golang::runtime
             {
                 print("entersyscallblock inconsistent ", hex(sp), " ", hex(gp->sched.sp), " ", hex(gp->syscallsp), " [", hex(gp->stack.lo), ",", hex(gp->stack.hi), "]\n");
                 go_throw("entersyscallblock");
-            }
-);
+            });
         }
         systemstack(entersyscallblock_handoff);
         save(getcallerpc(), getcallersp());
@@ -3724,8 +3710,7 @@ namespace golang::runtime
                 systemstack([=]() mutable -> void
                 {
                     tryRecordGoroutineProfileWB(gp);
-                }
-);
+                });
             }
             auto trace = traceAcquire();
             if(ok(gocpp::recv(trace)))
@@ -3741,8 +3726,7 @@ namespace golang::runtime
                     {
                         GoStart(gocpp::recv(trace));
                     }
-                }
-);
+                });
             }
             ptr(gocpp::recv(gp->m->p))->syscalltick++;
             casgstatus(gp, _Gsyscall, _Grunning);
@@ -3827,8 +3811,7 @@ namespace golang::runtime
                         traceRelease(trace);
                     }
                 }
-            }
-);
+            });
             if(ok)
             {
                 return true;
@@ -3856,8 +3839,7 @@ namespace golang::runtime
                         GoSysBlock(gocpp::recv(trace), ptr(gocpp::recv(gp->m->p)));
                         GoSysExit(gocpp::recv(trace), true);
                     }
-                }
-);
+                });
             }
             ptr(gocpp::recv(gp->m->p))->syscalltick++;
         }
@@ -3986,8 +3968,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 newg->stack = stackalloc(uint32_t(stacksize));
-            }
-);
+            });
             newg->stackguard0 = newg->stack.lo + stackGuard;
             newg->stackguard1 = ~ uintptr_t(0);
             *(uintptr_t*)(unsafe::Pointer(newg->stack.lo)) = 0;
@@ -4008,8 +3989,7 @@ namespace golang::runtime
             {
                 wakep();
             }
-        }
-);
+        });
     }
 
     g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc)
@@ -4216,16 +4196,14 @@ namespace golang::runtime
                 gp->stack.lo = 0;
                 gp->stack.hi = 0;
                 gp->stackguard0 = 0;
-            }
-);
+            });
         }
         if(gp->stack.lo == 0)
         {
             systemstack([=]() mutable -> void
             {
                 gp->stack = stackalloc(startingStackSize);
-            }
-);
+            });
             gp->stackguard0 = gp->stack.lo + stackGuard;
         }
         else
@@ -4658,8 +4636,7 @@ namespace golang::runtime
             lock(& mheap_.lock);
             flush(gocpp::recv(pp->pcache), & mheap_.pages);
             unlock(& mheap_.lock);
-        }
-);
+        });
         freemcache(pp->mcache);
         pp->mcache = nullptr;
         gfpurge(pp);
@@ -4838,8 +4815,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 go_throw("wirep: already in go");
-            }
-);
+            });
         }
         if(pp->m != 0 || pp->status != _Pidle)
         {
@@ -4852,8 +4828,7 @@ namespace golang::runtime
                 }
                 print("wirep: p->m=", pp->m, "(", id, ") p->status=", pp->status, "\n");
                 go_throw("wirep: invalid p state");
-            }
-);
+            });
         }
         set(gocpp::recv(gp->m->p), pp);
         set(gocpp::recv(pp->m), gp->m);
@@ -4960,8 +4935,7 @@ namespace golang::runtime
                         break;
                 }
             }
-        }
-);
+        });
         if(grunning == 0)
         {
             unlock(& sched.lock);
@@ -5354,8 +5328,7 @@ namespace golang::runtime
                 print("nil");
             }
             print("\n");
-        }
-);
+        });
         unlock(& sched.lock);
     }
 
@@ -5665,8 +5638,7 @@ namespace golang::runtime
             auto off = [=](uint32_t o) mutable -> uint32_t
             {
                 return (pp->runqtail + o) % uint32_t(len(pp->runq));
-            }
-;
+            };
             for(auto i = uint32_t(1); i < n; i++)
             {
                 auto j = cheaprandn(i + 1);

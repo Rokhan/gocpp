@@ -91,8 +91,7 @@ namespace golang::runtime
                 traceBufFlush(w.traceBuf, w.gen);
             }
             unlock(& trace.lock);
-        }
-);
+        });
         w.traceBuf = nullptr;
         return w;
     }
@@ -121,8 +120,7 @@ namespace golang::runtime
                     go_throw("trace: out of memory");
                 }
             }
-        }
-);
+        });
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->lastTime)
         {

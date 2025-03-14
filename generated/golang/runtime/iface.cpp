@@ -514,8 +514,7 @@ namespace golang::runtime
                 }
                 h = (h + 1) & (newN - 1);
             }
-        }
-;
+        };
         for(auto [_, e] : oldEntries)
         {
             if(e.Typ != 0)
@@ -591,8 +590,7 @@ namespace golang::runtime
                 }
                 h = (h + 1) & (newN - 1);
             }
-        }
-;
+        };
         for(auto [_, e] : oldEntries)
         {
             if(e.Typ != 0)

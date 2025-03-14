@@ -366,13 +366,11 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             stw = stopTheWorldWithSema(stwGCSweepTerm);
-        }
-);
+        });
         systemstack([=]() mutable -> void
         {
             finishsweep_m();
-        }
-);
+        });
         clearpools();
         Add(gocpp::recv(work.cycles), 1);
         startCycle(gocpp::recv(gcController), now, int(gomaxprocs), trigger);
@@ -396,8 +394,7 @@ namespace golang::runtime
             work.cpuStats.gcPauseTime += sweepTermCpu;
             work.cpuStats.gcTotalTime += sweepTermCpu;
             finishGCTransition(gocpp::recv(gcCPULimiter), now);
-        }
-);
+        });
         semrelease(& worldsema);
         releasem(mp);
         if(mode != gcBackgroundMode)
@@ -428,8 +425,7 @@ namespace golang::runtime
                 atomic::Xadd(& gcMarkDoneFlushed, 1);
                 pp->gcw.flushedWork = false;
             }
-        }
-);
+        });
         if(gcMarkDoneFlushed != 0)
         {
             semrelease(& worldsema);
@@ -442,8 +438,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             stw = stopTheWorldWithSema(stwGCMarkTerm);
-        }
-);
+        });
         auto restart = false;
         systemstack([=]() mutable -> void
         {
@@ -456,8 +451,7 @@ namespace golang::runtime
                     break;
                 }
             }
-        }
-);
+        });
         if(restart)
         {
             getg()->m->preemptoff = "";
@@ -465,8 +459,7 @@ namespace golang::runtime
             {
                 auto now = startTheWorldWithSema(0, stw);
                 work.pauseNS += now - stw.start;
-            }
-);
+            });
             semrelease(& worldsema);
             goto top;
         }
@@ -493,8 +486,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             gcMark(startTime);
-        }
-);
+        });
         bool stwSwept = {};
         systemstack([=]() mutable -> void
         {
@@ -511,8 +503,7 @@ namespace golang::runtime
             }
             setGCPhase(_GCoff);
             stwSwept = gcSweep(work.mode);
-        }
-);
+        });
         mp->traceback = 0;
         casgstatus(curgp, _Gwaiting, _Grunning);
         auto trace = traceAcquire();
@@ -570,8 +561,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             startTheWorldWithSema(now, stw);
-        }
-);
+        });
         mProf_Flush();
         prepareFreeWorkbufs();
         systemstack(freeStackSpans);
@@ -585,12 +575,10 @@ namespace golang::runtime
                     lock(& mheap_.lock);
                     flush(gocpp::recv(pp->pcache), & mheap_.pages);
                     unlock(& mheap_.lock);
-                }
-);
+                });
             }
             pp->pinnerCache = nullptr;
-        }
-);
+        });
         if(sl.valid)
         {
             end(gocpp::recv(sweep.active), sl);
@@ -646,8 +634,7 @@ namespace golang::runtime
             systemstack([=]() mutable -> void
             {
                 enableMetadataHugePages(gocpp::recv(mheap_));
-            }
-);
+            });
         }
         semrelease(& worldsema);
         semrelease(& gcsema);
@@ -712,8 +699,7 @@ namespace golang::runtime
                 }
                 push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
                 return true;
-            }
-, unsafe::Pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
+            }, unsafe::Pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
             set(gocpp::recv(node->m), acquirem());
             auto pp = ptr(gocpp::recv(gp->m->p));
             if(gcBlackenEnabled == 0)
@@ -775,8 +761,7 @@ namespace golang::runtime
                     }
                 }
                 casgstatus(gp, _Gwaiting, _Grunning);
-            }
-);
+            });
             auto now = nanotime();
             auto duration = now - startTime;
             markWorkerStop(gocpp::recv(gcController), pp->gcMarkWorkerMode, duration);
@@ -942,8 +927,7 @@ namespace golang::runtime
         {
             gp->gcscandone = false;
             gp->gcAssistBytes = 0;
-        }
-);
+        });
         lock(& mheap_.lock);
         auto arenas = mheap_.allArenas;
         unlock(& mheap_.lock);

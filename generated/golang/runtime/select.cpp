@@ -146,8 +146,7 @@ namespace golang::runtime
                 return 0;
             }
             return pcs[casi];
-        }
-;
+        };
         int64_t t0 = {};
         if(blockprofilerate > 0)
         {
@@ -479,8 +478,7 @@ namespace golang::runtime
         recv(c, sg, cas->elem, [=]() mutable -> void
         {
             selunlock(scases, lockorder);
-        }
-, 2);
+        }, 2);
         if(debugSelect)
         {
             print("syncrecv: cas0=", cas0, " c=", c, "\n");
@@ -515,8 +513,7 @@ namespace golang::runtime
         send(c, sg, cas->elem, [=]() mutable -> void
         {
             selunlock(scases, lockorder);
-        }
-, 2);
+        }, 2);
         if(debugSelect)
         {
             print("syncsend: cas0=", cas0, " c=", c, "\n");

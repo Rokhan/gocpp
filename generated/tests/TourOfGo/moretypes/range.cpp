@@ -22,6 +22,11 @@ namespace golang::main
         {
             mocklib::Printf("2**%v = %v\n", i, v);
         }
+        int n = 0;
+        for(const auto& _ : pow)
+        {
+            n++;
+        }
     }
 
 }

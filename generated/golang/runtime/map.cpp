@@ -1048,8 +1048,7 @@ namespace golang::runtime
                     }
                 }
             }
-        }
-;
+        };
         markBucketsEmpty(h->buckets, bucketMask(h->B));
         if(auto oldBuckets = h->oldbuckets; oldBuckets != nullptr)
         {

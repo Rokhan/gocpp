@@ -606,8 +606,7 @@ namespace golang::runtime
                 reclaim(gocpp::recv(h), npages);
             }
             s = allocSpan(gocpp::recv(h), npages, spanAllocHeap, spanclass);
-        }
-);
+        });
         return s;
     }
 
@@ -855,8 +854,7 @@ namespace golang::runtime
             auto released = scavenge(gocpp::recv(h->pages), bytesToScavenge, [=]() mutable -> bool
             {
                 return limiting(gocpp::recv(gcCPULimiter));
-            }
-, forceScavenge);
+            }, forceScavenge);
             Add(gocpp::recv(mheap_.pages.scav.releasedEager), released);
             now = nanotime();
             if(track)
@@ -1035,8 +1033,7 @@ namespace golang::runtime
             }
             freeSpanLocked(gocpp::recv(h), s, spanAllocHeap);
             unlock(& h->lock);
-        }
-);
+        });
     }
 
     void freeManual(struct mheap* h, mspan* s, spanAllocType typ)
@@ -1139,8 +1136,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             scavengeAll(gocpp::recv(mheap_));
-        }
-);
+        });
     }
 
     void init(struct mspan* span, uintptr_t base, uintptr_t npages)

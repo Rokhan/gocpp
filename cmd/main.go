@@ -51,7 +51,21 @@ func GetCppType(goType string) string {
 }
 
 func GetCppGoType(goType types.Type) string {
-	return GetCppType(goType.String())
+	switch t := goType.(type) {
+	case *types.Tuple:
+		if t.Len() == 0 {
+			return "void"
+		}
+
+		var strs []string
+		for i := 0; i < t.Len(); i++ {
+			strs = append(strs, GetCppGoType(t.At(i).Type()))
+		}
+		return strings.Join(strs, ", ")
+
+	default:
+		return GetCppType(goType.String())
+	}
 }
 
 // func GetCppFunc[T string | cppExpr](funcName T) T
@@ -1354,10 +1368,18 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 }
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
-	return cv.convertBlockStmtWithLabel(block, env, nil)
+	return cv.convertBlockStmtImpl(block, env, "\n", nil)
+}
+
+func (cv *cppConverter) convertInlinedBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
+	return cv.convertBlockStmtImpl(block, env, "", nil)
 }
 
 func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env blockEnv, label *ast.Ident) (outPlaces []place) {
+	return cv.convertBlockStmtImpl(block, env, "\n", label)
+}
+
+func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv, end string, label *ast.Ident) (outPlaces []place) {
 
 	if block == nil {
 		fmt.Fprintf(cv.cpp.out, "%v/* convertBlockStmt, nil block */;\n", cv.cpp.Indent())
@@ -1396,7 +1418,7 @@ func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env bloc
 	fmt.Fprintf(cv.cpp.out, "%s", cppOut)
 
 	cv.cpp.indent--
-	fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+	fmt.Fprintf(cv.cpp.out, "%s}%s", cv.cpp.Indent(), end)
 	cv.endScope()
 	return
 }
@@ -3247,9 +3269,12 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	case *types.TypeParam:
 		return fmt.Sprintf("%s", subType)
 
-	// TODO
-	// case *types.Signature:
-	// 	return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Params()), GetCppGoType(subType.Results()))
+	case *types.Signature:
+		if subType.Results().Len() <= 1 {
+			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results()), GetCppGoType(subType.Params()))
+		} else {
+			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results()), GetCppGoType(subType.Params()))
+		}
 
 	default:
 		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
@@ -3356,9 +3381,14 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 			cv.DeclareVars(params)
 
-			fmt.Fprintf(cv.cpp.out, "[=](%s) mutable -> %s\n", params, resultType)
+			var captureExpr = "[=]"
+			if cv.scopes.Len() <= 1 {
+				captureExpr = "[]" // global scope
+			}
 
-			expr.defs = cv.convertBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
+			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
+
+			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
 		})
 		return expr
 

@@ -1610,8 +1610,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+		} else if s.Key == nil && s.Value == nil {
+			cv.WritterExprPrintf(cppOut, "%sfor(const auto& _ : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.X))
 		} else {
-			panic("Unmanaged case of '*ast.RangeStmt'")
+			Panicf("Unmanaged case of '*ast.RangeStmt', token: %v, input: %v", s.Tok, cv.Position(s))
 		}
 		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
@@ -1631,7 +1633,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			outPlaces = append(outPlaces, elseOutPlace...)
 			if isFallthrough {
 				// Shouldn't happen correctly go file
-				Panicf("convertStmt, fallthrough not managed in ast.IfStmt")
+				Panicf("convertStmt, fallthrough not managed in ast.IfStmt, input: %v", cv.Position(s.Else))
 			}
 		}
 

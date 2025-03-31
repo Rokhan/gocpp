@@ -68,7 +68,12 @@
         "semaphore": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "locale": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp"
     },
     "C_Cpp.vcFormat.newLine.closeBraceSameLine.emptyFunction": true,
     "C_Cpp.vcFormat.space.afterKeywordsInControlFlowStatements": false,

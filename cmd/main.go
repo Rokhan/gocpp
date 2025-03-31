@@ -1829,31 +1829,34 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 
 	cv.WritterExprPrintf(cppOut, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
 	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != "", env.isTypeSwitch}
-	cv.extractCaseExpr(body, &se)
+	caseDefs := cv.extractCaseExpr(body, &se)
+	outPlaces = append(outPlaces, caseDefs...)
 	cv.WritterExprPrintf(cppOut, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
 	cv.currentSwitchId.PushBack(0)
-	outPlaces = cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
+	blockDefs := cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
+	outPlaces = append(outPlaces, blockDefs...)
 	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
 	cv.cpp.indent--
 	cv.WritterExprPrintf(cppOut, "%s}\n", cv.cpp.Indent())
 
 	if len(*cppOut.defs) != 0 {
-		Panicf("convertSwitchBody, not Implemented, manage cppOut.defs")
+		Panicf("convertSwitchBody, not Implemented, manage cppOut.defs, type [%v], %s", reflect.TypeOf(body), cv.Position(body))
 	}
 
 	return
 }
 
-func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
+func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPlaces []place) {
 	cppOut := mkCppWritter(cv.cpp.out)
 
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
 		cv.currentSwitchId.PushBack(0)
 		for _, stmt := range s.List {
-			cv.extractCaseExpr(stmt, se)
+			elts := cv.extractCaseExpr(stmt, se)
+			outPlaces = append(outPlaces, elts...)
 		}
 		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
 
@@ -1892,9 +1895,8 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) {
 		Panicf("extractCaseExpr, unmanaged type [%v], input %s", reflect.TypeOf(s), cv.Position(s))
 	}
 
-	if len(*cppOut.defs) != 0 {
-		Panicf("convertSwitchBody, not Implemented, manage cppOut.defs")
-	}
+	outPlaces = append(outPlaces, *cppOut.defs...)
+	return
 }
 
 func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
@@ -2854,6 +2856,13 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		fmt.Fprintf(buf, "struct %[1]s\n", param.name)
 		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 
+		// Not needed for now, we want to keep struct an aggregate type.
+		//fmt.Fprintf(buf, "%s    %s(){}\n", data.out.Indent(), param.name)
+		//fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", data.out.Indent(), param.name)
+		//fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", data.out.Indent(), param.name)
+		//fmt.Fprintf(buf, "%s    %[2]s& operator=(%[2]s& i) = default;\n", data.out.Indent(), param.name)
+		//fmt.Fprintf(buf, "%s    %[2]s& operator=(const %[2]s& i) = default;\n", data.out.Indent(), param.name)
+
 		data.out.indent++
 		for _, field := range fields {
 			for _, name := range field.names {
@@ -2874,9 +2883,67 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
+	excludedNames := append(templatePrms, param.name)
+	newTemplateParamName := getAnotherTemplateParamName(excludedNames)
+
+	// Not needed for now, we want to keep struct an aggregate type.
+	// fmt.Fprintf(buf, "\n")
+	// if param.output == implem {
+	// 	PrintTemplatePrefix(buf, data, templatePrms)
+	// }
+	//
+	// fmt.Fprintf(buf, "%stemplate<typename %s>\n", data.out.Indent(), newTemplateParamName)
+	// fmt.Fprintf(buf, "%s%s%s(const %s& ref)%s\n", data.out.Indent(), data.namePrefix, param.name, newTemplateParamName, data.declEnd)
+	// if data.needBody {
+	// 	fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+	// 	for _, field := range fields {
+	// 		for _, name := range field.names {
+	// 			fmt.Fprintf(buf, "%s    %s = ref.%s;\n", data.out.Indent(), name, name)
+	// 		}
+	// 	}
+	// 	fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+	// }
+
 	fmt.Fprintf(buf, "\n")
-	if templatePrmList != "" && param.output == implem {
-		fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
+	if param.output == implem {
+		PrintTemplatePrefix(buf, data, templatePrms)
+	}
+
+	fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
+	fmt.Fprintf(buf, "%s%soperator %s()%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
+	if data.needBody {
+		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    %s result;\n", data.out.Indent(), newTemplateParamName)
+		for _, field := range fields {
+			for _, name := range field.names {
+				fmt.Fprintf(buf, "%s    result.%s = this->%s;\n", data.out.Indent(), name, name)
+			}
+		}
+		fmt.Fprintf(buf, "%s    return result;\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+	}
+
+	fmt.Fprintf(buf, "\n")
+	if param.output == implem {
+		PrintTemplatePrefix(buf, data, templatePrms)
+	}
+
+	fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
+	fmt.Fprintf(buf, "%sbool %soperator==(const %s& ref) const%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
+	if data.needBody {
+		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+		for _, field := range fields {
+			for _, name := range field.names {
+				fmt.Fprintf(buf, "%s    if (%s != ref.%s) return false;\n", data.out.Indent(), name, name)
+			}
+		}
+		fmt.Fprintf(buf, "%s    return true;\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+	}
+
+	fmt.Fprintf(buf, "\n")
+	if param.output == implem {
+		PrintTemplatePrefix(buf, data, templatePrms)
 	}
 
 	fmt.Fprintf(buf, "%sstd::ostream& %sPrintTo(std::ostream& os) const%s\n", data.out.Indent(), data.namePrefix, data.declEnd)
@@ -2908,9 +2975,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
 
-		if templatePrmList != "" {
-			fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
-		}
+		PrintTemplatePrefix(buf, data, templatePrms)
 
 		// Need to add 'struct' to avoid conflicts when function have the same name than the struct
 		//   => exemple "RGBA" in "image\color\color.go"
@@ -2923,6 +2988,38 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		}
 	}
 	return buf.String()
+}
+
+func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms []string) {
+	if len(templatePrms) != 0 {
+		fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
+	}
+}
+
+var defaultTemplateNames = []string{"T", "U", "V", "W"}
+
+func getAnotherTemplateParamName(excludedNames []string) string {
+	usedNames := make(map[string]bool)
+	for _, name := range excludedNames {
+		usedNames[name] = true
+	}
+
+	// Try to use one of the default template names
+	for _, defaultName := range defaultTemplateNames {
+		if !usedNames[defaultName] {
+			return defaultName
+		}
+	}
+
+	// If all default names are used, append a suffix number
+	for i := 1; ; i++ {
+		for _, defaultName := range defaultTemplateNames {
+			candidate := fmt.Sprintf("%s%d", defaultName, i)
+			if !usedNames[candidate] {
+				return candidate
+			}
+		}
+	}
 }
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms []string, param genStructParam) string {
@@ -2980,7 +3077,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	switch param.output {
 	case all, decl:
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s    using isGoStruct = void;\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    using isGoInterface = void;\n", data.out.Indent())
 	}
 
 	fmt.Fprintf(buf, "\n")
@@ -3323,7 +3420,7 @@ func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []plac
 	}
 }
 
-// Sprintf formats according to a format specifier and returns the resulting string.
+// Sprintf formats according to a format specifier.
 func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], format string, srcParams ...any) (n int, err error) {
 	defs, params := extractParamDefs(srcParams...)
 	cv.printInline(buff.buff, buff.defs, defs)

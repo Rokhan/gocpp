@@ -21,8 +21,11 @@ OUT_MD_TEST_FILES=$(addprefix $(LOGDIR)/,$(MD_TEST_FILES))
 
 CCACHE := $(shell which ccache 2> /dev/null)
 
+GOCPP_ALWAYS_REGENERATE = false
 GOCPP_STRICT_MODE = false
 GOCPP_VERBOSE = false
+
+GOCPP_PARAMETERS = -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE) -verbose=$(GOCPP_VERBOSE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR)
 
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
@@ -72,7 +75,7 @@ $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	@echo "    $<"
 	@echo "    $@"
 
-	./gocpp.exe -parseFmt=false -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $@".log"
+	./gocpp.exe $(GOCPP_PARAMETERS) -input $< > $@".log"
 	(cd $(OUTDIR) && make) 
 	$(LOGDIR)/$*.go.exe
 
@@ -84,7 +87,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 
 	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
 
-	./gocpp.exe -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -verbose=$(GOCPP_VERBOSE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR) -input $< > $(LOGDIR)/$*".log" \
+	./gocpp.exe $(GOCPP_PARAMETERS) -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

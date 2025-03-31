@@ -130,6 +130,7 @@ var knownCompilationErrors = []*errorFilter{
 	{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 	{"png", "image/png/writer.go"},
 	{"race", "internal/race/norace.go"},
+	{"reflect", "reflect/value.go"},
 	{"runtime", "runtime/alg.go"},
 	{"runtime", "runtime/cgocall.go"},
 	{"runtime", "runtime/defs_windows.go"},

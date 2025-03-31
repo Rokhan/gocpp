@@ -369,7 +369,20 @@ namespace gocpp
     class IsGoStruct : public std::false_type { };
 
     template <typename T>
-    class IsGoStruct<T,typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
+    class IsGoStruct<T, typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
+
+    template<typename T>
+    concept GoStruct = IsGoStruct<T>::value;
+
+
+    template <typename T, typename = void>
+    class IsGoInterface : public std::false_type { };
+
+    template <typename T>
+    class IsGoInterface<T, typename CheckType<typename T::IsGoInterface>::type> : public std::true_type { };
+
+    template<typename T>
+    concept GoInterface = IsGoInterface<T>::value;
 
     template<typename T>
     T Init(void (init)(T&))
@@ -1110,6 +1123,21 @@ namespace mocklib
         return os;
     }
 
+    template<typename T> requires gocpp::GoStruct<T>
+    std::ostream& operator<<(std::ostream& os, const T* ptr)
+    {
+        if(ptr)
+        {
+            os << '&';
+            os << *ptr;
+        }
+        else
+        {
+            os << "<nil>";
+        } 
+        return os;
+    }
+
     // /* 
     // ** Should replace the two previous template but this create ambiguous overload because
     // ** the template match basic_string too
@@ -1276,9 +1304,7 @@ namespace mocklib
     template<typename T>
     std::string Sprintf(const T& value)
     {
-        std::stringstream sstr;
-        sstr << value;
-        return sstr.str();
+        return Sprint(value);
     }
 
     // No real formatting at the moment

@@ -18,6 +18,16 @@ func fibonacci(c, quit chan int) {
 	}
 }
 
+// from src\runtime\trace2.go:967:3
+func testInlinedType() {
+	var wakeup chan struct{}
+
+	select {
+	case wakeup <- struct{}{}:
+	default:
+	}
+}
+
 func main() {
 	c := make(chan int)
 	quit := make(chan int)

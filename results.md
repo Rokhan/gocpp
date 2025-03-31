@@ -274,7 +274,7 @@
 | $(ImportDir)/runtime/mcheckmark.go | ✔️ ([cpp](generated/golang/runtime/mcheckmark.cpp), [h](generated/golang/runtime/mcheckmark.h))|
 | $(ImportDir)/runtime/mem.go | ✔️ ([cpp](generated/golang/runtime/mem.cpp), [h](generated/golang/runtime/mem.h))|
 | $(ImportDir)/runtime/mem_windows.go | ✔️ ([cpp](generated/golang/runtime/mem_windows.cpp), [h](generated/golang/runtime/mem_windows.h))|
-| $(ImportDir)/runtime/metrics.go | ❌ |
+| $(ImportDir)/runtime/metrics.go | ✔️ ([cpp](generated/golang/runtime/metrics.cpp), [h](generated/golang/runtime/metrics.h))|
 | $(ImportDir)/runtime/mfinal.go | ✔️ ([cpp](generated/golang/runtime/mfinal.cpp), [h](generated/golang/runtime/mfinal.h))|
 | $(ImportDir)/runtime/mfixalloc.go | ✔️ ([cpp](generated/golang/runtime/mfixalloc.cpp), [h](generated/golang/runtime/mfixalloc.h))|
 | $(ImportDir)/runtime/mgc.go | ✔️ ([cpp](generated/golang/runtime/mgc.cpp), [h](generated/golang/runtime/mgc.h))|
@@ -341,7 +341,7 @@
 | $(ImportDir)/runtime/time_nofake.go | ✔️ ([cpp](generated/golang/runtime/time_nofake.cpp), [h](generated/golang/runtime/time_nofake.h))|
 | $(ImportDir)/runtime/timeasm.go | ✔️ ([cpp](generated/golang/runtime/timeasm.cpp), [h](generated/golang/runtime/timeasm.h))|
 | $(ImportDir)/runtime/tls_windows_amd64.go | ✔️ ([cpp](generated/golang/runtime/tls_windows_amd64.cpp), [h](generated/golang/runtime/tls_windows_amd64.h))|
-| $(ImportDir)/runtime/trace2.go | ❌ |
+| $(ImportDir)/runtime/trace2.go | ✔️ ([cpp](generated/golang/runtime/trace2.cpp), [h](generated/golang/runtime/trace2.h))|
 | $(ImportDir)/runtime/trace2buf.go | ✔️ ([cpp](generated/golang/runtime/trace2buf.cpp), [h](generated/golang/runtime/trace2buf.h))|
 | $(ImportDir)/runtime/trace2cpu.go | ✔️ ([cpp](generated/golang/runtime/trace2cpu.cpp), [h](generated/golang/runtime/trace2cpu.h))|
 | $(ImportDir)/runtime/trace2event.go | ✔️ ([cpp](generated/golang/runtime/trace2event.cpp), [h](generated/golang/runtime/trace2event.h))|

@@ -106,6 +106,31 @@ namespace golang::registry
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    KeyInfo::operator T()
+    {
+        T result;
+        result.SubKeyCount = this->SubKeyCount;
+        result.MaxSubKeyLen = this->MaxSubKeyLen;
+        result.ValueCount = this->ValueCount;
+        result.MaxValueNameLen = this->MaxValueNameLen;
+        result.MaxValueLen = this->MaxValueLen;
+        result.lastWriteTime = this->lastWriteTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool KeyInfo::operator==(const T& ref) const
+    {
+        if (SubKeyCount != ref.SubKeyCount) return false;
+        if (MaxSubKeyLen != ref.MaxSubKeyLen) return false;
+        if (ValueCount != ref.ValueCount) return false;
+        if (MaxValueNameLen != ref.MaxValueNameLen) return false;
+        if (MaxValueLen != ref.MaxValueLen) return false;
+        if (lastWriteTime != ref.lastWriteTime) return false;
+        return true;
+    }
+
     std::ostream& KeyInfo::PrintTo(std::ostream& os) const
     {
         os << '{';

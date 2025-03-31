@@ -35,6 +35,23 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    tableEntry::operator T()
+    {
+        T result;
+        result.val = this->val;
+        result.offset = this->offset;
+        return result;
+    }
+
+    template<typename T>
+    bool tableEntry::operator==(const T& ref) const
+    {
+        if (val != ref.val) return false;
+        if (offset != ref.offset) return false;
+        return true;
+    }
+
     std::ostream& tableEntry::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -50,6 +67,25 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    deflateFast::operator T()
+    {
+        T result;
+        result.table = this->table;
+        result.prev = this->prev;
+        result.cur = this->cur;
+        return result;
+    }
+
+    template<typename T>
+    bool deflateFast::operator==(const T& ref) const
+    {
+        if (table != ref.table) return false;
+        if (prev != ref.prev) return false;
+        if (cur != ref.cur) return false;
+        return true;
+    }
+
     std::ostream& deflateFast::PrintTo(std::ostream& os) const
     {
         os << '{';

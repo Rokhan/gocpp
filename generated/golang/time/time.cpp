@@ -19,6 +19,25 @@
 namespace golang::time
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Time::operator T()
+    {
+        T result;
+        result.wall = this->wall;
+        result.ext = this->ext;
+        result.loc = this->loc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Time::operator==(const T& ref) const
+    {
+        if (wall != ref.wall) return false;
+        if (ext != ref.ext) return false;
+        if (loc != ref.loc) return false;
+        return true;
+    }
+
     std::ostream& Time::PrintTo(std::ostream& os) const
     {
         os << '{';

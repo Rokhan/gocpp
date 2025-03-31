@@ -56,6 +56,35 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    timer::operator T()
+    {
+        T result;
+        result.pp = this->pp;
+        result.when = this->when;
+        result.period = this->period;
+        result.f = this->f;
+        result.arg = this->arg;
+        result.seq = this->seq;
+        result.nextwhen = this->nextwhen;
+        result.status = this->status;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool timer::operator==(const T& ref) const
+    {
+        if (pp != ref.pp) return false;
+        if (when != ref.when) return false;
+        if (period != ref.period) return false;
+        if (f != ref.f) return false;
+        if (arg != ref.arg) return false;
+        if (seq != ref.seq) return false;
+        if (nextwhen != ref.nextwhen) return false;
+        if (status != ref.status) return false;
+        return true;
+    }
+
     std::ostream& timer::PrintTo(std::ostream& os) const
     {
         os << '{';

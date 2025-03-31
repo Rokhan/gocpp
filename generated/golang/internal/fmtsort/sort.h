@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 
 namespace golang::fmtsort
 {
@@ -20,6 +20,12 @@ namespace golang::fmtsort
         gocpp::slice<reflect::Value> Value;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

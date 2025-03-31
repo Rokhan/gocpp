@@ -39,6 +39,23 @@
 namespace golang::reflect
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Value::operator T()
+    {
+        T result;
+        result.typ_ = this->typ_;
+        result.ptr = this->ptr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Value::operator==(const T& ref) const
+    {
+        if (typ_ != ref.typ_) return false;
+        if (ptr != ref.ptr) return false;
+        return true;
+    }
+
     std::ostream& Value::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -140,6 +157,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ValueError::operator T()
+    {
+        T result;
+        result.Method = this->Method;
+        result.Kind = this->Kind;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ValueError::operator==(const T& ref) const
+    {
+        if (Method != ref.Method) return false;
+        if (Kind != ref.Kind) return false;
+        return true;
+    }
+
     std::ostream& ValueError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -187,6 +221,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    emptyInterface::operator T()
+    {
+        T result;
+        result.typ = this->typ;
+        result.word = this->word;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool emptyInterface::operator==(const T& ref) const
+    {
+        if (typ != ref.typ) return false;
+        if (word != ref.word) return false;
+        return true;
+    }
+
     std::ostream& emptyInterface::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -202,6 +253,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    nonEmptyInterface::operator T()
+    {
+        T result;
+        result.itab = this->itab;
+        result.word = this->word;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool nonEmptyInterface::operator==(const T& ref) const
+    {
+        if (itab != ref.itab) return false;
+        if (word != ref.word) return false;
+        return true;
+    }
+
     std::ostream& nonEmptyInterface::PrintTo(std::ostream& os) const
     {
         os << '{';

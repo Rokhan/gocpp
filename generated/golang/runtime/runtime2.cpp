@@ -55,6 +55,21 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mutex::operator T()
+    {
+        T result;
+        result.key = this->key;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mutex::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        return true;
+    }
+
     std::ostream& mutex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -69,6 +84,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    note::operator T()
+    {
+        T result;
+        result.key = this->key;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool note::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        return true;
+    }
+
     std::ostream& note::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -83,6 +113,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    funcval::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool funcval::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        return true;
+    }
+
     std::ostream& funcval::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -97,6 +142,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    iface::operator T()
+    {
+        T result;
+        result.tab = this->tab;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool iface::operator==(const T& ref) const
+    {
+        if (tab != ref.tab) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& iface::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -112,6 +174,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    eface::operator T()
+    {
+        T result;
+        result._type = this->_type;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool eface::operator==(const T& ref) const
+    {
+        if (_type != ref._type) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& eface::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -182,6 +261,33 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gobuf::operator T()
+    {
+        T result;
+        result.sp = this->sp;
+        result.pc = this->pc;
+        result.g = this->g;
+        result.ctxt = this->ctxt;
+        result.ret = this->ret;
+        result.lr = this->lr;
+        result.bp = this->bp;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gobuf::operator==(const T& ref) const
+    {
+        if (sp != ref.sp) return false;
+        if (pc != ref.pc) return false;
+        if (g != ref.g) return false;
+        if (ctxt != ref.ctxt) return false;
+        if (ret != ref.ret) return false;
+        if (lr != ref.lr) return false;
+        if (bp != ref.bp) return false;
+        return true;
+    }
+
     std::ostream& gobuf::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -202,6 +308,47 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sudog::operator T()
+    {
+        T result;
+        result.g = this->g;
+        result.next = this->next;
+        result.prev = this->prev;
+        result.elem = this->elem;
+        result.acquiretime = this->acquiretime;
+        result.releasetime = this->releasetime;
+        result.ticket = this->ticket;
+        result.isSelect = this->isSelect;
+        result.success = this->success;
+        result.waiters = this->waiters;
+        result.parent = this->parent;
+        result.waitlink = this->waitlink;
+        result.waittail = this->waittail;
+        result.c = this->c;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sudog::operator==(const T& ref) const
+    {
+        if (g != ref.g) return false;
+        if (next != ref.next) return false;
+        if (prev != ref.prev) return false;
+        if (elem != ref.elem) return false;
+        if (acquiretime != ref.acquiretime) return false;
+        if (releasetime != ref.releasetime) return false;
+        if (ticket != ref.ticket) return false;
+        if (isSelect != ref.isSelect) return false;
+        if (success != ref.success) return false;
+        if (waiters != ref.waiters) return false;
+        if (parent != ref.parent) return false;
+        if (waitlink != ref.waitlink) return false;
+        if (waittail != ref.waittail) return false;
+        if (c != ref.c) return false;
+        return true;
+    }
+
     std::ostream& sudog::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -229,6 +376,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    libcall::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.n = this->n;
+        result.args = this->args;
+        result.r1 = this->r1;
+        result.r2 = this->r2;
+        result.err = this->err;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool libcall::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (n != ref.n) return false;
+        if (args != ref.args) return false;
+        if (r1 != ref.r1) return false;
+        if (r2 != ref.r2) return false;
+        if (err != ref.err) return false;
+        return true;
+    }
+
     std::ostream& libcall::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -248,6 +420,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stack::operator T()
+    {
+        T result;
+        result.lo = this->lo;
+        result.hi = this->hi;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stack::operator==(const T& ref) const
+    {
+        if (lo != ref.lo) return false;
+        if (hi != ref.hi) return false;
+        return true;
+    }
+
     std::ostream& stack::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -263,6 +452,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heldLockInfo::operator T()
+    {
+        T result;
+        result.lockAddr = this->lockAddr;
+        result.rank = this->rank;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heldLockInfo::operator==(const T& ref) const
+    {
+        if (lockAddr != ref.lockAddr) return false;
+        if (rank != ref.rank) return false;
+        return true;
+    }
+
     std::ostream& heldLockInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -278,6 +484,127 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    g::operator T()
+    {
+        T result;
+        result.stack = this->stack;
+        result.stackguard0 = this->stackguard0;
+        result.stackguard1 = this->stackguard1;
+        result._panic = this->_panic;
+        result._defer = this->_defer;
+        result.m = this->m;
+        result.sched = this->sched;
+        result.syscallsp = this->syscallsp;
+        result.syscallpc = this->syscallpc;
+        result.stktopsp = this->stktopsp;
+        result.param = this->param;
+        result.atomicstatus = this->atomicstatus;
+        result.stackLock = this->stackLock;
+        result.goid = this->goid;
+        result.schedlink = this->schedlink;
+        result.waitsince = this->waitsince;
+        result.waitreason = this->waitreason;
+        result.preempt = this->preempt;
+        result.preemptStop = this->preemptStop;
+        result.preemptShrink = this->preemptShrink;
+        result.asyncSafePoint = this->asyncSafePoint;
+        result.paniconfault = this->paniconfault;
+        result.gcscandone = this->gcscandone;
+        result.throwsplit = this->throwsplit;
+        result.activeStackChans = this->activeStackChans;
+        result.parkingOnChan = this->parkingOnChan;
+        result.inMarkAssist = this->inMarkAssist;
+        result.coroexit = this->coroexit;
+        result.raceignore = this->raceignore;
+        result.nocgocallback = this->nocgocallback;
+        result.tracking = this->tracking;
+        result.trackingSeq = this->trackingSeq;
+        result.trackingStamp = this->trackingStamp;
+        result.runnableTime = this->runnableTime;
+        result.lockedm = this->lockedm;
+        result.sig = this->sig;
+        result.writebuf = this->writebuf;
+        result.sigcode0 = this->sigcode0;
+        result.sigcode1 = this->sigcode1;
+        result.sigpc = this->sigpc;
+        result.parentGoid = this->parentGoid;
+        result.gopc = this->gopc;
+        result.ancestors = this->ancestors;
+        result.startpc = this->startpc;
+        result.racectx = this->racectx;
+        result.waiting = this->waiting;
+        result.cgoCtxt = this->cgoCtxt;
+        result.labels = this->labels;
+        result.timer = this->timer;
+        result.selectDone = this->selectDone;
+        result.coroarg = this->coroarg;
+        result.goroutineProfiled = this->goroutineProfiled;
+        result.trace = this->trace;
+        result.gcAssistBytes = this->gcAssistBytes;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool g::operator==(const T& ref) const
+    {
+        if (stack != ref.stack) return false;
+        if (stackguard0 != ref.stackguard0) return false;
+        if (stackguard1 != ref.stackguard1) return false;
+        if (_panic != ref._panic) return false;
+        if (_defer != ref._defer) return false;
+        if (m != ref.m) return false;
+        if (sched != ref.sched) return false;
+        if (syscallsp != ref.syscallsp) return false;
+        if (syscallpc != ref.syscallpc) return false;
+        if (stktopsp != ref.stktopsp) return false;
+        if (param != ref.param) return false;
+        if (atomicstatus != ref.atomicstatus) return false;
+        if (stackLock != ref.stackLock) return false;
+        if (goid != ref.goid) return false;
+        if (schedlink != ref.schedlink) return false;
+        if (waitsince != ref.waitsince) return false;
+        if (waitreason != ref.waitreason) return false;
+        if (preempt != ref.preempt) return false;
+        if (preemptStop != ref.preemptStop) return false;
+        if (preemptShrink != ref.preemptShrink) return false;
+        if (asyncSafePoint != ref.asyncSafePoint) return false;
+        if (paniconfault != ref.paniconfault) return false;
+        if (gcscandone != ref.gcscandone) return false;
+        if (throwsplit != ref.throwsplit) return false;
+        if (activeStackChans != ref.activeStackChans) return false;
+        if (parkingOnChan != ref.parkingOnChan) return false;
+        if (inMarkAssist != ref.inMarkAssist) return false;
+        if (coroexit != ref.coroexit) return false;
+        if (raceignore != ref.raceignore) return false;
+        if (nocgocallback != ref.nocgocallback) return false;
+        if (tracking != ref.tracking) return false;
+        if (trackingSeq != ref.trackingSeq) return false;
+        if (trackingStamp != ref.trackingStamp) return false;
+        if (runnableTime != ref.runnableTime) return false;
+        if (lockedm != ref.lockedm) return false;
+        if (sig != ref.sig) return false;
+        if (writebuf != ref.writebuf) return false;
+        if (sigcode0 != ref.sigcode0) return false;
+        if (sigcode1 != ref.sigcode1) return false;
+        if (sigpc != ref.sigpc) return false;
+        if (parentGoid != ref.parentGoid) return false;
+        if (gopc != ref.gopc) return false;
+        if (ancestors != ref.ancestors) return false;
+        if (startpc != ref.startpc) return false;
+        if (racectx != ref.racectx) return false;
+        if (waiting != ref.waiting) return false;
+        if (cgoCtxt != ref.cgoCtxt) return false;
+        if (labels != ref.labels) return false;
+        if (timer != ref.timer) return false;
+        if (selectDone != ref.selectDone) return false;
+        if (coroarg != ref.coroarg) return false;
+        if (goroutineProfiled != ref.goroutineProfiled) return false;
+        if (trace != ref.trace) return false;
+        if (gcAssistBytes != ref.gcAssistBytes) return false;
+        return true;
+    }
+
     std::ostream& g::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -345,6 +672,153 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    m::operator T()
+    {
+        T result;
+        result.g0 = this->g0;
+        result.morebuf = this->morebuf;
+        result.divmod = this->divmod;
+        result._ = this->_;
+        result.procid = this->procid;
+        result.gsignal = this->gsignal;
+        result.goSigStack = this->goSigStack;
+        result.sigmask = this->sigmask;
+        result.tls = this->tls;
+        result.mstartfn = this->mstartfn;
+        result.curg = this->curg;
+        result.caughtsig = this->caughtsig;
+        result.p = this->p;
+        result.nextp = this->nextp;
+        result.oldp = this->oldp;
+        result.id = this->id;
+        result.mallocing = this->mallocing;
+        result.throwing = this->throwing;
+        result.preemptoff = this->preemptoff;
+        result.locks = this->locks;
+        result.dying = this->dying;
+        result.profilehz = this->profilehz;
+        result.spinning = this->spinning;
+        result.blocked = this->blocked;
+        result.newSigstack = this->newSigstack;
+        result.printlock = this->printlock;
+        result.incgo = this->incgo;
+        result.isextra = this->isextra;
+        result.isExtraInC = this->isExtraInC;
+        result.isExtraInSig = this->isExtraInSig;
+        result.freeWait = this->freeWait;
+        result.needextram = this->needextram;
+        result.traceback = this->traceback;
+        result.ncgocall = this->ncgocall;
+        result.ncgo = this->ncgo;
+        result.cgoCallersUse = this->cgoCallersUse;
+        result.cgoCallers = this->cgoCallers;
+        result.park = this->park;
+        result.alllink = this->alllink;
+        result.schedlink = this->schedlink;
+        result.lockedg = this->lockedg;
+        result.createstack = this->createstack;
+        result.lockedExt = this->lockedExt;
+        result.lockedInt = this->lockedInt;
+        result.nextwaitm = this->nextwaitm;
+        result.mLockProfile = this->mLockProfile;
+        result.waitunlockf = this->waitunlockf;
+        result.waitlock = this->waitlock;
+        result.waitTraceBlockReason = this->waitTraceBlockReason;
+        result.waitTraceSkip = this->waitTraceSkip;
+        result.syscalltick = this->syscalltick;
+        result.freelink = this->freelink;
+        result.trace = this->trace;
+        result.libcall = this->libcall;
+        result.libcallpc = this->libcallpc;
+        result.libcallsp = this->libcallsp;
+        result.libcallg = this->libcallg;
+        result.syscall = this->syscall;
+        result.vdsoSP = this->vdsoSP;
+        result.vdsoPC = this->vdsoPC;
+        result.preemptGen = this->preemptGen;
+        result.signalPending = this->signalPending;
+        result.pcvalueCache = this->pcvalueCache;
+        result.chacha8 = this->chacha8;
+        result.cheaprand = this->cheaprand;
+        result.locksHeldLen = this->locksHeldLen;
+        result.locksHeld = this->locksHeld;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool m::operator==(const T& ref) const
+    {
+        if (g0 != ref.g0) return false;
+        if (morebuf != ref.morebuf) return false;
+        if (divmod != ref.divmod) return false;
+        if (_ != ref._) return false;
+        if (procid != ref.procid) return false;
+        if (gsignal != ref.gsignal) return false;
+        if (goSigStack != ref.goSigStack) return false;
+        if (sigmask != ref.sigmask) return false;
+        if (tls != ref.tls) return false;
+        if (mstartfn != ref.mstartfn) return false;
+        if (curg != ref.curg) return false;
+        if (caughtsig != ref.caughtsig) return false;
+        if (p != ref.p) return false;
+        if (nextp != ref.nextp) return false;
+        if (oldp != ref.oldp) return false;
+        if (id != ref.id) return false;
+        if (mallocing != ref.mallocing) return false;
+        if (throwing != ref.throwing) return false;
+        if (preemptoff != ref.preemptoff) return false;
+        if (locks != ref.locks) return false;
+        if (dying != ref.dying) return false;
+        if (profilehz != ref.profilehz) return false;
+        if (spinning != ref.spinning) return false;
+        if (blocked != ref.blocked) return false;
+        if (newSigstack != ref.newSigstack) return false;
+        if (printlock != ref.printlock) return false;
+        if (incgo != ref.incgo) return false;
+        if (isextra != ref.isextra) return false;
+        if (isExtraInC != ref.isExtraInC) return false;
+        if (isExtraInSig != ref.isExtraInSig) return false;
+        if (freeWait != ref.freeWait) return false;
+        if (needextram != ref.needextram) return false;
+        if (traceback != ref.traceback) return false;
+        if (ncgocall != ref.ncgocall) return false;
+        if (ncgo != ref.ncgo) return false;
+        if (cgoCallersUse != ref.cgoCallersUse) return false;
+        if (cgoCallers != ref.cgoCallers) return false;
+        if (park != ref.park) return false;
+        if (alllink != ref.alllink) return false;
+        if (schedlink != ref.schedlink) return false;
+        if (lockedg != ref.lockedg) return false;
+        if (createstack != ref.createstack) return false;
+        if (lockedExt != ref.lockedExt) return false;
+        if (lockedInt != ref.lockedInt) return false;
+        if (nextwaitm != ref.nextwaitm) return false;
+        if (mLockProfile != ref.mLockProfile) return false;
+        if (waitunlockf != ref.waitunlockf) return false;
+        if (waitlock != ref.waitlock) return false;
+        if (waitTraceBlockReason != ref.waitTraceBlockReason) return false;
+        if (waitTraceSkip != ref.waitTraceSkip) return false;
+        if (syscalltick != ref.syscalltick) return false;
+        if (freelink != ref.freelink) return false;
+        if (trace != ref.trace) return false;
+        if (libcall != ref.libcall) return false;
+        if (libcallpc != ref.libcallpc) return false;
+        if (libcallsp != ref.libcallsp) return false;
+        if (libcallg != ref.libcallg) return false;
+        if (syscall != ref.syscall) return false;
+        if (vdsoSP != ref.vdsoSP) return false;
+        if (vdsoPC != ref.vdsoPC) return false;
+        if (preemptGen != ref.preemptGen) return false;
+        if (signalPending != ref.signalPending) return false;
+        if (pcvalueCache != ref.pcvalueCache) return false;
+        if (chacha8 != ref.chacha8) return false;
+        if (cheaprand != ref.cheaprand) return false;
+        if (locksHeldLen != ref.locksHeldLen) return false;
+        if (locksHeld != ref.locksHeld) return false;
+        return true;
+    }
+
     std::ostream& m::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -425,6 +899,111 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    p::operator T()
+    {
+        T result;
+        result.id = this->id;
+        result.status = this->status;
+        result.link = this->link;
+        result.schedtick = this->schedtick;
+        result.syscalltick = this->syscalltick;
+        result.sysmontick = this->sysmontick;
+        result.m = this->m;
+        result.mcache = this->mcache;
+        result.pcache = this->pcache;
+        result.raceprocctx = this->raceprocctx;
+        result.deferpool = this->deferpool;
+        result.deferpoolbuf = this->deferpoolbuf;
+        result.goidcache = this->goidcache;
+        result.goidcacheend = this->goidcacheend;
+        result.runqhead = this->runqhead;
+        result.runqtail = this->runqtail;
+        result.runq = this->runq;
+        result.runnext = this->runnext;
+        result.gFree = this->gFree;
+        result.sudogcache = this->sudogcache;
+        result.sudogbuf = this->sudogbuf;
+        result.mspancache = this->mspancache;
+        result.pinnerCache = this->pinnerCache;
+        result.trace = this->trace;
+        result.palloc = this->palloc;
+        result.timer0When = this->timer0When;
+        result.timerModifiedEarliest = this->timerModifiedEarliest;
+        result.gcAssistTime = this->gcAssistTime;
+        result.gcFractionalMarkTime = this->gcFractionalMarkTime;
+        result.limiterEvent = this->limiterEvent;
+        result.gcMarkWorkerMode = this->gcMarkWorkerMode;
+        result.gcMarkWorkerStartTime = this->gcMarkWorkerStartTime;
+        result.gcw = this->gcw;
+        result.wbBuf = this->wbBuf;
+        result.runSafePointFn = this->runSafePointFn;
+        result.statsSeq = this->statsSeq;
+        result.timersLock = this->timersLock;
+        result.timers = this->timers;
+        result.numTimers = this->numTimers;
+        result.deletedTimers = this->deletedTimers;
+        result.timerRaceCtx = this->timerRaceCtx;
+        result.maxStackScanDelta = this->maxStackScanDelta;
+        result.scannedStackSize = this->scannedStackSize;
+        result.scannedStacks = this->scannedStacks;
+        result.preempt = this->preempt;
+        result.pageTraceBuf = this->pageTraceBuf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool p::operator==(const T& ref) const
+    {
+        if (id != ref.id) return false;
+        if (status != ref.status) return false;
+        if (link != ref.link) return false;
+        if (schedtick != ref.schedtick) return false;
+        if (syscalltick != ref.syscalltick) return false;
+        if (sysmontick != ref.sysmontick) return false;
+        if (m != ref.m) return false;
+        if (mcache != ref.mcache) return false;
+        if (pcache != ref.pcache) return false;
+        if (raceprocctx != ref.raceprocctx) return false;
+        if (deferpool != ref.deferpool) return false;
+        if (deferpoolbuf != ref.deferpoolbuf) return false;
+        if (goidcache != ref.goidcache) return false;
+        if (goidcacheend != ref.goidcacheend) return false;
+        if (runqhead != ref.runqhead) return false;
+        if (runqtail != ref.runqtail) return false;
+        if (runq != ref.runq) return false;
+        if (runnext != ref.runnext) return false;
+        if (gFree != ref.gFree) return false;
+        if (sudogcache != ref.sudogcache) return false;
+        if (sudogbuf != ref.sudogbuf) return false;
+        if (mspancache != ref.mspancache) return false;
+        if (pinnerCache != ref.pinnerCache) return false;
+        if (trace != ref.trace) return false;
+        if (palloc != ref.palloc) return false;
+        if (timer0When != ref.timer0When) return false;
+        if (timerModifiedEarliest != ref.timerModifiedEarliest) return false;
+        if (gcAssistTime != ref.gcAssistTime) return false;
+        if (gcFractionalMarkTime != ref.gcFractionalMarkTime) return false;
+        if (limiterEvent != ref.limiterEvent) return false;
+        if (gcMarkWorkerMode != ref.gcMarkWorkerMode) return false;
+        if (gcMarkWorkerStartTime != ref.gcMarkWorkerStartTime) return false;
+        if (gcw != ref.gcw) return false;
+        if (wbBuf != ref.wbBuf) return false;
+        if (runSafePointFn != ref.runSafePointFn) return false;
+        if (statsSeq != ref.statsSeq) return false;
+        if (timersLock != ref.timersLock) return false;
+        if (timers != ref.timers) return false;
+        if (numTimers != ref.numTimers) return false;
+        if (deletedTimers != ref.deletedTimers) return false;
+        if (timerRaceCtx != ref.timerRaceCtx) return false;
+        if (maxStackScanDelta != ref.maxStackScanDelta) return false;
+        if (scannedStackSize != ref.scannedStackSize) return false;
+        if (scannedStacks != ref.scannedStacks) return false;
+        if (preempt != ref.preempt) return false;
+        if (pageTraceBuf != ref.pageTraceBuf) return false;
+        return true;
+    }
+
     std::ostream& p::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -484,6 +1063,109 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    schedt::operator T()
+    {
+        T result;
+        result.goidgen = this->goidgen;
+        result.lastpoll = this->lastpoll;
+        result.pollUntil = this->pollUntil;
+        result.lock = this->lock;
+        result.midle = this->midle;
+        result.nmidle = this->nmidle;
+        result.nmidlelocked = this->nmidlelocked;
+        result.mnext = this->mnext;
+        result.maxmcount = this->maxmcount;
+        result.nmsys = this->nmsys;
+        result.nmfreed = this->nmfreed;
+        result.ngsys = this->ngsys;
+        result.pidle = this->pidle;
+        result.npidle = this->npidle;
+        result.nmspinning = this->nmspinning;
+        result.needspinning = this->needspinning;
+        result.runq = this->runq;
+        result.runqsize = this->runqsize;
+        result.disable = this->disable;
+        result.gFree = this->gFree;
+        result.sudoglock = this->sudoglock;
+        result.sudogcache = this->sudogcache;
+        result.deferlock = this->deferlock;
+        result.deferpool = this->deferpool;
+        result.freem = this->freem;
+        result.gcwaiting = this->gcwaiting;
+        result.stopwait = this->stopwait;
+        result.stopnote = this->stopnote;
+        result.sysmonwait = this->sysmonwait;
+        result.sysmonnote = this->sysmonnote;
+        result.safePointFn = this->safePointFn;
+        result.safePointWait = this->safePointWait;
+        result.safePointNote = this->safePointNote;
+        result.profilehz = this->profilehz;
+        result.procresizetime = this->procresizetime;
+        result.totaltime = this->totaltime;
+        result.sysmonlock = this->sysmonlock;
+        result.timeToRun = this->timeToRun;
+        result.idleTime = this->idleTime;
+        result.totalMutexWaitTime = this->totalMutexWaitTime;
+        result.stwStoppingTimeGC = this->stwStoppingTimeGC;
+        result.stwStoppingTimeOther = this->stwStoppingTimeOther;
+        result.stwTotalTimeGC = this->stwTotalTimeGC;
+        result.stwTotalTimeOther = this->stwTotalTimeOther;
+        result.totalRuntimeLockWaitTime = this->totalRuntimeLockWaitTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool schedt::operator==(const T& ref) const
+    {
+        if (goidgen != ref.goidgen) return false;
+        if (lastpoll != ref.lastpoll) return false;
+        if (pollUntil != ref.pollUntil) return false;
+        if (lock != ref.lock) return false;
+        if (midle != ref.midle) return false;
+        if (nmidle != ref.nmidle) return false;
+        if (nmidlelocked != ref.nmidlelocked) return false;
+        if (mnext != ref.mnext) return false;
+        if (maxmcount != ref.maxmcount) return false;
+        if (nmsys != ref.nmsys) return false;
+        if (nmfreed != ref.nmfreed) return false;
+        if (ngsys != ref.ngsys) return false;
+        if (pidle != ref.pidle) return false;
+        if (npidle != ref.npidle) return false;
+        if (nmspinning != ref.nmspinning) return false;
+        if (needspinning != ref.needspinning) return false;
+        if (runq != ref.runq) return false;
+        if (runqsize != ref.runqsize) return false;
+        if (disable != ref.disable) return false;
+        if (gFree != ref.gFree) return false;
+        if (sudoglock != ref.sudoglock) return false;
+        if (sudogcache != ref.sudogcache) return false;
+        if (deferlock != ref.deferlock) return false;
+        if (deferpool != ref.deferpool) return false;
+        if (freem != ref.freem) return false;
+        if (gcwaiting != ref.gcwaiting) return false;
+        if (stopwait != ref.stopwait) return false;
+        if (stopnote != ref.stopnote) return false;
+        if (sysmonwait != ref.sysmonwait) return false;
+        if (sysmonnote != ref.sysmonnote) return false;
+        if (safePointFn != ref.safePointFn) return false;
+        if (safePointWait != ref.safePointWait) return false;
+        if (safePointNote != ref.safePointNote) return false;
+        if (profilehz != ref.profilehz) return false;
+        if (procresizetime != ref.procresizetime) return false;
+        if (totaltime != ref.totaltime) return false;
+        if (sysmonlock != ref.sysmonlock) return false;
+        if (timeToRun != ref.timeToRun) return false;
+        if (idleTime != ref.idleTime) return false;
+        if (totalMutexWaitTime != ref.totalMutexWaitTime) return false;
+        if (stwStoppingTimeGC != ref.stwStoppingTimeGC) return false;
+        if (stwStoppingTimeOther != ref.stwStoppingTimeOther) return false;
+        if (stwTotalTimeGC != ref.stwTotalTimeGC) return false;
+        if (stwTotalTimeOther != ref.stwTotalTimeOther) return false;
+        if (totalRuntimeLockWaitTime != ref.totalRuntimeLockWaitTime) return false;
+        return true;
+    }
+
     std::ostream& schedt::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -542,6 +1224,47 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _func::operator T()
+    {
+        T result;
+        result.entryOff = this->entryOff;
+        result.nameOff = this->nameOff;
+        result.args = this->args;
+        result.deferreturn = this->deferreturn;
+        result.pcsp = this->pcsp;
+        result.pcfile = this->pcfile;
+        result.pcln = this->pcln;
+        result.npcdata = this->npcdata;
+        result.cuOffset = this->cuOffset;
+        result.startLine = this->startLine;
+        result.funcID = this->funcID;
+        result.flag = this->flag;
+        result._ = this->_;
+        result.nfuncdata = this->nfuncdata;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _func::operator==(const T& ref) const
+    {
+        if (entryOff != ref.entryOff) return false;
+        if (nameOff != ref.nameOff) return false;
+        if (args != ref.args) return false;
+        if (deferreturn != ref.deferreturn) return false;
+        if (pcsp != ref.pcsp) return false;
+        if (pcfile != ref.pcfile) return false;
+        if (pcln != ref.pcln) return false;
+        if (npcdata != ref.npcdata) return false;
+        if (cuOffset != ref.cuOffset) return false;
+        if (startLine != ref.startLine) return false;
+        if (funcID != ref.funcID) return false;
+        if (flag != ref.flag) return false;
+        if (_ != ref._) return false;
+        if (nfuncdata != ref.nfuncdata) return false;
+        return true;
+    }
+
     std::ostream& _func::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -569,6 +1292,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    funcinl::operator T()
+    {
+        T result;
+        result.ones = this->ones;
+        result.entry = this->entry;
+        result.name = this->name;
+        result.file = this->file;
+        result.line = this->line;
+        result.startLine = this->startLine;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool funcinl::operator==(const T& ref) const
+    {
+        if (ones != ref.ones) return false;
+        if (entry != ref.entry) return false;
+        if (name != ref.name) return false;
+        if (file != ref.file) return false;
+        if (line != ref.line) return false;
+        if (startLine != ref.startLine) return false;
+        return true;
+    }
+
     std::ostream& funcinl::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -588,6 +1336,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    itab::operator T()
+    {
+        T result;
+        result.inter = this->inter;
+        result._type = this->_type;
+        result.hash = this->hash;
+        result._ = this->_;
+        result.fun = this->fun;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool itab::operator==(const T& ref) const
+    {
+        if (inter != ref.inter) return false;
+        if (_type != ref._type) return false;
+        if (hash != ref.hash) return false;
+        if (_ != ref._) return false;
+        if (fun != ref.fun) return false;
+        return true;
+    }
+
     std::ostream& itab::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -606,6 +1377,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    lfnode::operator T()
+    {
+        T result;
+        result.next = this->next;
+        result.pushcnt = this->pushcnt;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool lfnode::operator==(const T& ref) const
+    {
+        if (next != ref.next) return false;
+        if (pushcnt != ref.pushcnt) return false;
+        return true;
+    }
+
     std::ostream& lfnode::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -621,6 +1409,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    forcegcstate::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.g = this->g;
+        result.idle = this->idle;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool forcegcstate::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (g != ref.g) return false;
+        if (idle != ref.idle) return false;
+        return true;
+    }
+
     std::ostream& forcegcstate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -637,6 +1444,33 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _defer::operator T()
+    {
+        T result;
+        result.heap = this->heap;
+        result.rangefunc = this->rangefunc;
+        result.sp = this->sp;
+        result.pc = this->pc;
+        result.fn = this->fn;
+        result.link = this->link;
+        result.head = this->head;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _defer::operator==(const T& ref) const
+    {
+        if (heap != ref.heap) return false;
+        if (rangefunc != ref.rangefunc) return false;
+        if (sp != ref.sp) return false;
+        if (pc != ref.pc) return false;
+        if (fn != ref.fn) return false;
+        if (link != ref.link) return false;
+        if (head != ref.head) return false;
+        return true;
+    }
+
     std::ostream& _defer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -657,6 +1491,47 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _panic::operator T()
+    {
+        T result;
+        result.argp = this->argp;
+        result.arg = this->arg;
+        result.link = this->link;
+        result.startPC = this->startPC;
+        result.startSP = this->startSP;
+        result.sp = this->sp;
+        result.lr = this->lr;
+        result.fp = this->fp;
+        result.retpc = this->retpc;
+        result.deferBitsPtr = this->deferBitsPtr;
+        result.slotsPtr = this->slotsPtr;
+        result.recovered = this->recovered;
+        result.goexit = this->goexit;
+        result.deferreturn = this->deferreturn;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _panic::operator==(const T& ref) const
+    {
+        if (argp != ref.argp) return false;
+        if (arg != ref.arg) return false;
+        if (link != ref.link) return false;
+        if (startPC != ref.startPC) return false;
+        if (startSP != ref.startSP) return false;
+        if (sp != ref.sp) return false;
+        if (lr != ref.lr) return false;
+        if (fp != ref.fp) return false;
+        if (retpc != ref.retpc) return false;
+        if (deferBitsPtr != ref.deferBitsPtr) return false;
+        if (slotsPtr != ref.slotsPtr) return false;
+        if (recovered != ref.recovered) return false;
+        if (goexit != ref.goexit) return false;
+        if (deferreturn != ref.deferreturn) return false;
+        return true;
+    }
+
     std::ostream& _panic::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -684,6 +1559,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    savedOpenDeferState::operator T()
+    {
+        T result;
+        result.retpc = this->retpc;
+        result.deferBitsOffset = this->deferBitsOffset;
+        result.slotsOffset = this->slotsOffset;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool savedOpenDeferState::operator==(const T& ref) const
+    {
+        if (retpc != ref.retpc) return false;
+        if (deferBitsOffset != ref.deferBitsOffset) return false;
+        if (slotsOffset != ref.slotsOffset) return false;
+        return true;
+    }
+
     std::ostream& savedOpenDeferState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -700,6 +1594,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ancestorInfo::operator T()
+    {
+        T result;
+        result.pcs = this->pcs;
+        result.goid = this->goid;
+        result.gopc = this->gopc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ancestorInfo::operator==(const T& ref) const
+    {
+        if (pcs != ref.pcs) return false;
+        if (goid != ref.goid) return false;
+        if (gopc != ref.gopc) return false;
+        return true;
+    }
+
     std::ostream& ancestorInfo::PrintTo(std::ostream& os) const
     {
         os << '{';

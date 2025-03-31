@@ -14,6 +14,19 @@
 namespace golang::sys
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    nih::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool nih::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& nih::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -27,6 +40,21 @@ namespace golang::sys
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    NotInHeap::operator T()
+    {
+        T result;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool NotInHeap::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& NotInHeap::PrintTo(std::ostream& os) const
     {
         os << '{';

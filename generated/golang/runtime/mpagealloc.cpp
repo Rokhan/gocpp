@@ -100,6 +100,43 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pageAlloc::operator T()
+    {
+        T result;
+        result.summary = this->summary;
+        result.chunks = this->chunks;
+        result.searchAddr = this->searchAddr;
+        result.start = this->start;
+        result.end = this->end;
+        result.inUse = this->inUse;
+        result.scav = this->scav;
+        result.mheapLock = this->mheapLock;
+        result.sysStat = this->sysStat;
+        result.summaryMappedReady = this->summaryMappedReady;
+        result.chunkHugePages = this->chunkHugePages;
+        result.test = this->test;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pageAlloc::operator==(const T& ref) const
+    {
+        if (summary != ref.summary) return false;
+        if (chunks != ref.chunks) return false;
+        if (searchAddr != ref.searchAddr) return false;
+        if (start != ref.start) return false;
+        if (end != ref.end) return false;
+        if (inUse != ref.inUse) return false;
+        if (scav != ref.scav) return false;
+        if (mheapLock != ref.mheapLock) return false;
+        if (sysStat != ref.sysStat) return false;
+        if (summaryMappedReady != ref.summaryMappedReady) return false;
+        if (chunkHugePages != ref.chunkHugePages) return false;
+        if (test != ref.test) return false;
+        return true;
+    }
+
     std::ostream& pageAlloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -356,6 +393,23 @@ namespace golang::runtime
 
             using isGoStruct = void;
 
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.base = this->base;
+                result.bound = this->bound;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (base != ref.base) return false;
+                if (bound != ref.bound) return false;
+                return true;
+            }
+
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
@@ -378,6 +432,23 @@ namespace golang::runtime
             offAddr bound;
 
             using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.base = this->base;
+                result.bound = this->bound;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (base != ref.base) return false;
+                if (bound != ref.bound) return false;
+                return true;
+            }
 
             std::ostream& PrintTo(std::ostream& os) const
             {

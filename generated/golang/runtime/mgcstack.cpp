@@ -22,6 +22,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackWorkBuf::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.obj = this->obj;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackWorkBuf::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (obj != ref.obj) return false;
+        return true;
+    }
+
     std::ostream& stackWorkBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -37,6 +54,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackWorkBufHdr::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackWorkBufHdr::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& stackWorkBufHdr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -52,6 +86,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackObjectBuf::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.obj = this->obj;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackObjectBuf::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (obj != ref.obj) return false;
+        return true;
+    }
+
     std::ostream& stackObjectBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -67,6 +118,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackObjectBufHdr::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackObjectBufHdr::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& stackObjectBufHdr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -94,6 +162,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackObject::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.off = this->off;
+        result.size = this->size;
+        result.r = this->r;
+        result.left = this->left;
+        result.right = this->right;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackObject::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (off != ref.off) return false;
+        if (size != ref.size) return false;
+        if (r != ref.r) return false;
+        if (left != ref.left) return false;
+        if (right != ref.right) return false;
+        return true;
+    }
+
     std::ostream& stackObject::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -118,6 +211,37 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackScanState::operator T()
+    {
+        T result;
+        result.stack = this->stack;
+        result.conservative = this->conservative;
+        result.buf = this->buf;
+        result.freeBuf = this->freeBuf;
+        result.cbuf = this->cbuf;
+        result.head = this->head;
+        result.tail = this->tail;
+        result.nobjs = this->nobjs;
+        result.root = this->root;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackScanState::operator==(const T& ref) const
+    {
+        if (stack != ref.stack) return false;
+        if (conservative != ref.conservative) return false;
+        if (buf != ref.buf) return false;
+        if (freeBuf != ref.freeBuf) return false;
+        if (cbuf != ref.cbuf) return false;
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        if (nobjs != ref.nobjs) return false;
+        if (root != ref.root) return false;
+        return true;
+    }
+
     std::ostream& stackScanState::PrintTo(std::ostream& os) const
     {
         os << '{';

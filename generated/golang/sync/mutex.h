@@ -21,6 +21,12 @@ namespace golang::sync
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -42,7 +48,7 @@ namespace golang::sync
         template<typename T>
         Locker(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 

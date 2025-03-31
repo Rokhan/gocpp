@@ -74,6 +74,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TypeAssertionError::operator T()
+    {
+        T result;
+        result._interface = this->_interface;
+        result.concrete = this->concrete;
+        result.asserted = this->asserted;
+        result.missingMethod = this->missingMethod;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TypeAssertionError::operator==(const T& ref) const
+    {
+        if (_interface != ref._interface) return false;
+        if (concrete != ref.concrete) return false;
+        if (asserted != ref.asserted) return false;
+        if (missingMethod != ref.missingMethod) return false;
+        return true;
+    }
+
     std::ostream& TypeAssertionError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -149,6 +170,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    errorAddressString::operator T()
+    {
+        T result;
+        result.msg = this->msg;
+        result.addr = this->addr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool errorAddressString::operator==(const T& ref) const
+    {
+        if (msg != ref.msg) return false;
+        if (addr != ref.addr) return false;
+        return true;
+    }
+
     std::ostream& errorAddressString::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -187,6 +225,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    boundsError::operator T()
+    {
+        T result;
+        result.x = this->x;
+        result.y = this->y;
+        result.go_signed = this->go_signed;
+        result.code = this->code;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool boundsError::operator==(const T& ref) const
+    {
+        if (x != ref.x) return false;
+        if (y != ref.y) return false;
+        if (go_signed != ref.go_signed) return false;
+        if (code != ref.code) return false;
+        return true;
+    }
+
     std::ostream& boundsError::PrintTo(std::ostream& os) const
     {
         os << '{';

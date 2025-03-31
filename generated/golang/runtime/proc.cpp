@@ -1101,6 +1101,23 @@ namespace golang::runtime
 
     gocpp::array_base<std::string> stwReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.stwUnknown = "unknown"; x.stwGCMarkTerm = "GC mark termination"; x.stwGCSweepTerm = "GC sweep termination"; x.stwWriteHeapDump = "write heap dump"; x.stwGoroutineProfile = "goroutine profile"; x.stwGoroutineProfileCleanup = "goroutine profile cleanup"; x.stwAllGoroutinesStack = "all goroutines stack trace"; x.stwReadMemStats = "read mem stats"; x.stwAllThreadsSyscall = "AllThreadsSyscall"; x.stwGOMAXPROCS = "GOMAXPROCS"; x.stwStartTrace = "start trace"; x.stwStopTrace = "stop trace"; x.stwForTestCountPagesInUse = "CountPagesInUse (test)"; x.stwForTestReadMetricsSlow = "ReadMetricsSlow (test)"; x.stwForTestReadMemStatsSlow = "ReadMemStatsSlow (test)"; x.stwForTestPageCachePagesLeaked = "PageCachePagesLeaked (test)"; x.stwForTestResetDebugLog = "ResetDebugLog (test)"; });
     
+    template<typename T> requires gocpp::GoStruct<T>
+    worldStop::operator T()
+    {
+        T result;
+        result.reason = this->reason;
+        result.start = this->start;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool worldStop::operator==(const T& ref) const
+    {
+        if (reason != ref.reason) return false;
+        if (start != ref.start) return false;
+        return true;
+    }
+
     std::ostream& worldStop::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1631,6 +1648,25 @@ namespace golang::runtime
 
     unsafe::Pointer cgoThreadStart;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cgothreadstart::operator T()
+    {
+        T result;
+        result.g = this->g;
+        result.tls = this->tls;
+        result.fn = this->fn;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cgothreadstart::operator==(const T& ref) const
+    {
+        if (g != ref.g) return false;
+        if (tls != ref.tls) return false;
+        if (fn != ref.fn) return false;
+        return true;
+    }
+
     std::ostream& cgothreadstart::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1950,6 +1986,29 @@ namespace golang::runtime
         uint32_t haveTemplateThread;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.newm = this->newm;
+            result.waiting = this->waiting;
+            result.wake = this->wake;
+            result.haveTemplateThread = this->haveTemplateThread;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (newm != ref.newm) return false;
+            if (waiting != ref.waiting) return false;
+            if (wake != ref.wake) return false;
+            if (haveTemplateThread != ref.haveTemplateThread) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -4356,6 +4415,23 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.signalLock = this->signalLock;
+            result.hz = this->hz;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (signalLock != ref.signalLock) return false;
+            if (hz != ref.hz) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -5099,6 +5175,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sysmontick::operator T()
+    {
+        T result;
+        result.schedtick = this->schedtick;
+        result.schedwhen = this->schedwhen;
+        result.syscalltick = this->syscalltick;
+        result.syscallwhen = this->syscallwhen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sysmontick::operator==(const T& ref) const
+    {
+        if (schedtick != ref.schedtick) return false;
+        if (schedwhen != ref.schedwhen) return false;
+        if (syscalltick != ref.syscalltick) return false;
+        if (syscallwhen != ref.syscallwhen) return false;
+        return true;
+    }
+
     std::ostream& sysmontick::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -5807,6 +5904,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gQueue::operator T()
+    {
+        T result;
+        result.head = this->head;
+        result.tail = this->tail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gQueue::operator==(const T& ref) const
+    {
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        return true;
+    }
+
     std::ostream& gQueue::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -5890,6 +6004,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gList::operator T()
+    {
+        T result;
+        result.head = this->head;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gList::operator==(const T& ref) const
+    {
+        if (head != ref.head) return false;
+        return true;
+    }
+
     std::ostream& gList::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -6007,6 +6136,23 @@ namespace golang::runtime
 
     randomOrder stealOrder;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    randomOrder::operator T()
+    {
+        T result;
+        result.count = this->count;
+        result.coprimes = this->coprimes;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool randomOrder::operator==(const T& ref) const
+    {
+        if (count != ref.count) return false;
+        if (coprimes != ref.coprimes) return false;
+        return true;
+    }
+
     std::ostream& randomOrder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -6022,6 +6168,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    randomEnum::operator T()
+    {
+        T result;
+        result.i = this->i;
+        result.count = this->count;
+        result.pos = this->pos;
+        result.inc = this->inc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool randomEnum::operator==(const T& ref) const
+    {
+        if (i != ref.i) return false;
+        if (count != ref.count) return false;
+        if (pos != ref.pos) return false;
+        if (inc != ref.inc) return false;
+        return true;
+    }
+
     std::ostream& randomEnum::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -6082,6 +6249,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    initTask::operator T()
+    {
+        T result;
+        result.state = this->state;
+        result.nfns = this->nfns;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool initTask::operator==(const T& ref) const
+    {
+        if (state != ref.state) return false;
+        if (nfns != ref.nfns) return false;
+        return true;
+    }
+
     std::ostream& initTask::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -6098,6 +6282,27 @@ namespace golang::runtime
 
     tracestat inittrace;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    tracestat::operator T()
+    {
+        T result;
+        result.active = this->active;
+        result.id = this->id;
+        result.allocs = this->allocs;
+        result.bytes = this->bytes;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool tracestat::operator==(const T& ref) const
+    {
+        if (active != ref.active) return false;
+        if (id != ref.id) return false;
+        if (allocs != ref.allocs) return false;
+        if (bytes != ref.bytes) return false;
+        return true;
+    }
+
     std::ostream& tracestat::PrintTo(std::ostream& os) const
     {
         os << '{';

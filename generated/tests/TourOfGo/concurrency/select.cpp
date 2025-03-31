@@ -40,6 +40,88 @@ namespace golang::main
         }
     }
 
+    struct gocpp_id_0
+        {
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
+    struct gocpp_id_1
+            {
+
+                using isGoStruct = void;
+
+                template<typename T> requires gocpp::GoStruct<T>
+                operator T()
+                {
+                    T result;
+                    return result;
+                }
+
+                template<typename T> requires gocpp::GoStruct<T>
+                bool operator==(const T& ref) const
+                {
+                    return true;
+                }
+
+                std::ostream& PrintTo(std::ostream& os) const
+                {
+                    os << '{';
+                    os << '}';
+                    return os;
+                }
+            };
+
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+            {
+                return value.PrintTo(os);
+            }
+
+
+    void testInlinedType()
+    {
+        gocpp::channel<gocpp_id_0> wakeup = {};
+        //Go select emulation
+        {
+            int conditionId = -1;
+            if(wakeup.trySend(gocpp_id_1 {})) { conditionId = 0; }
+            switch(conditionId)
+            {
+                case 0:
+                    break;
+                default:
+                    break;
+            }
+        }
+        std::this_thread::yield();
+    }
+
     void main()
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());

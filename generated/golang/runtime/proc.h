@@ -105,6 +105,12 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -135,6 +141,12 @@ namespace golang::runtime
         unsafe::Pointer fn;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -256,6 +268,12 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -294,6 +312,12 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -309,6 +333,12 @@ namespace golang::runtime
         guintptr head;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -334,6 +364,12 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -346,6 +382,12 @@ namespace golang::runtime
         uint32_t inc;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -364,6 +406,12 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -376,6 +424,12 @@ namespace golang::runtime
         uint64_t bytes;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

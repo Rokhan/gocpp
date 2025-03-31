@@ -37,7 +37,7 @@ namespace golang::io
         template<typename T>
         Reader(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -83,7 +83,7 @@ namespace golang::io
         template<typename T>
         Writer(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -129,7 +129,7 @@ namespace golang::io
         template<typename T>
         Closer(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -175,7 +175,7 @@ namespace golang::io
         template<typename T>
         Seeker(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -221,7 +221,7 @@ namespace golang::io
         template<typename T>
         ReadWriter(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -261,7 +261,7 @@ namespace golang::io
         template<typename T>
         ReadCloser(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -301,7 +301,7 @@ namespace golang::io
         template<typename T>
         WriteCloser(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -341,7 +341,7 @@ namespace golang::io
         template<typename T>
         ReadWriteCloser(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -381,7 +381,7 @@ namespace golang::io
         template<typename T>
         ReadSeeker(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -421,7 +421,7 @@ namespace golang::io
         template<typename T>
         ReadSeekCloser(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -461,7 +461,7 @@ namespace golang::io
         template<typename T>
         WriteSeeker(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -501,7 +501,7 @@ namespace golang::io
         template<typename T>
         ReadWriteSeeker(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -541,7 +541,7 @@ namespace golang::io
         template<typename T>
         ReaderFrom(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -587,7 +587,7 @@ namespace golang::io
         template<typename T>
         WriterTo(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -633,7 +633,7 @@ namespace golang::io
         template<typename T>
         ReaderAt(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -679,7 +679,7 @@ namespace golang::io
         template<typename T>
         WriterAt(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -725,7 +725,7 @@ namespace golang::io
         template<typename T>
         ByteReader(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -771,7 +771,7 @@ namespace golang::io
         template<typename T>
         ByteScanner(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -817,7 +817,7 @@ namespace golang::io
         template<typename T>
         ByteWriter(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -863,7 +863,7 @@ namespace golang::io
         template<typename T>
         RuneReader(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -909,7 +909,7 @@ namespace golang::io
         template<typename T>
         RuneScanner(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -955,7 +955,7 @@ namespace golang::io
         template<typename T>
         StringWriter(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -999,6 +999,12 @@ namespace golang::io
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -1014,6 +1020,12 @@ namespace golang::io
         int64_t n;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -1034,6 +1046,12 @@ namespace golang::io
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -1050,6 +1068,12 @@ namespace golang::io
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -1060,6 +1084,12 @@ namespace golang::io
     {
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -1076,6 +1106,12 @@ namespace golang::io
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -1085,6 +1121,12 @@ namespace golang::io
     {
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

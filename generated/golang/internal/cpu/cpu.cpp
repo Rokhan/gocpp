@@ -17,6 +17,21 @@ namespace golang::cpu
 {
     bool DebugOptions;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CacheLinePad::operator T()
+    {
+        T result;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CacheLinePad::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& CacheLinePad::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -57,6 +72,63 @@ namespace golang::cpu
         CacheLinePad _;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasAES = this->HasAES;
+            result.HasADX = this->HasADX;
+            result.HasAVX = this->HasAVX;
+            result.HasAVX2 = this->HasAVX2;
+            result.HasAVX512F = this->HasAVX512F;
+            result.HasAVX512BW = this->HasAVX512BW;
+            result.HasAVX512VL = this->HasAVX512VL;
+            result.HasBMI1 = this->HasBMI1;
+            result.HasBMI2 = this->HasBMI2;
+            result.HasERMS = this->HasERMS;
+            result.HasFMA = this->HasFMA;
+            result.HasOSXSAVE = this->HasOSXSAVE;
+            result.HasPCLMULQDQ = this->HasPCLMULQDQ;
+            result.HasPOPCNT = this->HasPOPCNT;
+            result.HasRDTSCP = this->HasRDTSCP;
+            result.HasSHA = this->HasSHA;
+            result.HasSSE3 = this->HasSSE3;
+            result.HasSSSE3 = this->HasSSSE3;
+            result.HasSSE41 = this->HasSSE41;
+            result.HasSSE42 = this->HasSSE42;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasAES != ref.HasAES) return false;
+            if (HasADX != ref.HasADX) return false;
+            if (HasAVX != ref.HasAVX) return false;
+            if (HasAVX2 != ref.HasAVX2) return false;
+            if (HasAVX512F != ref.HasAVX512F) return false;
+            if (HasAVX512BW != ref.HasAVX512BW) return false;
+            if (HasAVX512VL != ref.HasAVX512VL) return false;
+            if (HasBMI1 != ref.HasBMI1) return false;
+            if (HasBMI2 != ref.HasBMI2) return false;
+            if (HasERMS != ref.HasERMS) return false;
+            if (HasFMA != ref.HasFMA) return false;
+            if (HasOSXSAVE != ref.HasOSXSAVE) return false;
+            if (HasPCLMULQDQ != ref.HasPCLMULQDQ) return false;
+            if (HasPOPCNT != ref.HasPOPCNT) return false;
+            if (HasRDTSCP != ref.HasRDTSCP) return false;
+            if (HasSHA != ref.HasSHA) return false;
+            if (HasSSE3 != ref.HasSSE3) return false;
+            if (HasSSSE3 != ref.HasSSSE3) return false;
+            if (HasSSE41 != ref.HasSSE41) return false;
+            if (HasSSE42 != ref.HasSSE42) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -105,6 +177,29 @@ namespace golang::cpu
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasVFPv4 = this->HasVFPv4;
+            result.HasIDIVA = this->HasIDIVA;
+            result.HasV7Atomics = this->HasV7Atomics;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasVFPv4 != ref.HasVFPv4) return false;
+            if (HasIDIVA != ref.HasIDIVA) return false;
+            if (HasV7Atomics != ref.HasV7Atomics) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -141,6 +236,41 @@ namespace golang::cpu
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasAES = this->HasAES;
+            result.HasPMULL = this->HasPMULL;
+            result.HasSHA1 = this->HasSHA1;
+            result.HasSHA2 = this->HasSHA2;
+            result.HasSHA512 = this->HasSHA512;
+            result.HasCRC32 = this->HasCRC32;
+            result.HasATOMICS = this->HasATOMICS;
+            result.HasCPUID = this->HasCPUID;
+            result.IsNeoverse = this->IsNeoverse;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasAES != ref.HasAES) return false;
+            if (HasPMULL != ref.HasPMULL) return false;
+            if (HasSHA1 != ref.HasSHA1) return false;
+            if (HasSHA2 != ref.HasSHA2) return false;
+            if (HasSHA512 != ref.HasSHA512) return false;
+            if (HasCRC32 != ref.HasCRC32) return false;
+            if (HasATOMICS != ref.HasATOMICS) return false;
+            if (HasCPUID != ref.HasCPUID) return false;
+            if (IsNeoverse != ref.IsNeoverse) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -175,6 +305,25 @@ namespace golang::cpu
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasMSA = this->HasMSA;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasMSA != ref.HasMSA) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -204,6 +353,33 @@ namespace golang::cpu
         CacheLinePad _;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasDARN = this->HasDARN;
+            result.HasSCV = this->HasSCV;
+            result.IsPOWER8 = this->IsPOWER8;
+            result.IsPOWER9 = this->IsPOWER9;
+            result.IsPOWER10 = this->IsPOWER10;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasDARN != ref.HasDARN) return false;
+            if (HasSCV != ref.HasSCV) return false;
+            if (IsPOWER8 != ref.IsPOWER8) return false;
+            if (IsPOWER9 != ref.IsPOWER9) return false;
+            if (IsPOWER10 != ref.IsPOWER10) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -255,6 +431,65 @@ namespace golang::cpu
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result._ = this->_;
+            result.HasZARCH = this->HasZARCH;
+            result.HasSTFLE = this->HasSTFLE;
+            result.HasLDISP = this->HasLDISP;
+            result.HasEIMM = this->HasEIMM;
+            result.HasDFP = this->HasDFP;
+            result.HasETF3EH = this->HasETF3EH;
+            result.HasMSA = this->HasMSA;
+            result.HasAES = this->HasAES;
+            result.HasAESCBC = this->HasAESCBC;
+            result.HasAESCTR = this->HasAESCTR;
+            result.HasAESGCM = this->HasAESGCM;
+            result.HasGHASH = this->HasGHASH;
+            result.HasSHA1 = this->HasSHA1;
+            result.HasSHA256 = this->HasSHA256;
+            result.HasSHA512 = this->HasSHA512;
+            result.HasSHA3 = this->HasSHA3;
+            result.HasVX = this->HasVX;
+            result.HasVXE = this->HasVXE;
+            result.HasKDSA = this->HasKDSA;
+            result.HasECDSA = this->HasECDSA;
+            result.HasEDDSA = this->HasEDDSA;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (_ != ref._) return false;
+            if (HasZARCH != ref.HasZARCH) return false;
+            if (HasSTFLE != ref.HasSTFLE) return false;
+            if (HasLDISP != ref.HasLDISP) return false;
+            if (HasEIMM != ref.HasEIMM) return false;
+            if (HasDFP != ref.HasDFP) return false;
+            if (HasETF3EH != ref.HasETF3EH) return false;
+            if (HasMSA != ref.HasMSA) return false;
+            if (HasAES != ref.HasAES) return false;
+            if (HasAESCBC != ref.HasAESCBC) return false;
+            if (HasAESCTR != ref.HasAESCTR) return false;
+            if (HasAESGCM != ref.HasAESGCM) return false;
+            if (HasGHASH != ref.HasGHASH) return false;
+            if (HasSHA1 != ref.HasSHA1) return false;
+            if (HasSHA256 != ref.HasSHA256) return false;
+            if (HasSHA512 != ref.HasSHA512) return false;
+            if (HasSHA3 != ref.HasSHA3) return false;
+            if (HasVX != ref.HasVX) return false;
+            if (HasVXE != ref.HasVXE) return false;
+            if (HasKDSA != ref.HasKDSA) return false;
+            if (HasECDSA != ref.HasECDSA) return false;
+            if (HasEDDSA != ref.HasEDDSA) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -301,6 +536,27 @@ namespace golang::cpu
 
     gocpp::slice<option> options;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    option::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Feature = this->Feature;
+        result.Specified = this->Specified;
+        result.Enable = this->Enable;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool option::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Feature != ref.Feature) return false;
+        if (Specified != ref.Specified) return false;
+        if (Enable != ref.Enable) return false;
+        return true;
+    }
+
     std::ostream& option::PrintTo(std::ostream& os) const
     {
         os << '{';

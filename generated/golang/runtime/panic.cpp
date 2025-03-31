@@ -629,6 +629,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    PanicNilError::operator T()
+    {
+        T result;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool PanicNilError::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& PanicNilError::PrintTo(std::ostream& os) const
     {
         os << '{';

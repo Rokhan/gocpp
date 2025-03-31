@@ -62,6 +62,97 @@ namespace golang::runtime
 {
     gcControllerState gcController;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcControllerState::operator T()
+    {
+        T result;
+        result.gcPercent = this->gcPercent;
+        result.memoryLimit = this->memoryLimit;
+        result.heapMinimum = this->heapMinimum;
+        result.runway = this->runway;
+        result.consMark = this->consMark;
+        result.lastConsMark = this->lastConsMark;
+        result.gcPercentHeapGoal = this->gcPercentHeapGoal;
+        result.sweepDistMinTrigger = this->sweepDistMinTrigger;
+        result.triggered = this->triggered;
+        result.lastHeapGoal = this->lastHeapGoal;
+        result.heapLive = this->heapLive;
+        result.heapScan = this->heapScan;
+        result.lastHeapScan = this->lastHeapScan;
+        result.lastStackScan = this->lastStackScan;
+        result.maxStackScan = this->maxStackScan;
+        result.globalsScan = this->globalsScan;
+        result.heapMarked = this->heapMarked;
+        result.heapScanWork = this->heapScanWork;
+        result.stackScanWork = this->stackScanWork;
+        result.globalsScanWork = this->globalsScanWork;
+        result.bgScanCredit = this->bgScanCredit;
+        result.assistTime = this->assistTime;
+        result.dedicatedMarkTime = this->dedicatedMarkTime;
+        result.fractionalMarkTime = this->fractionalMarkTime;
+        result.idleMarkTime = this->idleMarkTime;
+        result.markStartTime = this->markStartTime;
+        result.dedicatedMarkWorkersNeeded = this->dedicatedMarkWorkersNeeded;
+        result.idleMarkWorkers = this->idleMarkWorkers;
+        result.assistWorkPerByte = this->assistWorkPerByte;
+        result.assistBytesPerWork = this->assistBytesPerWork;
+        result.fractionalUtilizationGoal = this->fractionalUtilizationGoal;
+        result.heapInUse = this->heapInUse;
+        result.heapReleased = this->heapReleased;
+        result.heapFree = this->heapFree;
+        result.totalAlloc = this->totalAlloc;
+        result.totalFree = this->totalFree;
+        result.mappedReady = this->mappedReady;
+        result.test = this->test;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcControllerState::operator==(const T& ref) const
+    {
+        if (gcPercent != ref.gcPercent) return false;
+        if (memoryLimit != ref.memoryLimit) return false;
+        if (heapMinimum != ref.heapMinimum) return false;
+        if (runway != ref.runway) return false;
+        if (consMark != ref.consMark) return false;
+        if (lastConsMark != ref.lastConsMark) return false;
+        if (gcPercentHeapGoal != ref.gcPercentHeapGoal) return false;
+        if (sweepDistMinTrigger != ref.sweepDistMinTrigger) return false;
+        if (triggered != ref.triggered) return false;
+        if (lastHeapGoal != ref.lastHeapGoal) return false;
+        if (heapLive != ref.heapLive) return false;
+        if (heapScan != ref.heapScan) return false;
+        if (lastHeapScan != ref.lastHeapScan) return false;
+        if (lastStackScan != ref.lastStackScan) return false;
+        if (maxStackScan != ref.maxStackScan) return false;
+        if (globalsScan != ref.globalsScan) return false;
+        if (heapMarked != ref.heapMarked) return false;
+        if (heapScanWork != ref.heapScanWork) return false;
+        if (stackScanWork != ref.stackScanWork) return false;
+        if (globalsScanWork != ref.globalsScanWork) return false;
+        if (bgScanCredit != ref.bgScanCredit) return false;
+        if (assistTime != ref.assistTime) return false;
+        if (dedicatedMarkTime != ref.dedicatedMarkTime) return false;
+        if (fractionalMarkTime != ref.fractionalMarkTime) return false;
+        if (idleMarkTime != ref.idleMarkTime) return false;
+        if (markStartTime != ref.markStartTime) return false;
+        if (dedicatedMarkWorkersNeeded != ref.dedicatedMarkWorkersNeeded) return false;
+        if (idleMarkWorkers != ref.idleMarkWorkers) return false;
+        if (assistWorkPerByte != ref.assistWorkPerByte) return false;
+        if (assistBytesPerWork != ref.assistBytesPerWork) return false;
+        if (fractionalUtilizationGoal != ref.fractionalUtilizationGoal) return false;
+        if (heapInUse != ref.heapInUse) return false;
+        if (heapReleased != ref.heapReleased) return false;
+        if (heapFree != ref.heapFree) return false;
+        if (totalAlloc != ref.totalAlloc) return false;
+        if (totalFree != ref.totalFree) return false;
+        if (mappedReady != ref.mappedReady) return false;
+        if (test != ref.test) return false;
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& gcControllerState::PrintTo(std::ostream& os) const
     {
         os << '{';

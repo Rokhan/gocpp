@@ -87,6 +87,23 @@ namespace golang::main
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fakeResult::operator T()
+    {
+        T result;
+        result.body = this->body;
+        result.urls = this->urls;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fakeResult::operator==(const T& ref) const
+    {
+        if (body != ref.body) return false;
+        if (urls != ref.urls) return false;
+        return true;
+    }
+
     std::ostream& fakeResult::PrintTo(std::ostream& os) const
     {
         os << '{';

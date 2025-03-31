@@ -31,6 +31,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    slice::operator T()
+    {
+        T result;
+        result.array = this->array;
+        result.len = this->len;
+        result.cap = this->cap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool slice::operator==(const T& ref) const
+    {
+        if (array != ref.array) return false;
+        if (len != ref.len) return false;
+        if (cap != ref.cap) return false;
+        return true;
+    }
+
     std::ostream& slice::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -47,6 +66,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    notInHeapSlice::operator T()
+    {
+        T result;
+        result.array = this->array;
+        result.len = this->len;
+        result.cap = this->cap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool notInHeapSlice::operator==(const T& ref) const
+    {
+        if (array != ref.array) return false;
+        if (len != ref.len) return false;
+        if (cap != ref.cap) return false;
+        return true;
+    }
+
     std::ostream& notInHeapSlice::PrintTo(std::ostream& os) const
     {
         os << '{';

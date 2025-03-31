@@ -18,6 +18,19 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    dlogPerM::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dlogPerM::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& dlogPerM::PrintTo(std::ostream& os) const
     {
         os << '{';

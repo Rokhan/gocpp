@@ -57,6 +57,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Frames::operator T()
+    {
+        T result;
+        result.callers = this->callers;
+        result.frames = this->frames;
+        result.frameStore = this->frameStore;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Frames::operator==(const T& ref) const
+    {
+        if (callers != ref.callers) return false;
+        if (frames != ref.frames) return false;
+        if (frameStore != ref.frameStore) return false;
+        return true;
+    }
+
     std::ostream& Frames::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -73,6 +92,35 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Frame::operator T()
+    {
+        T result;
+        result.PC = this->PC;
+        result.Func = this->Func;
+        result.Function = this->Function;
+        result.File = this->File;
+        result.Line = this->Line;
+        result.startLine = this->startLine;
+        result.Entry = this->Entry;
+        result.funcInfo = this->funcInfo;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Frame::operator==(const T& ref) const
+    {
+        if (PC != ref.PC) return false;
+        if (Func != ref.Func) return false;
+        if (Function != ref.Function) return false;
+        if (File != ref.File) return false;
+        if (Line != ref.Line) return false;
+        if (startLine != ref.startLine) return false;
+        if (Entry != ref.Entry) return false;
+        if (funcInfo != ref.funcInfo) return false;
+        return true;
+    }
+
     std::ostream& Frame::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -262,6 +310,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Func::operator T()
+    {
+        T result;
+        result.opaque = this->opaque;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Func::operator==(const T& ref) const
+    {
+        if (opaque != ref.opaque) return false;
+        return true;
+    }
+
     std::ostream& Func::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -306,6 +369,45 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pcHeader::operator T()
+    {
+        T result;
+        result.magic = this->magic;
+        result.pad1 = this->pad1;
+        result.pad2 = this->pad2;
+        result.minLC = this->minLC;
+        result.ptrSize = this->ptrSize;
+        result.nfunc = this->nfunc;
+        result.nfiles = this->nfiles;
+        result.textStart = this->textStart;
+        result.funcnameOffset = this->funcnameOffset;
+        result.cuOffset = this->cuOffset;
+        result.filetabOffset = this->filetabOffset;
+        result.pctabOffset = this->pctabOffset;
+        result.pclnOffset = this->pclnOffset;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pcHeader::operator==(const T& ref) const
+    {
+        if (magic != ref.magic) return false;
+        if (pad1 != ref.pad1) return false;
+        if (pad2 != ref.pad2) return false;
+        if (minLC != ref.minLC) return false;
+        if (ptrSize != ref.ptrSize) return false;
+        if (nfunc != ref.nfunc) return false;
+        if (nfiles != ref.nfiles) return false;
+        if (textStart != ref.textStart) return false;
+        if (funcnameOffset != ref.funcnameOffset) return false;
+        if (cuOffset != ref.cuOffset) return false;
+        if (filetabOffset != ref.filetabOffset) return false;
+        if (pctabOffset != ref.pctabOffset) return false;
+        if (pclnOffset != ref.pclnOffset) return false;
+        return true;
+    }
+
     std::ostream& pcHeader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -332,6 +434,107 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    moduledata::operator T()
+    {
+        T result;
+        result.pcHeader = this->pcHeader;
+        result.funcnametab = this->funcnametab;
+        result.cutab = this->cutab;
+        result.filetab = this->filetab;
+        result.pctab = this->pctab;
+        result.pclntable = this->pclntable;
+        result.ftab = this->ftab;
+        result.findfunctab = this->findfunctab;
+        result.minpc = this->minpc;
+        result.maxpc = this->maxpc;
+        result.text = this->text;
+        result.etext = this->etext;
+        result.noptrdata = this->noptrdata;
+        result.enoptrdata = this->enoptrdata;
+        result.data = this->data;
+        result.edata = this->edata;
+        result.bss = this->bss;
+        result.ebss = this->ebss;
+        result.noptrbss = this->noptrbss;
+        result.enoptrbss = this->enoptrbss;
+        result.covctrs = this->covctrs;
+        result.ecovctrs = this->ecovctrs;
+        result.end = this->end;
+        result.gcdata = this->gcdata;
+        result.gcbss = this->gcbss;
+        result.types = this->types;
+        result.etypes = this->etypes;
+        result.rodata = this->rodata;
+        result.gofunc = this->gofunc;
+        result.textsectmap = this->textsectmap;
+        result.typelinks = this->typelinks;
+        result.itablinks = this->itablinks;
+        result.ptab = this->ptab;
+        result.pluginpath = this->pluginpath;
+        result.pkghashes = this->pkghashes;
+        result.inittasks = this->inittasks;
+        result.modulename = this->modulename;
+        result.modulehashes = this->modulehashes;
+        result.hasmain = this->hasmain;
+        result.gcdatamask = this->gcdatamask;
+        result.gcbssmask = this->gcbssmask;
+        result.typemap = this->typemap;
+        result.bad = this->bad;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool moduledata::operator==(const T& ref) const
+    {
+        if (pcHeader != ref.pcHeader) return false;
+        if (funcnametab != ref.funcnametab) return false;
+        if (cutab != ref.cutab) return false;
+        if (filetab != ref.filetab) return false;
+        if (pctab != ref.pctab) return false;
+        if (pclntable != ref.pclntable) return false;
+        if (ftab != ref.ftab) return false;
+        if (findfunctab != ref.findfunctab) return false;
+        if (minpc != ref.minpc) return false;
+        if (maxpc != ref.maxpc) return false;
+        if (text != ref.text) return false;
+        if (etext != ref.etext) return false;
+        if (noptrdata != ref.noptrdata) return false;
+        if (enoptrdata != ref.enoptrdata) return false;
+        if (data != ref.data) return false;
+        if (edata != ref.edata) return false;
+        if (bss != ref.bss) return false;
+        if (ebss != ref.ebss) return false;
+        if (noptrbss != ref.noptrbss) return false;
+        if (enoptrbss != ref.enoptrbss) return false;
+        if (covctrs != ref.covctrs) return false;
+        if (ecovctrs != ref.ecovctrs) return false;
+        if (end != ref.end) return false;
+        if (gcdata != ref.gcdata) return false;
+        if (gcbss != ref.gcbss) return false;
+        if (types != ref.types) return false;
+        if (etypes != ref.etypes) return false;
+        if (rodata != ref.rodata) return false;
+        if (gofunc != ref.gofunc) return false;
+        if (textsectmap != ref.textsectmap) return false;
+        if (typelinks != ref.typelinks) return false;
+        if (itablinks != ref.itablinks) return false;
+        if (ptab != ref.ptab) return false;
+        if (pluginpath != ref.pluginpath) return false;
+        if (pkghashes != ref.pkghashes) return false;
+        if (inittasks != ref.inittasks) return false;
+        if (modulename != ref.modulename) return false;
+        if (modulehashes != ref.modulehashes) return false;
+        if (hasmain != ref.hasmain) return false;
+        if (gcdatamask != ref.gcdatamask) return false;
+        if (gcbssmask != ref.gcbssmask) return false;
+        if (typemap != ref.typemap) return false;
+        if (bad != ref.bad) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& moduledata::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -389,6 +592,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    modulehash::operator T()
+    {
+        T result;
+        result.modulename = this->modulename;
+        result.linktimehash = this->linktimehash;
+        result.runtimehash = this->runtimehash;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool modulehash::operator==(const T& ref) const
+    {
+        if (modulename != ref.modulename) return false;
+        if (linktimehash != ref.linktimehash) return false;
+        if (runtimehash != ref.runtimehash) return false;
+        return true;
+    }
+
     std::ostream& modulehash::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -450,6 +672,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    functab::operator T()
+    {
+        T result;
+        result.entryoff = this->entryoff;
+        result.funcoff = this->funcoff;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool functab::operator==(const T& ref) const
+    {
+        if (entryoff != ref.entryoff) return false;
+        if (funcoff != ref.funcoff) return false;
+        return true;
+    }
+
     std::ostream& functab::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -465,6 +704,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    textsect::operator T()
+    {
+        T result;
+        result.vaddr = this->vaddr;
+        result.end = this->end;
+        result.baseaddr = this->baseaddr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool textsect::operator==(const T& ref) const
+    {
+        if (vaddr != ref.vaddr) return false;
+        if (end != ref.end) return false;
+        if (baseaddr != ref.baseaddr) return false;
+        return true;
+    }
+
     std::ostream& textsect::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -481,6 +739,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    findfuncbucket::operator T()
+    {
+        T result;
+        result.idx = this->idx;
+        result.subbuckets = this->subbuckets;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool findfuncbucket::operator==(const T& ref) const
+    {
+        if (idx != ref.idx) return false;
+        if (subbuckets != ref.subbuckets) return false;
+        return true;
+    }
+
     std::ostream& findfuncbucket::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -694,6 +969,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    funcInfo::operator T()
+    {
+        T result;
+        result.datap = this->datap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool funcInfo::operator==(const T& ref) const
+    {
+        if (datap != ref.datap) return false;
+        return true;
+    }
+
     std::ostream& funcInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -754,6 +1044,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    srcFunc::operator T()
+    {
+        T result;
+        result.datap = this->datap;
+        result.nameOff = this->nameOff;
+        result.startLine = this->startLine;
+        result.funcID = this->funcID;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool srcFunc::operator==(const T& ref) const
+    {
+        if (datap != ref.datap) return false;
+        if (nameOff != ref.nameOff) return false;
+        if (startLine != ref.startLine) return false;
+        if (funcID != ref.funcID) return false;
+        return true;
+    }
+
     std::ostream& srcFunc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -789,6 +1100,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pcvalueCache::operator T()
+    {
+        T result;
+        result.entries = this->entries;
+        result.inUse = this->inUse;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pcvalueCache::operator==(const T& ref) const
+    {
+        if (entries != ref.entries) return false;
+        if (inUse != ref.inUse) return false;
+        return true;
+    }
+
     std::ostream& pcvalueCache::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -804,6 +1132,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pcvalueCacheEnt::operator T()
+    {
+        T result;
+        result.targetpc = this->targetpc;
+        result.off = this->off;
+        result.val = this->val;
+        result.valPC = this->valPC;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pcvalueCacheEnt::operator==(const T& ref) const
+    {
+        if (targetpc != ref.targetpc) return false;
+        if (off != ref.off) return false;
+        if (val != ref.val) return false;
+        if (valPC != ref.valPC) return false;
+        return true;
+    }
+
     std::ostream& pcvalueCacheEnt::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1158,6 +1507,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackmap::operator T()
+    {
+        T result;
+        result.n = this->n;
+        result.nbit = this->nbit;
+        result.bytedata = this->bytedata;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackmap::operator==(const T& ref) const
+    {
+        if (n != ref.n) return false;
+        if (nbit != ref.nbit) return false;
+        if (bytedata != ref.bytedata) return false;
+        return true;
+    }
+
     std::ostream& stackmap::PrintTo(std::ostream& os) const
     {
         os << '{';

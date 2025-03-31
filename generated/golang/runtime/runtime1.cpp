@@ -200,6 +200,21 @@ namespace golang::runtime
         uint16_t* l = {};
         gocpp::array<unsigned char, 4> m = {};
         
+        template<typename T> requires gocpp::GoStruct<T>
+        x1t::operator T()
+        {
+            T result;
+            result.x = this->x;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool x1t::operator==(const T& ref) const
+        {
+            if (x != ref.x) return false;
+            return true;
+        }
+
         std::ostream& x1t::PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -214,6 +229,23 @@ namespace golang::runtime
         }
 
         
+        template<typename T> requires gocpp::GoStruct<T>
+        y1t::operator T()
+        {
+            T result;
+            result.x1 = this->x1;
+            result.y = this->y;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool y1t::operator==(const T& ref) const
+        {
+            if (x1 != ref.x1) return false;
+            if (y != ref.y) return false;
+            return true;
+        }
+
         std::ostream& y1t::PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -382,6 +414,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    dbgVar::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.value = this->value;
+        result.atomic = this->atomic;
+        result.def = this->def;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dbgVar::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (value != ref.value) return false;
+        if (atomic != ref.atomic) return false;
+        if (def != ref.def) return false;
+        return true;
+    }
+
     std::ostream& dbgVar::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -429,6 +482,73 @@ namespace golang::runtime
         atomic::Int32 panicnil;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.cgocheck = this->cgocheck;
+            result.clobberfree = this->clobberfree;
+            result.disablethp = this->disablethp;
+            result.dontfreezetheworld = this->dontfreezetheworld;
+            result.efence = this->efence;
+            result.gccheckmark = this->gccheckmark;
+            result.gcpacertrace = this->gcpacertrace;
+            result.gcshrinkstackoff = this->gcshrinkstackoff;
+            result.gcstoptheworld = this->gcstoptheworld;
+            result.gctrace = this->gctrace;
+            result.invalidptr = this->invalidptr;
+            result.madvdontneed = this->madvdontneed;
+            result.runtimeContentionStacks = this->runtimeContentionStacks;
+            result.scavtrace = this->scavtrace;
+            result.scheddetail = this->scheddetail;
+            result.schedtrace = this->schedtrace;
+            result.tracebackancestors = this->tracebackancestors;
+            result.asyncpreemptoff = this->asyncpreemptoff;
+            result.harddecommit = this->harddecommit;
+            result.adaptivestackstart = this->adaptivestackstart;
+            result.tracefpunwindoff = this->tracefpunwindoff;
+            result.traceadvanceperiod = this->traceadvanceperiod;
+            result.malloc = this->malloc;
+            result.allocfreetrace = this->allocfreetrace;
+            result.inittrace = this->inittrace;
+            result.sbrk = this->sbrk;
+            result.panicnil = this->panicnil;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (cgocheck != ref.cgocheck) return false;
+            if (clobberfree != ref.clobberfree) return false;
+            if (disablethp != ref.disablethp) return false;
+            if (dontfreezetheworld != ref.dontfreezetheworld) return false;
+            if (efence != ref.efence) return false;
+            if (gccheckmark != ref.gccheckmark) return false;
+            if (gcpacertrace != ref.gcpacertrace) return false;
+            if (gcshrinkstackoff != ref.gcshrinkstackoff) return false;
+            if (gcstoptheworld != ref.gcstoptheworld) return false;
+            if (gctrace != ref.gctrace) return false;
+            if (invalidptr != ref.invalidptr) return false;
+            if (madvdontneed != ref.madvdontneed) return false;
+            if (runtimeContentionStacks != ref.runtimeContentionStacks) return false;
+            if (scavtrace != ref.scavtrace) return false;
+            if (scheddetail != ref.scheddetail) return false;
+            if (schedtrace != ref.schedtrace) return false;
+            if (tracebackancestors != ref.tracebackancestors) return false;
+            if (asyncpreemptoff != ref.asyncpreemptoff) return false;
+            if (harddecommit != ref.harddecommit) return false;
+            if (adaptivestackstart != ref.adaptivestackstart) return false;
+            if (tracefpunwindoff != ref.tracefpunwindoff) return false;
+            if (traceadvanceperiod != ref.traceadvanceperiod) return false;
+            if (malloc != ref.malloc) return false;
+            if (allocfreetrace != ref.allocfreetrace) return false;
+            if (inittrace != ref.inittrace) return false;
+            if (sbrk != ref.sbrk) return false;
+            if (panicnil != ref.panicnil) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

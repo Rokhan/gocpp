@@ -108,6 +108,27 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.gcPercentGoal = this->gcPercentGoal;
+            result.memoryLimitGoal = this->memoryLimitGoal;
+            result.assistTime = this->assistTime;
+            result.backgroundTime = this->backgroundTime;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (gcPercentGoal != ref.gcPercentGoal) return false;
+            if (memoryLimitGoal != ref.memoryLimitGoal) return false;
+            if (assistTime != ref.assistTime) return false;
+            if (backgroundTime != ref.backgroundTime) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -129,6 +150,47 @@ namespace golang::runtime
     gocpp_id_0 scavenge;
     scavengerState scavenger;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    scavengerState::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.g = this->g;
+        result.parked = this->parked;
+        result.timer = this->timer;
+        result.sysmonWake = this->sysmonWake;
+        result.targetCPUFraction = this->targetCPUFraction;
+        result.sleepRatio = this->sleepRatio;
+        result.sleepController = this->sleepController;
+        result.controllerCooldown = this->controllerCooldown;
+        result.printControllerReset = this->printControllerReset;
+        result.sleepStub = this->sleepStub;
+        result.scavenge = this->scavenge;
+        result.shouldStop = this->shouldStop;
+        result.gomaxprocs = this->gomaxprocs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scavengerState::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (g != ref.g) return false;
+        if (parked != ref.parked) return false;
+        if (timer != ref.timer) return false;
+        if (sysmonWake != ref.sysmonWake) return false;
+        if (targetCPUFraction != ref.targetCPUFraction) return false;
+        if (sleepRatio != ref.sleepRatio) return false;
+        if (sleepController != ref.sleepController) return false;
+        if (controllerCooldown != ref.controllerCooldown) return false;
+        if (printControllerReset != ref.printControllerReset) return false;
+        if (sleepStub != ref.sleepStub) return false;
+        if (scavenge != ref.scavenge) return false;
+        if (shouldStop != ref.shouldStop) return false;
+        if (gomaxprocs != ref.gomaxprocs) return false;
+        return true;
+    }
+
     std::ostream& scavengerState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -586,6 +648,37 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    scavengeIndex::operator T()
+    {
+        T result;
+        result.chunks = this->chunks;
+        result.min = this->min;
+        result.max = this->max;
+        result.minHeapIdx = this->minHeapIdx;
+        result.searchAddrBg = this->searchAddrBg;
+        result.searchAddrForce = this->searchAddrForce;
+        result.freeHWM = this->freeHWM;
+        result.gen = this->gen;
+        result.test = this->test;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scavengeIndex::operator==(const T& ref) const
+    {
+        if (chunks != ref.chunks) return false;
+        if (min != ref.min) return false;
+        if (max != ref.max) return false;
+        if (minHeapIdx != ref.minHeapIdx) return false;
+        if (searchAddrBg != ref.searchAddrBg) return false;
+        if (searchAddrForce != ref.searchAddrForce) return false;
+        if (freeHWM != ref.freeHWM) return false;
+        if (gen != ref.gen) return false;
+        if (test != ref.test) return false;
+        return true;
+    }
+
     std::ostream& scavengeIndex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -709,6 +802,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicScavChunkData::operator T()
+    {
+        T result;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicScavChunkData::operator==(const T& ref) const
+    {
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& atomicScavChunkData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -733,6 +841,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    scavChunkData::operator T()
+    {
+        T result;
+        result.inUse = this->inUse;
+        result.lastInUse = this->lastInUse;
+        result.gen = this->gen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scavChunkData::operator==(const T& ref) const
+    {
+        if (inUse != ref.inUse) return false;
+        if (lastInUse != ref.lastInUse) return false;
+        if (gen != ref.gen) return false;
+        return true;
+    }
+
     std::ostream& scavChunkData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -826,6 +953,35 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    piController::operator T()
+    {
+        T result;
+        result.kp = this->kp;
+        result.ti = this->ti;
+        result.tt = this->tt;
+        result.min = this->min;
+        result.max = this->max;
+        result.errIntegral = this->errIntegral;
+        result.errOverflow = this->errOverflow;
+        result.inputOverflow = this->inputOverflow;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool piController::operator==(const T& ref) const
+    {
+        if (kp != ref.kp) return false;
+        if (ti != ref.ti) return false;
+        if (tt != ref.tt) return false;
+        if (min != ref.min) return false;
+        if (max != ref.max) return false;
+        if (errIntegral != ref.errIntegral) return false;
+        if (errOverflow != ref.errOverflow) return false;
+        if (inputOverflow != ref.inputOverflow) return false;
+        return true;
+    }
+
     std::ostream& piController::PrintTo(std::ostream& os) const
     {
         os << '{';

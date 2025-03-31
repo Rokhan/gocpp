@@ -25,6 +25,25 @@ namespace golang::strconv
     std::string ErrRange = errors::New("value out of range");
     std::string ErrSyntax = errors::New("invalid syntax");
     
+    template<typename T> requires gocpp::GoStruct<T>
+    NumError::operator T()
+    {
+        T result;
+        result.Func = this->Func;
+        result.Num = this->Num;
+        result.Err = this->Err;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool NumError::operator==(const T& ref) const
+    {
+        if (Func != ref.Func) return false;
+        if (Num != ref.Num) return false;
+        if (Err != ref.Err) return false;
+        return true;
+    }
+
     std::ostream& NumError::PrintTo(std::ostream& os) const
     {
         os << '{';

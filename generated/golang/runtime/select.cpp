@@ -48,6 +48,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    scase::operator T()
+    {
+        T result;
+        result.c = this->c;
+        result.elem = this->elem;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scase::operator==(const T& ref) const
+    {
+        if (c != ref.c) return false;
+        if (elem != ref.elem) return false;
+        return true;
+    }
+
     std::ostream& scase::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -536,6 +553,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    runtimeSelect::operator T()
+    {
+        T result;
+        result.dir = this->dir;
+        result.typ = this->typ;
+        result.ch = this->ch;
+        result.val = this->val;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool runtimeSelect::operator==(const T& ref) const
+    {
+        if (dir != ref.dir) return false;
+        if (typ != ref.typ) return false;
+        if (ch != ref.ch) return false;
+        if (val != ref.val) return false;
+        return true;
+    }
+
     std::ostream& runtimeSelect::PrintTo(std::ostream& os) const
     {
         os << '{';

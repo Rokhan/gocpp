@@ -17,6 +17,29 @@ namespace golang::chacha8rand
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    State::operator T()
+    {
+        T result;
+        result.buf = this->buf;
+        result.seed = this->seed;
+        result.i = this->i;
+        result.n = this->n;
+        result.c = this->c;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool State::operator==(const T& ref) const
+    {
+        if (buf != ref.buf) return false;
+        if (seed != ref.seed) return false;
+        if (i != ref.i) return false;
+        if (n != ref.n) return false;
+        if (c != ref.c) return false;
+        return true;
+    }
+
     std::ostream& State::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -112,6 +135,19 @@ namespace golang::chacha8rand
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    errUnmarshalChaCha8::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool errUnmarshalChaCha8::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& errUnmarshalChaCha8::PrintTo(std::ostream& os) const
     {
         os << '{';

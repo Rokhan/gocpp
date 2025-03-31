@@ -18,6 +18,23 @@
 namespace golang::strings
 {
     
+    template<typename T>
+    Builder::operator T()
+    {
+        T result;
+        result.addr = this->addr;
+        result.buf = this->buf;
+        return result;
+    }
+
+    template<typename T>
+    bool Builder::operator==(const T& ref) const
+    {
+        if (addr != ref.addr) return false;
+        if (buf != ref.buf) return false;
+        return true;
+    }
+
     std::ostream& Builder::PrintTo(std::ostream& os) const
     {
         os << '{';

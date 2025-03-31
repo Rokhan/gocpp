@@ -455,6 +455,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gsignalStack::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gsignalStack::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& gsignalStack::PrintTo(std::ostream& os) const
     {
         os << '{';

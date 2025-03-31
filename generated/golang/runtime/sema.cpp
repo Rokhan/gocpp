@@ -46,6 +46,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    semaRoot::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.treap = this->treap;
+        result.nwait = this->nwait;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool semaRoot::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (treap != ref.treap) return false;
+        if (nwait != ref.nwait) return false;
+        return true;
+    }
+
     std::ostream& semaRoot::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -68,6 +87,23 @@ namespace golang::runtime
         gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.root = this->root;
+            result.pad = this->pad;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (root != ref.root) return false;
+            if (pad != ref.pad) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -581,6 +617,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    notifyList::operator T()
+    {
+        T result;
+        result.wait = this->wait;
+        result.notify = this->notify;
+        result.lock = this->lock;
+        result.head = this->head;
+        result.tail = this->tail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool notifyList::operator==(const T& ref) const
+    {
+        if (wait != ref.wait) return false;
+        if (notify != ref.notify) return false;
+        if (lock != ref.lock) return false;
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        return true;
+    }
+
     std::ostream& notifyList::PrintTo(std::ostream& os) const
     {
         os << '{';

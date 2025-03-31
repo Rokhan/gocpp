@@ -22,6 +22,12 @@ namespace golang::base64
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -48,6 +54,12 @@ namespace golang::base64
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -73,6 +85,12 @@ namespace golang::base64
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -86,6 +104,12 @@ namespace golang::base64
         io::Reader wrapped;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

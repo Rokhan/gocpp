@@ -28,6 +28,12 @@ namespace golang::flate
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -58,6 +64,12 @@ namespace golang::flate
         gocpp::array<uint32_t, maxMatchLength - 1> hashMatch;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -90,6 +102,12 @@ namespace golang::flate
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -102,6 +120,12 @@ namespace golang::flate
         gocpp::slice<unsigned char> dict;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

@@ -16,6 +16,25 @@
 namespace golang::unsafeheader
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Slice::operator T()
+    {
+        T result;
+        result.Data = this->Data;
+        result.Len = this->Len;
+        result.Cap = this->Cap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Slice::operator==(const T& ref) const
+    {
+        if (Data != ref.Data) return false;
+        if (Len != ref.Len) return false;
+        if (Cap != ref.Cap) return false;
+        return true;
+    }
+
     std::ostream& Slice::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -32,6 +51,23 @@ namespace golang::unsafeheader
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    String::operator T()
+    {
+        T result;
+        result.Data = this->Data;
+        result.Len = this->Len;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool String::operator==(const T& ref) const
+    {
+        if (Data != ref.Data) return false;
+        if (Len != ref.Len) return false;
+        return true;
+    }
+
     std::ostream& String::PrintTo(std::ostream& os) const
     {
         os << '{';

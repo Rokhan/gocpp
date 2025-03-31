@@ -25,6 +25,35 @@
 namespace golang::zlib
 {
     
+    template<typename T>
+    Writer::operator T()
+    {
+        T result;
+        result.w = this->w;
+        result.level = this->level;
+        result.dict = this->dict;
+        result.compressor = this->compressor;
+        result.digest = this->digest;
+        result.err = this->err;
+        result.scratch = this->scratch;
+        result.wroteHeader = this->wroteHeader;
+        return result;
+    }
+
+    template<typename T>
+    bool Writer::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        if (level != ref.level) return false;
+        if (dict != ref.dict) return false;
+        if (compressor != ref.compressor) return false;
+        if (digest != ref.digest) return false;
+        if (err != ref.err) return false;
+        if (scratch != ref.scratch) return false;
+        if (wroteHeader != ref.wroteHeader) return false;
+        return true;
+    }
+
     std::ostream& Writer::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -23,6 +23,12 @@ namespace golang::color
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -35,6 +41,12 @@ namespace golang::color
         uint8_t A;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -53,6 +65,12 @@ namespace golang::color
         uint8_t K;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

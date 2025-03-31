@@ -16,6 +16,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    m128a::operator T()
+    {
+        T result;
+        result.low = this->low;
+        result.high = this->high;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool m128a::operator==(const T& ref) const
+    {
+        if (low != ref.low) return false;
+        if (high != ref.high) return false;
+        return true;
+    }
+
     std::ostream& m128a::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -31,6 +48,111 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    context::operator T()
+    {
+        T result;
+        result.p1home = this->p1home;
+        result.p2home = this->p2home;
+        result.p3home = this->p3home;
+        result.p4home = this->p4home;
+        result.p5home = this->p5home;
+        result.p6home = this->p6home;
+        result.contextflags = this->contextflags;
+        result.mxcsr = this->mxcsr;
+        result.segcs = this->segcs;
+        result.segds = this->segds;
+        result.seges = this->seges;
+        result.segfs = this->segfs;
+        result.seggs = this->seggs;
+        result.segss = this->segss;
+        result.eflags = this->eflags;
+        result.dr0 = this->dr0;
+        result.dr1 = this->dr1;
+        result.dr2 = this->dr2;
+        result.dr3 = this->dr3;
+        result.dr6 = this->dr6;
+        result.dr7 = this->dr7;
+        result.rax = this->rax;
+        result.rcx = this->rcx;
+        result.rdx = this->rdx;
+        result.rbx = this->rbx;
+        result.rsp = this->rsp;
+        result.rbp = this->rbp;
+        result.rsi = this->rsi;
+        result.rdi = this->rdi;
+        result.r8 = this->r8;
+        result.r9 = this->r9;
+        result.r10 = this->r10;
+        result.r11 = this->r11;
+        result.r12 = this->r12;
+        result.r13 = this->r13;
+        result.r14 = this->r14;
+        result.r15 = this->r15;
+        result.rip = this->rip;
+        result.anon0 = this->anon0;
+        result.vectorregister = this->vectorregister;
+        result.vectorcontrol = this->vectorcontrol;
+        result.debugcontrol = this->debugcontrol;
+        result.lastbranchtorip = this->lastbranchtorip;
+        result.lastbranchfromrip = this->lastbranchfromrip;
+        result.lastexceptiontorip = this->lastexceptiontorip;
+        result.lastexceptionfromrip = this->lastexceptionfromrip;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool context::operator==(const T& ref) const
+    {
+        if (p1home != ref.p1home) return false;
+        if (p2home != ref.p2home) return false;
+        if (p3home != ref.p3home) return false;
+        if (p4home != ref.p4home) return false;
+        if (p5home != ref.p5home) return false;
+        if (p6home != ref.p6home) return false;
+        if (contextflags != ref.contextflags) return false;
+        if (mxcsr != ref.mxcsr) return false;
+        if (segcs != ref.segcs) return false;
+        if (segds != ref.segds) return false;
+        if (seges != ref.seges) return false;
+        if (segfs != ref.segfs) return false;
+        if (seggs != ref.seggs) return false;
+        if (segss != ref.segss) return false;
+        if (eflags != ref.eflags) return false;
+        if (dr0 != ref.dr0) return false;
+        if (dr1 != ref.dr1) return false;
+        if (dr2 != ref.dr2) return false;
+        if (dr3 != ref.dr3) return false;
+        if (dr6 != ref.dr6) return false;
+        if (dr7 != ref.dr7) return false;
+        if (rax != ref.rax) return false;
+        if (rcx != ref.rcx) return false;
+        if (rdx != ref.rdx) return false;
+        if (rbx != ref.rbx) return false;
+        if (rsp != ref.rsp) return false;
+        if (rbp != ref.rbp) return false;
+        if (rsi != ref.rsi) return false;
+        if (rdi != ref.rdi) return false;
+        if (r8 != ref.r8) return false;
+        if (r9 != ref.r9) return false;
+        if (r10 != ref.r10) return false;
+        if (r11 != ref.r11) return false;
+        if (r12 != ref.r12) return false;
+        if (r13 != ref.r13) return false;
+        if (r14 != ref.r14) return false;
+        if (r15 != ref.r15) return false;
+        if (rip != ref.rip) return false;
+        if (anon0 != ref.anon0) return false;
+        if (vectorregister != ref.vectorregister) return false;
+        if (vectorcontrol != ref.vectorcontrol) return false;
+        if (debugcontrol != ref.debugcontrol) return false;
+        if (lastbranchtorip != ref.lastbranchtorip) return false;
+        if (lastbranchfromrip != ref.lastbranchfromrip) return false;
+        if (lastexceptiontorip != ref.lastexceptiontorip) return false;
+        if (lastexceptionfromrip != ref.lastexceptionfromrip) return false;
+        return true;
+    }
+
     std::ostream& context::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -155,6 +277,35 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _DISPATCHER_CONTEXT::operator T()
+    {
+        T result;
+        result.controlPc = this->controlPc;
+        result.imageBase = this->imageBase;
+        result.functionEntry = this->functionEntry;
+        result.establisherFrame = this->establisherFrame;
+        result.targetIp = this->targetIp;
+        result.context = this->context;
+        result.languageHandler = this->languageHandler;
+        result.handlerData = this->handlerData;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _DISPATCHER_CONTEXT::operator==(const T& ref) const
+    {
+        if (controlPc != ref.controlPc) return false;
+        if (imageBase != ref.imageBase) return false;
+        if (functionEntry != ref.functionEntry) return false;
+        if (establisherFrame != ref.establisherFrame) return false;
+        if (targetIp != ref.targetIp) return false;
+        if (context != ref.context) return false;
+        if (languageHandler != ref.languageHandler) return false;
+        if (handlerData != ref.handlerData) return false;
+        return true;
+    }
+
     std::ostream& _DISPATCHER_CONTEXT::PrintTo(std::ostream& os) const
     {
         os << '{';

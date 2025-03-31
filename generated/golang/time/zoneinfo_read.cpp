@@ -34,6 +34,23 @@ namespace golang::time
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    dataIO::operator T()
+    {
+        T result;
+        result.p = this->p;
+        result.error = this->error;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dataIO::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        if (error != ref.error) return false;
+        return true;
+    }
+
     std::ostream& dataIO::PrintTo(std::ostream& os) const
     {
         os << '{';

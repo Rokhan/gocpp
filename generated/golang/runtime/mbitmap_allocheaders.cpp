@@ -78,6 +78,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heapArenaPtrScalar::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heapArenaPtrScalar::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& heapArenaPtrScalar::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -91,6 +104,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    typePointers::operator T()
+    {
+        T result;
+        result.elem = this->elem;
+        result.addr = this->addr;
+        result.mask = this->mask;
+        result.typ = this->typ;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool typePointers::operator==(const T& ref) const
+    {
+        if (elem != ref.elem) return false;
+        if (addr != ref.addr) return false;
+        if (mask != ref.mask) return false;
+        if (typ != ref.typ) return false;
+        return true;
+    }
+
     std::ostream& typePointers::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -420,6 +454,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    writeUserArenaHeapBits::operator T()
+    {
+        T result;
+        result.offset = this->offset;
+        result.mask = this->mask;
+        result.valid = this->valid;
+        result.low = this->low;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool writeUserArenaHeapBits::operator==(const T& ref) const
+    {
+        if (offset != ref.offset) return false;
+        if (mask != ref.mask) return false;
+        if (valid != ref.valid) return false;
+        if (low != ref.low) return false;
+        return true;
+    }
+
     std::ostream& writeUserArenaHeapBits::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1178,6 +1233,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heapBits::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heapBits::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& heapBits::PrintTo(std::ostream& os) const
     {
         os << '{';

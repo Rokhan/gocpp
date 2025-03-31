@@ -33,6 +33,35 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stkframe::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.pc = this->pc;
+        result.continpc = this->continpc;
+        result.lr = this->lr;
+        result.sp = this->sp;
+        result.fp = this->fp;
+        result.varp = this->varp;
+        result.argp = this->argp;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stkframe::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (pc != ref.pc) return false;
+        if (continpc != ref.continpc) return false;
+        if (lr != ref.lr) return false;
+        if (sp != ref.sp) return false;
+        if (fp != ref.fp) return false;
+        if (varp != ref.varp) return false;
+        if (argp != ref.argp) return false;
+        return true;
+    }
+
     std::ostream& stkframe::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -54,6 +83,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    reflectMethodValue::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.stack = this->stack;
+        result.argLen = this->argLen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool reflectMethodValue::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (stack != ref.stack) return false;
+        if (argLen != ref.argLen) return false;
+        return true;
+    }
+
     std::ostream& reflectMethodValue::PrintTo(std::ostream& os) const
     {
         os << '{';

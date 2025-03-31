@@ -13,7 +13,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/io/io.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
@@ -171,6 +171,12 @@ namespace golang::binary
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -190,6 +196,12 @@ namespace golang::binary
     {
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
@@ -220,6 +232,12 @@ namespace golang::binary
         int offset;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

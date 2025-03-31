@@ -21,6 +21,37 @@ namespace golang::fmt
     std::string ldigits = "0123456789abcdefx";
     std::string udigits = "0123456789ABCDEFX";
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fmtFlags::operator T()
+    {
+        T result;
+        result.widPresent = this->widPresent;
+        result.precPresent = this->precPresent;
+        result.minus = this->minus;
+        result.plus = this->plus;
+        result.sharp = this->sharp;
+        result.space = this->space;
+        result.zero = this->zero;
+        result.plusV = this->plusV;
+        result.sharpV = this->sharpV;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fmtFlags::operator==(const T& ref) const
+    {
+        if (widPresent != ref.widPresent) return false;
+        if (precPresent != ref.precPresent) return false;
+        if (minus != ref.minus) return false;
+        if (plus != ref.plus) return false;
+        if (sharp != ref.sharp) return false;
+        if (space != ref.space) return false;
+        if (zero != ref.zero) return false;
+        if (plusV != ref.plusV) return false;
+        if (sharpV != ref.sharpV) return false;
+        return true;
+    }
+
     std::ostream& fmtFlags::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -43,6 +74,27 @@ namespace golang::fmt
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fmt::operator T()
+    {
+        T result;
+        result.buf = this->buf;
+        result.wid = this->wid;
+        result.prec = this->prec;
+        result.intbuf = this->intbuf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fmt::operator==(const T& ref) const
+    {
+        if (buf != ref.buf) return false;
+        if (wid != ref.wid) return false;
+        if (prec != ref.prec) return false;
+        if (intbuf != ref.intbuf) return false;
+        return true;
+    }
+
     std::ostream& fmt::PrintTo(std::ostream& os) const
     {
         os << '{';

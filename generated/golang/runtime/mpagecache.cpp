@@ -27,6 +27,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pageCache::operator T()
+    {
+        T result;
+        result.base = this->base;
+        result.cache = this->cache;
+        result.scav = this->scav;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pageCache::operator==(const T& ref) const
+    {
+        if (base != ref.base) return false;
+        if (cache != ref.cache) return false;
+        if (scav != ref.scav) return false;
+        return true;
+    }
+
     std::ostream& pageCache::PrintTo(std::ostream& os) const
     {
         os << '{';

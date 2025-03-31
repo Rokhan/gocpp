@@ -62,6 +62,19 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Pinner::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Pinner::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& Pinner::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -119,6 +132,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pinner::operator T()
+    {
+        T result;
+        result.refs = this->refs;
+        result.refStore = this->refStore;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pinner::operator==(const T& ref) const
+    {
+        if (refs != ref.refs) return false;
+        if (refStore != ref.refStore) return false;
+        return true;
+    }
+
     std::ostream& pinner::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -256,6 +286,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pinState::operator T()
+    {
+        T result;
+        result.bytep = this->bytep;
+        result.byteVal = this->byteVal;
+        result.mask = this->mask;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pinState::operator==(const T& ref) const
+    {
+        if (bytep != ref.bytep) return false;
+        if (byteVal != ref.byteVal) return false;
+        if (mask != ref.mask) return false;
+        return true;
+    }
+
     std::ostream& pinState::PrintTo(std::ostream& os) const
     {
         os << '{';

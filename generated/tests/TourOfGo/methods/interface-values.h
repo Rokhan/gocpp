@@ -64,6 +64,12 @@ namespace golang::main
 
         using isGoStruct = void;
 
+        template<typename U>
+        operator U();
+
+        template<typename U>
+        bool operator==(const U& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

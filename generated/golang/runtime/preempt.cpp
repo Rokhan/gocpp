@@ -58,6 +58,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    suspendGState::operator T()
+    {
+        T result;
+        result.g = this->g;
+        result.dead = this->dead;
+        result.stopped = this->stopped;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool suspendGState::operator==(const T& ref) const
+    {
+        if (g != ref.g) return false;
+        if (dead != ref.dead) return false;
+        if (stopped != ref.stopped) return false;
+        return true;
+    }
+
     std::ostream& suspendGState::PrintTo(std::ostream& os) const
     {
         os << '{';

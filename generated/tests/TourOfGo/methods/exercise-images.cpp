@@ -19,6 +19,19 @@
 namespace golang::main
 {
     
+    template<typename T>
+    Image::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool Image::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& Image::PrintTo(std::ostream& os) const
     {
         os << '{';

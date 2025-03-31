@@ -18,6 +18,27 @@
 namespace golang::abi
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RegArgs::operator T()
+    {
+        T result;
+        result.Ints = this->Ints;
+        result.Floats = this->Floats;
+        result.Ptrs = this->Ptrs;
+        result.ReturnIsPtr = this->ReturnIsPtr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RegArgs::operator==(const T& ref) const
+    {
+        if (Ints != ref.Ints) return false;
+        if (Floats != ref.Floats) return false;
+        if (Ptrs != ref.Ptrs) return false;
+        if (ReturnIsPtr != ref.ReturnIsPtr) return false;
+        return true;
+    }
+
     std::ostream& RegArgs::PrintTo(std::ostream& os) const
     {
         os << '{';

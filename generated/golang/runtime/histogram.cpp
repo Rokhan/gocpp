@@ -19,6 +19,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    timeHistogram::operator T()
+    {
+        T result;
+        result.counts = this->counts;
+        result.underflow = this->underflow;
+        result.overflow = this->overflow;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool timeHistogram::operator==(const T& ref) const
+    {
+        if (counts != ref.counts) return false;
+        if (underflow != ref.underflow) return false;
+        if (overflow != ref.overflow) return false;
+        return true;
+    }
+
     std::ostream& timeHistogram::PrintTo(std::ostream& os) const
     {
         os << '{';

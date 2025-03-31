@@ -24,6 +24,33 @@ namespace golang::bufio
     std::string ErrBufferFull = errors::New("bufio: buffer full");
     std::string ErrNegativeCount = errors::New("bufio: negative count");
     
+    template<typename T>
+    Reader::operator T()
+    {
+        T result;
+        result.buf = this->buf;
+        result.rd = this->rd;
+        result.r = this->r;
+        result.w = this->w;
+        result.err = this->err;
+        result.lastByte = this->lastByte;
+        result.lastRuneSize = this->lastRuneSize;
+        return result;
+    }
+
+    template<typename T>
+    bool Reader::operator==(const T& ref) const
+    {
+        if (buf != ref.buf) return false;
+        if (rd != ref.rd) return false;
+        if (r != ref.r) return false;
+        if (w != ref.w) return false;
+        if (err != ref.err) return false;
+        if (lastByte != ref.lastByte) return false;
+        if (lastRuneSize != ref.lastRuneSize) return false;
+        return true;
+    }
+
     std::ostream& Reader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -613,6 +640,27 @@ namespace golang::bufio
     }
 
     
+    template<typename T>
+    Writer::operator T()
+    {
+        T result;
+        result.err = this->err;
+        result.buf = this->buf;
+        result.n = this->n;
+        result.wr = this->wr;
+        return result;
+    }
+
+    template<typename T>
+    bool Writer::operator==(const T& ref) const
+    {
+        if (err != ref.err) return false;
+        if (buf != ref.buf) return false;
+        if (n != ref.n) return false;
+        if (wr != ref.wr) return false;
+        return true;
+    }
+
     std::ostream& Writer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -933,6 +981,19 @@ namespace golang::bufio
     }
 
     
+    template<typename T>
+    ReadWriter::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool ReadWriter::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& ReadWriter::PrintTo(std::ostream& os) const
     {
         os << '{';

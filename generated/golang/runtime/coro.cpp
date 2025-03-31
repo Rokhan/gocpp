@@ -38,6 +38,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    coro::operator T()
+    {
+        T result;
+        result.gp = this->gp;
+        result.f = this->f;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool coro::operator==(const T& ref) const
+    {
+        if (gp != ref.gp) return false;
+        if (f != ref.f) return false;
+        return true;
+    }
+
     std::ostream& coro::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -115,6 +115,19 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    neverCallThisFunction::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool neverCallThisFunction::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& neverCallThisFunction::PrintTo(std::ostream& os) const
     {
         os << '{';

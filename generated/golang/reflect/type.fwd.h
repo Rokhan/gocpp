@@ -55,7 +55,7 @@ namespace golang::reflect
 #include "golang/internal/abi/map.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/reflect/abi.fwd.h"
-#include "golang/reflect/value.fwd.h"
+// #include "golang/reflect/value.fwd.h" [Ignored, known errors]
 #include "golang/sync/pool.fwd.h"
 
 namespace golang::reflect

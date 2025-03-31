@@ -31,6 +31,29 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSet::operator T()
+    {
+        T result;
+        result.spineLock = this->spineLock;
+        result.spine = this->spine;
+        result.spineLen = this->spineLen;
+        result.spineCap = this->spineCap;
+        result.index = this->index;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSet::operator==(const T& ref) const
+    {
+        if (spineLock != ref.spineLock) return false;
+        if (spine != ref.spine) return false;
+        if (spineLen != ref.spineLen) return false;
+        if (spineCap != ref.spineCap) return false;
+        if (index != ref.index) return false;
+        return true;
+    }
+
     std::ostream& spanSet::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -49,6 +72,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSetBlock::operator T()
+    {
+        T result;
+        result.popped = this->popped;
+        result.spans = this->spans;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSetBlock::operator==(const T& ref) const
+    {
+        if (popped != ref.popped) return false;
+        if (spans != ref.spans) return false;
+        return true;
+    }
+
     std::ostream& spanSetBlock::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -192,6 +232,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicSpanSetSpinePointer::operator T()
+    {
+        T result;
+        result.a = this->a;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicSpanSetSpinePointer::operator==(const T& ref) const
+    {
+        if (a != ref.a) return false;
+        return true;
+    }
+
     std::ostream& atomicSpanSetSpinePointer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -216,6 +271,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSetSpinePointer::operator T()
+    {
+        T result;
+        result.p = this->p;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSetSpinePointer::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        return true;
+    }
+
     std::ostream& spanSetSpinePointer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -236,6 +306,21 @@ namespace golang::runtime
 
     spanSetBlockAlloc spanSetBlockPool;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    spanSetBlockAlloc::operator T()
+    {
+        T result;
+        result.stack = this->stack;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool spanSetBlockAlloc::operator==(const T& ref) const
+    {
+        if (stack != ref.stack) return false;
+        return true;
+    }
+
     std::ostream& spanSetBlockAlloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -287,6 +372,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicHeadTailIndex::operator T()
+    {
+        T result;
+        result.u = this->u;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicHeadTailIndex::operator==(const T& ref) const
+    {
+        if (u != ref.u) return false;
+        return true;
+    }
+
     std::ostream& atomicHeadTailIndex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -337,6 +437,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicMSpanPointer::operator T()
+    {
+        T result;
+        result.p = this->p;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicMSpanPointer::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        return true;
+    }
+
     std::ostream& atomicMSpanPointer::PrintTo(std::ostream& os) const
     {
         os << '{';

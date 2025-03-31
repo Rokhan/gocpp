@@ -51,6 +51,41 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    hchan::operator T()
+    {
+        T result;
+        result.qcount = this->qcount;
+        result.dataqsiz = this->dataqsiz;
+        result.buf = this->buf;
+        result.elemsize = this->elemsize;
+        result.closed = this->closed;
+        result.elemtype = this->elemtype;
+        result.sendx = this->sendx;
+        result.recvx = this->recvx;
+        result.recvq = this->recvq;
+        result.sendq = this->sendq;
+        result.lock = this->lock;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool hchan::operator==(const T& ref) const
+    {
+        if (qcount != ref.qcount) return false;
+        if (dataqsiz != ref.dataqsiz) return false;
+        if (buf != ref.buf) return false;
+        if (elemsize != ref.elemsize) return false;
+        if (closed != ref.closed) return false;
+        if (elemtype != ref.elemtype) return false;
+        if (sendx != ref.sendx) return false;
+        if (recvx != ref.recvx) return false;
+        if (recvq != ref.recvq) return false;
+        if (sendq != ref.sendq) return false;
+        if (lock != ref.lock) return false;
+        return true;
+    }
+
     std::ostream& hchan::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -75,6 +110,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    waitq::operator T()
+    {
+        T result;
+        result.first = this->first;
+        result.last = this->last;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool waitq::operator==(const T& ref) const
+    {
+        if (first != ref.first) return false;
+        if (last != ref.last) return false;
+        return true;
+    }
+
     std::ostream& waitq::PrintTo(std::ostream& os) const
     {
         os << '{';

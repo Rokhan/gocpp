@@ -62,6 +62,25 @@ namespace golang::runtime
     itabTableType* itabTable = & itabTableInit;
     itabTableType itabTableInit = gocpp::Init<itabTableType>([](itabTableType& x) { x.size = itabInitSize; });
     
+    template<typename T> requires gocpp::GoStruct<T>
+    itabTableType::operator T()
+    {
+        T result;
+        result.size = this->size;
+        result.count = this->count;
+        result.entries = this->entries;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool itabTableType::operator==(const T& ref) const
+    {
+        if (size != ref.size) return false;
+        if (count != ref.count) return false;
+        if (entries != ref.entries) return false;
+        return true;
+    }
+
     std::ostream& itabTableType::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -13,12 +13,29 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/sort/sort.h"
 
 namespace golang::fmtsort
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SortedMap::operator T()
+    {
+        T result;
+        result.Key = this->Key;
+        result.Value = this->Value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SortedMap::operator==(const T& ref) const
+    {
+        if (Key != ref.Key) return false;
+        if (Value != ref.Value) return false;
+        return true;
+    }
+
     std::ostream& SortedMap::PrintTo(std::ostream& os) const
     {
         os << '{';

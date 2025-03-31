@@ -1072,6 +1072,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    persistentAlloc::operator T()
+    {
+        T result;
+        result.base = this->base;
+        result.off = this->off;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool persistentAlloc::operator==(const T& ref) const
+    {
+        if (base != ref.base) return false;
+        if (off != ref.off) return false;
+        return true;
+    }
+
     std::ostream& persistentAlloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1090,6 +1107,19 @@ namespace golang::runtime
     {
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -1207,6 +1237,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    linearAlloc::operator T()
+    {
+        T result;
+        result.next = this->next;
+        result.mapped = this->mapped;
+        result.end = this->end;
+        result.mapMemory = this->mapMemory;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool linearAlloc::operator==(const T& ref) const
+    {
+        if (next != ref.next) return false;
+        if (mapped != ref.mapped) return false;
+        if (end != ref.end) return false;
+        if (mapMemory != ref.mapMemory) return false;
+        return true;
+    }
+
     std::ostream& linearAlloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1256,6 +1307,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    notInHeap::operator T()
+    {
+        T result;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool notInHeap::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& notInHeap::PrintTo(std::ostream& os) const
     {
         os << '{';

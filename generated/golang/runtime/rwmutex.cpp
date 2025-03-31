@@ -39,6 +39,35 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    rwmutex::operator T()
+    {
+        T result;
+        result.rLock = this->rLock;
+        result.readers = this->readers;
+        result.readerPass = this->readerPass;
+        result.wLock = this->wLock;
+        result.writer = this->writer;
+        result.readerCount = this->readerCount;
+        result.readerWait = this->readerWait;
+        result.readRank = this->readRank;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool rwmutex::operator==(const T& ref) const
+    {
+        if (rLock != ref.rLock) return false;
+        if (readers != ref.readers) return false;
+        if (readerPass != ref.readerPass) return false;
+        if (wLock != ref.wLock) return false;
+        if (writer != ref.writer) return false;
+        if (readerCount != ref.readerCount) return false;
+        if (readerWait != ref.readerWait) return false;
+        if (readRank != ref.readRank) return false;
+        return true;
+    }
+
     std::ostream& rwmutex::PrintTo(std::ostream& os) const
     {
         os << '{';

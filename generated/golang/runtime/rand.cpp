@@ -51,6 +51,27 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.seed = this->seed;
+            result.state = this->state;
+            result.init = this->init;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (seed != ref.seed) return false;
+            if (state != ref.state) return false;
+            if (init != ref.init) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

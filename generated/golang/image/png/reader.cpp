@@ -36,6 +36,27 @@ namespace golang::png
     }
 
     
+    template<typename T>
+    interlaceScan::operator T()
+    {
+        T result;
+        result.xFactor = this->xFactor;
+        result.yFactor = this->yFactor;
+        result.xOffset = this->xOffset;
+        result.yOffset = this->yOffset;
+        return result;
+    }
+
+    template<typename T>
+    bool interlaceScan::operator==(const T& ref) const
+    {
+        if (xFactor != ref.xFactor) return false;
+        if (yFactor != ref.yFactor) return false;
+        if (xOffset != ref.xOffset) return false;
+        if (yOffset != ref.yOffset) return false;
+        return true;
+    }
+
     std::ostream& interlaceScan::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -55,6 +76,47 @@ namespace golang::png
     gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> { {8, 8, 0, 0},  {8, 8, 4, 0},  {4, 8, 0, 4},  {4, 4, 2, 0},  {2, 4, 0, 2},  {2, 2, 1, 0},  {1, 2, 0, 1}};
     std::string pngHeader = "\x89PNG\r\n\x1a\n";
     
+    template<typename T>
+    decoder::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.img = this->img;
+        result.crc = this->crc;
+        result.width = this->width;
+        result.height = this->height;
+        result.depth = this->depth;
+        result.palette = this->palette;
+        result.cb = this->cb;
+        result.stage = this->stage;
+        result.idatLength = this->idatLength;
+        result.tmp = this->tmp;
+        result.interlace = this->interlace;
+        result.useTransparent = this->useTransparent;
+        result.transparent = this->transparent;
+        return result;
+    }
+
+    template<typename T>
+    bool decoder::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (img != ref.img) return false;
+        if (crc != ref.crc) return false;
+        if (width != ref.width) return false;
+        if (height != ref.height) return false;
+        if (depth != ref.depth) return false;
+        if (palette != ref.palette) return false;
+        if (cb != ref.cb) return false;
+        if (stage != ref.stage) return false;
+        if (idatLength != ref.idatLength) return false;
+        if (tmp != ref.tmp) return false;
+        if (interlace != ref.interlace) return false;
+        if (useTransparent != ref.useTransparent) return false;
+        if (transparent != ref.transparent) return false;
+        return true;
+    }
+
     std::ostream& decoder::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -18,6 +18,23 @@
 namespace golang::main
 {
     
+    template<typename T>
+    MyError::operator T()
+    {
+        T result;
+        result.When = this->When;
+        result.What = this->What;
+        return result;
+    }
+
+    template<typename T>
+    bool MyError::operator==(const T& ref) const
+    {
+        if (When != ref.When) return false;
+        if (What != ref.What) return false;
+        return true;
+    }
+
     std::ostream& MyError::PrintTo(std::ostream& os) const
     {
         os << '{';

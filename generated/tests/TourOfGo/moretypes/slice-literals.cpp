@@ -22,6 +22,23 @@ namespace golang::main
 
             using isGoStruct = void;
 
+            template<typename T>
+            operator T()
+            {
+                T result;
+                result.i = this->i;
+                result.b = this->b;
+                return result;
+            }
+
+            template<typename T>
+            bool operator==(const T& ref) const
+            {
+                if (i != ref.i) return false;
+                if (b != ref.b) return false;
+                return true;
+            }
+
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';

@@ -31,6 +31,12 @@ namespace golang::png
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
@@ -104,6 +110,12 @@ namespace golang::png
         bufio::Writer* bw;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T();
+
+        template<typename T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

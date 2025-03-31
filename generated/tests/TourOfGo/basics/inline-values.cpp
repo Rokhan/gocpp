@@ -32,6 +32,23 @@ namespace golang::main
 
     ints smallPrimes = ints {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fakeResult::operator T()
+    {
+        T result;
+        result.body = this->body;
+        result.urls = this->urls;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fakeResult::operator==(const T& ref) const
+    {
+        if (body != ref.body) return false;
+        if (urls != ref.urls) return false;
+        return true;
+    }
+
     std::ostream& fakeResult::PrintTo(std::ostream& os) const
     {
         os << '{';

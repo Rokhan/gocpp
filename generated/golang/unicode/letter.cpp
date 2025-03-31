@@ -16,6 +16,25 @@
 namespace golang::unicode
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RangeTable::operator T()
+    {
+        T result;
+        result.R16 = this->R16;
+        result.R32 = this->R32;
+        result.LatinOffset = this->LatinOffset;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RangeTable::operator==(const T& ref) const
+    {
+        if (R16 != ref.R16) return false;
+        if (R32 != ref.R32) return false;
+        if (LatinOffset != ref.LatinOffset) return false;
+        return true;
+    }
+
     std::ostream& RangeTable::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -32,6 +51,25 @@ namespace golang::unicode
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Range16::operator T()
+    {
+        T result;
+        result.Lo = this->Lo;
+        result.Hi = this->Hi;
+        result.Stride = this->Stride;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Range16::operator==(const T& ref) const
+    {
+        if (Lo != ref.Lo) return false;
+        if (Hi != ref.Hi) return false;
+        if (Stride != ref.Stride) return false;
+        return true;
+    }
+
     std::ostream& Range16::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -48,6 +86,25 @@ namespace golang::unicode
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Range32::operator T()
+    {
+        T result;
+        result.Lo = this->Lo;
+        result.Hi = this->Hi;
+        result.Stride = this->Stride;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Range32::operator==(const T& ref) const
+    {
+        if (Lo != ref.Lo) return false;
+        if (Hi != ref.Hi) return false;
+        if (Stride != ref.Stride) return false;
+        return true;
+    }
+
     std::ostream& Range32::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -64,6 +121,25 @@ namespace golang::unicode
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CaseRange::operator T()
+    {
+        T result;
+        result.Lo = this->Lo;
+        result.Hi = this->Hi;
+        result.Delta = this->Delta;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CaseRange::operator==(const T& ref) const
+    {
+        if (Lo != ref.Lo) return false;
+        if (Hi != ref.Hi) return false;
+        if (Delta != ref.Delta) return false;
+        return true;
+    }
+
     std::ostream& CaseRange::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -340,6 +416,23 @@ namespace golang::unicode
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    foldPair::operator T()
+    {
+        T result;
+        result.From = this->From;
+        result.To = this->To;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool foldPair::operator==(const T& ref) const
+    {
+        if (From != ref.From) return false;
+        if (To != ref.To) return false;
+        return true;
+    }
+
     std::ostream& foldPair::PrintTo(std::ostream& os) const
     {
         os << '{';

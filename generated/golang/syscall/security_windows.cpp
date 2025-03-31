@@ -47,6 +47,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    UserInfo10::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Comment = this->Comment;
+        result.UsrComment = this->UsrComment;
+        result.FullName = this->FullName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool UserInfo10::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Comment != ref.Comment) return false;
+        if (UsrComment != ref.UsrComment) return false;
+        if (FullName != ref.FullName) return false;
+        return true;
+    }
+
     std::ostream& UserInfo10::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -64,6 +85,19 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SID::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SID::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& SID::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -265,6 +299,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SIDAndAttributes::operator T()
+    {
+        T result;
+        result.Sid = this->Sid;
+        result.Attributes = this->Attributes;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SIDAndAttributes::operator==(const T& ref) const
+    {
+        if (Sid != ref.Sid) return false;
+        if (Attributes != ref.Attributes) return false;
+        return true;
+    }
+
     std::ostream& SIDAndAttributes::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -280,6 +331,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Tokenuser::operator T()
+    {
+        T result;
+        result.User = this->User;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Tokenuser::operator==(const T& ref) const
+    {
+        if (User != ref.User) return false;
+        return true;
+    }
+
     std::ostream& Tokenuser::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -294,6 +360,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Tokenprimarygroup::operator T()
+    {
+        T result;
+        result.PrimaryGroup = this->PrimaryGroup;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Tokenprimarygroup::operator==(const T& ref) const
+    {
+        if (PrimaryGroup != ref.PrimaryGroup) return false;
+        return true;
+    }
+
     std::ostream& Tokenprimarygroup::PrintTo(std::ostream& os) const
     {
         os << '{';

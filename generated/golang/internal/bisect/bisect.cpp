@@ -203,6 +203,29 @@ namespace golang::bisect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Matcher::operator T()
+    {
+        T result;
+        result.verbose = this->verbose;
+        result.quiet = this->quiet;
+        result.enable = this->enable;
+        result.list = this->list;
+        result.dedup = this->dedup;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Matcher::operator==(const T& ref) const
+    {
+        if (verbose != ref.verbose) return false;
+        if (quiet != ref.quiet) return false;
+        if (enable != ref.enable) return false;
+        if (list != ref.list) return false;
+        if (dedup != ref.dedup) return false;
+        return true;
+    }
+
     std::ostream& Matcher::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -221,6 +244,21 @@ namespace golang::bisect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicPointerDedup::operator T()
+    {
+        T result;
+        result.p = this->p;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicPointerDedup::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        return true;
+    }
+
     std::ostream& atomicPointerDedup::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -245,6 +283,25 @@ namespace golang::bisect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cond::operator T()
+    {
+        T result;
+        result.mask = this->mask;
+        result.bits = this->bits;
+        result.result = this->result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cond::operator==(const T& ref) const
+    {
+        if (mask != ref.mask) return false;
+        if (bits != ref.bits) return false;
+        if (result != ref.result) return false;
+        return true;
+    }
+
     std::ostream& cond::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -841,6 +898,21 @@ namespace golang::bisect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    parseError::operator T()
+    {
+        T result;
+        result.text = this->text;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool parseError::operator==(const T& ref) const
+    {
+        if (text != ref.text) return false;
+        return true;
+    }
+
     std::ostream& parseError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -899,6 +971,25 @@ namespace golang::bisect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    dedup::operator T()
+    {
+        T result;
+        result.recent = this->recent;
+        result.mu = this->mu;
+        result.m = this->m;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dedup::operator==(const T& ref) const
+    {
+        if (recent != ref.recent) return false;
+        if (mu != ref.mu) return false;
+        if (m != ref.m) return false;
+        return true;
+    }
+
     std::ostream& dedup::PrintTo(std::ostream& os) const
     {
         os << '{';

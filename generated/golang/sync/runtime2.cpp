@@ -16,6 +16,29 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    notifyList::operator T()
+    {
+        T result;
+        result.wait = this->wait;
+        result.notify = this->notify;
+        result.lock = this->lock;
+        result.head = this->head;
+        result.tail = this->tail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool notifyList::operator==(const T& ref) const
+    {
+        if (wait != ref.wait) return false;
+        if (notify != ref.notify) return false;
+        if (lock != ref.lock) return false;
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        return true;
+    }
+
     std::ostream& notifyList::PrintTo(std::ostream& os) const
     {
         os << '{';

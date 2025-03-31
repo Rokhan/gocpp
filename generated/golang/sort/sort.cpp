@@ -119,6 +119,23 @@ namespace golang::sort
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    lessSwap::operator T()
+    {
+        T result;
+        result.Less = this->Less;
+        result.Swap = this->Swap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool lessSwap::operator==(const T& ref) const
+    {
+        if (Less != ref.Less) return false;
+        if (Swap != ref.Swap) return false;
+        return true;
+    }
+
     std::ostream& lessSwap::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -134,6 +151,19 @@ namespace golang::sort
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    reverse::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool reverse::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& reverse::PrintTo(std::ostream& os) const
     {
         os << '{';

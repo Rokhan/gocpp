@@ -76,6 +76,33 @@ namespace golang::runtime
     mutex profMemActiveLock;
     gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    bucket::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        result.allnext = this->allnext;
+        result.typ = this->typ;
+        result.hash = this->hash;
+        result.size = this->size;
+        result.nstk = this->nstk;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool bucket::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        if (allnext != ref.allnext) return false;
+        if (typ != ref.typ) return false;
+        if (hash != ref.hash) return false;
+        if (size != ref.size) return false;
+        if (nstk != ref.nstk) return false;
+        return true;
+    }
+
     std::ostream& bucket::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -96,6 +123,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    memRecord::operator T()
+    {
+        T result;
+        result.active = this->active;
+        result.future = this->future;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool memRecord::operator==(const T& ref) const
+    {
+        if (active != ref.active) return false;
+        if (future != ref.future) return false;
+        return true;
+    }
+
     std::ostream& memRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -111,6 +155,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    memRecordCycle::operator T()
+    {
+        T result;
+        result.allocs = this->allocs;
+        result.frees = this->frees;
+        result.alloc_bytes = this->alloc_bytes;
+        result.free_bytes = this->free_bytes;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool memRecordCycle::operator==(const T& ref) const
+    {
+        if (allocs != ref.allocs) return false;
+        if (frees != ref.frees) return false;
+        if (alloc_bytes != ref.alloc_bytes) return false;
+        if (free_bytes != ref.free_bytes) return false;
+        return true;
+    }
+
     std::ostream& memRecordCycle::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -136,6 +201,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    blockRecord::operator T()
+    {
+        T result;
+        result.count = this->count;
+        result.cycles = this->cycles;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool blockRecord::operator==(const T& ref) const
+    {
+        if (count != ref.count) return false;
+        if (cycles != ref.cycles) return false;
+        return true;
+    }
+
     std::ostream& blockRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -157,6 +239,21 @@ namespace golang::runtime
     mProfCycleHolder mProfCycle;
     // // *bucket
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mProfCycleHolder::operator T()
+    {
+        T result;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mProfCycleHolder::operator==(const T& ref) const
+    {
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& mProfCycleHolder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -504,6 +601,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    lockTimer::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.timeRate = this->timeRate;
+        result.timeStart = this->timeStart;
+        result.tickStart = this->tickStart;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool lockTimer::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (timeRate != ref.timeRate) return false;
+        if (timeStart != ref.timeStart) return false;
+        if (tickStart != ref.tickStart) return false;
+        return true;
+    }
+
     std::ostream& lockTimer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -554,6 +672,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mLockProfile::operator T()
+    {
+        T result;
+        result.waitTime = this->waitTime;
+        result.stack = this->stack;
+        result.pending = this->pending;
+        result.cycles = this->cycles;
+        result.cyclesLost = this->cyclesLost;
+        result.disabled = this->disabled;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mLockProfile::operator==(const T& ref) const
+    {
+        if (waitTime != ref.waitTime) return false;
+        if (stack != ref.stack) return false;
+        if (pending != ref.pending) return false;
+        if (cycles != ref.cycles) return false;
+        if (cyclesLost != ref.cyclesLost) return false;
+        if (disabled != ref.disabled) return false;
+        return true;
+    }
+
     std::ostream& mLockProfile::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -724,6 +867,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    StackRecord::operator T()
+    {
+        T result;
+        result.Stack0 = this->Stack0;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool StackRecord::operator==(const T& ref) const
+    {
+        if (Stack0 != ref.Stack0) return false;
+        return true;
+    }
+
     std::ostream& StackRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -752,6 +910,29 @@ namespace golang::runtime
     int MemProfileRate = 512 * 1024;
     bool disableMemoryProfiling;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    MemProfileRecord::operator T()
+    {
+        T result;
+        result.AllocBytes = this->AllocBytes;
+        result.FreeBytes = this->FreeBytes;
+        result.AllocObjects = this->AllocObjects;
+        result.FreeObjects = this->FreeObjects;
+        result.Stack0 = this->Stack0;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool MemProfileRecord::operator==(const T& ref) const
+    {
+        if (AllocBytes != ref.AllocBytes) return false;
+        if (FreeBytes != ref.FreeBytes) return false;
+        if (AllocObjects != ref.AllocObjects) return false;
+        if (FreeObjects != ref.FreeObjects) return false;
+        if (Stack0 != ref.Stack0) return false;
+        return true;
+    }
+
     std::ostream& MemProfileRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -911,6 +1092,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    BlockProfileRecord::operator T()
+    {
+        T result;
+        result.Count = this->Count;
+        result.Cycles = this->Cycles;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool BlockProfileRecord::operator==(const T& ref) const
+    {
+        if (Count != ref.Count) return false;
+        if (Cycles != ref.Cycles) return false;
+        return true;
+    }
+
     std::ostream& BlockProfileRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1085,6 +1283,29 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.sema = this->sema;
+            result.active = this->active;
+            result.offset = this->offset;
+            result.records = this->records;
+            result.labels = this->labels;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (sema != ref.sema) return false;
+            if (active != ref.active) return false;
+            if (offset != ref.offset) return false;
+            if (records != ref.records) return false;
+            if (labels != ref.labels) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -1113,6 +1334,29 @@ namespace golang::runtime
         gocpp::slice<unsafe::Pointer> labels;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.sema = this->sema;
+            result.active = this->active;
+            result.offset = this->offset;
+            result.records = this->records;
+            result.labels = this->labels;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (sema != ref.sema) return false;
+            if (active != ref.active) return false;
+            if (offset != ref.offset) return false;
+            if (records != ref.records) return false;
+            if (labels != ref.labels) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

@@ -23,6 +23,29 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    inlinedCall::operator T()
+    {
+        T result;
+        result.funcID = this->funcID;
+        result._ = this->_;
+        result.nameOff = this->nameOff;
+        result.parentPc = this->parentPc;
+        result.startLine = this->startLine;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool inlinedCall::operator==(const T& ref) const
+    {
+        if (funcID != ref.funcID) return false;
+        if (_ != ref._) return false;
+        if (nameOff != ref.nameOff) return false;
+        if (parentPc != ref.parentPc) return false;
+        if (startLine != ref.startLine) return false;
+        return true;
+    }
+
     std::ostream& inlinedCall::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -41,6 +64,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    inlineUnwinder::operator T()
+    {
+        T result;
+        result.f = this->f;
+        result.inlTree = this->inlTree;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool inlineUnwinder::operator==(const T& ref) const
+    {
+        if (f != ref.f) return false;
+        if (inlTree != ref.inlTree) return false;
+        return true;
+    }
+
     std::ostream& inlineUnwinder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -56,6 +96,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    inlineFrame::operator T()
+    {
+        T result;
+        result.pc = this->pc;
+        result.index = this->index;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool inlineFrame::operator==(const T& ref) const
+    {
+        if (pc != ref.pc) return false;
+        if (index != ref.index) return false;
+        return true;
+    }
+
     std::ostream& inlineFrame::PrintTo(std::ostream& os) const
     {
         os << '{';

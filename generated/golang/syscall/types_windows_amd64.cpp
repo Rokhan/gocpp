@@ -16,6 +16,33 @@
 namespace golang::syscall
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    WSAData::operator T()
+    {
+        T result;
+        result.Version = this->Version;
+        result.HighVersion = this->HighVersion;
+        result.MaxSockets = this->MaxSockets;
+        result.MaxUdpDg = this->MaxUdpDg;
+        result.VendorInfo = this->VendorInfo;
+        result.Description = this->Description;
+        result.SystemStatus = this->SystemStatus;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool WSAData::operator==(const T& ref) const
+    {
+        if (Version != ref.Version) return false;
+        if (HighVersion != ref.HighVersion) return false;
+        if (MaxSockets != ref.MaxSockets) return false;
+        if (MaxUdpDg != ref.MaxUdpDg) return false;
+        if (VendorInfo != ref.VendorInfo) return false;
+        if (Description != ref.Description) return false;
+        if (SystemStatus != ref.SystemStatus) return false;
+        return true;
+    }
+
     std::ostream& WSAData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -36,6 +63,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Servent::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Aliases = this->Aliases;
+        result.Proto = this->Proto;
+        result.Port = this->Port;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Servent::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Aliases != ref.Aliases) return false;
+        if (Proto != ref.Proto) return false;
+        if (Port != ref.Port) return false;
+        return true;
+    }
+
     std::ostream& Servent::PrintTo(std::ostream& os) const
     {
         os << '{';

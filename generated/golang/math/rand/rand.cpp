@@ -141,6 +141,27 @@ namespace golang::rand
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Rand::operator T()
+    {
+        T result;
+        result.src = this->src;
+        result.s64 = this->s64;
+        result.readVal = this->readVal;
+        result.readPos = this->readPos;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Rand::operator==(const T& ref) const
+    {
+        if (src != ref.src) return false;
+        if (s64 != ref.s64) return false;
+        if (readVal != ref.readVal) return false;
+        if (readPos != ref.readPos) return false;
+        return true;
+    }
+
     std::ostream& Rand::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -425,6 +446,21 @@ namespace golang::rand
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    runtimeSource::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool runtimeSource::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        return true;
+    }
+
     std::ostream& runtimeSource::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -560,6 +596,23 @@ namespace golang::rand
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    lockedSource::operator T()
+    {
+        T result;
+        result.lk = this->lk;
+        result.s = this->s;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool lockedSource::operator==(const T& ref) const
+    {
+        if (lk != ref.lk) return false;
+        if (s != ref.s) return false;
+        return true;
+    }
+
     std::ostream& lockedSource::PrintTo(std::ostream& os) const
     {
         os << '{';

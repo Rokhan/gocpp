@@ -14,6 +14,29 @@
 namespace golang::strconv
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    decimal::operator T()
+    {
+        T result;
+        result.d = this->d;
+        result.nd = this->nd;
+        result.dp = this->dp;
+        result.neg = this->neg;
+        result.trunc = this->trunc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool decimal::operator==(const T& ref) const
+    {
+        if (d != ref.d) return false;
+        if (nd != ref.nd) return false;
+        if (dp != ref.dp) return false;
+        if (neg != ref.neg) return false;
+        if (trunc != ref.trunc) return false;
+        return true;
+    }
+
     std::ostream& decimal::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -177,6 +200,23 @@ namespace golang::strconv
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    leftCheat::operator T()
+    {
+        T result;
+        result.delta = this->delta;
+        result.cutoff = this->cutoff;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool leftCheat::operator==(const T& ref) const
+    {
+        if (delta != ref.delta) return false;
+        if (cutoff != ref.cutoff) return false;
+        return true;
+    }
+
     std::ostream& leftCheat::PrintTo(std::ostream& os) const
     {
         os << '{';

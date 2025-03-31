@@ -29,7 +29,7 @@ namespace golang::main
         template<typename T>
         I(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -63,6 +63,12 @@ namespace golang::main
         std::string S;
 
         using isGoStruct = void;
+
+        template<typename U> requires gocpp::GoStruct<U>
+        operator U();
+
+        template<typename U> requires gocpp::GoStruct<U>
+        bool operator==(const U& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
     };

@@ -93,6 +93,23 @@ namespace golang::crc32
     }
 
     
+    template<typename T>
+    digest::operator T()
+    {
+        T result;
+        result.crc = this->crc;
+        result.tab = this->tab;
+        return result;
+    }
+
+    template<typename T>
+    bool digest::operator==(const T& ref) const
+    {
+        if (crc != ref.crc) return false;
+        if (tab != ref.tab) return false;
+        return true;
+    }
+
     std::ostream& digest::PrintTo(std::ostream& os) const
     {
         os << '{';

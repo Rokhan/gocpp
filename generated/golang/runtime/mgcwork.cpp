@@ -66,6 +66,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcWork::operator T()
+    {
+        T result;
+        result.wbuf1 = this->wbuf1;
+        result.wbuf2 = this->wbuf2;
+        result.bytesMarked = this->bytesMarked;
+        result.heapScanWork = this->heapScanWork;
+        result.flushedWork = this->flushedWork;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcWork::operator==(const T& ref) const
+    {
+        if (wbuf1 != ref.wbuf1) return false;
+        if (wbuf2 != ref.wbuf2) return false;
+        if (bytesMarked != ref.bytesMarked) return false;
+        if (heapScanWork != ref.heapScanWork) return false;
+        if (flushedWork != ref.flushedWork) return false;
+        return true;
+    }
+
     std::ostream& gcWork::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -283,6 +306,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    workbufhdr::operator T()
+    {
+        T result;
+        result.node = this->node;
+        result.nobj = this->nobj;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool workbufhdr::operator==(const T& ref) const
+    {
+        if (node != ref.node) return false;
+        if (nobj != ref.nobj) return false;
+        return true;
+    }
+
     std::ostream& workbufhdr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -298,6 +338,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    workbuf::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.obj = this->obj;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool workbuf::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (obj != ref.obj) return false;
+        return true;
+    }
+
     std::ostream& workbuf::PrintTo(std::ostream& os) const
     {
         os << '{';

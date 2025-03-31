@@ -53,6 +53,27 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mcentral::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.spanclass = this->spanclass;
+        result.partial = this->partial;
+        result.full = this->full;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mcentral::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (spanclass != ref.spanclass) return false;
+        if (partial != ref.partial) return false;
+        if (full != ref.full) return false;
+        return true;
+    }
+
     std::ostream& mcentral::PrintTo(std::ostream& os) const
     {
         os << '{';

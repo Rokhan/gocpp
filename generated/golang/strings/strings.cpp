@@ -397,6 +397,23 @@ namespace golang::strings
     gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         
+        template<typename T>
+        span::operator T()
+        {
+            T result;
+            result.start = this->start;
+            result.end = this->end;
+            return result;
+        }
+
+        template<typename T>
+        bool span::operator==(const T& ref) const
+        {
+            if (start != ref.start) return false;
+            if (end != ref.end) return false;
+            return true;
+        }
+
         std::ostream& span::PrintTo(std::ostream& os) const
         {
             os << '{';

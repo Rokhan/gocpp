@@ -18,6 +18,23 @@
 namespace golang::image
 {
     
+    template<typename T>
+    Point::operator T()
+    {
+        T result;
+        result.X = this->X;
+        result.Y = this->Y;
+        return result;
+    }
+
+    template<typename T>
+    bool Point::operator==(const T& ref) const
+    {
+        if (X != ref.X) return false;
+        if (Y != ref.Y) return false;
+        return true;
+    }
+
     std::ostream& Point::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -91,6 +108,23 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Rectangle::operator T()
+    {
+        T result;
+        result.Min = this->Min;
+        result.Max = this->Max;
+        return result;
+    }
+
+    template<typename T>
+    bool Rectangle::operator==(const T& ref) const
+    {
+        if (Min != ref.Min) return false;
+        if (Max != ref.Max) return false;
+        return true;
+    }
+
     std::ostream& Rectangle::PrintTo(std::ostream& os) const
     {
         os << '{';

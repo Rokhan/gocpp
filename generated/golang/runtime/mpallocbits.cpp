@@ -382,6 +382,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pallocData::operator T()
+    {
+        T result;
+        result.scavenged = this->scavenged;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pallocData::operator==(const T& ref) const
+    {
+        if (scavenged != ref.scavenged) return false;
+        return true;
+    }
+
     std::ostream& pallocData::PrintTo(std::ostream& os) const
     {
         os << '{';

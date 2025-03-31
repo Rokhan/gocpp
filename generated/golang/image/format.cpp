@@ -24,6 +24,27 @@ namespace golang::image
 {
     std::string ErrFormat = errors::New("image: unknown format");
     
+    template<typename T>
+    format::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.magic = this->magic;
+        result.decode = this->decode;
+        result.decodeConfig = this->decodeConfig;
+        return result;
+    }
+
+    template<typename T>
+    bool format::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (magic != ref.magic) return false;
+        if (decode != ref.decode) return false;
+        if (decodeConfig != ref.decodeConfig) return false;
+        return true;
+    }
+
     std::ostream& format::PrintTo(std::ostream& os) const
     {
         os << '{';

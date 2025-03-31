@@ -21,6 +21,39 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fixalloc::operator T()
+    {
+        T result;
+        result.size = this->size;
+        result.first = this->first;
+        result.arg = this->arg;
+        result.list = this->list;
+        result.chunk = this->chunk;
+        result.nchunk = this->nchunk;
+        result.nalloc = this->nalloc;
+        result.inuse = this->inuse;
+        result.stat = this->stat;
+        result.zero = this->zero;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fixalloc::operator==(const T& ref) const
+    {
+        if (size != ref.size) return false;
+        if (first != ref.first) return false;
+        if (arg != ref.arg) return false;
+        if (list != ref.list) return false;
+        if (chunk != ref.chunk) return false;
+        if (nchunk != ref.nchunk) return false;
+        if (nalloc != ref.nalloc) return false;
+        if (inuse != ref.inuse) return false;
+        if (stat != ref.stat) return false;
+        if (zero != ref.zero) return false;
+        return true;
+    }
+
     std::ostream& fixalloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -44,6 +77,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mlink::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mlink::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& mlink::PrintTo(std::ostream& os) const
     {
         os << '{';

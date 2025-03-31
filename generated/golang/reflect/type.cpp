@@ -17,7 +17,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/abi.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 #include "golang/strconv/quote.h"
 #include "golang/sync/atomic/type.h"
@@ -528,6 +528,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    common::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool common::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& common::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -541,6 +554,21 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    rtype::operator T()
+    {
+        T result;
+        result.t = this->t;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool rtype::operator==(const T& ref) const
+    {
+        if (t != ref.t) return false;
+        return true;
+    }
+
     std::ostream& rtype::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -565,6 +593,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    interfaceType::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool interfaceType::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& interfaceType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -608,6 +649,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mapType::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mapType::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& mapType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -621,6 +675,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ptrType::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ptrType::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& ptrType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -634,6 +701,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sliceType::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sliceType::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& sliceType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -647,6 +727,19 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    structType::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool structType::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& structType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -684,6 +777,29 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Method::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.PkgPath = this->PkgPath;
+        result.Type = this->Type;
+        result.Func = this->Func;
+        result.Index = this->Index;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Method::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (PkgPath != ref.PkgPath) return false;
+        if (Type != ref.Type) return false;
+        if (Func != ref.Func) return false;
+        if (Index != ref.Index) return false;
+        return true;
+    }
+
     std::ostream& Method::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1211,6 +1327,33 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    StructField::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.PkgPath = this->PkgPath;
+        result.Type = this->Type;
+        result.Tag = this->Tag;
+        result.Offset = this->Offset;
+        result.Index = this->Index;
+        result.Anonymous = this->Anonymous;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool StructField::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (PkgPath != ref.PkgPath) return false;
+        if (Type != ref.Type) return false;
+        if (Tag != ref.Tag) return false;
+        if (Offset != ref.Offset) return false;
+        if (Index != ref.Index) return false;
+        if (Anonymous != ref.Anonymous) return false;
+        return true;
+    }
+
     std::ostream& StructField::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1367,6 +1510,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    fieldScan::operator T()
+    {
+        T result;
+        result.typ = this->typ;
+        result.index = this->index;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool fieldScan::operator==(const T& ref) const
+    {
+        if (typ != ref.typ) return false;
+        if (index != ref.index) return false;
+        return true;
+    }
+
     std::ostream& fieldScan::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1918,6 +2078,27 @@ namespace golang::reflect
 
     sync::Map lookupCache;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cacheKey::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.t1 = this->t1;
+        result.t2 = this->t2;
+        result.extra = this->extra;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cacheKey::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (t1 != ref.t1) return false;
+        if (t2 != ref.t2) return false;
+        if (extra != ref.extra) return false;
+        return true;
+    }
+
     std::ostream& cacheKey::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1939,6 +2120,21 @@ namespace golang::reflect
         sync::Map m;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.m = this->m;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (m != ref.m) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -2009,7 +2205,7 @@ namespace golang::reflect
                 return gocpp::getValue<Type>(ti);
             }
         }
-        go_any ichan = (gocpp::channel<&{unsafe Pointer}>)(nullptr);
+        go_any ichan = (gocpp::channel<unsafe::Pointer>)(nullptr);
         auto prototype = *(chanType**)(unsafe::Pointer(& ichan));
         auto ch = *prototype;
         ch.TFlag = abi::TFlagRegularMemory;
@@ -2579,6 +2775,21 @@ namespace golang::reflect
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.m = this->m;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (m != ref.m) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -2596,6 +2807,21 @@ namespace golang::reflect
 
     gocpp_id_19 structLookupCache;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    structTypeUncommon::operator T()
+    {
+        T result;
+        result.u = this->u;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool structTypeUncommon::operator==(const T& ref) const
+    {
+        if (u != ref.u) return false;
+        return true;
+    }
+
     std::ostream& structTypeUncommon::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -2635,6 +2861,19 @@ namespace golang::reflect
 
             using isGoStruct = void;
 
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                return true;
+            }
+
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
@@ -2654,6 +2893,19 @@ namespace golang::reflect
 
                 using isGoStruct = void;
 
+                template<typename T> requires gocpp::GoStruct<T>
+                operator T()
+                {
+                    T result;
+                    return result;
+                }
+
+                template<typename T> requires gocpp::GoStruct<T>
+                bool operator==(const T& ref) const
+                {
+                    return true;
+                }
+
                 std::ostream& PrintTo(std::ostream& os) const
                 {
                     os << '{';
@@ -2672,6 +2924,19 @@ namespace golang::reflect
         {
 
             using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                return true;
+            }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
@@ -3273,6 +3538,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    layoutKey::operator T()
+    {
+        T result;
+        result.ftyp = this->ftyp;
+        result.rcvr = this->rcvr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool layoutKey::operator==(const T& ref) const
+    {
+        if (ftyp != ref.ftyp) return false;
+        if (rcvr != ref.rcvr) return false;
+        return true;
+    }
+
     std::ostream& layoutKey::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -3288,6 +3570,25 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    layoutType::operator T()
+    {
+        T result;
+        result.t = this->t;
+        result.framePool = this->framePool;
+        result.abid = this->abid;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool layoutType::operator==(const T& ref) const
+    {
+        if (t != ref.t) return false;
+        if (framePool != ref.framePool) return false;
+        if (abid != ref.abid) return false;
+        return true;
+    }
+
     std::ostream& layoutType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -3372,6 +3673,23 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    bitVector::operator T()
+    {
+        T result;
+        result.n = this->n;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool bitVector::operator==(const T& ref) const
+    {
+        if (n != ref.n) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& bitVector::PrintTo(std::ostream& os) const
     {
         os << '{';

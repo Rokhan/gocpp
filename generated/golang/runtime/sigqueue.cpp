@@ -38,6 +38,35 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.note = this->note;
+            result.mask = this->mask;
+            result.wanted = this->wanted;
+            result.ignored = this->ignored;
+            result.recv = this->recv;
+            result.state = this->state;
+            result.delivering = this->delivering;
+            result.inuse = this->inuse;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (note != ref.note) return false;
+            if (mask != ref.mask) return false;
+            if (wanted != ref.wanted) return false;
+            if (ignored != ref.ignored) return false;
+            if (recv != ref.recv) return false;
+            if (state != ref.state) return false;
+            if (delivering != ref.delivering) return false;
+            if (inuse != ref.inuse) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

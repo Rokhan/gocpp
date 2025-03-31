@@ -22,6 +22,41 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    profBuf::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.w = this->w;
+        result.overflow = this->overflow;
+        result.overflowTime = this->overflowTime;
+        result.eof = this->eof;
+        result.hdrsize = this->hdrsize;
+        result.data = this->data;
+        result.tags = this->tags;
+        result.rNext = this->rNext;
+        result.overflowBuf = this->overflowBuf;
+        result.wait = this->wait;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool profBuf::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (w != ref.w) return false;
+        if (overflow != ref.overflow) return false;
+        if (overflowTime != ref.overflowTime) return false;
+        if (eof != ref.eof) return false;
+        if (hdrsize != ref.hdrsize) return false;
+        if (data != ref.data) return false;
+        if (tags != ref.tags) return false;
+        if (rNext != ref.rNext) return false;
+        if (overflowBuf != ref.overflowBuf) return false;
+        if (wait != ref.wait) return false;
+        return true;
+    }
+
     std::ostream& profBuf::PrintTo(std::ostream& os) const
     {
         os << '{';

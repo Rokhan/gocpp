@@ -17,7 +17,7 @@
 #include "golang/io/io.h"
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
@@ -252,6 +252,19 @@ namespace golang::binary
     littleEndian LittleEndian;
     bigEndian BigEndian;
     
+    template<typename T>
+    littleEndian::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool littleEndian::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& littleEndian::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -337,6 +350,19 @@ namespace golang::binary
     }
 
     
+    template<typename T>
+    bigEndian::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool bigEndian::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& bigEndian::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1092,6 +1118,25 @@ namespace golang::binary
     }
 
     
+    template<typename T>
+    coder::operator T()
+    {
+        T result;
+        result.order = this->order;
+        result.buf = this->buf;
+        result.offset = this->offset;
+        return result;
+    }
+
+    template<typename T>
+    bool coder::operator==(const T& ref) const
+    {
+        if (order != ref.order) return false;
+        if (buf != ref.buf) return false;
+        if (offset != ref.offset) return false;
+        return true;
+    }
+
     std::ostream& coder::PrintTo(std::ostream& os) const
     {
         os << '{';

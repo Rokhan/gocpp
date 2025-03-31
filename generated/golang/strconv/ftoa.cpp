@@ -21,6 +21,25 @@
 namespace golang::strconv
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    floatInfo::operator T()
+    {
+        T result;
+        result.mantbits = this->mantbits;
+        result.expbits = this->expbits;
+        result.bias = this->bias;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool floatInfo::operator==(const T& ref) const
+    {
+        if (mantbits != ref.mantbits) return false;
+        if (expbits != ref.expbits) return false;
+        if (bias != ref.bias) return false;
+        return true;
+    }
+
     std::ostream& floatInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -438,6 +457,25 @@ namespace golang::strconv
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    decimalSlice::operator T()
+    {
+        T result;
+        result.d = this->d;
+        result.nd = this->nd;
+        result.dp = this->dp;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool decimalSlice::operator==(const T& ref) const
+    {
+        if (d != ref.d) return false;
+        if (nd != ref.nd) return false;
+        if (dp != ref.dp) return false;
+        return true;
+    }
+
     std::ostream& decimalSlice::PrintTo(std::ostream& os) const
     {
         os << '{';

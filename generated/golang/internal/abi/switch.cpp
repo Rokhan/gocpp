@@ -16,6 +16,25 @@
 namespace golang::abi
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    InterfaceSwitch::operator T()
+    {
+        T result;
+        result.Cache = this->Cache;
+        result.NCases = this->NCases;
+        result.Cases = this->Cases;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool InterfaceSwitch::operator==(const T& ref) const
+    {
+        if (Cache != ref.Cache) return false;
+        if (NCases != ref.NCases) return false;
+        if (Cases != ref.Cases) return false;
+        return true;
+    }
+
     std::ostream& InterfaceSwitch::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -32,6 +51,23 @@ namespace golang::abi
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    InterfaceSwitchCache::operator T()
+    {
+        T result;
+        result.Mask = this->Mask;
+        result.Entries = this->Entries;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool InterfaceSwitchCache::operator==(const T& ref) const
+    {
+        if (Mask != ref.Mask) return false;
+        if (Entries != ref.Entries) return false;
+        return true;
+    }
+
     std::ostream& InterfaceSwitchCache::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -47,6 +83,25 @@ namespace golang::abi
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    InterfaceSwitchCacheEntry::operator T()
+    {
+        T result;
+        result.Typ = this->Typ;
+        result.Case = this->Case;
+        result.Itab = this->Itab;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool InterfaceSwitchCacheEntry::operator==(const T& ref) const
+    {
+        if (Typ != ref.Typ) return false;
+        if (Case != ref.Case) return false;
+        if (Itab != ref.Itab) return false;
+        return true;
+    }
+
     std::ostream& InterfaceSwitchCacheEntry::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -106,6 +161,25 @@ namespace golang::abi
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TypeAssert::operator T()
+    {
+        T result;
+        result.Cache = this->Cache;
+        result.Inter = this->Inter;
+        result.CanFail = this->CanFail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TypeAssert::operator==(const T& ref) const
+    {
+        if (Cache != ref.Cache) return false;
+        if (Inter != ref.Inter) return false;
+        if (CanFail != ref.CanFail) return false;
+        return true;
+    }
+
     std::ostream& TypeAssert::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -122,6 +196,23 @@ namespace golang::abi
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TypeAssertCache::operator T()
+    {
+        T result;
+        result.Mask = this->Mask;
+        result.Entries = this->Entries;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TypeAssertCache::operator==(const T& ref) const
+    {
+        if (Mask != ref.Mask) return false;
+        if (Entries != ref.Entries) return false;
+        return true;
+    }
+
     std::ostream& TypeAssertCache::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -137,6 +228,23 @@ namespace golang::abi
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TypeAssertCacheEntry::operator T()
+    {
+        T result;
+        result.Typ = this->Typ;
+        result.Itab = this->Itab;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TypeAssertCacheEntry::operator==(const T& ref) const
+    {
+        if (Typ != ref.Typ) return false;
+        if (Itab != ref.Itab) return false;
+        return true;
+    }
+
     std::ostream& TypeAssertCacheEntry::PrintTo(std::ostream& os) const
     {
         os << '{';

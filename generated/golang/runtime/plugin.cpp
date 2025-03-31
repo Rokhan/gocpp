@@ -201,6 +201,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ptabEntry::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.typ = this->typ;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ptabEntry::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (typ != ref.typ) return false;
+        return true;
+    }
+
     std::ostream& ptabEntry::PrintTo(std::ostream& os) const
     {
         os << '{';

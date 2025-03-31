@@ -59,6 +59,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pageTraceBuf::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pageTraceBuf::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& pageTraceBuf::PrintTo(std::ostream& os) const
     {
         os << '{';

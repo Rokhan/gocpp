@@ -18,6 +18,23 @@
 namespace golang::atomic
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Int32::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Int32::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Int32::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -58,6 +75,25 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Int64::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result._ = this->_;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Int64::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (_ != ref._) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Int64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -99,6 +135,23 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Uint8::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Uint8::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Uint8::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -134,6 +187,21 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Bool::operator T()
+    {
+        T result;
+        result.u = this->u;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Bool::operator==(const T& ref) const
+    {
+        if (u != ref.u) return false;
+        return true;
+    }
+
     std::ostream& Bool::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -163,6 +231,23 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Uint32::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Uint32::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Uint32::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -228,6 +313,25 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Uint64::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result._ = this->_;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Uint64::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (_ != ref._) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Uint64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -269,6 +373,23 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Uintptr::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Uintptr::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& Uintptr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -319,6 +440,21 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Float64::operator T()
+    {
+        T result;
+        result.u = this->u;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Float64::operator==(const T& ref) const
+    {
+        if (u != ref.u) return false;
+        return true;
+    }
+
     std::ostream& Float64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -344,6 +480,23 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    UnsafePointer::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool UnsafePointer::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& UnsafePointer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -390,6 +543,23 @@ namespace golang::atomic
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    Pointer<T>::operator U()
+    {
+        U result;
+        result.u = this->u;
+        return result;
+    }
+
+    template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    bool Pointer<T>::operator==(const U& ref) const
+    {
+        if (u != ref.u) return false;
+        return true;
+    }
+
     template<typename T>
     std::ostream& Pointer<T>::PrintTo(std::ostream& os) const
     {
@@ -441,6 +611,19 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    noCopy::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool noCopy::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& noCopy::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -462,6 +645,19 @@ namespace golang::atomic
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    align64::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool align64::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& align64::PrintTo(std::ostream& os) const
     {
         os << '{';

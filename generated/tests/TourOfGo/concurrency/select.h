@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void fibonacci(gocpp::channel<int> c, gocpp::channel<int> quit);
+    void testInlinedType();
     void main();
 }
 

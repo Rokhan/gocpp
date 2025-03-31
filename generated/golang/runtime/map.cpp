@@ -43,6 +43,23 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.b = this->b;
+            result.v = this->v;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (b != ref.b) return false;
+            if (v != ref.v) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -65,6 +82,37 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    hmap::operator T()
+    {
+        T result;
+        result.count = this->count;
+        result.flags = this->flags;
+        result.B = this->B;
+        result.noverflow = this->noverflow;
+        result.hash0 = this->hash0;
+        result.buckets = this->buckets;
+        result.oldbuckets = this->oldbuckets;
+        result.nevacuate = this->nevacuate;
+        result.extra = this->extra;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool hmap::operator==(const T& ref) const
+    {
+        if (count != ref.count) return false;
+        if (flags != ref.flags) return false;
+        if (B != ref.B) return false;
+        if (noverflow != ref.noverflow) return false;
+        if (hash0 != ref.hash0) return false;
+        if (buckets != ref.buckets) return false;
+        if (oldbuckets != ref.oldbuckets) return false;
+        if (nevacuate != ref.nevacuate) return false;
+        if (extra != ref.extra) return false;
+        return true;
+    }
+
     std::ostream& hmap::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -87,6 +135,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mapextra::operator T()
+    {
+        T result;
+        result.overflow = this->overflow;
+        result.oldoverflow = this->oldoverflow;
+        result.nextOverflow = this->nextOverflow;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mapextra::operator==(const T& ref) const
+    {
+        if (overflow != ref.overflow) return false;
+        if (oldoverflow != ref.oldoverflow) return false;
+        if (nextOverflow != ref.nextOverflow) return false;
+        return true;
+    }
+
     std::ostream& mapextra::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -103,6 +170,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    bmap::operator T()
+    {
+        T result;
+        result.tophash = this->tophash;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool bmap::operator==(const T& ref) const
+    {
+        if (tophash != ref.tophash) return false;
+        return true;
+    }
+
     std::ostream& bmap::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -117,6 +199,49 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    hiter::operator T()
+    {
+        T result;
+        result.key = this->key;
+        result.elem = this->elem;
+        result.t = this->t;
+        result.h = this->h;
+        result.buckets = this->buckets;
+        result.bptr = this->bptr;
+        result.overflow = this->overflow;
+        result.oldoverflow = this->oldoverflow;
+        result.startBucket = this->startBucket;
+        result.offset = this->offset;
+        result.wrapped = this->wrapped;
+        result.B = this->B;
+        result.i = this->i;
+        result.bucket = this->bucket;
+        result.checkBucket = this->checkBucket;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool hiter::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        if (elem != ref.elem) return false;
+        if (t != ref.t) return false;
+        if (h != ref.h) return false;
+        if (buckets != ref.buckets) return false;
+        if (bptr != ref.bptr) return false;
+        if (overflow != ref.overflow) return false;
+        if (oldoverflow != ref.oldoverflow) return false;
+        if (startBucket != ref.startBucket) return false;
+        if (offset != ref.offset) return false;
+        if (wrapped != ref.wrapped) return false;
+        if (B != ref.B) return false;
+        if (i != ref.i) return false;
+        if (bucket != ref.bucket) return false;
+        if (checkBucket != ref.checkBucket) return false;
+        return true;
+    }
+
     std::ostream& hiter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1171,6 +1296,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    evacDst::operator T()
+    {
+        T result;
+        result.b = this->b;
+        result.i = this->i;
+        result.k = this->k;
+        result.e = this->e;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool evacDst::operator==(const T& ref) const
+    {
+        if (b != ref.b) return false;
+        if (i != ref.i) return false;
+        if (k != ref.k) return false;
+        if (e != ref.e) return false;
+        return true;
+    }
+
     std::ostream& evacDst::PrintTo(std::ostream& os) const
     {
         os << '{';

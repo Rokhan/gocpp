@@ -71,6 +71,19 @@ namespace golang::main
     }
 
     
+    template<typename U> requires gocpp::GoStruct<U>
+    T::operator U()
+    {
+        U result;
+        return result;
+    }
+
+    template<typename U> requires gocpp::GoStruct<U>
+    bool T::operator==(const U& ref) const
+    {
+        return true;
+    }
+
     std::ostream& T::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -88,6 +101,23 @@ namespace golang::main
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Vertex::operator T()
+    {
+        T result;
+        result.Lat = this->Lat;
+        result.Long = this->Long;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Vertex::operator==(const T& ref) const
+    {
+        if (Lat != ref.Lat) return false;
+        if (Long != ref.Long) return false;
+        return true;
+    }
+
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -17,6 +17,21 @@
 namespace golang::main
 {
     
+    template<typename T>
+    rot13Reader::operator T()
+    {
+        T result;
+        result.r = this->r;
+        return result;
+    }
+
+    template<typename T>
+    bool rot13Reader::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        return true;
+    }
+
     std::ostream& rot13Reader::PrintTo(std::ostream& os) const
     {
         os << '{';

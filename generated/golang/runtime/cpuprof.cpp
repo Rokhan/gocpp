@@ -28,6 +28,33 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cpuProfile::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.on = this->on;
+        result.log = this->log;
+        result.extra = this->extra;
+        result.numExtra = this->numExtra;
+        result.lostExtra = this->lostExtra;
+        result.lostAtomic = this->lostAtomic;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cpuProfile::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (on != ref.on) return false;
+        if (log != ref.log) return false;
+        if (extra != ref.extra) return false;
+        if (numExtra != ref.numExtra) return false;
+        if (lostExtra != ref.lostExtra) return false;
+        if (lostAtomic != ref.lostAtomic) return false;
+        return true;
+    }
+
     std::ostream& cpuProfile::PrintTo(std::ostream& os) const
     {
         os << '{';

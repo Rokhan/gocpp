@@ -55,6 +55,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    wbBuf::operator T()
+    {
+        T result;
+        result.next = this->next;
+        result.end = this->end;
+        result.buf = this->buf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool wbBuf::operator==(const T& ref) const
+    {
+        if (next != ref.next) return false;
+        if (end != ref.end) return false;
+        if (buf != ref.buf) return false;
+        return true;
+    }
+
     std::ostream& wbBuf::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -14,6 +14,27 @@
 namespace golang::flate
 {
     
+    template<typename T>
+    dictDecoder::operator T()
+    {
+        T result;
+        result.hist = this->hist;
+        result.wrPos = this->wrPos;
+        result.rdPos = this->rdPos;
+        result.full = this->full;
+        return result;
+    }
+
+    template<typename T>
+    bool dictDecoder::operator==(const T& ref) const
+    {
+        if (hist != ref.hist) return false;
+        if (wrPos != ref.wrPos) return false;
+        if (rdPos != ref.rdPos) return false;
+        if (full != ref.full) return false;
+        return true;
+    }
+
     std::ostream& dictDecoder::PrintTo(std::ostream& os) const
     {
         os << '{';

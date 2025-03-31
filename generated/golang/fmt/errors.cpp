@@ -15,7 +15,7 @@
 #include "golang/fmt/format.h"
 #include "golang/fmt/print.h"
 #include "golang/internal/abi/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/sort/sort.h"
 
 namespace golang::fmt
@@ -69,6 +69,23 @@ namespace golang::fmt
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    wrapError::operator T()
+    {
+        T result;
+        result.msg = this->msg;
+        result.err = this->err;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool wrapError::operator==(const T& ref) const
+    {
+        if (msg != ref.msg) return false;
+        if (err != ref.err) return false;
+        return true;
+    }
+
     std::ostream& wrapError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -94,6 +111,23 @@ namespace golang::fmt
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    wrapErrors::operator T()
+    {
+        T result;
+        result.msg = this->msg;
+        result.errs = this->errs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool wrapErrors::operator==(const T& ref) const
+    {
+        if (msg != ref.msg) return false;
+        if (errs != ref.errs) return false;
+        return true;
+    }
+
     std::ostream& wrapErrors::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -25,6 +25,45 @@ namespace golang::flate
     gocpp::slice<uint32_t> offsetBase = gocpp::slice<uint32_t> {0x000000, 0x000001, 0x000002, 0x000003, 0x000004, 0x000006, 0x000008, 0x00000c, 0x000010, 0x000018, 0x000020, 0x000030, 0x000040, 0x000060, 0x000080, 0x0000c0, 0x000100, 0x000180, 0x000200, 0x000300, 0x000400, 0x000600, 0x000800, 0x000c00, 0x001000, 0x001800, 0x002000, 0x003000, 0x004000, 0x006000};
     gocpp::slice<uint32_t> codegenOrder = gocpp::slice<uint32_t> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     
+    template<typename T>
+    huffmanBitWriter::operator T()
+    {
+        T result;
+        result.writer = this->writer;
+        result.bits = this->bits;
+        result.nbits = this->nbits;
+        result.bytes = this->bytes;
+        result.codegenFreq = this->codegenFreq;
+        result.nbytes = this->nbytes;
+        result.literalFreq = this->literalFreq;
+        result.offsetFreq = this->offsetFreq;
+        result.codegen = this->codegen;
+        result.literalEncoding = this->literalEncoding;
+        result.offsetEncoding = this->offsetEncoding;
+        result.codegenEncoding = this->codegenEncoding;
+        result.err = this->err;
+        return result;
+    }
+
+    template<typename T>
+    bool huffmanBitWriter::operator==(const T& ref) const
+    {
+        if (writer != ref.writer) return false;
+        if (bits != ref.bits) return false;
+        if (nbits != ref.nbits) return false;
+        if (bytes != ref.bytes) return false;
+        if (codegenFreq != ref.codegenFreq) return false;
+        if (nbytes != ref.nbytes) return false;
+        if (literalFreq != ref.literalFreq) return false;
+        if (offsetFreq != ref.offsetFreq) return false;
+        if (codegen != ref.codegen) return false;
+        if (literalEncoding != ref.literalEncoding) return false;
+        if (offsetEncoding != ref.offsetEncoding) return false;
+        if (codegenEncoding != ref.codegenEncoding) return false;
+        if (err != ref.err) return false;
+        return true;
+    }
+
     std::ostream& huffmanBitWriter::PrintTo(std::ostream& os) const
     {
         os << '{';

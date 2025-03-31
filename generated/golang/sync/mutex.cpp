@@ -25,6 +25,23 @@ namespace golang::sync
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Mutex::operator T()
+    {
+        T result;
+        result.state = this->state;
+        result.sema = this->sema;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Mutex::operator==(const T& ref) const
+    {
+        if (state != ref.state) return false;
+        if (sema != ref.sema) return false;
+        return true;
+    }
+
     std::ostream& Mutex::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -78,6 +78,25 @@ namespace golang::color
     }
 
     
+    template<typename T>
+    YCbCr::operator T()
+    {
+        T result;
+        result.Y = this->Y;
+        result.Cb = this->Cb;
+        result.Cr = this->Cr;
+        return result;
+    }
+
+    template<typename T>
+    bool YCbCr::operator==(const T& ref) const
+    {
+        if (Y != ref.Y) return false;
+        if (Cb != ref.Cb) return false;
+        if (Cr != ref.Cr) return false;
+        return true;
+    }
+
     std::ostream& YCbCr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -141,6 +160,21 @@ namespace golang::color
     }
 
     
+    template<typename T>
+    NYCbCrA::operator T()
+    {
+        T result;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T>
+    bool NYCbCrA::operator==(const T& ref) const
+    {
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& NYCbCrA::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -260,6 +294,27 @@ namespace golang::color
     }
 
     
+    template<typename T>
+    CMYK::operator T()
+    {
+        T result;
+        result.C = this->C;
+        result.M = this->M;
+        result.Y = this->Y;
+        result.K = this->K;
+        return result;
+    }
+
+    template<typename T>
+    bool CMYK::operator==(const T& ref) const
+    {
+        if (C != ref.C) return false;
+        if (M != ref.M) return false;
+        if (Y != ref.Y) return false;
+        if (K != ref.K) return false;
+        return true;
+    }
+
     std::ostream& CMYK::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -93,6 +93,23 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.item = this->item;
+            result._ = this->_;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (item != ref.item) return false;
+            if (_ != ref._) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -111,6 +128,25 @@ namespace golang::runtime
 
     gocpp::array<gocpp_id_0, _NumStackOrders> stackpool;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackpoolItem::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.mu = this->mu;
+        result.span = this->span;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackpoolItem::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (mu != ref.mu) return false;
+        if (span != ref.span) return false;
+        return true;
+    }
+
     std::ostream& stackpoolItem::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -132,6 +168,23 @@ namespace golang::runtime
         gocpp::array<mSpanList, heapAddrBits - pageShift> free;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.free = this->free;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (free != ref.free) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -503,6 +556,25 @@ namespace golang::runtime
     uintptr_t maxstackceiling = maxstacksize;
     gocpp::slice<std::string> ptrnames = gocpp::Init<gocpp::slice<std::string>>([](gocpp::slice<std::string>& x) { x.0 = "scalar"; x.1 = "ptr"; });
     
+    template<typename T> requires gocpp::GoStruct<T>
+    adjustinfo::operator T()
+    {
+        T result;
+        result.old = this->old;
+        result.delta = this->delta;
+        result.sghi = this->sghi;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool adjustinfo::operator==(const T& ref) const
+    {
+        if (old != ref.old) return false;
+        if (delta != ref.delta) return false;
+        if (sghi != ref.sghi) return false;
+        return true;
+    }
+
     std::ostream& adjustinfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -537,6 +609,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    bitvector::operator T()
+    {
+        T result;
+        result.n = this->n;
+        result.bytedata = this->bytedata;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool bitvector::operator==(const T& ref) const
+    {
+        if (n != ref.n) return false;
+        if (bytedata != ref.bytedata) return false;
+        return true;
+    }
+
     std::ostream& bitvector::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1110,6 +1199,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackObjectRecord::operator T()
+    {
+        T result;
+        result.off = this->off;
+        result.size = this->size;
+        result._ptrdata = this->_ptrdata;
+        result.gcdataoff = this->gcdataoff;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackObjectRecord::operator==(const T& ref) const
+    {
+        if (off != ref.off) return false;
+        if (size != ref.size) return false;
+        if (_ptrdata != ref._ptrdata) return false;
+        if (gcdataoff != ref.gcdataoff) return false;
+        return true;
+    }
+
     std::ostream& stackObjectRecord::PrintTo(std::ostream& os) const
     {
         os << '{';

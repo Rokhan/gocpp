@@ -18,6 +18,23 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    poolDequeue::operator T()
+    {
+        T result;
+        result.headTail = this->headTail;
+        result.vals = this->vals;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool poolDequeue::operator==(const T& ref) const
+    {
+        if (headTail != ref.headTail) return false;
+        if (vals != ref.vals) return false;
+        return true;
+    }
+
     std::ostream& poolDequeue::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -33,6 +50,23 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    eface::operator T()
+    {
+        T result;
+        result.typ = this->typ;
+        result.val = this->val;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool eface::operator==(const T& ref) const
+    {
+        if (typ != ref.typ) return false;
+        if (val != ref.val) return false;
+        return true;
+    }
+
     std::ostream& eface::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -51,6 +85,19 @@ namespace golang::sync
     {
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
@@ -162,6 +209,23 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    poolChain::operator T()
+    {
+        T result;
+        result.head = this->head;
+        result.tail = this->tail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool poolChain::operator==(const T& ref) const
+    {
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        return true;
+    }
+
     std::ostream& poolChain::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -177,6 +241,23 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    poolChainElt::operator T()
+    {
+        T result;
+        result.next = this->next;
+        result.prev = this->prev;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool poolChainElt::operator==(const T& ref) const
+    {
+        if (next != ref.next) return false;
+        if (prev != ref.prev) return false;
+        return true;
+    }
+
     std::ostream& poolChainElt::PrintTo(std::ostream& os) const
     {
         os << '{';

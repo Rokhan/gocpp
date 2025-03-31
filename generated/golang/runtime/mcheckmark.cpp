@@ -55,6 +55,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    checkmarksMap::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.b = this->b;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool checkmarksMap::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (b != ref.b) return false;
+        return true;
+    }
+
     std::ostream& checkmarksMap::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -56,6 +56,29 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    unwinder::operator T()
+    {
+        T result;
+        result.frame = this->frame;
+        result.g = this->g;
+        result.cgoCtxt = this->cgoCtxt;
+        result.calleeFuncID = this->calleeFuncID;
+        result.flags = this->flags;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool unwinder::operator==(const T& ref) const
+    {
+        if (frame != ref.frame) return false;
+        if (g != ref.g) return false;
+        if (cgoCtxt != ref.cgoCtxt) return false;
+        if (calleeFuncID != ref.calleeFuncID) return false;
+        if (flags != ref.flags) return false;
+        return true;
+    }
+
     std::ostream& unwinder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1138,6 +1161,27 @@ namespace golang::runtime
     unsafe::Pointer cgoContext;
     unsafe::Pointer cgoSymbolizer;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cgoTracebackArg::operator T()
+    {
+        T result;
+        result.context = this->context;
+        result.sigContext = this->sigContext;
+        result.buf = this->buf;
+        result.max = this->max;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cgoTracebackArg::operator==(const T& ref) const
+    {
+        if (context != ref.context) return false;
+        if (sigContext != ref.sigContext) return false;
+        if (buf != ref.buf) return false;
+        if (max != ref.max) return false;
+        return true;
+    }
+
     std::ostream& cgoTracebackArg::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1155,6 +1199,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cgoContextArg::operator T()
+    {
+        T result;
+        result.context = this->context;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cgoContextArg::operator==(const T& ref) const
+    {
+        if (context != ref.context) return false;
+        return true;
+    }
+
     std::ostream& cgoContextArg::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1169,6 +1228,33 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cgoSymbolizerArg::operator T()
+    {
+        T result;
+        result.pc = this->pc;
+        result.file = this->file;
+        result.lineno = this->lineno;
+        result.funcName = this->funcName;
+        result.entry = this->entry;
+        result.more = this->more;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cgoSymbolizerArg::operator==(const T& ref) const
+    {
+        if (pc != ref.pc) return false;
+        if (file != ref.file) return false;
+        if (lineno != ref.lineno) return false;
+        if (funcName != ref.funcName) return false;
+        if (entry != ref.entry) return false;
+        if (more != ref.more) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& cgoSymbolizerArg::PrintTo(std::ostream& os) const
     {
         os << '{';

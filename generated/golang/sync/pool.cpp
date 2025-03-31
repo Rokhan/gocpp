@@ -23,6 +23,31 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Pool::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.local = this->local;
+        result.localSize = this->localSize;
+        result.victim = this->victim;
+        result.victimSize = this->victimSize;
+        result.New = this->New;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Pool::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (local != ref.local) return false;
+        if (localSize != ref.localSize) return false;
+        if (victim != ref.victim) return false;
+        if (victimSize != ref.victimSize) return false;
+        if (New != ref.New) return false;
+        return true;
+    }
+
     std::ostream& Pool::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -42,6 +67,23 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    poolLocalInternal::operator T()
+    {
+        T result;
+        result.go_private = this->go_private;
+        result.shared = this->shared;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool poolLocalInternal::operator==(const T& ref) const
+    {
+        if (go_private != ref.go_private) return false;
+        if (shared != ref.shared) return false;
+        return true;
+    }
+
     std::ostream& poolLocalInternal::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -57,6 +99,21 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    poolLocal::operator T()
+    {
+        T result;
+        result.pad = this->pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool poolLocal::operator==(const T& ref) const
+    {
+        if (pad != ref.pad) return false;
+        return true;
+    }
+
     std::ostream& poolLocal::PrintTo(std::ostream& os) const
     {
         os << '{';

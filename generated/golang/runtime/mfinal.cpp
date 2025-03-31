@@ -58,6 +58,31 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    finblock::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.alllink = this->alllink;
+        result.next = this->next;
+        result.cnt = this->cnt;
+        result._ = this->_;
+        result.fin = this->fin;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool finblock::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (alllink != ref.alllink) return false;
+        if (next != ref.next) return false;
+        if (cnt != ref.cnt) return false;
+        if (_ != ref._) return false;
+        if (fin != ref.fin) return false;
+        return true;
+    }
+
     std::ostream& finblock::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -84,6 +109,29 @@ namespace golang::runtime
     gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     finblock* allfin;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    finalizer::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.arg = this->arg;
+        result.nret = this->nret;
+        result.fint = this->fint;
+        result.ot = this->ot;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool finalizer::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (arg != ref.arg) return false;
+        if (nret != ref.nret) return false;
+        if (fint != ref.fint) return false;
+        if (ot != ref.ot) return false;
+        return true;
+    }
+
     std::ostream& finalizer::PrintTo(std::ostream& os) const
     {
         os << '{';

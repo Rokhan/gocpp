@@ -57,6 +57,27 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.ctxt = this->ctxt;
+            result.index = this->index;
+            result.n = this->n;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (ctxt != ref.ctxt) return false;
+            if (index != ref.index) return false;
+            if (n != ref.n) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -95,6 +116,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    winCallback::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.retPop = this->retPop;
+        result.abiMap = this->abiMap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool winCallback::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (retPop != ref.retPop) return false;
+        if (abiMap != ref.abiMap) return false;
+        return true;
+    }
+
     std::ostream& winCallback::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -111,6 +151,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    abiPart::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.srcStackOffset = this->srcStackOffset;
+        result.dstStackOffset = this->dstStackOffset;
+        result.dstRegister = this->dstRegister;
+        result.len = this->len;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool abiPart::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (srcStackOffset != ref.srcStackOffset) return false;
+        if (dstStackOffset != ref.dstStackOffset) return false;
+        if (dstRegister != ref.dstRegister) return false;
+        if (len != ref.len) return false;
+        return true;
+    }
+
     std::ostream& abiPart::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -143,6 +206,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    abiDesc::operator T()
+    {
+        T result;
+        result.parts = this->parts;
+        result.srcStackSize = this->srcStackSize;
+        result.dstStackSize = this->dstStackSize;
+        result.dstSpill = this->dstSpill;
+        result.dstRegisters = this->dstRegisters;
+        result.retOffset = this->retOffset;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool abiDesc::operator==(const T& ref) const
+    {
+        if (parts != ref.parts) return false;
+        if (srcStackSize != ref.srcStackSize) return false;
+        if (dstStackSize != ref.dstStackSize) return false;
+        if (dstSpill != ref.dstSpill) return false;
+        if (dstRegisters != ref.dstRegisters) return false;
+        if (retOffset != ref.retOffset) return false;
+        return true;
+    }
+
     std::ostream& abiDesc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -278,6 +366,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    winCallbackKey::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.cdecl = this->cdecl;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool winCallbackKey::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (cdecl != ref.cdecl) return false;
+        return true;
+    }
+
     std::ostream& winCallbackKey::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -408,6 +513,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    callbackArgs::operator T()
+    {
+        T result;
+        result.index = this->index;
+        result.args = this->args;
+        result.result = this->result;
+        result.retPop = this->retPop;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool callbackArgs::operator==(const T& ref) const
+    {
+        if (index != ref.index) return false;
+        if (args != ref.args) return false;
+        if (result != ref.result) return false;
+        if (retPop != ref.retPop) return false;
+        return true;
+    }
+
     std::ostream& callbackArgs::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -475,6 +601,25 @@ namespace golang::runtime
             uint32_t flags;
 
             using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.lpFileName = this->lpFileName;
+                result.hFile = this->hFile;
+                result.flags = this->flags;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (lpFileName != ref.lpFileName) return false;
+                if (hFile != ref.hFile) return false;
+                if (flags != ref.flags) return false;
+                return true;
+            }
 
             std::ostream& PrintTo(std::ostream& os) const
             {

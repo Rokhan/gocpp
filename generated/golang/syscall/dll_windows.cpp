@@ -21,6 +21,25 @@
 namespace golang::syscall
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DLLError::operator T()
+    {
+        T result;
+        result.Err = this->Err;
+        result.ObjName = this->ObjName;
+        result.Msg = this->Msg;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DLLError::operator==(const T& ref) const
+    {
+        if (Err != ref.Err) return false;
+        if (ObjName != ref.ObjName) return false;
+        if (Msg != ref.Msg) return false;
+        return true;
+    }
+
     std::ostream& DLLError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -77,6 +96,23 @@ namespace golang::syscall
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DLL::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Handle = this->Handle;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DLL::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Handle != ref.Handle) return false;
+        return true;
+    }
+
     std::ostream& DLL::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -165,6 +201,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Proc::operator T()
+    {
+        T result;
+        result.Dll = this->Dll;
+        result.Name = this->Name;
+        result.addr = this->addr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Proc::operator==(const T& ref) const
+    {
+        if (Dll != ref.Dll) return false;
+        if (Name != ref.Name) return false;
+        if (addr != ref.addr) return false;
+        return true;
+    }
+
     std::ostream& Proc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -191,6 +246,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    LazyDLL::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        result.dll = this->dll;
+        result.Name = this->Name;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool LazyDLL::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        if (dll != ref.dll) return false;
+        if (Name != ref.Name) return false;
+        return true;
+    }
+
     std::ostream& LazyDLL::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -252,6 +326,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    LazyProc::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        result.Name = this->Name;
+        result.l = this->l;
+        result.proc = this->proc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool LazyProc::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        if (Name != ref.Name) return false;
+        if (l != ref.l) return false;
+        if (proc != ref.proc) return false;
+        return true;
+    }
+
     std::ostream& LazyProc::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -16,7 +16,7 @@
 // #include "golang/internal/fmtsort/sort.h"  [Ignored, known errors]
 #include "golang/io/io.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/pool.h"
@@ -308,6 +308,39 @@ namespace golang::fmt
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pp::operator T()
+    {
+        T result;
+        result.buf = this->buf;
+        result.arg = this->arg;
+        result.value = this->value;
+        result.fmt = this->fmt;
+        result.reordered = this->reordered;
+        result.goodArgNum = this->goodArgNum;
+        result.panicking = this->panicking;
+        result.erroring = this->erroring;
+        result.wrapErrs = this->wrapErrs;
+        result.wrappedErrs = this->wrappedErrs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pp::operator==(const T& ref) const
+    {
+        if (buf != ref.buf) return false;
+        if (arg != ref.arg) return false;
+        if (value != ref.value) return false;
+        if (fmt != ref.fmt) return false;
+        if (reordered != ref.reordered) return false;
+        if (goodArgNum != ref.goodArgNum) return false;
+        if (panicking != ref.panicking) return false;
+        if (erroring != ref.erroring) return false;
+        if (wrapErrs != ref.wrapErrs) return false;
+        if (wrappedErrs != ref.wrappedErrs) return false;
+        return true;
+    }
+
     std::ostream& pp::PrintTo(std::ostream& os) const
     {
         os << '{';

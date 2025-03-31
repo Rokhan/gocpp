@@ -72,6 +72,19 @@ namespace golang::runtime
 
             using isGoStruct = void;
 
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                return true;
+            }
+
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
@@ -90,6 +103,19 @@ namespace golang::runtime
             {
 
                 using isGoStruct = void;
+
+                template<typename T> requires gocpp::GoStruct<T>
+                operator T()
+                {
+                    T result;
+                    return result;
+                }
+
+                template<typename T> requires gocpp::GoStruct<T>
+                bool operator==(const T& ref) const
+                {
+                    return true;
+                }
 
                 std::ostream& PrintTo(std::ostream& os) const
                 {
@@ -112,7 +138,7 @@ namespace golang::runtime
             go_throw("traceStartReadCPU called with trace disabled");
         }
         trace.cpuSleep = newWakeableSleep();
-        auto done = gocpp::make(gocpp::Tag<gocpp::channel<&{%!s(token.Pos=32067356) %!s(*ast.FieldList=&{32067362 [] 32067363}) %!s(bool=false)}>>(), 1);
+        auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_0>>(), 1);
         gocpp::go([&]{ [=]() mutable -> void
         {
             for(; traceEnabled(); )

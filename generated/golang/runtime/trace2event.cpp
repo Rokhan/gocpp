@@ -53,6 +53,21 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceEventWriter::operator T()
+    {
+        T result;
+        result.w = this->w;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceEventWriter::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        return true;
+    }
+
     std::ostream& traceEventWriter::PrintTo(std::ostream& os) const
     {
         os << '{';

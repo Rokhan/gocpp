@@ -22,6 +22,12 @@ namespace golang::main
 
         using isGoStruct = void;
 
+        template<typename U> requires gocpp::GoStruct<U>
+        operator U();
+
+        template<typename U> requires gocpp::GoStruct<U>
+        bool operator==(const U& ref) const;
+
         std::ostream& PrintTo(std::ostream& os) const;
     };
 

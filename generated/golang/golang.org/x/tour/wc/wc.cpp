@@ -51,6 +51,23 @@ namespace golang::wc
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T()
+        {
+            T result;
+            result.in = this->in;
+            result.want = this->want;
+            return result;
+        }
+
+        template<typename T>
+        bool operator==(const T& ref) const
+        {
+            if (in != ref.in) return false;
+            if (want != ref.want) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';

@@ -266,6 +266,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stringStruct::operator T()
+    {
+        T result;
+        result.str = this->str;
+        result.len = this->len;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stringStruct::operator==(const T& ref) const
+    {
+        if (str != ref.str) return false;
+        if (len != ref.len) return false;
+        return true;
+    }
+
     std::ostream& stringStruct::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -281,6 +298,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stringStructDWARF::operator T()
+    {
+        T result;
+        result.str = this->str;
+        result.len = this->len;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stringStructDWARF::operator==(const T& ref) const
+    {
+        if (str != ref.str) return false;
+        if (len != ref.len) return false;
+        return true;
+    }
+
     std::ostream& stringStructDWARF::PrintTo(std::ostream& os) const
     {
         os << '{';

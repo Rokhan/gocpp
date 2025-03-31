@@ -56,6 +56,53 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mstats::operator T()
+    {
+        T result;
+        result.heapStats = this->heapStats;
+        result.stacks_sys = this->stacks_sys;
+        result.mspan_sys = this->mspan_sys;
+        result.mcache_sys = this->mcache_sys;
+        result.buckhash_sys = this->buckhash_sys;
+        result.gcMiscSys = this->gcMiscSys;
+        result.other_sys = this->other_sys;
+        result.last_gc_unix = this->last_gc_unix;
+        result.pause_total_ns = this->pause_total_ns;
+        result.pause_ns = this->pause_ns;
+        result.pause_end = this->pause_end;
+        result.numgc = this->numgc;
+        result.numforcedgc = this->numforcedgc;
+        result.gc_cpu_fraction = this->gc_cpu_fraction;
+        result.last_gc_nanotime = this->last_gc_nanotime;
+        result.lastHeapInUse = this->lastHeapInUse;
+        result.enablegc = this->enablegc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mstats::operator==(const T& ref) const
+    {
+        if (heapStats != ref.heapStats) return false;
+        if (stacks_sys != ref.stacks_sys) return false;
+        if (mspan_sys != ref.mspan_sys) return false;
+        if (mcache_sys != ref.mcache_sys) return false;
+        if (buckhash_sys != ref.buckhash_sys) return false;
+        if (gcMiscSys != ref.gcMiscSys) return false;
+        if (other_sys != ref.other_sys) return false;
+        if (last_gc_unix != ref.last_gc_unix) return false;
+        if (pause_total_ns != ref.pause_total_ns) return false;
+        if (pause_ns != ref.pause_ns) return false;
+        if (pause_end != ref.pause_end) return false;
+        if (numgc != ref.numgc) return false;
+        if (numforcedgc != ref.numforcedgc) return false;
+        if (gc_cpu_fraction != ref.gc_cpu_fraction) return false;
+        if (last_gc_nanotime != ref.last_gc_nanotime) return false;
+        if (lastHeapInUse != ref.lastHeapInUse) return false;
+        if (enablegc != ref.enablegc) return false;
+        return true;
+    }
+
     std::ostream& mstats::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -87,6 +134,83 @@ namespace golang::runtime
 
     mstats memstats;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    MemStats::operator T()
+    {
+        T result;
+        result.Alloc = this->Alloc;
+        result.TotalAlloc = this->TotalAlloc;
+        result.Sys = this->Sys;
+        result.Lookups = this->Lookups;
+        result.Mallocs = this->Mallocs;
+        result.Frees = this->Frees;
+        result.HeapAlloc = this->HeapAlloc;
+        result.HeapSys = this->HeapSys;
+        result.HeapIdle = this->HeapIdle;
+        result.HeapInuse = this->HeapInuse;
+        result.HeapReleased = this->HeapReleased;
+        result.HeapObjects = this->HeapObjects;
+        result.StackInuse = this->StackInuse;
+        result.StackSys = this->StackSys;
+        result.MSpanInuse = this->MSpanInuse;
+        result.MSpanSys = this->MSpanSys;
+        result.MCacheInuse = this->MCacheInuse;
+        result.MCacheSys = this->MCacheSys;
+        result.BuckHashSys = this->BuckHashSys;
+        result.GCSys = this->GCSys;
+        result.OtherSys = this->OtherSys;
+        result.NextGC = this->NextGC;
+        result.LastGC = this->LastGC;
+        result.PauseTotalNs = this->PauseTotalNs;
+        result.PauseNs = this->PauseNs;
+        result.PauseEnd = this->PauseEnd;
+        result.NumGC = this->NumGC;
+        result.NumForcedGC = this->NumForcedGC;
+        result.GCCPUFraction = this->GCCPUFraction;
+        result.EnableGC = this->EnableGC;
+        result.DebugGC = this->DebugGC;
+        result.BySize = this->BySize;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool MemStats::operator==(const T& ref) const
+    {
+        if (Alloc != ref.Alloc) return false;
+        if (TotalAlloc != ref.TotalAlloc) return false;
+        if (Sys != ref.Sys) return false;
+        if (Lookups != ref.Lookups) return false;
+        if (Mallocs != ref.Mallocs) return false;
+        if (Frees != ref.Frees) return false;
+        if (HeapAlloc != ref.HeapAlloc) return false;
+        if (HeapSys != ref.HeapSys) return false;
+        if (HeapIdle != ref.HeapIdle) return false;
+        if (HeapInuse != ref.HeapInuse) return false;
+        if (HeapReleased != ref.HeapReleased) return false;
+        if (HeapObjects != ref.HeapObjects) return false;
+        if (StackInuse != ref.StackInuse) return false;
+        if (StackSys != ref.StackSys) return false;
+        if (MSpanInuse != ref.MSpanInuse) return false;
+        if (MSpanSys != ref.MSpanSys) return false;
+        if (MCacheInuse != ref.MCacheInuse) return false;
+        if (MCacheSys != ref.MCacheSys) return false;
+        if (BuckHashSys != ref.BuckHashSys) return false;
+        if (GCSys != ref.GCSys) return false;
+        if (OtherSys != ref.OtherSys) return false;
+        if (NextGC != ref.NextGC) return false;
+        if (LastGC != ref.LastGC) return false;
+        if (PauseTotalNs != ref.PauseTotalNs) return false;
+        if (PauseNs != ref.PauseNs) return false;
+        if (PauseEnd != ref.PauseEnd) return false;
+        if (NumGC != ref.NumGC) return false;
+        if (NumForcedGC != ref.NumForcedGC) return false;
+        if (GCCPUFraction != ref.GCCPUFraction) return false;
+        if (EnableGC != ref.EnableGC) return false;
+        if (DebugGC != ref.DebugGC) return false;
+        if (BySize != ref.BySize) return false;
+        return true;
+    }
+
     std::ostream& MemStats::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -164,6 +288,25 @@ namespace golang::runtime
             uint64_t Frees;
 
             using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.Size = this->Size;
+                result.Mallocs = this->Mallocs;
+                result.Frees = this->Frees;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (Size != ref.Size) return false;
+                if (Mallocs != ref.Mallocs) return false;
+                if (Frees != ref.Frees) return false;
+                return true;
+            }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
@@ -364,6 +507,45 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heapStatsDelta::operator T()
+    {
+        T result;
+        result.committed = this->committed;
+        result.released = this->released;
+        result.inHeap = this->inHeap;
+        result.inStacks = this->inStacks;
+        result.inWorkBufs = this->inWorkBufs;
+        result.inPtrScalarBits = this->inPtrScalarBits;
+        result.tinyAllocCount = this->tinyAllocCount;
+        result.largeAlloc = this->largeAlloc;
+        result.largeAllocCount = this->largeAllocCount;
+        result.smallAllocCount = this->smallAllocCount;
+        result.largeFree = this->largeFree;
+        result.largeFreeCount = this->largeFreeCount;
+        result.smallFreeCount = this->smallFreeCount;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heapStatsDelta::operator==(const T& ref) const
+    {
+        if (committed != ref.committed) return false;
+        if (released != ref.released) return false;
+        if (inHeap != ref.inHeap) return false;
+        if (inStacks != ref.inStacks) return false;
+        if (inWorkBufs != ref.inWorkBufs) return false;
+        if (inPtrScalarBits != ref.inPtrScalarBits) return false;
+        if (tinyAllocCount != ref.tinyAllocCount) return false;
+        if (largeAlloc != ref.largeAlloc) return false;
+        if (largeAllocCount != ref.largeAllocCount) return false;
+        if (smallAllocCount != ref.smallAllocCount) return false;
+        if (largeFree != ref.largeFree) return false;
+        if (largeFreeCount != ref.largeFreeCount) return false;
+        if (smallFreeCount != ref.smallFreeCount) return false;
+        return true;
+    }
+
     std::ostream& heapStatsDelta::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -413,6 +595,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    consistentHeapStats::operator T()
+    {
+        T result;
+        result.stats = this->stats;
+        result.gen = this->gen;
+        result.noPLock = this->noPLock;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool consistentHeapStats::operator==(const T& ref) const
+    {
+        if (stats != ref.stats) return false;
+        if (gen != ref.gen) return false;
+        if (noPLock != ref.noPLock) return false;
+        return true;
+    }
+
     std::ostream& consistentHeapStats::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -507,6 +708,41 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cpuStats::operator T()
+    {
+        T result;
+        result.gcAssistTime = this->gcAssistTime;
+        result.gcDedicatedTime = this->gcDedicatedTime;
+        result.gcIdleTime = this->gcIdleTime;
+        result.gcPauseTime = this->gcPauseTime;
+        result.gcTotalTime = this->gcTotalTime;
+        result.scavengeAssistTime = this->scavengeAssistTime;
+        result.scavengeBgTime = this->scavengeBgTime;
+        result.scavengeTotalTime = this->scavengeTotalTime;
+        result.idleTime = this->idleTime;
+        result.userTime = this->userTime;
+        result.totalTime = this->totalTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cpuStats::operator==(const T& ref) const
+    {
+        if (gcAssistTime != ref.gcAssistTime) return false;
+        if (gcDedicatedTime != ref.gcDedicatedTime) return false;
+        if (gcIdleTime != ref.gcIdleTime) return false;
+        if (gcPauseTime != ref.gcPauseTime) return false;
+        if (gcTotalTime != ref.gcTotalTime) return false;
+        if (scavengeAssistTime != ref.scavengeAssistTime) return false;
+        if (scavengeBgTime != ref.scavengeBgTime) return false;
+        if (scavengeTotalTime != ref.scavengeTotalTime) return false;
+        if (idleTime != ref.idleTime) return false;
+        if (userTime != ref.userTime) return false;
+        if (totalTime != ref.totalTime) return false;
+        return true;
+    }
+
     std::ostream& cpuStats::PrintTo(std::ostream& os) const
     {
         os << '{';

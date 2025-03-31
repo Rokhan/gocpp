@@ -17,6 +17,19 @@
 namespace golang::main
 {
     
+    template<typename T>
+    MyReader::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool MyReader::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& MyReader::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -26,6 +26,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    addrRange::operator T()
+    {
+        T result;
+        result.base = this->base;
+        result.limit = this->limit;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool addrRange::operator==(const T& ref) const
+    {
+        if (base != ref.base) return false;
+        if (limit != ref.limit) return false;
+        return true;
+    }
+
     std::ostream& addrRange::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -126,6 +143,21 @@ namespace golang::runtime
     offAddr minOffAddr = offAddr {arenaBaseOffset};
     offAddr maxOffAddr = offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    offAddr::operator T()
+    {
+        T result;
+        result.a = this->a;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool offAddr::operator==(const T& ref) const
+    {
+        if (a != ref.a) return false;
+        return true;
+    }
+
     std::ostream& offAddr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -175,6 +207,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    atomicOffAddr::operator T()
+    {
+        T result;
+        result.a = this->a;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool atomicOffAddr::operator==(const T& ref) const
+    {
+        if (a != ref.a) return false;
+        return true;
+    }
+
     std::ostream& atomicOffAddr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -244,6 +291,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    addrRanges::operator T()
+    {
+        T result;
+        result.ranges = this->ranges;
+        result.totalBytes = this->totalBytes;
+        result.sysStat = this->sysStat;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool addrRanges::operator==(const T& ref) const
+    {
+        if (ranges != ref.ranges) return false;
+        if (totalBytes != ref.totalBytes) return false;
+        if (sysStat != ref.sysStat) return false;
+        return true;
+    }
+
     std::ostream& addrRanges::PrintTo(std::ostream& os) const
     {
         os << '{';

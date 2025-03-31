@@ -19,6 +19,21 @@ namespace golang::errors
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    errorString::operator T()
+    {
+        T result;
+        result.s = this->s;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool errorString::operator==(const T& ref) const
+    {
+        if (s != ref.s) return false;
+        return true;
+    }
+
     std::ostream& errorString::PrintTo(std::ostream& os) const
     {
         os << '{';

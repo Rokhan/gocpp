@@ -28,7 +28,7 @@ namespace golang::cmp
         template<typename T>
         Ordered(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 

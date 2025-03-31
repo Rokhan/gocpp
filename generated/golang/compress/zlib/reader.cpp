@@ -25,6 +25,29 @@ namespace golang::zlib
     std::string ErrDictionary = errors::New("zlib: invalid dictionary");
     std::string ErrHeader = errors::New("zlib: invalid header");
     
+    template<typename T>
+    reader::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.decompressor = this->decompressor;
+        result.digest = this->digest;
+        result.err = this->err;
+        result.scratch = this->scratch;
+        return result;
+    }
+
+    template<typename T>
+    bool reader::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (decompressor != ref.decompressor) return false;
+        if (digest != ref.digest) return false;
+        if (err != ref.err) return false;
+        if (scratch != ref.scratch) return false;
+        return true;
+    }
+
     std::ostream& reader::PrintTo(std::ostream& os) const
     {
         os << '{';

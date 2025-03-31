@@ -56,6 +56,19 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gTraceState::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gTraceState::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& gTraceState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -74,6 +87,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mTraceState::operator T()
+    {
+        T result;
+        result.seqlock = this->seqlock;
+        result.buf = this->buf;
+        result.link = this->link;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mTraceState::operator==(const T& ref) const
+    {
+        if (seqlock != ref.seqlock) return false;
+        if (buf != ref.buf) return false;
+        if (link != ref.link) return false;
+        return true;
+    }
+
     std::ostream& mTraceState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -90,6 +122,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pTraceState::operator T()
+    {
+        T result;
+        result.mSyscallID = this->mSyscallID;
+        result.maySweep = this->maySweep;
+        result.inSweep = this->inSweep;
+        result.swept = this->swept;
+        result.reclaimed = this->reclaimed;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pTraceState::operator==(const T& ref) const
+    {
+        if (mSyscallID != ref.mSyscallID) return false;
+        if (maySweep != ref.maySweep) return false;
+        if (inSweep != ref.inSweep) return false;
+        if (swept != ref.swept) return false;
+        if (reclaimed != ref.reclaimed) return false;
+        return true;
+    }
+
     std::ostream& pTraceState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -136,6 +191,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceLocker::operator T()
+    {
+        T result;
+        result.mp = this->mp;
+        result.gen = this->gen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceLocker::operator==(const T& ref) const
+    {
+        if (mp != ref.mp) return false;
+        if (gen != ref.gen) return false;
+        return true;
+    }
+
     std::ostream& traceLocker::PrintTo(std::ostream& os) const
     {
         os << '{';

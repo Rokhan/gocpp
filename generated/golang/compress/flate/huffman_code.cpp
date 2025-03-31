@@ -19,6 +19,23 @@
 namespace golang::flate
 {
     
+    template<typename T>
+    hcode::operator T()
+    {
+        T result;
+        result.code = this->code;
+        result.len = this->len;
+        return result;
+    }
+
+    template<typename T>
+    bool hcode::operator==(const T& ref) const
+    {
+        if (code != ref.code) return false;
+        if (len != ref.len) return false;
+        return true;
+    }
+
     std::ostream& hcode::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -34,6 +51,29 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    huffmanEncoder::operator T()
+    {
+        T result;
+        result.codes = this->codes;
+        result.freqcache = this->freqcache;
+        result.bitCount = this->bitCount;
+        result.lns = this->lns;
+        result.lfs = this->lfs;
+        return result;
+    }
+
+    template<typename T>
+    bool huffmanEncoder::operator==(const T& ref) const
+    {
+        if (codes != ref.codes) return false;
+        if (freqcache != ref.freqcache) return false;
+        if (bitCount != ref.bitCount) return false;
+        if (lns != ref.lns) return false;
+        if (lfs != ref.lfs) return false;
+        return true;
+    }
+
     std::ostream& huffmanEncoder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -52,6 +92,23 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    literalNode::operator T()
+    {
+        T result;
+        result.literal = this->literal;
+        result.freq = this->freq;
+        return result;
+    }
+
+    template<typename T>
+    bool literalNode::operator==(const T& ref) const
+    {
+        if (literal != ref.literal) return false;
+        if (freq != ref.freq) return false;
+        return true;
+    }
+
     std::ostream& literalNode::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -67,6 +124,29 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    levelInfo::operator T()
+    {
+        T result;
+        result.level = this->level;
+        result.lastFreq = this->lastFreq;
+        result.nextCharFreq = this->nextCharFreq;
+        result.nextPairFreq = this->nextPairFreq;
+        result.needed = this->needed;
+        return result;
+    }
+
+    template<typename T>
+    bool levelInfo::operator==(const T& ref) const
+    {
+        if (level != ref.level) return false;
+        if (lastFreq != ref.lastFreq) return false;
+        if (nextCharFreq != ref.nextCharFreq) return false;
+        if (nextPairFreq != ref.nextPairFreq) return false;
+        if (needed != ref.needed) return false;
+        return true;
+    }
+
     std::ostream& levelInfo::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -59,6 +59,27 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RGBA::operator T()
+    {
+        T result;
+        result.R = this->R;
+        result.G = this->G;
+        result.B = this->B;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RGBA::operator==(const T& ref) const
+    {
+        if (R != ref.R) return false;
+        if (G != ref.G) return false;
+        if (B != ref.B) return false;
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& RGBA::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -93,6 +114,27 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RGBA64::operator T()
+    {
+        T result;
+        result.R = this->R;
+        result.G = this->G;
+        result.B = this->B;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RGBA64::operator==(const T& ref) const
+    {
+        if (R != ref.R) return false;
+        if (G != ref.G) return false;
+        if (B != ref.B) return false;
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& RGBA64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -119,6 +161,27 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    NRGBA::operator T()
+    {
+        T result;
+        result.R = this->R;
+        result.G = this->G;
+        result.B = this->B;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool NRGBA::operator==(const T& ref) const
+    {
+        if (R != ref.R) return false;
+        if (G != ref.G) return false;
+        if (B != ref.B) return false;
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& NRGBA::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -159,6 +222,27 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    NRGBA64::operator T()
+    {
+        T result;
+        result.R = this->R;
+        result.G = this->G;
+        result.B = this->B;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool NRGBA64::operator==(const T& ref) const
+    {
+        if (R != ref.R) return false;
+        if (G != ref.G) return false;
+        if (B != ref.B) return false;
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& NRGBA64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -195,6 +279,21 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Alpha::operator T()
+    {
+        T result;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Alpha::operator==(const T& ref) const
+    {
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& Alpha::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -220,6 +319,21 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Alpha16::operator T()
+    {
+        T result;
+        result.A = this->A;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Alpha16::operator==(const T& ref) const
+    {
+        if (A != ref.A) return false;
+        return true;
+    }
+
     std::ostream& Alpha16::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -244,6 +358,21 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Gray::operator T()
+    {
+        T result;
+        result.Y = this->Y;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Gray::operator==(const T& ref) const
+    {
+        if (Y != ref.Y) return false;
+        return true;
+    }
+
     std::ostream& Gray::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -269,6 +398,21 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Gray16::operator T()
+    {
+        T result;
+        result.Y = this->Y;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Gray16::operator==(const T& ref) const
+    {
+        if (Y != ref.Y) return false;
+        return true;
+    }
+
     std::ostream& Gray16::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -343,6 +487,21 @@ namespace golang::color
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    modelFunc::operator T()
+    {
+        T result;
+        result.f = this->f;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool modelFunc::operator==(const T& ref) const
+    {
+        if (f != ref.f) return false;
+        return true;
+    }
+
     std::ostream& modelFunc::PrintTo(std::ostream& os) const
     {
         os << '{';

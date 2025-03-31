@@ -803,6 +803,27 @@ namespace golang::syscall
 
     bool SocketDisableIPv6;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RawSockaddrInet4::operator T()
+    {
+        T result;
+        result.Family = this->Family;
+        result.Port = this->Port;
+        result.Addr = this->Addr;
+        result.Zero = this->Zero;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RawSockaddrInet4::operator==(const T& ref) const
+    {
+        if (Family != ref.Family) return false;
+        if (Port != ref.Port) return false;
+        if (Addr != ref.Addr) return false;
+        if (Zero != ref.Zero) return false;
+        return true;
+    }
+
     std::ostream& RawSockaddrInet4::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -820,6 +841,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RawSockaddrInet6::operator T()
+    {
+        T result;
+        result.Family = this->Family;
+        result.Port = this->Port;
+        result.Flowinfo = this->Flowinfo;
+        result.Addr = this->Addr;
+        result.Scope_id = this->Scope_id;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RawSockaddrInet6::operator==(const T& ref) const
+    {
+        if (Family != ref.Family) return false;
+        if (Port != ref.Port) return false;
+        if (Flowinfo != ref.Flowinfo) return false;
+        if (Addr != ref.Addr) return false;
+        if (Scope_id != ref.Scope_id) return false;
+        return true;
+    }
+
     std::ostream& RawSockaddrInet6::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -838,6 +882,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RawSockaddr::operator T()
+    {
+        T result;
+        result.Family = this->Family;
+        result.Data = this->Data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RawSockaddr::operator==(const T& ref) const
+    {
+        if (Family != ref.Family) return false;
+        if (Data != ref.Data) return false;
+        return true;
+    }
+
     std::ostream& RawSockaddr::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -853,6 +914,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RawSockaddrAny::operator T()
+    {
+        T result;
+        result.Addr = this->Addr;
+        result.Pad = this->Pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RawSockaddrAny::operator==(const T& ref) const
+    {
+        if (Addr != ref.Addr) return false;
+        if (Pad != ref.Pad) return false;
+        return true;
+    }
+
     std::ostream& RawSockaddrAny::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -913,6 +991,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SockaddrInet4::operator T()
+    {
+        T result;
+        result.Port = this->Port;
+        result.Addr = this->Addr;
+        result.raw = this->raw;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SockaddrInet4::operator==(const T& ref) const
+    {
+        if (Port != ref.Port) return false;
+        if (Addr != ref.Addr) return false;
+        if (raw != ref.raw) return false;
+        return true;
+    }
+
     std::ostream& SockaddrInet4::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -943,6 +1040,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SockaddrInet6::operator T()
+    {
+        T result;
+        result.Port = this->Port;
+        result.ZoneId = this->ZoneId;
+        result.Addr = this->Addr;
+        result.raw = this->raw;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SockaddrInet6::operator==(const T& ref) const
+    {
+        if (Port != ref.Port) return false;
+        if (ZoneId != ref.ZoneId) return false;
+        if (Addr != ref.Addr) return false;
+        if (raw != ref.raw) return false;
+        return true;
+    }
+
     std::ostream& SockaddrInet6::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -975,6 +1093,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    RawSockaddrUnix::operator T()
+    {
+        T result;
+        result.Family = this->Family;
+        result.Path = this->Path;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool RawSockaddrUnix::operator==(const T& ref) const
+    {
+        if (Family != ref.Family) return false;
+        if (Path != ref.Path) return false;
+        return true;
+    }
+
     std::ostream& RawSockaddrUnix::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -990,6 +1125,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SockaddrUnix::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.raw = this->raw;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SockaddrUnix::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (raw != ref.raw) return false;
+        return true;
+    }
+
     std::ostream& SockaddrUnix::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1268,6 +1420,25 @@ namespace golang::syscall
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.once = this->once;
+            result.addr = this->addr;
+            result.err = this->err;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (once != ref.once) return false;
+            if (addr != ref.addr) return false;
+            if (err != ref.err) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -1343,6 +1514,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Rusage::operator T()
+    {
+        T result;
+        result.CreationTime = this->CreationTime;
+        result.ExitTime = this->ExitTime;
+        result.KernelTime = this->KernelTime;
+        result.UserTime = this->UserTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Rusage::operator==(const T& ref) const
+    {
+        if (CreationTime != ref.CreationTime) return false;
+        if (ExitTime != ref.ExitTime) return false;
+        if (KernelTime != ref.KernelTime) return false;
+        if (UserTime != ref.UserTime) return false;
+        return true;
+    }
+
     std::ostream& Rusage::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1360,6 +1552,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    WaitStatus::operator T()
+    {
+        T result;
+        result.ExitCode = this->ExitCode;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool WaitStatus::operator==(const T& ref) const
+    {
+        if (ExitCode != ref.ExitCode) return false;
+        return true;
+    }
+
     std::ostream& WaitStatus::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1419,6 +1626,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Timespec::operator T()
+    {
+        T result;
+        result.Sec = this->Sec;
+        result.Nsec = this->Nsec;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Timespec::operator==(const T& ref) const
+    {
+        if (Sec != ref.Sec) return false;
+        if (Nsec != ref.Nsec) return false;
+        return true;
+    }
+
     std::ostream& Timespec::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1475,6 +1699,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Linger::operator T()
+    {
+        T result;
+        result.Onoff = this->Onoff;
+        result.Linger = this->Linger;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Linger::operator==(const T& ref) const
+    {
+        if (Onoff != ref.Onoff) return false;
+        if (Linger != ref.Linger) return false;
+        return true;
+    }
+
     std::ostream& Linger::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1490,6 +1731,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sysLinger::operator T()
+    {
+        T result;
+        result.Onoff = this->Onoff;
+        result.Linger = this->Linger;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sysLinger::operator==(const T& ref) const
+    {
+        if (Onoff != ref.Onoff) return false;
+        if (Linger != ref.Linger) return false;
+        return true;
+    }
+
     std::ostream& sysLinger::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1505,6 +1763,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    IPMreq::operator T()
+    {
+        T result;
+        result.Multiaddr = this->Multiaddr;
+        result.Interface = this->Interface;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IPMreq::operator==(const T& ref) const
+    {
+        if (Multiaddr != ref.Multiaddr) return false;
+        if (Interface != ref.Interface) return false;
+        return true;
+    }
+
     std::ostream& IPMreq::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1520,6 +1795,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    IPv6Mreq::operator T()
+    {
+        T result;
+        result.Multiaddr = this->Multiaddr;
+        result.Interface = this->Interface;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IPv6Mreq::operator==(const T& ref) const
+    {
+        if (Multiaddr != ref.Multiaddr) return false;
+        if (Interface != ref.Interface) return false;
+        return true;
+    }
+
     std::ostream& IPv6Mreq::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -39,6 +39,23 @@ namespace golang::main
 
     
     template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    Wrapper<T>::operator U()
+    {
+        U result;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    bool Wrapper<T>::operator==(const U& ref) const
+    {
+        if (value != ref.value) return false;
+        return true;
+    }
+
+    template<typename T>
     std::ostream& Wrapper<T>::PrintTo(std::ostream& os) const
     {
         os << '{';

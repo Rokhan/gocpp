@@ -24,6 +24,19 @@ namespace golang::syscall
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -39,6 +52,23 @@ namespace golang::syscall
 
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Timeval::operator T()
+    {
+        T result;
+        result.Sec = this->Sec;
+        result.Usec = this->Usec;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Timeval::operator==(const T& ref) const
+    {
+        if (Sec != ref.Sec) return false;
+        if (Usec != ref.Usec) return false;
+        return true;
+    }
+
     std::ostream& Timeval::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -67,6 +97,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SecurityAttributes::operator T()
+    {
+        T result;
+        result.Length = this->Length;
+        result.SecurityDescriptor = this->SecurityDescriptor;
+        result.InheritHandle = this->InheritHandle;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SecurityAttributes::operator==(const T& ref) const
+    {
+        if (Length != ref.Length) return false;
+        if (SecurityDescriptor != ref.SecurityDescriptor) return false;
+        if (InheritHandle != ref.InheritHandle) return false;
+        return true;
+    }
+
     std::ostream& SecurityAttributes::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -83,6 +132,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Overlapped::operator T()
+    {
+        T result;
+        result.Internal = this->Internal;
+        result.InternalHigh = this->InternalHigh;
+        result.Offset = this->Offset;
+        result.OffsetHigh = this->OffsetHigh;
+        result.HEvent = this->HEvent;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Overlapped::operator==(const T& ref) const
+    {
+        if (Internal != ref.Internal) return false;
+        if (InternalHigh != ref.InternalHigh) return false;
+        if (Offset != ref.Offset) return false;
+        if (OffsetHigh != ref.OffsetHigh) return false;
+        if (HEvent != ref.HEvent) return false;
+        return true;
+    }
+
     std::ostream& Overlapped::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -101,6 +173,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    FileNotifyInformation::operator T()
+    {
+        T result;
+        result.NextEntryOffset = this->NextEntryOffset;
+        result.Action = this->Action;
+        result.FileNameLength = this->FileNameLength;
+        result.FileName = this->FileName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool FileNotifyInformation::operator==(const T& ref) const
+    {
+        if (NextEntryOffset != ref.NextEntryOffset) return false;
+        if (Action != ref.Action) return false;
+        if (FileNameLength != ref.FileNameLength) return false;
+        if (FileName != ref.FileName) return false;
+        return true;
+    }
+
     std::ostream& FileNotifyInformation::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -118,6 +211,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Filetime::operator T()
+    {
+        T result;
+        result.LowDateTime = this->LowDateTime;
+        result.HighDateTime = this->HighDateTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Filetime::operator==(const T& ref) const
+    {
+        if (LowDateTime != ref.LowDateTime) return false;
+        if (HighDateTime != ref.HighDateTime) return false;
+        return true;
+    }
+
     std::ostream& Filetime::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -151,6 +261,39 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Win32finddata::operator T()
+    {
+        T result;
+        result.FileAttributes = this->FileAttributes;
+        result.CreationTime = this->CreationTime;
+        result.LastAccessTime = this->LastAccessTime;
+        result.LastWriteTime = this->LastWriteTime;
+        result.FileSizeHigh = this->FileSizeHigh;
+        result.FileSizeLow = this->FileSizeLow;
+        result.Reserved0 = this->Reserved0;
+        result.Reserved1 = this->Reserved1;
+        result.FileName = this->FileName;
+        result.AlternateFileName = this->AlternateFileName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Win32finddata::operator==(const T& ref) const
+    {
+        if (FileAttributes != ref.FileAttributes) return false;
+        if (CreationTime != ref.CreationTime) return false;
+        if (LastAccessTime != ref.LastAccessTime) return false;
+        if (LastWriteTime != ref.LastWriteTime) return false;
+        if (FileSizeHigh != ref.FileSizeHigh) return false;
+        if (FileSizeLow != ref.FileSizeLow) return false;
+        if (Reserved0 != ref.Reserved0) return false;
+        if (Reserved1 != ref.Reserved1) return false;
+        if (FileName != ref.FileName) return false;
+        if (AlternateFileName != ref.AlternateFileName) return false;
+        return true;
+    }
+
     std::ostream& Win32finddata::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -174,6 +317,39 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    win32finddata1::operator T()
+    {
+        T result;
+        result.FileAttributes = this->FileAttributes;
+        result.CreationTime = this->CreationTime;
+        result.LastAccessTime = this->LastAccessTime;
+        result.LastWriteTime = this->LastWriteTime;
+        result.FileSizeHigh = this->FileSizeHigh;
+        result.FileSizeLow = this->FileSizeLow;
+        result.Reserved0 = this->Reserved0;
+        result.Reserved1 = this->Reserved1;
+        result.FileName = this->FileName;
+        result.AlternateFileName = this->AlternateFileName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool win32finddata1::operator==(const T& ref) const
+    {
+        if (FileAttributes != ref.FileAttributes) return false;
+        if (CreationTime != ref.CreationTime) return false;
+        if (LastAccessTime != ref.LastAccessTime) return false;
+        if (LastWriteTime != ref.LastWriteTime) return false;
+        if (FileSizeHigh != ref.FileSizeHigh) return false;
+        if (FileSizeLow != ref.FileSizeLow) return false;
+        if (Reserved0 != ref.Reserved0) return false;
+        if (Reserved1 != ref.Reserved1) return false;
+        if (FileName != ref.FileName) return false;
+        if (AlternateFileName != ref.AlternateFileName) return false;
+        return true;
+    }
+
     std::ostream& win32finddata1::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -211,6 +387,39 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ByHandleFileInformation::operator T()
+    {
+        T result;
+        result.FileAttributes = this->FileAttributes;
+        result.CreationTime = this->CreationTime;
+        result.LastAccessTime = this->LastAccessTime;
+        result.LastWriteTime = this->LastWriteTime;
+        result.VolumeSerialNumber = this->VolumeSerialNumber;
+        result.FileSizeHigh = this->FileSizeHigh;
+        result.FileSizeLow = this->FileSizeLow;
+        result.NumberOfLinks = this->NumberOfLinks;
+        result.FileIndexHigh = this->FileIndexHigh;
+        result.FileIndexLow = this->FileIndexLow;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ByHandleFileInformation::operator==(const T& ref) const
+    {
+        if (FileAttributes != ref.FileAttributes) return false;
+        if (CreationTime != ref.CreationTime) return false;
+        if (LastAccessTime != ref.LastAccessTime) return false;
+        if (LastWriteTime != ref.LastWriteTime) return false;
+        if (VolumeSerialNumber != ref.VolumeSerialNumber) return false;
+        if (FileSizeHigh != ref.FileSizeHigh) return false;
+        if (FileSizeLow != ref.FileSizeLow) return false;
+        if (NumberOfLinks != ref.NumberOfLinks) return false;
+        if (FileIndexHigh != ref.FileIndexHigh) return false;
+        if (FileIndexLow != ref.FileIndexLow) return false;
+        return true;
+    }
+
     std::ostream& ByHandleFileInformation::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -234,6 +443,31 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Win32FileAttributeData::operator T()
+    {
+        T result;
+        result.FileAttributes = this->FileAttributes;
+        result.CreationTime = this->CreationTime;
+        result.LastAccessTime = this->LastAccessTime;
+        result.LastWriteTime = this->LastWriteTime;
+        result.FileSizeHigh = this->FileSizeHigh;
+        result.FileSizeLow = this->FileSizeLow;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Win32FileAttributeData::operator==(const T& ref) const
+    {
+        if (FileAttributes != ref.FileAttributes) return false;
+        if (CreationTime != ref.CreationTime) return false;
+        if (LastAccessTime != ref.LastAccessTime) return false;
+        if (LastWriteTime != ref.LastWriteTime) return false;
+        if (FileSizeHigh != ref.FileSizeHigh) return false;
+        if (FileSizeLow != ref.FileSizeLow) return false;
+        return true;
+    }
+
     std::ostream& Win32FileAttributeData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -253,6 +487,55 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    StartupInfo::operator T()
+    {
+        T result;
+        result.Cb = this->Cb;
+        result._ = this->_;
+        result.Desktop = this->Desktop;
+        result.Title = this->Title;
+        result.X = this->X;
+        result.Y = this->Y;
+        result.XSize = this->XSize;
+        result.YSize = this->YSize;
+        result.XCountChars = this->XCountChars;
+        result.YCountChars = this->YCountChars;
+        result.FillAttribute = this->FillAttribute;
+        result.Flags = this->Flags;
+        result.ShowWindow = this->ShowWindow;
+        result._ = this->_;
+        result._ = this->_;
+        result.StdInput = this->StdInput;
+        result.StdOutput = this->StdOutput;
+        result.StdErr = this->StdErr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool StartupInfo::operator==(const T& ref) const
+    {
+        if (Cb != ref.Cb) return false;
+        if (_ != ref._) return false;
+        if (Desktop != ref.Desktop) return false;
+        if (Title != ref.Title) return false;
+        if (X != ref.X) return false;
+        if (Y != ref.Y) return false;
+        if (XSize != ref.XSize) return false;
+        if (YSize != ref.YSize) return false;
+        if (XCountChars != ref.XCountChars) return false;
+        if (YCountChars != ref.YCountChars) return false;
+        if (FillAttribute != ref.FillAttribute) return false;
+        if (Flags != ref.Flags) return false;
+        if (ShowWindow != ref.ShowWindow) return false;
+        if (_ != ref._) return false;
+        if (_ != ref._) return false;
+        if (StdInput != ref.StdInput) return false;
+        if (StdOutput != ref.StdOutput) return false;
+        if (StdErr != ref.StdErr) return false;
+        return true;
+    }
+
     std::ostream& StartupInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -284,6 +567,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _PROC_THREAD_ATTRIBUTE_LIST::operator T()
+    {
+        T result;
+        result._ = this->_;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _PROC_THREAD_ATTRIBUTE_LIST::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        return true;
+    }
+
     std::ostream& _PROC_THREAD_ATTRIBUTE_LIST::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -298,6 +596,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    _STARTUPINFOEXW::operator T()
+    {
+        T result;
+        result.ProcThreadAttributeList = this->ProcThreadAttributeList;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool _STARTUPINFOEXW::operator==(const T& ref) const
+    {
+        if (ProcThreadAttributeList != ref.ProcThreadAttributeList) return false;
+        return true;
+    }
+
     std::ostream& _STARTUPINFOEXW::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -312,6 +625,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ProcessInformation::operator T()
+    {
+        T result;
+        result.Process = this->Process;
+        result.Thread = this->Thread;
+        result.ProcessId = this->ProcessId;
+        result.ThreadId = this->ThreadId;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ProcessInformation::operator==(const T& ref) const
+    {
+        if (Process != ref.Process) return false;
+        if (Thread != ref.Thread) return false;
+        if (ProcessId != ref.ProcessId) return false;
+        if (ThreadId != ref.ThreadId) return false;
+        return true;
+    }
+
     std::ostream& ProcessInformation::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -329,6 +663,39 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ProcessEntry32::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.Usage = this->Usage;
+        result.ProcessID = this->ProcessID;
+        result.DefaultHeapID = this->DefaultHeapID;
+        result.ModuleID = this->ModuleID;
+        result.Threads = this->Threads;
+        result.ParentProcessID = this->ParentProcessID;
+        result.PriClassBase = this->PriClassBase;
+        result.Flags = this->Flags;
+        result.ExeFile = this->ExeFile;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ProcessEntry32::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (Usage != ref.Usage) return false;
+        if (ProcessID != ref.ProcessID) return false;
+        if (DefaultHeapID != ref.DefaultHeapID) return false;
+        if (ModuleID != ref.ModuleID) return false;
+        if (Threads != ref.Threads) return false;
+        if (ParentProcessID != ref.ParentProcessID) return false;
+        if (PriClassBase != ref.PriClassBase) return false;
+        if (Flags != ref.Flags) return false;
+        if (ExeFile != ref.ExeFile) return false;
+        return true;
+    }
+
     std::ostream& ProcessEntry32::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -352,6 +719,35 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Systemtime::operator T()
+    {
+        T result;
+        result.Year = this->Year;
+        result.Month = this->Month;
+        result.DayOfWeek = this->DayOfWeek;
+        result.Day = this->Day;
+        result.Hour = this->Hour;
+        result.Minute = this->Minute;
+        result.Second = this->Second;
+        result.Milliseconds = this->Milliseconds;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Systemtime::operator==(const T& ref) const
+    {
+        if (Year != ref.Year) return false;
+        if (Month != ref.Month) return false;
+        if (DayOfWeek != ref.DayOfWeek) return false;
+        if (Day != ref.Day) return false;
+        if (Hour != ref.Hour) return false;
+        if (Minute != ref.Minute) return false;
+        if (Second != ref.Second) return false;
+        if (Milliseconds != ref.Milliseconds) return false;
+        return true;
+    }
+
     std::ostream& Systemtime::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -373,6 +769,33 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Timezoneinformation::operator T()
+    {
+        T result;
+        result.Bias = this->Bias;
+        result.StandardName = this->StandardName;
+        result.StandardDate = this->StandardDate;
+        result.StandardBias = this->StandardBias;
+        result.DaylightName = this->DaylightName;
+        result.DaylightDate = this->DaylightDate;
+        result.DaylightBias = this->DaylightBias;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Timezoneinformation::operator==(const T& ref) const
+    {
+        if (Bias != ref.Bias) return false;
+        if (StandardName != ref.StandardName) return false;
+        if (StandardDate != ref.StandardDate) return false;
+        if (StandardBias != ref.StandardBias) return false;
+        if (DaylightName != ref.DaylightName) return false;
+        if (DaylightDate != ref.DaylightDate) return false;
+        if (DaylightBias != ref.DaylightBias) return false;
+        return true;
+    }
+
     std::ostream& Timezoneinformation::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -393,6 +816,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    WSABuf::operator T()
+    {
+        T result;
+        result.Len = this->Len;
+        result.Buf = this->Buf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool WSABuf::operator==(const T& ref) const
+    {
+        if (Len != ref.Len) return false;
+        if (Buf != ref.Buf) return false;
+        return true;
+    }
+
     std::ostream& WSABuf::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -408,6 +848,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Hostent::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Aliases = this->Aliases;
+        result.AddrType = this->AddrType;
+        result.Length = this->Length;
+        result.AddrList = this->AddrList;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Hostent::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Aliases != ref.Aliases) return false;
+        if (AddrType != ref.AddrType) return false;
+        if (Length != ref.Length) return false;
+        if (AddrList != ref.AddrList) return false;
+        return true;
+    }
+
     std::ostream& Hostent::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -426,6 +889,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Protoent::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Aliases = this->Aliases;
+        result.Proto = this->Proto;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Protoent::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Aliases != ref.Aliases) return false;
+        if (Proto != ref.Proto) return false;
+        return true;
+    }
+
     std::ostream& Protoent::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -442,6 +924,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DNSSRVData::operator T()
+    {
+        T result;
+        result.Target = this->Target;
+        result.Priority = this->Priority;
+        result.Weight = this->Weight;
+        result.Port = this->Port;
+        result.Pad = this->Pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DNSSRVData::operator==(const T& ref) const
+    {
+        if (Target != ref.Target) return false;
+        if (Priority != ref.Priority) return false;
+        if (Weight != ref.Weight) return false;
+        if (Port != ref.Port) return false;
+        if (Pad != ref.Pad) return false;
+        return true;
+    }
+
     std::ostream& DNSSRVData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -460,6 +965,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DNSPTRData::operator T()
+    {
+        T result;
+        result.Host = this->Host;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DNSPTRData::operator==(const T& ref) const
+    {
+        if (Host != ref.Host) return false;
+        return true;
+    }
+
     std::ostream& DNSPTRData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -474,6 +994,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DNSMXData::operator T()
+    {
+        T result;
+        result.NameExchange = this->NameExchange;
+        result.Preference = this->Preference;
+        result.Pad = this->Pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DNSMXData::operator==(const T& ref) const
+    {
+        if (NameExchange != ref.NameExchange) return false;
+        if (Preference != ref.Preference) return false;
+        if (Pad != ref.Pad) return false;
+        return true;
+    }
+
     std::ostream& DNSMXData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -490,6 +1029,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DNSTXTData::operator T()
+    {
+        T result;
+        result.StringCount = this->StringCount;
+        result.StringArray = this->StringArray;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DNSTXTData::operator==(const T& ref) const
+    {
+        if (StringCount != ref.StringCount) return false;
+        if (StringArray != ref.StringArray) return false;
+        return true;
+    }
+
     std::ostream& DNSTXTData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -505,6 +1061,35 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    DNSRecord::operator T()
+    {
+        T result;
+        result.Next = this->Next;
+        result.Name = this->Name;
+        result.Type = this->Type;
+        result.Length = this->Length;
+        result.Dw = this->Dw;
+        result.Ttl = this->Ttl;
+        result.Reserved = this->Reserved;
+        result.Data = this->Data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool DNSRecord::operator==(const T& ref) const
+    {
+        if (Next != ref.Next) return false;
+        if (Name != ref.Name) return false;
+        if (Type != ref.Type) return false;
+        if (Length != ref.Length) return false;
+        if (Dw != ref.Dw) return false;
+        if (Ttl != ref.Ttl) return false;
+        if (Reserved != ref.Reserved) return false;
+        if (Data != ref.Data) return false;
+        return true;
+    }
+
     std::ostream& DNSRecord::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -526,6 +1111,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TransmitFileBuffers::operator T()
+    {
+        T result;
+        result.Head = this->Head;
+        result.HeadLength = this->HeadLength;
+        result.Tail = this->Tail;
+        result.TailLength = this->TailLength;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TransmitFileBuffers::operator==(const T& ref) const
+    {
+        if (Head != ref.Head) return false;
+        if (HeadLength != ref.HeadLength) return false;
+        if (Tail != ref.Tail) return false;
+        if (TailLength != ref.TailLength) return false;
+        return true;
+    }
+
     std::ostream& TransmitFileBuffers::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -543,6 +1149,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    InterfaceInfo::operator T()
+    {
+        T result;
+        result.Flags = this->Flags;
+        result.Address = this->Address;
+        result.BroadcastAddress = this->BroadcastAddress;
+        result.Netmask = this->Netmask;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool InterfaceInfo::operator==(const T& ref) const
+    {
+        if (Flags != ref.Flags) return false;
+        if (Address != ref.Address) return false;
+        if (BroadcastAddress != ref.BroadcastAddress) return false;
+        if (Netmask != ref.Netmask) return false;
+        return true;
+    }
+
     std::ostream& InterfaceInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -560,6 +1187,21 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    IpAddressString::operator T()
+    {
+        T result;
+        result.String = this->String;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IpAddressString::operator==(const T& ref) const
+    {
+        if (String != ref.String) return false;
+        return true;
+    }
+
     std::ostream& IpAddressString::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -574,6 +1216,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    IpAddrString::operator T()
+    {
+        T result;
+        result.Next = this->Next;
+        result.IpAddress = this->IpAddress;
+        result.IpMask = this->IpMask;
+        result.Context = this->Context;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IpAddrString::operator==(const T& ref) const
+    {
+        if (Next != ref.Next) return false;
+        if (IpAddress != ref.IpAddress) return false;
+        if (IpMask != ref.IpMask) return false;
+        if (Context != ref.Context) return false;
+        return true;
+    }
+
     std::ostream& IpAddrString::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -591,6 +1254,55 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    IpAdapterInfo::operator T()
+    {
+        T result;
+        result.Next = this->Next;
+        result.ComboIndex = this->ComboIndex;
+        result.AdapterName = this->AdapterName;
+        result.Description = this->Description;
+        result.AddressLength = this->AddressLength;
+        result.Address = this->Address;
+        result.Index = this->Index;
+        result.Type = this->Type;
+        result.DhcpEnabled = this->DhcpEnabled;
+        result.CurrentIpAddress = this->CurrentIpAddress;
+        result.IpAddressList = this->IpAddressList;
+        result.GatewayList = this->GatewayList;
+        result.DhcpServer = this->DhcpServer;
+        result.HaveWins = this->HaveWins;
+        result.PrimaryWinsServer = this->PrimaryWinsServer;
+        result.SecondaryWinsServer = this->SecondaryWinsServer;
+        result.LeaseObtained = this->LeaseObtained;
+        result.LeaseExpires = this->LeaseExpires;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool IpAdapterInfo::operator==(const T& ref) const
+    {
+        if (Next != ref.Next) return false;
+        if (ComboIndex != ref.ComboIndex) return false;
+        if (AdapterName != ref.AdapterName) return false;
+        if (Description != ref.Description) return false;
+        if (AddressLength != ref.AddressLength) return false;
+        if (Address != ref.Address) return false;
+        if (Index != ref.Index) return false;
+        if (Type != ref.Type) return false;
+        if (DhcpEnabled != ref.DhcpEnabled) return false;
+        if (CurrentIpAddress != ref.CurrentIpAddress) return false;
+        if (IpAddressList != ref.IpAddressList) return false;
+        if (GatewayList != ref.GatewayList) return false;
+        if (DhcpServer != ref.DhcpServer) return false;
+        if (HaveWins != ref.HaveWins) return false;
+        if (PrimaryWinsServer != ref.PrimaryWinsServer) return false;
+        if (SecondaryWinsServer != ref.SecondaryWinsServer) return false;
+        if (LeaseObtained != ref.LeaseObtained) return false;
+        if (LeaseExpires != ref.LeaseExpires) return false;
+        return true;
+    }
+
     std::ostream& IpAdapterInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -622,6 +1334,67 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    MibIfRow::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Index = this->Index;
+        result.Type = this->Type;
+        result.Mtu = this->Mtu;
+        result.Speed = this->Speed;
+        result.PhysAddrLen = this->PhysAddrLen;
+        result.PhysAddr = this->PhysAddr;
+        result.AdminStatus = this->AdminStatus;
+        result.OperStatus = this->OperStatus;
+        result.LastChange = this->LastChange;
+        result.InOctets = this->InOctets;
+        result.InUcastPkts = this->InUcastPkts;
+        result.InNUcastPkts = this->InNUcastPkts;
+        result.InDiscards = this->InDiscards;
+        result.InErrors = this->InErrors;
+        result.InUnknownProtos = this->InUnknownProtos;
+        result.OutOctets = this->OutOctets;
+        result.OutUcastPkts = this->OutUcastPkts;
+        result.OutNUcastPkts = this->OutNUcastPkts;
+        result.OutDiscards = this->OutDiscards;
+        result.OutErrors = this->OutErrors;
+        result.OutQLen = this->OutQLen;
+        result.DescrLen = this->DescrLen;
+        result.Descr = this->Descr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool MibIfRow::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Index != ref.Index) return false;
+        if (Type != ref.Type) return false;
+        if (Mtu != ref.Mtu) return false;
+        if (Speed != ref.Speed) return false;
+        if (PhysAddrLen != ref.PhysAddrLen) return false;
+        if (PhysAddr != ref.PhysAddr) return false;
+        if (AdminStatus != ref.AdminStatus) return false;
+        if (OperStatus != ref.OperStatus) return false;
+        if (LastChange != ref.LastChange) return false;
+        if (InOctets != ref.InOctets) return false;
+        if (InUcastPkts != ref.InUcastPkts) return false;
+        if (InNUcastPkts != ref.InNUcastPkts) return false;
+        if (InDiscards != ref.InDiscards) return false;
+        if (InErrors != ref.InErrors) return false;
+        if (InUnknownProtos != ref.InUnknownProtos) return false;
+        if (OutOctets != ref.OutOctets) return false;
+        if (OutUcastPkts != ref.OutUcastPkts) return false;
+        if (OutNUcastPkts != ref.OutNUcastPkts) return false;
+        if (OutDiscards != ref.OutDiscards) return false;
+        if (OutErrors != ref.OutErrors) return false;
+        if (OutQLen != ref.OutQLen) return false;
+        if (DescrLen != ref.DescrLen) return false;
+        if (Descr != ref.Descr) return false;
+        return true;
+    }
+
     std::ostream& MibIfRow::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -659,6 +1432,19 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertInfo::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertInfo::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& CertInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -672,6 +1458,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertContext::operator T()
+    {
+        T result;
+        result.EncodingType = this->EncodingType;
+        result.EncodedCert = this->EncodedCert;
+        result.Length = this->Length;
+        result.CertInfo = this->CertInfo;
+        result.Store = this->Store;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertContext::operator==(const T& ref) const
+    {
+        if (EncodingType != ref.EncodingType) return false;
+        if (EncodedCert != ref.EncodedCert) return false;
+        if (Length != ref.Length) return false;
+        if (CertInfo != ref.CertInfo) return false;
+        if (Store != ref.Store) return false;
+        return true;
+    }
+
     std::ostream& CertContext::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -690,6 +1499,35 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertChainContext::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.TrustStatus = this->TrustStatus;
+        result.ChainCount = this->ChainCount;
+        result.Chains = this->Chains;
+        result.LowerQualityChainCount = this->LowerQualityChainCount;
+        result.LowerQualityChains = this->LowerQualityChains;
+        result.HasRevocationFreshnessTime = this->HasRevocationFreshnessTime;
+        result.RevocationFreshnessTime = this->RevocationFreshnessTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertChainContext::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (TrustStatus != ref.TrustStatus) return false;
+        if (ChainCount != ref.ChainCount) return false;
+        if (Chains != ref.Chains) return false;
+        if (LowerQualityChainCount != ref.LowerQualityChainCount) return false;
+        if (LowerQualityChains != ref.LowerQualityChains) return false;
+        if (HasRevocationFreshnessTime != ref.HasRevocationFreshnessTime) return false;
+        if (RevocationFreshnessTime != ref.RevocationFreshnessTime) return false;
+        return true;
+    }
+
     std::ostream& CertChainContext::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -711,6 +1549,19 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertTrustListInfo::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertTrustListInfo::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& CertTrustListInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -724,6 +1575,33 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertSimpleChain::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.TrustStatus = this->TrustStatus;
+        result.NumElements = this->NumElements;
+        result.Elements = this->Elements;
+        result.TrustListInfo = this->TrustListInfo;
+        result.HasRevocationFreshnessTime = this->HasRevocationFreshnessTime;
+        result.RevocationFreshnessTime = this->RevocationFreshnessTime;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertSimpleChain::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (TrustStatus != ref.TrustStatus) return false;
+        if (NumElements != ref.NumElements) return false;
+        if (Elements != ref.Elements) return false;
+        if (TrustListInfo != ref.TrustListInfo) return false;
+        if (HasRevocationFreshnessTime != ref.HasRevocationFreshnessTime) return false;
+        if (RevocationFreshnessTime != ref.RevocationFreshnessTime) return false;
+        return true;
+    }
+
     std::ostream& CertSimpleChain::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -744,6 +1622,33 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertChainElement::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.CertContext = this->CertContext;
+        result.TrustStatus = this->TrustStatus;
+        result.RevocationInfo = this->RevocationInfo;
+        result.IssuanceUsage = this->IssuanceUsage;
+        result.ApplicationUsage = this->ApplicationUsage;
+        result.ExtendedErrorInfo = this->ExtendedErrorInfo;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertChainElement::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (CertContext != ref.CertContext) return false;
+        if (TrustStatus != ref.TrustStatus) return false;
+        if (RevocationInfo != ref.RevocationInfo) return false;
+        if (IssuanceUsage != ref.IssuanceUsage) return false;
+        if (ApplicationUsage != ref.ApplicationUsage) return false;
+        if (ExtendedErrorInfo != ref.ExtendedErrorInfo) return false;
+        return true;
+    }
+
     std::ostream& CertChainElement::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -764,6 +1669,19 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertRevocationCrlInfo::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertRevocationCrlInfo::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& CertRevocationCrlInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -777,6 +1695,33 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertRevocationInfo::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.RevocationResult = this->RevocationResult;
+        result.RevocationOid = this->RevocationOid;
+        result.OidSpecificInfo = this->OidSpecificInfo;
+        result.HasFreshnessTime = this->HasFreshnessTime;
+        result.FreshnessTime = this->FreshnessTime;
+        result.CrlInfo = this->CrlInfo;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertRevocationInfo::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (RevocationResult != ref.RevocationResult) return false;
+        if (RevocationOid != ref.RevocationOid) return false;
+        if (OidSpecificInfo != ref.OidSpecificInfo) return false;
+        if (HasFreshnessTime != ref.HasFreshnessTime) return false;
+        if (FreshnessTime != ref.FreshnessTime) return false;
+        if (CrlInfo != ref.CrlInfo) return false;
+        return true;
+    }
+
     std::ostream& CertRevocationInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -797,6 +1742,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertTrustStatus::operator T()
+    {
+        T result;
+        result.ErrorStatus = this->ErrorStatus;
+        result.InfoStatus = this->InfoStatus;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertTrustStatus::operator==(const T& ref) const
+    {
+        if (ErrorStatus != ref.ErrorStatus) return false;
+        if (InfoStatus != ref.InfoStatus) return false;
+        return true;
+    }
+
     std::ostream& CertTrustStatus::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -812,6 +1774,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertUsageMatch::operator T()
+    {
+        T result;
+        result.Type = this->Type;
+        result.Usage = this->Usage;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertUsageMatch::operator==(const T& ref) const
+    {
+        if (Type != ref.Type) return false;
+        if (Usage != ref.Usage) return false;
+        return true;
+    }
+
     std::ostream& CertUsageMatch::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -827,6 +1806,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertEnhKeyUsage::operator T()
+    {
+        T result;
+        result.Length = this->Length;
+        result.UsageIdentifiers = this->UsageIdentifiers;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertEnhKeyUsage::operator==(const T& ref) const
+    {
+        if (Length != ref.Length) return false;
+        if (UsageIdentifiers != ref.UsageIdentifiers) return false;
+        return true;
+    }
+
     std::ostream& CertEnhKeyUsage::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -842,6 +1838,33 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertChainPara::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.RequestedUsage = this->RequestedUsage;
+        result.RequstedIssuancePolicy = this->RequstedIssuancePolicy;
+        result.URLRetrievalTimeout = this->URLRetrievalTimeout;
+        result.CheckRevocationFreshnessTime = this->CheckRevocationFreshnessTime;
+        result.RevocationFreshnessTime = this->RevocationFreshnessTime;
+        result.CacheResync = this->CacheResync;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertChainPara::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (RequestedUsage != ref.RequestedUsage) return false;
+        if (RequstedIssuancePolicy != ref.RequstedIssuancePolicy) return false;
+        if (URLRetrievalTimeout != ref.URLRetrievalTimeout) return false;
+        if (CheckRevocationFreshnessTime != ref.CheckRevocationFreshnessTime) return false;
+        if (RevocationFreshnessTime != ref.RevocationFreshnessTime) return false;
+        if (CacheResync != ref.CacheResync) return false;
+        return true;
+    }
+
     std::ostream& CertChainPara::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -862,6 +1885,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertChainPolicyPara::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.Flags = this->Flags;
+        result.ExtraPolicyPara = this->ExtraPolicyPara;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertChainPolicyPara::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (Flags != ref.Flags) return false;
+        if (ExtraPolicyPara != ref.ExtraPolicyPara) return false;
+        return true;
+    }
+
     std::ostream& CertChainPolicyPara::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -878,6 +1920,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SSLExtraCertChainPolicyPara::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.AuthType = this->AuthType;
+        result.Checks = this->Checks;
+        result.ServerName = this->ServerName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SSLExtraCertChainPolicyPara::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (AuthType != ref.AuthType) return false;
+        if (Checks != ref.Checks) return false;
+        if (ServerName != ref.ServerName) return false;
+        return true;
+    }
+
     std::ostream& SSLExtraCertChainPolicyPara::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -895,6 +1958,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    CertChainPolicyStatus::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.Error = this->Error;
+        result.ChainIndex = this->ChainIndex;
+        result.ElementIndex = this->ElementIndex;
+        result.ExtraPolicyStatus = this->ExtraPolicyStatus;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool CertChainPolicyStatus::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (Error != ref.Error) return false;
+        if (ChainIndex != ref.ChainIndex) return false;
+        if (ElementIndex != ref.ElementIndex) return false;
+        if (ExtraPolicyStatus != ref.ExtraPolicyStatus) return false;
+        return true;
+    }
+
     std::ostream& CertChainPolicyStatus::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -913,6 +1999,35 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    AddrinfoW::operator T()
+    {
+        T result;
+        result.Flags = this->Flags;
+        result.Family = this->Family;
+        result.Socktype = this->Socktype;
+        result.Protocol = this->Protocol;
+        result.Addrlen = this->Addrlen;
+        result.Canonname = this->Canonname;
+        result.Addr = this->Addr;
+        result.Next = this->Next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool AddrinfoW::operator==(const T& ref) const
+    {
+        if (Flags != ref.Flags) return false;
+        if (Family != ref.Family) return false;
+        if (Socktype != ref.Socktype) return false;
+        if (Protocol != ref.Protocol) return false;
+        if (Addrlen != ref.Addrlen) return false;
+        if (Canonname != ref.Canonname) return false;
+        if (Addr != ref.Addr) return false;
+        if (Next != ref.Next) return false;
+        return true;
+    }
+
     std::ostream& AddrinfoW::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -934,6 +2049,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    GUID::operator T()
+    {
+        T result;
+        result.Data1 = this->Data1;
+        result.Data2 = this->Data2;
+        result.Data3 = this->Data3;
+        result.Data4 = this->Data4;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool GUID::operator==(const T& ref) const
+    {
+        if (Data1 != ref.Data1) return false;
+        if (Data2 != ref.Data2) return false;
+        if (Data3 != ref.Data3) return false;
+        if (Data4 != ref.Data4) return false;
+        return true;
+    }
+
     std::ostream& GUID::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -952,6 +2088,59 @@ namespace golang::syscall
 
     GUID WSAID_CONNECTEX = GUID {0x25a207b9, 0xddf3, 0x4660, gocpp::array<unsigned char, 8> {0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e}};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    WSAProtocolInfo::operator T()
+    {
+        T result;
+        result.ServiceFlags1 = this->ServiceFlags1;
+        result.ServiceFlags2 = this->ServiceFlags2;
+        result.ServiceFlags3 = this->ServiceFlags3;
+        result.ServiceFlags4 = this->ServiceFlags4;
+        result.ProviderFlags = this->ProviderFlags;
+        result.ProviderId = this->ProviderId;
+        result.CatalogEntryId = this->CatalogEntryId;
+        result.ProtocolChain = this->ProtocolChain;
+        result.Version = this->Version;
+        result.AddressFamily = this->AddressFamily;
+        result.MaxSockAddr = this->MaxSockAddr;
+        result.MinSockAddr = this->MinSockAddr;
+        result.SocketType = this->SocketType;
+        result.Protocol = this->Protocol;
+        result.ProtocolMaxOffset = this->ProtocolMaxOffset;
+        result.NetworkByteOrder = this->NetworkByteOrder;
+        result.SecurityScheme = this->SecurityScheme;
+        result.MessageSize = this->MessageSize;
+        result.ProviderReserved = this->ProviderReserved;
+        result.ProtocolName = this->ProtocolName;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool WSAProtocolInfo::operator==(const T& ref) const
+    {
+        if (ServiceFlags1 != ref.ServiceFlags1) return false;
+        if (ServiceFlags2 != ref.ServiceFlags2) return false;
+        if (ServiceFlags3 != ref.ServiceFlags3) return false;
+        if (ServiceFlags4 != ref.ServiceFlags4) return false;
+        if (ProviderFlags != ref.ProviderFlags) return false;
+        if (ProviderId != ref.ProviderId) return false;
+        if (CatalogEntryId != ref.CatalogEntryId) return false;
+        if (ProtocolChain != ref.ProtocolChain) return false;
+        if (Version != ref.Version) return false;
+        if (AddressFamily != ref.AddressFamily) return false;
+        if (MaxSockAddr != ref.MaxSockAddr) return false;
+        if (MinSockAddr != ref.MinSockAddr) return false;
+        if (SocketType != ref.SocketType) return false;
+        if (Protocol != ref.Protocol) return false;
+        if (ProtocolMaxOffset != ref.ProtocolMaxOffset) return false;
+        if (NetworkByteOrder != ref.NetworkByteOrder) return false;
+        if (SecurityScheme != ref.SecurityScheme) return false;
+        if (MessageSize != ref.MessageSize) return false;
+        if (ProviderReserved != ref.ProviderReserved) return false;
+        if (ProtocolName != ref.ProtocolName) return false;
+        return true;
+    }
+
     std::ostream& WSAProtocolInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -985,6 +2174,23 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    WSAProtocolChain::operator T()
+    {
+        T result;
+        result.ChainLen = this->ChainLen;
+        result.ChainEntries = this->ChainEntries;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool WSAProtocolChain::operator==(const T& ref) const
+    {
+        if (ChainLen != ref.ChainLen) return false;
+        if (ChainEntries != ref.ChainEntries) return false;
+        return true;
+    }
+
     std::ostream& WSAProtocolChain::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1000,6 +2206,25 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    TCPKeepalive::operator T()
+    {
+        T result;
+        result.OnOff = this->OnOff;
+        result.Time = this->Time;
+        result.Interval = this->Interval;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool TCPKeepalive::operator==(const T& ref) const
+    {
+        if (OnOff != ref.OnOff) return false;
+        if (Time != ref.Time) return false;
+        if (Interval != ref.Interval) return false;
+        return true;
+    }
+
     std::ostream& TCPKeepalive::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1016,6 +2241,31 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    symbolicLinkReparseBuffer::operator T()
+    {
+        T result;
+        result.SubstituteNameOffset = this->SubstituteNameOffset;
+        result.SubstituteNameLength = this->SubstituteNameLength;
+        result.PrintNameOffset = this->PrintNameOffset;
+        result.PrintNameLength = this->PrintNameLength;
+        result.Flags = this->Flags;
+        result.PathBuffer = this->PathBuffer;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool symbolicLinkReparseBuffer::operator==(const T& ref) const
+    {
+        if (SubstituteNameOffset != ref.SubstituteNameOffset) return false;
+        if (SubstituteNameLength != ref.SubstituteNameLength) return false;
+        if (PrintNameOffset != ref.PrintNameOffset) return false;
+        if (PrintNameLength != ref.PrintNameLength) return false;
+        if (Flags != ref.Flags) return false;
+        if (PathBuffer != ref.PathBuffer) return false;
+        return true;
+    }
+
     std::ostream& symbolicLinkReparseBuffer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1035,6 +2285,29 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mountPointReparseBuffer::operator T()
+    {
+        T result;
+        result.SubstituteNameOffset = this->SubstituteNameOffset;
+        result.SubstituteNameLength = this->SubstituteNameLength;
+        result.PrintNameOffset = this->PrintNameOffset;
+        result.PrintNameLength = this->PrintNameLength;
+        result.PathBuffer = this->PathBuffer;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mountPointReparseBuffer::operator==(const T& ref) const
+    {
+        if (SubstituteNameOffset != ref.SubstituteNameOffset) return false;
+        if (SubstituteNameLength != ref.SubstituteNameLength) return false;
+        if (PrintNameOffset != ref.PrintNameOffset) return false;
+        if (PrintNameLength != ref.PrintNameLength) return false;
+        if (PathBuffer != ref.PathBuffer) return false;
+        return true;
+    }
+
     std::ostream& mountPointReparseBuffer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1053,6 +2326,27 @@ namespace golang::syscall
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    reparseDataBuffer::operator T()
+    {
+        T result;
+        result.ReparseTag = this->ReparseTag;
+        result.ReparseDataLength = this->ReparseDataLength;
+        result.Reserved = this->Reserved;
+        result.reparseBuffer = this->reparseBuffer;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool reparseDataBuffer::operator==(const T& ref) const
+    {
+        if (ReparseTag != ref.ReparseTag) return false;
+        if (ReparseDataLength != ref.ReparseDataLength) return false;
+        if (Reserved != ref.Reserved) return false;
+        if (reparseBuffer != ref.reparseBuffer) return false;
+        return true;
+    }
+
     std::ostream& reparseDataBuffer::PrintTo(std::ostream& os) const
     {
         os << '{';

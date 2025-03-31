@@ -96,6 +96,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceStackTable::operator T()
+    {
+        T result;
+        result.tab = this->tab;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceStackTable::operator==(const T& ref) const
+    {
+        if (tab != ref.tab) return false;
+        return true;
+    }
+
     std::ostream& traceStackTable::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -170,6 +185,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceFrame::operator T()
+    {
+        T result;
+        result.PC = this->PC;
+        result.funcID = this->funcID;
+        result.fileID = this->fileID;
+        result.line = this->line;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceFrame::operator==(const T& ref) const
+    {
+        if (PC != ref.PC) return false;
+        if (funcID != ref.funcID) return false;
+        if (fileID != ref.fileID) return false;
+        if (line != ref.line) return false;
+        return true;
+    }
+
     std::ostream& traceFrame::PrintTo(std::ostream& os) const
     {
         os << '{';

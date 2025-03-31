@@ -29,6 +29,27 @@ namespace golang::runtime
 {
     ticksType ticks;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    ticksType::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.startTicks = this->startTicks;
+        result.startTime = this->startTime;
+        result.val = this->val;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool ticksType::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (startTicks != ref.startTicks) return false;
+        if (startTime != ref.startTime) return false;
+        if (val != ref.val) return false;
+        return true;
+    }
+
     std::ostream& ticksType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -130,6 +151,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    godebugInc::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.inc = this->inc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool godebugInc::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (inc != ref.inc) return false;
+        return true;
+    }
+
     std::ostream& godebugInc::PrintTo(std::ostream& os) const
     {
         os << '{';

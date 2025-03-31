@@ -61,6 +61,21 @@ namespace golang::main
     }
 
     
+    template<typename U>
+    T::operator U()
+    {
+        U result;
+        result.S = this->S;
+        return result;
+    }
+
+    template<typename U>
+    bool T::operator==(const U& ref) const
+    {
+        if (S != ref.S) return false;
+        return true;
+    }
+
     std::ostream& T::PrintTo(std::ostream& os) const
     {
         os << '{';

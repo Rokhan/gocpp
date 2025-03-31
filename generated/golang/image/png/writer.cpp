@@ -32,6 +32,23 @@
 namespace golang::png
 {
     
+    template<typename T>
+    Encoder::operator T()
+    {
+        T result;
+        result.CompressionLevel = this->CompressionLevel;
+        result.BufferPool = this->BufferPool;
+        return result;
+    }
+
+    template<typename T>
+    bool Encoder::operator==(const T& ref) const
+    {
+        if (CompressionLevel != ref.CompressionLevel) return false;
+        if (BufferPool != ref.BufferPool) return false;
+        return true;
+    }
+
     std::ostream& Encoder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -107,6 +124,45 @@ namespace golang::png
     }
 
     
+    template<typename T>
+    encoder::operator T()
+    {
+        T result;
+        result.enc = this->enc;
+        result.w = this->w;
+        result.m = this->m;
+        result.cb = this->cb;
+        result.err = this->err;
+        result.header = this->header;
+        result.footer = this->footer;
+        result.tmp = this->tmp;
+        result.cr = this->cr;
+        result.pr = this->pr;
+        result.zw = this->zw;
+        result.zwLevel = this->zwLevel;
+        result.bw = this->bw;
+        return result;
+    }
+
+    template<typename T>
+    bool encoder::operator==(const T& ref) const
+    {
+        if (enc != ref.enc) return false;
+        if (w != ref.w) return false;
+        if (m != ref.m) return false;
+        if (cb != ref.cb) return false;
+        if (err != ref.err) return false;
+        if (header != ref.header) return false;
+        if (footer != ref.footer) return false;
+        if (tmp != ref.tmp) return false;
+        if (cr != ref.cr) return false;
+        if (pr != ref.pr) return false;
+        if (zw != ref.zw) return false;
+        if (zwLevel != ref.zwLevel) return false;
+        if (bw != ref.bw) return false;
+        return true;
+    }
+
     std::ostream& encoder::PrintTo(std::ostream& os) const
     {
         os << '{';

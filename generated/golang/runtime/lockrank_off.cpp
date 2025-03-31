@@ -18,6 +18,19 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    lockRankStruct::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool lockRankStruct::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& lockRankStruct::PrintTo(std::ostream& os) const
     {
         os << '{';

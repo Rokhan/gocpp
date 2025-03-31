@@ -39,6 +39,45 @@ namespace golang::runtime
 {
     gcCPULimiterState gcCPULimiter;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcCPULimiterState::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.enabled = this->enabled;
+        result.bucket = this->bucket;
+        result.overflow = this->overflow;
+        result.gcEnabled = this->gcEnabled;
+        result.transitioning = this->transitioning;
+        result.assistTimePool = this->assistTimePool;
+        result.idleMarkTimePool = this->idleMarkTimePool;
+        result.idleTimePool = this->idleTimePool;
+        result.lastUpdate = this->lastUpdate;
+        result.lastEnabledCycle = this->lastEnabledCycle;
+        result.nprocs = this->nprocs;
+        result.test = this->test;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcCPULimiterState::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (enabled != ref.enabled) return false;
+        if (bucket != ref.bucket) return false;
+        if (overflow != ref.overflow) return false;
+        if (gcEnabled != ref.gcEnabled) return false;
+        if (transitioning != ref.transitioning) return false;
+        if (assistTimePool != ref.assistTimePool) return false;
+        if (idleMarkTimePool != ref.idleMarkTimePool) return false;
+        if (idleTimePool != ref.idleTimePool) return false;
+        if (lastUpdate != ref.lastUpdate) return false;
+        if (lastEnabledCycle != ref.lastEnabledCycle) return false;
+        if (nprocs != ref.nprocs) return false;
+        if (test != ref.test) return false;
+        return true;
+    }
+
     std::ostream& gcCPULimiterState::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -281,6 +320,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    limiterEvent::operator T()
+    {
+        T result;
+        result.stamp = this->stamp;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool limiterEvent::operator==(const T& ref) const
+    {
+        if (stamp != ref.stamp) return false;
+        return true;
+    }
+
     std::ostream& limiterEvent::PrintTo(std::ostream& os) const
     {
         os << '{';

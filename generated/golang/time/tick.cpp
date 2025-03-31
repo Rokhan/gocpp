@@ -18,6 +18,23 @@
 namespace golang::time
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Ticker::operator T()
+    {
+        T result;
+        result.C = this->C;
+        result.r = this->r;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Ticker::operator==(const T& ref) const
+    {
+        if (C != ref.C) return false;
+        if (r != ref.r) return false;
+        return true;
+    }
+
     std::ostream& Ticker::PrintTo(std::ostream& os) const
     {
         os << '{';

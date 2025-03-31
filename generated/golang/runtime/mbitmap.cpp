@@ -89,6 +89,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    markBits::operator T()
+    {
+        T result;
+        result.bytep = this->bytep;
+        result.mask = this->mask;
+        result.index = this->index;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool markBits::operator==(const T& ref) const
+    {
+        if (bytep != ref.bytep) return false;
+        if (mask != ref.mask) return false;
+        if (index != ref.index) return false;
+        return true;
+    }
+
     std::ostream& markBits::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -453,6 +472,23 @@ namespace golang::runtime
         unsigned char* data;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.data = this->data;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (data != ref.data) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

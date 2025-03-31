@@ -71,6 +71,29 @@ namespace golang::runtime
 {
     sweepdata sweep;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sweepdata::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.g = this->g;
+        result.parked = this->parked;
+        result.active = this->active;
+        result.centralIndex = this->centralIndex;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sweepdata::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (g != ref.g) return false;
+        if (parked != ref.parked) return false;
+        if (active != ref.active) return false;
+        if (centralIndex != ref.centralIndex) return false;
+        return true;
+    }
+
     std::ostream& sweepdata::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -141,6 +164,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    activeSweep::operator T()
+    {
+        T result;
+        result.state = this->state;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool activeSweep::operator==(const T& ref) const
+    {
+        if (state != ref.state) return false;
+        return true;
+    }
+
     std::ostream& activeSweep::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -288,6 +326,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sweepLocker::operator T()
+    {
+        T result;
+        result.sweepGen = this->sweepGen;
+        result.valid = this->valid;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sweepLocker::operator==(const T& ref) const
+    {
+        if (sweepGen != ref.sweepGen) return false;
+        if (valid != ref.valid) return false;
+        return true;
+    }
+
     std::ostream& sweepLocker::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -303,6 +358,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sweepLocked::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sweepLocked::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& sweepLocked::PrintTo(std::ostream& os) const
     {
         os << '{';

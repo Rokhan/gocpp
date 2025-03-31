@@ -20,6 +20,27 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Cond::operator T()
+    {
+        T result;
+        result.noCopy = this->noCopy;
+        result.L = this->L;
+        result.notify = this->notify;
+        result.checker = this->checker;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Cond::operator==(const T& ref) const
+    {
+        if (noCopy != ref.noCopy) return false;
+        if (L != ref.L) return false;
+        if (notify != ref.notify) return false;
+        if (checker != ref.checker) return false;
+        return true;
+    }
+
     std::ostream& Cond::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -71,6 +92,19 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    noCopy::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool noCopy::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& noCopy::PrintTo(std::ostream& os) const
     {
         os << '{';

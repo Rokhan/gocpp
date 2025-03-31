@@ -16,7 +16,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
@@ -24,6 +24,23 @@
 namespace golang::reflect
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    makeFuncImpl::operator T()
+    {
+        T result;
+        result.ftyp = this->ftyp;
+        result.fn = this->fn;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool makeFuncImpl::operator==(const T& ref) const
+    {
+        if (ftyp != ref.ftyp) return false;
+        if (fn != ref.fn) return false;
+        return true;
+    }
+
     std::ostream& makeFuncImpl::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -56,6 +73,23 @@ namespace golang::reflect
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    methodValue::operator T()
+    {
+        T result;
+        result.method = this->method;
+        result.rcvr = this->rcvr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool methodValue::operator==(const T& ref) const
+    {
+        if (method != ref.method) return false;
+        if (rcvr != ref.rcvr) return false;
+        return true;
+    }
+
     std::ostream& methodValue::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -96,6 +130,27 @@ namespace golang::reflect
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    makeFuncCtxt::operator T()
+    {
+        T result;
+        result.fn = this->fn;
+        result.stack = this->stack;
+        result.argLen = this->argLen;
+        result.regPtrs = this->regPtrs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool makeFuncCtxt::operator==(const T& ref) const
+    {
+        if (fn != ref.fn) return false;
+        if (stack != ref.stack) return false;
+        if (argLen != ref.argLen) return false;
+        if (regPtrs != ref.regPtrs) return false;
+        return true;
+    }
+
     std::ostream& makeFuncCtxt::PrintTo(std::ostream& os) const
     {
         os << '{';

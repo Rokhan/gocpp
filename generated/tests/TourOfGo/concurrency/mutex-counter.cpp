@@ -19,6 +19,23 @@
 namespace golang::main
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SafeCounter::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        result.v = this->v;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SafeCounter::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        if (v != ref.v) return false;
+        return true;
+    }
+
     std::ostream& SafeCounter::PrintTo(std::ostream& os) const
     {
         os << '{';

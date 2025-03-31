@@ -168,6 +168,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceSchedResourceState::operator T()
+    {
+        T result;
+        result.statusTraced = this->statusTraced;
+        result.seq = this->seq;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceSchedResourceState::operator==(const T& ref) const
+    {
+        if (statusTraced != ref.statusTraced) return false;
+        if (seq != ref.seq) return false;
+        return true;
+    }
+
     std::ostream& traceSchedResourceState::PrintTo(std::ostream& os) const
     {
         os << '{';

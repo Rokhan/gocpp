@@ -26,6 +26,27 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceMap::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.seq = this->seq;
+        result.mem = this->mem;
+        result.tab = this->tab;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceMap::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (seq != ref.seq) return false;
+        if (mem != ref.mem) return false;
+        if (tab != ref.tab) return false;
+        return true;
+    }
+
     std::ostream& traceMap::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -43,6 +64,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceMapNode::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.link = this->link;
+        result.hash = this->hash;
+        result.id = this->id;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceMapNode::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (link != ref.link) return false;
+        if (hash != ref.hash) return false;
+        if (id != ref.id) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& traceMapNode::PrintTo(std::ostream& os) const
     {
         os << '{';

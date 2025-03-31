@@ -15,6 +15,23 @@ namespace golang::utf8
 {
     gocpp::array<uint8_t, 256> first = gocpp::array<uint8_t, 256> {as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    acceptRange::operator T()
+    {
+        T result;
+        result.lo = this->lo;
+        result.hi = this->hi;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool acceptRange::operator==(const T& ref) const
+    {
+        if (lo != ref.lo) return false;
+        if (hi != ref.hi) return false;
+        return true;
+    }
+
     std::ostream& acceptRange::PrintTo(std::ostream& os) const
     {
         os << '{';

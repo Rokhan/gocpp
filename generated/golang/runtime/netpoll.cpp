@@ -48,6 +48,53 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pollDesc::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.link = this->link;
+        result.fd = this->fd;
+        result.fdseq = this->fdseq;
+        result.atomicInfo = this->atomicInfo;
+        result.rg = this->rg;
+        result.wg = this->wg;
+        result.lock = this->lock;
+        result.closing = this->closing;
+        result.user = this->user;
+        result.rseq = this->rseq;
+        result.rt = this->rt;
+        result.rd = this->rd;
+        result.wseq = this->wseq;
+        result.wt = this->wt;
+        result.wd = this->wd;
+        result.self = this->self;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pollDesc::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (link != ref.link) return false;
+        if (fd != ref.fd) return false;
+        if (fdseq != ref.fdseq) return false;
+        if (atomicInfo != ref.atomicInfo) return false;
+        if (rg != ref.rg) return false;
+        if (wg != ref.wg) return false;
+        if (lock != ref.lock) return false;
+        if (closing != ref.closing) return false;
+        if (user != ref.user) return false;
+        if (rseq != ref.rseq) return false;
+        if (rt != ref.rt) return false;
+        if (rd != ref.rd) return false;
+        if (wseq != ref.wseq) return false;
+        if (wt != ref.wt) return false;
+        if (wd != ref.wd) return false;
+        if (self != ref.self) return false;
+        return true;
+    }
+
     std::ostream& pollDesc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -146,6 +193,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    pollCache::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.first = this->first;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pollCache::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (first != ref.first) return false;
+        return true;
+    }
+
     std::ostream& pollCache::PrintTo(std::ostream& os) const
     {
         os << '{';

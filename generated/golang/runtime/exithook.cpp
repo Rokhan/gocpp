@@ -22,6 +22,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    exitHook::operator T()
+    {
+        T result;
+        result.f = this->f;
+        result.runOnNonZeroExit = this->runOnNonZeroExit;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool exitHook::operator==(const T& ref) const
+    {
+        if (f != ref.f) return false;
+        if (runOnNonZeroExit != ref.runOnNonZeroExit) return false;
+        return true;
+    }
+
     std::ostream& exitHook::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -42,6 +59,23 @@ namespace golang::runtime
         bool runningExitHooks;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.hooks = this->hooks;
+            result.runningExitHooks = this->runningExitHooks;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (hooks != ref.hooks) return false;
+            if (runningExitHooks != ref.runningExitHooks) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

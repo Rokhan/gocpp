@@ -18,6 +18,25 @@
 namespace golang::image
 {
     
+    template<typename T>
+    Config::operator T()
+    {
+        T result;
+        result.ColorModel = this->ColorModel;
+        result.Width = this->Width;
+        result.Height = this->Height;
+        return result;
+    }
+
+    template<typename T>
+    bool Config::operator==(const T& ref) const
+    {
+        if (ColorModel != ref.ColorModel) return false;
+        if (Width != ref.Width) return false;
+        if (Height != ref.Height) return false;
+        return true;
+    }
+
     std::ostream& Config::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -209,6 +228,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    RGBA::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool RGBA::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& RGBA::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -352,6 +390,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    RGBA64::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool RGBA64::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& RGBA64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -474,6 +531,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    NRGBA::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool NRGBA::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& NRGBA::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -615,6 +691,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    NRGBA64::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool NRGBA64::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& NRGBA64::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -768,6 +863,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Alpha::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool Alpha::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& Alpha::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -889,6 +1003,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Alpha16::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool Alpha16::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& Alpha16::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1013,6 +1146,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Gray::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool Gray::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& Gray::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1118,6 +1270,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Gray16::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool Gray16::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& Gray16::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1226,6 +1397,25 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    CMYK::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        return result;
+    }
+
+    template<typename T>
+    bool CMYK::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        return true;
+    }
+
     std::ostream& CMYK::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1344,6 +1534,27 @@ namespace golang::image
     }
 
     
+    template<typename T>
+    Paletted::operator T()
+    {
+        T result;
+        result.Pix = this->Pix;
+        result.Stride = this->Stride;
+        result.Rect = this->Rect;
+        result.Palette = this->Palette;
+        return result;
+    }
+
+    template<typename T>
+    bool Paletted::operator==(const T& ref) const
+    {
+        if (Pix != ref.Pix) return false;
+        if (Stride != ref.Stride) return false;
+        if (Rect != ref.Rect) return false;
+        if (Palette != ref.Palette) return false;
+        return true;
+    }
+
     std::ostream& Paletted::PrintTo(std::ostream& os) const
     {
         os << '{';

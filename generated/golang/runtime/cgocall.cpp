@@ -61,6 +61,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    argset::operator T()
+    {
+        T result;
+        result.args = this->args;
+        result.retval = this->retval;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool argset::operator==(const T& ref) const
+    {
+        if (args != ref.args) return false;
+        if (retval != ref.retval) return false;
+        return true;
+    }
+
     std::ostream& argset::PrintTo(std::ostream& os) const
     {
         os << '{';

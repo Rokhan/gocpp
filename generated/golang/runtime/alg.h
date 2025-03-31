@@ -71,7 +71,7 @@ namespace golang::runtime
         template<typename T>
         gocpp_id_0(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 

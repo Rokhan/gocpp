@@ -7,4 +7,11 @@
 namespace golang::main
 {
     struct Vertex;
+    struct Empty;
+    struct Dummy;
+    struct gocpp_id_0;
+    struct gocpp_id_1;
+    struct gocpp_id_2;
+    struct gocpp_id_3;
+    struct gocpp_id_4;
 }

@@ -22,6 +22,23 @@
 namespace golang::godebug
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Setting::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.once = this->once;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Setting::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (once != ref.once) return false;
+        return true;
+    }
+
     std::ostream& Setting::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -37,6 +54,27 @@ namespace golang::godebug
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    setting::operator T()
+    {
+        T result;
+        result.value = this->value;
+        result.nonDefaultOnce = this->nonDefaultOnce;
+        result.nonDefault = this->nonDefault;
+        result.info = this->info;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool setting::operator==(const T& ref) const
+    {
+        if (value != ref.value) return false;
+        if (nonDefaultOnce != ref.nonDefaultOnce) return false;
+        if (nonDefault != ref.nonDefault) return false;
+        if (info != ref.info) return false;
+        return true;
+    }
+
     std::ostream& setting::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -54,6 +92,23 @@ namespace golang::godebug
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    value::operator T()
+    {
+        T result;
+        result.text = this->text;
+        result.bisect = this->bisect;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool value::operator==(const T& ref) const
+    {
+        if (text != ref.text) return false;
+        if (bisect != ref.bisect) return false;
+        return true;
+    }
+
     std::ostream& value::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -223,6 +278,19 @@ namespace golang::godebug
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    runtimeStderr::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool runtimeStderr::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& runtimeStderr::PrintTo(std::ostream& os) const
     {
         os << '{';

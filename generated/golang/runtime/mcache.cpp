@@ -65,6 +65,37 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mcache::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.nextSample = this->nextSample;
+        result.scanAlloc = this->scanAlloc;
+        result.tiny = this->tiny;
+        result.tinyoffset = this->tinyoffset;
+        result.tinyAllocs = this->tinyAllocs;
+        result.alloc = this->alloc;
+        result.stackcache = this->stackcache;
+        result.flushGen = this->flushGen;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mcache::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (nextSample != ref.nextSample) return false;
+        if (scanAlloc != ref.scanAlloc) return false;
+        if (tiny != ref.tiny) return false;
+        if (tinyoffset != ref.tinyoffset) return false;
+        if (tinyAllocs != ref.tinyAllocs) return false;
+        if (alloc != ref.alloc) return false;
+        if (stackcache != ref.stackcache) return false;
+        if (flushGen != ref.flushGen) return false;
+        return true;
+    }
+
     std::ostream& mcache::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -87,6 +118,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gclink::operator T()
+    {
+        T result;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gclink::operator==(const T& ref) const
+    {
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& gclink::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -106,6 +152,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    stackfreelist::operator T()
+    {
+        T result;
+        result.list = this->list;
+        result.size = this->size;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackfreelist::operator==(const T& ref) const
+    {
+        if (list != ref.list) return false;
+        if (size != ref.size) return false;
+        return true;
+    }
+
     std::ostream& stackfreelist::PrintTo(std::ostream& os) const
     {
         os << '{';

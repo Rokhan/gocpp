@@ -42,6 +42,25 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceStringTable::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.buf = this->buf;
+        result.tab = this->tab;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceStringTable::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (buf != ref.buf) return false;
+        if (tab != ref.tab) return false;
+        return true;
+    }
+
     std::ostream& traceStringTable::PrintTo(std::ostream& os) const
     {
         os << '{';

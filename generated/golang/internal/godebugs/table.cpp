@@ -14,6 +14,29 @@
 namespace golang::godebugs
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Info::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Package = this->Package;
+        result.Changed = this->Changed;
+        result.Old = this->Old;
+        result.Opaque = this->Opaque;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Info::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Package != ref.Package) return false;
+        if (Changed != ref.Changed) return false;
+        if (Old != ref.Old) return false;
+        if (Opaque != ref.Opaque) return false;
+        return true;
+    }
+
     std::ostream& Info::PrintTo(std::ostream& os) const
     {
         os << '{';

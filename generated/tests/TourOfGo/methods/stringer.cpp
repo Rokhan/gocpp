@@ -16,6 +16,23 @@
 namespace golang::main
 {
     
+    template<typename T>
+    Person::operator T()
+    {
+        T result;
+        result.Name = this->Name;
+        result.Age = this->Age;
+        return result;
+    }
+
+    template<typename T>
+    bool Person::operator==(const T& ref) const
+    {
+        if (Name != ref.Name) return false;
+        if (Age != ref.Age) return false;
+        return true;
+    }
+
     std::ostream& Person::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -20,6 +20,27 @@
 namespace golang::base64
 {
     
+    template<typename T>
+    Encoding::operator T()
+    {
+        T result;
+        result.encode = this->encode;
+        result.decodeMap = this->decodeMap;
+        result.padChar = this->padChar;
+        result.strict = this->strict;
+        return result;
+    }
+
+    template<typename T>
+    bool Encoding::operator==(const T& ref) const
+    {
+        if (encode != ref.encode) return false;
+        if (decodeMap != ref.decodeMap) return false;
+        if (padChar != ref.padChar) return false;
+        if (strict != ref.strict) return false;
+        return true;
+    }
+
     std::ostream& Encoding::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -173,6 +194,31 @@ namespace golang::base64
     }
 
     
+    template<typename T>
+    encoder::operator T()
+    {
+        T result;
+        result.err = this->err;
+        result.enc = this->enc;
+        result.w = this->w;
+        result.buf = this->buf;
+        result.nbuf = this->nbuf;
+        result.out = this->out;
+        return result;
+    }
+
+    template<typename T>
+    bool encoder::operator==(const T& ref) const
+    {
+        if (err != ref.err) return false;
+        if (enc != ref.enc) return false;
+        if (w != ref.w) return false;
+        if (buf != ref.buf) return false;
+        if (nbuf != ref.nbuf) return false;
+        if (out != ref.out) return false;
+        return true;
+    }
+
     std::ostream& encoder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -478,6 +524,35 @@ namespace golang::base64
     }
 
     
+    template<typename T>
+    decoder::operator T()
+    {
+        T result;
+        result.err = this->err;
+        result.readErr = this->readErr;
+        result.enc = this->enc;
+        result.r = this->r;
+        result.buf = this->buf;
+        result.nbuf = this->nbuf;
+        result.out = this->out;
+        result.outbuf = this->outbuf;
+        return result;
+    }
+
+    template<typename T>
+    bool decoder::operator==(const T& ref) const
+    {
+        if (err != ref.err) return false;
+        if (readErr != ref.readErr) return false;
+        if (enc != ref.enc) return false;
+        if (r != ref.r) return false;
+        if (buf != ref.buf) return false;
+        if (nbuf != ref.nbuf) return false;
+        if (out != ref.out) return false;
+        if (outbuf != ref.outbuf) return false;
+        return true;
+    }
+
     std::ostream& decoder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -706,6 +781,21 @@ namespace golang::base64
     }
 
     
+    template<typename T>
+    newlineFilteringReader::operator T()
+    {
+        T result;
+        result.wrapped = this->wrapped;
+        return result;
+    }
+
+    template<typename T>
+    bool newlineFilteringReader::operator==(const T& ref) const
+    {
+        if (wrapped != ref.wrapped) return false;
+        return true;
+    }
+
     std::ostream& newlineFilteringReader::PrintTo(std::ostream& os) const
     {
         os << '{';

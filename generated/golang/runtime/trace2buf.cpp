@@ -40,6 +40,19 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceWriter::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceWriter::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& traceWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -143,6 +156,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceBufQueue::operator T()
+    {
+        T result;
+        result.head = this->head;
+        result.tail = this->tail;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceBufQueue::operator==(const T& ref) const
+    {
+        if (head != ref.head) return false;
+        if (tail != ref.tail) return false;
+        return true;
+    }
+
     std::ostream& traceBufQueue::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -193,6 +223,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceBufHeader::operator T()
+    {
+        T result;
+        result.link = this->link;
+        result.lastTime = this->lastTime;
+        result.pos = this->pos;
+        result.lenPos = this->lenPos;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceBufHeader::operator==(const T& ref) const
+    {
+        if (link != ref.link) return false;
+        if (lastTime != ref.lastTime) return false;
+        if (pos != ref.pos) return false;
+        if (lenPos != ref.lenPos) return false;
+        return true;
+    }
+
     std::ostream& traceBufHeader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -210,6 +261,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceBuf::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.arr = this->arr;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceBuf::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (arr != ref.arr) return false;
+        return true;
+    }
+
     std::ostream& traceBuf::PrintTo(std::ostream& os) const
     {
         os << '{';

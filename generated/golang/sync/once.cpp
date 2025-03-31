@@ -17,6 +17,23 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Once::operator T()
+    {
+        T result;
+        result.done = this->done;
+        result.m = this->m;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Once::operator==(const T& ref) const
+    {
+        if (done != ref.done) return false;
+        if (m != ref.m) return false;
+        return true;
+    }
+
     std::ostream& Once::PrintTo(std::ostream& os) const
     {
         os << '{';

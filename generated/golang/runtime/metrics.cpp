@@ -38,6 +38,23 @@ namespace golang::runtime
     gocpp::slice<double> sizeClassBuckets = 1;
     gocpp::slice<double> timeHistBuckets = 1;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    metricData::operator T()
+    {
+        T result;
+        result.deps = this->deps;
+        result.compute = this->compute;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool metricData::operator==(const T& ref) const
+    {
+        if (deps != ref.deps) return false;
+        if (compute != ref.compute) return false;
+        return true;
+    }
+
     std::ostream& metricData::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -395,6 +412,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heapStatsAggregate::operator T()
+    {
+        T result;
+        result.inObjects = this->inObjects;
+        result.numObjects = this->numObjects;
+        result.totalAllocated = this->totalAllocated;
+        result.totalFreed = this->totalFreed;
+        result.totalAllocs = this->totalAllocs;
+        result.totalFrees = this->totalFrees;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heapStatsAggregate::operator==(const T& ref) const
+    {
+        if (inObjects != ref.inObjects) return false;
+        if (numObjects != ref.numObjects) return false;
+        if (totalAllocated != ref.totalAllocated) return false;
+        if (totalFreed != ref.totalFreed) return false;
+        if (totalAllocs != ref.totalAllocs) return false;
+        if (totalFrees != ref.totalFrees) return false;
+        return true;
+    }
+
     std::ostream& heapStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -434,6 +476,41 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sysStatsAggregate::operator T()
+    {
+        T result;
+        result.stacksSys = this->stacksSys;
+        result.mSpanSys = this->mSpanSys;
+        result.mSpanInUse = this->mSpanInUse;
+        result.mCacheSys = this->mCacheSys;
+        result.mCacheInUse = this->mCacheInUse;
+        result.buckHashSys = this->buckHashSys;
+        result.gcMiscSys = this->gcMiscSys;
+        result.otherSys = this->otherSys;
+        result.heapGoal = this->heapGoal;
+        result.gcCyclesDone = this->gcCyclesDone;
+        result.gcCyclesForced = this->gcCyclesForced;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sysStatsAggregate::operator==(const T& ref) const
+    {
+        if (stacksSys != ref.stacksSys) return false;
+        if (mSpanSys != ref.mSpanSys) return false;
+        if (mSpanInUse != ref.mSpanInUse) return false;
+        if (mCacheSys != ref.mCacheSys) return false;
+        if (mCacheInUse != ref.mCacheInUse) return false;
+        if (buckHashSys != ref.buckHashSys) return false;
+        if (gcMiscSys != ref.gcMiscSys) return false;
+        if (otherSys != ref.otherSys) return false;
+        if (heapGoal != ref.heapGoal) return false;
+        if (gcCyclesDone != ref.gcCyclesDone) return false;
+        if (gcCyclesForced != ref.gcCyclesForced) return false;
+        return true;
+    }
+
     std::ostream& sysStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -478,6 +555,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    cpuStatsAggregate::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cpuStatsAggregate::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& cpuStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -496,6 +586,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcStatsAggregate::operator T()
+    {
+        T result;
+        result.heapScan = this->heapScan;
+        result.stackScan = this->stackScan;
+        result.globalsScan = this->globalsScan;
+        result.totalScan = this->totalScan;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcStatsAggregate::operator==(const T& ref) const
+    {
+        if (heapScan != ref.heapScan) return false;
+        if (stackScan != ref.stackScan) return false;
+        if (globalsScan != ref.globalsScan) return false;
+        if (totalScan != ref.totalScan) return false;
+        return true;
+    }
+
     std::ostream& gcStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -526,6 +637,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    statAggregate::operator T()
+    {
+        T result;
+        result.ensured = this->ensured;
+        result.heapStats = this->heapStats;
+        result.sysStats = this->sysStats;
+        result.cpuStats = this->cpuStats;
+        result.gcStats = this->gcStats;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool statAggregate::operator==(const T& ref) const
+    {
+        if (ensured != ref.ensured) return false;
+        if (heapStats != ref.heapStats) return false;
+        if (sysStats != ref.sysStats) return false;
+        if (cpuStats != ref.cpuStats) return false;
+        if (gcStats != ref.gcStats) return false;
+        return true;
+    }
+
     std::ostream& statAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -585,6 +719,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    metricSample::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool metricSample::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (value != ref.value) return false;
+        return true;
+    }
+
     std::ostream& metricSample::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -600,6 +751,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    metricValue::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.scalar = this->scalar;
+        result.pointer = this->pointer;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool metricValue::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (scalar != ref.scalar) return false;
+        if (pointer != ref.pointer) return false;
+        return true;
+    }
+
     std::ostream& metricValue::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -618,4 +788,131 @@ namespace golang::runtime
     metricFloat64Histogram* float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets)
     {
         metricFloat64Histogram* hist = {};
-        
+        if(v->kind == metricKindFloat64Histogram && v->pointer != nullptr)
+        {
+            hist = (metricFloat64Histogram*)(v->pointer);
+        }
+        else
+        {
+            v->kind = metricKindFloat64Histogram;
+            hist = go_new(metricFloat64Histogram);
+            v->pointer = unsafe::Pointer(hist);
+        }
+        hist->buckets = buckets;
+        if(len(hist->counts) != len(hist->buckets) - 1)
+        {
+            hist->counts = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), len(buckets) - 1);
+        }
+        return hist;
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    metricFloat64Histogram::operator T()
+    {
+        T result;
+        result.counts = this->counts;
+        result.buckets = this->buckets;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool metricFloat64Histogram::operator==(const T& ref) const
+    {
+        if (counts != ref.counts) return false;
+        if (buckets != ref.buckets) return false;
+        return true;
+    }
+
+    std::ostream& metricFloat64Histogram::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << counts;
+        os << " " << buckets;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    statAggregate agg;
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    metricName::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.kind = this->kind;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool metricName::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (kind != ref.kind) return false;
+        return true;
+    }
+
+    std::ostream& metricName::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << name;
+        os << " " << kind;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct metricName& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    gocpp::slice<std::string> readMetricNames()
+    {
+        metricsLock();
+        initMetrics();
+        auto n = len(metrics);
+        metricsUnlock();
+        auto list = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, n);
+        metricsLock();
+        for(auto [name, gocpp_ignored] : metrics)
+        {
+            list = append(list, name);
+        }
+        metricsUnlock();
+        return list;
+    }
+
+    void readMetrics(unsafe::Pointer samplesp, int len, int cap)
+    {
+        metricsLock();
+        initMetrics();
+        readMetricsLocked(samplesp, len, cap);
+        metricsUnlock();
+    }
+
+    void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap)
+    {
+        auto sl = slice {samplesp, len, cap};
+        auto samples = *(gocpp::slice<metricSample>*)(unsafe::Pointer(& sl));
+        agg = statAggregate {};
+        for(auto [i, gocpp_ignored] : samples)
+        {
+            auto sample = & samples[i];
+            auto [data, ok] = metrics[sample->name];
+            if(! ok)
+            {
+                sample->value.kind = metricKindBad;
+                continue;
+            }
+            ensure(gocpp::recv(agg), & data.deps);
+            compute(gocpp::recv(data), & agg, & sample->value);
+        }
+    }
+
+}
+

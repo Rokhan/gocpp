@@ -21,6 +21,21 @@ namespace golang::main
 
         using isGoStruct = void;
 
+        template<typename T>
+        operator T()
+        {
+            T result;
+            result.value = this->value;
+            return result;
+        }
+
+        template<typename T>
+        bool operator==(const T& ref) const
+        {
+            if (value != ref.value) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -41,6 +56,21 @@ namespace golang::main
         int value;
 
         using isGoStruct = void;
+
+        template<typename T>
+        operator T()
+        {
+            T result;
+            result.value = this->value;
+            return result;
+        }
+
+        template<typename T>
+        bool operator==(const T& ref) const
+        {
+            if (value != ref.value) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

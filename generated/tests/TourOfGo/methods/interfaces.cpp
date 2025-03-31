@@ -82,6 +82,23 @@ namespace golang::main
     }
 
     
+    template<typename T>
+    Vertex::operator T()
+    {
+        T result;
+        result.X = this->X;
+        result.Y = this->Y;
+        return result;
+    }
+
+    template<typename T>
+    bool Vertex::operator==(const T& ref) const
+    {
+        if (X != ref.X) return false;
+        if (Y != ref.Y) return false;
+        return true;
+    }
+
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';

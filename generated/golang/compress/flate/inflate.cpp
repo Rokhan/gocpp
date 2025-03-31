@@ -37,6 +37,23 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    ReadError::operator T()
+    {
+        T result;
+        result.Offset = this->Offset;
+        result.Err = this->Err;
+        return result;
+    }
+
+    template<typename T>
+    bool ReadError::operator==(const T& ref) const
+    {
+        if (Offset != ref.Offset) return false;
+        if (Err != ref.Err) return false;
+        return true;
+    }
+
     std::ostream& ReadError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -57,6 +74,23 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    WriteError::operator T()
+    {
+        T result;
+        result.Offset = this->Offset;
+        result.Err = this->Err;
+        return result;
+    }
+
+    template<typename T>
+    bool WriteError::operator==(const T& ref) const
+    {
+        if (Offset != ref.Offset) return false;
+        if (Err != ref.Err) return false;
+        return true;
+    }
+
     std::ostream& WriteError::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -122,6 +156,27 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    huffmanDecoder::operator T()
+    {
+        T result;
+        result.min = this->min;
+        result.chunks = this->chunks;
+        result.links = this->links;
+        result.linkMask = this->linkMask;
+        return result;
+    }
+
+    template<typename T>
+    bool huffmanDecoder::operator==(const T& ref) const
+    {
+        if (min != ref.min) return false;
+        if (chunks != ref.chunks) return false;
+        if (links != ref.links) return false;
+        if (linkMask != ref.linkMask) return false;
+        return true;
+    }
+
     std::ostream& huffmanDecoder::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -300,6 +355,59 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    decompressor::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.rBuf = this->rBuf;
+        result.roffset = this->roffset;
+        result.b = this->b;
+        result.nb = this->nb;
+        result.h1 = this->h1;
+        result.h2 = this->h2;
+        result.bits = this->bits;
+        result.codebits = this->codebits;
+        result.dict = this->dict;
+        result.buf = this->buf;
+        result.step = this->step;
+        result.stepState = this->stepState;
+        result.final = this->final;
+        result.err = this->err;
+        result.toRead = this->toRead;
+        result.hl = this->hl;
+        result.hd = this->hd;
+        result.copyLen = this->copyLen;
+        result.copyDist = this->copyDist;
+        return result;
+    }
+
+    template<typename T>
+    bool decompressor::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (rBuf != ref.rBuf) return false;
+        if (roffset != ref.roffset) return false;
+        if (b != ref.b) return false;
+        if (nb != ref.nb) return false;
+        if (h1 != ref.h1) return false;
+        if (h2 != ref.h2) return false;
+        if (bits != ref.bits) return false;
+        if (codebits != ref.codebits) return false;
+        if (dict != ref.dict) return false;
+        if (buf != ref.buf) return false;
+        if (step != ref.step) return false;
+        if (stepState != ref.stepState) return false;
+        if (final != ref.final) return false;
+        if (err != ref.err) return false;
+        if (toRead != ref.toRead) return false;
+        if (hl != ref.hl) return false;
+        if (hd != ref.hd) return false;
+        if (copyLen != ref.copyLen) return false;
+        if (copyDist != ref.copyDist) return false;
+        return true;
+    }
+
     std::ostream& decompressor::PrintTo(std::ostream& os) const
     {
         os << '{';

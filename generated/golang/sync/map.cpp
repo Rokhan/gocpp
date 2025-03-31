@@ -17,6 +17,27 @@
 namespace golang::sync
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Map::operator T()
+    {
+        T result;
+        result.mu = this->mu;
+        result.read = this->read;
+        result.dirty = this->dirty;
+        result.misses = this->misses;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Map::operator==(const T& ref) const
+    {
+        if (mu != ref.mu) return false;
+        if (read != ref.read) return false;
+        if (dirty != ref.dirty) return false;
+        if (misses != ref.misses) return false;
+        return true;
+    }
+
     std::ostream& Map::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -34,6 +55,23 @@ namespace golang::sync
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    readOnly::operator T()
+    {
+        T result;
+        result.m = this->m;
+        result.amended = this->amended;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool readOnly::operator==(const T& ref) const
+    {
+        if (m != ref.m) return false;
+        if (amended != ref.amended) return false;
+        return true;
+    }
+
     std::ostream& readOnly::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -50,6 +88,21 @@ namespace golang::sync
 
     go_any* expunged = go_new(go_any);
     
+    template<typename T> requires gocpp::GoStruct<T>
+    entry::operator T()
+    {
+        T result;
+        result.p = this->p;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool entry::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        return true;
+    }
+
     std::ostream& entry::PrintTo(std::ostream& os) const
     {
         os << '{';

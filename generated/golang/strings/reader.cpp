@@ -18,6 +18,25 @@
 namespace golang::strings
 {
     
+    template<typename T>
+    Reader::operator T()
+    {
+        T result;
+        result.s = this->s;
+        result.i = this->i;
+        result.prevRune = this->prevRune;
+        return result;
+    }
+
+    template<typename T>
+    bool Reader::operator==(const T& ref) const
+    {
+        if (s != ref.s) return false;
+        if (i != ref.i) return false;
+        if (prevRune != ref.prevRune) return false;
+        return true;
+    }
+
     std::ostream& Reader::PrintTo(std::ostream& os) const
     {
         os << '{';

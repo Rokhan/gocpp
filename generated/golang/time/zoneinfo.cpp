@@ -25,6 +25,33 @@
 namespace golang::time
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Location::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.zone = this->zone;
+        result.tx = this->tx;
+        result.extend = this->extend;
+        result.cacheStart = this->cacheStart;
+        result.cacheEnd = this->cacheEnd;
+        result.cacheZone = this->cacheZone;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Location::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (zone != ref.zone) return false;
+        if (tx != ref.tx) return false;
+        if (extend != ref.extend) return false;
+        if (cacheStart != ref.cacheStart) return false;
+        if (cacheEnd != ref.cacheEnd) return false;
+        if (cacheZone != ref.cacheZone) return false;
+        return true;
+    }
+
     std::ostream& Location::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -45,6 +72,25 @@ namespace golang::time
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    zone::operator T()
+    {
+        T result;
+        result.name = this->name;
+        result.offset = this->offset;
+        result.isDST = this->isDST;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool zone::operator==(const T& ref) const
+    {
+        if (name != ref.name) return false;
+        if (offset != ref.offset) return false;
+        if (isDST != ref.isDST) return false;
+        return true;
+    }
+
     std::ostream& zone::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -61,6 +107,27 @@ namespace golang::time
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    zoneTrans::operator T()
+    {
+        T result;
+        result.when = this->when;
+        result.index = this->index;
+        result.isstd = this->isstd;
+        result.isutc = this->isutc;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool zoneTrans::operator==(const T& ref) const
+    {
+        if (when != ref.when) return false;
+        if (index != ref.index) return false;
+        if (isstd != ref.isstd) return false;
+        if (isutc != ref.isutc) return false;
+        return true;
+    }
+
     std::ostream& zoneTrans::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -646,6 +713,29 @@ namespace golang::time
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    rule::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.day = this->day;
+        result.week = this->week;
+        result.mon = this->mon;
+        result.time = this->time;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool rule::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (day != ref.day) return false;
+        if (week != ref.week) return false;
+        if (mon != ref.mon) return false;
+        if (time != ref.time) return false;
+        return true;
+    }
+
     std::ostream& rule::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -17,6 +17,25 @@
 namespace golang::tree
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    Tree::operator T()
+    {
+        T result;
+        result.Left = this->Left;
+        result.Value = this->Value;
+        result.Right = this->Right;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Tree::operator==(const T& ref) const
+    {
+        if (Left != ref.Left) return false;
+        if (Value != ref.Value) return false;
+        if (Right != ref.Right) return false;
+        return true;
+    }
+
     std::ostream& Tree::PrintTo(std::ostream& os) const
     {
         os << '{';

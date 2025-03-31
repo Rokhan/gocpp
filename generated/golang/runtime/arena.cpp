@@ -211,6 +211,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    userArena::operator T()
+    {
+        T result;
+        result.fullList = this->fullList;
+        result.active = this->active;
+        result.refs = this->refs;
+        result.defunct = this->defunct;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool userArena::operator==(const T& ref) const
+    {
+        if (fullList != ref.fullList) return false;
+        if (active != ref.active) return false;
+        if (refs != ref.refs) return false;
+        if (defunct != ref.defunct) return false;
+        return true;
+    }
+
     std::ostream& userArena::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -360,6 +381,21 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    liveUserArenaChunk::operator T()
+    {
+        T result;
+        result.x = this->x;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool liveUserArenaChunk::operator==(const T& ref) const
+    {
+        if (x != ref.x) return false;
+        return true;
+    }
+
     std::ostream& liveUserArenaChunk::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -380,6 +416,25 @@ namespace golang::runtime
         gocpp::slice<liveUserArenaChunk> fault;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.reuse = this->reuse;
+            result.fault = this->fault;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (reuse != ref.reuse) return false;
+            if (fault != ref.fault) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

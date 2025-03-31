@@ -1087,6 +1087,23 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    LimitedReader::operator T()
+    {
+        T result;
+        result.R = this->R;
+        result.N = this->N;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool LimitedReader::operator==(const T& ref) const
+    {
+        if (R != ref.R) return false;
+        if (N != ref.N) return false;
+        return true;
+    }
+
     std::ostream& LimitedReader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1138,6 +1155,29 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    SectionReader::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.base = this->base;
+        result.off = this->off;
+        result.limit = this->limit;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SectionReader::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (base != ref.base) return false;
+        if (off != ref.off) return false;
+        if (limit != ref.limit) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
+
     std::ostream& SectionReader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1253,6 +1293,25 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    OffsetWriter::operator T()
+    {
+        T result;
+        result.w = this->w;
+        result.base = this->base;
+        result.off = this->off;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool OffsetWriter::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        if (base != ref.base) return false;
+        if (off != ref.off) return false;
+        return true;
+    }
+
     std::ostream& OffsetWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1331,6 +1390,23 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    teeReader::operator T()
+    {
+        T result;
+        result.r = this->r;
+        result.w = this->w;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool teeReader::operator==(const T& ref) const
+    {
+        if (r != ref.r) return false;
+        if (w != ref.w) return false;
+        return true;
+    }
+
     std::ostream& teeReader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1366,6 +1442,19 @@ namespace golang::io
 
     Writer Discard = discard {};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    discard::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool discard::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& discard::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1432,6 +1521,19 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    nopCloser::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool nopCloser::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& nopCloser::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1450,6 +1552,19 @@ namespace golang::io
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    nopCloserWriterTo::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool nopCloserWriterTo::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& nopCloserWriterTo::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -123,6 +123,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    dlogger::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.w = this->w;
+        result.allLink = this->allLink;
+        result.owned = this->owned;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dlogger::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (w != ref.w) return false;
+        if (allLink != ref.allLink) return false;
+        if (owned != ref.owned) return false;
+        return true;
+    }
+
     std::ostream& dlogger::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -358,6 +379,33 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    debugLogWriter::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.write = this->write;
+        result.data = this->data;
+        result.tick = this->tick;
+        result.nano = this->nano;
+        result.r = this->r;
+        result.buf = this->buf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool debugLogWriter::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (write != ref.write) return false;
+        if (data != ref.data) return false;
+        if (tick != ref.tick) return false;
+        if (nano != ref.nano) return false;
+        if (r != ref.r) return false;
+        if (buf != ref.buf) return false;
+        return true;
+    }
+
     std::ostream& debugLogWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -378,6 +426,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    debugLogBuf::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.b = this->b;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool debugLogBuf::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (b != ref.b) return false;
+        return true;
+    }
+
     std::ostream& debugLogBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -485,6 +550,29 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    debugLogReader::operator T()
+    {
+        T result;
+        result.data = this->data;
+        result.begin = this->begin;
+        result.end = this->end;
+        result.tick = this->tick;
+        result.nano = this->nano;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool debugLogReader::operator==(const T& ref) const
+    {
+        if (data != ref.data) return false;
+        if (begin != ref.begin) return false;
+        if (end != ref.end) return false;
+        if (tick != ref.tick) return false;
+        if (nano != ref.nano) return false;
+        return true;
+    }
+
     std::ostream& debugLogReader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -737,6 +825,23 @@ namespace golang::runtime
 
                 using isGoStruct = void;
 
+                template<typename T> requires gocpp::GoStruct<T>
+                operator T()
+                {
+                    T result;
+                    result.tick = this->tick;
+                    result.i = this->i;
+                    return result;
+                }
+
+                template<typename T> requires gocpp::GoStruct<T>
+                bool operator==(const T& ref) const
+                {
+                    if (tick != ref.tick) return false;
+                    if (i != ref.i) return false;
+                    return true;
+                }
+
                 std::ostream& PrintTo(std::ostream& os) const
                 {
                     os << '{';
@@ -773,6 +878,25 @@ namespace golang::runtime
             return;
         }
         
+        template<typename T> requires gocpp::GoStruct<T>
+        readState::operator T()
+        {
+            T result;
+            result.first = this->first;
+            result.lost = this->lost;
+            result.nextTick = this->nextTick;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool readState::operator==(const T& ref) const
+        {
+            if (first != ref.first) return false;
+            if (lost != ref.lost) return false;
+            if (nextTick != ref.nextTick) return false;
+            return true;
+        }
+
         std::ostream& readState::PrintTo(std::ostream& os) const
         {
             os << '{';

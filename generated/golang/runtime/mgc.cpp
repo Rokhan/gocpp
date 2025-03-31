@@ -115,6 +115,25 @@ namespace golang::runtime
 
         using isGoStruct = void;
 
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.enabled = this->enabled;
+            result.pad = this->pad;
+            result.alignme = this->alignme;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (enabled != ref.enabled) return false;
+            if (pad != ref.pad) return false;
+            if (alignme != ref.alignme) return false;
+            return true;
+        }
+
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
@@ -156,6 +175,103 @@ namespace golang::runtime
 
     workType work;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    workType::operator T()
+    {
+        T result;
+        result.full = this->full;
+        result._ = this->_;
+        result.empty = this->empty;
+        result._ = this->_;
+        result.wbufSpans = this->wbufSpans;
+        result._ = this->_;
+        result.bytesMarked = this->bytesMarked;
+        result.markrootNext = this->markrootNext;
+        result.markrootJobs = this->markrootJobs;
+        result.nproc = this->nproc;
+        result.tstart = this->tstart;
+        result.nwait = this->nwait;
+        result.nDataRoots = this->nDataRoots;
+        result.nBSSRoots = this->nBSSRoots;
+        result.nSpanRoots = this->nSpanRoots;
+        result.nStackRoots = this->nStackRoots;
+        result.baseData = this->baseData;
+        result.baseBSS = this->baseBSS;
+        result.baseSpans = this->baseSpans;
+        result.baseStacks = this->baseStacks;
+        result.baseEnd = this->baseEnd;
+        result.stackRoots = this->stackRoots;
+        result.startSema = this->startSema;
+        result.markDoneSema = this->markDoneSema;
+        result.bgMarkReady = this->bgMarkReady;
+        result.bgMarkDone = this->bgMarkDone;
+        result.mode = this->mode;
+        result.userForced = this->userForced;
+        result.initialHeapLive = this->initialHeapLive;
+        result.assistQueue = this->assistQueue;
+        result.sweepWaiters = this->sweepWaiters;
+        result.cycles = this->cycles;
+        result.stwprocs = this->stwprocs;
+        result.maxprocs = this->maxprocs;
+        result.tSweepTerm = this->tSweepTerm;
+        result.tMark = this->tMark;
+        result.tMarkTerm = this->tMarkTerm;
+        result.tEnd = this->tEnd;
+        result.pauseNS = this->pauseNS;
+        result.heap0 = this->heap0;
+        result.heap1 = this->heap1;
+        result.heap2 = this->heap2;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool workType::operator==(const T& ref) const
+    {
+        if (full != ref.full) return false;
+        if (_ != ref._) return false;
+        if (empty != ref.empty) return false;
+        if (_ != ref._) return false;
+        if (wbufSpans != ref.wbufSpans) return false;
+        if (_ != ref._) return false;
+        if (bytesMarked != ref.bytesMarked) return false;
+        if (markrootNext != ref.markrootNext) return false;
+        if (markrootJobs != ref.markrootJobs) return false;
+        if (nproc != ref.nproc) return false;
+        if (tstart != ref.tstart) return false;
+        if (nwait != ref.nwait) return false;
+        if (nDataRoots != ref.nDataRoots) return false;
+        if (nBSSRoots != ref.nBSSRoots) return false;
+        if (nSpanRoots != ref.nSpanRoots) return false;
+        if (nStackRoots != ref.nStackRoots) return false;
+        if (baseData != ref.baseData) return false;
+        if (baseBSS != ref.baseBSS) return false;
+        if (baseSpans != ref.baseSpans) return false;
+        if (baseStacks != ref.baseStacks) return false;
+        if (baseEnd != ref.baseEnd) return false;
+        if (stackRoots != ref.stackRoots) return false;
+        if (startSema != ref.startSema) return false;
+        if (markDoneSema != ref.markDoneSema) return false;
+        if (bgMarkReady != ref.bgMarkReady) return false;
+        if (bgMarkDone != ref.bgMarkDone) return false;
+        if (mode != ref.mode) return false;
+        if (userForced != ref.userForced) return false;
+        if (initialHeapLive != ref.initialHeapLive) return false;
+        if (assistQueue != ref.assistQueue) return false;
+        if (sweepWaiters != ref.sweepWaiters) return false;
+        if (cycles != ref.cycles) return false;
+        if (stwprocs != ref.stwprocs) return false;
+        if (maxprocs != ref.maxprocs) return false;
+        if (tSweepTerm != ref.tSweepTerm) return false;
+        if (tMark != ref.tMark) return false;
+        if (tMarkTerm != ref.tMarkTerm) return false;
+        if (tEnd != ref.tEnd) return false;
+        if (pauseNS != ref.pauseNS) return false;
+        if (heap0 != ref.heap0) return false;
+        if (heap1 != ref.heap1) return false;
+        if (heap2 != ref.heap2) return false;
+        return true;
+    }
+
     std::ostream& workType::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -254,6 +370,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcTrigger::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.now = this->now;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcTrigger::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (now != ref.now) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
+
     std::ostream& gcTrigger::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -664,6 +799,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcBgMarkWorkerNode::operator T()
+    {
+        T result;
+        result.node = this->node;
+        result.gp = this->gp;
+        result.m = this->m;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcBgMarkWorkerNode::operator==(const T& ref) const
+    {
+        if (node != ref.node) return false;
+        if (gp != ref.gp) return false;
+        if (m != ref.m) return false;
+        return true;
+    }
+
     std::ostream& gcBgMarkWorkerNode::PrintTo(std::ostream& os) const
     {
         os << '{';

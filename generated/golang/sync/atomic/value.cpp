@@ -17,6 +17,21 @@
 namespace golang::atomic
 {
     
+    template<typename T>
+    Value::operator T()
+    {
+        T result;
+        result.v = this->v;
+        return result;
+    }
+
+    template<typename T>
+    bool Value::operator==(const T& ref) const
+    {
+        if (v != ref.v) return false;
+        return true;
+    }
+
     std::ostream& Value::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -31,6 +46,23 @@ namespace golang::atomic
     }
 
     
+    template<typename T>
+    efaceWords::operator T()
+    {
+        T result;
+        result.typ = this->typ;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T>
+    bool efaceWords::operator==(const T& ref) const
+    {
+        if (typ != ref.typ) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& efaceWords::PrintTo(std::ostream& os) const
     {
         os << '{';

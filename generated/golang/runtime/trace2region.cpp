@@ -23,6 +23,23 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceRegionAlloc::operator T()
+    {
+        T result;
+        result.head = this->head;
+        result.off = this->off;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceRegionAlloc::operator==(const T& ref) const
+    {
+        if (head != ref.head) return false;
+        if (off != ref.off) return false;
+        return true;
+    }
+
     std::ostream& traceRegionAlloc::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -38,6 +55,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    traceRegionAllocBlock::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        result.data = this->data;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceRegionAllocBlock::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
+
     std::ostream& traceRegionAllocBlock::PrintTo(std::ostream& os) const
     {
         os << '{';

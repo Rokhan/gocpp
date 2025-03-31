@@ -16,6 +16,19 @@
 namespace golang::binary
 {
     
+    template<typename T>
+    nativeEndian::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T>
+    bool nativeEndian::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& nativeEndian::PrintTo(std::ostream& os) const
     {
         os << '{';

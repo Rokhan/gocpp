@@ -41,6 +41,29 @@
 namespace golang::runtime
 {
     
+    template<typename T> requires gocpp::GoStruct<T>
+    net_op::operator T()
+    {
+        T result;
+        result.o = this->o;
+        result.pd = this->pd;
+        result.mode = this->mode;
+        result.errno = this->errno;
+        result.qty = this->qty;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool net_op::operator==(const T& ref) const
+    {
+        if (o != ref.o) return false;
+        if (pd != ref.pd) return false;
+        if (mode != ref.mode) return false;
+        if (errno != ref.errno) return false;
+        if (qty != ref.qty) return false;
+        return true;
+    }
+
     std::ostream& net_op::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -59,6 +82,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    overlappedEntry::operator T()
+    {
+        T result;
+        result.key = this->key;
+        result.op = this->op;
+        result.internal = this->internal;
+        result.qty = this->qty;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool overlappedEntry::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        if (op != ref.op) return false;
+        if (internal != ref.internal) return false;
+        if (qty != ref.qty) return false;
+        return true;
+    }
+
     std::ostream& overlappedEntry::PrintTo(std::ostream& os) const
     {
         os << '{';

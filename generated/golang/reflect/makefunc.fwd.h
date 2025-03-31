@@ -5,7 +5,7 @@
 
 #include "golang/internal/abi/abi.fwd.h"
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
+// #include "golang/reflect/value.fwd.h" [Ignored, known errors]
 
 namespace golang::reflect
 {

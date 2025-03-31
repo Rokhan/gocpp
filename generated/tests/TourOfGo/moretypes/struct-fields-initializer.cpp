@@ -16,6 +16,25 @@
 namespace golang::main
 {
     
+    template<typename T>
+    Vertex::operator T()
+    {
+        T result;
+        result.X = this->X;
+        result.Y = this->Y;
+        result.Z = this->Z;
+        return result;
+    }
+
+    template<typename T>
+    bool Vertex::operator==(const T& ref) const
+    {
+        if (X != ref.X) return false;
+        if (Y != ref.Y) return false;
+        if (Z != ref.Z) return false;
+        return true;
+    }
+
     std::ostream& Vertex::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -32,6 +51,23 @@ namespace golang::main
     }
 
     
+    template<typename T>
+    Segment::operator T()
+    {
+        T result;
+        result.Start = this->Start;
+        result.End = this->End;
+        return result;
+    }
+
+    template<typename T>
+    bool Segment::operator==(const T& ref) const
+    {
+        if (Start != ref.Start) return false;
+        if (End != ref.End) return false;
+        return true;
+    }
+
     std::ostream& Segment::PrintTo(std::ostream& os) const
     {
         os << '{';

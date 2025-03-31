@@ -23,6 +23,31 @@
 namespace golang::flate
 {
     
+    template<typename T>
+    compressionLevel::operator T()
+    {
+        T result;
+        result.level = this->level;
+        result.good = this->good;
+        result.lazy = this->lazy;
+        result.nice = this->nice;
+        result.chain = this->chain;
+        result.fastSkipHashing = this->fastSkipHashing;
+        return result;
+    }
+
+    template<typename T>
+    bool compressionLevel::operator==(const T& ref) const
+    {
+        if (level != ref.level) return false;
+        if (good != ref.good) return false;
+        if (lazy != ref.lazy) return false;
+        if (nice != ref.nice) return false;
+        if (chain != ref.chain) return false;
+        if (fastSkipHashing != ref.fastSkipHashing) return false;
+        return true;
+    }
+
     std::ostream& compressionLevel::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -43,6 +68,61 @@ namespace golang::flate
 
     gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> { {0, 0, 0, 0, 0, 0},  {1, 0, 0, 0, 0, 0},  {2, 4, 0, 16, 8, 5},  {3, 4, 0, 32, 32, 6},  {4, 4, 4, 16, 16, skipNever},  {5, 8, 16, 32, 32, skipNever},  {6, 8, 16, 128, 128, skipNever},  {7, 8, 32, 128, 256, skipNever},  {8, 32, 128, 258, 1024, skipNever},  {9, 32, 258, 258, 4096, skipNever}};
     
+    template<typename T>
+    compressor::operator T()
+    {
+        T result;
+        result.w = this->w;
+        result.bulkHasher = this->bulkHasher;
+        result.fill = this->fill;
+        result.step = this->step;
+        result.sync = this->sync;
+        result.bestSpeed = this->bestSpeed;
+        result.chainHead = this->chainHead;
+        result.hashHead = this->hashHead;
+        result.hashPrev = this->hashPrev;
+        result.hashOffset = this->hashOffset;
+        result.index = this->index;
+        result.window = this->window;
+        result.windowEnd = this->windowEnd;
+        result.blockStart = this->blockStart;
+        result.byteAvailable = this->byteAvailable;
+        result.tokens = this->tokens;
+        result.length = this->length;
+        result.offset = this->offset;
+        result.maxInsertIndex = this->maxInsertIndex;
+        result.err = this->err;
+        result.hashMatch = this->hashMatch;
+        return result;
+    }
+
+    template<typename T>
+    bool compressor::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        if (bulkHasher != ref.bulkHasher) return false;
+        if (fill != ref.fill) return false;
+        if (step != ref.step) return false;
+        if (sync != ref.sync) return false;
+        if (bestSpeed != ref.bestSpeed) return false;
+        if (chainHead != ref.chainHead) return false;
+        if (hashHead != ref.hashHead) return false;
+        if (hashPrev != ref.hashPrev) return false;
+        if (hashOffset != ref.hashOffset) return false;
+        if (index != ref.index) return false;
+        if (window != ref.window) return false;
+        if (windowEnd != ref.windowEnd) return false;
+        if (blockStart != ref.blockStart) return false;
+        if (byteAvailable != ref.byteAvailable) return false;
+        if (tokens != ref.tokens) return false;
+        if (length != ref.length) return false;
+        if (offset != ref.offset) return false;
+        if (maxInsertIndex != ref.maxInsertIndex) return false;
+        if (err != ref.err) return false;
+        if (hashMatch != ref.hashMatch) return false;
+        return true;
+    }
+
     std::ostream& compressor::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -744,6 +824,21 @@ namespace golang::flate
     }
 
     
+    template<typename T>
+    dictWriter::operator T()
+    {
+        T result;
+        result.w = this->w;
+        return result;
+    }
+
+    template<typename T>
+    bool dictWriter::operator==(const T& ref) const
+    {
+        if (w != ref.w) return false;
+        return true;
+    }
+
     std::ostream& dictWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -766,6 +861,23 @@ namespace golang::flate
 
     std::string errWriterClosed = errors::New("flate: closed writer");
     
+    template<typename T>
+    Writer::operator T()
+    {
+        T result;
+        result.d = this->d;
+        result.dict = this->dict;
+        return result;
+    }
+
+    template<typename T>
+    bool Writer::operator==(const T& ref) const
+    {
+        if (d != ref.d) return false;
+        if (dict != ref.dict) return false;
+        return true;
+    }
+
     std::ostream& Writer::PrintTo(std::ostream& os) const
     {
         os << '{';

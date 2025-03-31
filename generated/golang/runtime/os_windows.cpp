@@ -140,6 +140,31 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mOS::operator T()
+    {
+        T result;
+        result.threadLock = this->threadLock;
+        result.thread = this->thread;
+        result.waitsema = this->waitsema;
+        result.resumesema = this->resumesema;
+        result.highResTimer = this->highResTimer;
+        result.preemptExtLock = this->preemptExtLock;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mOS::operator==(const T& ref) const
+    {
+        if (threadLock != ref.threadLock) return false;
+        if (thread != ref.thread) return false;
+        if (waitsema != ref.waitsema) return false;
+        if (resumesema != ref.resumesema) return false;
+        if (highResTimer != ref.highResTimer) return false;
+        if (preemptExtLock != ref.preemptExtLock) return false;
+        return true;
+    }
+
     std::ostream& mOS::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -177,6 +202,19 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    sigset::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sigset::operator==(const T& ref) const
+    {
+        return true;
+    }
+
     std::ostream& sigset::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -268,6 +306,23 @@ namespace golang::runtime
     {
         auto _DEVICE_NOTIFY_CALLBACK = 2;
         
+        template<typename T> requires gocpp::GoStruct<T>
+        _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::operator T()
+        {
+            T result;
+            result.callback = this->callback;
+            result.context = this->context;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::operator==(const T& ref) const
+        {
+            if (callback != ref.callback) return false;
+            if (context != ref.context) return false;
+            return true;
+        }
+
         std::ostream& _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::PrintTo(std::ostream& os) const
         {
             os << '{';

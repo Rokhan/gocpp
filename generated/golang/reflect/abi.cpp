@@ -17,7 +17,7 @@
 #include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/float32reg_generic.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+// #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
@@ -26,6 +26,31 @@ namespace golang::reflect
     int floatArgRegs = abi::FloatArgRegs;
     uintptr_t floatRegSize = uintptr_t(abi::EffectiveFloatRegSize);
     
+    template<typename T> requires gocpp::GoStruct<T>
+    abiStep::operator T()
+    {
+        T result;
+        result.kind = this->kind;
+        result.offset = this->offset;
+        result.size = this->size;
+        result.stkOff = this->stkOff;
+        result.ireg = this->ireg;
+        result.freg = this->freg;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool abiStep::operator==(const T& ref) const
+    {
+        if (kind != ref.kind) return false;
+        if (offset != ref.offset) return false;
+        if (size != ref.size) return false;
+        if (stkOff != ref.stkOff) return false;
+        if (ireg != ref.ireg) return false;
+        if (freg != ref.freg) return false;
+        return true;
+    }
+
     std::ostream& abiStep::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -45,6 +70,29 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    abiSeq::operator T()
+    {
+        T result;
+        result.steps = this->steps;
+        result.valueStart = this->valueStart;
+        result.stackBytes = this->stackBytes;
+        result.iregs = this->iregs;
+        result.fregs = this->fregs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool abiSeq::operator==(const T& ref) const
+    {
+        if (steps != ref.steps) return false;
+        if (valueStart != ref.valueStart) return false;
+        if (stackBytes != ref.stackBytes) return false;
+        if (iregs != ref.iregs) return false;
+        if (fregs != ref.fregs) return false;
+        return true;
+    }
+
     std::ostream& abiSeq::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -323,6 +371,35 @@ namespace golang::reflect
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    abiDesc::operator T()
+    {
+        T result;
+        result.call = this->call;
+        result.ret = this->ret;
+        result.stackCallArgsSize = this->stackCallArgsSize;
+        result.retOffset = this->retOffset;
+        result.spill = this->spill;
+        result.stackPtrs = this->stackPtrs;
+        result.inRegPtrs = this->inRegPtrs;
+        result.outRegPtrs = this->outRegPtrs;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool abiDesc::operator==(const T& ref) const
+    {
+        if (call != ref.call) return false;
+        if (ret != ref.ret) return false;
+        if (stackCallArgsSize != ref.stackCallArgsSize) return false;
+        if (retOffset != ref.retOffset) return false;
+        if (spill != ref.spill) return false;
+        if (stackPtrs != ref.stackPtrs) return false;
+        if (inRegPtrs != ref.inRegPtrs) return false;
+        if (outRegPtrs != ref.outRegPtrs) return false;
+        return true;
+    }
+
     std::ostream& abiDesc::PrintTo(std::ostream& os) const
     {
         os << '{';

@@ -82,6 +82,85 @@ namespace golang::runtime
 {
     /* bool physPageAlignedStacks = GOOS == "openbsd" [known mising deps] */;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mheap::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.lock = this->lock;
+        result.pages = this->pages;
+        result.sweepgen = this->sweepgen;
+        result.allspans = this->allspans;
+        result.pagesInUse = this->pagesInUse;
+        result.pagesSwept = this->pagesSwept;
+        result.pagesSweptBasis = this->pagesSweptBasis;
+        result.sweepHeapLiveBasis = this->sweepHeapLiveBasis;
+        result.sweepPagesPerByte = this->sweepPagesPerByte;
+        result.reclaimIndex = this->reclaimIndex;
+        result.reclaimCredit = this->reclaimCredit;
+        result._ = this->_;
+        result.arenas = this->arenas;
+        result.arenasHugePages = this->arenasHugePages;
+        result.heapArenaAlloc = this->heapArenaAlloc;
+        result.arenaHints = this->arenaHints;
+        result.arena = this->arena;
+        result.allArenas = this->allArenas;
+        result.sweepArenas = this->sweepArenas;
+        result.markArenas = this->markArenas;
+        result.curArena = this->curArena;
+        result.central = this->central;
+        result.spanalloc = this->spanalloc;
+        result.cachealloc = this->cachealloc;
+        result.specialfinalizeralloc = this->specialfinalizeralloc;
+        result.specialprofilealloc = this->specialprofilealloc;
+        result.specialReachableAlloc = this->specialReachableAlloc;
+        result.specialPinCounterAlloc = this->specialPinCounterAlloc;
+        result.speciallock = this->speciallock;
+        result.arenaHintAlloc = this->arenaHintAlloc;
+        result.userArena = this->userArena;
+        result.unused = this->unused;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mheap::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (lock != ref.lock) return false;
+        if (pages != ref.pages) return false;
+        if (sweepgen != ref.sweepgen) return false;
+        if (allspans != ref.allspans) return false;
+        if (pagesInUse != ref.pagesInUse) return false;
+        if (pagesSwept != ref.pagesSwept) return false;
+        if (pagesSweptBasis != ref.pagesSweptBasis) return false;
+        if (sweepHeapLiveBasis != ref.sweepHeapLiveBasis) return false;
+        if (sweepPagesPerByte != ref.sweepPagesPerByte) return false;
+        if (reclaimIndex != ref.reclaimIndex) return false;
+        if (reclaimCredit != ref.reclaimCredit) return false;
+        if (_ != ref._) return false;
+        if (arenas != ref.arenas) return false;
+        if (arenasHugePages != ref.arenasHugePages) return false;
+        if (heapArenaAlloc != ref.heapArenaAlloc) return false;
+        if (arenaHints != ref.arenaHints) return false;
+        if (arena != ref.arena) return false;
+        if (allArenas != ref.allArenas) return false;
+        if (sweepArenas != ref.sweepArenas) return false;
+        if (markArenas != ref.markArenas) return false;
+        if (curArena != ref.curArena) return false;
+        if (central != ref.central) return false;
+        if (spanalloc != ref.spanalloc) return false;
+        if (cachealloc != ref.cachealloc) return false;
+        if (specialfinalizeralloc != ref.specialfinalizeralloc) return false;
+        if (specialprofilealloc != ref.specialprofilealloc) return false;
+        if (specialReachableAlloc != ref.specialReachableAlloc) return false;
+        if (specialPinCounterAlloc != ref.specialPinCounterAlloc) return false;
+        if (speciallock != ref.speciallock) return false;
+        if (arenaHintAlloc != ref.arenaHintAlloc) return false;
+        if (userArena != ref.userArena) return false;
+        if (unused != ref.unused) return false;
+        return true;
+    }
+
     std::ostream& mheap::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -129,6 +208,33 @@ namespace golang::runtime
 
     mheap mheap_;
     
+    template<typename T> requires gocpp::GoStruct<T>
+    heapArena::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.spans = this->spans;
+        result.pageInUse = this->pageInUse;
+        result.pageMarks = this->pageMarks;
+        result.pageSpecials = this->pageSpecials;
+        result.checkmarks = this->checkmarks;
+        result.zeroedBase = this->zeroedBase;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool heapArena::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (spans != ref.spans) return false;
+        if (pageInUse != ref.pageInUse) return false;
+        if (pageMarks != ref.pageMarks) return false;
+        if (pageSpecials != ref.pageSpecials) return false;
+        if (checkmarks != ref.checkmarks) return false;
+        if (zeroedBase != ref.zeroedBase) return false;
+        return true;
+    }
+
     std::ostream& heapArena::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -149,6 +255,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    arenaHint::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.addr = this->addr;
+        result.down = this->down;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool arenaHint::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (addr != ref.addr) return false;
+        if (down != ref.down) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& arenaHint::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -167,6 +294,21 @@ namespace golang::runtime
 
     gocpp::slice<std::string> mSpanStateNames = gocpp::slice<std::string> {"mSpanDead", "mSpanInUse", "mSpanManual"};
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mSpanStateBox::operator T()
+    {
+        T result;
+        result.s = this->s;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mSpanStateBox::operator==(const T& ref) const
+    {
+        if (s != ref.s) return false;
+        return true;
+    }
+
     std::ostream& mSpanStateBox::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -191,6 +333,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mSpanList::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.first = this->first;
+        result.last = this->last;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mSpanList::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (first != ref.first) return false;
+        if (last != ref.last) return false;
+        return true;
+    }
+
     std::ostream& mSpanList::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -207,6 +368,75 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    mspan::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        result.prev = this->prev;
+        result.list = this->list;
+        result.startAddr = this->startAddr;
+        result.npages = this->npages;
+        result.manualFreeList = this->manualFreeList;
+        result.freeindex = this->freeindex;
+        result.nelems = this->nelems;
+        result.freeIndexForScan = this->freeIndexForScan;
+        result.allocCache = this->allocCache;
+        result.allocBits = this->allocBits;
+        result.gcmarkBits = this->gcmarkBits;
+        result.pinnerBits = this->pinnerBits;
+        result.sweepgen = this->sweepgen;
+        result.divMul = this->divMul;
+        result.allocCount = this->allocCount;
+        result.spanclass = this->spanclass;
+        result.state = this->state;
+        result.needzero = this->needzero;
+        result.isUserArenaChunk = this->isUserArenaChunk;
+        result.allocCountBeforeCache = this->allocCountBeforeCache;
+        result.elemsize = this->elemsize;
+        result.limit = this->limit;
+        result.speciallock = this->speciallock;
+        result.specials = this->specials;
+        result.userArenaChunkFree = this->userArenaChunkFree;
+        result.largeType = this->largeType;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool mspan::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        if (prev != ref.prev) return false;
+        if (list != ref.list) return false;
+        if (startAddr != ref.startAddr) return false;
+        if (npages != ref.npages) return false;
+        if (manualFreeList != ref.manualFreeList) return false;
+        if (freeindex != ref.freeindex) return false;
+        if (nelems != ref.nelems) return false;
+        if (freeIndexForScan != ref.freeIndexForScan) return false;
+        if (allocCache != ref.allocCache) return false;
+        if (allocBits != ref.allocBits) return false;
+        if (gcmarkBits != ref.gcmarkBits) return false;
+        if (pinnerBits != ref.pinnerBits) return false;
+        if (sweepgen != ref.sweepgen) return false;
+        if (divMul != ref.divMul) return false;
+        if (allocCount != ref.allocCount) return false;
+        if (spanclass != ref.spanclass) return false;
+        if (state != ref.state) return false;
+        if (needzero != ref.needzero) return false;
+        if (isUserArenaChunk != ref.isUserArenaChunk) return false;
+        if (allocCountBeforeCache != ref.allocCountBeforeCache) return false;
+        if (elemsize != ref.elemsize) return false;
+        if (limit != ref.limit) return false;
+        if (speciallock != ref.speciallock) return false;
+        if (specials != ref.specials) return false;
+        if (userArenaChunkFree != ref.userArenaChunkFree) return false;
+        if (largeType != ref.largeType) return false;
+        return true;
+    }
+
     std::ostream& mspan::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1269,6 +1499,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    special::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.next = this->next;
+        result.offset = this->offset;
+        result.kind = this->kind;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool special::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (next != ref.next) return false;
+        if (offset != ref.offset) return false;
+        if (kind != ref.kind) return false;
+        return true;
+    }
+
     std::ostream& special::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1380,6 +1631,31 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    specialfinalizer::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.special = this->special;
+        result.fn = this->fn;
+        result.nret = this->nret;
+        result.fint = this->fint;
+        result.ot = this->ot;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialfinalizer::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (special != ref.special) return false;
+        if (fn != ref.fn) return false;
+        if (nret != ref.nret) return false;
+        if (fint != ref.fint) return false;
+        if (ot != ref.ot) return false;
+        return true;
+    }
+
     std::ostream& specialfinalizer::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1443,6 +1719,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    specialprofile::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.special = this->special;
+        result.b = this->b;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialprofile::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (special != ref.special) return false;
+        if (b != ref.b) return false;
+        return true;
+    }
+
     std::ostream& specialprofile::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1472,6 +1767,25 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    specialReachable::operator T()
+    {
+        T result;
+        result.special = this->special;
+        result.done = this->done;
+        result.reachable = this->reachable;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialReachable::operator==(const T& ref) const
+    {
+        if (special != ref.special) return false;
+        if (done != ref.done) return false;
+        if (reachable != ref.reachable) return false;
+        return true;
+    }
+
     std::ostream& specialReachable::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1488,6 +1802,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    specialPinCounter::operator T()
+    {
+        T result;
+        result.special = this->special;
+        result.counter = this->counter;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialPinCounter::operator==(const T& ref) const
+    {
+        if (special != ref.special) return false;
+        if (counter != ref.counter) return false;
+        return true;
+    }
+
     std::ostream& specialPinCounter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1503,6 +1834,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    specialsIter::operator T()
+    {
+        T result;
+        result.pprev = this->pprev;
+        result.s = this->s;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool specialsIter::operator==(const T& ref) const
+    {
+        if (pprev != ref.pprev) return false;
+        if (s != ref.s) return false;
+        return true;
+    }
+
     std::ostream& specialsIter::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1585,6 +1933,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcBits::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.x = this->x;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcBits::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (x != ref.x) return false;
+        return true;
+    }
+
     std::ostream& gcBits::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1612,6 +1977,23 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcBitsHeader::operator T()
+    {
+        T result;
+        result.free = this->free;
+        result.next = this->next;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcBitsHeader::operator==(const T& ref) const
+    {
+        if (free != ref.free) return false;
+        if (next != ref.next) return false;
+        return true;
+    }
+
     std::ostream& gcBitsHeader::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1627,6 +2009,27 @@ namespace golang::runtime
     }
 
     
+    template<typename T> requires gocpp::GoStruct<T>
+    gcBitsArena::operator T()
+    {
+        T result;
+        result._ = this->_;
+        result.free = this->free;
+        result.next = this->next;
+        result.bits = this->bits;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcBitsArena::operator==(const T& ref) const
+    {
+        if (_ != ref._) return false;
+        if (free != ref.free) return false;
+        if (next != ref.next) return false;
+        if (bits != ref.bits) return false;
+        return true;
+    }
+
     std::ostream& gcBitsArena::PrintTo(std::ostream& os) const
     {
         os << '{';
@@ -1652,6 +2055,29 @@ namespace golang::runtime
         gcBitsArena* previous;
 
         using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.lock = this->lock;
+            result.free = this->free;
+            result.next = this->next;
+            result.current = this->current;
+            result.previous = this->previous;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (lock != ref.lock) return false;
+            if (free != ref.free) return false;
+            if (next != ref.next) return false;
+            if (current != ref.current) return false;
+            if (previous != ref.previous) return false;
+            return true;
+        }
 
         std::ostream& PrintTo(std::ostream& os) const
         {

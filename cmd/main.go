@@ -1074,11 +1074,15 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 		if recv := typ.Recv(); recv != nil {
 			internalGetObjectsOfType(recv.Type(), seen)
 		}
-		for i := 0; i < typ.Params().Len(); i++ {
-			internalGetObjectsOfType(typ.Params().At(i).Type(), seen)
+		if typ.Params() != nil {
+			for i := 0; i < typ.Params().Len(); i++ {
+				internalGetObjectsOfType(typ.Params().At(i).Type(), seen)
+			}
 		}
-		for i := 0; i < typ.Results().Len(); i++ {
-			internalGetObjectsOfType(typ.Results().At(i).Type(), seen)
+		if typ.Results() != nil {
+			for i := 0; i < typ.Results().Len(); i++ {
+				internalGetObjectsOfType(typ.Results().At(i).Type(), seen)
+			}
 		}
 	case *types.Tuple:
 		for i := 0; i < typ.Len(); i++ {
@@ -2284,6 +2288,21 @@ func ComputeDeps(toDo map[types.Type]bool) map[types.Type]bool {
 			case *types.Pointer:
 				toDo[t.Elem()] = true
 
+			case *types.Signature:
+				if t.Params() != nil {
+					for i := 0; i < t.Params().Len(); i++ {
+						toDo[t.Params().At(i).Type()] = true
+					}
+				}
+				if t.Results() != nil {
+					for i := 0; i < t.Results().Len(); i++ {
+						toDo[t.Results().At(i).Type()] = true
+					}
+				}
+				if t.Recv() != nil {
+					toDo[t.Recv().Type()] = true
+				}
+
 			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.Struct:
 				// Nothing to do
 
@@ -2767,7 +2786,7 @@ func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis) cppType {
 
 func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType) cppType {
 	elt := cv.convertTypeExpr(node.Value)
-	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", node.Value), elt.defs)
+	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", elt.str), elt.defs)
 }
 
 func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) cppType {

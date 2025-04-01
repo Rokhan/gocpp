@@ -652,8 +652,12 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 				place.depInfo.initialOrder = initialOrder
 				fwdHeaderElts = append(fwdHeaderElts, &place)
 			}
-			if place.header != nil || place.inline != nil {
-				panic("BUG: place.header and place.inline should always be nil at this point.")
+
+			if place.header != nil {
+				Panicf("BUG: place.header should always be nil at this point. position %s\n", cv.Position(place.node))
+			}
+			if place.inline != nil {
+				Panicf("BUG: place.inline should always be nil at this point. position %s\n", cv.Position(place.node))
 			}
 		}
 		fmt.Fprintf(cv.fwd.out, "%s", allFwdOut[i])
@@ -1984,7 +1988,7 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 			result = assignStmts[nbStmts-1]
 			for i := 0; i < nbStmts-1; i++ {
 				result.defs = append(result.defs, assignStmts[i].defs...)
-				result.defs = append(result.defs, inlineStr(assignStmts[i].str))
+				result.defs = append(result.defs, inlineStr(assignStmts[i].str, s))
 			}
 			return
 		}
@@ -2081,14 +2085,14 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 		case *ast.TypeSpec:
 			if s.Comment != nil {
 				for _, comment := range s.Comment.List {
-					result = append(result, inlineStrf("// %s\n", comment.Text)...)
+					result = append(result, inlineStrf(s, "// %s\n", comment.Text)...)
 				}
 			}
 
 			t := cv.convertTypeSpec(s, end, isNamespace)
 			result = append(result, t.defs...)
 			if t.str != "" {
-				result = append(result, inlineStr(t.str))
+				result = append(result, inlineStr(t.str, s))
 			}
 
 		case *ast.ValueSpec:
@@ -2107,20 +2111,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						name := GetCppName(s.Names[i].Name)
 						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
-							result = append(result, inlineStrf("%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
+							result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
 						} else if tok == token.CONST && canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 							} else {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "const %s %s = %s%s", exprType, name, expr, end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
 							}
 						} else {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, headerStrf("/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf("/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+								result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 							} else {
-								result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf("%s %s = %s%s", exprType, name, expr, end)...)
+								result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
 							}
 						}
 					}
@@ -2130,20 +2134,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						name := GetCppName(s.Names[i].Name)
 
 						if len(values) == 0 {
-							result = append(result, inlineStrf("%s %s%s", exprType, name, end)...)
+							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else if tok == token.CONST && exprType.canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							} else {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							}
 						} else {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, headerStrf("/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf("/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							} else {
-								result = append(result, headerStrf("extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf("%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+								result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							}
 						}
 					}
@@ -2154,9 +2158,9 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 					for i := range s.Names {
 						name := GetCppName(s.Names[i].Name)
 						if len(values) == 0 {
-							result = append(result, inlineStrf("auto %s%s", name, end)...)
+							result = append(result, inlineStrf(s, "auto %s%s", name, end)...)
 						} else {
-							result = append(result, inlineStrf("auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
+							result = append(result, inlineStrf(s, "auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
 						}
 					}
 				} else {
@@ -2164,9 +2168,9 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						name := GetCppName(s.Names[i].Name)
 						t := cv.convertTypeExpr(s.Type)
 						if len(values) == 0 {
-							result = append(result, inlineStrf("%s %s = {}%s", t, name, end)...)
+							result = append(result, inlineStrf(s, "%s %s = {}%s", t, name, end)...)
 						} else {
-							result = append(result, inlineStrf("%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+							result = append(result, inlineStrf(s, "%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
 						}
 					}
 				}
@@ -2190,17 +2194,17 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 			// for each package listed on the command line.
 			for _, pkg := range pkgs {
 				for _, file := range pkg.GoFiles {
-					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, GoFiles))
+					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, GoFiles, s))
 				}
 				for _, file := range pkg.CompiledGoFiles {
-					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, CompiledGoFiles))
+					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, CompiledGoFiles, s))
 				}
 				for _, file := range pkg.OtherFiles {
-					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, OtherFiles))
+					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, OtherFiles, s))
 				}
 				// use packages.NeedEmbedFiles in config to activate
 				for _, file := range pkg.EmbedFiles {
-					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, EmbedFiles))
+					result = append(result, importPackage(pkg.Name, pkg.PkgPath, file, EmbedFiles, s))
 				}
 			}
 
@@ -2336,35 +2340,38 @@ type place struct {
 
 	//packages
 	pkgInfo *pkgInfo
+
+	// source node, for debug message
+	node ast.Node
 }
 
-func inlineStr(str string) place {
-	return place{&str, nil, nil, nil, false, depInfo{}, nil}
+func inlineStr(str string, node ast.Node) place {
+	return place{&str, nil, nil, nil, false, depInfo{}, nil, node}
 }
 
-func outlineStr(str string) place {
-	return place{nil, &str, nil, nil, false, depInfo{}, nil}
+func outlineStr(str string, node ast.Node) place {
+	return place{nil, &str, nil, nil, false, depInfo{}, nil, node}
 }
 
-func headerStr(str string) place {
-	return place{nil, nil, &str, nil, false, depInfo{}, nil}
+func headerStr(str string, node ast.Node) place {
+	return place{nil, nil, &str, nil, false, depInfo{}, nil, node}
 }
 
-func fwdHeaderStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, &str, false, depInfo, nil}
+func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
+	return place{nil, nil, nil, &str, false, depInfo, nil, node}
 }
 
 func includeStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, &str, true, depInfo, nil}
+	return place{nil, nil, nil, &str, true, depInfo, nil, nil}
 }
 
-func importPackage(name string, pkgPath string, filePath string, pkgType pkgType) place {
-	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}}
+func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
+	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node}
 }
 
-func inlineStrf(format string, params ...any) []place {
+func inlineStrf(node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, inlineStr(expr.str))
+	expr.defs = append(expr.defs, inlineStr(expr.str, node))
 	return expr.defs
 }
 
@@ -2374,15 +2381,15 @@ func inlineStrf(format string, params ...any) []place {
 // 	return expr.defs
 // }
 
-func headerStrf(format string, params ...any) []place {
+func headerStrf(node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, headerStr(expr.str))
+	expr.defs = append(expr.defs, headerStr(expr.str, node))
 	return expr.defs
 }
 
-func fwdHeaderStrf(di depInfo, format string, params ...any) []place {
+func fwdHeaderStrf(di depInfo, node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, di))
+	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, node, di))
 	return expr.defs
 }
 
@@ -2484,9 +2491,9 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		}
 
 		if isNamespace {
-			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, cv.getTypeDepInfo(node))))
+			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
 		} else {
-			return mkCppType("", append(t.defs, inlineStr(usingDec)))
+			return mkCppType("", append(t.defs, inlineStr(usingDec, node)))
 		}
 
 	case *ast.StructType:
@@ -2495,13 +2502,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		if isNamespace {
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
-			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getTypeDepInfo(node)))
+			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
 			structDecl := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with})
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
-			defs = append(defs, headerStr(structDecl))
+			defs = append(defs, headerStr(structDecl, node))
 		}
 
 		return mkCppType(cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, implem, with}), defs)
@@ -2512,13 +2519,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		if isNamespace {
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
-			defs = append(defs, fwdHeaderStr(structFwdDecl, cv.getTypeDepInfo(node)))
+			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
 			structDecl := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, decl, with})
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
-			defs = append(defs, headerStr(structDecl))
+			defs = append(defs, headerStr(structDecl, node))
 		}
 
 		return mkCppType(cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with}), defs)
@@ -2709,7 +2716,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 			// stream operator generation.
 			structDef := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with})
 			//return mkCppType(name, []place{inlineStr(structDef), fwdHeaderStr(structFwdDecl, depInfo{})})
-			return mkCppType(name, []place{outlineStr(structDef), fwdHeaderStr(structFwdDecl, depInfo{})})
+			return mkCppType(name, []place{outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{})})
 		}
 		return mkCppType(name, nil)
 
@@ -2723,10 +2730,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 			if first {
 				structDecl := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, decl, with})
-				defs = append(defs, headerStr(structDecl))
+				defs = append(defs, headerStr(structDecl, node))
 
 				structDef := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, implem, with})
-				defs = append(defs, outlineStr(structDef))
+				defs = append(defs, outlineStr(structDef, node))
 			}
 
 			return mkCppPtrType(cppExpr{name, defs})

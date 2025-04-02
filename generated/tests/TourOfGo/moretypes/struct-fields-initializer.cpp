@@ -16,7 +16,7 @@
 namespace golang::main
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Vertex::operator T()
     {
         T result;
@@ -26,7 +26,7 @@ namespace golang::main
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Vertex::operator==(const T& ref) const
     {
         if (X != ref.X) return false;
@@ -51,7 +51,7 @@ namespace golang::main
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Segment::operator T()
     {
         T result;
@@ -60,7 +60,7 @@ namespace golang::main
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Segment::operator==(const T& ref) const
     {
         if (Start != ref.Start) return false;

@@ -61,7 +61,7 @@ namespace golang::main
     }
 
     
-    template<typename U>
+    template<typename U> requires gocpp::GoStruct<U>
     T::operator U()
     {
         U result;
@@ -69,7 +69,7 @@ namespace golang::main
         return result;
     }
 
-    template<typename U>
+    template<typename U> requires gocpp::GoStruct<U>
     bool T::operator==(const U& ref) const
     {
         if (S != ref.S) return false;

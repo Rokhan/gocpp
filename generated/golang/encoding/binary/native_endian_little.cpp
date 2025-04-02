@@ -16,14 +16,14 @@
 namespace golang::binary
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     nativeEndian::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool nativeEndian::operator==(const T& ref) const
     {
         return true;

@@ -93,7 +93,7 @@ namespace golang::crc32
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     digest::operator T()
     {
         T result;
@@ -102,7 +102,7 @@ namespace golang::crc32
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool digest::operator==(const T& ref) const
     {
         if (crc != ref.crc) return false;

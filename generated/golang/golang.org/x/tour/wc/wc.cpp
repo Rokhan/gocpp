@@ -51,7 +51,7 @@ namespace golang::wc
 
         using isGoStruct = void;
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         operator T()
         {
             T result;
@@ -60,7 +60,7 @@ namespace golang::wc
             return result;
         }
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
             if (in != ref.in) return false;

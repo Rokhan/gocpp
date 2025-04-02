@@ -252,14 +252,14 @@ namespace golang::binary
     littleEndian LittleEndian;
     bigEndian BigEndian;
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     littleEndian::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool littleEndian::operator==(const T& ref) const
     {
         return true;
@@ -350,14 +350,14 @@ namespace golang::binary
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bigEndian::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool bigEndian::operator==(const T& ref) const
     {
         return true;
@@ -1118,7 +1118,7 @@ namespace golang::binary
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     coder::operator T()
     {
         T result;
@@ -1128,7 +1128,7 @@ namespace golang::binary
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool coder::operator==(const T& ref) const
     {
         if (order != ref.order) return false;

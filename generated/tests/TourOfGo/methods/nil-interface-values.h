@@ -29,7 +29,7 @@ namespace golang::main
         template<typename T>
         I(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 

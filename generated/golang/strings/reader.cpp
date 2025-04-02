@@ -18,7 +18,7 @@
 namespace golang::strings
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
     {
         T result;
@@ -28,7 +28,7 @@ namespace golang::strings
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Reader::operator==(const T& ref) const
     {
         if (s != ref.s) return false;

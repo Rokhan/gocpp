@@ -18,7 +18,7 @@
 namespace golang::image
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Config::operator T()
     {
         T result;
@@ -28,7 +28,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Config::operator==(const T& ref) const
     {
         if (ColorModel != ref.ColorModel) return false;
@@ -228,7 +228,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     RGBA::operator T()
     {
         T result;
@@ -238,7 +238,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool RGBA::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -390,7 +390,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     RGBA64::operator T()
     {
         T result;
@@ -400,7 +400,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool RGBA64::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -531,7 +531,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     NRGBA::operator T()
     {
         T result;
@@ -541,7 +541,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool NRGBA::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -691,7 +691,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     NRGBA64::operator T()
     {
         T result;
@@ -701,7 +701,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool NRGBA64::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -863,7 +863,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Alpha::operator T()
     {
         T result;
@@ -873,7 +873,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Alpha::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -1003,7 +1003,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Alpha16::operator T()
     {
         T result;
@@ -1013,7 +1013,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Alpha16::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -1146,7 +1146,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Gray::operator T()
     {
         T result;
@@ -1156,7 +1156,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Gray::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -1270,7 +1270,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Gray16::operator T()
     {
         T result;
@@ -1280,7 +1280,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Gray16::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -1397,7 +1397,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     CMYK::operator T()
     {
         T result;
@@ -1407,7 +1407,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool CMYK::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;
@@ -1534,7 +1534,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Paletted::operator T()
     {
         T result;
@@ -1545,7 +1545,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Paletted::operator==(const T& ref) const
     {
         if (Pix != ref.Pix) return false;

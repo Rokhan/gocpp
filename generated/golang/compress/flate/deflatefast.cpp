@@ -35,7 +35,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     tableEntry::operator T()
     {
         T result;
@@ -44,7 +44,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool tableEntry::operator==(const T& ref) const
     {
         if (val != ref.val) return false;
@@ -67,7 +67,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     deflateFast::operator T()
     {
         T result;
@@ -77,7 +77,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool deflateFast::operator==(const T& ref) const
     {
         if (table != ref.table) return false;

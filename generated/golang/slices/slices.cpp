@@ -35,7 +35,7 @@ namespace golang::slices
     }
 
 
-    template<typename S2, typename S1>
+    template<typename S1, typename S2>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq)
     {
         if(len(s1) != len(s2))
@@ -100,7 +100,7 @@ namespace golang::slices
     }
 
 
-    template<typename E, typename S>
+    template<typename S, typename E>
     int Index(S s, E v)
     {
         for(auto [i, gocpp_ignored] : s)

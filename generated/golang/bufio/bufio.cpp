@@ -24,7 +24,7 @@ namespace golang::bufio
     std::string ErrBufferFull = errors::New("bufio: buffer full");
     std::string ErrNegativeCount = errors::New("bufio: negative count");
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
     {
         T result;
@@ -38,7 +38,7 @@ namespace golang::bufio
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Reader::operator==(const T& ref) const
     {
         if (buf != ref.buf) return false;
@@ -640,7 +640,7 @@ namespace golang::bufio
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
     {
         T result;
@@ -651,7 +651,7 @@ namespace golang::bufio
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Writer::operator==(const T& ref) const
     {
         if (err != ref.err) return false;
@@ -981,14 +981,14 @@ namespace golang::bufio
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     ReadWriter::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool ReadWriter::operator==(const T& ref) const
     {
         return true;

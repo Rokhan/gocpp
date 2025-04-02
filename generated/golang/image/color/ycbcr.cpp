@@ -78,7 +78,7 @@ namespace golang::color
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     YCbCr::operator T()
     {
         T result;
@@ -88,7 +88,7 @@ namespace golang::color
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool YCbCr::operator==(const T& ref) const
     {
         if (Y != ref.Y) return false;
@@ -160,7 +160,7 @@ namespace golang::color
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     NYCbCrA::operator T()
     {
         T result;
@@ -168,7 +168,7 @@ namespace golang::color
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool NYCbCrA::operator==(const T& ref) const
     {
         if (A != ref.A) return false;
@@ -294,7 +294,7 @@ namespace golang::color
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     CMYK::operator T()
     {
         T result;
@@ -305,7 +305,7 @@ namespace golang::color
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool CMYK::operator==(const T& ref) const
     {
         if (C != ref.C) return false;

@@ -21,7 +21,7 @@ namespace golang::main
 
         using isGoStruct = void;
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         operator T()
         {
             T result;
@@ -29,7 +29,7 @@ namespace golang::main
             return result;
         }
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
             if (value != ref.value) return false;
@@ -57,7 +57,7 @@ namespace golang::main
 
         using isGoStruct = void;
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         operator T()
         {
             T result;
@@ -65,7 +65,7 @@ namespace golang::main
             return result;
         }
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
             if (value != ref.value) return false;

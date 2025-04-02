@@ -28,10 +28,10 @@ namespace golang::png
 
         using isGoStruct = void;
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         operator T();
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
@@ -59,10 +59,10 @@ namespace golang::png
 
         using isGoStruct = void;
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         operator T();
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;

@@ -25,7 +25,7 @@
 namespace golang::zlib
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
     {
         T result;
@@ -40,7 +40,7 @@ namespace golang::zlib
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Writer::operator==(const T& ref) const
     {
         if (w != ref.w) return false;

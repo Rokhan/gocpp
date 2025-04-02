@@ -25,7 +25,7 @@ namespace golang::flate
     gocpp::slice<uint32_t> offsetBase = gocpp::slice<uint32_t> {0x000000, 0x000001, 0x000002, 0x000003, 0x000004, 0x000006, 0x000008, 0x00000c, 0x000010, 0x000018, 0x000020, 0x000030, 0x000040, 0x000060, 0x000080, 0x0000c0, 0x000100, 0x000180, 0x000200, 0x000300, 0x000400, 0x000600, 0x000800, 0x000c00, 0x001000, 0x001800, 0x002000, 0x003000, 0x004000, 0x006000};
     gocpp::slice<uint32_t> codegenOrder = gocpp::slice<uint32_t> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     huffmanBitWriter::operator T()
     {
         T result;
@@ -45,7 +45,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool huffmanBitWriter::operator==(const T& ref) const
     {
         if (writer != ref.writer) return false;

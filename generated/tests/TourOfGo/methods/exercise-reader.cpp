@@ -17,14 +17,14 @@
 namespace golang::main
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     MyReader::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool MyReader::operator==(const T& ref) const
     {
         return true;

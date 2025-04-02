@@ -19,14 +19,14 @@
 namespace golang::main
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Image::operator T()
     {
         T result;
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Image::operator==(const T& ref) const
     {
         return true;

@@ -18,7 +18,7 @@
 namespace golang::main
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     MyError::operator T()
     {
         T result;
@@ -27,7 +27,7 @@ namespace golang::main
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool MyError::operator==(const T& ref) const
     {
         if (When != ref.When) return false;

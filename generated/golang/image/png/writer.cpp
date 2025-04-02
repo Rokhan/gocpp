@@ -32,7 +32,7 @@
 namespace golang::png
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Encoder::operator T()
     {
         T result;
@@ -41,7 +41,7 @@ namespace golang::png
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Encoder::operator==(const T& ref) const
     {
         if (CompressionLevel != ref.CompressionLevel) return false;
@@ -124,7 +124,7 @@ namespace golang::png
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     encoder::operator T()
     {
         T result;
@@ -144,7 +144,7 @@ namespace golang::png
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool encoder::operator==(const T& ref) const
     {
         if (enc != ref.enc) return false;

@@ -17,7 +17,7 @@
 namespace golang::main
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     rot13Reader::operator T()
     {
         T result;
@@ -25,7 +25,7 @@ namespace golang::main
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool rot13Reader::operator==(const T& ref) const
     {
         if (r != ref.r) return false;

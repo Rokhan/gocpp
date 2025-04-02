@@ -24,7 +24,7 @@ namespace golang::image
 {
     std::string ErrFormat = errors::New("image: unknown format");
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     format::operator T()
     {
         T result;
@@ -35,7 +35,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool format::operator==(const T& ref) const
     {
         if (name != ref.name) return false;

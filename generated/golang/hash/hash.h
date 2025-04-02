@@ -30,7 +30,7 @@ namespace golang::hash
         template<typename T>
         Hash(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -94,7 +94,7 @@ namespace golang::hash
         template<typename T>
         Hash32(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
@@ -140,7 +140,7 @@ namespace golang::hash
         template<typename T>
         Hash64(T* ptr);
 
-        using isGoStruct = void;
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 

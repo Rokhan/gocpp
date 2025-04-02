@@ -37,7 +37,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     ReadError::operator T()
     {
         T result;
@@ -46,7 +46,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool ReadError::operator==(const T& ref) const
     {
         if (Offset != ref.Offset) return false;
@@ -74,7 +74,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     WriteError::operator T()
     {
         T result;
@@ -83,7 +83,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool WriteError::operator==(const T& ref) const
     {
         if (Offset != ref.Offset) return false;
@@ -156,7 +156,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     huffmanDecoder::operator T()
     {
         T result;
@@ -167,7 +167,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool huffmanDecoder::operator==(const T& ref) const
     {
         if (min != ref.min) return false;
@@ -355,7 +355,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     decompressor::operator T()
     {
         T result;
@@ -382,7 +382,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool decompressor::operator==(const T& ref) const
     {
         if (r != ref.r) return false;

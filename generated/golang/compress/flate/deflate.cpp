@@ -23,7 +23,7 @@
 namespace golang::flate
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     compressionLevel::operator T()
     {
         T result;
@@ -36,7 +36,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool compressionLevel::operator==(const T& ref) const
     {
         if (level != ref.level) return false;
@@ -68,7 +68,7 @@ namespace golang::flate
 
     gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> { {0, 0, 0, 0, 0, 0},  {1, 0, 0, 0, 0, 0},  {2, 4, 0, 16, 8, 5},  {3, 4, 0, 32, 32, 6},  {4, 4, 4, 16, 16, skipNever},  {5, 8, 16, 32, 32, skipNever},  {6, 8, 16, 128, 128, skipNever},  {7, 8, 32, 128, 256, skipNever},  {8, 32, 128, 258, 1024, skipNever},  {9, 32, 258, 258, 4096, skipNever}};
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     compressor::operator T()
     {
         T result;
@@ -96,7 +96,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool compressor::operator==(const T& ref) const
     {
         if (w != ref.w) return false;
@@ -824,7 +824,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     dictWriter::operator T()
     {
         T result;
@@ -832,7 +832,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool dictWriter::operator==(const T& ref) const
     {
         if (w != ref.w) return false;
@@ -861,7 +861,7 @@ namespace golang::flate
 
     std::string errWriterClosed = errors::New("flate: closed writer");
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
     {
         T result;
@@ -870,7 +870,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Writer::operator==(const T& ref) const
     {
         if (d != ref.d) return false;

@@ -397,7 +397,7 @@ namespace golang::strings
     gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         span::operator T()
         {
             T result;
@@ -406,7 +406,7 @@ namespace golang::strings
             return result;
         }
 
-        template<typename T>
+        template<typename T> requires gocpp::GoStruct<T>
         bool span::operator==(const T& ref) const
         {
             if (start != ref.start) return false;

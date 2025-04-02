@@ -20,7 +20,7 @@
 namespace golang::base64
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Encoding::operator T()
     {
         T result;
@@ -31,7 +31,7 @@ namespace golang::base64
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Encoding::operator==(const T& ref) const
     {
         if (encode != ref.encode) return false;
@@ -194,7 +194,7 @@ namespace golang::base64
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     encoder::operator T()
     {
         T result;
@@ -207,7 +207,7 @@ namespace golang::base64
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool encoder::operator==(const T& ref) const
     {
         if (err != ref.err) return false;
@@ -524,7 +524,7 @@ namespace golang::base64
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     decoder::operator T()
     {
         T result;
@@ -539,7 +539,7 @@ namespace golang::base64
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool decoder::operator==(const T& ref) const
     {
         if (err != ref.err) return false;
@@ -781,7 +781,7 @@ namespace golang::base64
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     newlineFilteringReader::operator T()
     {
         T result;
@@ -789,7 +789,7 @@ namespace golang::base64
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool newlineFilteringReader::operator==(const T& ref) const
     {
         if (wrapped != ref.wrapped) return false;

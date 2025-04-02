@@ -18,7 +18,7 @@
 namespace golang::strings
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Builder::operator T()
     {
         T result;
@@ -27,7 +27,7 @@ namespace golang::strings
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Builder::operator==(const T& ref) const
     {
         if (addr != ref.addr) return false;

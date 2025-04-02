@@ -19,7 +19,7 @@
 namespace golang::flate
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     hcode::operator T()
     {
         T result;
@@ -28,7 +28,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool hcode::operator==(const T& ref) const
     {
         if (code != ref.code) return false;
@@ -51,7 +51,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     huffmanEncoder::operator T()
     {
         T result;
@@ -63,7 +63,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool huffmanEncoder::operator==(const T& ref) const
     {
         if (codes != ref.codes) return false;
@@ -92,7 +92,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     literalNode::operator T()
     {
         T result;
@@ -101,7 +101,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool literalNode::operator==(const T& ref) const
     {
         if (literal != ref.literal) return false;
@@ -124,7 +124,7 @@ namespace golang::flate
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     levelInfo::operator T()
     {
         T result;
@@ -136,7 +136,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool levelInfo::operator==(const T& ref) const
     {
         if (level != ref.level) return false;

@@ -36,7 +36,7 @@ namespace golang::png
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     interlaceScan::operator T()
     {
         T result;
@@ -47,7 +47,7 @@ namespace golang::png
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool interlaceScan::operator==(const T& ref) const
     {
         if (xFactor != ref.xFactor) return false;
@@ -76,7 +76,7 @@ namespace golang::png
     gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> { {8, 8, 0, 0},  {8, 8, 4, 0},  {4, 8, 0, 4},  {4, 4, 2, 0},  {2, 4, 0, 2},  {2, 2, 1, 0},  {1, 2, 0, 1}};
     std::string pngHeader = "\x89PNG\r\n\x1a\n";
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     decoder::operator T()
     {
         T result;
@@ -97,7 +97,7 @@ namespace golang::png
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool decoder::operator==(const T& ref) const
     {
         if (r != ref.r) return false;

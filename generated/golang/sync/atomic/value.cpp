@@ -17,7 +17,7 @@
 namespace golang::atomic
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Value::operator T()
     {
         T result;
@@ -25,7 +25,7 @@ namespace golang::atomic
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Value::operator==(const T& ref) const
     {
         if (v != ref.v) return false;
@@ -46,7 +46,7 @@ namespace golang::atomic
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     efaceWords::operator T()
     {
         T result;
@@ -55,7 +55,7 @@ namespace golang::atomic
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool efaceWords::operator==(const T& ref) const
     {
         if (typ != ref.typ) return false;

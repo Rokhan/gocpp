@@ -25,7 +25,7 @@ namespace golang::zlib
     std::string ErrDictionary = errors::New("zlib: invalid dictionary");
     std::string ErrHeader = errors::New("zlib: invalid header");
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     reader::operator T()
     {
         T result;
@@ -37,7 +37,7 @@ namespace golang::zlib
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool reader::operator==(const T& ref) const
     {
         if (r != ref.r) return false;

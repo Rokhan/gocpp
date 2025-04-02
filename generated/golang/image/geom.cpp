@@ -18,7 +18,7 @@
 namespace golang::image
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Point::operator T()
     {
         T result;
@@ -27,7 +27,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Point::operator==(const T& ref) const
     {
         if (X != ref.X) return false;
@@ -108,7 +108,7 @@ namespace golang::image
     }
 
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     Rectangle::operator T()
     {
         T result;
@@ -117,7 +117,7 @@ namespace golang::image
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool Rectangle::operator==(const T& ref) const
     {
         if (Min != ref.Min) return false;

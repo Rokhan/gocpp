@@ -140,7 +140,7 @@ namespace golang::slices
     }
 
 
-    template<typename E, typename S>
+    template<typename S, typename E>
     std::tuple<int, bool> BinarySearch(S x, E target)
     {
         auto n = len(x);

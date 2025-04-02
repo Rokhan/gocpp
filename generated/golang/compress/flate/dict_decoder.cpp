@@ -14,7 +14,7 @@
 namespace golang::flate
 {
     
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     dictDecoder::operator T()
     {
         T result;
@@ -25,7 +25,7 @@ namespace golang::flate
         return result;
     }
 
-    template<typename T>
+    template<typename T> requires gocpp::GoStruct<T>
     bool dictDecoder::operator==(const T& ref) const
     {
         if (hist != ref.hist) return false;

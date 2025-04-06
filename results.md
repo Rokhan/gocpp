@@ -67,6 +67,7 @@
 | [TourOfGo/methods/inline-interface.go](tests/TourOfGo/methods/inline-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/inline-interface.cpp)) | ❌ |
 | [TourOfGo/methods/interfaces.go](tests/TourOfGo/methods/interfaces.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ❌ |
 | [TourOfGo/methods/interfaces-are-satisfied-implicitly.go](tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.cpp)) | ✔️ |
+| [TourOfGo/methods/interfaces-cast.go](tests/TourOfGo/methods/interfaces-cast.go) | ✔️ | ✔️ | ❌ | ❌ |
 | [TourOfGo/methods/interfaces-ordered.go](tests/TourOfGo/methods/interfaces-ordered.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |
 | [TourOfGo/methods/interface-values.go](tests/TourOfGo/methods/interface-values.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values.cpp)) | ❌ |
 | [TourOfGo/methods/interface-values-with-nil.go](tests/TourOfGo/methods/interface-values-with-nil.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interface-values-with-nil.cpp)) | ❌ |
@@ -223,7 +224,7 @@
 | $(ImportDir)/reflect/float32reg_generic.go | ✔️ ([cpp](generated/golang/reflect/float32reg_generic.cpp), [h](generated/golang/reflect/float32reg_generic.h))|
 | $(ImportDir)/reflect/makefunc.go | ✔️ ([cpp](generated/golang/reflect/makefunc.cpp), [h](generated/golang/reflect/makefunc.h))|
 | $(ImportDir)/reflect/type.go | ✔️ ([cpp](generated/golang/reflect/type.cpp), [h](generated/golang/reflect/type.h))|
-| $(ImportDir)/reflect/value.go | ❌ |
+| $(ImportDir)/reflect/value.go | ✔️ ([cpp](generated/golang/reflect/value.cpp), [h](generated/golang/reflect/value.h))|
 | $(ImportDir)/runtime/alg.go | ✔️ ([cpp](generated/golang/runtime/alg.cpp), [h](generated/golang/runtime/alg.h))|
 | $(ImportDir)/runtime/arena.go | ✔️ ([cpp](generated/golang/runtime/arena.cpp), [h](generated/golang/runtime/arena.h))|
 | $(ImportDir)/runtime/asan0.go | ✔️ ([cpp](generated/golang/runtime/asan0.cpp), [h](generated/golang/runtime/asan0.h))|

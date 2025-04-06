@@ -1,5 +1,5 @@
-//go:build
-// +build
+//go:build OMIT
+// +build OMIT
 
 package main
 

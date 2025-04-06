@@ -1362,8 +1362,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			cv.hasMain = true
 		}
 
-		blockOutlines := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
-		outPlaces = append(outPlaces, blockOutlines...)
+		blockPlaces := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
+		for _, place := range blockPlaces {
+			cv.printOrKeepPlace(place, &outPlaces, nil)
+		}
 		fmt.Fprintf(cv.cpp.out, "\n")
 
 	case *ast.BadDecl:

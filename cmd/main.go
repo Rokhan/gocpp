@@ -1309,15 +1309,16 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		resultType := buildOutType(outTypes)
 
 		cv.DeclareVars(params)
-		typenames := map[string]bool{}
+		typenames := []string{}
 		for _, param := range params {
 			for _, place := range param.Type.defs {
 				cv.printOrKeepPlace(place, &outPlaces, nil)
 			}
-			for _, tn := range param.Type.typenames {
-				typenames[tn] = true
-			}
+			typenames = append(typenames, param.Type.typenames...)
 		}
+
+		// Deduplicate but keep initial ordering
+		typenames = deduplicate(typenames)
 
 		name := GetCppName(d.Name.Name)
 
@@ -1325,7 +1326,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			fmt.Fprintf(cv.hpp.out, "%s/* %s %s(%s); [Ignored, known name conflict] */ \n", cv.cpp.Indent(), resultType, name, params)
 		} else {
 			if len(typenames) != 0 {
-				fmt.Fprintf(cv.hpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(maps.Keys(typenames)))
+				fmt.Fprintf(cv.hpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typenames))
 			}
 			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
 		}
@@ -1355,7 +1356,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		}
 
 		if len(typenames) != 0 {
-			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(maps.Keys(typenames)))
+			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typenames))
 		}
 		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
 		if name == "main" {
@@ -1375,6 +1376,18 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		panic("convertDecls, unmanaged subtype")
 	}
 	return
+}
+
+func deduplicate[T comparable](items []T) []T {
+	seen := map[T]bool{}
+	var result []T
+	for _, item := range items {
+		if !seen[item] {
+			result = append(result, item)
+			seen[item] = true
+		}
+	}
+	return result
 }
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {

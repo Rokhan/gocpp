@@ -1200,3 +1200,3759 @@ namespace golang::reflect
         runtime::KeepAlive(valueRegs);
     }
 
+    std::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value>)> f)
+    {
+        auto pc = *(uintptr_t*)(unsafe::Pointer(& f));
+        auto rf = runtime::FuncForPC(pc);
+        if(rf != nullptr)
+        {
+            return Name(gocpp::recv(rf));
+        }
+        return "closure";
+    }
+
+    int Cap(struct Value v)
+    {
+        if(kind(gocpp::recv(v)) == Slice)
+        {
+            return (unsafeheader::Slice*)(v.ptr)->Cap;
+        }
+        return capNonSlice(gocpp::recv(v));
+    }
+
+    int capNonSlice(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Array) { conditionId = 0; }
+            else if(condition == Chan) { conditionId = 1; }
+            else if(condition == Ptr) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    return Len(gocpp::recv(typ(gocpp::recv(v))));
+                    break;
+                case 1:
+                    return chancap(pointer(gocpp::recv(v)));
+                    break;
+                case 2:
+                    if(Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v)))))) == abi::Array)
+                    {
+                        return Len(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v))))));
+                    }
+                    gocpp::panic("reflect: call of reflect.Value.Cap on ptr to non-array Value");
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Cap", kind(gocpp::recv(v))});
+    }
+
+    void Close(struct Value v)
+    {
+        mustBe(gocpp::recv(v), Chan);
+        mustBeExported(gocpp::recv(v));
+        auto tt = (chanType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        if(ChanDir(tt->Dir) & SendDir == 0)
+        {
+            gocpp::panic("reflect: close of receive-only channel");
+        }
+        chanclose(pointer(gocpp::recv(v)));
+    }
+
+    bool CanComplex(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Complex64) { conditionId = 0; }
+            if(condition == Complex128) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                    return true;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+        }
+    }
+
+    gocpp::complex128 Complex(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Complex64) { conditionId = 0; }
+            else if(condition == Complex128) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    return gocpp::complex128(*(complex64*)(v.ptr));
+                    break;
+                case 1:
+                    return *(gocpp::complex128*)(v.ptr);
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Complex", kind(gocpp::recv(v))});
+    }
+
+    
+                        template<typename T>
+                        gocpp_id_9::gocpp_id_9(T& ref)
+                        {
+                            value.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                        }
+
+                        template<typename T>
+                        gocpp_id_9::gocpp_id_9(const T& ref)
+                        {
+                            value.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                        }
+
+                        template<typename T>
+                        gocpp_id_9::gocpp_id_9(T* ptr)
+                        {
+                            value.reset(new gocpp_id_9Impl<T, gocpp::ptr<T>>(ptr));
+                        }
+
+                        std::ostream& gocpp_id_9::PrintTo(std::ostream& os) const
+                        {
+                            return os;
+                        }
+
+                        template<typename T, typename StoreT>
+                        void gocpp_id_9::gocpp_id_9Impl<T, StoreT>::vM()
+                        {
+                            return M(gocpp::PtrRecv<T, false>(value.get()));
+                        }
+
+                        void M(const gocpp::PtrRecv<gocpp_id_9, false>& self)
+                        {
+                            return self.ptr->value->vM();
+                        }
+
+                        void M(const gocpp::ObjRecv<gocpp_id_9>& self)
+                        {
+                            return self.obj.value->vM();
+                        }
+
+                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+                        {
+                            return value.PrintTo(os);
+                        }
+
+
+    Value Elem(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Interface) { conditionId = 0; }
+            else if(condition == Pointer) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    go_any eface = {};
+                    if(NumMethod(gocpp::recv(typ(gocpp::recv(v)))) == 0)
+                    {
+                        eface = *(go_any*)(v.ptr);
+                    }
+                    else
+                    {
+                        eface = (go_any)(*(gocpp_id_9*)(v.ptr));
+                    }
+                    auto x = unpackEface(eface);
+                    if(x.flag != 0)
+                    {
+                        x.flag |= ro(gocpp::recv(v.flag));
+                    }
+                    return x;
+                    break;
+                case 1:
+                    auto ptr = v.ptr;
+                    if(v.flag & flagIndir != 0)
+                    {
+                        if(ifaceIndir(typ(gocpp::recv(v))))
+                        {
+                            if(! verifyNotInHeapPtr(*(uintptr_t*)(ptr)))
+                            {
+                                gocpp::panic("reflect: reflect.Value.Elem on an invalid notinheap pointer");
+                            }
+                        }
+                        ptr = *(unsafe::Pointer*)(ptr);
+                    }
+                    if(ptr == nullptr)
+                    {
+                        return Value {};
+                    }
+                    auto tt = (ptrType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto typ = tt->Elem;
+                    auto fl = v.flag & flagRO | flagIndir | flagAddr;
+                    fl |= flag(Kind(gocpp::recv(typ)));
+                    return Value {typ, ptr, fl};
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Elem", kind(gocpp::recv(v))});
+    }
+
+    Value Field(struct Value v, int i)
+    {
+        if(kind(gocpp::recv(v)) != Struct)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.Field", kind(gocpp::recv(v))});
+        }
+        auto tt = (structType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        if((unsigned int)(i) >= (unsigned int)(len(tt->Fields)))
+        {
+            gocpp::panic("reflect: Field index out of range");
+        }
+        auto field = & tt->Fields[i];
+        auto typ = field->Typ;
+        auto fl = v.flag & (flagStickyRO | flagIndir | flagAddr) | flag(Kind(gocpp::recv(typ)));
+        if(! IsExported(gocpp::recv(field->Name)))
+        {
+            if(Embedded(gocpp::recv(field)))
+            {
+                fl |= flagEmbedRO;
+            }
+            else
+            {
+                fl |= flagStickyRO;
+            }
+        }
+        auto ptr = add(v.ptr, field->Offset, "same as non-reflect &v.field");
+        return Value {typ, ptr, fl};
+    }
+
+    Value FieldByIndex(struct Value v, gocpp::slice<int> index)
+    {
+        if(len(index) == 1)
+        {
+            return Field(gocpp::recv(v), index[0]);
+        }
+        mustBe(gocpp::recv(v), Struct);
+        for(auto [i, x] : index)
+        {
+            if(i > 0)
+            {
+                if(Kind(gocpp::recv(v)) == Pointer && Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v)))))) == abi::Struct)
+                {
+                    if(IsNil(gocpp::recv(v)))
+                    {
+                        gocpp::panic("reflect: indirection through nil pointer to embedded struct");
+                    }
+                    v = Elem(gocpp::recv(v));
+                }
+            }
+            v = Field(gocpp::recv(v), x);
+        }
+        return v;
+    }
+
+    std::tuple<Value, std::string> FieldByIndexErr(struct Value v, gocpp::slice<int> index)
+    {
+        if(len(index) == 1)
+        {
+            return {Field(gocpp::recv(v), index[0]), nullptr};
+        }
+        mustBe(gocpp::recv(v), Struct);
+        for(auto [i, x] : index)
+        {
+            if(i > 0)
+            {
+                if(Kind(gocpp::recv(v)) == Ptr && Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v)))))) == abi::Struct)
+                {
+                    if(IsNil(gocpp::recv(v)))
+                    {
+                        return {Value {}, errors::New("reflect: indirection through nil pointer to embedded struct field " + nameFor(Elem(gocpp::recv(typ(gocpp::recv(v))))))};
+                    }
+                    v = Elem(gocpp::recv(v));
+                }
+            }
+            v = Field(gocpp::recv(v), x);
+        }
+        return {v, nullptr};
+    }
+
+    Value FieldByName(struct Value v, std::string name)
+    {
+        mustBe(gocpp::recv(v), Struct);
+        if(auto [f, ok] = FieldByName(gocpp::recv(toRType(typ(gocpp::recv(v)))), name); ok)
+        {
+            return FieldByIndex(gocpp::recv(v), f.Index);
+        }
+        return Value {};
+    }
+
+    Value FieldByNameFunc(struct Value v, std::function<bool (std::string)> match)
+    {
+        if(auto [f, ok] = FieldByNameFunc(gocpp::recv(toRType(typ(gocpp::recv(v)))), match); ok)
+        {
+            return FieldByIndex(gocpp::recv(v), f.Index);
+        }
+        return Value {};
+    }
+
+    bool CanFloat(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Float32) { conditionId = 0; }
+            if(condition == Float64) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                    return true;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+        }
+    }
+
+    double Float(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Float32) { conditionId = 0; }
+            else if(condition == Float64) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    return double(*(float*)(v.ptr));
+                    break;
+                case 1:
+                    return *(double*)(v.ptr);
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Float", kind(gocpp::recv(v))});
+    }
+
+    abi::Type* uint8Type = rtypeOf(uint8_t(0));
+    Value Index(struct Value v, int i)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Array) { conditionId = 0; }
+            else if(condition == Slice) { conditionId = 1; }
+            else if(condition == String) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    auto tt = (arrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    if((unsigned int)(i) >= (unsigned int)(tt->Len))
+                    {
+                        gocpp::panic("reflect: array index out of range");
+                    }
+                    auto typ = tt->Elem;
+                    auto offset = uintptr_t(i) * Size(gocpp::recv(typ));
+                    auto val = add(v.ptr, offset, "same as &v[i], i < tt.len");
+                    auto fl = v.flag & (flagIndir | flagAddr) | ro(gocpp::recv(v.flag)) | flag(Kind(gocpp::recv(typ)));
+                    return Value {typ, val, fl};
+                    break;
+                case 1:
+                    auto s = (unsafeheader::Slice*)(v.ptr);
+                    if((unsigned int)(i) >= (unsigned int)(s->Len))
+                    {
+                        gocpp::panic("reflect: slice index out of range");
+                    }
+                    auto tt = (sliceType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto typ = tt->Elem;
+                    auto val = arrayAt(s->Data, i, Size(gocpp::recv(typ)), "i < s.Len");
+                    auto fl = flagAddr | flagIndir | ro(gocpp::recv(v.flag)) | flag(Kind(gocpp::recv(typ)));
+                    return Value {typ, val, fl};
+                    break;
+                case 2:
+                    auto s = (unsafeheader::String*)(v.ptr);
+                    if((unsigned int)(i) >= (unsigned int)(s->Len))
+                    {
+                        gocpp::panic("reflect: string index out of range");
+                    }
+                    auto p = arrayAt(s->Data, i, 1, "i < s.Len");
+                    auto fl = ro(gocpp::recv(v.flag)) | flag(Uint8) | flagIndir;
+                    return Value {uint8Type, p, fl};
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Index", kind(gocpp::recv(v))});
+    }
+
+    bool CanInt(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Int) { conditionId = 0; }
+            if(condition == Int8) { conditionId = 1; }
+            if(condition == Int16) { conditionId = 2; }
+            if(condition == Int32) { conditionId = 3; }
+            if(condition == Int64) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    return true;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+        }
+    }
+
+    int64_t Int(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        auto p = v.ptr;
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Int) { conditionId = 0; }
+            else if(condition == Int8) { conditionId = 1; }
+            else if(condition == Int16) { conditionId = 2; }
+            else if(condition == Int32) { conditionId = 3; }
+            else if(condition == Int64) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                    return int64_t(*(int*)(p));
+                    break;
+                case 1:
+                    return int64_t(*(int8_t*)(p));
+                    break;
+                case 2:
+                    return int64_t(*(int16_t*)(p));
+                    break;
+                case 3:
+                    return int64_t(*(int32_t*)(p));
+                    break;
+                case 4:
+                    return *(int64_t*)(p);
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Int", kind(gocpp::recv(v))});
+    }
+
+    bool CanInterface(struct Value v)
+    {
+        if(v.flag == 0)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.CanInterface", Invalid});
+        }
+        return v.flag & flagRO == 0;
+    }
+
+    go_any Interface(struct Value v)
+    {
+        go_any i;
+        return valueInterface(v, true);
+    }
+
+    
+            template<typename T>
+            gocpp_id_10::gocpp_id_10(T& ref)
+            {
+                value.reset(new gocpp_id_10Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_10::gocpp_id_10(const T& ref)
+            {
+                value.reset(new gocpp_id_10Impl<T, std::unique_ptr<T>>(new T(ref)));
+            }
+
+            template<typename T>
+            gocpp_id_10::gocpp_id_10(T* ptr)
+            {
+                value.reset(new gocpp_id_10Impl<T, gocpp::ptr<T>>(ptr));
+            }
+
+            std::ostream& gocpp_id_10::PrintTo(std::ostream& os) const
+            {
+                return os;
+            }
+
+            template<typename T, typename StoreT>
+            void gocpp_id_10::gocpp_id_10Impl<T, StoreT>::vM()
+            {
+                return M(gocpp::PtrRecv<T, false>(value.get()));
+            }
+
+            void M(const gocpp::PtrRecv<gocpp_id_10, false>& self)
+            {
+                return self.ptr->value->vM();
+            }
+
+            void M(const gocpp::ObjRecv<gocpp_id_10>& self)
+            {
+                return self.obj.value->vM();
+            }
+
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_10& value)
+            {
+                return value.PrintTo(os);
+            }
+
+
+    go_any valueInterface(Value v, bool safe)
+    {
+        if(v.flag == 0)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.Interface", Invalid});
+        }
+        if(safe && v.flag & flagRO != 0)
+        {
+            gocpp::panic("reflect.Value.Interface: cannot return value obtained from unexported field or method");
+        }
+        if(v.flag & flagMethod != 0)
+        {
+            v = makeMethodValue("Interface", v);
+        }
+        if(kind(gocpp::recv(v)) == Interface)
+        {
+            if(NumMethod(gocpp::recv(v)) == 0)
+            {
+                return *(go_any*)(v.ptr);
+            }
+            return *(gocpp_id_10*)(v.ptr);
+        }
+        return packEface(v);
+    }
+
+    gocpp::array<uintptr_t, 2> InterfaceData(struct Value v)
+    {
+        mustBe(gocpp::recv(v), Interface);
+        escapes(v.ptr);
+        return *(gocpp::array<uintptr_t, 2>*)(v.ptr);
+    }
+
+    bool IsNil(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Chan) { conditionId = 0; }
+            if(condition == Func) { conditionId = 1; }
+            if(condition == Map) { conditionId = 2; }
+            if(condition == Pointer) { conditionId = 3; }
+            if(condition == UnsafePointer) { conditionId = 4; }
+            else if(condition == Interface) { conditionId = 5; }
+            else if(condition == Slice) { conditionId = 6; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    if(v.flag & flagMethod != 0)
+                    {
+                        return false;
+                    }
+                    auto ptr = v.ptr;
+                    if(v.flag & flagIndir != 0)
+                    {
+                        ptr = *(unsafe::Pointer*)(ptr);
+                    }
+                    return ptr == nullptr;
+                    break;
+                case 5:
+                case 6:
+                    return *(unsafe::Pointer*)(v.ptr) == nullptr;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.IsNil", kind(gocpp::recv(v))});
+    }
+
+    bool IsValid(struct Value v)
+    {
+        return v.flag != 0;
+    }
+
+    bool IsZero(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Bool) { conditionId = 0; }
+            else if(condition == Int) { conditionId = 1; }
+            else if(condition == Int8) { conditionId = 2; }
+            else if(condition == Int16) { conditionId = 3; }
+            else if(condition == Int32) { conditionId = 4; }
+            else if(condition == Int64) { conditionId = 5; }
+            else if(condition == Uint) { conditionId = 6; }
+            else if(condition == Uint8) { conditionId = 7; }
+            else if(condition == Uint16) { conditionId = 8; }
+            else if(condition == Uint32) { conditionId = 9; }
+            else if(condition == Uint64) { conditionId = 10; }
+            else if(condition == Uintptr) { conditionId = 11; }
+            else if(condition == Float32) { conditionId = 12; }
+            else if(condition == Float64) { conditionId = 13; }
+            else if(condition == Complex64) { conditionId = 14; }
+            else if(condition == Complex128) { conditionId = 15; }
+            else if(condition == Array) { conditionId = 16; }
+            else if(condition == Chan) { conditionId = 17; }
+            else if(condition == Func) { conditionId = 18; }
+            else if(condition == Interface) { conditionId = 19; }
+            else if(condition == Map) { conditionId = 20; }
+            else if(condition == Pointer) { conditionId = 21; }
+            else if(condition == Slice) { conditionId = 22; }
+            else if(condition == UnsafePointer) { conditionId = 23; }
+            else if(condition == String) { conditionId = 24; }
+            else if(condition == Struct) { conditionId = 25; }
+            switch(conditionId)
+            {
+                case 0:
+                    return ! Bool(gocpp::recv(v));
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    return Int(gocpp::recv(v)) == 0;
+                    break;
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                    return Uint(gocpp::recv(v)) == 0;
+                    break;
+                case 12:
+                case 13:
+                    return Float(gocpp::recv(v)) == 0;
+                    break;
+                case 14:
+                case 15:
+                    return Complex(gocpp::recv(v)) == 0;
+                    break;
+                case 16:
+                    if(v.flag & flagIndir == 0)
+                    {
+                        return v.ptr == nullptr;
+                    }
+                    auto typ = (abi::ArrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    if(typ->Equal != nullptr && Size(gocpp::recv(typ)) <= abi::ZeroValSize)
+                    {
+                        return Equal(gocpp::recv(typ), noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
+                    }
+                    if(typ->TFlag & abi::TFlagRegularMemory != 0)
+                    {
+                        return isZero(unsafe::Slice(((unsigned char*)(v.ptr)), Size(gocpp::recv(typ))));
+                    }
+                    auto n = int(typ->Len);
+                    for(auto i = 0; i < n; i++)
+                    {
+                        if(! IsZero(gocpp::recv(Index(gocpp::recv(v), i))))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                    break;
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                    return IsNil(gocpp::recv(v));
+                    break;
+                case 24:
+                    return Len(gocpp::recv(v)) == 0;
+                    break;
+                case 25:
+                    if(v.flag & flagIndir == 0)
+                    {
+                        return v.ptr == nullptr;
+                    }
+                    auto typ = (abi::StructType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    if(typ->Equal != nullptr && Size(gocpp::recv(typ)) <= abi::ZeroValSize)
+                    {
+                        return Equal(gocpp::recv(typ), noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
+                    }
+                    if(typ->TFlag & abi::TFlagRegularMemory != 0)
+                    {
+                        return isZero(unsafe::Slice(((unsigned char*)(v.ptr)), Size(gocpp::recv(typ))));
+                    }
+                    auto n = NumField(gocpp::recv(v));
+                    for(auto i = 0; i < n; i++)
+                    {
+                        if(! IsZero(gocpp::recv(Field(gocpp::recv(v), i))) && Field(gocpp::recv(Type(gocpp::recv(v))), i).Name != "_")
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                    break;
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.IsZero", Kind(gocpp::recv(v))});
+                    break;
+            }
+        }
+    }
+
+    bool isZero(gocpp::slice<unsigned char> b)
+    {
+        if(len(b) == 0)
+        {
+            return true;
+        }
+        auto n = 32;
+        for(; uintptr_t(unsafe::Pointer(& b[0])) % 8 != 0; )
+        {
+            if(b[0] != 0)
+            {
+                return false;
+            }
+            b = b.make_slice(1);
+            if(len(b) == 0)
+            {
+                return true;
+            }
+        }
+        for(; len(b) % 8 != 0; )
+        {
+            if(b[len(b) - 1] != 0)
+            {
+                return false;
+            }
+            b = b.make_slice(0, len(b) - 1);
+        }
+        if(len(b) == 0)
+        {
+            return true;
+        }
+        auto w = unsafe::Slice((uint64_t*)(unsafe::Pointer(& b[0])), len(b) / 8);
+        for(; len(w) % n != 0; )
+        {
+            if(w[0] != 0)
+            {
+                return false;
+            }
+            w = w.make_slice(1);
+        }
+        for(; len(w) >= n; )
+        {
+            if(w[0] != 0 || w[1] != 0 || w[2] != 0 || w[3] != 0 || w[4] != 0 || w[5] != 0 || w[6] != 0 || w[7] != 0 || w[8] != 0 || w[9] != 0 || w[10] != 0 || w[11] != 0 || w[12] != 0 || w[13] != 0 || w[14] != 0 || w[15] != 0 || w[16] != 0 || w[17] != 0 || w[18] != 0 || w[19] != 0 || w[20] != 0 || w[21] != 0 || w[22] != 0 || w[23] != 0 || w[24] != 0 || w[25] != 0 || w[26] != 0 || w[27] != 0 || w[28] != 0 || w[29] != 0 || w[30] != 0 || w[31] != 0)
+            {
+                return false;
+            }
+            w = w.make_slice(n);
+        }
+        return true;
+    }
+
+    void SetZero(struct Value v)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Bool) { conditionId = 0; }
+            else if(condition == Int) { conditionId = 1; }
+            else if(condition == Int8) { conditionId = 2; }
+            else if(condition == Int16) { conditionId = 3; }
+            else if(condition == Int32) { conditionId = 4; }
+            else if(condition == Int64) { conditionId = 5; }
+            else if(condition == Uint) { conditionId = 6; }
+            else if(condition == Uint8) { conditionId = 7; }
+            else if(condition == Uint16) { conditionId = 8; }
+            else if(condition == Uint32) { conditionId = 9; }
+            else if(condition == Uint64) { conditionId = 10; }
+            else if(condition == Uintptr) { conditionId = 11; }
+            else if(condition == Float32) { conditionId = 12; }
+            else if(condition == Float64) { conditionId = 13; }
+            else if(condition == Complex64) { conditionId = 14; }
+            else if(condition == Complex128) { conditionId = 15; }
+            else if(condition == String) { conditionId = 16; }
+            else if(condition == Slice) { conditionId = 17; }
+            else if(condition == Interface) { conditionId = 18; }
+            else if(condition == Chan) { conditionId = 19; }
+            else if(condition == Func) { conditionId = 20; }
+            else if(condition == Map) { conditionId = 21; }
+            else if(condition == Pointer) { conditionId = 22; }
+            else if(condition == UnsafePointer) { conditionId = 23; }
+            else if(condition == Array) { conditionId = 24; }
+            else if(condition == Struct) { conditionId = 25; }
+            switch(conditionId)
+            {
+                case 0:
+                    *(bool*)(v.ptr) = false;
+                    break;
+                case 1:
+                    *(int*)(v.ptr) = 0;
+                    break;
+                case 2:
+                    *(int8_t*)(v.ptr) = 0;
+                    break;
+                case 3:
+                    *(int16_t*)(v.ptr) = 0;
+                    break;
+                case 4:
+                    *(int32_t*)(v.ptr) = 0;
+                    break;
+                case 5:
+                    *(int64_t*)(v.ptr) = 0;
+                    break;
+                case 6:
+                    *(unsigned int*)(v.ptr) = 0;
+                    break;
+                case 7:
+                    *(uint8_t*)(v.ptr) = 0;
+                    break;
+                case 8:
+                    *(uint16_t*)(v.ptr) = 0;
+                    break;
+                case 9:
+                    *(uint32_t*)(v.ptr) = 0;
+                    break;
+                case 10:
+                    *(uint64_t*)(v.ptr) = 0;
+                    break;
+                case 11:
+                    *(uintptr_t*)(v.ptr) = 0;
+                    break;
+                case 12:
+                    *(float*)(v.ptr) = 0;
+                    break;
+                case 13:
+                    *(double*)(v.ptr) = 0;
+                    break;
+                case 14:
+                    *(complex64*)(v.ptr) = 0;
+                    break;
+                case 15:
+                    *(gocpp::complex128*)(v.ptr) = 0;
+                    break;
+                case 16:
+                    *(std::string*)(v.ptr) = "";
+                    break;
+                case 17:
+                    *(unsafeheader::Slice*)(v.ptr) = unsafeheader::Slice {};
+                    break;
+                case 18:
+                    *(emptyInterface*)(v.ptr) = emptyInterface {};
+                    break;
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                    *(unsafe::Pointer*)(v.ptr) = nullptr;
+                    break;
+                case 24:
+                case 25:
+                    typedmemclr(typ(gocpp::recv(v)), v.ptr);
+                    break;
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.SetZero", Kind(gocpp::recv(v))});
+                    break;
+            }
+        }
+    }
+
+    Kind Kind(struct Value v)
+    {
+        return kind(gocpp::recv(v));
+    }
+
+    int Len(struct Value v)
+    {
+        if(kind(gocpp::recv(v)) == Slice)
+        {
+            return (unsafeheader::Slice*)(v.ptr)->Len;
+        }
+        return lenNonSlice(gocpp::recv(v));
+    }
+
+    int lenNonSlice(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto k = kind(gocpp::recv(v));
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Array) { conditionId = 0; }
+            else if(condition == Chan) { conditionId = 1; }
+            else if(condition == Map) { conditionId = 2; }
+            else if(condition == String) { conditionId = 3; }
+            else if(condition == Ptr) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                    auto tt = (arrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    return int(tt->Len);
+                    break;
+                case 1:
+                    return chanlen(pointer(gocpp::recv(v)));
+                    break;
+                case 2:
+                    return maplen(pointer(gocpp::recv(v)));
+                    break;
+                case 3:
+                    return (unsafeheader::String*)(v.ptr)->Len;
+                    break;
+                case 4:
+                    if(Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v)))))) == abi::Array)
+                    {
+                        return Len(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v))))));
+                    }
+                    gocpp::panic("reflect: call of reflect.Value.Len on ptr to non-array Value");
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Len", kind(gocpp::recv(v))});
+    }
+
+    abi::Type* stringType = rtypeOf("");
+    Value MapIndex(struct Value v, Value key)
+    {
+        mustBe(gocpp::recv(v), Map);
+        auto tt = (mapType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        unsafe::Pointer e = {};
+        if((tt->Key == stringType || kind(gocpp::recv(key)) == String) && tt->Key == typ(gocpp::recv(key)) && Size(gocpp::recv(tt->Elem)) <= maxValSize)
+        {
+            auto k = *(std::string*)(key.ptr);
+            e = mapaccess_faststr(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k);
+        }
+        else
+        {
+            key = assignTo(gocpp::recv(key), "reflect.Value.MapIndex", tt->Key, nullptr);
+            unsafe::Pointer k = {};
+            if(key.flag & flagIndir != 0)
+            {
+                k = key.ptr;
+            }
+            else
+            {
+                k = unsafe::Pointer(& key.ptr);
+            }
+            e = mapaccess(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k);
+        }
+        if(e == nullptr)
+        {
+            return Value {};
+        }
+        auto typ = tt->Elem;
+        auto fl = ro(gocpp::recv((v.flag | key.flag)));
+        fl |= flag(Kind(gocpp::recv(typ)));
+        return copyVal(typ, fl, e);
+    }
+
+    gocpp::slice<Value> MapKeys(struct Value v)
+    {
+        mustBe(gocpp::recv(v), Map);
+        auto tt = (mapType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        auto keyType = tt->Key;
+        auto fl = ro(gocpp::recv(v.flag)) | flag(Kind(gocpp::recv(keyType)));
+        auto m = pointer(gocpp::recv(v));
+        auto mlen = int(0);
+        if(m != nullptr)
+        {
+            mlen = maplen(m);
+        }
+        hiter it = {};
+        mapiterinit(typ(gocpp::recv(v)), m, & it);
+        auto a = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), mlen);
+        int i = {};
+        for(i = 0; i < len(a); i++)
+        {
+            auto key = mapiterkey(& it);
+            if(key == nullptr)
+            {
+                break;
+            }
+            a[i] = copyVal(keyType, fl, key);
+            mapiternext(& it);
+        }
+        return a.make_slice(0, i);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    hiter::operator T()
+    {
+        T result;
+        result.key = this->key;
+        result.elem = this->elem;
+        result.t = this->t;
+        result.h = this->h;
+        result.buckets = this->buckets;
+        result.bptr = this->bptr;
+        result.overflow = this->overflow;
+        result.oldoverflow = this->oldoverflow;
+        result.startBucket = this->startBucket;
+        result.offset = this->offset;
+        result.wrapped = this->wrapped;
+        result.B = this->B;
+        result.i = this->i;
+        result.bucket = this->bucket;
+        result.checkBucket = this->checkBucket;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool hiter::operator==(const T& ref) const
+    {
+        if (key != ref.key) return false;
+        if (elem != ref.elem) return false;
+        if (t != ref.t) return false;
+        if (h != ref.h) return false;
+        if (buckets != ref.buckets) return false;
+        if (bptr != ref.bptr) return false;
+        if (overflow != ref.overflow) return false;
+        if (oldoverflow != ref.oldoverflow) return false;
+        if (startBucket != ref.startBucket) return false;
+        if (offset != ref.offset) return false;
+        if (wrapped != ref.wrapped) return false;
+        if (B != ref.B) return false;
+        if (i != ref.i) return false;
+        if (bucket != ref.bucket) return false;
+        if (checkBucket != ref.checkBucket) return false;
+        return true;
+    }
+
+    std::ostream& hiter::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << key;
+        os << " " << elem;
+        os << " " << t;
+        os << " " << h;
+        os << " " << buckets;
+        os << " " << bptr;
+        os << " " << overflow;
+        os << " " << oldoverflow;
+        os << " " << startBucket;
+        os << " " << offset;
+        os << " " << wrapped;
+        os << " " << B;
+        os << " " << i;
+        os << " " << bucket;
+        os << " " << checkBucket;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct hiter& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    bool initialized(struct hiter* h)
+    {
+        return h->t != nullptr;
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    MapIter::operator T()
+    {
+        T result;
+        result.m = this->m;
+        result.hiter = this->hiter;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool MapIter::operator==(const T& ref) const
+    {
+        if (m != ref.m) return false;
+        if (hiter != ref.hiter) return false;
+        return true;
+    }
+
+    std::ostream& MapIter::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << m;
+        os << " " << hiter;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct MapIter& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    Value Key(struct MapIter* iter)
+    {
+        if(! initialized(gocpp::recv(iter->hiter)))
+        {
+            gocpp::panic("MapIter.Key called before Next");
+        }
+        auto iterkey = mapiterkey(& iter->hiter);
+        if(iterkey == nullptr)
+        {
+            gocpp::panic("MapIter.Key called on exhausted iterator");
+        }
+        auto t = (mapType*)(unsafe::Pointer(typ(gocpp::recv(iter->m))));
+        auto ktype = t->Key;
+        return copyVal(ktype, ro(gocpp::recv(iter->m.flag)) | flag(Kind(gocpp::recv(ktype))), iterkey);
+    }
+
+    void SetIterKey(struct Value v, MapIter* iter)
+    {
+        if(! initialized(gocpp::recv(iter->hiter)))
+        {
+            gocpp::panic("reflect: Value.SetIterKey called before Next");
+        }
+        auto iterkey = mapiterkey(& iter->hiter);
+        if(iterkey == nullptr)
+        {
+            gocpp::panic("reflect: Value.SetIterKey called on exhausted iterator");
+        }
+        mustBeAssignable(gocpp::recv(v));
+        unsafe::Pointer target = {};
+        if(kind(gocpp::recv(v)) == Interface)
+        {
+            target = v.ptr;
+        }
+        auto t = (mapType*)(unsafe::Pointer(typ(gocpp::recv(iter->m))));
+        auto ktype = t->Key;
+        mustBeExported(gocpp::recv(iter->m));
+        auto key = Value {ktype, iterkey, iter->m.flag | flag(Kind(gocpp::recv(ktype))) | flagIndir};
+        key = assignTo(gocpp::recv(key), "reflect.MapIter.SetKey", typ(gocpp::recv(v)), target);
+        typedmemmove(typ(gocpp::recv(v)), v.ptr, key.ptr);
+    }
+
+    Value Value(struct MapIter* iter)
+    {
+        if(! initialized(gocpp::recv(iter->hiter)))
+        {
+            gocpp::panic("MapIter.Value called before Next");
+        }
+        auto iterelem = mapiterelem(& iter->hiter);
+        if(iterelem == nullptr)
+        {
+            gocpp::panic("MapIter.Value called on exhausted iterator");
+        }
+        auto t = (mapType*)(unsafe::Pointer(typ(gocpp::recv(iter->m))));
+        auto vtype = t->Elem;
+        return copyVal(vtype, ro(gocpp::recv(iter->m.flag)) | flag(Kind(gocpp::recv(vtype))), iterelem);
+    }
+
+    void SetIterValue(struct Value v, MapIter* iter)
+    {
+        if(! initialized(gocpp::recv(iter->hiter)))
+        {
+            gocpp::panic("reflect: Value.SetIterValue called before Next");
+        }
+        auto iterelem = mapiterelem(& iter->hiter);
+        if(iterelem == nullptr)
+        {
+            gocpp::panic("reflect: Value.SetIterValue called on exhausted iterator");
+        }
+        mustBeAssignable(gocpp::recv(v));
+        unsafe::Pointer target = {};
+        if(kind(gocpp::recv(v)) == Interface)
+        {
+            target = v.ptr;
+        }
+        auto t = (mapType*)(unsafe::Pointer(typ(gocpp::recv(iter->m))));
+        auto vtype = t->Elem;
+        mustBeExported(gocpp::recv(iter->m));
+        auto elem = Value {vtype, iterelem, iter->m.flag | flag(Kind(gocpp::recv(vtype))) | flagIndir};
+        elem = assignTo(gocpp::recv(elem), "reflect.MapIter.SetValue", typ(gocpp::recv(v)), target);
+        typedmemmove(typ(gocpp::recv(v)), v.ptr, elem.ptr);
+    }
+
+    bool Next(struct MapIter* iter)
+    {
+        if(! IsValid(gocpp::recv(iter->m)))
+        {
+            gocpp::panic("MapIter.Next called on an iterator that does not have an associated map Value");
+        }
+        if(! initialized(gocpp::recv(iter->hiter)))
+        {
+            mapiterinit(typ(gocpp::recv(iter->m)), pointer(gocpp::recv(iter->m)), & iter->hiter);
+        }
+        else
+        {
+            if(mapiterkey(& iter->hiter) == nullptr)
+            {
+                gocpp::panic("MapIter.Next called on exhausted iterator");
+            }
+            mapiternext(& iter->hiter);
+        }
+        return mapiterkey(& iter->hiter) != nullptr;
+    }
+
+    void Reset(struct MapIter* iter, Value v)
+    {
+        if(IsValid(gocpp::recv(v)))
+        {
+            mustBe(gocpp::recv(v), Map);
+        }
+        iter->m = v;
+        iter->hiter = hiter {};
+    }
+
+    MapIter* MapRange(struct Value v)
+    {
+        if(kind(gocpp::recv(v)) != Map)
+        {
+            panicNotMap(gocpp::recv(v));
+        }
+        return gocpp::InitPtr<MapIter>([](MapIter& x) { x.m = v; });
+    }
+
+    void panicNotMap(flag f)
+    {
+        mustBe(gocpp::recv(f), Map);
+    }
+
+    Value copyVal(abi::Type* typ, flag fl, unsafe::Pointer ptr)
+    {
+        if(IfaceIndir(gocpp::recv(typ)))
+        {
+            auto c = unsafe_New(typ);
+            typedmemmove(typ, c, ptr);
+            return Value {typ, c, fl | flagIndir};
+        }
+        return Value {typ, *(unsafe::Pointer*)(ptr), fl};
+    }
+
+    Value Method(struct Value v, int i)
+    {
+        if(typ(gocpp::recv(v)) == nullptr)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.Method", Invalid});
+        }
+        if(v.flag & flagMethod != 0 || (unsigned int)(i) >= (unsigned int)(NumMethod(gocpp::recv(toRType(typ(gocpp::recv(v)))))))
+        {
+            gocpp::panic("reflect: Method index out of range");
+        }
+        if(Kind(gocpp::recv(typ(gocpp::recv(v)))) == abi::Interface && IsNil(gocpp::recv(v)))
+        {
+            gocpp::panic("reflect: Method on nil interface value");
+        }
+        auto fl = ro(gocpp::recv(v.flag)) | (v.flag & flagIndir);
+        fl |= flag(Func);
+        fl |= (flag(i) << flagMethodShift) | flagMethod;
+        return Value {typ(gocpp::recv(v)), v.ptr, fl};
+    }
+
+    int NumMethod(struct Value v)
+    {
+        if(typ(gocpp::recv(v)) == nullptr)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.NumMethod", Invalid});
+        }
+        if(v.flag & flagMethod != 0)
+        {
+            return 0;
+        }
+        return NumMethod(gocpp::recv(toRType(typ(gocpp::recv(v)))));
+    }
+
+    Value MethodByName(struct Value v, std::string name)
+    {
+        if(typ(gocpp::recv(v)) == nullptr)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.MethodByName", Invalid});
+        }
+        if(v.flag & flagMethod != 0)
+        {
+            return Value {};
+        }
+        auto [m, ok] = MethodByName(gocpp::recv(toRType(typ(gocpp::recv(v)))), name);
+        if(! ok)
+        {
+            return Value {};
+        }
+        return Method(gocpp::recv(v), m.Index);
+    }
+
+    int NumField(struct Value v)
+    {
+        mustBe(gocpp::recv(v), Struct);
+        auto tt = (structType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        return len(tt->Fields);
+    }
+
+    bool OverflowComplex(struct Value v, gocpp::complex128 x)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Complex64) { conditionId = 0; }
+            else if(condition == Complex128) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    return overflowFloat32(real(x)) || overflowFloat32(imag(x));
+                    break;
+                case 1:
+                    return false;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.OverflowComplex", kind(gocpp::recv(v))});
+    }
+
+    bool OverflowFloat(struct Value v, double x)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Float32) { conditionId = 0; }
+            else if(condition == Float64) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    return overflowFloat32(x);
+                    break;
+                case 1:
+                    return false;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.OverflowFloat", kind(gocpp::recv(v))});
+    }
+
+    bool overflowFloat32(double x)
+    {
+        if(x < 0)
+        {
+            x = - x;
+        }
+        return math::MaxFloat32 < x && x <= math::MaxFloat64;
+    }
+
+    bool OverflowInt(struct Value v, int64_t x)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Int) { conditionId = 0; }
+            if(condition == Int8) { conditionId = 1; }
+            if(condition == Int16) { conditionId = 2; }
+            if(condition == Int32) { conditionId = 3; }
+            if(condition == Int64) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    auto bitSize = Size(gocpp::recv(typ(gocpp::recv(v)))) * 8;
+                    auto trunc = (x << (64 - bitSize)) >> (64 - bitSize);
+                    return x != trunc;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.OverflowInt", kind(gocpp::recv(v))});
+    }
+
+    bool OverflowUint(struct Value v, uint64_t x)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Uint) { conditionId = 0; }
+            if(condition == Uintptr) { conditionId = 1; }
+            if(condition == Uint8) { conditionId = 2; }
+            if(condition == Uint16) { conditionId = 3; }
+            if(condition == Uint32) { conditionId = 4; }
+            if(condition == Uint64) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    auto bitSize = Size(gocpp::recv(v.typ_)) * 8;
+                    auto trunc = (x << (64 - bitSize)) >> (64 - bitSize);
+                    return x != trunc;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.OverflowUint", kind(gocpp::recv(v))});
+    }
+
+    uintptr_t Pointer(struct Value v)
+    {
+        escapes(v.ptr);
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Pointer) { conditionId = 0; }
+            else if(condition == Chan) { conditionId = 1; }
+            else if(condition == Map) { conditionId = 2; }
+            else if(condition == UnsafePointer) { conditionId = 3; }
+            else if(condition == Func) { conditionId = 4; }
+            else if(condition == Slice) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                    if(typ(gocpp::recv(v))->PtrBytes == 0)
+                    {
+                        auto val = *(uintptr_t*)(v.ptr);
+                        if(! verifyNotInHeapPtr(val))
+                        {
+                            gocpp::panic("reflect: reflect.Value.Pointer on an invalid notinheap pointer");
+                        }
+                        return val;
+                    }
+                case 1:
+                case 2:
+                case 3:
+                    return uintptr_t(pointer(gocpp::recv(v)));
+                    break;
+                case 4:
+                    if(v.flag & flagMethod != 0)
+                    {
+                        return methodValueCallCodePtr();
+                    }
+                    auto p = pointer(gocpp::recv(v));
+                    if(p != nullptr)
+                    {
+                        p = *(unsafe::Pointer*)(p);
+                    }
+                    return uintptr_t(p);
+                    break;
+                case 5:
+                    return uintptr_t((unsafeheader::Slice*)(v.ptr)->Data);
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Pointer", kind(gocpp::recv(v))});
+    }
+
+    std::tuple<Value, bool> Recv(struct Value v)
+    {
+        Value x;
+        bool ok;
+        mustBe(gocpp::recv(v), Chan);
+        mustBeExported(gocpp::recv(v));
+        return recv(gocpp::recv(v), false);
+    }
+
+    std::tuple<Value, bool> recv(struct Value v, bool nb)
+    {
+        Value val;
+        bool ok;
+        auto tt = (chanType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        if(ChanDir(tt->Dir) & RecvDir == 0)
+        {
+            Value val;
+            bool ok;
+            gocpp::panic("reflect: recv on send-only channel");
+        }
+        auto t = tt->Elem;
+        val = Value {t, nullptr, flag(Kind(gocpp::recv(t)))};
+        unsafe::Pointer p = {};
+        if(ifaceIndir(t))
+        {
+            Value val;
+            bool ok;
+            p = unsafe_New(t);
+            val.ptr = p;
+            val.flag |= flagIndir;
+        }
+        else
+        {
+            Value val;
+            bool ok;
+            p = unsafe::Pointer(& val.ptr);
+        }
+        auto [selected, ok] = chanrecv(pointer(gocpp::recv(v)), nb, p);
+        if(! selected)
+        {
+            Value val;
+            bool ok;
+            val = Value {};
+        }
+        return {val, ok};
+    }
+
+    void Send(struct Value v, Value x)
+    {
+        mustBe(gocpp::recv(v), Chan);
+        mustBeExported(gocpp::recv(v));
+        send(gocpp::recv(v), x, false);
+    }
+
+    bool send(struct Value v, Value x, bool nb)
+    {
+        bool selected;
+        auto tt = (chanType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        if(ChanDir(tt->Dir) & SendDir == 0)
+        {
+            bool selected;
+            gocpp::panic("reflect: send on recv-only channel");
+        }
+        mustBeExported(gocpp::recv(x));
+        x = assignTo(gocpp::recv(x), "reflect.Value.Send", tt->Elem, nullptr);
+        unsafe::Pointer p = {};
+        if(x.flag & flagIndir != 0)
+        {
+            bool selected;
+            p = x.ptr;
+        }
+        else
+        {
+            bool selected;
+            p = unsafe::Pointer(& x.ptr);
+        }
+        return chansend(pointer(gocpp::recv(v)), p, nb);
+    }
+
+    void Set(struct Value v, Value x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBeExported(gocpp::recv(x));
+        unsafe::Pointer target = {};
+        if(kind(gocpp::recv(v)) == Interface)
+        {
+            target = v.ptr;
+        }
+        x = assignTo(gocpp::recv(x), "reflect.Set", typ(gocpp::recv(v)), target);
+        if(x.flag & flagIndir != 0)
+        {
+            if(x.ptr == unsafe::Pointer(& zeroVal[0]))
+            {
+                typedmemclr(typ(gocpp::recv(v)), v.ptr);
+            }
+            else
+            {
+                typedmemmove(typ(gocpp::recv(v)), v.ptr, x.ptr);
+            }
+        }
+        else
+        {
+            *(unsafe::Pointer*)(v.ptr) = x.ptr;
+        }
+    }
+
+    void SetBool(struct Value v, bool x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Bool);
+        *(bool*)(v.ptr) = x;
+    }
+
+    void SetBytes(struct Value v, gocpp::slice<unsigned char> x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        if(Kind(gocpp::recv(Elem(gocpp::recv(toRType(typ(gocpp::recv(v))))))) != Uint8)
+        {
+            gocpp::panic("reflect.Value.SetBytes of non-byte slice");
+        }
+        *(gocpp::slice<unsigned char>*)(v.ptr) = x;
+    }
+
+    void setRunes(struct Value v, gocpp::slice<gocpp::rune> x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        if(Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(v)))))) != abi::Int32)
+        {
+            gocpp::panic("reflect.Value.setRunes of non-rune slice");
+        }
+        *(gocpp::slice<gocpp::rune>*)(v.ptr) = x;
+    }
+
+    void SetComplex(struct Value v, gocpp::complex128 x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto k = kind(gocpp::recv(v));
+            auto condition = k;
+            int conditionId = -1;
+            else if(condition == Complex64) { conditionId = 0; }
+            else if(condition == Complex128) { conditionId = 1; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.SetComplex", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    *(complex64*)(v.ptr) = complex64(x);
+                    break;
+                case 1:
+                    *(gocpp::complex128*)(v.ptr) = x;
+                    break;
+            }
+        }
+    }
+
+    void SetFloat(struct Value v, double x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto k = kind(gocpp::recv(v));
+            auto condition = k;
+            int conditionId = -1;
+            else if(condition == Float32) { conditionId = 0; }
+            else if(condition == Float64) { conditionId = 1; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.SetFloat", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    *(float*)(v.ptr) = float(x);
+                    break;
+                case 1:
+                    *(double*)(v.ptr) = x;
+                    break;
+            }
+        }
+    }
+
+    void SetInt(struct Value v, int64_t x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto k = kind(gocpp::recv(v));
+            auto condition = k;
+            int conditionId = -1;
+            else if(condition == Int) { conditionId = 0; }
+            else if(condition == Int8) { conditionId = 1; }
+            else if(condition == Int16) { conditionId = 2; }
+            else if(condition == Int32) { conditionId = 3; }
+            else if(condition == Int64) { conditionId = 4; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.SetInt", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    *(int*)(v.ptr) = int(x);
+                    break;
+                case 1:
+                    *(int8_t*)(v.ptr) = int8_t(x);
+                    break;
+                case 2:
+                    *(int16_t*)(v.ptr) = int16_t(x);
+                    break;
+                case 3:
+                    *(int32_t*)(v.ptr) = int32_t(x);
+                    break;
+                case 4:
+                    *(int64_t*)(v.ptr) = x;
+                    break;
+            }
+        }
+    }
+
+    void SetLen(struct Value v, int n)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        auto s = (unsafeheader::Slice*)(v.ptr);
+        if((unsigned int)(n) > (unsigned int)(s->Cap))
+        {
+            gocpp::panic("reflect: slice length out of range in SetLen");
+        }
+        s->Len = n;
+    }
+
+    void SetCap(struct Value v, int n)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        auto s = (unsafeheader::Slice*)(v.ptr);
+        if(n < s->Len || n > s->Cap)
+        {
+            gocpp::panic("reflect: slice capacity out of range in SetCap");
+        }
+        s->Cap = n;
+    }
+
+    void SetMapIndex(struct Value v, Value key, Value elem)
+    {
+        mustBe(gocpp::recv(v), Map);
+        mustBeExported(gocpp::recv(v));
+        mustBeExported(gocpp::recv(key));
+        auto tt = (mapType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+        if((tt->Key == stringType || kind(gocpp::recv(key)) == String) && tt->Key == typ(gocpp::recv(key)) && Size(gocpp::recv(tt->Elem)) <= maxValSize)
+        {
+            auto k = *(std::string*)(key.ptr);
+            if(typ(gocpp::recv(elem)) == nullptr)
+            {
+                mapdelete_faststr(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k);
+                return;
+            }
+            mustBeExported(gocpp::recv(elem));
+            elem = assignTo(gocpp::recv(elem), "reflect.Value.SetMapIndex", tt->Elem, nullptr);
+            unsafe::Pointer e = {};
+            if(elem.flag & flagIndir != 0)
+            {
+                e = elem.ptr;
+            }
+            else
+            {
+                e = unsafe::Pointer(& elem.ptr);
+            }
+            mapassign_faststr(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k, e);
+            return;
+        }
+        key = assignTo(gocpp::recv(key), "reflect.Value.SetMapIndex", tt->Key, nullptr);
+        unsafe::Pointer k = {};
+        if(key.flag & flagIndir != 0)
+        {
+            k = key.ptr;
+        }
+        else
+        {
+            k = unsafe::Pointer(& key.ptr);
+        }
+        if(typ(gocpp::recv(elem)) == nullptr)
+        {
+            mapdelete(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k);
+            return;
+        }
+        mustBeExported(gocpp::recv(elem));
+        elem = assignTo(gocpp::recv(elem), "reflect.Value.SetMapIndex", tt->Elem, nullptr);
+        unsafe::Pointer e = {};
+        if(elem.flag & flagIndir != 0)
+        {
+            e = elem.ptr;
+        }
+        else
+        {
+            e = unsafe::Pointer(& elem.ptr);
+        }
+        mapassign(typ(gocpp::recv(v)), pointer(gocpp::recv(v)), k, e);
+    }
+
+    void SetUint(struct Value v, uint64_t x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto k = kind(gocpp::recv(v));
+            auto condition = k;
+            int conditionId = -1;
+            else if(condition == Uint) { conditionId = 0; }
+            else if(condition == Uint8) { conditionId = 1; }
+            else if(condition == Uint16) { conditionId = 2; }
+            else if(condition == Uint32) { conditionId = 3; }
+            else if(condition == Uint64) { conditionId = 4; }
+            else if(condition == Uintptr) { conditionId = 5; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.SetUint", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    *(unsigned int*)(v.ptr) = (unsigned int)(x);
+                    break;
+                case 1:
+                    *(uint8_t*)(v.ptr) = uint8_t(x);
+                    break;
+                case 2:
+                    *(uint16_t*)(v.ptr) = uint16_t(x);
+                    break;
+                case 3:
+                    *(uint32_t*)(v.ptr) = uint32_t(x);
+                    break;
+                case 4:
+                    *(uint64_t*)(v.ptr) = x;
+                    break;
+                case 5:
+                    *(uintptr_t*)(v.ptr) = uintptr_t(x);
+                    break;
+            }
+        }
+    }
+
+    void SetPointer(struct Value v, unsafe::Pointer x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), UnsafePointer);
+        *(unsafe::Pointer*)(v.ptr) = x;
+    }
+
+    void SetString(struct Value v, std::string x)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), String);
+        *(std::string*)(v.ptr) = x;
+    }
+
+    Value Slice(struct Value v, int i, int j)
+    {
+        int cap = {};
+        sliceType* typ = {};
+        unsafe::Pointer base = {};
+        //Go switch emulation
+        {
+            auto kind = kind(gocpp::recv(v));
+            auto condition = kind;
+            int conditionId = -1;
+            else if(condition == Array) { conditionId = 0; }
+            else if(condition == Slice) { conditionId = 1; }
+            else if(condition == String) { conditionId = 2; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.Slice", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    if(v.flag & flagAddr == 0)
+                    {
+                        gocpp::panic("reflect.Value.Slice: slice of unaddressable array");
+                    }
+                    auto tt = (arrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    cap = int(tt->Len);
+                    typ = (sliceType*)(unsafe::Pointer(tt->Slice));
+                    base = v.ptr;
+                    break;
+                case 1:
+                    typ = (sliceType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto s = (unsafeheader::Slice*)(v.ptr);
+                    base = s->Data;
+                    cap = s->Cap;
+                    break;
+                case 2:
+                    auto s = (unsafeheader::String*)(v.ptr);
+                    if(i < 0 || j < i || j > s->Len)
+                    {
+                        gocpp::panic("reflect.Value.Slice: string slice index out of bounds");
+                    }
+                    unsafeheader::String t = {};
+                    if(i < s->Len)
+                    {
+                        t = gocpp::Init<unsafeheader::String>([](unsafeheader::String& x) { x.Data = arrayAt(s->Data, i, 1, "i < s.Len"); x.Len = j - i; });
+                    }
+                    return Value {typ(gocpp::recv(v)), unsafe::Pointer(& t), v.flag};
+                    break;
+            }
+        }
+        if(i < 0 || j < i || j > cap)
+        {
+            gocpp::panic("reflect.Value.Slice: slice index out of bounds");
+        }
+        gocpp::slice<unsafe::Pointer> x = {};
+        auto s = (unsafeheader::Slice*)(unsafe::Pointer(& x));
+        s->Len = j - i;
+        s->Cap = cap - i;
+        if(cap - i > 0)
+        {
+            s->Data = arrayAt(base, i, Size(gocpp::recv(typ->Elem)), "i < cap");
+        }
+        else
+        {
+            s->Data = base;
+        }
+        auto fl = ro(gocpp::recv(v.flag)) | flagIndir | flag(Slice);
+        return Value {Common(gocpp::recv(typ)), unsafe::Pointer(& x), fl};
+    }
+
+    Value Slice3(struct Value v, int i, int j, int k)
+    {
+        int cap = {};
+        sliceType* typ = {};
+        unsafe::Pointer base = {};
+        //Go switch emulation
+        {
+            auto kind = kind(gocpp::recv(v));
+            auto condition = kind;
+            int conditionId = -1;
+            else if(condition == Array) { conditionId = 0; }
+            else if(condition == Slice) { conditionId = 1; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.Slice3", kind(gocpp::recv(v))});
+                    break;
+                case 0:
+                    if(v.flag & flagAddr == 0)
+                    {
+                        gocpp::panic("reflect.Value.Slice3: slice of unaddressable array");
+                    }
+                    auto tt = (arrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    cap = int(tt->Len);
+                    typ = (sliceType*)(unsafe::Pointer(tt->Slice));
+                    base = v.ptr;
+                    break;
+                case 1:
+                    typ = (sliceType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto s = (unsafeheader::Slice*)(v.ptr);
+                    base = s->Data;
+                    cap = s->Cap;
+                    break;
+            }
+        }
+        if(i < 0 || j < i || k < j || k > cap)
+        {
+            gocpp::panic("reflect.Value.Slice3: slice index out of bounds");
+        }
+        gocpp::slice<unsafe::Pointer> x = {};
+        auto s = (unsafeheader::Slice*)(unsafe::Pointer(& x));
+        s->Len = j - i;
+        s->Cap = k - i;
+        if(k - i > 0)
+        {
+            s->Data = arrayAt(base, i, Size(gocpp::recv(typ->Elem)), "i < k <= cap");
+        }
+        else
+        {
+            s->Data = base;
+        }
+        auto fl = ro(gocpp::recv(v.flag)) | flagIndir | flag(Slice);
+        return Value {Common(gocpp::recv(typ)), unsafe::Pointer(& x), fl};
+    }
+
+    std::string String(struct Value v)
+    {
+        if(kind(gocpp::recv(v)) == String)
+        {
+            return *(std::string*)(v.ptr);
+        }
+        return stringNonString(gocpp::recv(v));
+    }
+
+    std::string stringNonString(struct Value v)
+    {
+        if(kind(gocpp::recv(v)) == Invalid)
+        {
+            return "<invalid Value>";
+        }
+        return "<" + String(gocpp::recv(Type(gocpp::recv(v)))) + " Value>";
+    }
+
+    std::tuple<Value, bool> TryRecv(struct Value v)
+    {
+        Value x;
+        bool ok;
+        mustBe(gocpp::recv(v), Chan);
+        mustBeExported(gocpp::recv(v));
+        return recv(gocpp::recv(v), true);
+    }
+
+    bool TrySend(struct Value v, Value x)
+    {
+        mustBe(gocpp::recv(v), Chan);
+        mustBeExported(gocpp::recv(v));
+        return send(gocpp::recv(v), x, true);
+    }
+
+    Type Type(struct Value v)
+    {
+        if(v.flag != 0 && v.flag & flagMethod == 0)
+        {
+            return (rtype*)(noescape(unsafe::Pointer(v.typ_)));
+        }
+        return typeSlow(gocpp::recv(v));
+    }
+
+    Type typeSlow(struct Value v)
+    {
+        if(v.flag == 0)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.Type", Invalid});
+        }
+        auto typ = typ(gocpp::recv(v));
+        if(v.flag & flagMethod == 0)
+        {
+            return toRType(typ(gocpp::recv(v)));
+        }
+        auto i = int(v.flag) >> flagMethodShift;
+        if(Kind(gocpp::recv(typ(gocpp::recv(v)))) == abi::Interface)
+        {
+            auto tt = (interfaceType*)(unsafe::Pointer(typ));
+            if((unsigned int)(i) >= (unsigned int)(len(tt->Methods)))
+            {
+                gocpp::panic("reflect: internal error: invalid method index");
+            }
+            auto m = & tt->Methods[i];
+            return toRType(typeOffFor(typ, m->Typ));
+        }
+        auto ms = ExportedMethods(gocpp::recv(typ));
+        if((unsigned int)(i) >= (unsigned int)(len(ms)))
+        {
+            gocpp::panic("reflect: internal error: invalid method index");
+        }
+        auto m = ms[i];
+        return toRType(typeOffFor(typ, m.Mtyp));
+    }
+
+    bool CanUint(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Uint) { conditionId = 0; }
+            if(condition == Uint8) { conditionId = 1; }
+            if(condition == Uint16) { conditionId = 2; }
+            if(condition == Uint32) { conditionId = 3; }
+            if(condition == Uint64) { conditionId = 4; }
+            if(condition == Uintptr) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    return true;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+        }
+    }
+
+    uint64_t Uint(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        auto p = v.ptr;
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Uint) { conditionId = 0; }
+            else if(condition == Uint8) { conditionId = 1; }
+            else if(condition == Uint16) { conditionId = 2; }
+            else if(condition == Uint32) { conditionId = 3; }
+            else if(condition == Uint64) { conditionId = 4; }
+            else if(condition == Uintptr) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                    return uint64_t(*(unsigned int*)(p));
+                    break;
+                case 1:
+                    return uint64_t(*(uint8_t*)(p));
+                    break;
+                case 2:
+                    return uint64_t(*(uint16_t*)(p));
+                    break;
+                case 3:
+                    return uint64_t(*(uint32_t*)(p));
+                    break;
+                case 4:
+                    return *(uint64_t*)(p);
+                    break;
+                case 5:
+                    return uint64_t(*(uintptr_t*)(p));
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.Uint", kind(gocpp::recv(v))});
+    }
+
+    uintptr_t UnsafeAddr(struct Value v)
+    {
+        if(typ(gocpp::recv(v)) == nullptr)
+        {
+            gocpp::panic(new ValueError {"reflect.Value.UnsafeAddr", Invalid});
+        }
+        if(v.flag & flagAddr == 0)
+        {
+            gocpp::panic("reflect.Value.UnsafeAddr of unaddressable value");
+        }
+        escapes(v.ptr);
+        return uintptr_t(v.ptr);
+    }
+
+    unsafe::Pointer UnsafePointer(struct Value v)
+    {
+        auto k = kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Pointer) { conditionId = 0; }
+            else if(condition == Chan) { conditionId = 1; }
+            else if(condition == Map) { conditionId = 2; }
+            else if(condition == UnsafePointer) { conditionId = 3; }
+            else if(condition == Func) { conditionId = 4; }
+            else if(condition == Slice) { conditionId = 5; }
+            switch(conditionId)
+            {
+                case 0:
+                    if(typ(gocpp::recv(v))->PtrBytes == 0)
+                    {
+                        if(! verifyNotInHeapPtr(*(uintptr_t*)(v.ptr)))
+                        {
+                            gocpp::panic("reflect: reflect.Value.UnsafePointer on an invalid notinheap pointer");
+                        }
+                        return *(unsafe::Pointer*)(v.ptr);
+                    }
+                case 1:
+                case 2:
+                case 3:
+                    return pointer(gocpp::recv(v));
+                    break;
+                case 4:
+                    if(v.flag & flagMethod != 0)
+                    {
+                        auto code = methodValueCallCodePtr();
+                        return *(unsafe::Pointer*)(unsafe::Pointer(& code));
+                    }
+                    auto p = pointer(gocpp::recv(v));
+                    if(p != nullptr)
+                    {
+                        p = *(unsafe::Pointer*)(p);
+                    }
+                    return p;
+                    break;
+                case 5:
+                    return (unsafeheader::Slice*)(v.ptr)->Data;
+                    break;
+            }
+        }
+        gocpp::panic(new ValueError {"reflect.Value.UnsafePointer", kind(gocpp::recv(v))});
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    StringHeader::operator T()
+    {
+        T result;
+        result.Data = this->Data;
+        result.Len = this->Len;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool StringHeader::operator==(const T& ref) const
+    {
+        if (Data != ref.Data) return false;
+        if (Len != ref.Len) return false;
+        return true;
+    }
+
+    std::ostream& StringHeader::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Data;
+        os << " " << Len;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct StringHeader& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    SliceHeader::operator T()
+    {
+        T result;
+        result.Data = this->Data;
+        result.Len = this->Len;
+        result.Cap = this->Cap;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SliceHeader::operator==(const T& ref) const
+    {
+        if (Data != ref.Data) return false;
+        if (Len != ref.Len) return false;
+        if (Cap != ref.Cap) return false;
+        return true;
+    }
+
+    std::ostream& SliceHeader::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Data;
+        os << " " << Len;
+        os << " " << Cap;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct SliceHeader& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    void typesMustMatch(std::string what, Type t1, Type t2)
+    {
+        if(t1 != t2)
+        {
+            gocpp::panic(what + ": " + String(gocpp::recv(t1)) + " != " + String(gocpp::recv(t2)));
+        }
+    }
+
+    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe)
+    {
+        return add(p, uintptr_t(i) * eltSize, "i < len");
+    }
+
+    void Grow(struct Value v, int n)
+    {
+        mustBeAssignable(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        grow(gocpp::recv(v), n);
+    }
+
+    void grow(struct Value v, int n)
+    {
+        auto p = (unsafeheader::Slice*)(v.ptr);
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(n < 0) { conditionId = 0; }
+            else if(p->Len + n < 0) { conditionId = 1; }
+            else if(p->Len + n > p->Cap) { conditionId = 2; }
+            switch(conditionId)
+            {
+                case 0:
+                    gocpp::panic("reflect.Value.Grow: negative len");
+                    break;
+                case 1:
+                    gocpp::panic("reflect.Value.Grow: slice overflow");
+                    break;
+                case 2:
+                    auto t = Elem(gocpp::recv(typ(gocpp::recv(v))));
+                    *p = growslice(t, *p, n);
+                    break;
+            }
+        }
+    }
+
+    Value extendSlice(struct Value v, int n)
+    {
+        mustBeExported(gocpp::recv(v));
+        mustBe(gocpp::recv(v), Slice);
+        auto sh = *(unsafeheader::Slice*)(v.ptr);
+        auto s = & sh;
+        v.ptr = unsafe::Pointer(s);
+        v.flag = flagIndir | flag(Slice);
+        grow(gocpp::recv(v), n);
+        s->Len += n;
+        return v;
+    }
+
+    void Clear(struct Value v)
+    {
+        //Go switch emulation
+        {
+            auto condition = Kind(gocpp::recv(v));
+            int conditionId = -1;
+            if(condition == Slice) { conditionId = 0; }
+            else if(condition == Map) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    auto sh = *(unsafeheader::Slice*)(v.ptr);
+                    auto st = (sliceType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    typedarrayclear(st->Elem, sh.Data, sh.Len);
+                    break;
+                case 1:
+                    mapclear(typ(gocpp::recv(v)), pointer(gocpp::recv(v)));
+                    break;
+                default:
+                    gocpp::panic(new ValueError {"reflect.Value.Clear", Kind(gocpp::recv(v))});
+                    break;
+            }
+        }
+    }
+
+    Value Append(Value s, gocpp::slice<Value> x)
+    {
+        mustBe(gocpp::recv(s), Slice);
+        auto n = Len(gocpp::recv(s));
+        s = extendSlice(gocpp::recv(s), len(x));
+        for(auto [i, v] : x)
+        {
+            Set(gocpp::recv(Index(gocpp::recv(s), n + i)), v);
+        }
+        return s;
+    }
+
+    Value AppendSlice(Value s, Value t)
+    {
+        mustBe(gocpp::recv(s), Slice);
+        mustBe(gocpp::recv(t), Slice);
+        typesMustMatch("reflect.AppendSlice", Elem(gocpp::recv(Type(gocpp::recv(s)))), Elem(gocpp::recv(Type(gocpp::recv(t)))));
+        auto ns = Len(gocpp::recv(s));
+        auto nt = Len(gocpp::recv(t));
+        s = extendSlice(gocpp::recv(s), nt);
+        Copy(Slice(gocpp::recv(s), ns, ns + nt), t);
+        return s;
+    }
+
+    int Copy(Value dst, Value src)
+    {
+        auto dk = kind(gocpp::recv(dst));
+        if(dk != Array && dk != Slice)
+        {
+            gocpp::panic(new ValueError {"reflect.Copy", dk});
+        }
+        if(dk == Array)
+        {
+            mustBeAssignable(gocpp::recv(dst));
+        }
+        mustBeExported(gocpp::recv(dst));
+        auto sk = kind(gocpp::recv(src));
+        bool stringCopy = {};
+        if(sk != Array && sk != Slice)
+        {
+            stringCopy = sk == String && Kind(gocpp::recv(Elem(gocpp::recv(typ(gocpp::recv(dst)))))) == abi::Uint8;
+            if(! stringCopy)
+            {
+                gocpp::panic(new ValueError {"reflect.Copy", sk});
+            }
+        }
+        mustBeExported(gocpp::recv(src));
+        auto de = Elem(gocpp::recv(typ(gocpp::recv(dst))));
+        if(! stringCopy)
+        {
+            auto se = Elem(gocpp::recv(typ(gocpp::recv(src))));
+            typesMustMatch("reflect.Copy", toType(de), toType(se));
+        }
+        unsafeheader::Slice ds = {};
+        unsafeheader::Slice ss = {};
+        if(dk == Array)
+        {
+            ds.Data = dst.ptr;
+            ds.Len = Len(gocpp::recv(dst));
+            ds.Cap = ds.Len;
+        }
+        else
+        {
+            ds = *(unsafeheader::Slice*)(dst.ptr);
+        }
+        if(sk == Array)
+        {
+            ss.Data = src.ptr;
+            ss.Len = Len(gocpp::recv(src));
+            ss.Cap = ss.Len;
+        }
+        else
+        if(sk == Slice)
+        {
+            ss = *(unsafeheader::Slice*)(src.ptr);
+        }
+        else
+        {
+            auto sh = *(unsafeheader::String*)(src.ptr);
+            ss.Data = sh.Data;
+            ss.Len = sh.Len;
+            ss.Cap = sh.Len;
+        }
+        return typedslicecopy(Common(gocpp::recv(de)), ds, ss);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    runtimeSelect::operator T()
+    {
+        T result;
+        result.dir = this->dir;
+        result.typ = this->typ;
+        result.ch = this->ch;
+        result.val = this->val;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool runtimeSelect::operator==(const T& ref) const
+    {
+        if (dir != ref.dir) return false;
+        if (typ != ref.typ) return false;
+        if (ch != ref.ch) return false;
+        if (val != ref.val) return false;
+        return true;
+    }
+
+    std::ostream& runtimeSelect::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << dir;
+        os << " " << typ;
+        os << " " << ch;
+        os << " " << val;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    std::tuple<int, bool> rselect(gocpp::slice<runtimeSelect>)
+    /* convertBlockStmt, nil block */;
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    SelectCase::operator T()
+    {
+        T result;
+        result.Dir = this->Dir;
+        result.Chan = this->Chan;
+        result.Send = this->Send;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool SelectCase::operator==(const T& ref) const
+    {
+        if (Dir != ref.Dir) return false;
+        if (Chan != ref.Chan) return false;
+        if (Send != ref.Send) return false;
+        return true;
+    }
+
+    std::ostream& SelectCase::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Dir;
+        os << " " << Chan;
+        os << " " << Send;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct SelectCase& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    std::tuple<int, Value, bool> Select(gocpp::slice<SelectCase> cases)
+    {
+        int chosen;
+        Value recv;
+        bool recvOK;
+        if(len(cases) > 65536)
+        {
+            int chosen;
+            Value recv;
+            bool recvOK;
+            gocpp::panic("reflect.Select: too many cases (max 65536)");
+        }
+        gocpp::slice<runtimeSelect> runcases = {};
+        if(len(cases) > 4)
+        {
+            int chosen;
+            Value recv;
+            bool recvOK;
+            runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases));
+        }
+        else
+        {
+            int chosen;
+            Value recv;
+            bool recvOK;
+            runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases), 4);
+        }
+        auto haveDefault = false;
+        for(auto [i, c] : cases)
+        {
+            int chosen;
+            Value recv;
+            bool recvOK;
+            auto rc = & runcases[i];
+            rc->dir = c.Dir;
+            //Go switch emulation
+            {
+                auto condition = c.Dir;
+                int conditionId = -1;
+                else if(condition == SelectDefault) { conditionId = 0; }
+                else if(condition == SelectSend) { conditionId = 1; }
+                else if(condition == SelectRecv) { conditionId = 2; }
+                switch(conditionId)
+                {
+                    int chosen;
+                    Value recv;
+                    bool recvOK;
+                    default:
+                        gocpp::panic("reflect.Select: invalid Dir");
+                        break;
+                    case 0:
+                        if(haveDefault)
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: multiple default cases");
+                        }
+                        haveDefault = true;
+                        if(IsValid(gocpp::recv(c.Chan)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: default case has Chan value");
+                        }
+                        if(IsValid(gocpp::recv(c.Send)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: default case has Send value");
+                        }
+                        break;
+                    case 1:
+                        auto ch = c.Chan;
+                        if(! IsValid(gocpp::recv(ch)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            break;
+                        }
+                        mustBe(gocpp::recv(ch), Chan);
+                        mustBeExported(gocpp::recv(ch));
+                        auto tt = (chanType*)(unsafe::Pointer(typ(gocpp::recv(ch))));
+                        if(ChanDir(tt->Dir) & SendDir == 0)
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: SendDir case using recv-only channel");
+                        }
+                        rc->ch = pointer(gocpp::recv(ch));
+                        rc->typ = toRType(& tt->Type);
+                        auto v = c.Send;
+                        if(! IsValid(gocpp::recv(v)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: SendDir case missing Send value");
+                        }
+                        mustBeExported(gocpp::recv(v));
+                        v = assignTo(gocpp::recv(v), "reflect.Select", tt->Elem, nullptr);
+                        if(v.flag & flagIndir != 0)
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            rc->val = v.ptr;
+                        }
+                        else
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            rc->val = unsafe::Pointer(& v.ptr);
+                        }
+                        escapes(rc->val);
+                        break;
+                    case 2:
+                        if(IsValid(gocpp::recv(c.Send)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: RecvDir case has Send value");
+                        }
+                        auto ch = c.Chan;
+                        if(! IsValid(gocpp::recv(ch)))
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            break;
+                        }
+                        mustBe(gocpp::recv(ch), Chan);
+                        mustBeExported(gocpp::recv(ch));
+                        auto tt = (chanType*)(unsafe::Pointer(typ(gocpp::recv(ch))));
+                        if(ChanDir(tt->Dir) & RecvDir == 0)
+                        {
+                            int chosen;
+                            Value recv;
+                            bool recvOK;
+                            gocpp::panic("reflect.Select: RecvDir case using send-only channel");
+                        }
+                        rc->ch = pointer(gocpp::recv(ch));
+                        rc->typ = toRType(& tt->Type);
+                        rc->val = unsafe_New(tt->Elem);
+                        break;
+                }
+            }
+        }
+        std::tie(chosen, recvOK) = rselect(runcases);
+        if(runcases[chosen].dir == SelectRecv)
+        {
+            int chosen;
+            Value recv;
+            bool recvOK;
+            auto tt = (chanType*)(unsafe::Pointer(runcases[chosen].typ));
+            auto t = tt->Elem;
+            auto p = runcases[chosen].val;
+            auto fl = flag(Kind(gocpp::recv(t)));
+            if(IfaceIndir(gocpp::recv(t)))
+            {
+                int chosen;
+                Value recv;
+                bool recvOK;
+                recv = Value {t, p, fl | flagIndir};
+            }
+            else
+            {
+                int chosen;
+                Value recv;
+                bool recvOK;
+                recv = Value {t, *(unsafe::Pointer*)(p), fl};
+            }
+        }
+        return {chosen, recv, recvOK};
+    }
+
+    unsafe::Pointer unsafe_New(abi::Type*)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer unsafe_NewArray(abi::Type*, int)
+    /* convertBlockStmt, nil block */;
+
+    Value MakeSlice(Type typ, int len, int cap)
+    {
+        if(Kind(gocpp::recv(typ)) != Slice)
+        {
+            gocpp::panic("reflect.MakeSlice of non-slice type");
+        }
+        if(len < 0)
+        {
+            gocpp::panic("reflect.MakeSlice: negative len");
+        }
+        if(cap < 0)
+        {
+            gocpp::panic("reflect.MakeSlice: negative cap");
+        }
+        if(len > cap)
+        {
+            gocpp::panic("reflect.MakeSlice: len > cap");
+        }
+        auto s = gocpp::Init<unsafeheader::Slice>([](unsafeheader::Slice& x) { x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(Elem(gocpp::recv(typ)))->t), cap); x.Len = len; x.Cap = cap; });
+        return Value {& gocpp::getValue<rtype*>(typ)->t, unsafe::Pointer(& s), flagIndir | flag(Slice)};
+    }
+
+    Value MakeChan(Type typ, int buffer)
+    {
+        if(Kind(gocpp::recv(typ)) != Chan)
+        {
+            gocpp::panic("reflect.MakeChan of non-chan type");
+        }
+        if(buffer < 0)
+        {
+            gocpp::panic("reflect.MakeChan: negative buffer size");
+        }
+        if(ChanDir(gocpp::recv(typ)) != BothDir)
+        {
+            gocpp::panic("reflect.MakeChan: unidirectional channel type");
+        }
+        auto t = common(gocpp::recv(typ));
+        auto ch = makechan(t, buffer);
+        return Value {t, ch, flag(Chan)};
+    }
+
+    Value MakeMap(Type typ)
+    {
+        return MakeMapWithSize(typ, 0);
+    }
+
+    Value MakeMapWithSize(Type typ, int n)
+    {
+        if(Kind(gocpp::recv(typ)) != Map)
+        {
+            gocpp::panic("reflect.MakeMapWithSize of non-map type");
+        }
+        auto t = common(gocpp::recv(typ));
+        auto m = makemap(t, n);
+        return Value {t, m, flag(Map)};
+    }
+
+    Value Indirect(Value v)
+    {
+        if(Kind(gocpp::recv(v)) != Pointer)
+        {
+            return v;
+        }
+        return Elem(gocpp::recv(v));
+    }
+
+    Value ValueOf(go_any i)
+    {
+        if(i == nullptr)
+        {
+            return Value {};
+        }
+        return unpackEface(i);
+    }
+
+    Value Zero(Type typ)
+    {
+        if(typ == nullptr)
+        {
+            gocpp::panic("reflect: Zero(nil)");
+        }
+        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto fl = flag(Kind(gocpp::recv(t)));
+        if(IfaceIndir(gocpp::recv(t)))
+        {
+            unsafe::Pointer p = {};
+            if(Size(gocpp::recv(t)) <= abi::ZeroValSize)
+            {
+                p = unsafe::Pointer(& zeroVal[0]);
+            }
+            else
+            {
+                p = unsafe_New(t);
+            }
+            return Value {t, p, fl | flagIndir};
+        }
+        return Value {t, nullptr, fl};
+    }
+
+    gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+    Value New(Type typ)
+    {
+        if(typ == nullptr)
+        {
+            gocpp::panic("reflect: New(nil)");
+        }
+        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto pt = ptrTo(t);
+        if(ifaceIndir(pt))
+        {
+            gocpp::panic("reflect: New of type that may not be allocated in heap (possibly undefined cgo C type)");
+        }
+        auto ptr = unsafe_New(t);
+        auto fl = flag(Pointer);
+        return Value {pt, ptr, fl};
+    }
+
+    Value NewAt(Type typ, unsafe::Pointer p)
+    {
+        auto fl = flag(Pointer);
+        auto t = gocpp::getValue<rtype*>(typ);
+        return Value {ptrTo(gocpp::recv(t)), p, fl};
+    }
+
+    Value assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target)
+    {
+        if(v.flag & flagMethod != 0)
+        {
+            v = makeMethodValue(context, v);
+        }
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(directlyAssignable(dst, typ(gocpp::recv(v)))) { conditionId = 0; }
+            else if(implements(dst, typ(gocpp::recv(v)))) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    auto fl = v.flag & (flagAddr | flagIndir) | ro(gocpp::recv(v.flag));
+                    fl |= flag(Kind(gocpp::recv(dst)));
+                    return Value {dst, v.ptr, fl};
+                    break;
+                case 1:
+                    if(Kind(gocpp::recv(v)) == Interface && IsNil(gocpp::recv(v)))
+                    {
+                        return Value {dst, nullptr, flag(Interface)};
+                    }
+                    auto x = valueInterface(v, false);
+                    if(target == nullptr)
+                    {
+                        target = unsafe_New(dst);
+                    }
+                    if(NumMethod(gocpp::recv(dst)) == 0)
+                    {
+                        *(go_any*)(target) = x;
+                    }
+                    else
+                    {
+                        ifaceE2I(dst, x, target);
+                    }
+                    return Value {dst, target, flagIndir | flag(Interface)};
+                    break;
+            }
+        }
+        gocpp::panic(context + ": value of type " + stringFor(typ(gocpp::recv(v))) + " is not assignable to type " + stringFor(dst));
+    }
+
+    Value Convert(struct Value v, Type t)
+    {
+        if(v.flag & flagMethod != 0)
+        {
+            v = makeMethodValue("Convert", v);
+        }
+        auto op = convertOp(common(gocpp::recv(t)), typ(gocpp::recv(v)));
+        if(op == nullptr)
+        {
+            gocpp::panic("reflect.Value.Convert: value of type " + stringFor(typ(gocpp::recv(v))) + " cannot be converted to type " + String(gocpp::recv(t)));
+        }
+        return op(v, t);
+    }
+
+    bool CanConvert(struct Value v, Type t)
+    {
+        auto vt = Type(gocpp::recv(v));
+        if(! ConvertibleTo(gocpp::recv(vt), t))
+        {
+            return false;
+        }
+        //Go switch emulation
+        {
+            int conditionId = -1;
+            if(Kind(gocpp::recv(vt)) == Slice && Kind(gocpp::recv(t)) == Array) { conditionId = 0; }
+            else if(Kind(gocpp::recv(vt)) == Slice && Kind(gocpp::recv(t)) == Pointer && Kind(gocpp::recv(Elem(gocpp::recv(t)))) == Array) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    if(Len(gocpp::recv(t)) > Len(gocpp::recv(v)))
+                    {
+                        return false;
+                    }
+                    break;
+                case 1:
+                    auto n = Len(gocpp::recv(Elem(gocpp::recv(t))));
+                    if(n > Len(gocpp::recv(v)))
+                    {
+                        return false;
+                    }
+                    break;
+            }
+        }
+        return true;
+    }
+
+    bool Comparable(struct Value v)
+    {
+        auto k = Kind(gocpp::recv(v));
+        //Go switch emulation
+        {
+            auto condition = k;
+            int conditionId = -1;
+            if(condition == Invalid) { conditionId = 0; }
+            else if(condition == Array) { conditionId = 1; }
+            else if(condition == Interface) { conditionId = 2; }
+            else if(condition == Struct) { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                    return false;
+                    break;
+                case 1:
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(gocpp::recv(Elem(gocpp::recv(Type(gocpp::recv(v))))));
+                        int conditionId = -1;
+                        if(condition == Interface) { conditionId = 0; }
+                        if(condition == Array) { conditionId = 1; }
+                        if(condition == Struct) { conditionId = 2; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            case 2:
+                                for(auto i = 0; i < Len(gocpp::recv(Type(gocpp::recv(v)))); i++)
+                                {
+                                    if(! Comparable(gocpp::recv(Index(gocpp::recv(v), i))))
+                                    {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                                break;
+                        }
+                    }
+                    return Comparable(gocpp::recv(Type(gocpp::recv(v))));
+                    break;
+                case 2:
+                    return Comparable(gocpp::recv(Elem(gocpp::recv(v))));
+                    break;
+                case 3:
+                    for(auto i = 0; i < NumField(gocpp::recv(v)); i++)
+                    {
+                        if(! Comparable(gocpp::recv(Field(gocpp::recv(v), i))))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                    break;
+                default:
+                    return Comparable(gocpp::recv(Type(gocpp::recv(v))));
+                    break;
+            }
+        }
+    }
+
+    bool Equal(struct Value v, Value u)
+    {
+        if(Kind(gocpp::recv(v)) == Interface)
+        {
+            v = Elem(gocpp::recv(v));
+        }
+        if(Kind(gocpp::recv(u)) == Interface)
+        {
+            u = Elem(gocpp::recv(u));
+        }
+        if(! IsValid(gocpp::recv(v)) || ! IsValid(gocpp::recv(u)))
+        {
+            return IsValid(gocpp::recv(v)) == IsValid(gocpp::recv(u));
+        }
+        if(Kind(gocpp::recv(v)) != Kind(gocpp::recv(u)) || Type(gocpp::recv(v)) != Type(gocpp::recv(u)))
+        {
+            return false;
+        }
+        //Go switch emulation
+        {
+            auto condition = Kind(gocpp::recv(v));
+            int conditionId = -1;
+            else if(condition == Bool) { conditionId = 0; }
+            else if(condition == Int) { conditionId = 1; }
+            else if(condition == Int8) { conditionId = 2; }
+            else if(condition == Int16) { conditionId = 3; }
+            else if(condition == Int32) { conditionId = 4; }
+            else if(condition == Int64) { conditionId = 5; }
+            else if(condition == Uint) { conditionId = 6; }
+            else if(condition == Uint8) { conditionId = 7; }
+            else if(condition == Uint16) { conditionId = 8; }
+            else if(condition == Uint32) { conditionId = 9; }
+            else if(condition == Uint64) { conditionId = 10; }
+            else if(condition == Uintptr) { conditionId = 11; }
+            else if(condition == Float32) { conditionId = 12; }
+            else if(condition == Float64) { conditionId = 13; }
+            else if(condition == Complex64) { conditionId = 14; }
+            else if(condition == Complex128) { conditionId = 15; }
+            else if(condition == String) { conditionId = 16; }
+            else if(condition == Chan) { conditionId = 17; }
+            else if(condition == Pointer) { conditionId = 18; }
+            else if(condition == UnsafePointer) { conditionId = 19; }
+            else if(condition == Array) { conditionId = 20; }
+            else if(condition == Struct) { conditionId = 21; }
+            else if(condition == Func) { conditionId = 22; }
+            else if(condition == Map) { conditionId = 23; }
+            else if(condition == Slice) { conditionId = 24; }
+            switch(conditionId)
+            {
+                default:
+                    gocpp::panic("reflect.Value.Equal: invalid Kind");
+                    break;
+                case 0:
+                    return Bool(gocpp::recv(v)) == Bool(gocpp::recv(u));
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    return Int(gocpp::recv(v)) == Int(gocpp::recv(u));
+                    break;
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                    return Uint(gocpp::recv(v)) == Uint(gocpp::recv(u));
+                    break;
+                case 12:
+                case 13:
+                    return Float(gocpp::recv(v)) == Float(gocpp::recv(u));
+                    break;
+                case 14:
+                case 15:
+                    return Complex(gocpp::recv(v)) == Complex(gocpp::recv(u));
+                    break;
+                case 16:
+                    return String(gocpp::recv(v)) == String(gocpp::recv(u));
+                    break;
+                case 17:
+                case 18:
+                case 19:
+                    return Pointer(gocpp::recv(v)) == Pointer(gocpp::recv(u));
+                    break;
+                case 20:
+                    auto vl = Len(gocpp::recv(v));
+                    if(vl == 0)
+                    {
+                        if(! Comparable(gocpp::recv(Elem(gocpp::recv(Type(gocpp::recv(v)))))))
+                        {
+                            break;
+                        }
+                        return true;
+                    }
+                    for(auto i = 0; i < vl; i++)
+                    {
+                        if(! Equal(gocpp::recv(Index(gocpp::recv(v), i)), Index(gocpp::recv(u), i)))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                    break;
+                case 21:
+                    auto nf = NumField(gocpp::recv(v));
+                    for(auto i = 0; i < nf; i++)
+                    {
+                        if(! Equal(gocpp::recv(Field(gocpp::recv(v), i)), Field(gocpp::recv(u), i)))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                    break;
+                case 22:
+                case 23:
+                case 24:
+                    break;
+                    break;
+            }
+        }
+        gocpp::panic("reflect.Value.Equal: values of type " + String(gocpp::recv(Type(gocpp::recv(v)))) + " are not comparable");
+    }
+
+    std::function<Value (Value, Type)> convertOp(abi::Type* dst, abi::Type* src)
+    {
+        //Go switch emulation
+        {
+            auto condition = Kind(Kind(gocpp::recv(src)));
+            int conditionId = -1;
+            if(condition == Int) { conditionId = 0; }
+            if(condition == Int8) { conditionId = 1; }
+            if(condition == Int16) { conditionId = 2; }
+            if(condition == Int32) { conditionId = 3; }
+            if(condition == Int64) { conditionId = 4; }
+            else if(condition == Uint) { conditionId = 5; }
+            else if(condition == Uint8) { conditionId = 6; }
+            else if(condition == Uint16) { conditionId = 7; }
+            else if(condition == Uint32) { conditionId = 8; }
+            else if(condition == Uint64) { conditionId = 9; }
+            else if(condition == Uintptr) { conditionId = 10; }
+            else if(condition == Float32) { conditionId = 11; }
+            else if(condition == Float64) { conditionId = 12; }
+            else if(condition == Complex64) { conditionId = 13; }
+            else if(condition == Complex128) { conditionId = 14; }
+            else if(condition == String) { conditionId = 15; }
+            else if(condition == Slice) { conditionId = 16; }
+            else if(condition == Chan) { conditionId = 17; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(Kind(gocpp::recv(dst)));
+                        int conditionId = -1;
+                        if(condition == Int) { conditionId = 0; }
+                        if(condition == Int8) { conditionId = 1; }
+                        if(condition == Int16) { conditionId = 2; }
+                        if(condition == Int32) { conditionId = 3; }
+                        if(condition == Int64) { conditionId = 4; }
+                        if(condition == Uint) { conditionId = 5; }
+                        if(condition == Uint8) { conditionId = 6; }
+                        if(condition == Uint16) { conditionId = 7; }
+                        if(condition == Uint32) { conditionId = 8; }
+                        if(condition == Uint64) { conditionId = 9; }
+                        if(condition == Uintptr) { conditionId = 10; }
+                        else if(condition == Float32) { conditionId = 11; }
+                        else if(condition == Float64) { conditionId = 12; }
+                        else if(condition == String) { conditionId = 13; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 8:
+                            case 9:
+                            case 10:
+                                return cvtInt;
+                                break;
+                            case 11:
+                            case 12:
+                                return cvtIntFloat;
+                                break;
+                            case 13:
+                                return cvtIntString;
+                                break;
+                        }
+                    }
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(Kind(gocpp::recv(dst)));
+                        int conditionId = -1;
+                        if(condition == Int) { conditionId = 0; }
+                        if(condition == Int8) { conditionId = 1; }
+                        if(condition == Int16) { conditionId = 2; }
+                        if(condition == Int32) { conditionId = 3; }
+                        if(condition == Int64) { conditionId = 4; }
+                        if(condition == Uint) { conditionId = 5; }
+                        if(condition == Uint8) { conditionId = 6; }
+                        if(condition == Uint16) { conditionId = 7; }
+                        if(condition == Uint32) { conditionId = 8; }
+                        if(condition == Uint64) { conditionId = 9; }
+                        if(condition == Uintptr) { conditionId = 10; }
+                        else if(condition == Float32) { conditionId = 11; }
+                        else if(condition == Float64) { conditionId = 12; }
+                        else if(condition == String) { conditionId = 13; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 8:
+                            case 9:
+                            case 10:
+                                return cvtUint;
+                                break;
+                            case 11:
+                            case 12:
+                                return cvtUintFloat;
+                                break;
+                            case 13:
+                                return cvtUintString;
+                                break;
+                        }
+                    }
+                    break;
+                case 11:
+                case 12:
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(Kind(gocpp::recv(dst)));
+                        int conditionId = -1;
+                        if(condition == Int) { conditionId = 0; }
+                        if(condition == Int8) { conditionId = 1; }
+                        if(condition == Int16) { conditionId = 2; }
+                        if(condition == Int32) { conditionId = 3; }
+                        if(condition == Int64) { conditionId = 4; }
+                        else if(condition == Uint) { conditionId = 5; }
+                        else if(condition == Uint8) { conditionId = 6; }
+                        else if(condition == Uint16) { conditionId = 7; }
+                        else if(condition == Uint32) { conditionId = 8; }
+                        else if(condition == Uint64) { conditionId = 9; }
+                        else if(condition == Uintptr) { conditionId = 10; }
+                        else if(condition == Float32) { conditionId = 11; }
+                        else if(condition == Float64) { conditionId = 12; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                                return cvtFloatInt;
+                                break;
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 8:
+                            case 9:
+                            case 10:
+                                return cvtFloatUint;
+                                break;
+                            case 11:
+                            case 12:
+                                return cvtFloat;
+                                break;
+                        }
+                    }
+                    break;
+                case 13:
+                case 14:
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(Kind(gocpp::recv(dst)));
+                        int conditionId = -1;
+                        if(condition == Complex64) { conditionId = 0; }
+                        if(condition == Complex128) { conditionId = 1; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                            case 1:
+                                return cvtComplex;
+                                break;
+                        }
+                    }
+                    break;
+                case 15:
+                    if(Kind(gocpp::recv(dst)) == abi::Slice && pkgPathFor(Elem(gocpp::recv(dst))) == "")
+                    {
+                        //Go switch emulation
+                        {
+                            auto condition = Kind(Kind(gocpp::recv(Elem(gocpp::recv(dst)))));
+                            int conditionId = -1;
+                            if(condition == Uint8) { conditionId = 0; }
+                            else if(condition == Int32) { conditionId = 1; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                    return cvtStringBytes;
+                                    break;
+                                case 1:
+                                    return cvtStringRunes;
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                case 16:
+                    if(Kind(gocpp::recv(dst)) == abi::String && pkgPathFor(Elem(gocpp::recv(src))) == "")
+                    {
+                        //Go switch emulation
+                        {
+                            auto condition = Kind(Kind(gocpp::recv(Elem(gocpp::recv(src)))));
+                            int conditionId = -1;
+                            if(condition == Uint8) { conditionId = 0; }
+                            else if(condition == Int32) { conditionId = 1; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                    return cvtBytesString;
+                                    break;
+                                case 1:
+                                    return cvtRunesString;
+                                    break;
+                            }
+                        }
+                    }
+                    if(Kind(gocpp::recv(dst)) == abi::Pointer && Kind(gocpp::recv(Elem(gocpp::recv(dst)))) == abi::Array && Elem(gocpp::recv(src)) == Elem(gocpp::recv(Elem(gocpp::recv(dst)))))
+                    {
+                        return cvtSliceArrayPtr;
+                    }
+                    if(Kind(gocpp::recv(dst)) == abi::Array && Elem(gocpp::recv(src)) == Elem(gocpp::recv(dst)))
+                    {
+                        return cvtSliceArray;
+                    }
+                    break;
+                case 17:
+                    if(Kind(gocpp::recv(dst)) == abi::Chan && specialChannelAssignability(dst, src))
+                    {
+                        return cvtDirect;
+                    }
+                    break;
+            }
+        }
+        if(haveIdenticalUnderlyingType(dst, src, false))
+        {
+            return cvtDirect;
+        }
+        if(Kind(gocpp::recv(dst)) == abi::Pointer && nameFor(dst) == "" && Kind(gocpp::recv(src)) == abi::Pointer && nameFor(src) == "" && haveIdenticalUnderlyingType(elem(dst), elem(src), false))
+        {
+            return cvtDirect;
+        }
+        if(implements(dst, src))
+        {
+            if(Kind(gocpp::recv(src)) == abi::Interface)
+            {
+                return cvtI2I;
+            }
+            return cvtT2I;
+        }
+        return nullptr;
+    }
+
+    Value makeInt(flag f, uint64_t bits, Type t)
+    {
+        auto typ = common(gocpp::recv(t));
+        auto ptr = unsafe_New(typ);
+        //Go switch emulation
+        {
+            auto condition = Size(gocpp::recv(typ));
+            int conditionId = -1;
+            if(condition == 1) { conditionId = 0; }
+            else if(condition == 2) { conditionId = 1; }
+            else if(condition == 4) { conditionId = 2; }
+            else if(condition == 8) { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                    *(uint8_t*)(ptr) = uint8_t(bits);
+                    break;
+                case 1:
+                    *(uint16_t*)(ptr) = uint16_t(bits);
+                    break;
+                case 2:
+                    *(uint32_t*)(ptr) = uint32_t(bits);
+                    break;
+                case 3:
+                    *(uint64_t*)(ptr) = bits;
+                    break;
+            }
+        }
+        return Value {typ, ptr, f | flagIndir | flag(Kind(gocpp::recv(typ)))};
+    }
+
+    Value makeFloat(flag f, double v, Type t)
+    {
+        auto typ = common(gocpp::recv(t));
+        auto ptr = unsafe_New(typ);
+        //Go switch emulation
+        {
+            auto condition = Size(gocpp::recv(typ));
+            int conditionId = -1;
+            if(condition == 4) { conditionId = 0; }
+            else if(condition == 8) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    *(float*)(ptr) = float(v);
+                    break;
+                case 1:
+                    *(double*)(ptr) = v;
+                    break;
+            }
+        }
+        return Value {typ, ptr, f | flagIndir | flag(Kind(gocpp::recv(typ)))};
+    }
+
+    Value makeFloat32(flag f, double v, Type t)
+    {
+        auto typ = common(gocpp::recv(t));
+        auto ptr = unsafe_New(typ);
+        *(float*)(ptr) = v;
+        return Value {typ, ptr, f | flagIndir | flag(Kind(gocpp::recv(typ)))};
+    }
+
+    Value makeComplex(flag f, gocpp::complex128 v, Type t)
+    {
+        auto typ = common(gocpp::recv(t));
+        auto ptr = unsafe_New(typ);
+        //Go switch emulation
+        {
+            auto condition = Size(gocpp::recv(typ));
+            int conditionId = -1;
+            if(condition == 8) { conditionId = 0; }
+            else if(condition == 16) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                    *(complex64*)(ptr) = complex64(v);
+                    break;
+                case 1:
+                    *(gocpp::complex128*)(ptr) = v;
+                    break;
+            }
+        }
+        return Value {typ, ptr, f | flagIndir | flag(Kind(gocpp::recv(typ)))};
+    }
+
+    Value makeString(flag f, std::string v, Type t)
+    {
+        auto ret = Elem(gocpp::recv(New(t)));
+        SetString(gocpp::recv(ret), v);
+        ret.flag = ret.flag &^ flagAddr | f;
+        return ret;
+    }
+
+    Value makeBytes(flag f, gocpp::slice<unsigned char> v, Type t)
+    {
+        auto ret = Elem(gocpp::recv(New(t)));
+        SetBytes(gocpp::recv(ret), v);
+        ret.flag = ret.flag &^ flagAddr | f;
+        return ret;
+    }
+
+    Value makeRunes(flag f, gocpp::slice<gocpp::rune> v, Type t)
+    {
+        auto ret = Elem(gocpp::recv(New(t)));
+        setRunes(gocpp::recv(ret), v);
+        ret.flag = ret.flag &^ flagAddr | f;
+        return ret;
+    }
+
+    Value cvtInt(Value v, Type t)
+    {
+        return makeInt(ro(gocpp::recv(v.flag)), uint64_t(Int(gocpp::recv(v))), t);
+    }
+
+    Value cvtUint(Value v, Type t)
+    {
+        return makeInt(ro(gocpp::recv(v.flag)), Uint(gocpp::recv(v)), t);
+    }
+
+    Value cvtFloatInt(Value v, Type t)
+    {
+        return makeInt(ro(gocpp::recv(v.flag)), uint64_t(int64_t(Float(gocpp::recv(v)))), t);
+    }
+
+    Value cvtFloatUint(Value v, Type t)
+    {
+        return makeInt(ro(gocpp::recv(v.flag)), uint64_t(Float(gocpp::recv(v))), t);
+    }
+
+    Value cvtIntFloat(Value v, Type t)
+    {
+        return makeFloat(ro(gocpp::recv(v.flag)), double(Int(gocpp::recv(v))), t);
+    }
+
+    Value cvtUintFloat(Value v, Type t)
+    {
+        return makeFloat(ro(gocpp::recv(v.flag)), double(Uint(gocpp::recv(v))), t);
+    }
+
+    Value cvtFloat(Value v, Type t)
+    {
+        if(Kind(gocpp::recv(Type(gocpp::recv(v)))) == Float32 && Kind(gocpp::recv(t)) == Float32)
+        {
+            return makeFloat32(ro(gocpp::recv(v.flag)), *(float*)(v.ptr), t);
+        }
+        return makeFloat(ro(gocpp::recv(v.flag)), Float(gocpp::recv(v)), t);
+    }
+
+    Value cvtComplex(Value v, Type t)
+    {
+        return makeComplex(ro(gocpp::recv(v.flag)), Complex(gocpp::recv(v)), t);
+    }
+
+    Value cvtIntString(Value v, Type t)
+    {
+        auto s = "\uFFFD";
+        if(auto x = Int(gocpp::recv(v)); int64_t(rune(x)) == x)
+        {
+            s = string(rune(x));
+        }
+        return makeString(ro(gocpp::recv(v.flag)), s, t);
+    }
+
+    Value cvtUintString(Value v, Type t)
+    {
+        auto s = "\uFFFD";
+        if(auto x = Uint(gocpp::recv(v)); uint64_t(rune(x)) == x)
+        {
+            s = string(rune(x));
+        }
+        return makeString(ro(gocpp::recv(v.flag)), s, t);
+    }
+
+    Value cvtBytesString(Value v, Type t)
+    {
+        return makeString(ro(gocpp::recv(v.flag)), string(Bytes(gocpp::recv(v))), t);
+    }
+
+    Value cvtStringBytes(Value v, Type t)
+    {
+        return makeBytes(ro(gocpp::recv(v.flag)), gocpp::Tag<gocpp::slice<unsigned char>>()(String(gocpp::recv(v))), t);
+    }
+
+    Value cvtRunesString(Value v, Type t)
+    {
+        return makeString(ro(gocpp::recv(v.flag)), string(runes(gocpp::recv(v))), t);
+    }
+
+    Value cvtStringRunes(Value v, Type t)
+    {
+        return makeRunes(ro(gocpp::recv(v.flag)), gocpp::Tag<gocpp::slice<gocpp::rune>>()(String(gocpp::recv(v))), t);
+    }
+
+    Value cvtSliceArrayPtr(Value v, Type t)
+    {
+        auto n = Len(gocpp::recv(Elem(gocpp::recv(t))));
+        if(n > Len(gocpp::recv(v)))
+        {
+            gocpp::panic("reflect: cannot convert slice with length " + itoa::Itoa(Len(gocpp::recv(v))) + " to pointer to array with length " + itoa::Itoa(n));
+        }
+        auto h = (unsafeheader::Slice*)(v.ptr);
+        return Value {common(gocpp::recv(t)), h->Data, v.flag &^ (flagIndir | flagAddr | flagKindMask) | flag(Pointer)};
+    }
+
+    Value cvtSliceArray(Value v, Type t)
+    {
+        auto n = Len(gocpp::recv(t));
+        if(n > Len(gocpp::recv(v)))
+        {
+            gocpp::panic("reflect: cannot convert slice with length " + itoa::Itoa(Len(gocpp::recv(v))) + " to array with length " + itoa::Itoa(n));
+        }
+        auto h = (unsafeheader::Slice*)(v.ptr);
+        auto typ = common(gocpp::recv(t));
+        auto ptr = h->Data;
+        auto c = unsafe_New(typ);
+        typedmemmove(typ, c, ptr);
+        ptr = c;
+        return Value {typ, ptr, v.flag &^ (flagAddr | flagKindMask) | flag(Array)};
+    }
+
+    Value cvtDirect(Value v, Type typ)
+    {
+        auto f = v.flag;
+        auto t = common(gocpp::recv(typ));
+        auto ptr = v.ptr;
+        if(f & flagAddr != 0)
+        {
+            auto c = unsafe_New(t);
+            typedmemmove(t, c, ptr);
+            ptr = c;
+            f &^= flagAddr;
+        }
+        return Value {t, ptr, ro(gocpp::recv(v.flag)) | f};
+    }
+
+    Value cvtT2I(Value v, Type typ)
+    {
+        auto target = unsafe_New(common(gocpp::recv(typ)));
+        auto x = valueInterface(v, false);
+        if(NumMethod(gocpp::recv(typ)) == 0)
+        {
+            *(go_any*)(target) = x;
+        }
+        else
+        {
+            ifaceE2I(common(gocpp::recv(typ)), x, target);
+        }
+        return Value {common(gocpp::recv(typ)), target, ro(gocpp::recv(v.flag)) | flagIndir | flag(Interface)};
+    }
+
+    Value cvtI2I(Value v, Type typ)
+    {
+        if(IsNil(gocpp::recv(v)))
+        {
+            auto ret = Zero(typ);
+            ret.flag |= ro(gocpp::recv(v.flag));
+            return ret;
+        }
+        return cvtT2I(Elem(gocpp::recv(v)), typ);
+    }
+
+    int chancap(unsafe::Pointer ch)
+    /* convertBlockStmt, nil block */;
+
+    void chanclose(unsafe::Pointer ch)
+    /* convertBlockStmt, nil block */;
+
+    int chanlen(unsafe::Pointer ch)
+    /* convertBlockStmt, nil block */;
+
+    std::tuple<bool, bool> chanrecv(unsafe::Pointer ch, bool nb, unsafe::Pointer val)
+    /* convertBlockStmt, nil block */;
+
+    bool chansend0(unsafe::Pointer ch, unsafe::Pointer val, bool nb)
+    /* convertBlockStmt, nil block */;
+
+    bool chansend(unsafe::Pointer ch, unsafe::Pointer val, bool nb)
+    {
+        contentEscapes(val);
+        return chansend0(ch, val, nb);
+    }
+
+    unsafe::Pointer makechan(abi::Type* typ, int size)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer makemap(abi::Type* t, int cap)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer mapaccess(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer mapaccess_faststr(abi::Type* t, unsafe::Pointer m, std::string key)
+    /* convertBlockStmt, nil block */;
+
+    void mapassign0(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key, unsafe::Pointer val)
+    /* convertBlockStmt, nil block */;
+
+    void mapassign(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key, unsafe::Pointer val)
+    {
+        contentEscapes(key);
+        contentEscapes(val);
+        mapassign0(t, m, key, val);
+    }
+
+    void mapassign_faststr0(abi::Type* t, unsafe::Pointer m, std::string key, unsafe::Pointer val)
+    /* convertBlockStmt, nil block */;
+
+    void mapassign_faststr(abi::Type* t, unsafe::Pointer m, std::string key, unsafe::Pointer val)
+    {
+        contentEscapes((unsafeheader::String*)(unsafe::Pointer(& key))->Data);
+        contentEscapes(val);
+        mapassign_faststr0(t, m, key, val);
+    }
+
+    void mapdelete(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key)
+    /* convertBlockStmt, nil block */;
+
+    void mapdelete_faststr(abi::Type* t, unsafe::Pointer m, std::string key)
+    /* convertBlockStmt, nil block */;
+
+    void mapiterinit(abi::Type* t, unsafe::Pointer m, hiter* it)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer mapiterkey(hiter* it)
+    /* convertBlockStmt, nil block */;
+
+    unsafe::Pointer mapiterelem(hiter* it)
+    /* convertBlockStmt, nil block */;
+
+    void mapiternext(hiter* it)
+    /* convertBlockStmt, nil block */;
+
+    int maplen(unsafe::Pointer m)
+    /* convertBlockStmt, nil block */;
+
+    void mapclear(abi::Type* t, unsafe::Pointer m)
+    /* convertBlockStmt, nil block */;
+
+    void call(abi::Type* stackArgsType, unsafe::Pointer f, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    /* convertBlockStmt, nil block */;
+
+    void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst)
+    /* convertBlockStmt, nil block */;
+
+    void memmove(unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size)
+    /* convertBlockStmt, nil block */;
+
+    void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src)
+    /* convertBlockStmt, nil block */;
+
+    void typedmemclr(abi::Type* t, unsafe::Pointer ptr)
+    /* convertBlockStmt, nil block */;
+
+    void typedmemclrpartial(abi::Type* t, unsafe::Pointer ptr, uintptr_t off, uintptr_t size)
+    /* convertBlockStmt, nil block */;
+
+    int typedslicecopy(abi::Type* t, unsafeheader::Slice dst, unsafeheader::Slice src)
+    /* convertBlockStmt, nil block */;
+
+    void typedarrayclear(abi::Type* elemType, unsafe::Pointer ptr, int len)
+    /* convertBlockStmt, nil block */;
+
+    uintptr_t typehash(abi::Type* t, unsafe::Pointer p, uintptr_t h)
+    /* convertBlockStmt, nil block */;
+
+    bool verifyNotInHeapPtr(uintptr_t p)
+    /* convertBlockStmt, nil block */;
+
+    unsafeheader::Slice growslice(abi::Type* t, unsafeheader::Slice old, int num)
+    /* convertBlockStmt, nil block */;
+
+    void escapes(go_any x)
+    {
+        if(dummy.b)
+        {
+            dummy.x = x;
+        }
+    }
+
+    struct gocpp_id_11
+    {
+        bool b;
+        go_any x;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            result.b = this->b;
+            result.x = this->x;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            if (b != ref.b) return false;
+            if (x != ref.x) return false;
+            return true;
+        }
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << "" << b;
+            os << " " << x;
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    gocpp_id_11 dummy;
+    void contentEscapes(unsafe::Pointer x)
+    {
+        if(dummy.b)
+        {
+            escapes(*(go_any*)(x));
+        }
+    }
+
+    unsafe::Pointer noescape(unsafe::Pointer p)
+    {
+        auto x = uintptr_t(p);
+        return unsafe::Pointer(x ^ 0);
+    }
+
+}
+

@@ -16,7 +16,7 @@ namespace golang::slices
     template<typename S>
     bool Equal(S s1, S s2);
 
-    template<typename S2, typename S1>
+    template<typename S1, typename S2>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq);
 
     template<typename S>
@@ -25,7 +25,7 @@ namespace golang::slices
     template<typename S1, typename S2>
     int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp);
 
-    template<typename E, typename S>
+    template<typename S, typename E>
     int Index(S s, E v);
 
     template<typename S>

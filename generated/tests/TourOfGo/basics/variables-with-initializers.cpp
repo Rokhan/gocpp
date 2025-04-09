@@ -17,12 +17,22 @@ namespace golang::main
 {
     int i = 1;
     int j = 2;
+    std::tuple<std::string, int, uint64_t> locabs()
+    {
+        std::string name;
+        int offset;
+        uint64_t abs;
+        return {"UTC", 0, 0};
+    }
+
     void main()
     {
         auto c = true;
         auto python = false;
         auto java = "no!";
         mocklib::Println(i, j, c, python, java);
+        auto [name, offset, abs] = locabs();
+        mocklib::Println(name, offset, abs);
     }
 
 }

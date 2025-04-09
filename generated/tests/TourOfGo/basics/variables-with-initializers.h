@@ -14,6 +14,7 @@ namespace golang::main
 {
     extern int i;
     extern int j;
+    std::tuple<std::string, int, uint64_t> locabs();
     void main();
 }
 

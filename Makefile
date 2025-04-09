@@ -120,6 +120,9 @@ clean:
 #	@rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES)
 	rm -f results.md
 
+soft_clean:
+	touch cmd/main.go
+
 unix2dos:
 	unix2dos -q $$(find generated -type f -name "*.cpp" -o -name "*.h")
 

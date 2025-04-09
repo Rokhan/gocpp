@@ -40,6 +40,12 @@ func Panicf(format string, a ...interface{}) {
 	panic(msg)
 }
 
+func Assertf(ok bool, format string, a ...interface{}) {
+	if !ok {
+		Panicf(format, a...)
+	}
+}
+
 func GetCppType(goType string) string {
 	goType = GetCppName(goType)
 	val, ok := stdTypeMapping[goType]
@@ -2154,6 +2160,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 							if cv.ignoreKnownError(name, knownMissingDeps) {
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							} else {
+								Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							}
 						} else {
@@ -2161,6 +2168,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 								result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
 								result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							} else {
+								Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 								result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
 								result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							}
@@ -2170,13 +2178,28 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 
 			} else {
 				if s.Type == nil {
-					for i := range s.Names {
-						name := GetCppName(s.Names[i].Name)
-						if len(values) == 0 {
+					switch {
+					case len(values) == 0:
+						for i := range s.Names {
+							name := GetCppName(s.Names[i].Name)
 							result = append(result, inlineStrf(s, "auto %s%s", name, end)...)
-						} else {
+						}
+
+					case len(values) == len(s.Names):
+						for i := range s.Names {
+							name := GetCppName(s.Names[i].Name)
 							result = append(result, inlineStrf(s, "auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
 						}
+
+					case len(values) == 1:
+						names := []string{}
+						for i := range s.Names {
+							names = append(names, GetCppName(s.Names[i].Name))
+						}
+						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
+
+					default:
+						Panicf("convertSpecs, mismatch declaration length. variable: %v, names:%v, input: %v", reflect.TypeOf(s), s.Names, cv.Position(s))
 					}
 				} else {
 					for i := range s.Names {
@@ -2185,6 +2208,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						if len(values) == 0 {
 							result = append(result, inlineStrf(s, "%s %s = {}%s", t, name, end)...)
 						} else {
+							Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 							result = append(result, inlineStrf(s, "%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
 						}
 					}

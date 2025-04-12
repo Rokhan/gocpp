@@ -475,31 +475,38 @@ namespace golang::sync
     bool CompareAndSwap(struct Map* m, go_any key, go_any old, go_any go_new)
     {
         gocpp::Defer defer;
-        auto read = loadReadOnly(gocpp::recv(m));
-        if(auto [e, ok] = read.m[key]; ok)
+        try
         {
-            return tryCompareAndSwap(gocpp::recv(e), old, go_new);
+            auto read = loadReadOnly(gocpp::recv(m));
+            if(auto [e, ok] = read.m[key]; ok)
+            {
+                return tryCompareAndSwap(gocpp::recv(e), old, go_new);
+            }
+            else
+            if(! read.amended)
+            {
+                return false;
+            }
+            Lock(gocpp::recv(m->mu));
+            defer.push_back([=]{ Unlock(gocpp::recv(m->mu)); });
+            read = loadReadOnly(gocpp::recv(m));
+            auto swapped = false;
+            if(auto [e, ok] = read.m[key]; ok)
+            {
+                swapped = tryCompareAndSwap(gocpp::recv(e), old, go_new);
+            }
+            else
+            if(auto [e, ok] = m->dirty[key]; ok)
+            {
+                swapped = tryCompareAndSwap(gocpp::recv(e), old, go_new);
+                missLocked(gocpp::recv(m));
+            }
+            return swapped;
         }
-        else
-        if(! read.amended)
+        catch(gocpp::GoPanic& gp)
         {
-            return false;
+            defer.handlePanic(gp);
         }
-        Lock(gocpp::recv(m->mu));
-        defer.push_back([=]{ Unlock(gocpp::recv(m->mu)); });
-        read = loadReadOnly(gocpp::recv(m));
-        auto swapped = false;
-        if(auto [e, ok] = read.m[key]; ok)
-        {
-            swapped = tryCompareAndSwap(gocpp::recv(e), old, go_new);
-        }
-        else
-        if(auto [e, ok] = m->dirty[key]; ok)
-        {
-            swapped = tryCompareAndSwap(gocpp::recv(e), old, go_new);
-            missLocked(gocpp::recv(m));
-        }
-        return swapped;
     }
 
     bool CompareAndDelete(struct Map* m, go_any key, go_any old)

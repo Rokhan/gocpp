@@ -113,19 +113,26 @@ namespace golang::syscall
     std::tuple<SID*, std::string> StringToSid(std::string s)
     {
         gocpp::Defer defer;
-        SID* sid = {};
-        auto [p, e] = UTF16PtrFromString(s);
-        if(e != nullptr)
+        try
         {
-            return {nullptr, e};
+            SID* sid = {};
+            auto [p, e] = UTF16PtrFromString(s);
+            if(e != nullptr)
+            {
+                return {nullptr, e};
+            }
+            e = ConvertStringSidToSid(p, & sid);
+            if(e != nullptr)
+            {
+                return {nullptr, e};
+            }
+            defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(sid))); });
+            return Copy(gocpp::recv(sid));
         }
-        e = ConvertStringSidToSid(p, & sid);
-        if(e != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            return {nullptr, e};
+            defer.handlePanic(gp);
         }
-        defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(sid))); });
-        return Copy(gocpp::recv(sid));
     }
 
     std::tuple<SID*, std::string, uint32_t, std::string> LookupSID(std::string system, std::string account)
@@ -210,14 +217,21 @@ namespace golang::syscall
     std::tuple<std::string, std::string> String(struct SID* sid)
     {
         gocpp::Defer defer;
-        uint16_t* s = {};
-        auto e = ConvertSidToStringSid(sid, & s);
-        if(e != nullptr)
+        try
         {
-            return {"", e};
+            uint16_t* s = {};
+            auto e = ConvertSidToStringSid(sid, & s);
+            if(e != nullptr)
+            {
+                return {"", e};
+            }
+            defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(s))); });
+            return {utf16PtrToString(s), nullptr};
         }
-        defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(s))); });
-        return {utf16PtrToString(s), nullptr};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     int Len(struct SID* sid)

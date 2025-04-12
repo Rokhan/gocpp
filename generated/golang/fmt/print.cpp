@@ -1032,7 +1032,7 @@ namespace golang::fmt
 
     void catchPanic(struct pp* p, go_any arg, gocpp::rune verb, std::string method)
     {
-        if(auto err = recover(); err != nullptr)
+        if(auto err = gocpp::recover(); err != nullptr)
         {
             if(auto v = reflect::ValueOf(arg); Kind(gocpp::recv(v)) == reflect::Pointer && IsNil(gocpp::recv(v)))
             {
@@ -1061,98 +1061,105 @@ namespace golang::fmt
     bool handleMethods(struct pp* p, gocpp::rune verb)
     {
         gocpp::Defer defer;
-        bool handled;
-        if(p->erroring)
+        try
         {
             bool handled;
-            return handled;
-        }
-        if(verb == 'w')
-        {
-            bool handled;
-            auto [gocpp_id_1, ok] = gocpp::getValue<std::string>(p->arg);
-            if(! ok || ! p->wrapErrs)
+            if(p->erroring)
             {
                 bool handled;
-                badVerb(gocpp::recv(p), verb);
-                return true;
+                return handled;
             }
-            verb = 'v';
-        }
-        if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
-        {
-            bool handled;
-            handled = true;
-            defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "Format"); });
-            Format(gocpp::recv(formatter), p, verb);
-            return handled;
-        }
-        if(p->fmt.sharpV)
-        {
-            bool handled;
-            if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
+            if(verb == 'w')
+            {
+                bool handled;
+                auto [gocpp_id_1, ok] = gocpp::getValue<std::string>(p->arg);
+                if(! ok || ! p->wrapErrs)
+                {
+                    bool handled;
+                    badVerb(gocpp::recv(p), verb);
+                    return true;
+                }
+                verb = 'v';
+            }
+            if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
             {
                 bool handled;
                 handled = true;
-                defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "GoString"); });
-                fmtS(gocpp::recv(p->fmt), GoString(gocpp::recv(stringer)));
+                defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "Format"); });
+                Format(gocpp::recv(formatter), p, verb);
                 return handled;
             }
-        }
-        else
-        {
-            bool handled;
-            //Go switch emulation
+            if(p->fmt.sharpV)
             {
-                auto condition = verb;
-                int conditionId = -1;
-                if(condition == 'v') { conditionId = 0; }
-                if(condition == 's') { conditionId = 1; }
-                if(condition == 'x') { conditionId = 2; }
-                if(condition == 'X') { conditionId = 3; }
-                if(condition == 'q') { conditionId = 4; }
-                switch(conditionId)
+                bool handled;
+                if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
                 {
                     bool handled;
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                        //Go type switch emulation
-                        {
-                            const auto& gocpp_id_2 = gocpp::type_info(p->arg);
-                            int conditionId = -1;
-                            if(gocpp_id_2 == typeid(std::string)) { conditionId = 0; }
-                            else if(gocpp_id_2 == typeid(Stringer)) { conditionId = 1; }
-                            switch(conditionId)
-                            {
-                                bool handled;
-                                case 0:
-                                {
-                                    std::string v = gocpp::any_cast<std::string>(p->arg);
-                                    handled = true;
-                                    defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "Error"); });
-                                    fmtString(gocpp::recv(p), Error(gocpp::recv(v)), verb);
-                                    return handled;
-                                    break;
-                                }
-                                case 1:
-                                {
-                                    Stringer v = gocpp::any_cast<Stringer>(p->arg);
-                                    handled = true;
-                                    defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "String"); });
-                                    fmtString(gocpp::recv(p), String(gocpp::recv(v)), verb);
-                                    return handled;
-                                    break;
-                                }
-                            }
-                        }
-                        break;
+                    handled = true;
+                    defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "GoString"); });
+                    fmtS(gocpp::recv(p->fmt), GoString(gocpp::recv(stringer)));
+                    return handled;
                 }
             }
+            else
+            {
+                bool handled;
+                //Go switch emulation
+                {
+                    auto condition = verb;
+                    int conditionId = -1;
+                    if(condition == 'v') { conditionId = 0; }
+                    if(condition == 's') { conditionId = 1; }
+                    if(condition == 'x') { conditionId = 2; }
+                    if(condition == 'X') { conditionId = 3; }
+                    if(condition == 'q') { conditionId = 4; }
+                    switch(conditionId)
+                    {
+                        bool handled;
+                        case 0:
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                            //Go type switch emulation
+                            {
+                                const auto& gocpp_id_2 = gocpp::type_info(p->arg);
+                                int conditionId = -1;
+                                if(gocpp_id_2 == typeid(std::string)) { conditionId = 0; }
+                                else if(gocpp_id_2 == typeid(Stringer)) { conditionId = 1; }
+                                switch(conditionId)
+                                {
+                                    bool handled;
+                                    case 0:
+                                    {
+                                        std::string v = gocpp::any_cast<std::string>(p->arg);
+                                        handled = true;
+                                        defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "Error"); });
+                                        fmtString(gocpp::recv(p), Error(gocpp::recv(v)), verb);
+                                        return handled;
+                                        break;
+                                    }
+                                    case 1:
+                                    {
+                                        Stringer v = gocpp::any_cast<Stringer>(p->arg);
+                                        handled = true;
+                                        defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "String"); });
+                                        fmtString(gocpp::recv(p), String(gocpp::recv(v)), verb);
+                                        return handled;
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+            return false;
         }
-        return false;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void printArg(struct pp* p, go_any arg, gocpp::rune verb)

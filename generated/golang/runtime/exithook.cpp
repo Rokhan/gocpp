@@ -104,16 +104,23 @@ namespace golang::runtime
         auto runExitHook = [=](std::function<void ()> f) mutable -> bool
         {
             gocpp::Defer defer;
-            bool caughtPanic;
-            defer.push_back([=]{ [=]() mutable -> void
+            try
             {
-                if(auto x = recover(); x != nullptr)
+                bool caughtPanic;
+                defer.push_back([=]{ [=]() mutable -> void
                 {
-                    caughtPanic = true;
-                }
-            }(); });
-            f();
-            return caughtPanic;
+                    if(auto x = gocpp::recover(); x != nullptr)
+                    {
+                        caughtPanic = true;
+                    }
+                }(); });
+                f();
+                return caughtPanic;
+            }
+            catch(gocpp::GoPanic& gp)
+            {
+                defer.handlePanic(gp);
+            }
         };
         finishPageTrace();
         for(auto [i, gocpp_ignored] : exitHooks.hooks)

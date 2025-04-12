@@ -257,25 +257,32 @@ namespace golang::sync
     std::tuple<poolLocal*, int> pinSlow(struct Pool* p)
     {
         gocpp::Defer defer;
-        runtime_procUnpin();
-        Lock(gocpp::recv(allPoolsMu));
-        defer.push_back([=]{ Unlock(gocpp::recv(allPoolsMu)); });
-        auto pid = runtime_procPin();
-        auto s = p->localSize;
-        auto l = p->local;
-        if(uintptr_t(pid) < s)
+        try
         {
-            return {indexLocal(l, pid), pid};
+            runtime_procUnpin();
+            Lock(gocpp::recv(allPoolsMu));
+            defer.push_back([=]{ Unlock(gocpp::recv(allPoolsMu)); });
+            auto pid = runtime_procPin();
+            auto s = p->localSize;
+            auto l = p->local;
+            if(uintptr_t(pid) < s)
+            {
+                return {indexLocal(l, pid), pid};
+            }
+            if(p->local == nullptr)
+            {
+                allPools = append(allPools, p);
+            }
+            auto size = runtime::GOMAXPROCS(0);
+            auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
+            atomic::StorePointer(& p->local, unsafe::Pointer(& local[0]));
+            runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
+            return {& local[pid], pid};
         }
-        if(p->local == nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            allPools = append(allPools, p);
+            defer.handlePanic(gp);
         }
-        auto size = runtime::GOMAXPROCS(0);
-        auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
-        atomic::StorePointer(& p->local, unsafe::Pointer(& local[0]));
-        runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
-        return {& local[pid], pid};
     }
 
     void poolCleanup()

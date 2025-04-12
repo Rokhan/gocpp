@@ -119,124 +119,131 @@ namespace golang::runtime
     void main()
     {
         gocpp::Defer defer;
-        auto mp = getg()->m;
-        mp->g0->racectx = 0;
-        if(goarch::PtrSize == 8)
+        try
         {
-            maxstacksize = 1000000000;
-        }
-        else
-        {
-            maxstacksize = 250000000;
-        }
-        maxstackceiling = 2 * maxstacksize;
-        mainStarted = true;
-        if(GOARCH != "wasm")
-        {
-            systemstack([=]() mutable -> void
+            auto mp = getg()->m;
+            mp->g0->racectx = 0;
+            if(goarch::PtrSize == 8)
             {
-                newm(sysmon, nullptr, - 1);
-            });
-        }
-        lockOSThread();
-        if(mp != & m0)
-        {
-            go_throw("runtime.main not on m0");
-        }
-        runtimeInitTime = nanotime();
-        if(runtimeInitTime == 0)
-        {
-            go_throw("nanotime returning zero");
-        }
-        if(debug.inittrace != 0)
-        {
-            inittrace.id = getg()->goid;
-            inittrace.active = true;
-        }
-        doInit(runtime_inittasks);
-        auto needUnlock = true;
-        defer.push_back([=]{ [=]() mutable -> void
-        {
-            if(needUnlock)
-            {
-                unlockOSThread();
+                maxstacksize = 1000000000;
             }
-        }(); });
-        gcenable();
-        main_init_done = gocpp::make(gocpp::Tag<gocpp::channel<bool>>());
-        if(iscgo)
-        {
-            if(_cgo_pthread_key_created == nullptr)
+            else
             {
-                go_throw("_cgo_pthread_key_created missing");
+                maxstacksize = 250000000;
             }
-            if(_cgo_thread_start == nullptr)
+            maxstackceiling = 2 * maxstacksize;
+            mainStarted = true;
+            if(GOARCH != "wasm")
             {
-                go_throw("_cgo_thread_start missing");
-            }
-            if(GOOS != "windows")
-            {
-                if(_cgo_setenv == nullptr)
+                systemstack([=]() mutable -> void
                 {
-                    go_throw("_cgo_setenv missing");
-                }
-                if(_cgo_unsetenv == nullptr)
+                    newm(sysmon, nullptr, - 1);
+                });
+            }
+            lockOSThread();
+            if(mp != & m0)
+            {
+                go_throw("runtime.main not on m0");
+            }
+            runtimeInitTime = nanotime();
+            if(runtimeInitTime == 0)
+            {
+                go_throw("nanotime returning zero");
+            }
+            if(debug.inittrace != 0)
+            {
+                inittrace.id = getg()->goid;
+                inittrace.active = true;
+            }
+            doInit(runtime_inittasks);
+            auto needUnlock = true;
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(needUnlock)
                 {
-                    go_throw("_cgo_unsetenv missing");
+                    unlockOSThread();
+                }
+            }(); });
+            gcenable();
+            main_init_done = gocpp::make(gocpp::Tag<gocpp::channel<bool>>());
+            if(iscgo)
+            {
+                if(_cgo_pthread_key_created == nullptr)
+                {
+                    go_throw("_cgo_pthread_key_created missing");
+                }
+                if(_cgo_thread_start == nullptr)
+                {
+                    go_throw("_cgo_thread_start missing");
+                }
+                if(GOOS != "windows")
+                {
+                    if(_cgo_setenv == nullptr)
+                    {
+                        go_throw("_cgo_setenv missing");
+                    }
+                    if(_cgo_unsetenv == nullptr)
+                    {
+                        go_throw("_cgo_unsetenv missing");
+                    }
+                }
+                if(_cgo_notify_runtime_init_done == nullptr)
+                {
+                    go_throw("_cgo_notify_runtime_init_done missing");
+                }
+                if(set_crosscall2 == nullptr)
+                {
+                    go_throw("set_crosscall2 missing");
+                }
+                set_crosscall2();
+                startTemplateThread();
+                cgocall(_cgo_notify_runtime_init_done, nullptr);
+            }
+            for(auto m = & firstmoduledata; m != nullptr; m = m->next)
+            {
+                doInit(m->inittasks);
+            }
+            inittrace.active = false;
+            close(main_init_done);
+            needUnlock = false;
+            unlockOSThread();
+            if(isarchive || islibrary)
+            {
+                return;
+            }
+            auto fn = main_main;
+            fn();
+            if(raceenabled)
+            {
+                runExitHooks(0);
+                racefini();
+            }
+            if(Load(gocpp::recv(runningPanicDefers)) != 0)
+            {
+                for(auto c = 0; c < 1000; c++)
+                {
+                    if(Load(gocpp::recv(runningPanicDefers)) == 0)
+                    {
+                        break;
+                    }
+                    Gosched();
                 }
             }
-            if(_cgo_notify_runtime_init_done == nullptr)
+            if(Load(gocpp::recv(panicking)) != 0)
             {
-                go_throw("_cgo_notify_runtime_init_done missing");
+                gopark(nullptr, nullptr, waitReasonPanicWait, traceBlockForever, 1);
             }
-            if(set_crosscall2 == nullptr)
-            {
-                go_throw("set_crosscall2 missing");
-            }
-            set_crosscall2();
-            startTemplateThread();
-            cgocall(_cgo_notify_runtime_init_done, nullptr);
-        }
-        for(auto m = & firstmoduledata; m != nullptr; m = m->next)
-        {
-            doInit(m->inittasks);
-        }
-        inittrace.active = false;
-        close(main_init_done);
-        needUnlock = false;
-        unlockOSThread();
-        if(isarchive || islibrary)
-        {
-            return;
-        }
-        auto fn = main_main;
-        fn();
-        if(raceenabled)
-        {
             runExitHooks(0);
-            racefini();
-        }
-        if(Load(gocpp::recv(runningPanicDefers)) != 0)
-        {
-            for(auto c = 0; c < 1000; c++)
+            exit(0);
+            for(; ; )
             {
-                if(Load(gocpp::recv(runningPanicDefers)) == 0)
-                {
-                    break;
-                }
-                Gosched();
+                int32_t* x = {};
+                *x = 0;
             }
         }
-        if(Load(gocpp::recv(panicking)) != 0)
+        catch(gocpp::GoPanic& gp)
         {
-            gopark(nullptr, nullptr, waitReasonPanicWait, traceBlockForever, 1);
-        }
-        runExitHooks(0);
-        exit(0);
-        for(; ; )
-        {
-            int32_t* x = {};
-            *x = 0;
+            defer.handlePanic(gp);
         }
     }
 

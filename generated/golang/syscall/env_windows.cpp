@@ -108,26 +108,33 @@ namespace golang::syscall
     gocpp::slice<std::string> Environ()
     {
         gocpp::Defer defer;
-        auto [envp, e] = GetEnvironmentStrings();
-        if(e != nullptr)
+        try
         {
-            return nullptr;
-        }
-        defer.push_back([=]{ FreeEnvironmentStrings(envp); });
-        auto r = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 50);
-        auto size = gocpp::Sizeof<uint16_t>();
-        for(; *envp != 0; )
-        {
-            auto end = unsafe::Pointer(envp);
-            for(; *(uint16_t*)(end) != 0; )
+            auto [envp, e] = GetEnvironmentStrings();
+            if(e != nullptr)
             {
-                end = unsafe::Add(end, size);
+                return nullptr;
             }
-            auto entry = unsafe::Slice(envp, (uintptr_t(end) - uintptr_t(unsafe::Pointer(envp))) / size);
-            r = append(r, UTF16ToString(entry));
-            envp = (uint16_t*)(unsafe::Add(end, size));
+            defer.push_back([=]{ FreeEnvironmentStrings(envp); });
+            auto r = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 50);
+            auto size = gocpp::Sizeof<uint16_t>();
+            for(; *envp != 0; )
+            {
+                auto end = unsafe::Pointer(envp);
+                for(; *(uint16_t*)(end) != 0; )
+                {
+                    end = unsafe::Add(end, size);
+                }
+                auto entry = unsafe::Slice(envp, (uintptr_t(end) - uintptr_t(unsafe::Pointer(envp))) / size);
+                r = append(r, UTF16ToString(entry));
+                envp = (uint16_t*)(unsafe::Add(end, size));
+            }
+            return r;
         }
-        return r;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

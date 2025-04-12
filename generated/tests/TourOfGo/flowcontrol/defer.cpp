@@ -18,8 +18,15 @@ namespace golang::main
     void main()
     {
         gocpp::Defer defer;
-        defer.push_back([=]{ mocklib::Println("world"); });
-        mocklib::Println("hello");
+        try
+        {
+            defer.push_back([=]{ mocklib::Println("world"); });
+            mocklib::Println("hello");
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

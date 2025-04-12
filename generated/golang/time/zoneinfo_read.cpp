@@ -411,66 +411,73 @@ namespace golang::time
     std::tuple<gocpp::slice<unsigned char>, std::string> loadTzinfoFromZip(std::string zipfile, std::string name)
     {
         gocpp::Defer defer;
-        auto [fd, err] = open(zipfile);
-        if(err != nullptr)
+        try
         {
-            return {nullptr, err};
-        }
-        defer.push_back([=]{ closefd(fd); });
-        auto zecheader = 0x06054b50;
-        auto zcheader = 0x02014b50;
-        auto ztailsize = 22;
-        auto zheadersize = 30;
-        auto zheader = 0x04034b50;
-        auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
-        if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)
-        {
-            return {nullptr, errors::New("corrupt zip file " + zipfile)};
-        }
-        auto n = get2(buf.make_slice(10));
-        auto size = get4(buf.make_slice(12));
-        auto off = get4(buf.make_slice(16));
-        buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
-        if(auto err = preadn(fd, buf, off); err != nullptr)
-        {
-            return {nullptr, errors::New("corrupt zip file " + zipfile)};
-        }
-        for(auto i = 0; i < n; i++)
-        {
-            if(get4(buf) != zcheader)
+            auto [fd, err] = open(zipfile);
+            if(err != nullptr)
             {
-                break;
+                return {nullptr, err};
             }
-            auto meth = get2(buf.make_slice(10));
-            auto size = get4(buf.make_slice(24));
-            auto namelen = get2(buf.make_slice(28));
-            auto xlen = get2(buf.make_slice(30));
-            auto fclen = get2(buf.make_slice(32));
-            auto off = get4(buf.make_slice(42));
-            auto zname = buf.make_slice(46, 46 + namelen);
-            buf = buf.make_slice(46 + namelen + xlen + fclen);
-            if(string(zname) != name)
-            {
-                continue;
-            }
-            if(meth != 0)
-            {
-                return {nullptr, errors::New("unsupported compression for " + name + " in " + zipfile)};
-            }
-            buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
-            if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || string(buf.make_slice(30, 30 + namelen)) != name)
+            defer.push_back([=]{ closefd(fd); });
+            auto zecheader = 0x06054b50;
+            auto zcheader = 0x02014b50;
+            auto ztailsize = 22;
+            auto zheadersize = 30;
+            auto zheader = 0x04034b50;
+            auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
+            if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)
             {
                 return {nullptr, errors::New("corrupt zip file " + zipfile)};
             }
-            xlen = get2(buf.make_slice(28));
+            auto n = get2(buf.make_slice(10));
+            auto size = get4(buf.make_slice(12));
+            auto off = get4(buf.make_slice(16));
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
-            if(auto err = preadn(fd, buf, off + 30 + namelen + xlen); err != nullptr)
+            if(auto err = preadn(fd, buf, off); err != nullptr)
             {
                 return {nullptr, errors::New("corrupt zip file " + zipfile)};
             }
-            return {buf, nullptr};
+            for(auto i = 0; i < n; i++)
+            {
+                if(get4(buf) != zcheader)
+                {
+                    break;
+                }
+                auto meth = get2(buf.make_slice(10));
+                auto size = get4(buf.make_slice(24));
+                auto namelen = get2(buf.make_slice(28));
+                auto xlen = get2(buf.make_slice(30));
+                auto fclen = get2(buf.make_slice(32));
+                auto off = get4(buf.make_slice(42));
+                auto zname = buf.make_slice(46, 46 + namelen);
+                buf = buf.make_slice(46 + namelen + xlen + fclen);
+                if(string(zname) != name)
+                {
+                    continue;
+                }
+                if(meth != 0)
+                {
+                    return {nullptr, errors::New("unsupported compression for " + name + " in " + zipfile)};
+                }
+                buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
+                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || string(buf.make_slice(30, 30 + namelen)) != name)
+                {
+                    return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                }
+                xlen = get2(buf.make_slice(28));
+                buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
+                if(auto err = preadn(fd, buf, off + 30 + namelen + xlen); err != nullptr)
+                {
+                    return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                }
+                return {buf, nullptr};
+            }
+            return {nullptr, syscall::ENOENT};
         }
-        return {nullptr, syscall::ENOENT};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::function<std::tuple<gocpp::slice<unsigned char>, std::string> (std::string file, std::string name)> loadTzinfoFromTzdata;
@@ -568,32 +575,39 @@ namespace golang::time
     std::tuple<gocpp::slice<unsigned char>, std::string> readFile(std::string name)
     {
         gocpp::Defer defer;
-        auto [f, err] = open(name);
-        if(err != nullptr)
+        try
         {
-            return {nullptr, err};
+            auto [f, err] = open(name);
+            if(err != nullptr)
+            {
+                return {nullptr, err};
+            }
+            defer.push_back([=]{ closefd(f); });
+            gocpp::array<unsigned char, 4096> buf = {};
+            gocpp::slice<unsigned char> ret = {};
+            int n = {};
+            for(; ; )
+            {
+                std::tie(n, err) = read(f, buf.make_slice(0, ));
+                if(n > 0)
+                {
+                    ret = append(ret, buf.make_slice(0, n));
+                }
+                if(n == 0 || err != nullptr)
+                {
+                    break;
+                }
+                if(len(ret) > maxFileSize)
+                {
+                    return {nullptr, fileSizeError(name)};
+                }
+            }
+            return {ret, err};
         }
-        defer.push_back([=]{ closefd(f); });
-        gocpp::array<unsigned char, 4096> buf = {};
-        gocpp::slice<unsigned char> ret = {};
-        int n = {};
-        for(; ; )
+        catch(gocpp::GoPanic& gp)
         {
-            std::tie(n, err) = read(f, buf.make_slice(0, ));
-            if(n > 0)
-            {
-                ret = append(ret, buf.make_slice(0, n));
-            }
-            if(n == 0 || err != nullptr)
-            {
-                break;
-            }
-            if(len(ret) > maxFileSize)
-            {
-                return {nullptr, fileSizeError(name)};
-            }
+            defer.handlePanic(gp);
         }
-        return {ret, err};
     }
 
 }

@@ -60,9 +60,16 @@ namespace golang::main
     int Value(struct SafeCounter* c, std::string key)
     {
         gocpp::Defer defer;
-        Lock(gocpp::recv(c->mu));
-        defer.push_back([=]{ Unlock(gocpp::recv(c->mu)); });
-        return c->v[key];
+        try
+        {
+            Lock(gocpp::recv(c->mu));
+            defer.push_back([=]{ Unlock(gocpp::recv(c->mu)); });
+            return c->v[key];
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void main()

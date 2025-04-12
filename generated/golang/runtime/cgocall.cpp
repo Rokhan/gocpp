@@ -216,49 +216,56 @@ namespace golang::runtime
     void cgocallbackg1(unsafe::Pointer fn, unsafe::Pointer frame, uintptr_t ctxt)
     {
         gocpp::Defer defer;
-        auto gp = getg();
-        if(gp->m->needextram || Load(gocpp::recv(extraMWaiters)) > 0)
+        try
         {
-            gp->m->needextram = false;
-            systemstack(newextram);
-        }
-        if(ctxt != 0)
-        {
-            auto s = append(gp->cgoCtxt, ctxt);
-            auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
-            atomicstorep(unsafe::Pointer(& p->array), unsafe::Pointer(& s[0]));
-            p->cap = cap(s);
-            p->len = len(s);
-            defer.push_back([=]{ [=](g* gp) mutable -> void
+            auto gp = getg();
+            if(gp->m->needextram || Load(gocpp::recv(extraMWaiters)) > 0)
             {
+                gp->m->needextram = false;
+                systemstack(newextram);
+            }
+            if(ctxt != 0)
+            {
+                auto s = append(gp->cgoCtxt, ctxt);
                 auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
-                p->len--;
-            }(gp); });
+                atomicstorep(unsafe::Pointer(& p->array), unsafe::Pointer(& s[0]));
+                p->cap = cap(s);
+                p->len = len(s);
+                defer.push_back([=]{ [=](g* gp) mutable -> void
+                {
+                    auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
+                    p->len--;
+                }(gp); });
+            }
+            if(gp->m->ncgo == 0)
+            {
+                main_init_done.recv();
+            }
+            auto hz = sched.profilehz;
+            if(gp->m->profilehz != hz)
+            {
+                setThreadCPUProfiler(hz);
+            }
+            auto restore = true;
+            defer.push_back([=]{ unwindm(& restore); });
+            if(raceenabled)
+            {
+                raceacquire(unsafe::Pointer(& racecgosync));
+            }
+            std::function<void (unsafe::Pointer frame)> cb = {};
+            auto cbFV = funcval {uintptr_t(fn)};
+            *(unsafe::Pointer*)(unsafe::Pointer(& cb)) = noescape(unsafe::Pointer(& cbFV));
+            cb(frame);
+            if(raceenabled)
+            {
+                racereleasemerge(unsafe::Pointer(& racecgosync));
+            }
+            restore = false;
         }
-        if(gp->m->ncgo == 0)
+        catch(gocpp::GoPanic& gp)
         {
-            main_init_done.recv();
+            defer.handlePanic(gp);
         }
-        auto hz = sched.profilehz;
-        if(gp->m->profilehz != hz)
-        {
-            setThreadCPUProfiler(hz);
-        }
-        auto restore = true;
-        defer.push_back([=]{ unwindm(& restore); });
-        if(raceenabled)
-        {
-            raceacquire(unsafe::Pointer(& racecgosync));
-        }
-        std::function<void (unsafe::Pointer frame)> cb = {};
-        auto cbFV = funcval {uintptr_t(fn)};
-        *(unsafe::Pointer*)(unsafe::Pointer(& cb)) = noescape(unsafe::Pointer(& cbFV));
-        cb(frame);
-        if(raceenabled)
-        {
-            racereleasemerge(unsafe::Pointer(& racecgosync));
-        }
-        restore = false;
     }
 
     void unwindm(bool* restore)

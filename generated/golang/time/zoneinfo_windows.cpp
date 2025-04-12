@@ -26,81 +26,95 @@ namespace golang::time
     std::tuple<bool, std::string> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
-        bool matched;
-        std::string err2;
-        auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
-        if(err != nullptr)
+        try
         {
             bool matched;
             std::string err2;
-            return {false, err};
-        }
-        defer.push_back([=]{ Close(gocpp::recv(k)); });
-        std::string std = {};
-        std::string dlt = {};
-        std::tie(std, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Std");
-        if(err == nullptr)
-        {
-            bool matched;
-            std::string err2;
-            std::tie(dlt, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
-        }
-        if(err != nullptr)
-        {
-            bool matched;
-            std::string err2;
-            if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
+            auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
+            if(err != nullptr)
             {
                 bool matched;
                 std::string err2;
                 return {false, err};
             }
-            if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
+            defer.push_back([=]{ Close(gocpp::recv(k)); });
+            std::string std = {};
+            std::string dlt = {};
+            std::tie(std, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Std");
+            if(err == nullptr)
             {
                 bool matched;
                 std::string err2;
-                return {false, err};
+                std::tie(dlt, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
             }
+            if(err != nullptr)
+            {
+                bool matched;
+                std::string err2;
+                if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
+                {
+                    bool matched;
+                    std::string err2;
+                    return {false, err};
+                }
+                if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
+                {
+                    bool matched;
+                    std::string err2;
+                    return {false, err};
+                }
+            }
+            if(std != stdname)
+            {
+                bool matched;
+                std::string err2;
+                return {false, nullptr};
+            }
+            if(dlt != dstname && dstname != stdname)
+            {
+                bool matched;
+                std::string err2;
+                return {false, nullptr};
+            }
+            return {true, nullptr};
         }
-        if(std != stdname)
+        catch(gocpp::GoPanic& gp)
         {
-            bool matched;
-            std::string err2;
-            return {false, nullptr};
+            defer.handlePanic(gp);
         }
-        if(dlt != dstname && dstname != stdname)
-        {
-            bool matched;
-            std::string err2;
-            return {false, nullptr};
-        }
-        return {true, nullptr};
     }
 
     std::tuple<std::string, std::string> toEnglishName(std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
-        auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones", registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
-        if(err != nullptr)
+        try
         {
-            return {"", err};
-        }
-        defer.push_back([=]{ Close(gocpp::recv(k)); });
-        gocpp::slice<std::string> names;
-        std::tie(names, err) = ReadSubKeyNames(gocpp::recv(k));
-        if(err != nullptr)
-        {
-            return {"", err};
-        }
-        for(auto [_, name] : names)
-        {
-            auto [matched, err] = matchZoneKey(k, name, stdname, dstname);
-            if(err == nullptr && matched)
+            auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones", registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
+            if(err != nullptr)
             {
-                return {name, nullptr};
+                return {"", err};
             }
+            defer.push_back([=]{ Close(gocpp::recv(k)); });
+            gocpp::slice<std::string> names;
+            std::tie(names, err) = ReadSubKeyNames(gocpp::recv(k));
+            if(err != nullptr)
+            {
+                return {"", err};
+            }
+            for(auto [_, name] : names)
+            {
+                auto [matched, err] = matchZoneKey(k, name, stdname, dstname);
+                if(err == nullptr && matched)
+                {
+                    return {name, nullptr};
+                }
+            }
+            return {"", errors::New("English name for time zone "" + stdname + "" not found in registry")};
         }
-        return {"", errors::New("English name for time zone "" + stdname + "" not found in registry")};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::string extractCAPS(std::string desc)

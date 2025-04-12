@@ -18,12 +18,19 @@ namespace golang::main
     void main()
     {
         gocpp::Defer defer;
-        mocklib::Println("counting");
-        for(auto i = 0; i < 10; i++)
+        try
         {
-            defer.push_back([=]{ mocklib::Println(i); });
+            mocklib::Println("counting");
+            for(auto i = 0; i < 10; i++)
+            {
+                defer.push_back([=]{ mocklib::Println(i); });
+            }
+            mocklib::Println("done");
         }
-        mocklib::Println("done");
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

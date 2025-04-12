@@ -19,38 +19,57 @@ namespace golang::main
     {
         f();
         mocklib::Println("Returned normally from f.");
+        if(auto r = gocpp::recover(); r != nullptr)
+        {
+            mocklib::Println("R should always be nil, r =", r);
+        }
     }
 
     void f()
     {
         gocpp::Defer defer;
-        defer.push_back([=]{ [=]() mutable -> void
+        try
         {
-            if(auto r = recover(); r != nullptr)
+            defer.push_back([=]{ [=]() mutable -> void
             {
-                mocklib::Println("Recovered in f", r);
-            }
-        }(); });
-        defer.push_back([=]{ [=]() mutable -> void
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    mocklib::Println("Recovered in f", r);
+                }
+            }(); });
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                mocklib::Println("Simple defer in f");
+            }(); });
+            mocklib::Println("Calling g.");
+            g(0);
+            mocklib::Println("Returned normally from g.");
+        }
+        catch(gocpp::GoPanic& gp)
         {
-            mocklib::Println("Simple defer in f");
-        }(); });
-        mocklib::Println("Calling g.");
-        g(0);
-        mocklib::Println("Returned normally from g.");
+            defer.handlePanic(gp);
+        }
     }
 
     void g(int i)
     {
         gocpp::Defer defer;
-        if(i > 3)
+        try
         {
-            mocklib::Println("Panicking!");
-            gocpp::panic(mocklib::Sprintf("%v", i));
+            defer.push_back([=]{ mocklib::Println("Defer1 in g", i); });
+            if(i > 3)
+            {
+                mocklib::Println("Panicking!");
+                gocpp::panic(mocklib::Sprint(i));
+            }
+            defer.push_back([=]{ mocklib::Println("Defer2 in g", i); });
+            mocklib::Println("Printing in g", i);
+            g(i + 1);
         }
-        defer.push_back([=]{ mocklib::Println("Defer in g", i); });
-        mocklib::Println("Printing in g", i);
-        g(i + 1);
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

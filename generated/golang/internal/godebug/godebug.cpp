@@ -224,19 +224,26 @@ namespace golang::godebug
     void update(std::string def, std::string env)
     {
         gocpp::Defer defer;
-        Lock(gocpp::recv(updateMu));
-        defer.push_back([=]{ Unlock(gocpp::recv(updateMu)); });
-        auto did = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
-        parse(did, env);
-        parse(did, def);
-        Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
+        try
         {
-            if(! did[gocpp::getValue<std::string>(name)])
+            Lock(gocpp::recv(updateMu));
+            defer.push_back([=]{ Unlock(gocpp::recv(updateMu)); });
+            auto did = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
+            parse(did, env);
+            parse(did, def);
+            Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
-                Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
-            }
-            return true;
-        });
+                if(! did[gocpp::getValue<std::string>(name)])
+                {
+                    Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
+                }
+                return true;
+            });
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void parse(gocpp::map<std::string, bool> did, std::string s)

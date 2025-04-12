@@ -52,17 +52,24 @@ namespace golang::pic
     void ShowImage(image::Image m)
     {
         gocpp::Defer defer;
-        auto w = bufio::NewWriter(os::Stdout);
-        defer.push_back([=]{ Flush(gocpp::recv(w)); });
-        io::WriteString(w, "IMAGE:");
-        auto b64 = base64::NewEncoder(base64::StdEncoding, w);
-        auto err = Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
-        if(err != nullptr)
+        try
         {
-            gocpp::panic(err);
+            auto w = bufio::NewWriter(os::Stdout);
+            defer.push_back([=]{ Flush(gocpp::recv(w)); });
+            io::WriteString(w, "IMAGE:");
+            auto b64 = base64::NewEncoder(base64::StdEncoding, w);
+            auto err = Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
+            if(err != nullptr)
+            {
+                gocpp::panic(err);
+            }
+            Close(gocpp::recv(b64));
+            io::WriteString(w, "\n");
         }
-        Close(gocpp::recv(b64));
-        io::WriteString(w, "\n");
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

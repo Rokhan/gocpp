@@ -44,42 +44,49 @@ namespace golang::registry
     std::tuple<gocpp::slice<std::string>, std::string> ReadSubKeyNames(Key k)
     {
         gocpp::Defer defer;
-        runtime::LockOSThread();
-        defer.push_back([=]{ runtime::UnlockOSThread(); });
-        auto names = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0);
-        auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 256);
-        loopItems:
-        for(auto i = uint32_t(0); ; i++)
+        try
         {
-            auto l = uint32_t(len(buf));
-            for(; ; )
+            runtime::LockOSThread();
+            defer.push_back([=]{ runtime::UnlockOSThread(); });
+            auto names = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0);
+            auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 256);
+            loopItems:
+            for(auto i = uint32_t(0); ; i++)
             {
-                auto err = syscall::RegEnumKeyEx(syscall::Handle(k), i, & buf[0], & l, nullptr, nullptr, nullptr, nullptr);
-                if(err == nullptr)
+                auto l = uint32_t(len(buf));
+                for(; ; )
                 {
+                    auto err = syscall::RegEnumKeyEx(syscall::Handle(k), i, & buf[0], & l, nullptr, nullptr, nullptr, nullptr);
+                    if(err == nullptr)
+                    {
+                        break;
+                    }
+                    if(err == syscall::ERROR_MORE_DATA)
+                    {
+                        l = uint32_t(2 * len(buf));
+                        buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), l);
+                        continue;
+                    }
+                    if(err == _ERROR_NO_MORE_ITEMS)
+                    {
+                        goto loopItems_break;
+                    }
+                    return {names, err};
+                }
+                names = append(names, syscall::UTF16ToString(buf.make_slice(0, l)));
+                if(false) {
+                loopItems_continue:
+                    continue;
+                loopItems_break:
                     break;
                 }
-                if(err == syscall::ERROR_MORE_DATA)
-                {
-                    l = uint32_t(2 * len(buf));
-                    buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), l);
-                    continue;
-                }
-                if(err == _ERROR_NO_MORE_ITEMS)
-                {
-                    goto loopItems_break;
-                }
-                return {names, err};
             }
-            names = append(names, syscall::UTF16ToString(buf.make_slice(0, l)));
-            if(false) {
-            loopItems_continue:
-                continue;
-            loopItems_break:
-                break;
-            }
+            return {names, nullptr};
         }
-        return {names, nullptr};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::tuple<Key, bool, std::string> CreateKey(Key k, std::string path, uint32_t access)

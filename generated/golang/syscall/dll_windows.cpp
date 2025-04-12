@@ -283,21 +283,28 @@ namespace golang::syscall
     std::string Load(struct LazyDLL* d)
     {
         gocpp::Defer defer;
-        if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll))) == nullptr)
+        try
         {
-            Lock(gocpp::recv(d->mu));
-            defer.push_back([=]{ Unlock(gocpp::recv(d->mu)); });
-            if(d->dll == nullptr)
+            if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll))) == nullptr)
             {
-                auto [dll, e] = LoadDLL(d->Name);
-                if(e != nullptr)
+                Lock(gocpp::recv(d->mu));
+                defer.push_back([=]{ Unlock(gocpp::recv(d->mu)); });
+                if(d->dll == nullptr)
                 {
-                    return e;
+                    auto [dll, e] = LoadDLL(d->Name);
+                    if(e != nullptr)
+                    {
+                        return e;
+                    }
+                    atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll)), unsafe::Pointer(dll));
                 }
-                atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll)), unsafe::Pointer(dll));
             }
+            return nullptr;
         }
-        return nullptr;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void mustLoad(struct LazyDLL* d)
@@ -366,27 +373,34 @@ namespace golang::syscall
     std::string Find(struct LazyProc* p)
     {
         gocpp::Defer defer;
-        if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc))) == nullptr)
+        try
         {
-            Lock(gocpp::recv(p->mu));
-            defer.push_back([=]{ Unlock(gocpp::recv(p->mu)); });
-            if(p->proc == nullptr)
+            if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc))) == nullptr)
             {
-                auto e = Load(gocpp::recv(p->l));
-                if(e != nullptr)
+                Lock(gocpp::recv(p->mu));
+                defer.push_back([=]{ Unlock(gocpp::recv(p->mu)); });
+                if(p->proc == nullptr)
                 {
-                    return e;
+                    auto e = Load(gocpp::recv(p->l));
+                    if(e != nullptr)
+                    {
+                        return e;
+                    }
+                    Proc* proc;
+                    std::tie(proc, e) = FindProc(gocpp::recv(p->l->dll), p->Name);
+                    if(e != nullptr)
+                    {
+                        return e;
+                    }
+                    atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc)), unsafe::Pointer(proc));
                 }
-                Proc* proc;
-                std::tie(proc, e) = FindProc(gocpp::recv(p->l->dll), p->Name);
-                if(e != nullptr)
-                {
-                    return e;
-                }
-                atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc)), unsafe::Pointer(proc));
             }
+            return nullptr;
         }
-        return nullptr;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void mustFind(struct LazyProc* p)

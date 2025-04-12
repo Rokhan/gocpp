@@ -627,27 +627,34 @@ namespace golang::syscall
     std::string Ftruncate(Handle fd, int64_t length)
     {
         gocpp::Defer defer;
-        std::string err;
-        auto [curoffset, e] = Seek(fd, 0, 1);
-        if(e != nullptr)
+        try
         {
             std::string err;
-            return e;
+            auto [curoffset, e] = Seek(fd, 0, 1);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            defer.push_back([=]{ Seek(fd, curoffset, 0); });
+            std::tie(gocpp_id_8, e) = Seek(fd, length, 0);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            e = SetEndOfFile(fd);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            return nullptr;
         }
-        defer.push_back([=]{ Seek(fd, curoffset, 0); });
-        std::tie(gocpp_id_8, e) = Seek(fd, length, 0);
-        if(e != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            std::string err;
-            return e;
+            defer.handlePanic(gp);
         }
-        e = SetEndOfFile(fd);
-        if(e != nullptr)
-        {
-            std::string err;
-            return e;
-        }
-        return nullptr;
     }
 
     std::string Gettimeofday(Timeval* tv)
@@ -683,77 +690,91 @@ namespace golang::syscall
     std::string Utimes(std::string path, gocpp::slice<Timeval> tv)
     {
         gocpp::Defer defer;
-        std::string err;
-        if(len(tv) != 2)
+        try
         {
             std::string err;
-            return EINVAL;
+            if(len(tv) != 2)
+            {
+                std::string err;
+                return EINVAL;
+            }
+            auto [pathp, e] = UTF16PtrFromString(path);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            Handle h;
+            std::tie(h, e) = CreateFile(pathp, FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            defer.push_back([=]{ Close(h); });
+            auto a = Filetime {};
+            auto w = Filetime {};
+            if(Nanoseconds(gocpp::recv(tv[0])) != 0)
+            {
+                std::string err;
+                a = NsecToFiletime(Nanoseconds(gocpp::recv(tv[0])));
+            }
+            if(Nanoseconds(gocpp::recv(tv[0])) != 0)
+            {
+                std::string err;
+                w = NsecToFiletime(Nanoseconds(gocpp::recv(tv[1])));
+            }
+            return SetFileTime(h, nullptr, & a, & w);
         }
-        auto [pathp, e] = UTF16PtrFromString(path);
-        if(e != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            std::string err;
-            return e;
+            defer.handlePanic(gp);
         }
-        Handle h;
-        std::tie(h, e) = CreateFile(pathp, FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-        if(e != nullptr)
-        {
-            std::string err;
-            return e;
-        }
-        defer.push_back([=]{ Close(h); });
-        auto a = Filetime {};
-        auto w = Filetime {};
-        if(Nanoseconds(gocpp::recv(tv[0])) != 0)
-        {
-            std::string err;
-            a = NsecToFiletime(Nanoseconds(gocpp::recv(tv[0])));
-        }
-        if(Nanoseconds(gocpp::recv(tv[0])) != 0)
-        {
-            std::string err;
-            w = NsecToFiletime(Nanoseconds(gocpp::recv(tv[1])));
-        }
-        return SetFileTime(h, nullptr, & a, & w);
     }
 
     std::string UtimesNano(std::string path, gocpp::slice<Timespec> ts)
     {
         gocpp::Defer defer;
-        std::string err;
-        if(len(ts) != 2)
+        try
         {
             std::string err;
-            return EINVAL;
+            if(len(ts) != 2)
+            {
+                std::string err;
+                return EINVAL;
+            }
+            auto [pathp, e] = UTF16PtrFromString(path);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            Handle h;
+            std::tie(h, e) = CreateFile(pathp, FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+            if(e != nullptr)
+            {
+                std::string err;
+                return e;
+            }
+            defer.push_back([=]{ Close(h); });
+            auto a = Filetime {};
+            auto w = Filetime {};
+            if(ts[0].Nsec != _UTIME_OMIT)
+            {
+                std::string err;
+                a = NsecToFiletime(TimespecToNsec(ts[0]));
+            }
+            if(ts[1].Nsec != _UTIME_OMIT)
+            {
+                std::string err;
+                w = NsecToFiletime(TimespecToNsec(ts[1]));
+            }
+            return SetFileTime(h, nullptr, & a, & w);
         }
-        auto [pathp, e] = UTF16PtrFromString(path);
-        if(e != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            std::string err;
-            return e;
+            defer.handlePanic(gp);
         }
-        Handle h;
-        std::tie(h, e) = CreateFile(pathp, FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-        if(e != nullptr)
-        {
-            std::string err;
-            return e;
-        }
-        defer.push_back([=]{ Close(h); });
-        auto a = Filetime {};
-        auto w = Filetime {};
-        if(ts[0].Nsec != _UTIME_OMIT)
-        {
-            std::string err;
-            a = NsecToFiletime(TimespecToNsec(ts[0]));
-        }
-        if(ts[1].Nsec != _UTIME_OMIT)
-        {
-            std::string err;
-            w = NsecToFiletime(TimespecToNsec(ts[1]));
-        }
-        return SetFileTime(h, nullptr, & a, & w);
     }
 
     std::string Fsync(Handle fd)
@@ -1462,15 +1483,22 @@ namespace golang::syscall
         Do(gocpp::recv(connectExFunc.once), [=]() mutable -> void
         {
             gocpp::Defer defer;
-            Handle s = {};
-            std::tie(s, connectExFunc.err) = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if(connectExFunc.err != nullptr)
+            try
             {
-                return;
+                Handle s = {};
+                std::tie(s, connectExFunc.err) = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                if(connectExFunc.err != nullptr)
+                {
+                    return;
+                }
+                defer.push_back([=]{ CloseHandle(s); });
+                uint32_t n = {};
+                connectExFunc.err = WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_CONNECTEX)), uint32_t(gocpp::Sizeof<GUID>()), (unsigned char*)(unsafe::Pointer(& connectExFunc.addr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
             }
-            defer.push_back([=]{ CloseHandle(s); });
-            uint32_t n = {};
-            connectExFunc.err = WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_CONNECTEX)), uint32_t(gocpp::Sizeof<GUID>()), (unsigned char*)(unsafe::Pointer(& connectExFunc.addr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
+            catch(gocpp::GoPanic& gp)
+            {
+                defer.handlePanic(gp);
+            }
         });
         return connectExFunc.err;
     }
@@ -1893,29 +1921,36 @@ namespace golang::syscall
     std::tuple<ProcessEntry32*, std::string> getProcessEntry(int pid)
     {
         gocpp::Defer defer;
-        auto [snapshot, err] = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if(err != nullptr)
+        try
         {
-            return {nullptr, err};
-        }
-        defer.push_back([=]{ CloseHandle(snapshot); });
-        ProcessEntry32 procEntry = {};
-        procEntry.Size = uint32_t(gocpp::Sizeof<ProcessEntry32>());
-        if(err = Process32First(snapshot, & procEntry); err != nullptr)
-        {
-            return {nullptr, err};
-        }
-        for(; ; )
-        {
-            if(procEntry.ProcessID == uint32_t(pid))
-            {
-                return {& procEntry, nullptr};
-            }
-            err = Process32Next(snapshot, & procEntry);
+            auto [snapshot, err] = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
             if(err != nullptr)
             {
                 return {nullptr, err};
             }
+            defer.push_back([=]{ CloseHandle(snapshot); });
+            ProcessEntry32 procEntry = {};
+            procEntry.Size = uint32_t(gocpp::Sizeof<ProcessEntry32>());
+            if(err = Process32First(snapshot, & procEntry); err != nullptr)
+            {
+                return {nullptr, err};
+            }
+            for(; ; )
+            {
+                if(procEntry.ProcessID == uint32_t(pid))
+                {
+                    return {& procEntry, nullptr};
+                }
+                err = Process32Next(snapshot, & procEntry);
+                if(err != nullptr)
+                {
+                    return {nullptr, err};
+                }
+            }
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
         }
     }
 
@@ -2062,99 +2097,106 @@ namespace golang::syscall
     std::tuple<int, std::string> Readlink(std::string path, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
-        int n;
-        std::string err;
-        auto [fd, err] = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
-        if(err != nullptr)
+        try
         {
             int n;
             std::string err;
-            return {- 1, err};
-        }
-        defer.push_back([=]{ CloseHandle(fd); });
-        auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-        uint32_t bytesReturned = {};
-        err = DeviceIoControl(fd, FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
-        if(err != nullptr)
-        {
-            int n;
-            std::string err;
-            return {- 1, err};
-        }
-        auto rdb = (reparseDataBuffer*)(unsafe::Pointer(& rdbbuf[0]));
-        std::string s = {};
-        //Go switch emulation
-        {
-            auto condition = rdb->ReparseTag;
-            int conditionId = -1;
-            if(condition == IO_REPARSE_TAG_SYMLINK) { conditionId = 0; }
-            else if(condition == _IO_REPARSE_TAG_MOUNT_POINT) { conditionId = 1; }
-            switch(conditionId)
+            auto [fd, err] = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
+            if(err != nullptr)
             {
                 int n;
                 std::string err;
-                case 0:
-                    auto data = (symbolicLinkReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
-                    auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
-                    s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
-                    if(data->Flags & _SYMLINK_FLAG_RELATIVE == 0)
-                    {
-                        int n;
-                        std::string err;
+                return {- 1, err};
+            }
+            defer.push_back([=]{ CloseHandle(fd); });
+            auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+            uint32_t bytesReturned = {};
+            err = DeviceIoControl(fd, FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
+            if(err != nullptr)
+            {
+                int n;
+                std::string err;
+                return {- 1, err};
+            }
+            auto rdb = (reparseDataBuffer*)(unsafe::Pointer(& rdbbuf[0]));
+            std::string s = {};
+            //Go switch emulation
+            {
+                auto condition = rdb->ReparseTag;
+                int conditionId = -1;
+                if(condition == IO_REPARSE_TAG_SYMLINK) { conditionId = 0; }
+                else if(condition == _IO_REPARSE_TAG_MOUNT_POINT) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    int n;
+                    std::string err;
+                    case 0:
+                        auto data = (symbolicLinkReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
+                        auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
+                        s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
+                        if(data->Flags & _SYMLINK_FLAG_RELATIVE == 0)
+                        {
+                            int n;
+                            std::string err;
+                            if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\")
+                            {
+                                int n;
+                                std::string err;
+                                s = s.make_slice(4);
+                                //Go switch emulation
+                                {
+                                    int conditionId = -1;
+                                    if(len(s) >= 2 && s[1] == ':') { conditionId = 0; }
+                                    else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\") { conditionId = 1; }
+                                    switch(conditionId)
+                                    {
+                                        int n;
+                                        std::string err;
+                                        case 0:
+                                            break;
+                                        case 1:
+                                            s = "\\\\" + s.make_slice(4);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                int n;
+                                std::string err;
+                            }
+                        }
+                        break;
+                    case 1:
+                        auto data = (mountPointReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
+                        auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
+                        s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
                         if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\")
                         {
                             int n;
                             std::string err;
                             s = s.make_slice(4);
-                            //Go switch emulation
-                            {
-                                int conditionId = -1;
-                                if(len(s) >= 2 && s[1] == ':') { conditionId = 0; }
-                                else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\") { conditionId = 1; }
-                                switch(conditionId)
-                                {
-                                    int n;
-                                    std::string err;
-                                    case 0:
-                                        break;
-                                    case 1:
-                                        s = "\\\\" + s.make_slice(4);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
                         }
                         else
                         {
                             int n;
                             std::string err;
                         }
-                    }
-                    break;
-                case 1:
-                    auto data = (mountPointReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
-                    auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
-                    s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
-                    if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\")
-                    {
-                        int n;
-                        std::string err;
-                        s = s.make_slice(4);
-                    }
-                    else
-                    {
-                        int n;
-                        std::string err;
-                    }
-                    break;
-                default:
-                    return {- 1, ENOENT};
-                    break;
+                        break;
+                    default:
+                        return {- 1, ENOENT};
+                        break;
+                }
             }
+            n = copy(buf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
+            return {n, nullptr};
         }
-        n = copy(buf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
-        return {n, nullptr};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::tuple<Handle, std::string> CreateIoCompletionPort(Handle filehandle, Handle cphandle, uint32_t key, uint32_t threadcnt)

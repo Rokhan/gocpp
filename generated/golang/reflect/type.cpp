@@ -2294,109 +2294,123 @@ namespace golang::reflect
     Type initFuncTypes(int n)
     {
         gocpp::Defer defer;
-        Lock(gocpp::recv(funcTypesMutex));
-        defer.push_back([=]{ Unlock(gocpp::recv(funcTypesMutex)); });
-        if(n >= len(funcTypes))
+        try
         {
-            auto newFuncTypes = gocpp::make(gocpp::Tag<gocpp::slice<Type>>(), n + 1);
-            copy(newFuncTypes, funcTypes);
-            funcTypes = newFuncTypes;
-        }
-        if(funcTypes[n] != nullptr)
-        {
+            Lock(gocpp::recv(funcTypesMutex));
+            defer.push_back([=]{ Unlock(gocpp::recv(funcTypesMutex)); });
+            if(n >= len(funcTypes))
+            {
+                auto newFuncTypes = gocpp::make(gocpp::Tag<gocpp::slice<Type>>(), n + 1);
+                copy(newFuncTypes, funcTypes);
+                funcTypes = newFuncTypes;
+            }
+            if(funcTypes[n] != nullptr)
+            {
+                return funcTypes[n];
+            }
+            funcTypes[n] = StructOf(gocpp::slice<StructField> {gocpp::Init<>([](& x) { x.Name = "FuncType"; x.Type = TypeOf(funcType {}); }), gocpp::Init<>([](& x) { x.Name = "Args"; x.Type = ArrayOf(n, TypeOf(new rtype {})); })});
             return funcTypes[n];
         }
-        funcTypes[n] = StructOf(gocpp::slice<StructField> {gocpp::Init<>([](& x) { x.Name = "FuncType"; x.Type = TypeOf(funcType {}); }), gocpp::Init<>([](& x) { x.Name = "Args"; x.Type = ArrayOf(n, TypeOf(new rtype {})); })});
-        return funcTypes[n];
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     Type FuncOf(gocpp::slice<Type> in, gocpp::slice<Type> out, bool variadic)
     {
         gocpp::Defer defer;
-        if(variadic && (len(in) == 0 || Kind(gocpp::recv(in[len(in) - 1])) != Slice))
+        try
         {
-            gocpp::panic("reflect.FuncOf: last arg of variadic func must be slice");
-        }
-        go_any ifunc = (std::function<void ()>)(nullptr);
-        auto prototype = *(funcType**)(unsafe::Pointer(& ifunc));
-        auto n = len(in) + len(out);
-        if(n > 128)
-        {
-            gocpp::panic("reflect.FuncOf: too many arguments");
-        }
-        auto o = Elem(gocpp::recv(New(initFuncTypes(n))));
-        auto ft = (funcType*)(unsafe::Pointer(Pointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(o), 0)))))));
-        auto args = unsafe::Slice((rtype**)(unsafe::Pointer(Pointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(o), 1))))))), n).make_slice(0, 0, n);
-        *ft = *prototype;
-        uint32_t hash = {};
-        for(auto [_, in] : in)
-        {
-            auto t = gocpp::getValue<rtype*>(in);
-            args = append(args, t);
-            hash = fnv1(hash, unsigned char(t->t.Hash >> 24), unsigned char(t->t.Hash >> 16), unsigned char(t->t.Hash >> 8), unsigned char(t->t.Hash));
-        }
-        if(variadic)
-        {
-            hash = fnv1(hash, 'v');
-        }
-        hash = fnv1(hash, '.');
-        for(auto [_, out] : out)
-        {
-            auto t = gocpp::getValue<rtype*>(out);
-            args = append(args, t);
-            hash = fnv1(hash, unsigned char(t->t.Hash >> 24), unsigned char(t->t.Hash >> 16), unsigned char(t->t.Hash >> 8), unsigned char(t->t.Hash));
-        }
-        ft->TFlag = 0;
-        ft->Hash = hash;
-        ft->InCount = uint16_t(len(in));
-        ft->OutCount = uint16_t(len(out));
-        if(variadic)
-        {
-            ft->OutCount |= 1 << 15;
-        }
-        if(auto [ts, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
-        {
-            for(auto [_, t] : gocpp::getValue<abi::Type>>(ts))
+            if(variadic && (len(in) == 0 || Kind(gocpp::recv(in[len(in) - 1])) != Slice))
             {
-                if(haveIdenticalUnderlyingType(& ft->Type, t, true))
+                gocpp::panic("reflect.FuncOf: last arg of variadic func must be slice");
+            }
+            go_any ifunc = (std::function<void ()>)(nullptr);
+            auto prototype = *(funcType**)(unsafe::Pointer(& ifunc));
+            auto n = len(in) + len(out);
+            if(n > 128)
+            {
+                gocpp::panic("reflect.FuncOf: too many arguments");
+            }
+            auto o = Elem(gocpp::recv(New(initFuncTypes(n))));
+            auto ft = (funcType*)(unsafe::Pointer(Pointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(o), 0)))))));
+            auto args = unsafe::Slice((rtype**)(unsafe::Pointer(Pointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(o), 1))))))), n).make_slice(0, 0, n);
+            *ft = *prototype;
+            uint32_t hash = {};
+            for(auto [_, in] : in)
+            {
+                auto t = gocpp::getValue<rtype*>(in);
+                args = append(args, t);
+                hash = fnv1(hash, unsigned char(t->t.Hash >> 24), unsigned char(t->t.Hash >> 16), unsigned char(t->t.Hash >> 8), unsigned char(t->t.Hash));
+            }
+            if(variadic)
+            {
+                hash = fnv1(hash, 'v');
+            }
+            hash = fnv1(hash, '.');
+            for(auto [_, out] : out)
+            {
+                auto t = gocpp::getValue<rtype*>(out);
+                args = append(args, t);
+                hash = fnv1(hash, unsigned char(t->t.Hash >> 24), unsigned char(t->t.Hash >> 16), unsigned char(t->t.Hash >> 8), unsigned char(t->t.Hash));
+            }
+            ft->TFlag = 0;
+            ft->Hash = hash;
+            ft->InCount = uint16_t(len(in));
+            ft->OutCount = uint16_t(len(out));
+            if(variadic)
+            {
+                ft->OutCount |= 1 << 15;
+            }
+            if(auto [ts, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
+            {
+                for(auto [_, t] : gocpp::getValue<abi::Type>>(ts))
                 {
-                    return toRType(t);
+                    if(haveIdenticalUnderlyingType(& ft->Type, t, true))
+                    {
+                        return toRType(t);
+                    }
                 }
             }
-        }
-        Lock(gocpp::recv(funcLookupCache));
-        defer.push_back([=]{ Unlock(gocpp::recv(funcLookupCache)); });
-        if(auto [ts, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
-        {
-            for(auto [_, t] : gocpp::getValue<abi::Type>>(ts))
+            Lock(gocpp::recv(funcLookupCache));
+            defer.push_back([=]{ Unlock(gocpp::recv(funcLookupCache)); });
+            if(auto [ts, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
-                if(haveIdenticalUnderlyingType(& ft->Type, t, true))
+                for(auto [_, t] : gocpp::getValue<abi::Type>>(ts))
                 {
-                    return toRType(t);
+                    if(haveIdenticalUnderlyingType(& ft->Type, t, true))
+                    {
+                        return toRType(t);
+                    }
                 }
             }
-        }
-        auto addToCache = [=](abi::Type* tt) mutable -> Type
-        {
-            gocpp::slice<abi::Type*> rts = {};
-            if(auto [rti, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
+            auto addToCache = [=](abi::Type* tt) mutable -> Type
             {
-                rts = gocpp::getValue<abi::Type>>(rti);
-            }
-            Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
-            return toType(tt);
-        };
-        auto str = funcStr(ft);
-        for(auto [_, tt] : typesByString(str))
-        {
-            if(haveIdenticalUnderlyingType(& ft->Type, tt, true))
+                gocpp::slice<abi::Type*> rts = {};
+                if(auto [rti, ok] = Load(gocpp::recv(funcLookupCache.m), hash); ok)
+                {
+                    rts = gocpp::getValue<abi::Type>>(rti);
+                }
+                Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
+                return toType(tt);
+            };
+            auto str = funcStr(ft);
+            for(auto [_, tt] : typesByString(str))
             {
-                return addToCache(tt);
+                if(haveIdenticalUnderlyingType(& ft->Type, tt, true))
+                {
+                    return addToCache(tt);
+                }
             }
+            ft->Str = resolveReflectName(newName(str, "", false, false));
+            ft->PtrToThis = 0;
+            return addToCache(& ft->Type);
         }
-        ft->Str = resolveReflectName(newName(str, "", false, false));
-        ft->PtrToThis = 0;
-        return addToCache(& ft->Type);
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::string stringFor(abi::Type* t)
@@ -2955,364 +2969,371 @@ namespace golang::reflect
     Type StructOf(gocpp::slice<StructField> fields)
     {
         gocpp::Defer defer;
-        auto hash = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        uintptr_t size = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        uint8_t typalign = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
-        auto comparable = true;
-        gocpp::slice<abi::Method> methods = true;
-        auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
-        auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
-        auto fset = gocpp::map<std::string, gocpp_id_20> {};
-        auto hasGCProg = false;
-        auto lastzero = uintptr_t(0);
-        repr = append(repr, "struct {");
-        auto pkgpath = "";
-        for(auto [i, field] : fields)
+        try
         {
-            if(field.Name == "")
+            auto hash = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+            uintptr_t size = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+            uint8_t typalign = fnv1(0, gocpp::Tag<gocpp::slice<unsigned char>>()("struct {"));
+            auto comparable = true;
+            gocpp::slice<abi::Method> methods = true;
+            auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
+            auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
+            auto fset = gocpp::map<std::string, gocpp_id_20> {};
+            auto hasGCProg = false;
+            auto lastzero = uintptr_t(0);
+            repr = append(repr, "struct {");
+            auto pkgpath = "";
+            for(auto [i, field] : fields)
             {
-                gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has no name");
-            }
-            if(! isValidFieldName(field.Name))
-            {
-                gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has invalid name");
-            }
-            if(field.Type == nullptr)
-            {
-                gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has no type");
-            }
-            auto [f, fpkgpath] = runtimeStructField(field);
-            auto ft = f.Typ;
-            if(ft->Kind_ & kindGCProg != 0)
-            {
-                hasGCProg = true;
-            }
-            if(fpkgpath != "")
-            {
-                if(pkgpath == "")
+                if(field.Name == "")
                 {
-                    pkgpath = fpkgpath;
+                    gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has no name");
                 }
-                else
-                if(pkgpath != fpkgpath)
+                if(! isValidFieldName(field.Name))
                 {
-                    gocpp::panic("reflect.Struct: fields with different PkgPath " + pkgpath + " and " + fpkgpath);
+                    gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has invalid name");
                 }
-            }
-            auto name = Name(gocpp::recv(f.Name));
-            hash = fnv1(hash, gocpp::Tag<gocpp::slice<unsigned char>>()(name));
-            repr = append(repr, (" " + name));
-            if(Embedded(gocpp::recv(f)))
-            {
-                if(Kind(gocpp::recv(f.Typ)) == abi::Pointer)
+                if(field.Type == nullptr)
                 {
-                    auto elem = Elem(gocpp::recv(ft));
-                    if(auto k = Kind(gocpp::recv(elem)); k == abi::Pointer || k == abi::Interface)
+                    gocpp::panic("reflect.StructOf: field " + strconv::Itoa(i) + " has no type");
+                }
+                auto [f, fpkgpath] = runtimeStructField(field);
+                auto ft = f.Typ;
+                if(ft->Kind_ & kindGCProg != 0)
+                {
+                    hasGCProg = true;
+                }
+                if(fpkgpath != "")
+                {
+                    if(pkgpath == "")
                     {
-                        gocpp::panic("reflect.StructOf: illegal embedded field type " + stringFor(ft));
+                        pkgpath = fpkgpath;
+                    }
+                    else
+                    if(pkgpath != fpkgpath)
+                    {
+                        gocpp::panic("reflect.Struct: fields with different PkgPath " + pkgpath + " and " + fpkgpath);
                     }
                 }
-                //Go switch emulation
+                auto name = Name(gocpp::recv(f.Name));
+                hash = fnv1(hash, gocpp::Tag<gocpp::slice<unsigned char>>()(name));
+                repr = append(repr, (" " + name));
+                if(Embedded(gocpp::recv(f)))
                 {
-                    auto condition = Kind(Kind(gocpp::recv(f.Typ)));
-                    int conditionId = -1;
-                    if(condition == Interface) { conditionId = 0; }
-                    else if(condition == Pointer) { conditionId = 1; }
-                    switch(conditionId)
+                    if(Kind(gocpp::recv(f.Typ)) == abi::Pointer)
                     {
-                        case 0:
-                            auto ift = (interfaceType*)(unsafe::Pointer(ft));
-                            for(auto [_, m] : ift->Methods)
-                            {
-                                if(pkgPath(nameOff(gocpp::recv(ift), m.Name)) != "")
+                        auto elem = Elem(gocpp::recv(ft));
+                        if(auto k = Kind(gocpp::recv(elem)); k == abi::Pointer || k == abi::Interface)
+                        {
+                            gocpp::panic("reflect.StructOf: illegal embedded field type " + stringFor(ft));
+                        }
+                    }
+                    //Go switch emulation
+                    {
+                        auto condition = Kind(Kind(gocpp::recv(f.Typ)));
+                        int conditionId = -1;
+                        if(condition == Interface) { conditionId = 0; }
+                        else if(condition == Pointer) { conditionId = 1; }
+                        switch(conditionId)
+                        {
+                            case 0:
+                                auto ift = (interfaceType*)(unsafe::Pointer(ft));
+                                for(auto [_, m] : ift->Methods)
                                 {
-                                    gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
-                                }
-                                auto fnStub = resolveReflectText(unsafe::Pointer(abi::FuncPCABIInternal(embeddedIfaceMethStub)));
-                                methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(nameOff(gocpp::recv(ift), m.Name)); x.Mtyp = resolveReflectType(typeOff(gocpp::recv(ift), m.Typ)); x.Ifn = fnStub; x.Tfn = fnStub; }));
-                            }
-                            break;
-                        case 1:
-                            auto ptr = (ptrType*)(unsafe::Pointer(ft));
-                            if(auto unt = Uncommon(gocpp::recv(ptr)); unt != nullptr)
-                            {
-                                if(i > 0 && unt->Mcount > 0)
-                                {
-                                    gocpp::panic("reflect: embedded type with methods not implemented if type is not first field");
-                                }
-                                if(len(fields) > 1)
-                                {
-                                    gocpp::panic("reflect: embedded type with methods not implemented if there is more than one field");
-                                }
-                                for(auto [_, m] : Methods(gocpp::recv(unt)))
-                                {
-                                    auto mname = nameOffFor(ft, m.Name);
-                                    if(pkgPath(mname) != "")
+                                    if(pkgPath(nameOff(gocpp::recv(ift), m.Name)) != "")
                                     {
                                         gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
                                     }
-                                    methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ft, m.Tfn)); }));
+                                    auto fnStub = resolveReflectText(unsafe::Pointer(abi::FuncPCABIInternal(embeddedIfaceMethStub)));
+                                    methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(nameOff(gocpp::recv(ift), m.Name)); x.Mtyp = resolveReflectType(typeOff(gocpp::recv(ift), m.Typ)); x.Ifn = fnStub; x.Tfn = fnStub; }));
                                 }
-                            }
-                            if(auto unt = Uncommon(gocpp::recv(ptr->Elem)); unt != nullptr)
-                            {
-                                for(auto [_, m] : Methods(gocpp::recv(unt)))
+                                break;
+                            case 1:
+                                auto ptr = (ptrType*)(unsafe::Pointer(ft));
+                                if(auto unt = Uncommon(gocpp::recv(ptr)); unt != nullptr)
                                 {
-                                    auto mname = nameOffFor(ft, m.Name);
-                                    if(pkgPath(mname) != "")
+                                    if(i > 0 && unt->Mcount > 0)
                                     {
-                                        gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
+                                        gocpp::panic("reflect: embedded type with methods not implemented if type is not first field");
                                     }
-                                    methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ptr->Elem, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ptr->Elem, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ptr->Elem, m.Tfn)); }));
-                                }
-                            }
-                            break;
-                        default:
-                            if(auto unt = Uncommon(gocpp::recv(ft)); unt != nullptr)
-                            {
-                                if(i > 0 && unt->Mcount > 0)
-                                {
-                                    gocpp::panic("reflect: embedded type with methods not implemented if type is not first field");
-                                }
-                                if(len(fields) > 1 && ft->Kind_ & kindDirectIface != 0)
-                                {
-                                    gocpp::panic("reflect: embedded type with methods not implemented for non-pointer type");
-                                }
-                                for(auto [_, m] : Methods(gocpp::recv(unt)))
-                                {
-                                    auto mname = nameOffFor(ft, m.Name);
-                                    if(pkgPath(mname) != "")
+                                    if(len(fields) > 1)
                                     {
-                                        gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
+                                        gocpp::panic("reflect: embedded type with methods not implemented if there is more than one field");
                                     }
-                                    methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ft, m.Tfn)); }));
+                                    for(auto [_, m] : Methods(gocpp::recv(unt)))
+                                    {
+                                        auto mname = nameOffFor(ft, m.Name);
+                                        if(pkgPath(mname) != "")
+                                        {
+                                            gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
+                                        }
+                                        methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ft, m.Tfn)); }));
+                                    }
                                 }
-                            }
-                            break;
+                                if(auto unt = Uncommon(gocpp::recv(ptr->Elem)); unt != nullptr)
+                                {
+                                    for(auto [_, m] : Methods(gocpp::recv(unt)))
+                                    {
+                                        auto mname = nameOffFor(ft, m.Name);
+                                        if(pkgPath(mname) != "")
+                                        {
+                                            gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
+                                        }
+                                        methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ptr->Elem, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ptr->Elem, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ptr->Elem, m.Tfn)); }));
+                                    }
+                                }
+                                break;
+                            default:
+                                if(auto unt = Uncommon(gocpp::recv(ft)); unt != nullptr)
+                                {
+                                    if(i > 0 && unt->Mcount > 0)
+                                    {
+                                        gocpp::panic("reflect: embedded type with methods not implemented if type is not first field");
+                                    }
+                                    if(len(fields) > 1 && ft->Kind_ & kindDirectIface != 0)
+                                    {
+                                        gocpp::panic("reflect: embedded type with methods not implemented for non-pointer type");
+                                    }
+                                    for(auto [_, m] : Methods(gocpp::recv(unt)))
+                                    {
+                                        auto mname = nameOffFor(ft, m.Name);
+                                        if(pkgPath(mname) != "")
+                                        {
+                                            gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
+                                        }
+                                        methods = append(methods, gocpp::Init<abi::Method>([](abi::Method& x) { x.Name = resolveReflectName(mname); x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp)); x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn)); x.Tfn = resolveReflectText(textOffFor(ft, m.Tfn)); }));
+                                    }
+                                }
+                                break;
+                        }
                     }
                 }
+                if(auto [gocpp_id_22, dup] = fset[name]; dup && name != "_")
+                {
+                    gocpp::panic("reflect.StructOf: duplicate field " + name);
+                }
+                fset[name] = gocpp_id_23 {};
+                hash = fnv1(hash, unsigned char(ft->Hash >> 24), unsigned char(ft->Hash >> 16), unsigned char(ft->Hash >> 8), unsigned char(ft->Hash));
+                repr = append(repr, (" " + stringFor(ft)));
+                if(HasTag(gocpp::recv(f.Name)))
+                {
+                    hash = fnv1(hash, gocpp::Tag<gocpp::slice<unsigned char>>()(Tag(gocpp::recv(f.Name))));
+                    repr = append(repr, (" " + strconv::Quote(Tag(gocpp::recv(f.Name)))));
+                }
+                if(i < len(fields) - 1)
+                {
+                    repr = append(repr, ';');
+                }
+                comparable = comparable && (ft->Equal != nullptr);
+                auto offset = align(size, uintptr_t(ft->Align_));
+                if(offset < size)
+                {
+                    gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
+                }
+                if(ft->Align_ > typalign)
+                {
+                    typalign = ft->Align_;
+                }
+                size = offset + ft->Size_;
+                if(size < offset)
+                {
+                    gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
+                }
+                f.Offset = offset;
+                if(ft->Size_ == 0)
+                {
+                    lastzero = size;
+                }
+                fs[i] = f;
             }
-            if(auto [gocpp_id_22, dup] = fset[name]; dup && name != "_")
+            if(size > 0 && lastzero == size)
             {
-                gocpp::panic("reflect.StructOf: duplicate field " + name);
+                size++;
+                if(size == 0)
+                {
+                    gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
+                }
             }
-            fset[name] = gocpp_id_23 {};
-            hash = fnv1(hash, unsigned char(ft->Hash >> 24), unsigned char(ft->Hash >> 16), unsigned char(ft->Hash >> 8), unsigned char(ft->Hash));
-            repr = append(repr, (" " + stringFor(ft)));
-            if(HasTag(gocpp::recv(f.Name)))
+            structType* typ = {};
+            uncommonType* ut = {};
+            if(len(methods) == 0)
             {
-                hash = fnv1(hash, gocpp::Tag<gocpp::slice<unsigned char>>()(Tag(gocpp::recv(f.Name))));
-                repr = append(repr, (" " + strconv::Quote(Tag(gocpp::recv(f.Name)))));
+                auto t = go_new(structTypeUncommon);
+                typ = & t->structType;
+                ut = & t->u;
             }
-            if(i < len(fields) - 1)
+            else
             {
-                repr = append(repr, ';');
+                auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([](& x) { x.Name = "S"; x.Type = TypeOf(structType {}); }), gocpp::Init<>([](& x) { x.Name = "U"; x.Type = TypeOf(uncommonType {}); }), gocpp::Init<>([](& x) { x.Name = "M"; x.Type = ArrayOf(len(methods), TypeOf(methods[0])); })}));
+                typ = (structType*)(UnsafePointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 0))))));
+                ut = (uncommonType*)(UnsafePointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 1))))));
+                copy(gocpp::getValue<abi::Method>>(Interface(gocpp::recv(Slice(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
             }
-            comparable = comparable && (ft->Equal != nullptr);
-            auto offset = align(size, uintptr_t(ft->Align_));
-            if(offset < size)
+            ut->Mcount = uint16_t(len(methods));
+            ut->Xcount = ut->Mcount;
+            ut->Moff = uint32_t(gocpp::Sizeof<uncommonType>());
+            if(len(fs) > 0)
+            {
+                repr = append(repr, ' ');
+            }
+            repr = append(repr, '}');
+            hash = fnv1(hash, '}');
+            auto str = string(repr);
+            auto s = align(size, uintptr_t(typalign));
+            if(s < size)
             {
                 gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
             }
-            if(ft->Align_ > typalign)
+            size = s;
+            go_any istruct = gocpp_id_24 {};
+            auto prototype = *(structType**)(unsafe::Pointer(& istruct));
+            *typ = *prototype;
+            typ->Fields = fs;
+            if(pkgpath != "")
             {
-                typalign = ft->Align_;
+                typ->PkgPath = newName(pkgpath, "", false, false);
             }
-            size = offset + ft->Size_;
-            if(size < offset)
+            if(auto [ts, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
-            }
-            f.Offset = offset;
-            if(ft->Size_ == 0)
-            {
-                lastzero = size;
-            }
-            fs[i] = f;
-        }
-        if(size > 0 && lastzero == size)
-        {
-            size++;
-            if(size == 0)
-            {
-                gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
-            }
-        }
-        structType* typ = {};
-        uncommonType* ut = {};
-        if(len(methods) == 0)
-        {
-            auto t = go_new(structTypeUncommon);
-            typ = & t->structType;
-            ut = & t->u;
-        }
-        else
-        {
-            auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([](& x) { x.Name = "S"; x.Type = TypeOf(structType {}); }), gocpp::Init<>([](& x) { x.Name = "U"; x.Type = TypeOf(uncommonType {}); }), gocpp::Init<>([](& x) { x.Name = "M"; x.Type = ArrayOf(len(methods), TypeOf(methods[0])); })}));
-            typ = (structType*)(UnsafePointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 0))))));
-            ut = (uncommonType*)(UnsafePointer(gocpp::recv(Addr(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 1))))));
-            copy(gocpp::getValue<abi::Method>>(Interface(gocpp::recv(Slice(gocpp::recv(Field(gocpp::recv(Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
-        }
-        ut->Mcount = uint16_t(len(methods));
-        ut->Xcount = ut->Mcount;
-        ut->Moff = uint32_t(gocpp::Sizeof<uncommonType>());
-        if(len(fs) > 0)
-        {
-            repr = append(repr, ' ');
-        }
-        repr = append(repr, '}');
-        hash = fnv1(hash, '}');
-        auto str = string(repr);
-        auto s = align(size, uintptr_t(typalign));
-        if(s < size)
-        {
-            gocpp::panic("reflect.StructOf: struct size would exceed virtual address space");
-        }
-        size = s;
-        go_any istruct = gocpp_id_24 {};
-        auto prototype = *(structType**)(unsafe::Pointer(& istruct));
-        *typ = *prototype;
-        typ->Fields = fs;
-        if(pkgpath != "")
-        {
-            typ->PkgPath = newName(pkgpath, "", false, false);
-        }
-        if(auto [ts, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
-        {
-            for(auto [_, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
-            {
-                auto t = common(gocpp::recv(st));
-                if(haveIdenticalUnderlyingType(& typ->Type, t, true))
+                for(auto [_, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
                 {
-                    return toType(t);
-                }
-            }
-        }
-        Lock(gocpp::recv(structLookupCache));
-        defer.push_back([=]{ Unlock(gocpp::recv(structLookupCache)); });
-        if(auto [ts, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
-        {
-            for(auto [_, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
-            {
-                auto t = common(gocpp::recv(st));
-                if(haveIdenticalUnderlyingType(& typ->Type, t, true))
-                {
-                    return toType(t);
-                }
-            }
-        }
-        auto addToCache = [=](Type t) mutable -> Type
-        {
-            gocpp::slice<Type> ts = {};
-            if(auto [ti, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
-            {
-                ts = gocpp::getValue<gocpp::slice<reflect::Type>>(ti);
-            }
-            Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
-            return t;
-        };
-        for(auto [_, t] : typesByString(str))
-        {
-            if(haveIdenticalUnderlyingType(& typ->Type, t, true))
-            {
-                return addToCache(toType(t));
-            }
-        }
-        typ->Str = resolveReflectName(newName(str, "", false, false));
-        typ->TFlag = 0;
-        typ->Hash = hash;
-        typ->Size_ = size;
-        typ->PtrBytes = typeptrdata(& typ->Type);
-        typ->Align_ = typalign;
-        typ->FieldAlign_ = typalign;
-        typ->PtrToThis = 0;
-        if(len(methods) > 0)
-        {
-            typ->TFlag |= abi::TFlagUncommon;
-        }
-        if(hasGCProg)
-        {
-            auto lastPtrField = 0;
-            for(auto [i, ft] : fs)
-            {
-                if(Pointers(gocpp::recv(ft->Typ)))
-                {
-                    lastPtrField = i;
-                }
-            }
-            auto prog = gocpp::slice<unsigned char> {0, 0, 0, 0};
-            uintptr_t off = {};
-            for(auto [i, ft] : fs)
-            {
-                if(i > lastPtrField)
-                {
-                    break;
-                }
-                if(! Pointers(gocpp::recv(ft->Typ)))
-                {
-                    continue;
-                }
-                if(ft->Offset > off)
-                {
-                    auto n = (ft->Offset - off) / goarch::PtrSize;
-                    prog = append(prog, 0x01, 0x00);
-                    if(n > 1)
+                    auto t = common(gocpp::recv(st));
+                    if(haveIdenticalUnderlyingType(& typ->Type, t, true))
                     {
-                        prog = append(prog, 0x81);
-                        prog = appendVarint(prog, n - 1);
+                        return toType(t);
                     }
-                    off = ft->Offset;
                 }
-                prog = appendGCProg(prog, ft->Typ);
-                off += ft->Typ->PtrBytes;
             }
-            prog = append(prog, 0);
-            *(uint32_t*)(unsafe::Pointer(& prog[0])) = uint32_t(len(prog) - 4);
-            typ->Kind_ |= kindGCProg;
-            typ->GCData = & prog[0];
-        }
-        else
-        {
-            typ->Kind_ &^= kindGCProg;
-            auto bv = go_new(bitVector);
-            addTypeBits(bv, 0, & typ->Type);
-            if(len(bv->data) > 0)
+            Lock(gocpp::recv(structLookupCache));
+            defer.push_back([=]{ Unlock(gocpp::recv(structLookupCache)); });
+            if(auto [ts, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                typ->GCData = & bv->data[0];
-            }
-        }
-        typ->Equal = nullptr;
-        if(comparable)
-        {
-            typ->Equal = [=](unsafe::Pointer p, unsafe::Pointer q) mutable -> bool
-            {
-                for(auto [_, ft] : typ->Fields)
+                for(auto [_, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
                 {
-                    auto pi = add(p, ft->Offset, "&x.field safe");
-                    auto qi = add(q, ft->Offset, "&x.field safe");
-                    if(! Equal(gocpp::recv(ft->Typ), pi, qi))
+                    auto t = common(gocpp::recv(st));
+                    if(haveIdenticalUnderlyingType(& typ->Type, t, true))
                     {
-                        return false;
+                        return toType(t);
                     }
                 }
-                return true;
+            }
+            auto addToCache = [=](Type t) mutable -> Type
+            {
+                gocpp::slice<Type> ts = {};
+                if(auto [ti, ok] = Load(gocpp::recv(structLookupCache.m), hash); ok)
+                {
+                    ts = gocpp::getValue<gocpp::slice<reflect::Type>>(ti);
+                }
+                Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
+                return t;
             };
-        }
-        //Go switch emulation
-        {
-            int conditionId = -1;
-            if(len(fs) == 1 && ! ifaceIndir(fs[0].Typ)) { conditionId = 0; }
-            switch(conditionId)
+            for(auto [_, t] : typesByString(str))
             {
-                case 0:
-                    typ->Kind_ |= kindDirectIface;
-                    break;
-                default:
-                    typ->Kind_ &^= kindDirectIface;
-                    break;
+                if(haveIdenticalUnderlyingType(& typ->Type, t, true))
+                {
+                    return addToCache(toType(t));
+                }
             }
+            typ->Str = resolveReflectName(newName(str, "", false, false));
+            typ->TFlag = 0;
+            typ->Hash = hash;
+            typ->Size_ = size;
+            typ->PtrBytes = typeptrdata(& typ->Type);
+            typ->Align_ = typalign;
+            typ->FieldAlign_ = typalign;
+            typ->PtrToThis = 0;
+            if(len(methods) > 0)
+            {
+                typ->TFlag |= abi::TFlagUncommon;
+            }
+            if(hasGCProg)
+            {
+                auto lastPtrField = 0;
+                for(auto [i, ft] : fs)
+                {
+                    if(Pointers(gocpp::recv(ft->Typ)))
+                    {
+                        lastPtrField = i;
+                    }
+                }
+                auto prog = gocpp::slice<unsigned char> {0, 0, 0, 0};
+                uintptr_t off = {};
+                for(auto [i, ft] : fs)
+                {
+                    if(i > lastPtrField)
+                    {
+                        break;
+                    }
+                    if(! Pointers(gocpp::recv(ft->Typ)))
+                    {
+                        continue;
+                    }
+                    if(ft->Offset > off)
+                    {
+                        auto n = (ft->Offset - off) / goarch::PtrSize;
+                        prog = append(prog, 0x01, 0x00);
+                        if(n > 1)
+                        {
+                            prog = append(prog, 0x81);
+                            prog = appendVarint(prog, n - 1);
+                        }
+                        off = ft->Offset;
+                    }
+                    prog = appendGCProg(prog, ft->Typ);
+                    off += ft->Typ->PtrBytes;
+                }
+                prog = append(prog, 0);
+                *(uint32_t*)(unsafe::Pointer(& prog[0])) = uint32_t(len(prog) - 4);
+                typ->Kind_ |= kindGCProg;
+                typ->GCData = & prog[0];
+            }
+            else
+            {
+                typ->Kind_ &^= kindGCProg;
+                auto bv = go_new(bitVector);
+                addTypeBits(bv, 0, & typ->Type);
+                if(len(bv->data) > 0)
+                {
+                    typ->GCData = & bv->data[0];
+                }
+            }
+            typ->Equal = nullptr;
+            if(comparable)
+            {
+                typ->Equal = [=](unsafe::Pointer p, unsafe::Pointer q) mutable -> bool
+                {
+                    for(auto [_, ft] : typ->Fields)
+                    {
+                        auto pi = add(p, ft->Offset, "&x.field safe");
+                        auto qi = add(q, ft->Offset, "&x.field safe");
+                        if(! Equal(gocpp::recv(ft->Typ), pi, qi))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+            }
+            //Go switch emulation
+            {
+                int conditionId = -1;
+                if(len(fs) == 1 && ! ifaceIndir(fs[0].Typ)) { conditionId = 0; }
+                switch(conditionId)
+                {
+                    case 0:
+                        typ->Kind_ |= kindDirectIface;
+                        break;
+                    default:
+                        typ->Kind_ &^= kindDirectIface;
+                        break;
+                }
+            }
+            return addToCache(toType(& typ->Type));
         }
-        return addToCache(toType(& typ->Type));
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void embeddedIfaceMethStub()

@@ -599,76 +599,89 @@ namespace golang::runtime
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0()
     {
         gocpp::Defer defer;
-        gocpp::slice<unsigned char> buf;
-        bool park;
-        if(raceenabled)
+        try
         {
             gocpp::slice<unsigned char> buf;
             bool park;
-            if(getg()->racectx != 0)
+            if(raceenabled)
             {
                 gocpp::slice<unsigned char> buf;
                 bool park;
-                go_throw("expected racectx == 0");
-            }
-            getg()->racectx = getg()->m->curg->racectx;
-            defer.push_back([=]{ [=]() mutable -> void
-            {
-                getg()->racectx = 0;
-            }(); });
-        }
-        lock(& trace.lock);
-        if(Load(gocpp::recv(trace.reader)) != nullptr)
-        {
-            gocpp::slice<unsigned char> buf;
-            bool park;
-            unlock(& trace.lock);
-            println("runtime: ReadTrace called from multiple goroutines simultaneously");
-            return {nullptr, false};
-        }
-        if(auto buf = trace.reading; buf != nullptr)
-        {
-            gocpp::slice<unsigned char> buf;
-            bool park;
-            buf->link = trace.empty;
-            trace.empty = buf;
-            trace.reading = nullptr;
-        }
-        if(! trace.headerWritten)
-        {
-            gocpp::slice<unsigned char> buf;
-            bool park;
-            trace.headerWritten = true;
-            unlock(& trace.lock);
-            return {gocpp::Tag<gocpp::slice<unsigned char>>()("go 1.22 trace\x00\x00\x00"), false};
-        }
-        if(Load(gocpp::recv(trace.readerGen)) == 0)
-        {
-            gocpp::slice<unsigned char> buf;
-            bool park;
-            Store(gocpp::recv(trace.readerGen), 1);
-        }
-        uintptr_t gen = {};
-        for(; ; )
-        {
-            gocpp::slice<unsigned char> buf;
-            bool park;
-            assertLockHeld(& trace.lock);
-            gen = Load(gocpp::recv(trace.readerGen));
-            if(! empty(gocpp::recv(trace.full[gen % 2])))
-            {
-                gocpp::slice<unsigned char> buf;
-                bool park;
-                break;
-            }
-            if(Load(gocpp::recv(trace.flushedGen)) == gen)
-            {
-                gocpp::slice<unsigned char> buf;
-                bool park;
-                if(Load(gocpp::recv(trace.shutdown)))
+                if(getg()->racectx != 0)
                 {
                     gocpp::slice<unsigned char> buf;
                     bool park;
+                    go_throw("expected racectx == 0");
+                }
+                getg()->racectx = getg()->m->curg->racectx;
+                defer.push_back([=]{ [=]() mutable -> void
+                {
+                    getg()->racectx = 0;
+                }(); });
+            }
+            lock(& trace.lock);
+            if(Load(gocpp::recv(trace.reader)) != nullptr)
+            {
+                gocpp::slice<unsigned char> buf;
+                bool park;
+                unlock(& trace.lock);
+                println("runtime: ReadTrace called from multiple goroutines simultaneously");
+                return {nullptr, false};
+            }
+            if(auto buf = trace.reading; buf != nullptr)
+            {
+                gocpp::slice<unsigned char> buf;
+                bool park;
+                buf->link = trace.empty;
+                trace.empty = buf;
+                trace.reading = nullptr;
+            }
+            if(! trace.headerWritten)
+            {
+                gocpp::slice<unsigned char> buf;
+                bool park;
+                trace.headerWritten = true;
+                unlock(& trace.lock);
+                return {gocpp::Tag<gocpp::slice<unsigned char>>()("go 1.22 trace\x00\x00\x00"), false};
+            }
+            if(Load(gocpp::recv(trace.readerGen)) == 0)
+            {
+                gocpp::slice<unsigned char> buf;
+                bool park;
+                Store(gocpp::recv(trace.readerGen), 1);
+            }
+            uintptr_t gen = {};
+            for(; ; )
+            {
+                gocpp::slice<unsigned char> buf;
+                bool park;
+                assertLockHeld(& trace.lock);
+                gen = Load(gocpp::recv(trace.readerGen));
+                if(! empty(gocpp::recv(trace.full[gen % 2])))
+                {
+                    gocpp::slice<unsigned char> buf;
+                    bool park;
+                    break;
+                }
+                if(Load(gocpp::recv(trace.flushedGen)) == gen)
+                {
+                    gocpp::slice<unsigned char> buf;
+                    bool park;
+                    if(Load(gocpp::recv(trace.shutdown)))
+                    {
+                        gocpp::slice<unsigned char> buf;
+                        bool park;
+                        unlock(& trace.lock);
+                        if(raceenabled)
+                        {
+                            gocpp::slice<unsigned char> buf;
+                            bool park;
+                            racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
+                        }
+                        semrelease(& trace.doneSema[gen % 2]);
+                        return {nullptr, false};
+                    }
+                    Store(gocpp::recv(trace.readerGen), Load(gocpp::recv(trace.gen)));
                     unlock(& trace.lock);
                     if(raceenabled)
                     {
@@ -677,28 +690,22 @@ namespace golang::runtime
                         racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
                     }
                     semrelease(& trace.doneSema[gen % 2]);
-                    return {nullptr, false};
+                    lock(& trace.lock);
+                    continue;
                 }
-                Store(gocpp::recv(trace.readerGen), Load(gocpp::recv(trace.gen)));
+                Store(gocpp::recv(trace.workAvailable), false);
                 unlock(& trace.lock);
-                if(raceenabled)
-                {
-                    gocpp::slice<unsigned char> buf;
-                    bool park;
-                    racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
-                }
-                semrelease(& trace.doneSema[gen % 2]);
-                lock(& trace.lock);
-                continue;
+                return {nullptr, true};
             }
-            Store(gocpp::recv(trace.workAvailable), false);
+            auto tbuf = pop(gocpp::recv(trace.full[gen % 2]));
+            trace.reading = tbuf;
             unlock(& trace.lock);
-            return {nullptr, true};
+            return {tbuf->arr.make_slice(0, tbuf->pos), false};
         }
-        auto tbuf = pop(gocpp::recv(trace.full[gen % 2]));
-        trace.reading = tbuf;
-        unlock(& trace.lock);
-        return {tbuf->arr.make_slice(0, tbuf->pos), false};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     g* traceReader()

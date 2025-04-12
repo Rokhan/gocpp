@@ -664,47 +664,61 @@ namespace golang::runtime
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename)
     {
         gocpp::Defer defer;
-        uintptr_t handle;
-        uintptr_t err;
-        lockOSThread();
-        defer.push_back([=]{ unlockOSThread(); });
-        auto c = & getg()->m->syscall;
-        c->fn = getLoadLibrary();
-        c->n = 1;
-        c->args = uintptr_t(noescape(unsafe::Pointer(& filename)));
-        cgocall(asmstdcallAddr, unsafe::Pointer(c));
-        KeepAlive(filename);
-        handle = c->r1;
-        if(handle == 0)
+        try
         {
             uintptr_t handle;
             uintptr_t err;
-            err = c->err;
+            lockOSThread();
+            defer.push_back([=]{ unlockOSThread(); });
+            auto c = & getg()->m->syscall;
+            c->fn = getLoadLibrary();
+            c->n = 1;
+            c->args = uintptr_t(noescape(unsafe::Pointer(& filename)));
+            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            KeepAlive(filename);
+            handle = c->r1;
+            if(handle == 0)
+            {
+                uintptr_t handle;
+                uintptr_t err;
+                err = c->err;
+            }
+            return {handle, err};
         }
-        return {handle, err};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname)
     {
         gocpp::Defer defer;
-        uintptr_t outhandle;
-        uintptr_t err;
-        lockOSThread();
-        defer.push_back([=]{ unlockOSThread(); });
-        auto c = & getg()->m->syscall;
-        c->fn = getGetProcAddress();
-        c->n = 2;
-        c->args = uintptr_t(noescape(unsafe::Pointer(& handle)));
-        cgocall(asmstdcallAddr, unsafe::Pointer(c));
-        KeepAlive(procname);
-        outhandle = c->r1;
-        if(outhandle == 0)
+        try
         {
             uintptr_t outhandle;
             uintptr_t err;
-            err = c->err;
+            lockOSThread();
+            defer.push_back([=]{ unlockOSThread(); });
+            auto c = & getg()->m->syscall;
+            c->fn = getGetProcAddress();
+            c->n = 2;
+            c->args = uintptr_t(noescape(unsafe::Pointer(& handle)));
+            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            KeepAlive(procname);
+            outhandle = c->r1;
+            if(outhandle == 0)
+            {
+                uintptr_t outhandle;
+                uintptr_t err;
+                err = c->err;
+            }
+            return {outhandle, err};
         }
-        return {outhandle, err};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3)
@@ -758,38 +772,45 @@ namespace golang::runtime
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
     {
         gocpp::Defer defer;
-        uintptr_t r1;
-        uintptr_t r2;
-        uintptr_t err;
-        auto nargs = len(args);
-        gocpp::array<uintptr_t, 4> tmp = {};
-        //Go switch emulation
+        try
         {
-            int conditionId = -1;
-            if(nargs < 4) { conditionId = 0; }
-            else if(nargs > maxArgs) { conditionId = 1; }
-            switch(conditionId)
+            uintptr_t r1;
+            uintptr_t r2;
+            uintptr_t err;
+            auto nargs = len(args);
+            gocpp::array<uintptr_t, 4> tmp = {};
+            //Go switch emulation
             {
-                uintptr_t r1;
-                uintptr_t r2;
-                uintptr_t err;
-                case 0:
-                    copy(tmp.make_slice(0, ), args);
-                    args = tmp.make_slice(0, );
-                    break;
-                case 1:
-                    gocpp::panic("runtime: SyscallN has too many arguments");
-                    break;
+                int conditionId = -1;
+                if(nargs < 4) { conditionId = 0; }
+                else if(nargs > maxArgs) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    uintptr_t r1;
+                    uintptr_t r2;
+                    uintptr_t err;
+                    case 0:
+                        copy(tmp.make_slice(0, ), args);
+                        args = tmp.make_slice(0, );
+                        break;
+                    case 1:
+                        gocpp::panic("runtime: SyscallN has too many arguments");
+                        break;
+                }
             }
+            lockOSThread();
+            defer.push_back([=]{ unlockOSThread(); });
+            auto c = & getg()->m->syscall;
+            c->fn = trap;
+            c->n = uintptr_t(nargs);
+            c->args = uintptr_t(noescape(unsafe::Pointer(& args[0])));
+            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            return {c->r1, c->r2, c->err};
         }
-        lockOSThread();
-        defer.push_back([=]{ unlockOSThread(); });
-        auto c = & getg()->m->syscall;
-        c->fn = trap;
-        c->n = uintptr_t(nargs);
-        c->args = uintptr_t(noescape(unsafe::Pointer(& args[0])));
-        cgocall(asmstdcallAddr, unsafe::Pointer(c));
-        return {c->r1, c->r2, c->err};
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
 }

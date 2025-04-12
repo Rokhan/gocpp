@@ -507,102 +507,24 @@ namespace golang::png
     std::string writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
-        if(e->zw == nullptr || e->zwLevel != level)
+        try
         {
-            auto [zw, err] = zlib::NewWriterLevel(w, level);
-            if(err != nullptr)
+            if(e->zw == nullptr || e->zwLevel != level)
             {
-                return err;
-            }
-            e->zw = zw;
-            e->zwLevel = level;
-        }
-        else
-        {
-            Reset(gocpp::recv(e->zw), w);
-        }
-        defer.push_back([=]{ Close(gocpp::recv(e->zw)); });
-        auto bitsPerPixel = 0;
-        //Go switch emulation
-        {
-            auto condition = cb;
-            int conditionId = -1;
-            if(condition == cbG8) { conditionId = 0; }
-            else if(condition == cbTC8) { conditionId = 1; }
-            else if(condition == cbP8) { conditionId = 2; }
-            else if(condition == cbP4) { conditionId = 3; }
-            else if(condition == cbP2) { conditionId = 4; }
-            else if(condition == cbP1) { conditionId = 5; }
-            else if(condition == cbTCA8) { conditionId = 6; }
-            else if(condition == cbTC16) { conditionId = 7; }
-            else if(condition == cbTCA16) { conditionId = 8; }
-            else if(condition == cbG16) { conditionId = 9; }
-            switch(conditionId)
-            {
-                case 0:
-                    bitsPerPixel = 8;
-                    break;
-                case 1:
-                    bitsPerPixel = 24;
-                    break;
-                case 2:
-                    bitsPerPixel = 8;
-                    break;
-                case 3:
-                    bitsPerPixel = 4;
-                    break;
-                case 4:
-                    bitsPerPixel = 2;
-                    break;
-                case 5:
-                    bitsPerPixel = 1;
-                    break;
-                case 6:
-                    bitsPerPixel = 32;
-                    break;
-                case 7:
-                    bitsPerPixel = 48;
-                    break;
-                case 8:
-                    bitsPerPixel = 64;
-                    break;
-                case 9:
-                    bitsPerPixel = 16;
-                    break;
-            }
-        }
-        auto b = Bounds(gocpp::recv(m));
-        auto sz = 1 + (bitsPerPixel * Dx(gocpp::recv(b)) + 7) / 8;
-        for(auto [i, gocpp_ignored] : e->cr)
-        {
-            if(cap(e->cr[i]) < sz)
-            {
-                e->cr[i] = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), sz);
+                auto [zw, err] = zlib::NewWriterLevel(w, level);
+                if(err != nullptr)
+                {
+                    return err;
+                }
+                e->zw = zw;
+                e->zwLevel = level;
             }
             else
             {
-                e->cr[i] = e->cr[i].make_slice(0, sz);
+                Reset(gocpp::recv(e->zw), w);
             }
-            e->cr[i][0] = uint8_t(i);
-        }
-        auto cr = e->cr;
-        if(cap(e->pr) < sz)
-        {
-            e->pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), sz);
-        }
-        else
-        {
-            e->pr = e->pr.make_slice(0, sz);
-            zeroMemory(e->pr);
-        }
-        auto pr = e->pr;
-        auto [gray, gocpp_id_10] = gocpp::getValue<image::Gray*>(m);
-        auto [rgba, gocpp_id_12] = gocpp::getValue<image::RGBA*>(m);
-        auto [paletted, gocpp_id_14] = gocpp::getValue<image::Paletted*>(m);
-        auto [nrgba, gocpp_id_16] = gocpp::getValue<image::NRGBA*>(m);
-        for(auto y = b.Min.Y; y < b.Max.Y; y++)
-        {
-            auto i = 1;
+            defer.push_back([=]{ Close(gocpp::recv(e->zw)); });
+            auto bitsPerPixel = 0;
             //Go switch emulation
             {
                 auto condition = cb;
@@ -614,211 +536,296 @@ namespace golang::png
                 else if(condition == cbP2) { conditionId = 4; }
                 else if(condition == cbP1) { conditionId = 5; }
                 else if(condition == cbTCA8) { conditionId = 6; }
-                else if(condition == cbG16) { conditionId = 7; }
-                else if(condition == cbTC16) { conditionId = 8; }
-                else if(condition == cbTCA16) { conditionId = 9; }
+                else if(condition == cbTC16) { conditionId = 7; }
+                else if(condition == cbTCA16) { conditionId = 8; }
+                else if(condition == cbG16) { conditionId = 9; }
                 switch(conditionId)
                 {
                     case 0:
-                        if(gray != nullptr)
-                        {
-                            auto offset = (y - b.Min.Y) * gray->Stride;
-                            copy(cr[0].make_slice(1), gray->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
-                        }
-                        else
-                        {
-                            for(auto x = b.Min.X; x < b.Max.X; x++)
-                            {
-                                auto c = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), At(gocpp::recv(m), x, y)));
-                                cr[0][i] = c.Y;
-                                i++;
-                            }
-                        }
+                        bitsPerPixel = 8;
                         break;
                     case 1:
-                        auto cr0 = cr[0];
-                        auto [stride, pix] = std::tuple{0, gocpp::Tag<gocpp::slice<unsigned char>>()(nullptr)};
-                        if(rgba != nullptr)
-                        {
-                            std::tie(stride, pix) = std::tuple{rgba->Stride, rgba->Pix};
-                        }
-                        else
-                        if(nrgba != nullptr)
-                        {
-                            std::tie(stride, pix) = std::tuple{nrgba->Stride, nrgba->Pix};
-                        }
-                        if(stride != 0)
-                        {
-                            auto j0 = (y - b.Min.Y) * stride;
-                            auto j1 = j0 + Dx(gocpp::recv(b)) * 4;
-                            for(auto j = j0; j < j1; j += 4)
-                            {
-                                cr0[i + 0] = pix[j + 0];
-                                cr0[i + 1] = pix[j + 1];
-                                cr0[i + 2] = pix[j + 2];
-                                i += 3;
-                            }
-                        }
-                        else
-                        {
-                            for(auto x = b.Min.X; x < b.Max.X; x++)
-                            {
-                                auto [r, g, b, gocpp_id_18] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
-                                cr0[i + 0] = uint8_t(r >> 8);
-                                cr0[i + 1] = uint8_t(g >> 8);
-                                cr0[i + 2] = uint8_t(b >> 8);
-                                i += 3;
-                            }
-                        }
+                        bitsPerPixel = 24;
                         break;
                     case 2:
-                        if(paletted != nullptr)
-                        {
-                            auto offset = (y - b.Min.Y) * paletted->Stride;
-                            copy(cr[0].make_slice(1), paletted->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
-                        }
-                        else
-                        {
-                            auto pi = gocpp::getValue<image::PalettedImage>(m);
-                            for(auto x = b.Min.X; x < b.Max.X; x++)
-                            {
-                                cr[0][i] = ColorIndexAt(gocpp::recv(pi), x, y);
-                                i += 1;
-                            }
-                        }
+                        bitsPerPixel = 8;
                         break;
                     case 3:
+                        bitsPerPixel = 4;
+                        break;
                     case 4:
+                        bitsPerPixel = 2;
+                        break;
                     case 5:
-                        auto pi = gocpp::getValue<image::PalettedImage>(m);
-                        uint8_t a = {};
-                        int c = {};
-                        auto pixelsPerByte = 8 / bitsPerPixel;
-                        for(auto x = b.Min.X; x < b.Max.X; x++)
-                        {
-                            a = (a << (unsigned int)(bitsPerPixel)) | ColorIndexAt(gocpp::recv(pi), x, y);
-                            c++;
-                            if(c == pixelsPerByte)
-                            {
-                                cr[0][i] = a;
-                                i += 1;
-                                a = 0;
-                                c = 0;
-                            }
-                        }
-                        if(c != 0)
-                        {
-                            for(; c != pixelsPerByte; )
-                            {
-                                a = a << (unsigned int)(bitsPerPixel);
-                                c++;
-                            }
-                            cr[0][i] = a;
-                        }
+                        bitsPerPixel = 1;
                         break;
                     case 6:
-                        if(nrgba != nullptr)
-                        {
-                            auto offset = (y - b.Min.Y) * nrgba->Stride;
-                            copy(cr[0].make_slice(1), nrgba->Pix.make_slice(offset, offset + Dx(gocpp::recv(b)) * 4));
-                        }
-                        else
-                        if(rgba != nullptr)
-                        {
-                            auto dst = cr[0].make_slice(1);
-                            auto src = rgba->Pix.make_slice(PixOffset(gocpp::recv(rgba), b.Min.X, y), PixOffset(gocpp::recv(rgba), b.Max.X, y));
-                            for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
-                            {
-                                auto d = (gocpp::array<unsigned char, 4>*)(dst);
-                                auto s = (gocpp::array<unsigned char, 4>*)(src);
-                                if(s[3] == 0x00)
-                                {
-                                    d[0] = 0;
-                                    d[1] = 0;
-                                    d[2] = 0;
-                                    d[3] = 0;
-                                }
-                                else
-                                if(s[3] == 0xff)
-                                {
-                                    copy(d.make_slice(0, ), s.make_slice(0, ));
-                                }
-                                else
-                                {
-                                    auto m = 0x101 * 0xffff;
-                                    auto a = uint32_t(s[3]) * 0x101;
-                                    d[0] = uint8_t((uint32_t(s[0]) * m / a) >> 8);
-                                    d[1] = uint8_t((uint32_t(s[1]) * m / a) >> 8);
-                                    d[2] = uint8_t((uint32_t(s[2]) * m / a) >> 8);
-                                    d[3] = s[3];
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for(auto x = b.Min.X; x < b.Max.X; x++)
-                            {
-                                auto c = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), At(gocpp::recv(m), x, y)));
-                                cr[0][i + 0] = c.R;
-                                cr[0][i + 1] = c.G;
-                                cr[0][i + 2] = c.B;
-                                cr[0][i + 3] = c.A;
-                                i += 4;
-                            }
-                        }
+                        bitsPerPixel = 32;
                         break;
                     case 7:
-                        for(auto x = b.Min.X; x < b.Max.X; x++)
-                        {
-                            auto c = gocpp::getValue<color::Gray16>(Convert(gocpp::recv(color::Gray16Model), At(gocpp::recv(m), x, y)));
-                            cr[0][i + 0] = uint8_t(c.Y >> 8);
-                            cr[0][i + 1] = uint8_t(c.Y);
-                            i += 2;
-                        }
+                        bitsPerPixel = 48;
                         break;
                     case 8:
-                        for(auto x = b.Min.X; x < b.Max.X; x++)
-                        {
-                            auto [r, g, b, gocpp_id_20] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
-                            cr[0][i + 0] = uint8_t(r >> 8);
-                            cr[0][i + 1] = uint8_t(r);
-                            cr[0][i + 2] = uint8_t(g >> 8);
-                            cr[0][i + 3] = uint8_t(g);
-                            cr[0][i + 4] = uint8_t(b >> 8);
-                            cr[0][i + 5] = uint8_t(b);
-                            i += 6;
-                        }
+                        bitsPerPixel = 64;
                         break;
                     case 9:
-                        for(auto x = b.Min.X; x < b.Max.X; x++)
-                        {
-                            auto c = gocpp::getValue<color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), At(gocpp::recv(m), x, y)));
-                            cr[0][i + 0] = uint8_t(c.R >> 8);
-                            cr[0][i + 1] = uint8_t(c.R);
-                            cr[0][i + 2] = uint8_t(c.G >> 8);
-                            cr[0][i + 3] = uint8_t(c.G);
-                            cr[0][i + 4] = uint8_t(c.B >> 8);
-                            cr[0][i + 5] = uint8_t(c.B);
-                            cr[0][i + 6] = uint8_t(c.A >> 8);
-                            cr[0][i + 7] = uint8_t(c.A);
-                            i += 8;
-                        }
+                        bitsPerPixel = 16;
                         break;
                 }
             }
-            auto f = ftNone;
-            if(level != zlib::NoCompression && cb != cbP8 && cb != cbP4 && cb != cbP2 && cb != cbP1)
+            auto b = Bounds(gocpp::recv(m));
+            auto sz = 1 + (bitsPerPixel * Dx(gocpp::recv(b)) + 7) / 8;
+            for(auto [i, gocpp_ignored] : e->cr)
             {
-                auto bpp = bitsPerPixel / 8;
-                f = filter(& cr, pr, bpp);
+                if(cap(e->cr[i]) < sz)
+                {
+                    e->cr[i] = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), sz);
+                }
+                else
+                {
+                    e->cr[i] = e->cr[i].make_slice(0, sz);
+                }
+                e->cr[i][0] = uint8_t(i);
             }
-            if(auto [gocpp_id_22, err] = Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
+            auto cr = e->cr;
+            if(cap(e->pr) < sz)
             {
-                return err;
+                e->pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), sz);
             }
-            std::tie(pr, cr[0]) = std::tuple{cr[0], pr};
+            else
+            {
+                e->pr = e->pr.make_slice(0, sz);
+                zeroMemory(e->pr);
+            }
+            auto pr = e->pr;
+            auto [gray, gocpp_id_10] = gocpp::getValue<image::Gray*>(m);
+            auto [rgba, gocpp_id_12] = gocpp::getValue<image::RGBA*>(m);
+            auto [paletted, gocpp_id_14] = gocpp::getValue<image::Paletted*>(m);
+            auto [nrgba, gocpp_id_16] = gocpp::getValue<image::NRGBA*>(m);
+            for(auto y = b.Min.Y; y < b.Max.Y; y++)
+            {
+                auto i = 1;
+                //Go switch emulation
+                {
+                    auto condition = cb;
+                    int conditionId = -1;
+                    if(condition == cbG8) { conditionId = 0; }
+                    else if(condition == cbTC8) { conditionId = 1; }
+                    else if(condition == cbP8) { conditionId = 2; }
+                    else if(condition == cbP4) { conditionId = 3; }
+                    else if(condition == cbP2) { conditionId = 4; }
+                    else if(condition == cbP1) { conditionId = 5; }
+                    else if(condition == cbTCA8) { conditionId = 6; }
+                    else if(condition == cbG16) { conditionId = 7; }
+                    else if(condition == cbTC16) { conditionId = 8; }
+                    else if(condition == cbTCA16) { conditionId = 9; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                            if(gray != nullptr)
+                            {
+                                auto offset = (y - b.Min.Y) * gray->Stride;
+                                copy(cr[0].make_slice(1), gray->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
+                            }
+                            else
+                            {
+                                for(auto x = b.Min.X; x < b.Max.X; x++)
+                                {
+                                    auto c = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), At(gocpp::recv(m), x, y)));
+                                    cr[0][i] = c.Y;
+                                    i++;
+                                }
+                            }
+                            break;
+                        case 1:
+                            auto cr0 = cr[0];
+                            auto [stride, pix] = std::tuple{0, gocpp::Tag<gocpp::slice<unsigned char>>()(nullptr)};
+                            if(rgba != nullptr)
+                            {
+                                std::tie(stride, pix) = std::tuple{rgba->Stride, rgba->Pix};
+                            }
+                            else
+                            if(nrgba != nullptr)
+                            {
+                                std::tie(stride, pix) = std::tuple{nrgba->Stride, nrgba->Pix};
+                            }
+                            if(stride != 0)
+                            {
+                                auto j0 = (y - b.Min.Y) * stride;
+                                auto j1 = j0 + Dx(gocpp::recv(b)) * 4;
+                                for(auto j = j0; j < j1; j += 4)
+                                {
+                                    cr0[i + 0] = pix[j + 0];
+                                    cr0[i + 1] = pix[j + 1];
+                                    cr0[i + 2] = pix[j + 2];
+                                    i += 3;
+                                }
+                            }
+                            else
+                            {
+                                for(auto x = b.Min.X; x < b.Max.X; x++)
+                                {
+                                    auto [r, g, b, gocpp_id_18] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
+                                    cr0[i + 0] = uint8_t(r >> 8);
+                                    cr0[i + 1] = uint8_t(g >> 8);
+                                    cr0[i + 2] = uint8_t(b >> 8);
+                                    i += 3;
+                                }
+                            }
+                            break;
+                        case 2:
+                            if(paletted != nullptr)
+                            {
+                                auto offset = (y - b.Min.Y) * paletted->Stride;
+                                copy(cr[0].make_slice(1), paletted->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
+                            }
+                            else
+                            {
+                                auto pi = gocpp::getValue<image::PalettedImage>(m);
+                                for(auto x = b.Min.X; x < b.Max.X; x++)
+                                {
+                                    cr[0][i] = ColorIndexAt(gocpp::recv(pi), x, y);
+                                    i += 1;
+                                }
+                            }
+                            break;
+                        case 3:
+                        case 4:
+                        case 5:
+                            auto pi = gocpp::getValue<image::PalettedImage>(m);
+                            uint8_t a = {};
+                            int c = {};
+                            auto pixelsPerByte = 8 / bitsPerPixel;
+                            for(auto x = b.Min.X; x < b.Max.X; x++)
+                            {
+                                a = (a << (unsigned int)(bitsPerPixel)) | ColorIndexAt(gocpp::recv(pi), x, y);
+                                c++;
+                                if(c == pixelsPerByte)
+                                {
+                                    cr[0][i] = a;
+                                    i += 1;
+                                    a = 0;
+                                    c = 0;
+                                }
+                            }
+                            if(c != 0)
+                            {
+                                for(; c != pixelsPerByte; )
+                                {
+                                    a = a << (unsigned int)(bitsPerPixel);
+                                    c++;
+                                }
+                                cr[0][i] = a;
+                            }
+                            break;
+                        case 6:
+                            if(nrgba != nullptr)
+                            {
+                                auto offset = (y - b.Min.Y) * nrgba->Stride;
+                                copy(cr[0].make_slice(1), nrgba->Pix.make_slice(offset, offset + Dx(gocpp::recv(b)) * 4));
+                            }
+                            else
+                            if(rgba != nullptr)
+                            {
+                                auto dst = cr[0].make_slice(1);
+                                auto src = rgba->Pix.make_slice(PixOffset(gocpp::recv(rgba), b.Min.X, y), PixOffset(gocpp::recv(rgba), b.Max.X, y));
+                                for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
+                                {
+                                    auto d = (gocpp::array<unsigned char, 4>*)(dst);
+                                    auto s = (gocpp::array<unsigned char, 4>*)(src);
+                                    if(s[3] == 0x00)
+                                    {
+                                        d[0] = 0;
+                                        d[1] = 0;
+                                        d[2] = 0;
+                                        d[3] = 0;
+                                    }
+                                    else
+                                    if(s[3] == 0xff)
+                                    {
+                                        copy(d.make_slice(0, ), s.make_slice(0, ));
+                                    }
+                                    else
+                                    {
+                                        auto m = 0x101 * 0xffff;
+                                        auto a = uint32_t(s[3]) * 0x101;
+                                        d[0] = uint8_t((uint32_t(s[0]) * m / a) >> 8);
+                                        d[1] = uint8_t((uint32_t(s[1]) * m / a) >> 8);
+                                        d[2] = uint8_t((uint32_t(s[2]) * m / a) >> 8);
+                                        d[3] = s[3];
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                for(auto x = b.Min.X; x < b.Max.X; x++)
+                                {
+                                    auto c = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), At(gocpp::recv(m), x, y)));
+                                    cr[0][i + 0] = c.R;
+                                    cr[0][i + 1] = c.G;
+                                    cr[0][i + 2] = c.B;
+                                    cr[0][i + 3] = c.A;
+                                    i += 4;
+                                }
+                            }
+                            break;
+                        case 7:
+                            for(auto x = b.Min.X; x < b.Max.X; x++)
+                            {
+                                auto c = gocpp::getValue<color::Gray16>(Convert(gocpp::recv(color::Gray16Model), At(gocpp::recv(m), x, y)));
+                                cr[0][i + 0] = uint8_t(c.Y >> 8);
+                                cr[0][i + 1] = uint8_t(c.Y);
+                                i += 2;
+                            }
+                            break;
+                        case 8:
+                            for(auto x = b.Min.X; x < b.Max.X; x++)
+                            {
+                                auto [r, g, b, gocpp_id_20] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
+                                cr[0][i + 0] = uint8_t(r >> 8);
+                                cr[0][i + 1] = uint8_t(r);
+                                cr[0][i + 2] = uint8_t(g >> 8);
+                                cr[0][i + 3] = uint8_t(g);
+                                cr[0][i + 4] = uint8_t(b >> 8);
+                                cr[0][i + 5] = uint8_t(b);
+                                i += 6;
+                            }
+                            break;
+                        case 9:
+                            for(auto x = b.Min.X; x < b.Max.X; x++)
+                            {
+                                auto c = gocpp::getValue<color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), At(gocpp::recv(m), x, y)));
+                                cr[0][i + 0] = uint8_t(c.R >> 8);
+                                cr[0][i + 1] = uint8_t(c.R);
+                                cr[0][i + 2] = uint8_t(c.G >> 8);
+                                cr[0][i + 3] = uint8_t(c.G);
+                                cr[0][i + 4] = uint8_t(c.B >> 8);
+                                cr[0][i + 5] = uint8_t(c.B);
+                                cr[0][i + 6] = uint8_t(c.A >> 8);
+                                cr[0][i + 7] = uint8_t(c.A);
+                                i += 8;
+                            }
+                            break;
+                    }
+                }
+                auto f = ftNone;
+                if(level != zlib::NoCompression && cb != cbP8 && cb != cbP4 && cb != cbP2 && cb != cbP1)
+                {
+                    auto bpp = bitsPerPixel / 8;
+                    f = filter(& cr, pr, bpp);
+                }
+                if(auto [gocpp_id_22, err] = Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
+                {
+                    return err;
+                }
+                std::tie(pr, cr[0]) = std::tuple{cr[0], pr};
+            }
+            return nullptr;
         }
-        return nullptr;
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     void writeIDATs(struct encoder* e)
@@ -888,107 +895,114 @@ namespace golang::png
     std::string Encode(struct Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
-        auto [mw, mh] = std::tuple{int64_t(Dx(gocpp::recv(Bounds(gocpp::recv(m))))), int64_t(Dy(gocpp::recv(Bounds(gocpp::recv(m)))))};
-        if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
+        try
         {
-            return FormatError("invalid image size: " + strconv::FormatInt(mw, 10) + "x" + strconv::FormatInt(mh, 10));
-        }
-        encoder* e = {};
-        if(enc->BufferPool != nullptr)
-        {
-            auto buffer = Get(gocpp::recv(enc->BufferPool));
-            e = (encoder*)(buffer);
-        }
-        if(e == nullptr)
-        {
-            e = new encoder {};
-        }
-        if(enc->BufferPool != nullptr)
-        {
-            defer.push_back([=]{ Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
-        }
-        e->enc = enc;
-        e->w = w;
-        e->m = m;
-        color::Palette pal = {};
-        if(auto [gocpp_id_24, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
-        {
-            std::tie(pal, gocpp_id_25) = gocpp::getValue<color::Palette>(ColorModel(gocpp::recv(m)));
-        }
-        if(pal != nullptr)
-        {
-            if(len(pal) <= 2)
+            auto [mw, mh] = std::tuple{int64_t(Dx(gocpp::recv(Bounds(gocpp::recv(m))))), int64_t(Dy(gocpp::recv(Bounds(gocpp::recv(m)))))};
+            if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
             {
-                e->cb = cbP1;
+                return FormatError("invalid image size: " + strconv::FormatInt(mw, 10) + "x" + strconv::FormatInt(mh, 10));
             }
-            else
-            if(len(pal) <= 4)
+            encoder* e = {};
+            if(enc->BufferPool != nullptr)
             {
-                e->cb = cbP2;
+                auto buffer = Get(gocpp::recv(enc->BufferPool));
+                e = (encoder*)(buffer);
             }
-            else
-            if(len(pal) <= 16)
+            if(e == nullptr)
             {
-                e->cb = cbP4;
+                e = new encoder {};
             }
-            else
+            if(enc->BufferPool != nullptr)
             {
-                e->cb = cbP8;
+                defer.push_back([=]{ Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
             }
-        }
-        else
-        {
-            //Go switch emulation
+            e->enc = enc;
+            e->w = w;
+            e->m = m;
+            color::Palette pal = {};
+            if(auto [gocpp_id_24, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
             {
-                auto condition = ColorModel(gocpp::recv(m));
-                int conditionId = -1;
-                if(condition == color::GrayModel) { conditionId = 0; }
-                else if(condition == color::Gray16Model) { conditionId = 1; }
-                else if(condition == color::RGBAModel) { conditionId = 2; }
-                else if(condition == color::NRGBAModel) { conditionId = 3; }
-                else if(condition == color::AlphaModel) { conditionId = 4; }
-                switch(conditionId)
+                std::tie(pal, gocpp_id_25) = gocpp::getValue<color::Palette>(ColorModel(gocpp::recv(m)));
+            }
+            if(pal != nullptr)
+            {
+                if(len(pal) <= 2)
                 {
-                    case 0:
-                        e->cb = cbG8;
-                        break;
-                    case 1:
-                        e->cb = cbG16;
-                        break;
-                    case 2:
-                    case 3:
-                    case 4:
-                        if(opaque(m))
-                        {
-                            e->cb = cbTC8;
-                        }
-                        else
-                        {
-                            e->cb = cbTCA8;
-                        }
-                        break;
-                    default:
-                        if(opaque(m))
-                        {
-                            e->cb = cbTC16;
-                        }
-                        else
-                        {
-                            e->cb = cbTCA16;
-                        }
-                        break;
+                    e->cb = cbP1;
+                }
+                else
+                if(len(pal) <= 4)
+                {
+                    e->cb = cbP2;
+                }
+                else
+                if(len(pal) <= 16)
+                {
+                    e->cb = cbP4;
+                }
+                else
+                {
+                    e->cb = cbP8;
                 }
             }
+            else
+            {
+                //Go switch emulation
+                {
+                    auto condition = ColorModel(gocpp::recv(m));
+                    int conditionId = -1;
+                    if(condition == color::GrayModel) { conditionId = 0; }
+                    else if(condition == color::Gray16Model) { conditionId = 1; }
+                    else if(condition == color::RGBAModel) { conditionId = 2; }
+                    else if(condition == color::NRGBAModel) { conditionId = 3; }
+                    else if(condition == color::AlphaModel) { conditionId = 4; }
+                    switch(conditionId)
+                    {
+                        case 0:
+                            e->cb = cbG8;
+                            break;
+                        case 1:
+                            e->cb = cbG16;
+                            break;
+                        case 2:
+                        case 3:
+                        case 4:
+                            if(opaque(m))
+                            {
+                                e->cb = cbTC8;
+                            }
+                            else
+                            {
+                                e->cb = cbTCA8;
+                            }
+                            break;
+                        default:
+                            if(opaque(m))
+                            {
+                                e->cb = cbTC16;
+                            }
+                            else
+                            {
+                                e->cb = cbTCA16;
+                            }
+                            break;
+                    }
+                }
+            }
+            std::tie(gocpp_id_26, e->err) = io::WriteString(w, pngHeader);
+            writeIHDR(gocpp::recv(e));
+            if(pal != nullptr)
+            {
+                writePLTEAndTRNS(gocpp::recv(e), pal);
+            }
+            writeIDATs(gocpp::recv(e));
+            writeIEND(gocpp::recv(e));
+            return e->err;
         }
-        std::tie(gocpp_id_26, e->err) = io::WriteString(w, pngHeader);
-        writeIHDR(gocpp::recv(e));
-        if(pal != nullptr)
+        catch(gocpp::GoPanic& gp)
         {
-            writePLTEAndTRNS(gocpp::recv(e), pal);
+            defer.handlePanic(gp);
         }
-        writeIDATs(gocpp::recv(e));
-        writeIEND(gocpp::recv(e));
-        return e->err;
     }
 
 }

@@ -523,60 +523,67 @@ namespace golang::png
     std::tuple<image::Image, std::string> decode(struct decoder* d)
     {
         gocpp::Defer defer;
-        auto [r, err] = zlib::NewReader(d);
-        if(err != nullptr)
+        try
         {
-            return {nullptr, err};
-        }
-        defer.push_back([=]{ Close(gocpp::recv(r)); });
-        image::Image img = {};
-        if(d->interlace == itNone)
-        {
-            std::tie(img, err) = readImagePass(gocpp::recv(d), r, 0, false);
+            auto [r, err] = zlib::NewReader(d);
             if(err != nullptr)
             {
                 return {nullptr, err};
             }
-        }
-        else
-        if(d->interlace == itAdam7)
-        {
-            std::tie(img, err) = readImagePass(gocpp::recv(d), nullptr, 0, true);
-            if(err != nullptr)
+            defer.push_back([=]{ Close(gocpp::recv(r)); });
+            image::Image img = {};
+            if(d->interlace == itNone)
             {
-                return {nullptr, err};
-            }
-            for(auto pass = 0; pass < 7; pass++)
-            {
-                auto [imagePass, err] = readImagePass(gocpp::recv(d), r, pass, false);
+                std::tie(img, err) = readImagePass(gocpp::recv(d), r, 0, false);
                 if(err != nullptr)
                 {
                     return {nullptr, err};
                 }
-                if(imagePass != nullptr)
+            }
+            else
+            if(d->interlace == itAdam7)
+            {
+                std::tie(img, err) = readImagePass(gocpp::recv(d), nullptr, 0, true);
+                if(err != nullptr)
                 {
-                    mergePassInto(gocpp::recv(d), img, imagePass, pass);
+                    return {nullptr, err};
+                }
+                for(auto pass = 0; pass < 7; pass++)
+                {
+                    auto [imagePass, err] = readImagePass(gocpp::recv(d), r, pass, false);
+                    if(err != nullptr)
+                    {
+                        return {nullptr, err};
+                    }
+                    if(imagePass != nullptr)
+                    {
+                        mergePassInto(gocpp::recv(d), img, imagePass, pass);
+                    }
                 }
             }
-        }
-        auto n = 0;
-        for(auto i = 0; n == 0 && err == nullptr; i++)
-        {
-            if(i == 100)
+            auto n = 0;
+            for(auto i = 0; n == 0 && err == nullptr; i++)
             {
-                return {nullptr, io::ErrNoProgress};
+                if(i == 100)
+                {
+                    return {nullptr, io::ErrNoProgress};
+                }
+                std::tie(n, err) = Read(gocpp::recv(r), d->tmp.make_slice(0, 1));
             }
-            std::tie(n, err) = Read(gocpp::recv(r), d->tmp.make_slice(0, 1));
+            if(err != nullptr && err != io::go_EOF)
+            {
+                return {nullptr, FormatError(Error(gocpp::recv(err)))};
+            }
+            if(n != 0 || d->idatLength != 0)
+            {
+                return {nullptr, FormatError("too much pixel data")};
+            }
+            return {img, nullptr};
         }
-        if(err != nullptr && err != io::go_EOF)
+        catch(gocpp::GoPanic& gp)
         {
-            return {nullptr, FormatError(Error(gocpp::recv(err)))};
+            defer.handlePanic(gp);
         }
-        if(n != 0 || d->idatLength != 0)
-        {
-            return {nullptr, FormatError("too much pixel data")};
-        }
-        return {img, nullptr};
     }
 
     std::tuple<image::Image, std::string> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)

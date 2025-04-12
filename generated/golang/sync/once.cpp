@@ -59,12 +59,19 @@ namespace golang::sync
     void doSlow(struct Once* o, std::function<void ()> f)
     {
         gocpp::Defer defer;
-        Lock(gocpp::recv(o->m));
-        defer.push_back([=]{ Unlock(gocpp::recv(o->m)); });
-        if(Load(gocpp::recv(o->done)) == 0)
+        try
         {
-            defer.push_back([=]{ Store(gocpp::recv(o->done), 1); });
-            f();
+            Lock(gocpp::recv(o->m));
+            defer.push_back([=]{ Unlock(gocpp::recv(o->m)); });
+            if(Load(gocpp::recv(o->done)) == 0)
+            {
+                defer.push_back([=]{ Store(gocpp::recv(o->done), 1); });
+                f();
+            }
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
         }
     }
 

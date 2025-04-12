@@ -525,62 +525,69 @@ namespace golang::runtime
     void preprintpanics(_panic* p)
     {
         gocpp::Defer defer;
-        defer.push_back([=]{ [=]() mutable -> void
+        try
         {
-            auto text = "panic while printing panic value";
-            //Go type switch emulation
+            defer.push_back([=]{ [=]() mutable -> void
             {
-                const auto& gocpp_id_0 = gocpp::type_info(recover());
-                int conditionId = -1;
-                if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
-                else if(gocpp_id_0 == typeid(std::string)) { conditionId = 1; }
-                switch(conditionId)
+                auto text = "panic while printing panic value";
+                //Go type switch emulation
                 {
-                    case 0:
+                    const auto& gocpp_id_0 = gocpp::type_info(gocpp::recover());
+                    int conditionId = -1;
+                    if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+                    else if(gocpp_id_0 == typeid(std::string)) { conditionId = 1; }
+                    switch(conditionId)
                     {
-                        untyped nil r = gocpp::any_cast<untyped nil>(recover());
-                        break;
-                    }
-                    case 1:
-                    {
-                        std::string r = gocpp::any_cast<std::string>(recover());
-                        go_throw(text + ": " + r);
-                        break;
-                    }
-                    default:
-                    {
-                        auto r = recover();
-                        go_throw(text + ": type " + string(gocpp::recv(toRType(efaceOf(& r)->_type))));
-                        break;
+                        case 0:
+                        {
+                            untyped nil r = gocpp::any_cast<untyped nil>(gocpp::recover());
+                            break;
+                        }
+                        case 1:
+                        {
+                            std::string r = gocpp::any_cast<std::string>(gocpp::recover());
+                            go_throw(text + ": " + r);
+                            break;
+                        }
+                        default:
+                        {
+                            auto r = gocpp::recover();
+                            go_throw(text + ": type " + string(gocpp::recv(toRType(efaceOf(& r)->_type))));
+                            break;
+                        }
                     }
                 }
-            }
-        }(); });
-        for(; p != nullptr; )
-        {
-            //Go type switch emulation
+            }(); });
+            for(; p != nullptr; )
             {
-                const auto& gocpp_id_1 = gocpp::type_info(p->arg);
-                int conditionId = -1;
-                if(gocpp_id_1 == typeid(std::string)) { conditionId = 0; }
-                else if(gocpp_id_1 == typeid(stringer)) { conditionId = 1; }
-                switch(conditionId)
+                //Go type switch emulation
                 {
-                    case 0:
+                    const auto& gocpp_id_1 = gocpp::type_info(p->arg);
+                    int conditionId = -1;
+                    if(gocpp_id_1 == typeid(std::string)) { conditionId = 0; }
+                    else if(gocpp_id_1 == typeid(stringer)) { conditionId = 1; }
+                    switch(conditionId)
                     {
-                        std::string v = gocpp::any_cast<std::string>(p->arg);
-                        p->arg = Error(gocpp::recv(v));
-                        break;
-                    }
-                    case 1:
-                    {
-                        stringer v = gocpp::any_cast<stringer>(p->arg);
-                        p->arg = String(gocpp::recv(v));
-                        break;
+                        case 0:
+                        {
+                            std::string v = gocpp::any_cast<std::string>(p->arg);
+                            p->arg = Error(gocpp::recv(v));
+                            break;
+                        }
+                        case 1:
+                        {
+                            stringer v = gocpp::any_cast<stringer>(p->arg);
+                            p->arg = String(gocpp::recv(v));
+                            break;
+                        }
                     }
                 }
+                p = p->link;
             }
-            p = p->link;
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
         }
     }
 

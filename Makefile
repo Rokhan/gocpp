@@ -27,6 +27,8 @@ GOCPP_VERBOSE = false
 
 GOCPP_PARAMETERS = -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE) -verbose=$(GOCPP_VERBOSE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR)
 
+ON_DIFF_ERROR = false
+
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
 ##  To generate full report just use "make -k"            ##
@@ -112,7 +114,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 	else \
 		(diff -q $(LOGDIR)/$*.cpp.out.txt $(LOGDIR)/$*.go.out.txt) \
 			&&  echo    "| ✔️ |" >> $(LOGDIR)/$*.md \
-			|| (echo    "| ❌ |" >> $(LOGDIR)/$*.md && false); \
+			|| (echo    "| ❌ |" >> $(LOGDIR)/$*.md && $(ON_DIFF_ERROR)); \
 	fi
 
 clean:

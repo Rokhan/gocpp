@@ -5,6 +5,11 @@ import "fmt"
 func main() {
 	f()
 	fmt.Println("Returned normally from f.")
+
+	// As it's not called in a defer statement, r should always be nil.
+	if r := recover(); r != nil {
+		fmt.Println("R should always be nil, r =", r)
+	}
 }
 
 func f() {
@@ -24,11 +29,12 @@ func f() {
 }
 
 func g(i int) {
+	defer fmt.Println("Defer1 in g", i)
 	if i > 3 {
 		fmt.Println("Panicking!")
-		panic(fmt.Sprintf("%v", i))
+		panic(fmt.Sprint(i))
 	}
-	defer fmt.Println("Defer in g", i)
+	defer fmt.Println("Defer2 in g", i)
 	fmt.Println("Printing in g", i)
 	g(i + 1)
 }

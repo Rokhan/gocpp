@@ -98,6 +98,7 @@ var stdFuncMapping = map[string]string{
 	"go_delete":      "remove", // if already renamed by keyword mapping
 	"make":           "gocpp::make",
 	"panic":          "gocpp::panic",
+	"recover":        "gocpp::recover",
 	"nil":            "nullptr",
 	"unsafe::Sizeof": "gocpp::Sizeof",
 

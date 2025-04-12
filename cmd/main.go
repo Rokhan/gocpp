@@ -221,8 +221,10 @@ func (cv *cppConverter) UpdateIota() {
 	cv.iota_value++
 }
 
+var baseIndent string = "    "
+
 func (of *outFile) Indent() string {
-	return strings.Repeat("    ", of.indent)
+	return strings.Repeat(baseIndent, of.indent)
 }
 
 func (cv *cppConverter) GenerateId() (id string) {
@@ -1442,14 +1444,36 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 
 	if env.isFunc && *env.useDefer {
 		fmt.Fprintf(cv.cpp.out, "%sgocpp::Defer defer;\n", cv.cpp.Indent())
-	}
+		fmt.Fprintf(cv.cpp.out, "%stry\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 
-	fmt.Fprintf(cv.cpp.out, "%s", cppOut)
+		// perf, not efficient as we need to split again the string we have just build ...
+		fmt.Fprintf(cv.cpp.out, "%s", addIndentation(cppOut, baseIndent))
+
+		fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%scatch(gocpp::GoPanic& gp)\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s    defer.handlePanic(gp);\n", cv.cpp.Indent())
+		fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+	} else {
+		fmt.Fprintf(cv.cpp.out, "%s", cppOut)
+	}
 
 	cv.cpp.indent--
 	fmt.Fprintf(cv.cpp.out, "%s}%s", cv.cpp.Indent(), end)
 	cv.endScope()
 	return
+}
+
+// Adds a specified indentation to each non-empty line of the input string.
+func addIndentation(input string, indent string) string {
+	lines := strings.Split(input, "\n")
+	for i, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			lines[i] = indent + line
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr, outNames []string) cppExpr {
@@ -3609,6 +3633,14 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			}
 		case *ast.ParenExpr:
 			cv.BuffExprPrintf(buf, "(%v)(", cv.convertTypeExpr(fun.X))
+
+		case *ast.Ident:
+			if fun.Name == "recover" {
+				cv.BuffExprPrintf(buf, "gocpp::recover(")
+			} else {
+				cv.BuffExprPrintf(buf, "%v(", cv.convertExpr(fun))
+			}
+
 		default:
 			cv.BuffExprPrintf(buf, "%v(", cv.convertExpr(n.Fun))
 		}

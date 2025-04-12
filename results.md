@@ -16,7 +16,7 @@
 | [TourOfGo/basics/named-results.go](tests/TourOfGo/basics/named-results.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/named-results.cpp)) | ❌ |
 | [TourOfGo/basics/numeric-constants.go](tests/TourOfGo/basics/numeric-constants.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/numeric-constants.cpp)) | ❌ |
 | [TourOfGo/basics/packages.go](tests/TourOfGo/basics/packages.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/packages.cpp)) | ➖ | 
-| [TourOfGo/basics/panic-recover.go](tests/TourOfGo/basics/panic-recover.go) | ✔️ | ❌ | ❌ | ❌ |
+| [TourOfGo/basics/panic-recover.go](tests/TourOfGo/basics/panic-recover.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/panic-recover.cpp)) | ✔️ |
 | [TourOfGo/basics/short-variable-declarations.go](tests/TourOfGo/basics/short-variable-declarations.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/short-variable-declarations.cpp)) | ✔️ |
 | [TourOfGo/basics/type-conversions.go](tests/TourOfGo/basics/type-conversions.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/type-conversions.cpp)) | ✔️ |
 | [TourOfGo/basics/type-conversions-advanced.go](tests/TourOfGo/basics/type-conversions-advanced.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/type-conversions-advanced.cpp)) | ❌ |

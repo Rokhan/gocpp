@@ -80,9 +80,38 @@ namespace gocpp
         global_pool().enqueue_detach(func, args...);
     }
 
+    struct GoPanic : std::runtime_error 
+    {
+        // maybe make it mutable to be able to use the usual
+        // "catch(const GoPanic& p)" syntax
+        std::shared_ptr<bool> recovered = std::make_shared<bool>(false);
+
+        GoPanic(const std::string& message) : runtime_error(message)
+        {
+        }
+    };
+
     struct go_any : std::any {
         using any::any;
     };
+
+    template<typename T>
+    bool operator ==(gocpp::go_any const& lhs, T const& rhs) {
+        if(lhs.type() != typeid(T))
+        {
+            return false;
+        }
+        return std::any_cast<T>(lhs) == rhs;
+    }
+
+    // template<typename T>
+    // bool operator ==(T& lhs, gocpp::go_any const& rhs) {
+    //     if(rhs.type() != typeid(T))
+    //     {
+    //         return false;
+    //     }
+    //     return lhs == std::any_cast<T>(rhs);
+    // }
 
     std::ostream& operator<<(std::ostream& os, gocpp::go_any const& value) {
         return os << mocklib::Sprint(value);
@@ -349,13 +378,27 @@ namespace gocpp
 
     struct Defer : std::vector<std::function<void()>>
     {
-        ~Defer()
+        void unwind()
         {
             while(!empty())
             {
                 back()();
                 pop_back();
             }
+        }
+
+        void handlePanic(GoPanic& gp)
+        {
+            unwind();
+
+            if(!(*gp.recovered)) {
+                throw gp;
+            }            
+        }
+
+        ~Defer()
+        {
+            unwind();
         }
     };
 
@@ -415,18 +458,27 @@ namespace gocpp
         }
     };
 
-    struct GoPanic : std::runtime_error 
-    {
-        GoPanic(const std::string& message) : runtime_error(message)
-        {
-        }
-    };
-
     [[noreturn]] void panic(const std::string& message)
     {
         throw GoPanic(message);
     }
 
+    go_any recover()
+    {
+        try
+        {
+            if(auto e_ptr = std::current_exception())
+            {
+                std::rethrow_exception(e_ptr);
+            }
+        }
+        catch(GoPanic& p)
+        {
+            *(p.recovered) = true;
+            return p.what();
+        }        
+        return nullptr;
+    }
 
     // Receiver adapter for method calls
     // TODO: check if "IgnoreInterface" parameters has still some utility
@@ -1290,7 +1342,18 @@ namespace mocklib
 
     std::string Sprint(const gocpp::go_any& value)
     {
-        return "<gocpp::go_any>";
+        if (value.type() == typeid(int)) {
+            std::stringstream sstr;
+            sstr << std::any_cast<int>(value);
+            return sstr.str();
+        }        
+        if (value.type() == typeid(nullptr)) {
+            return "<nil>";
+        }
+        if (value.type() == typeid(const char*)) {
+            return std::any_cast<const char*>(value);
+        }
+        return "<gocpp::go_any>[" + std::string(value.type().name()) + "]";
     }
 
     template<typename T>

@@ -7,6 +7,10 @@ OUTDIR=generated
 LOGDIR=log
 SUPPORT_FILES=includes/gocpp/support.h includes/gocpp/support.fwd.h
 
+GENERATED_GOLANG_LIB_CPP_FILES=$(shell find $(OUTDIR)/golang -name '*.cpp')
+GENERATED_GOLANG_LIB_OBJ_FILES=$(patsubst  $(OUTDIR)/%, $(LOGDIR)/%, $(GENERATED_GOLANG_LIB_CPP_FILES:.cpp=.o))
+GENERATED_GOLANG_LIB_OBJ_MD_FILES=$(GENERATED_GOLANG_LIB_OBJ_FILES:.o=.full.md)
+
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.cpp)
 OUT_CPP_TEST_FILES=$(addprefix $(OUTDIR)/,$(CPP_TEST_FILES))
 
@@ -26,15 +30,29 @@ GOCPP_STRICT_MODE = false
 GOCPP_VERBOSE = false
 
 GOCPP_PARAMETERS = -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE) -verbose=$(GOCPP_VERBOSE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR)
+### Maybe use something like this if we keep adding more parameters
+#ifeq ($(GOCPP_ALWAYS_REGENERATE), true)
+#	GOCPP_PARAMETERS += -alwaysRegenerate=true
+#endif
 
 ON_DIFF_ERROR = false
+export SHOW_DEBUG_LOG = false
+
+ifeq ($(SHOW_DEBUG_LOG),true)
+  define DEBUG_LOG
+    @echo $(1)
+  endef
+else ifeq ($(SHOW_DEBUG_LOG),false)
+  define DEBUG_LOG
+  endef
+endif
 
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
 ##  To generate full report just use "make -k"            ##
 ## ------------------------------------------------------ ##
 
-all: allexe
+all: allexe go-stdlib-all
 
 doc:
 	echo "# Results on test directory" > results.md
@@ -45,9 +63,10 @@ doc:
 	echo "" >> results.md
 	echo "" >> results.md
 	echo "# Conversion of imported packages" >> results.md
-	echo "| file | cpp generate |" >> results.md
-	echo "| ---- | -------------| " >> results.md
-	cat $$(find log/golang -type f -name "*.status.md" | sort) >> results.md
+	echo "| file | cpp generate | cpp compile |" >> results.md
+	echo "| ---- | -------------| ----------- |" >> results.md
+	make md-stdlib
+	cat $$(find log/golang -type f -name "*.full.md" | sort) >> results.md
 	dos2unix results.md
 
 format-tests:
@@ -74,17 +93,18 @@ gocpp.exe: cmd/main.go cmd/constants.go
 	go build -o gocpp.exe cmd/main.go cmd/constants.go
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
-	@echo "    $<"
-	@echo "    $@"
+	$(call DEBUG_LOG, " => $<")
+	$(call DEBUG_LOG, " => $@")
+	$(call DEBUG_LOG, " => $*")
 
 	./gocpp.exe $(GOCPP_PARAMETERS) -input $< > $@".log"
 	(cd $(OUTDIR) && make) 
 	$(LOGDIR)/$*.go.exe
 
 $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
-	@echo "    $< "
-	@echo "    $@ "
-	
+	$(call DEBUG_LOG, " => $<")
+	$(call DEBUG_LOG, " => $@")
+	$(call DEBUG_LOG, " => $*")
 	mkdir -p $$(dirname $(LOGDIR)/$*) || true
 
 	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
@@ -117,12 +137,41 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 			|| (echo    "| ❌ |" >> $(LOGDIR)/$*.md && $(ON_DIFF_ERROR)); \
 	fi
 
+go-stdlib-all: allexe
+	make go-stdlib
+
+go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
+#	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FILES))
+
+
+$(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FILES)
+	$(call DEBUG_LOG, " => $<")
+	$(call DEBUG_LOG, " => $@")
+	$(call DEBUG_LOG, " => $*")
+
+	mkdir -p $$(dirname $@) || true
+
+	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o) \
+		&&  echo -n " ✔️ |" >> $(LOGDIR)/$*.obj.md \
+		|| (echo    " ❌ |" >> $(LOGDIR)/$*.obj.md && false)
+
+md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_MD_FILES)
+#	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_MD_FILES))
+
+$(GENERATED_GOLANG_LIB_OBJ_MD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md
+	$(call DEBUG_LOG, " => $<")
+	$(call DEBUG_LOG, " => $@")
+	$(call DEBUG_LOG, " => $*")
+	cat $(LOGDIR)/$*.status.md $(LOGDIR)/$*.obj.md | (tr -d "\n" && echo) > $@
+
+clean-full-md:
+	rm $$(find $(LOGDIR) -name '*.full.md')
+
 clean:
 	rm -rf $(LOGDIR) $(OUTDIR)
-#	@rm -f $(OUT_CPP_TEST_FILES) $(OUT_HPP_TEST_FILES) $(OUT_EXE_TEST_FILES)
 	rm -f results.md
 
-soft_clean:
+soft-clean:
 	touch cmd/main.go
 
 unix2dos:

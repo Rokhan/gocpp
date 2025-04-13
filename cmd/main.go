@@ -3440,8 +3440,11 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	case *types.Basic:
 		return GetCppGoType(subType)
 
-	// case *types.Chan:
-	// 	return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem()))
+	case *types.Chan:
+		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem()))
+
+	case *types.Map:
+		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key()), GetCppGoType(subType.Elem()))
 
 	case *types.Named:
 		return GetCppGoType(subType)

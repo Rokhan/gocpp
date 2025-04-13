@@ -9,7 +9,7 @@ SUPPORT_FILES=includes/gocpp/support.h includes/gocpp/support.fwd.h
 
 GENERATED_GOLANG_LIB_CPP_FILES=$(shell find $(OUTDIR)/golang -name '*.cpp')
 GENERATED_GOLANG_LIB_OBJ_FILES=$(patsubst  $(OUTDIR)/%, $(LOGDIR)/%, $(GENERATED_GOLANG_LIB_CPP_FILES:.cpp=.o))
-GENERATED_GOLANG_LIB_OBJ_MD_FILES=$(GENERATED_GOLANG_LIB_OBJ_FILES:.o=.full.md)
+GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES=$(GENERATED_GOLANG_LIB_OBJ_FILES:.o=.full.md)
 
 CPP_TEST_FILES=$(GO_TEST_FILES:.go=.cpp)
 OUT_CPP_TEST_FILES=$(addprefix $(OUTDIR)/,$(CPP_TEST_FILES))
@@ -36,6 +36,8 @@ GOCPP_PARAMETERS = -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -alwaysRegen
 #endif
 
 ON_DIFF_ERROR = false
+ON_GCC_ERROR = false
+
 export SHOW_DEBUG_LOG = false
 
 ifeq ($(SHOW_DEBUG_LOG),true)
@@ -46,6 +48,10 @@ else ifeq ($(SHOW_DEBUG_LOG),false)
   define DEBUG_LOG
   endef
 endif
+
+define check-nonempty
+	test -s $(1) || (echo "Error: $(1) is empty" && false)
+endef
 
 ## ------------------------------------------------------ ##
 ##  Building stop at first error (as usual in Makefile)   ##
@@ -151,14 +157,14 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 
 	mkdir -p $$(dirname $@) || true
 
-	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o) \
-		&&  echo -n " ✔️ |" >> $(LOGDIR)/$*.obj.md \
-		|| (echo    " ❌ |" >> $(LOGDIR)/$*.obj.md && false)
+	($(call check-nonempty, $<) && cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o) \
+		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
+		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md && $(ON_GCC_ERROR))
 
-md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_MD_FILES)
-#	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_MD_FILES))
+md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES)
+#	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES))
 
-$(GENERATED_GOLANG_LIB_OBJ_MD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md
+$(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md
 	$(call DEBUG_LOG, " => $<")
 	$(call DEBUG_LOG, " => $@")
 	$(call DEBUG_LOG, " => $*")

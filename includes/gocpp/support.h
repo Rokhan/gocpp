@@ -265,6 +265,20 @@ namespace gocpp
     };
 
     template <typename T>
+    struct result_or_error : std::pair<T, bool>
+    {
+        result_or_error(const std::pair<T, bool>& src) : std::pair<T, bool>(src) {}
+
+        operator const T() const 
+        {
+            if(!this->second)
+                panic("no value in channel");
+
+            return this->first;
+        }
+    };
+
+    template <typename T>
     class channel
     {
     private:
@@ -341,12 +355,9 @@ namespace gocpp
             return optVal.hasValue;
         }
 
-        T recv()
+        result_or_error<T> recv()
         {
-            auto [val, ok] = mImpl->receive();
-            if(!ok)
-                panic("no value in channel");
-            return val;
+            return mImpl->receive();
         }
 
         bool isOpen() const
@@ -1281,6 +1292,12 @@ namespace mocklib
     void Print(const T& value)
     {
         std::cout << value;
+    }
+
+    template<typename T>
+    void Print(const gocpp::result_or_error<T>& value)
+    {
+        std::cout << value.first;
     }
 
     template<typename T, typename... Args>

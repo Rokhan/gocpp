@@ -13,7 +13,7 @@
 
 namespace golang::bisect
 {
-    std::tuple<Matcher*, std::string> New(std::string pattern);
+    std::tuple<Matcher*, gocpp::error> New(std::string pattern);
     struct Matcher
     {
         bool verbose;
@@ -76,7 +76,7 @@ namespace golang::bisect
     bool matchResult(struct Matcher* m, uint64_t id);
     bool FileLine(struct Matcher* m, Writer w, std::string file, int line);
     bool fileLine(struct Matcher* m, Writer w, std::string file, int line);
-    std::string printFileLine(Writer w, uint64_t h, std::string file, int line);
+    gocpp::error printFileLine(Writer w, uint64_t h, std::string file, int line);
     gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
     bool Stack(struct Matcher* m, Writer w);
     bool stack(struct Matcher* m, Writer w);
@@ -103,7 +103,7 @@ namespace golang::bisect
 
         struct IWriter
         {
-            virtual std::tuple<int, std::string> vWrite(gocpp::slice<unsigned char>) = 0;
+            virtual std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char>) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -114,7 +114,7 @@ namespace golang::bisect
                 value.reset(ptr);
             }
 
-            std::tuple<int, std::string> vWrite(gocpp::slice<unsigned char>) override;
+            std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char>) override;
 
             StoreT value;
         };
@@ -122,12 +122,12 @@ namespace golang::bisect
         std::shared_ptr<IWriter> value;
     };
 
-    std::tuple<int, std::string> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>);
-    std::tuple<int, std::string> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>);
+    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>);
+    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>);
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    std::string PrintMarker(Writer w, uint64_t h);
-    std::string printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
+    gocpp::error PrintMarker(Writer w, uint64_t h);
+    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
     std::string Marker(uint64_t id);
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
     std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);

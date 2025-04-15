@@ -37,9 +37,9 @@ namespace golang::strings
     void Reset(struct Builder* b);
     void grow(struct Builder* b, int n);
     void Grow(struct Builder* b, int n);
-    std::tuple<int, std::string> Write(struct Builder* b, gocpp::slice<unsigned char> p);
-    std::string WriteByte(struct Builder* b, unsigned char c);
-    std::tuple<int, std::string> WriteRune(struct Builder* b, gocpp::rune r);
-    std::tuple<int, std::string> WriteString(struct Builder* b, std::string s);
+    std::tuple<int, gocpp::error> Write(struct Builder* b, gocpp::slice<unsigned char> p);
+    gocpp::error WriteByte(struct Builder* b, unsigned char c);
+    std::tuple<int, gocpp::error> WriteRune(struct Builder* b, gocpp::rune r);
+    std::tuple<int, gocpp::error> WriteString(struct Builder* b, std::string s);
 }
 

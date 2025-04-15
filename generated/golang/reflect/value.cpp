@@ -1461,7 +1461,7 @@ namespace golang::reflect
         return v;
     }
 
-    std::tuple<Value, std::string> FieldByIndexErr(struct Value v, gocpp::slice<int> index)
+    std::tuple<Value, gocpp::error> FieldByIndexErr(struct Value v, gocpp::slice<int> index)
     {
         if(len(index) == 1)
         {

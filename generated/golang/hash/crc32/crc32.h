@@ -45,13 +45,13 @@ namespace golang::crc32
     int BlockSize(struct digest* d);
     void Reset(struct digest* d);
     extern std::string magic;
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct digest* d);
-    std::string UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct digest* d);
+    gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
     uint32_t Update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p);
-    std::tuple<int, std::string> Write(struct digest* d, gocpp::slice<unsigned char> p);
+    std::tuple<int, gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p);
     uint32_t Sum32(struct digest* d);
     gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in);
     uint32_t Checksum(gocpp::slice<unsigned char> data, Table* tab);

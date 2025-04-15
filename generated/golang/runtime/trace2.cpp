@@ -205,7 +205,7 @@ namespace golang::runtime
     gocpp_id_0 trace;
     uint32_t traceAdvanceSema = 1;
     uint32_t traceShutdownSema = 1;
-    std::string StartTrace()
+    gocpp::error StartTrace()
     {
         if(traceEnabled() || traceShuttingDown())
         {

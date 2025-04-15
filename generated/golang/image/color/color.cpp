@@ -463,17 +463,17 @@ namespace golang::color
     template<typename T, typename StoreT>
     Color Model::ModelImpl<T, StoreT>::vConvert(Color c)
     {
-        return Convert(gocpp::PtrRecv<T, false>(value.get()));
+        return Convert(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
     Color Convert(const gocpp::PtrRecv<Model, false>& self, Color c)
     {
-        return self.ptr->value->vConvert(Color c);
+        return self.ptr->value->vConvert(c);
     }
 
     Color Convert(const gocpp::ObjRecv<Model>& self, Color c)
     {
-        return self.obj.value->vConvert(Color c);
+        return self.obj.value->vConvert(c);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value)

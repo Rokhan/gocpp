@@ -20,13 +20,13 @@
 
 namespace golang::fmt
 {
-    std::string Errorf(std::string format, gocpp::slice<go_any> a)
+    gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;
         doPrintf(gocpp::recv(p), format, a);
         auto s = string(p->buf);
-        std::string err = {};
+        gocpp::error err = {};
         //Go switch emulation
         {
             auto condition = len(p->wrappedErrs);
@@ -40,7 +40,7 @@ namespace golang::fmt
                     break;
                 case 1:
                     auto w = gocpp::InitPtr<wrapError>([](wrapError& x) { x.msg = s; });
-                    std::tie(w->err, gocpp_id_0) = gocpp::getValue<std::string>(a[p->wrappedErrs[0]]);
+                    std::tie(w->err, gocpp_id_0) = gocpp::getValue<gocpp::error>(a[p->wrappedErrs[0]]);
                     err = w;
                     break;
                 default:
@@ -48,14 +48,14 @@ namespace golang::fmt
                     {
                         sort::Ints(p->wrappedErrs);
                     }
-                    gocpp::slice<std::string> errs = {};
+                    gocpp::slice<gocpp::error> errs = {};
                     for(auto [i, argNum] : p->wrappedErrs)
                     {
                         if(i > 0 && p->wrappedErrs[i - 1] == argNum)
                         {
                             continue;
                         }
-                        if(auto [e, ok] = gocpp::getValue<std::string>(a[argNum]); ok)
+                        if(auto [e, ok] = gocpp::getValue<gocpp::error>(a[argNum]); ok)
                         {
                             errs = append(errs, e);
                         }
@@ -105,7 +105,7 @@ namespace golang::fmt
         return e->msg;
     }
 
-    std::string Unwrap(struct wrapError* e)
+    gocpp::error Unwrap(struct wrapError* e)
     {
         return e->err;
     }
@@ -147,7 +147,7 @@ namespace golang::fmt
         return e->msg;
     }
 
-    gocpp::slice<std::string> Unwrap(struct wrapErrors* e)
+    gocpp::slice<gocpp::error> Unwrap(struct wrapErrors* e)
     {
         return e->errs;
     }

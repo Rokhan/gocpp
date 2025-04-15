@@ -40,7 +40,7 @@ namespace golang::adler32
     }
 
     std::string magic = "adl\x01";
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -48,7 +48,7 @@ namespace golang::adler32
         return {b, nullptr};
     }
 
-    std::string UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -107,10 +107,10 @@ namespace golang::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, std::string> Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int nn;
-        std::string err;
+        gocpp::error err;
         *d = update(*d, p);
         return {len(p), nullptr};
     }

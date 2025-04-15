@@ -19,10 +19,10 @@
 
 namespace golang::bufio
 {
-    std::string ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte");
-    std::string ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune");
-    std::string ErrBufferFull = errors::New("bufio: buffer full");
-    std::string ErrNegativeCount = errors::New("bufio: negative count");
+    gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte");
+    gocpp::error ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune");
+    gocpp::error ErrBufferFull = errors::New("bufio: buffer full");
+    gocpp::error ErrNegativeCount = errors::New("bufio: negative count");
     
     template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
@@ -110,7 +110,7 @@ namespace golang::bufio
         *b = gocpp::Init<Reader>([](Reader& x) { x.buf = buf; x.rd = r; x.lastByte = - 1; x.lastRuneSize = - 1; });
     }
 
-    std::string errNegativeRead = errors::New("bufio: reader returned negative count from Read");
+    gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read");
     void fill(struct Reader* b)
     {
         if(b->r > 0)
@@ -144,14 +144,14 @@ namespace golang::bufio
         b->err = io::ErrNoProgress;
     }
 
-    std::string readErr(struct Reader* b)
+    gocpp::error readErr(struct Reader* b)
     {
         auto err = b->err;
         b->err = nullptr;
         return err;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> Peek(struct Reader* b, int n)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(struct Reader* b, int n)
     {
         if(n < 0)
         {
@@ -167,7 +167,7 @@ namespace golang::bufio
         {
             return {b->buf.make_slice(b->r, b->w), ErrBufferFull};
         }
-        std::string err = {};
+        gocpp::error err = {};
         if(auto avail = b->w - b->r; avail < n)
         {
             n = avail;
@@ -180,20 +180,20 @@ namespace golang::bufio
         return {b->buf.make_slice(b->r, b->r + n), err};
     }
 
-    std::tuple<int, std::string> Discard(struct Reader* b, int n)
+    std::tuple<int, gocpp::error> Discard(struct Reader* b, int n)
     {
         int discarded;
-        std::string err;
+        gocpp::error err;
         if(n < 0)
         {
             int discarded;
-            std::string err;
+            gocpp::error err;
             return {0, ErrNegativeCount};
         }
         if(n == 0)
         {
             int discarded;
-            std::string err;
+            gocpp::error err;
             return {discarded, err};
         }
         b->lastByte = - 1;
@@ -202,19 +202,19 @@ namespace golang::bufio
         for(; ; )
         {
             int discarded;
-            std::string err;
+            gocpp::error err;
             auto skip = Buffered(gocpp::recv(b));
             if(skip == 0)
             {
                 int discarded;
-                std::string err;
+                gocpp::error err;
                 fill(gocpp::recv(b));
                 skip = Buffered(gocpp::recv(b));
             }
             if(skip > remain)
             {
                 int discarded;
-                std::string err;
+                gocpp::error err;
                 skip = remain;
             }
             b->r += skip;
@@ -222,31 +222,31 @@ namespace golang::bufio
             if(remain == 0)
             {
                 int discarded;
-                std::string err;
+                gocpp::error err;
                 return {n, nullptr};
             }
             if(b->err != nullptr)
             {
                 int discarded;
-                std::string err;
+                gocpp::error err;
                 return {n - remain, readErr(gocpp::recv(b))};
             }
         }
     }
 
-    std::tuple<int, std::string> Read(struct Reader* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(struct Reader* b, gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         n = len(p);
         if(n == 0)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             if(Buffered(gocpp::recv(b)) > 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {0, nullptr};
             }
             return {0, readErr(gocpp::recv(b))};
@@ -254,28 +254,28 @@ namespace golang::bufio
         if(b->r == b->w)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             if(b->err != nullptr)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {0, readErr(gocpp::recv(b))};
             }
             if(len(p) >= len(b->buf))
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 std::tie(n, b->err) = Read(gocpp::recv(b->rd), p);
                 if(n < 0)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     gocpp::panic(errNegativeRead);
                 }
                 if(n > 0)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     b->lastByte = int(p[n - 1]);
                     b->lastRuneSize = - 1;
                 }
@@ -287,13 +287,13 @@ namespace golang::bufio
             if(n < 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 gocpp::panic(errNegativeRead);
             }
             if(n == 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {0, readErr(gocpp::recv(b))};
             }
             b->w += n;
@@ -305,7 +305,7 @@ namespace golang::bufio
         return {n, nullptr};
     }
 
-    std::tuple<unsigned char, std::string> ReadByte(struct Reader* b)
+    std::tuple<unsigned char, gocpp::error> ReadByte(struct Reader* b)
     {
         b->lastRuneSize = - 1;
         for(; b->r == b->w; )
@@ -322,7 +322,7 @@ namespace golang::bufio
         return {c, nullptr};
     }
 
-    std::string UnreadByte(struct Reader* b)
+    gocpp::error UnreadByte(struct Reader* b)
     {
         if(b->lastByte < 0 || b->r == 0 && b->w > 0)
         {
@@ -342,16 +342,16 @@ namespace golang::bufio
         return nullptr;
     }
 
-    std::tuple<gocpp::rune, int, std::string> ReadRune(struct Reader* b)
+    std::tuple<gocpp::rune, int, gocpp::error> ReadRune(struct Reader* b)
     {
         gocpp::rune r;
         int size;
-        std::string err;
+        gocpp::error err;
         for(; b->r + utf8::UTFMax > b->w && ! utf8::FullRune(b->buf.make_slice(b->r, b->w)) && b->err == nullptr && b->w - b->r < len(b->buf); )
         {
             gocpp::rune r;
             int size;
-            std::string err;
+            gocpp::error err;
             fill(gocpp::recv(b));
         }
         b->lastRuneSize = - 1;
@@ -359,7 +359,7 @@ namespace golang::bufio
         {
             gocpp::rune r;
             int size;
-            std::string err;
+            gocpp::error err;
             return {0, 0, readErr(gocpp::recv(b))};
         }
         std::tie(r, size) = std::tuple{rune(b->buf[b->r]), 1};
@@ -367,7 +367,7 @@ namespace golang::bufio
         {
             gocpp::rune r;
             int size;
-            std::string err;
+            gocpp::error err;
             std::tie(r, size) = utf8::DecodeRune(b->buf.make_slice(b->r, b->w));
         }
         b->r += size;
@@ -376,7 +376,7 @@ namespace golang::bufio
         return {r, size, nullptr};
     }
 
-    std::string UnreadRune(struct Reader* b)
+    gocpp::error UnreadRune(struct Reader* b)
     {
         if(b->lastRuneSize < 0 || b->r < b->lastRuneSize)
         {
@@ -393,19 +393,19 @@ namespace golang::bufio
         return b->w - b->r;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> ReadSlice(struct Reader* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadSlice(struct Reader* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
-        std::string err;
+        gocpp::error err;
         auto s = 0;
         for(; ; )
         {
             gocpp::slice<unsigned char> line;
-            std::string err;
+            gocpp::error err;
             if(auto i = bytes::IndexByte(b->buf.make_slice(b->r + s, b->w), delim); i >= 0)
             {
                 gocpp::slice<unsigned char> line;
-                std::string err;
+                gocpp::error err;
                 i += s;
                 line = b->buf.make_slice(b->r, b->r + i + 1);
                 b->r += i + 1;
@@ -414,7 +414,7 @@ namespace golang::bufio
             if(b->err != nullptr)
             {
                 gocpp::slice<unsigned char> line;
-                std::string err;
+                gocpp::error err;
                 line = b->buf.make_slice(b->r, b->w);
                 b->r = b->w;
                 err = readErr(gocpp::recv(b));
@@ -423,7 +423,7 @@ namespace golang::bufio
             if(Buffered(gocpp::recv(b)) >= len(b->buf))
             {
                 gocpp::slice<unsigned char> line;
-                std::string err;
+                gocpp::error err;
                 b->r = b->w;
                 line = b->buf;
                 err = ErrBufferFull;
@@ -435,34 +435,34 @@ namespace golang::bufio
         if(auto i = len(line) - 1; i >= 0)
         {
             gocpp::slice<unsigned char> line;
-            std::string err;
+            gocpp::error err;
             b->lastByte = int(line[i]);
             b->lastRuneSize = - 1;
         }
         return {line, err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, bool, std::string> ReadLine(struct Reader* b)
+    std::tuple<gocpp::slice<unsigned char>, bool, gocpp::error> ReadLine(struct Reader* b)
     {
         gocpp::slice<unsigned char> line;
         bool isPrefix;
-        std::string err;
+        gocpp::error err;
         std::tie(line, err) = ReadSlice(gocpp::recv(b), '\n');
         if(err == ErrBufferFull)
         {
             gocpp::slice<unsigned char> line;
             bool isPrefix;
-            std::string err;
+            gocpp::error err;
             if(len(line) > 0 && line[len(line) - 1] == '\r')
             {
                 gocpp::slice<unsigned char> line;
                 bool isPrefix;
-                std::string err;
+                gocpp::error err;
                 if(b->r == 0)
                 {
                     gocpp::slice<unsigned char> line;
                     bool isPrefix;
-                    std::string err;
+                    gocpp::error err;
                     gocpp::panic("bufio: tried to rewind past start of buffer");
                 }
                 b->r--;
@@ -474,12 +474,12 @@ namespace golang::bufio
         {
             gocpp::slice<unsigned char> line;
             bool isPrefix;
-            std::string err;
+            gocpp::error err;
             if(err != nullptr)
             {
                 gocpp::slice<unsigned char> line;
                 bool isPrefix;
-                std::string err;
+                gocpp::error err;
                 line = nullptr;
             }
             return {line, isPrefix, err};
@@ -489,13 +489,13 @@ namespace golang::bufio
         {
             gocpp::slice<unsigned char> line;
             bool isPrefix;
-            std::string err;
+            gocpp::error err;
             auto drop = 1;
             if(len(line) > 1 && line[len(line) - 2] == '\r')
             {
                 gocpp::slice<unsigned char> line;
                 bool isPrefix;
-                std::string err;
+                gocpp::error err;
                 drop = 2;
             }
             line = line.make_slice(0, len(line) - drop);
@@ -503,27 +503,27 @@ namespace golang::bufio
         return {line, isPrefix, err};
     }
 
-    std::tuple<gocpp::slice<gocpp::slice<unsigned char>>, gocpp::slice<unsigned char>, int, std::string> collectFragments(struct Reader* b, unsigned char delim)
+    std::tuple<gocpp::slice<gocpp::slice<unsigned char>>, gocpp::slice<unsigned char>, int, gocpp::error> collectFragments(struct Reader* b, unsigned char delim)
     {
         gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
         gocpp::slice<unsigned char> finalFragment;
         int totalLen;
-        std::string err;
+        gocpp::error err;
         gocpp::slice<unsigned char> frag = {};
         for(; ; )
         {
             gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
             gocpp::slice<unsigned char> finalFragment;
             int totalLen;
-            std::string err;
-            std::string e = {};
+            gocpp::error err;
+            gocpp::error e = {};
             std::tie(frag, e) = ReadSlice(gocpp::recv(b), delim);
             if(e == nullptr)
             {
                 gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
                 gocpp::slice<unsigned char> finalFragment;
                 int totalLen;
-                std::string err;
+                gocpp::error err;
                 break;
             }
             if(e != ErrBufferFull)
@@ -531,7 +531,7 @@ namespace golang::bufio
                 gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
                 gocpp::slice<unsigned char> finalFragment;
                 int totalLen;
-                std::string err;
+                gocpp::error err;
                 err = e;
                 break;
             }
@@ -543,7 +543,7 @@ namespace golang::bufio
         return {fullBuffers, frag, totalLen, err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> ReadBytes(struct Reader* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(struct Reader* b, unsigned char delim)
     {
         auto [full, frag, n, err] = collectFragments(gocpp::recv(b), delim);
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
@@ -556,7 +556,7 @@ namespace golang::bufio
         return {buf, err};
     }
 
-    std::tuple<std::string, std::string> ReadString(struct Reader* b, unsigned char delim)
+    std::tuple<std::string, gocpp::error> ReadString(struct Reader* b, unsigned char delim)
     {
         auto [full, frag, n, err] = collectFragments(gocpp::recv(b), delim);
         strings::Builder buf = {};
@@ -569,23 +569,23 @@ namespace golang::bufio
         return {String(gocpp::recv(buf)), err};
     }
 
-    std::tuple<int64_t, std::string> WriteTo(struct Reader* b, io::Writer w)
+    std::tuple<int64_t, gocpp::error> WriteTo(struct Reader* b, io::Writer w)
     {
         int64_t n;
-        std::string err;
+        gocpp::error err;
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
         std::tie(n, err) = writeBuf(gocpp::recv(b), w);
         if(err != nullptr)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             return {n, err};
         }
         if(auto [r, ok] = gocpp::getValue<io::WriterTo>(b->rd); ok)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             auto [m, err] = WriteTo(gocpp::recv(r), w);
             n += m;
             return {n, err};
@@ -593,7 +593,7 @@ namespace golang::bufio
         if(auto [w, ok] = gocpp::getValue<io::ReaderFrom>(w); ok)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             auto [m, err] = ReadFrom(gocpp::recv(w), b->rd);
             n += m;
             return {n, err};
@@ -601,19 +601,19 @@ namespace golang::bufio
         if(b->w - b->r < len(b->buf))
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             fill(gocpp::recv(b));
         }
         for(; b->r < b->w; )
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             auto [m, err] = writeBuf(gocpp::recv(b), w);
             n += m;
             if(err != nullptr)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 return {n, err};
             }
             fill(gocpp::recv(b));
@@ -621,14 +621,14 @@ namespace golang::bufio
         if(b->err == io::go_EOF)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             b->err = nullptr;
         }
         return {n, readErr(gocpp::recv(b))};
     }
 
-    std::string errNegativeWrite = errors::New("bufio: writer returned negative count from Write");
-    std::tuple<int64_t, std::string> writeBuf(struct Reader* b, io::Writer w)
+    gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write");
+    std::tuple<int64_t, gocpp::error> writeBuf(struct Reader* b, io::Writer w)
     {
         auto [n, err] = Write(gocpp::recv(w), b->buf.make_slice(b->r, b->w));
         if(n < 0)
@@ -716,7 +716,7 @@ namespace golang::bufio
         b->wr = w;
     }
 
-    std::string Flush(struct Writer* b)
+    gocpp::error Flush(struct Writer* b)
     {
         if(b->err != nullptr)
         {
@@ -760,25 +760,25 @@ namespace golang::bufio
         return b->n;
     }
 
-    std::tuple<int, std::string> Write(struct Writer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Write(struct Writer* b, gocpp::slice<unsigned char> p)
     {
         int nn;
-        std::string err;
+        gocpp::error err;
         for(; len(p) > Available(gocpp::recv(b)) && b->err == nullptr; )
         {
             int nn;
-            std::string err;
+            gocpp::error err;
             int n = {};
             if(Buffered(gocpp::recv(b)) == 0)
             {
                 int nn;
-                std::string err;
+                gocpp::error err;
                 std::tie(n, b->err) = Write(gocpp::recv(b->wr), p);
             }
             else
             {
                 int nn;
-                std::string err;
+                gocpp::error err;
                 n = copy(b->buf.make_slice(b->n), p);
                 b->n += n;
                 Flush(gocpp::recv(b));
@@ -789,7 +789,7 @@ namespace golang::bufio
         if(b->err != nullptr)
         {
             int nn;
-            std::string err;
+            gocpp::error err;
             return {nn, b->err};
         }
         auto n = copy(b->buf.make_slice(b->n), p);
@@ -798,7 +798,7 @@ namespace golang::bufio
         return {nn, nullptr};
     }
 
-    std::string WriteByte(struct Writer* b, unsigned char c)
+    gocpp::error WriteByte(struct Writer* b, unsigned char c)
     {
         if(b->err != nullptr)
         {
@@ -813,19 +813,19 @@ namespace golang::bufio
         return nullptr;
     }
 
-    std::tuple<int, std::string> WriteRune(struct Writer* b, gocpp::rune r)
+    std::tuple<int, gocpp::error> WriteRune(struct Writer* b, gocpp::rune r)
     {
         int size;
-        std::string err;
+        gocpp::error err;
         if(uint32_t(r) < utf8::RuneSelf)
         {
             int size;
-            std::string err;
+            gocpp::error err;
             err = WriteByte(gocpp::recv(b), unsigned char(r));
             if(err != nullptr)
             {
                 int size;
-                std::string err;
+                gocpp::error err;
                 return {0, err};
             }
             return {1, nullptr};
@@ -833,25 +833,25 @@ namespace golang::bufio
         if(b->err != nullptr)
         {
             int size;
-            std::string err;
+            gocpp::error err;
             return {0, b->err};
         }
         auto n = Available(gocpp::recv(b));
         if(n < utf8::UTFMax)
         {
             int size;
-            std::string err;
+            gocpp::error err;
             if(Flush(gocpp::recv(b)); b->err != nullptr)
             {
                 int size;
-                std::string err;
+                gocpp::error err;
                 return {0, b->err};
             }
             n = Available(gocpp::recv(b));
             if(n < utf8::UTFMax)
             {
                 int size;
-                std::string err;
+                gocpp::error err;
                 return WriteString(gocpp::recv(b), string(r));
             }
         }
@@ -860,7 +860,7 @@ namespace golang::bufio
         return {size, nullptr};
     }
 
-    std::tuple<int, std::string> WriteString(struct Writer* b, std::string s)
+    std::tuple<int, gocpp::error> WriteString(struct Writer* b, std::string s)
     {
         io::StringWriter sw = {};
         auto tryStringWriter = true;
@@ -895,14 +895,14 @@ namespace golang::bufio
         return {nn, nullptr};
     }
 
-    std::tuple<int64_t, std::string> ReadFrom(struct Writer* b, io::Reader r)
+    std::tuple<int64_t, gocpp::error> ReadFrom(struct Writer* b, io::Reader r)
     {
         int64_t n;
-        std::string err;
+        gocpp::error err;
         if(b->err != nullptr)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             return {0, b->err};
         }
         auto [readerFrom, readerFromOK] = gocpp::getValue<io::ReaderFrom>(b->wr);
@@ -910,22 +910,22 @@ namespace golang::bufio
         for(; ; )
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             if(Available(gocpp::recv(b)) == 0)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 if(auto err1 = Flush(gocpp::recv(b)); err1 != nullptr)
                 {
                     int64_t n;
-                    std::string err;
+                    gocpp::error err;
                     return {n, err1};
                 }
             }
             if(readerFromOK && Buffered(gocpp::recv(b)) == 0)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 auto [nn, err] = ReadFrom(gocpp::recv(readerFrom), r);
                 b->err = err;
                 n += nn;
@@ -935,12 +935,12 @@ namespace golang::bufio
             for(; nr < maxConsecutiveEmptyReads; )
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 std::tie(m, err) = Read(gocpp::recv(r), b->buf.make_slice(b->n));
                 if(m != 0 || err != nullptr)
                 {
                     int64_t n;
-                    std::string err;
+                    gocpp::error err;
                     break;
                 }
                 nr++;
@@ -948,7 +948,7 @@ namespace golang::bufio
             if(nr == maxConsecutiveEmptyReads)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 return {n, io::ErrNoProgress};
             }
             b->n += m;
@@ -956,24 +956,24 @@ namespace golang::bufio
             if(err != nullptr)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 break;
             }
         }
         if(err == io::go_EOF)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             if(Available(gocpp::recv(b)) == 0)
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 err = Flush(gocpp::recv(b));
             }
             else
             {
                 int64_t n;
-                std::string err;
+                gocpp::error err;
                 err = nullptr;
             }
         }

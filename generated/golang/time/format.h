@@ -41,12 +41,12 @@ namespace golang::time
     extern gocpp::slice<std::string> shortMonthNames;
     extern gocpp::slice<std::string> longMonthNames;
     bool match(std::string s1, std::string s2);
-    std::tuple<int, std::string, std::string> lookup(gocpp::slice<std::string> tab, std::string val);
+    std::tuple<int, std::string, gocpp::error> lookup(gocpp::slice<std::string> tab, std::string val);
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
-    extern std::string errAtoi;
+    extern gocpp::error errAtoi;
 
     template<typename bytes>
-    std::tuple<int, std::string> atoi(bytes s);
+    std::tuple<int, gocpp::error> atoi(bytes s);
     int stdFracSecond(int code, int n, int c);
     int digitsLen(int std);
     unsigned char separator(int std);
@@ -56,7 +56,7 @@ namespace golang::time
     std::string Format(struct Time t, std::string layout);
     gocpp::slice<unsigned char> AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout);
     gocpp::slice<unsigned char> appendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout);
-    extern std::string errBad;
+    extern gocpp::error errBad;
     struct ParseError
     {
         std::string Layout;
@@ -85,26 +85,26 @@ namespace golang::time
 
     template<typename bytes>
     bool isDigit(bytes s, int i);
-    std::tuple<int, std::string, std::string> getnum(std::string s, bool fixed);
-    std::tuple<int, std::string, std::string> getnum3(std::string s, bool fixed);
+    std::tuple<int, std::string, gocpp::error> getnum(std::string s, bool fixed);
+    std::tuple<int, std::string, gocpp::error> getnum3(std::string s, bool fixed);
     std::string cutspace(std::string s);
-    std::tuple<std::string, std::string> skip(std::string value, std::string prefix);
-    std::tuple<Time, std::string> Parse(std::string layout, std::string value);
-    std::tuple<Time, std::string> ParseInLocation(std::string layout, std::string value, Location* loc);
-    std::tuple<Time, std::string> parse(std::string layout, std::string value, Location* defaultLocation, Location* local);
+    std::tuple<std::string, gocpp::error> skip(std::string value, std::string prefix);
+    std::tuple<Time, gocpp::error> Parse(std::string layout, std::string value);
+    std::tuple<Time, gocpp::error> ParseInLocation(std::string layout, std::string value, Location* loc);
+    std::tuple<Time, gocpp::error> parse(std::string layout, std::string value, Location* defaultLocation, Location* local);
     std::tuple<int, bool> parseTimeZone(std::string value);
     int parseGMT(std::string value);
     int parseSignedOffset(std::string value);
     bool commaOrPeriod(unsigned char b);
 
     template<typename bytes>
-    std::tuple<int, std::string, std::string> parseNanoseconds(bytes value, int nbytes);
-    extern std::string errLeadingInt;
+    std::tuple<int, std::string, gocpp::error> parseNanoseconds(bytes value, int nbytes);
+    extern gocpp::error errLeadingInt;
 
     template<typename bytes>
-    std::tuple<uint64_t, bytes, std::string> leadingInt(bytes s);
+    std::tuple<uint64_t, bytes, gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, std::string> leadingFraction(std::string s);
     extern gocpp::map<std::string, uint64_t> unitMap;
-    std::tuple<Duration, std::string> ParseDuration(std::string s);
+    std::tuple<Duration, gocpp::error> ParseDuration(std::string s);
 }
 

@@ -311,7 +311,7 @@ namespace golang::godebug
     }
 
     runtimeStderr stderr;
-    std::tuple<int, std::string> Write(runtimeStderr*, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

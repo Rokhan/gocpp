@@ -154,7 +154,7 @@ namespace golang::crc32
     }
 
     std::string magic = "crc\x01";
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct digest* d)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -163,7 +163,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    std::string UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
+    gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -223,10 +223,10 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, std::string> Write(struct digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         d->crc = update(d->crc, d->tab, p, false);
         return {len(p), nullptr};
     }

@@ -23,18 +23,18 @@
 namespace golang::time
 {
     gocpp::slice<std::string> platformZoneSources;
-    std::tuple<bool, std::string> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
+    std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
         try
         {
             bool matched;
-            std::string err2;
+            gocpp::error err2;
             auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
             if(err != nullptr)
             {
                 bool matched;
-                std::string err2;
+                gocpp::error err2;
                 return {false, err};
             }
             defer.push_back([=]{ Close(gocpp::recv(k)); });
@@ -44,36 +44,36 @@ namespace golang::time
             if(err == nullptr)
             {
                 bool matched;
-                std::string err2;
+                gocpp::error err2;
                 std::tie(dlt, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
             }
             if(err != nullptr)
             {
                 bool matched;
-                std::string err2;
+                gocpp::error err2;
                 if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
                 {
                     bool matched;
-                    std::string err2;
+                    gocpp::error err2;
                     return {false, err};
                 }
                 if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
                 {
                     bool matched;
-                    std::string err2;
+                    gocpp::error err2;
                     return {false, err};
                 }
             }
             if(std != stdname)
             {
                 bool matched;
-                std::string err2;
+                gocpp::error err2;
                 return {false, nullptr};
             }
             if(dlt != dstname && dstname != stdname)
             {
                 bool matched;
-                std::string err2;
+                gocpp::error err2;
                 return {false, nullptr};
             }
             return {true, nullptr};
@@ -84,7 +84,7 @@ namespace golang::time
         }
     }
 
-    std::tuple<std::string, std::string> toEnglishName(std::string stdname, std::string dstname)
+    std::tuple<std::string, gocpp::error> toEnglishName(std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
         try

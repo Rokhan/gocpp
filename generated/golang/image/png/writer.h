@@ -99,7 +99,7 @@ namespace golang::png
         io::Writer w;
         image::Image m;
         int cb;
-        std::string err;
+        gocpp::error err;
         gocpp::array<unsigned char, 8> header;
         gocpp::array<unsigned char, 4> footer;
         gocpp::array<unsigned char, 4 * 256> tmp;
@@ -172,14 +172,14 @@ namespace golang::png
     void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
     void writeIHDR(struct encoder* e);
     void writePLTEAndTRNS(struct encoder* e, color::Palette p);
-    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> b);
+    std::tuple<int, gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
     int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
-    std::string writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level);
+    gocpp::error writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level);
     void writeIDATs(struct encoder* e);
     int levelToZlib(CompressionLevel l);
     void writeIEND(struct encoder* e);
-    std::string Encode(io::Writer w, image::Image m);
-    std::string Encode(struct Encoder* enc, io::Writer w, image::Image m);
+    gocpp::error Encode(io::Writer w, image::Image m);
+    gocpp::error Encode(struct Encoder* enc, io::Writer w, image::Image m);
 }
 

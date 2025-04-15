@@ -11,7 +11,7 @@
 
 namespace golang::errors
 {
-    std::string New(std::string text);
+    gocpp::error New(std::string text);
     struct errorString
     {
         std::string s;
@@ -29,6 +29,6 @@ namespace golang::errors
 
     std::ostream& operator<<(std::ostream& os, const struct errorString& value);
     std::string Error(struct errorString* e);
-    extern std::string ErrUnsupported;
+    extern gocpp::error ErrUnsupported;
 }
 

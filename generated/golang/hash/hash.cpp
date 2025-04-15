@@ -42,7 +42,7 @@ namespace golang::hash
     template<typename T, typename StoreT>
     gocpp::slice<unsigned char> Hash::HashImpl<T, StoreT>::vSum(gocpp::slice<unsigned char> b)
     {
-        return Sum(gocpp::PtrRecv<T, false>(value.get()));
+        return Sum(gocpp::PtrRecv<T, false>(value.get()), b);
     }
     template<typename T, typename StoreT>
     void Hash::HashImpl<T, StoreT>::vReset()
@@ -62,12 +62,12 @@ namespace golang::hash
 
     gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<Hash, false>& self, gocpp::slice<unsigned char> b)
     {
-        return self.ptr->value->vSum(gocpp::slice<unsigned char> b);
+        return self.ptr->value->vSum(b);
     }
 
     gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<Hash>& self, gocpp::slice<unsigned char> b)
     {
-        return self.obj.value->vSum(gocpp::slice<unsigned char> b);
+        return self.obj.value->vSum(b);
     }
 
     void Reset(const gocpp::PtrRecv<Hash, false>& self)

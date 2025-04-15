@@ -55,7 +55,7 @@ namespace golang::fmt
 
         struct IState
         {
-            virtual std::tuple<int, std::string> vWrite(gocpp::slice<unsigned char> b) = 0;
+            virtual std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> b) = 0;
             virtual std::tuple<int, bool> vWidth() = 0;
             virtual std::tuple<int, bool> vPrecision() = 0;
             virtual bool vFlag(int c) = 0;
@@ -69,7 +69,7 @@ namespace golang::fmt
                 value.reset(ptr);
             }
 
-            std::tuple<int, std::string> vWrite(gocpp::slice<unsigned char> b) override;
+            std::tuple<int, gocpp::error> vWrite(gocpp::slice<unsigned char> b) override;
 
             std::tuple<int, bool> vWidth() override;
 
@@ -83,8 +83,8 @@ namespace golang::fmt
         std::shared_ptr<IState> value;
     };
 
-    std::tuple<int, std::string> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b);
-    std::tuple<int, std::string> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b);
+    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b);
+    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b);
 
     std::tuple<int, bool> Width(const gocpp::PtrRecv<State, false>& self);
     std::tuple<int, bool> Width(const gocpp::ObjRecv<State>& self);
@@ -270,20 +270,20 @@ namespace golang::fmt
     std::tuple<int, bool> Width(struct pp* p);
     std::tuple<int, bool> Precision(struct pp* p);
     bool Flag(struct pp* p, int b);
-    std::tuple<int, std::string> Write(struct pp* p, gocpp::slice<unsigned char> b);
-    std::tuple<int, std::string> WriteString(struct pp* p, std::string s);
-    std::tuple<int, std::string> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Write(struct pp* p, gocpp::slice<unsigned char> b);
+    std::tuple<int, gocpp::error> WriteString(struct pp* p, std::string s);
+    std::tuple<int, gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Fprintf(io::Writer w, std::string format, Args... a)
+    std::tuple<int, gocpp::error> Fprintf(io::Writer w, std::string format, Args... a)
     {
         return Fprintf(w, format, gocpp::ToSlice<go_any>(a...));
     }
 
-    std::tuple<int, std::string> Printf(std::string format, gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Printf(std::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Printf(std::string format, Args... a)
+    std::tuple<int, gocpp::error> Printf(std::string format, Args... a)
     {
         return Printf(format, gocpp::ToSlice<go_any>(a...));
     }
@@ -304,18 +304,18 @@ namespace golang::fmt
         return Appendf(b, format, gocpp::ToSlice<go_any>(a...));
     }
 
-    std::tuple<int, std::string> Fprint(io::Writer w, gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Fprint(io::Writer w, Args... a)
+    std::tuple<int, gocpp::error> Fprint(io::Writer w, Args... a)
     {
         return Fprint(w, gocpp::ToSlice<go_any>(a...));
     }
 
-    std::tuple<int, std::string> Print(gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Print(Args... a)
+    std::tuple<int, gocpp::error> Print(Args... a)
     {
         return Print(gocpp::ToSlice<go_any>(a...));
     }
@@ -336,18 +336,18 @@ namespace golang::fmt
         return Append(b, gocpp::ToSlice<go_any>(a...));
     }
 
-    std::tuple<int, std::string> Fprintln(io::Writer w, gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Fprintln(io::Writer w, Args... a)
+    std::tuple<int, gocpp::error> Fprintln(io::Writer w, Args... a)
     {
         return Fprintln(w, gocpp::ToSlice<go_any>(a...));
     }
 
-    std::tuple<int, std::string> Println(gocpp::slice<go_any> a);
+    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a);
 
     template<typename... Args>
-    std::tuple<int, std::string> Println(Args... a)
+    std::tuple<int, gocpp::error> Println(Args... a)
     {
         return Println(gocpp::ToSlice<go_any>(a...));
     }

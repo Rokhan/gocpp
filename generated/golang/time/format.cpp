@@ -364,7 +364,7 @@ namespace golang::time
         return true;
     }
 
-    std::tuple<int, std::string, std::string> lookup(gocpp::slice<std::string> tab, std::string val)
+    std::tuple<int, std::string, gocpp::error> lookup(gocpp::slice<std::string> tab, std::string val)
     {
         for(auto [i, v] : tab)
         {
@@ -436,18 +436,18 @@ namespace golang::time
         return b;
     }
 
-    std::string errAtoi = errors::New("time: invalid number");
+    gocpp::error errAtoi = errors::New("time: invalid number");
 
     template<typename bytes>
-    std::tuple<int, std::string> atoi(bytes s)
+    std::tuple<int, gocpp::error> atoi(bytes s)
     {
         int x;
-        std::string err;
+        gocpp::error err;
         auto neg = false;
         if(len(s) > 0 && (s[0] == '-' || s[0] == '+'))
         {
             int x;
-            std::string err;
+            gocpp::error err;
             neg = s[0] == '-';
             s = s.make_slice(1);
         }
@@ -456,13 +456,13 @@ namespace golang::time
         if(err != nullptr || len(rem) > 0)
         {
             int x;
-            std::string err;
+            gocpp::error err;
             return {0, errAtoi};
         }
         if(neg)
         {
             int x;
-            std::string err;
+            gocpp::error err;
             x = - x;
         }
         return {x, nullptr};
@@ -905,7 +905,7 @@ namespace golang::time
         return b;
     }
 
-    std::string errBad = errors::New("bad value for field");
+    gocpp::error errBad = errors::New("bad value for field");
     
     template<typename T> requires gocpp::GoStruct<T>
     ParseError::operator T()
@@ -1022,7 +1022,7 @@ namespace golang::time
         return '0' <= c && c <= '9';
     }
 
-    std::tuple<int, std::string, std::string> getnum(std::string s, bool fixed)
+    std::tuple<int, std::string, gocpp::error> getnum(std::string s, bool fixed)
     {
         if(! isDigit(s, 0))
         {
@@ -1039,7 +1039,7 @@ namespace golang::time
         return {int(s[0] - '0') * 10 + int(s[1] - '0'), s.make_slice(2), nullptr};
     }
 
-    std::tuple<int, std::string, std::string> getnum3(std::string s, bool fixed)
+    std::tuple<int, std::string, gocpp::error> getnum3(std::string s, bool fixed)
     {
         int n = {};
         int i = {};
@@ -1063,7 +1063,7 @@ namespace golang::time
         return s;
     }
 
-    std::tuple<std::string, std::string> skip(std::string value, std::string prefix)
+    std::tuple<std::string, gocpp::error> skip(std::string value, std::string prefix)
     {
         for(; len(prefix) > 0; )
         {
@@ -1087,7 +1087,7 @@ namespace golang::time
         return {value, nullptr};
     }
 
-    std::tuple<Time, std::string> Parse(std::string layout, std::string value)
+    std::tuple<Time, gocpp::error> Parse(std::string layout, std::string value)
     {
         if(layout == RFC3339 || layout == RFC3339Nano)
         {
@@ -1099,7 +1099,7 @@ namespace golang::time
         return parse(layout, value, UTC, Local);
     }
 
-    std::tuple<Time, std::string> ParseInLocation(std::string layout, std::string value, Location* loc)
+    std::tuple<Time, gocpp::error> ParseInLocation(std::string layout, std::string value, Location* loc)
     {
         if(layout == RFC3339 || layout == RFC3339Nano)
         {
@@ -1111,7 +1111,7 @@ namespace golang::time
         return parse(layout, value, loc, loc);
     }
 
-    std::tuple<Time, std::string> parse(std::string layout, std::string value, Location* defaultLocation, Location* local)
+    std::tuple<Time, gocpp::error> parse(std::string layout, std::string value, Location* defaultLocation, Location* local)
     {
         auto [alayout, avalue] = std::tuple{layout, value};
         auto rangeErrString = "";
@@ -1130,7 +1130,7 @@ namespace golang::time
         std::string zoneName = - 1;
         for(; ; )
         {
-            std::string err = {};
+            gocpp::error err = {};
             auto [prefix, std, suffix] = nextStdChunk(layout);
             auto stdstr = layout.make_slice(len(prefix), len(layout) - len(suffix));
             std::tie(value, err) = skip(value, prefix);
@@ -1761,16 +1761,16 @@ namespace golang::time
 
 
     template<typename bytes>
-    std::tuple<int, std::string, std::string> parseNanoseconds(bytes value, int nbytes)
+    std::tuple<int, std::string, gocpp::error> parseNanoseconds(bytes value, int nbytes)
     {
         int ns;
         std::string rangeErrString;
-        std::string err;
+        gocpp::error err;
         if(! commaOrPeriod(value[0]))
         {
             int ns;
             std::string rangeErrString;
-            std::string err;
+            gocpp::error err;
             err = errBad;
             return {ns, rangeErrString, err};
         }
@@ -1778,7 +1778,7 @@ namespace golang::time
         {
             int ns;
             std::string rangeErrString;
-            std::string err;
+            gocpp::error err;
             value = value.make_slice(0, 10);
             nbytes = 10;
         }
@@ -1786,14 +1786,14 @@ namespace golang::time
         {
             int ns;
             std::string rangeErrString;
-            std::string err;
+            gocpp::error err;
             return {ns, rangeErrString, err};
         }
         if(ns < 0)
         {
             int ns;
             std::string rangeErrString;
-            std::string err;
+            gocpp::error err;
             rangeErrString = "fractional second";
             return {ns, rangeErrString, err};
         }
@@ -1802,39 +1802,39 @@ namespace golang::time
         {
             int ns;
             std::string rangeErrString;
-            std::string err;
+            gocpp::error err;
             ns *= 10;
         }
         return {ns, rangeErrString, err};
     }
 
-    std::string errLeadingInt = errors::New("time: bad [0-9]*");
+    gocpp::error errLeadingInt = errors::New("time: bad [0-9]*");
 
     template<typename bytes>
-    std::tuple<uint64_t, bytes, std::string> leadingInt(bytes s)
+    std::tuple<uint64_t, bytes, gocpp::error> leadingInt(bytes s)
     {
         uint64_t x;
         bytes rem;
-        std::string err;
+        gocpp::error err;
         auto i = 0;
         for(; i < len(s); i++)
         {
             uint64_t x;
             bytes rem;
-            std::string err;
+            gocpp::error err;
             auto c = s[i];
             if(c < '0' || c > '9')
             {
                 uint64_t x;
                 bytes rem;
-                std::string err;
+                gocpp::error err;
                 break;
             }
             if(x > (1 << 63) / 10)
             {
                 uint64_t x;
                 bytes rem;
-                std::string err;
+                gocpp::error err;
                 return {0, rem, errLeadingInt};
             }
             x = x * 10 + uint64_t(c) - '0';
@@ -1842,7 +1842,7 @@ namespace golang::time
             {
                 uint64_t x;
                 bytes rem;
-                std::string err;
+                gocpp::error err;
                 return {0, rem, errLeadingInt};
             }
         }
@@ -1901,7 +1901,7 @@ namespace golang::time
     }
 
     gocpp::map<std::string, uint64_t> unitMap = gocpp::map<std::string, uint64_t> {{ "ns", uint64_t(Nanosecond) }, { "us", uint64_t(Microsecond) }, { "µs", uint64_t(Microsecond) }, { "μs", uint64_t(Microsecond) }, { "ms", uint64_t(Millisecond) }, { "s", uint64_t(Second) }, { "m", uint64_t(Minute) }, { "h", uint64_t(Hour) }};
-    std::tuple<Duration, std::string> ParseDuration(std::string s)
+    std::tuple<Duration, gocpp::error> ParseDuration(std::string s)
     {
         auto orig = s;
         uint64_t d = {};
@@ -1928,7 +1928,7 @@ namespace golang::time
             uint64_t v = {};
             uint64_t f = {};
             double scale = 1;
-            std::string err = {};
+            gocpp::error err = {};
             if(! (s[0] == '.' || '0' <= s[0] && s[0] <= '9'))
             {
                 return {0, errors::New("time: invalid duration " + quote(orig))};

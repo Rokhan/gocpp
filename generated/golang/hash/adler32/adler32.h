@@ -19,12 +19,12 @@ namespace golang::adler32
     int Size(digest* d);
     int BlockSize(digest* d);
     extern std::string magic;
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(digest* d);
-    std::string UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
+    gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     digest update(digest d, gocpp::slice<unsigned char> p);
-    std::tuple<int, std::string> Write(digest* d, gocpp::slice<unsigned char> p);
+    std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
     uint32_t Sum32(digest* d);
     gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);
     uint32_t Checksum(gocpp::slice<unsigned char> data);

@@ -976,10 +976,10 @@ namespace golang::time
         return {offset, ok};
     }
 
-    std::string errLocation = errors::New("time: invalid location name");
+    gocpp::error errLocation = errors::New("time: invalid location name");
     std::string* zoneinfo;
     sync::Once zoneinfoOnce;
-    std::tuple<Location*, std::string> LoadLocation(std::string name)
+    std::tuple<Location*, gocpp::error> LoadLocation(std::string name)
     {
         if(name == "" || name == "UTC")
         {
@@ -998,7 +998,7 @@ namespace golang::time
             auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO");
             zoneinfo = & env;
         });
-        std::string firstErr = {};
+        gocpp::error firstErr = {};
         if(*zoneinfo != "")
         {
             if(auto [zoneData, err] = loadTzinfoFromDirOrZip(*zoneinfo, name); err == nullptr)

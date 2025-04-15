@@ -135,19 +135,19 @@ namespace golang::flate
     }
 
     template<typename T, typename StoreT>
-    std::string Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return Reset(gocpp::PtrRecv<T, false>(value.get()));
+        return Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
-    std::string Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return self.ptr->value->vReset(io::Reader r, gocpp::slice<unsigned char> dict);
+        return self.ptr->value->vReset(r, dict);
     }
 
-    std::string Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return self.obj.value->vReset(io::Reader r, gocpp::slice<unsigned char> dict);
+        return self.obj.value->vReset(r, dict);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value)
@@ -487,7 +487,7 @@ namespace golang::flate
         }
     }
 
-    std::tuple<int, std::string> Read(struct decompressor* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b)
     {
         for(; ; )
         {
@@ -513,7 +513,7 @@ namespace golang::flate
         }
     }
 
-    std::string Close(struct decompressor* f)
+    gocpp::error Close(struct decompressor* f)
     {
         if(f->err == io::go_EOF)
         {
@@ -523,7 +523,7 @@ namespace golang::flate
     }
 
     gocpp::array_base<int> codeOrder = gocpp::array_base<int> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
-    std::string readHuffman(struct decompressor* f)
+    gocpp::error readHuffman(struct decompressor* f)
     {
         for(; f->nb < 5 + 5 + 4; )
         {
@@ -903,7 +903,7 @@ namespace golang::flate
         f->step = (*decompressor)->nextBlock;
     }
 
-    std::string noEOF(std::string e)
+    gocpp::error noEOF(gocpp::error e)
     {
         if(e == io::go_EOF)
         {
@@ -912,7 +912,7 @@ namespace golang::flate
         return e;
     }
 
-    std::string moreBits(struct decompressor* f)
+    gocpp::error moreBits(struct decompressor* f)
     {
         auto [c, err] = ReadByte(gocpp::recv(f->r));
         if(err != nullptr)
@@ -925,7 +925,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    std::tuple<int, std::string> huffSym(struct decompressor* f, huffmanDecoder* h)
+    std::tuple<int, gocpp::error> huffSym(struct decompressor* f, huffmanDecoder* h)
     {
         auto n = (unsigned int)(h->min);
         auto [nb, b] = std::tuple{f->nb, f->b};
@@ -1011,7 +1011,7 @@ namespace golang::flate
         });
     }
 
-    std::string Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *f = gocpp::Init<decompressor>([](decompressor& x) { x.rBuf = f->rBuf; x.bits = f->bits; x.codebits = f->codebits; x.dict = f->dict; x.step = (*decompressor)->nextBlock; });
         makeReader(gocpp::recv(f), r);

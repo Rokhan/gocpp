@@ -13,7 +13,7 @@
 
 namespace golang::errors
 {
-    std::string New(std::string text)
+    gocpp::error New(std::string text)
     {
         return new errorString {text};
     }
@@ -52,6 +52,6 @@ namespace golang::errors
         return e->s;
     }
 
-    std::string ErrUnsupported = New("unsupported operation");
+    gocpp::error ErrUnsupported = New("unsupported operation");
 }
 

@@ -21,9 +21,9 @@
 
 namespace golang::zlib
 {
-    std::string ErrChecksum = errors::New("zlib: invalid checksum");
-    std::string ErrDictionary = errors::New("zlib: invalid dictionary");
-    std::string ErrHeader = errors::New("zlib: invalid header");
+    gocpp::error ErrChecksum = errors::New("zlib: invalid checksum");
+    gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary");
+    gocpp::error ErrHeader = errors::New("zlib: invalid header");
     
     template<typename T> requires gocpp::GoStruct<T>
     reader::operator T()
@@ -90,19 +90,19 @@ namespace golang::zlib
     }
 
     template<typename T, typename StoreT>
-    std::string Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return Reset(gocpp::PtrRecv<T, false>(value.get()));
+        return Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
-    std::string Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return self.ptr->value->vReset(io::Reader r, gocpp::slice<unsigned char> dict);
+        return self.ptr->value->vReset(r, dict);
     }
 
-    std::string Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return self.obj.value->vReset(io::Reader r, gocpp::slice<unsigned char> dict);
+        return self.obj.value->vReset(r, dict);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value)
@@ -110,12 +110,12 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
-    std::tuple<io::ReadCloser, std::string> NewReader(io::Reader r)
+    std::tuple<io::ReadCloser, gocpp::error> NewReader(io::Reader r)
     {
         return NewReaderDict(r, nullptr);
     }
 
-    std::tuple<io::ReadCloser, std::string> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
+    std::tuple<io::ReadCloser, gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         auto z = go_new(reader);
         auto err = Reset(gocpp::recv(z), r, dict);
@@ -126,7 +126,7 @@ namespace golang::zlib
         return {z, nullptr};
     }
 
-    std::tuple<int, std::string> Read(struct reader* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(struct reader* z, gocpp::slice<unsigned char> p)
     {
         if(z->err != nullptr)
         {
@@ -157,7 +157,7 @@ namespace golang::zlib
         return {n, io::go_EOF};
     }
 
-    std::string Close(struct reader* z)
+    gocpp::error Close(struct reader* z)
     {
         if(z->err != nullptr && z->err != io::go_EOF)
         {
@@ -167,7 +167,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    std::string Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
+    gocpp::error Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
         if(auto [fr, ok] = gocpp::getValue<flate::Reader>(r); ok)

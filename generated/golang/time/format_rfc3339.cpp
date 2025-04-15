@@ -59,7 +59,7 @@ namespace golang::time
         return b;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
     {
         auto n0 = len(b);
         b = appendFormatRFC3339(gocpp::recv(t), b, true);
@@ -172,7 +172,7 @@ namespace golang::time
         return {t, true};
     }
 
-    std::tuple<Time, std::string> parseStrictRFC3339(gocpp::slice<unsigned char> b)
+    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
     {
         auto [t, ok] = parseRFC3339(b, Local);
         if(! ok)

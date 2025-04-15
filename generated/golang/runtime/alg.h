@@ -31,8 +31,8 @@ namespace golang::runtime
     uintptr_t interhash(unsafe::Pointer p, uintptr_t h);
     uintptr_t nilinterhash(unsafe::Pointer p, uintptr_t h);
     uintptr_t typehash(_type* t, unsafe::Pointer p, uintptr_t h);
-    std::string mapKeyError(maptype* t, unsafe::Pointer p);
-    std::string mapKeyError2(_type* t, unsafe::Pointer p);
+    gocpp::error mapKeyError(maptype* t, unsafe::Pointer p);
+    gocpp::error mapKeyError2(_type* t, unsafe::Pointer p);
     uintptr_t reflect_typehash(_type* t, unsafe::Pointer p, uintptr_t h);
     bool memequal0(unsafe::Pointer p, unsafe::Pointer q);
     bool memequal8(unsafe::Pointer p, unsafe::Pointer q);

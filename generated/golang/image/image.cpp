@@ -89,7 +89,7 @@ namespace golang::image
     template<typename T, typename StoreT>
     color::Color Image::ImageImpl<T, StoreT>::vAt(int x, int y)
     {
-        return At(gocpp::PtrRecv<T, false>(value.get()));
+        return At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
     color::Model ColorModel(const gocpp::PtrRecv<Image, false>& self)
@@ -114,12 +114,12 @@ namespace golang::image
 
     color::Color At(const gocpp::PtrRecv<Image, false>& self, int x, int y)
     {
-        return self.ptr->value->vAt(int x, int y);
+        return self.ptr->value->vAt(x, y);
     }
 
     color::Color At(const gocpp::ObjRecv<Image>& self, int x, int y)
     {
-        return self.obj.value->vAt(int x, int y);
+        return self.obj.value->vAt(x, y);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value)
@@ -154,17 +154,17 @@ namespace golang::image
     template<typename T, typename StoreT>
     color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, StoreT>::vRGBA64At(int x, int y)
     {
-        return RGBA64At(gocpp::PtrRecv<T, false>(value.get()));
+        return RGBA64At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
     color::RGBA64 RGBA64At(const gocpp::PtrRecv<RGBA64Image, false>& self, int x, int y)
     {
-        return self.ptr->value->vRGBA64At(int x, int y);
+        return self.ptr->value->vRGBA64At(x, y);
     }
 
     color::RGBA64 RGBA64At(const gocpp::ObjRecv<RGBA64Image>& self, int x, int y)
     {
-        return self.obj.value->vRGBA64At(int x, int y);
+        return self.obj.value->vRGBA64At(x, y);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA64Image& value)
@@ -199,17 +199,17 @@ namespace golang::image
     template<typename T, typename StoreT>
     uint8_t PalettedImage::PalettedImageImpl<T, StoreT>::vColorIndexAt(int x, int y)
     {
-        return ColorIndexAt(gocpp::PtrRecv<T, false>(value.get()));
+        return ColorIndexAt(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
     uint8_t ColorIndexAt(const gocpp::PtrRecv<PalettedImage, false>& self, int x, int y)
     {
-        return self.ptr->value->vColorIndexAt(int x, int y);
+        return self.ptr->value->vColorIndexAt(x, y);
     }
 
     uint8_t ColorIndexAt(const gocpp::ObjRecv<PalettedImage>& self, int x, int y)
     {
-        return self.obj.value->vColorIndexAt(int x, int y);
+        return self.obj.value->vColorIndexAt(x, y);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value)

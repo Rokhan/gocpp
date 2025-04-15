@@ -283,18 +283,18 @@ namespace golang::strconv
         return {v, ok};
     }
 
-    std::tuple<gocpp::rune, bool, std::string, std::string> UnquoteChar(std::string s, unsigned char quote)
+    std::tuple<gocpp::rune, bool, std::string, gocpp::error> UnquoteChar(std::string s, unsigned char quote)
     {
         gocpp::rune value;
         bool multibyte;
         std::string tail;
-        std::string err;
+        gocpp::error err;
         if(len(s) == 0)
         {
             gocpp::rune value;
             bool multibyte;
             std::string tail;
-            std::string err;
+            gocpp::error err;
             err = ErrSyntax;
             return {value, multibyte, tail, err};
         }
@@ -310,7 +310,7 @@ namespace golang::strconv
                 gocpp::rune value;
                 bool multibyte;
                 std::string tail;
-                std::string err;
+                gocpp::error err;
                 case 0:
                     err = ErrSyntax;
                     return {value, multibyte, tail, err};
@@ -329,7 +329,7 @@ namespace golang::strconv
             gocpp::rune value;
             bool multibyte;
             std::string tail;
-            std::string err;
+            gocpp::error err;
             err = ErrSyntax;
             return {value, multibyte, tail, err};
         }
@@ -365,7 +365,7 @@ namespace golang::strconv
                 gocpp::rune value;
                 bool multibyte;
                 std::string tail;
-                std::string err;
+                gocpp::error err;
                 case 0:
                     value = '\a';
                     break;
@@ -403,7 +403,7 @@ namespace golang::strconv
                             gocpp::rune value;
                             bool multibyte;
                             std::string tail;
-                            std::string err;
+                            gocpp::error err;
                             case 0:
                                 n = 2;
                                 break;
@@ -421,7 +421,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -430,14 +430,14 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         auto [x, ok] = unhex(s[j]);
                         if(! ok)
                         {
                             gocpp::rune value;
                             bool multibyte;
                             std::string tail;
-                            std::string err;
+                            gocpp::error err;
                             err = ErrSyntax;
                             return {value, multibyte, tail, err};
                         }
@@ -449,7 +449,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         value = v;
                         break;
                     }
@@ -458,7 +458,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -479,7 +479,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -488,14 +488,14 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         auto x = rune(s[j]) - '0';
                         if(x < 0 || x > 7)
                         {
                             gocpp::rune value;
                             bool multibyte;
                             std::string tail;
-                            std::string err;
+                            gocpp::error err;
                             err = ErrSyntax;
                             return {value, multibyte, tail, err};
                         }
@@ -507,7 +507,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -523,7 +523,7 @@ namespace golang::strconv
                         gocpp::rune value;
                         bool multibyte;
                         std::string tail;
-                        std::string err;
+                        gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -539,13 +539,13 @@ namespace golang::strconv
         return {value, multibyte, tail, err};
     }
 
-    std::tuple<std::string, std::string> QuotedPrefix(std::string s)
+    std::tuple<std::string, gocpp::error> QuotedPrefix(std::string s)
     {
         auto [out, gocpp_id_1, err] = unquote(s, false);
         return {out, err};
     }
 
-    std::tuple<std::string, std::string> Unquote(std::string s)
+    std::tuple<std::string, gocpp::error> Unquote(std::string s)
     {
         auto [out, rem, err] = unquote(s, true);
         if(len(rem) > 0)
@@ -555,16 +555,16 @@ namespace golang::strconv
         return {out, err};
     }
 
-    std::tuple<std::string, std::string, std::string> unquote(std::string in, bool unescape)
+    std::tuple<std::string, std::string, gocpp::error> unquote(std::string in, bool unescape)
     {
         std::string out;
         std::string rem;
-        std::string err;
+        gocpp::error err;
         if(len(in) < 2)
         {
             std::string out;
             std::string rem;
-            std::string err;
+            gocpp::error err;
             return {"", in, ErrSyntax};
         }
         auto quote = in[0];
@@ -573,7 +573,7 @@ namespace golang::strconv
         {
             std::string out;
             std::string rem;
-            std::string err;
+            gocpp::error err;
             return {"", in, ErrSyntax};
         }
         end += 2;
@@ -588,7 +588,7 @@ namespace golang::strconv
             {
                 std::string out;
                 std::string rem;
-                std::string err;
+                gocpp::error err;
                 case 0:
                     //Go switch emulation
                     {
@@ -599,7 +599,7 @@ namespace golang::strconv
                         {
                             std::string out;
                             std::string rem;
-                            std::string err;
+                            gocpp::error err;
                             case 0:
                                 out = in.make_slice(0, end);
                                 break;
@@ -612,12 +612,12 @@ namespace golang::strconv
                                 {
                                     std::string out;
                                     std::string rem;
-                                    std::string err;
+                                    gocpp::error err;
                                     if(in[i] != '\r')
                                     {
                                         std::string out;
                                         std::string rem;
-                                        std::string err;
+                                        gocpp::error err;
                                         buf = append(buf, in[i]);
                                     }
                                 }
@@ -633,7 +633,7 @@ namespace golang::strconv
                     {
                         std::string out;
                         std::string rem;
-                        std::string err;
+                        gocpp::error err;
                         bool valid = {};
                         //Go switch emulation
                         {
@@ -645,7 +645,7 @@ namespace golang::strconv
                             {
                                 std::string out;
                                 std::string rem;
-                                std::string err;
+                                gocpp::error err;
                                 case 0:
                                     valid = utf8::ValidString(in.make_slice(len("""), end - len(""")));
                                     break;
@@ -659,13 +659,13 @@ namespace golang::strconv
                         {
                             std::string out;
                             std::string rem;
-                            std::string err;
+                            gocpp::error err;
                             out = in.make_slice(0, end);
                             if(unescape)
                             {
                                 std::string out;
                                 std::string rem;
-                                std::string err;
+                                gocpp::error err;
                                 out = out.make_slice(1, end - 1);
                             }
                             return {out, in.make_slice(end), nullptr};
@@ -678,20 +678,20 @@ namespace golang::strconv
                     {
                         std::string out;
                         std::string rem;
-                        std::string err;
+                        gocpp::error err;
                         buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * end / 2);
                     }
                     for(; len(in) > 0 && in[0] != quote; )
                     {
                         std::string out;
                         std::string rem;
-                        std::string err;
+                        gocpp::error err;
                         auto [r, multibyte, rem, err] = UnquoteChar(in, quote);
                         if(in[0] == '\n' || err != nullptr)
                         {
                             std::string out;
                             std::string rem;
-                            std::string err;
+                            gocpp::error err;
                             return {"", in0, ErrSyntax};
                         }
                         in = rem;
@@ -699,19 +699,19 @@ namespace golang::strconv
                         {
                             std::string out;
                             std::string rem;
-                            std::string err;
+                            gocpp::error err;
                             if(r < utf8::RuneSelf || ! multibyte)
                             {
                                 std::string out;
                                 std::string rem;
-                                std::string err;
+                                gocpp::error err;
                                 buf = append(buf, unsigned char(r));
                             }
                             else
                             {
                                 std::string out;
                                 std::string rem;
-                                std::string err;
+                                gocpp::error err;
                                 buf = utf8::AppendRune(buf, r);
                             }
                         }
@@ -719,7 +719,7 @@ namespace golang::strconv
                         {
                             std::string out;
                             std::string rem;
-                            std::string err;
+                            gocpp::error err;
                             break;
                         }
                     }
@@ -727,7 +727,7 @@ namespace golang::strconv
                     {
                         std::string out;
                         std::string rem;
-                        std::string err;
+                        gocpp::error err;
                         return {"", in0, ErrSyntax};
                     }
                     in = in.make_slice(1);
@@ -735,7 +735,7 @@ namespace golang::strconv
                     {
                         std::string out;
                         std::string rem;
-                        std::string err;
+                        gocpp::error err;
                         return {string(buf), in, nullptr};
                     }
                     return {in0.make_slice(0, len(in0) - len(in)), in, nullptr};

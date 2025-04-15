@@ -110,12 +110,12 @@ namespace golang::png
 
     void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*)
     {
-        return self.ptr->value->vPut(EncoderBuffer*);
+        return self.ptr->value->vPut();
     }
 
     void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*)
     {
-        return self.obj.value->vPut(EncoderBuffer*);
+        return self.obj.value->vPut();
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value)
@@ -393,7 +393,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
         writeChunk(gocpp::recv(e), b, "IDAT");
         if(e->err != nullptr)
@@ -504,7 +504,7 @@ namespace golang::png
         }
     }
 
-    std::string writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
+    gocpp::error writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -886,13 +886,13 @@ namespace golang::png
         writeChunk(gocpp::recv(e), nullptr, "IEND");
     }
 
-    std::string Encode(io::Writer w, image::Image m)
+    gocpp::error Encode(io::Writer w, image::Image m)
     {
         Encoder e = {};
         return Encode(gocpp::recv(e), w, m);
     }
 
-    std::string Encode(struct Encoder* enc, io::Writer w, image::Image m)
+    gocpp::error Encode(struct Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
         try

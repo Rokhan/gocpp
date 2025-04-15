@@ -237,25 +237,25 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Write(struct encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(e->err != nullptr)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, e->err};
         }
         if(e->nbuf > 0)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             int i = {};
             for(i = 0; i < len(p) && e->nbuf < 3; i++)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 e->buf[e->nbuf] = p[i];
                 e->nbuf++;
             }
@@ -264,14 +264,14 @@ namespace golang::base64
             if(e->nbuf < 3)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {n, err};
             }
             Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), e->buf.make_slice(0, ));
             if(std::tie(gocpp_id_0, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {n, e->err};
             }
             e->nbuf = 0;
@@ -279,12 +279,12 @@ namespace golang::base64
         for(; len(p) >= 3; )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             auto nn = len(e->out) / 4 * 3;
             if(nn > len(p))
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 nn = len(p);
                 nn -= nn % 3;
             }
@@ -292,7 +292,7 @@ namespace golang::base64
             if(std::tie(gocpp_id_1, e->err) = Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {n, e->err};
             }
             n += nn;
@@ -304,7 +304,7 @@ namespace golang::base64
         return {n, err};
     }
 
-    std::string Close(struct encoder* e)
+    gocpp::error Close(struct encoder* e)
     {
         if(e->err == nullptr && e->nbuf > 0)
         {
@@ -334,11 +334,11 @@ namespace golang::base64
         return "illegal base64 data at input byte " + strconv::FormatInt(int64_t(e), 10);
     }
 
-    std::tuple<int, int, std::string> decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
+    std::tuple<int, int, gocpp::error> decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
     {
         int nsi;
         int n;
-        std::string err;
+        gocpp::error err;
         gocpp::array<unsigned char, 4> dbuf = {};
         auto dlen = 4;
         _ = enc->decodeMap;
@@ -346,12 +346,12 @@ namespace golang::base64
         {
             int nsi;
             int n;
-            std::string err;
+            gocpp::error err;
             if(len(src) == si)
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 //Go switch emulation
                 {
                     int conditionId = -1;
@@ -362,7 +362,7 @@ namespace golang::base64
                     {
                         int nsi;
                         int n;
-                        std::string err;
+                        gocpp::error err;
                         case 0:
                             return {si, 0, nullptr};
                             break;
@@ -382,7 +382,7 @@ namespace golang::base64
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 dbuf[j] = out;
                 continue;
             }
@@ -390,7 +390,7 @@ namespace golang::base64
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 j--;
                 continue;
             }
@@ -398,7 +398,7 @@ namespace golang::base64
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {si, 0, CorruptInputError(si - 1)};
             }
             //Go switch emulation
@@ -412,7 +412,7 @@ namespace golang::base64
                 {
                     int nsi;
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     case 0:
                     case 1:
                         return {si, 0, CorruptInputError(si - 1)};
@@ -422,21 +422,21 @@ namespace golang::base64
                         {
                             int nsi;
                             int n;
-                            std::string err;
+                            gocpp::error err;
                             si++;
                         }
                         if(si == len(src))
                         {
                             int nsi;
                             int n;
-                            std::string err;
+                            gocpp::error err;
                             return {si, 0, CorruptInputError(len(src))};
                         }
                         if(rune(src[si]) != enc->padChar)
                         {
                             int nsi;
                             int n;
-                            std::string err;
+                            gocpp::error err;
                             return {si, 0, CorruptInputError(si - 1)};
                         }
                         si++;
@@ -447,14 +447,14 @@ namespace golang::base64
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 si++;
             }
             if(si < len(src))
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 err = CorruptInputError(si);
             }
             dlen = j;
@@ -473,7 +473,7 @@ namespace golang::base64
             {
                 int nsi;
                 int n;
-                std::string err;
+                gocpp::error err;
                 case 0:
                     dst[2] = dbuf[2];
                     dbuf[2] = 0;
@@ -483,7 +483,7 @@ namespace golang::base64
                     {
                         int nsi;
                         int n;
-                        std::string err;
+                        gocpp::error err;
                         return {si, 0, CorruptInputError(si - 1)};
                     }
                     dbuf[1] = 0;
@@ -493,7 +493,7 @@ namespace golang::base64
                     {
                         int nsi;
                         int n;
-                        std::string err;
+                        gocpp::error err;
                         return {si, 0, CorruptInputError(si - 2)};
                     }
                     break;
@@ -502,7 +502,7 @@ namespace golang::base64
         return {si, dlen - 1, err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> AppendDecode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = len(src);
         for(; n > 0 && rune(src[n - 1]) == enc->padChar; )
@@ -511,12 +511,12 @@ namespace golang::base64
         }
         n = decodedLen(n, NoPadding);
         dst = slices::Grow(dst, n);
-        std::string err;
+        gocpp::error err;
         std::tie(n, err) = Decode(gocpp::recv(enc), dst.make_slice(len(dst)).make_slice(0, n), src);
         return {dst.make_slice(0, len(dst) + n), err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> DecodeString(struct Encoding* enc, std::string s)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(struct Encoding* enc, std::string s)
     {
         auto dbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), DecodedLen(gocpp::recv(enc), len(s)));
         auto [n, err] = Decode(gocpp::recv(enc), dbuf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
@@ -573,14 +573,14 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(struct decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(len(d->out) > 0)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             n = copy(p, d->out);
             d->out = d->out.make_slice(n);
             return {n, nullptr};
@@ -588,24 +588,24 @@ namespace golang::base64
         if(d->err != nullptr)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, d->err};
         }
         for(; d->nbuf < 4 && d->readErr == nullptr; )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             auto nn = len(p) / 3 * 4;
             if(nn < 4)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 nn = 4;
             }
             if(nn > len(d->buf))
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 nn = len(d->buf);
             }
             std::tie(nn, d->readErr) = Read(gocpp::recv(d->r), d->buf.make_slice(d->nbuf, nn));
@@ -614,11 +614,11 @@ namespace golang::base64
         if(d->nbuf < 4)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             if(d->enc->padChar == NoPadding && d->nbuf > 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 int nw = {};
                 std::tie(nw, d->err) = Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0, ), d->buf.make_slice(0, d->nbuf));
                 d->nbuf = 0;
@@ -628,13 +628,13 @@ namespace golang::base64
                 if(n > 0 || len(p) == 0 && len(d->out) > 0)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     return {n, nullptr};
                 }
                 if(d->err != nullptr)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     return {0, d->err};
                 }
             }
@@ -642,7 +642,7 @@ namespace golang::base64
             if(d->err == io::go_EOF && d->nbuf > 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 d->err = io::ErrUnexpectedEOF;
             }
             return {0, d->err};
@@ -652,7 +652,7 @@ namespace golang::base64
         if(nw > len(p))
         {
             int n;
-            std::string err;
+            gocpp::error err;
             std::tie(nw, d->err) = Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0, ), d->buf.make_slice(0, nr));
             d->out = d->outbuf.make_slice(0, nw);
             n = copy(p, d->out);
@@ -661,7 +661,7 @@ namespace golang::base64
         else
         {
             int n;
-            std::string err;
+            gocpp::error err;
             std::tie(n, d->err) = Decode(gocpp::recv(d->enc), p, d->buf.make_slice(0, nr));
         }
         d->nbuf -= nr;
@@ -669,14 +669,14 @@ namespace golang::base64
         return {n, d->err};
     }
 
-    std::tuple<int, std::string> Decode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int, gocpp::error> Decode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(len(src) == 0)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, nullptr};
         }
         _ = enc->decodeMap;
@@ -684,12 +684,12 @@ namespace golang::base64
         for(; strconv::IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             auto src2 = src.make_slice(si, si + 8);
             if(auto [dn, ok] = assemble64(enc->decodeMap[src2[0]], enc->decodeMap[src2[1]], enc->decodeMap[src2[2]], enc->decodeMap[src2[3]], enc->decodeMap[src2[4]], enc->decodeMap[src2[5]], enc->decodeMap[src2[6]], enc->decodeMap[src2[7]]); ok)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 PutUint64(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
                 n += 6;
                 si += 8;
@@ -697,14 +697,14 @@ namespace golang::base64
             else
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 int ninc = {};
                 std::tie(si, ninc, err) = decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
                 n += ninc;
                 if(err != nullptr)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     return {n, err};
                 }
             }
@@ -712,12 +712,12 @@ namespace golang::base64
         for(; len(src) - si >= 4 && len(dst) - n >= 4; )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             auto src2 = src.make_slice(si, si + 4);
             if(auto [dn, ok] = assemble32(enc->decodeMap[src2[0]], enc->decodeMap[src2[1]], enc->decodeMap[src2[2]], enc->decodeMap[src2[3]]); ok)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 PutUint32(gocpp::recv(binary::BigEndian), dst.make_slice(n), dn);
                 n += 3;
                 si += 4;
@@ -725,14 +725,14 @@ namespace golang::base64
             else
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 int ninc = {};
                 std::tie(si, ninc, err) = decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
                 n += ninc;
                 if(err != nullptr)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     return {n, err};
                 }
             }
@@ -740,14 +740,14 @@ namespace golang::base64
         for(; si < len(src); )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             int ninc = {};
             std::tie(si, ninc, err) = decodeQuantum(gocpp::recv(enc), dst.make_slice(n), src, si);
             n += ninc;
             if(err != nullptr)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {n, err};
             }
         }
@@ -809,7 +809,7 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Read(struct newlineFilteringReader* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(struct newlineFilteringReader* r, gocpp::slice<unsigned char> p)
     {
         auto [n, err] = Read(gocpp::recv(r->wrapped), p);
         for(; n > 0; )

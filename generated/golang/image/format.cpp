@@ -22,7 +22,7 @@
 
 namespace golang::image
 {
-    std::string ErrFormat = errors::New("image: unknown format");
+    gocpp::error ErrFormat = errors::New("image: unknown format");
     
     template<typename T> requires gocpp::GoStruct<T>
     format::operator T()
@@ -63,7 +63,7 @@ namespace golang::image
 
     mocklib::Mutex formatsMu;
     atomic::Value atomicFormats;
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<Image, std::string> (io::Reader)> decode, std::function<std::tuple<Config, std::string> (io::Reader)> decodeConfig)
+    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader)> decodeConfig)
     {
         Lock(gocpp::recv(formatsMu));
         auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
@@ -96,19 +96,19 @@ namespace golang::image
     }
 
     template<typename T, typename StoreT>
-    std::tuple<gocpp::slice<unsigned char>, std::string> reader::readerImpl<T, StoreT>::vPeek(int)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reader::readerImpl<T, StoreT>::vPeek(int)
     {
         return Peek(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> Peek(const gocpp::PtrRecv<reader, false>& self, int)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
     {
-        return self.ptr->value->vPeek(int);
+        return self.ptr->value->vPeek();
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> Peek(const gocpp::ObjRecv<reader>& self, int)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
     {
-        return self.obj.value->vPeek(int);
+        return self.obj.value->vPeek();
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value)
@@ -155,7 +155,7 @@ namespace golang::image
         return format {};
     }
 
-    std::tuple<Image, std::string, std::string> Decode(io::Reader r)
+    std::tuple<Image, std::string, gocpp::error> Decode(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
@@ -167,7 +167,7 @@ namespace golang::image
         return {m, f.name, err};
     }
 
-    std::tuple<Config, std::string, std::string> DecodeConfig(io::Reader r)
+    std::tuple<Config, std::string, gocpp::error> DecodeConfig(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);

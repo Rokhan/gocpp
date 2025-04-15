@@ -22,12 +22,12 @@
 
 namespace golang::time
 {
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, std::string> (std::string)> f)
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, gocpp::error> (std::string)> f)
     {
         loadFromEmbeddedTZData = f;
     }
 
-    std::function<std::tuple<std::string, std::string> (std::string zipname)> loadFromEmbeddedTZData;
+    std::function<std::tuple<std::string, gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
     std::string Error(fileSizeError f)
     {
         return "time: file " + string(f) + " is too large";
@@ -143,8 +143,8 @@ namespace golang::time
         return string(p);
     }
 
-    std::string errBadData = errors::New("malformed time zone information");
-    std::tuple<Location*, std::string> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
+    gocpp::error errBadData = errors::New("malformed time zone information");
+    std::tuple<Location*, gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
         if(auto magic = read(gocpp::recv(d), 4); string(magic) != "TZif")
@@ -377,7 +377,7 @@ namespace golang::time
         return - 1;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> loadTzinfoFromDirOrZip(std::string dir, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name)
     {
         if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip")
         {
@@ -408,7 +408,7 @@ namespace golang::time
         return int(b[0]) | (int(b[1]) << 8);
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> loadTzinfoFromZip(std::string zipfile, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name)
     {
         gocpp::Defer defer;
         try
@@ -480,8 +480,8 @@ namespace golang::time
         }
     }
 
-    std::function<std::tuple<gocpp::slice<unsigned char>, std::string> (std::string file, std::string name)> loadTzinfoFromTzdata;
-    std::tuple<gocpp::slice<unsigned char>, std::string> loadTzinfo(std::string name, std::string source)
+    std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (std::string file, std::string name)> loadTzinfoFromTzdata;
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfo(std::string name, std::string source)
     {
         if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata")
         {
@@ -490,89 +490,89 @@ namespace golang::time
         return loadTzinfoFromDirOrZip(source, name);
     }
 
-    std::tuple<Location*, std::string> loadLocation(std::string name, gocpp::slice<std::string> sources)
+    std::tuple<Location*, gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources)
     {
         Location* z;
-        std::string firstErr;
+        gocpp::error firstErr;
         for(auto [_, source] : sources)
         {
             Location* z;
-            std::string firstErr;
+            gocpp::error firstErr;
             auto [zoneData, err] = loadTzinfo(name, source);
             if(err == nullptr)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, zoneData); err == nullptr)
                 {
                     Location* z;
-                    std::string firstErr;
+                    gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::ENOENT)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(loadFromEmbeddedTZData != nullptr)
         {
             Location* z;
-            std::string firstErr;
+            gocpp::error firstErr;
             auto [zoneData, err] = loadFromEmbeddedTZData(name);
             if(err == nullptr)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, gocpp::Tag<gocpp::slice<unsigned char>>()(zoneData)); err == nullptr)
                 {
                     Location* z;
-                    std::string firstErr;
+                    gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::ENOENT)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(auto [source, ok] = gorootZoneSource(runtime::GOROOT()); ok)
         {
             Location* z;
-            std::string firstErr;
+            gocpp::error firstErr;
             auto [zoneData, err] = loadTzinfo(name, source);
             if(err == nullptr)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, zoneData); err == nullptr)
                 {
                     Location* z;
-                    std::string firstErr;
+                    gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::ENOENT)
             {
                 Location* z;
-                std::string firstErr;
+                gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(firstErr != nullptr)
         {
             Location* z;
-            std::string firstErr;
+            gocpp::error firstErr;
             return {nullptr, firstErr};
         }
         return {nullptr, errors::New("unknown time zone " + name)};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> readFile(std::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFile(std::string name)
     {
         gocpp::Defer defer;
         try

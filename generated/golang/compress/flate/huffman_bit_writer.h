@@ -34,7 +34,7 @@ namespace golang::flate
         huffmanEncoder* literalEncoding;
         huffmanEncoder* offsetEncoding;
         huffmanEncoder* codegenEncoding;
-        std::string err;
+        gocpp::error err;
 
         using isGoStruct = void;
 

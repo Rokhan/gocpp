@@ -20,12 +20,12 @@
 
 namespace golang::registry
 {
-    std::string Close(Key k)
+    gocpp::error Close(Key k)
     {
         return syscall::RegCloseKey(syscall::Handle(k));
     }
 
-    std::tuple<Key, std::string> OpenKey(Key k, std::string path, uint32_t access)
+    std::tuple<Key, gocpp::error> OpenKey(Key k, std::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -41,7 +41,7 @@ namespace golang::registry
         return {Key(subkey), nullptr};
     }
 
-    std::tuple<gocpp::slice<std::string>, std::string> ReadSubKeyNames(Key k)
+    std::tuple<gocpp::slice<std::string>, gocpp::error> ReadSubKeyNames(Key k)
     {
         gocpp::Defer defer;
         try
@@ -89,11 +89,11 @@ namespace golang::registry
         }
     }
 
-    std::tuple<Key, bool, std::string> CreateKey(Key k, std::string path, uint32_t access)
+    std::tuple<Key, bool, gocpp::error> CreateKey(Key k, std::string path, uint32_t access)
     {
         Key newk;
         bool openedExisting;
-        std::string err;
+        gocpp::error err;
         syscall::Handle h = {};
         uint32_t d = {};
         err = regCreateKeyEx(syscall::Handle(k), syscall::StringToUTF16Ptr(path), 0, nullptr, _REG_OPTION_NON_VOLATILE, access, nullptr, & h, & d);
@@ -101,13 +101,13 @@ namespace golang::registry
         {
             Key newk;
             bool openedExisting;
-            std::string err;
+            gocpp::error err;
             return {0, false, err};
         }
         return {Key(h), d == _REG_OPENED_EXISTING_KEY, nullptr};
     }
 
-    std::string DeleteKey(Key k, std::string path)
+    gocpp::error DeleteKey(Key k, std::string path)
     {
         return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
     }
@@ -156,7 +156,7 @@ namespace golang::registry
         return value.PrintTo(os);
     }
 
-    std::tuple<KeyInfo*, std::string> Stat(Key k)
+    std::tuple<KeyInfo*, gocpp::error> Stat(Key k)
     {
         KeyInfo ki = {};
         auto err = syscall::RegQueryInfoKey(syscall::Handle(k), nullptr, nullptr, nullptr, & ki.SubKeyCount, & ki.MaxSubKeyLen, nullptr, & ki.ValueCount, & ki.MaxValueNameLen, & ki.MaxValueLen, nullptr, & ki.lastWriteTime);

@@ -25,9 +25,9 @@
 namespace golang::syscall
 {
     unsafe::Pointer _;
-    std::string errERROR_IO_PENDING = Errno(errnoERROR_IO_PENDING);
-    std::string errERROR_EINVAL = EINVAL;
-    std::string errnoErr(Errno e)
+    gocpp::error errERROR_IO_PENDING = Errno(errnoERROR_IO_PENDING);
+    gocpp::error errERROR_EINVAL = EINVAL;
+    gocpp::error errnoErr(Errno e)
     {
         //Go switch emulation
         {
@@ -208,91 +208,91 @@ namespace golang::syscall
     LazyProc* procsetsockopt = NewProc(gocpp::recv(modws2_32), "setsockopt");
     LazyProc* procshutdown = NewProc(gocpp::recv(modws2_32), "shutdown");
     LazyProc* procsocket = NewProc(gocpp::recv(modws2_32), "socket");
-    std::string ConvertSidToStringSid(SID* sid, uint16_t** stringSid)
+    gocpp::error ConvertSidToStringSid(SID* sid, uint16_t** stringSid)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_1, e1] = Syscall(Addr(gocpp::recv(procConvertSidToStringSidW)), 2, uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(stringSid)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string ConvertStringSidToSid(uint16_t* stringSid, SID** sid)
+    gocpp::error ConvertStringSidToSid(uint16_t* stringSid, SID** sid)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_3, e1] = Syscall(Addr(gocpp::recv(procConvertStringSidToSidW)), 2, uintptr_t(unsafe::Pointer(stringSid)), uintptr_t(unsafe::Pointer(sid)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CopySid(uint32_t destSidLen, SID* destSid, SID* srcSid)
+    gocpp::error CopySid(uint32_t destSidLen, SID* destSid, SID* srcSid)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_5, e1] = Syscall(Addr(gocpp::recv(procCopySid)), 3, uintptr_t(destSidLen), uintptr_t(unsafe::Pointer(destSid)), uintptr_t(unsafe::Pointer(srcSid)));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
+    gocpp::error CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
     {
-        std::string err;
+        gocpp::error err;
         uint32_t _p0 = {};
         if(inheritHandles)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_7, e1] = Syscall12(Addr(gocpp::recv(procCreateProcessAsUserW)), 11, uintptr_t(token), uintptr_t(unsafe::Pointer(appName)), uintptr_t(unsafe::Pointer(commandLine)), uintptr_t(unsafe::Pointer(procSecurity)), uintptr_t(unsafe::Pointer(threadSecurity)), uintptr_t(_p0), uintptr_t(creationFlags), uintptr_t(unsafe::Pointer(env)), uintptr_t(unsafe::Pointer(currentDir)), uintptr_t(unsafe::Pointer(startupInfo)), uintptr_t(unsafe::Pointer(outProcInfo)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CryptAcquireContext(Handle* provhandle, uint16_t* container, uint16_t* provider, uint32_t provtype, uint32_t flags)
+    gocpp::error CryptAcquireContext(Handle* provhandle, uint16_t* container, uint16_t* provider, uint32_t provtype, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_9, e1] = Syscall6(Addr(gocpp::recv(procCryptAcquireContextW)), 5, uintptr_t(unsafe::Pointer(provhandle)), uintptr_t(unsafe::Pointer(container)), uintptr_t(unsafe::Pointer(provider)), uintptr_t(provtype), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CryptGenRandom(Handle provhandle, uint32_t buflen, unsigned char* buf)
+    gocpp::error CryptGenRandom(Handle provhandle, uint32_t buflen, unsigned char* buf)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_11, e1] = Syscall(Addr(gocpp::recv(procCryptGenRandom)), 3, uintptr_t(provhandle), uintptr_t(buflen), uintptr_t(unsafe::Pointer(buf)));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CryptReleaseContext(Handle provhandle, uint32_t flags)
+    gocpp::error CryptReleaseContext(Handle provhandle, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_13, e1] = Syscall(Addr(gocpp::recv(procCryptReleaseContext)), 2, uintptr_t(provhandle), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -306,163 +306,163 @@ namespace golang::syscall
         return len;
     }
 
-    std::string GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen)
+    gocpp::error GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_19, e1] = Syscall6(Addr(gocpp::recv(procGetTokenInformation)), 5, uintptr_t(t), uintptr_t(infoClass), uintptr_t(unsafe::Pointer(info)), uintptr_t(infoLen), uintptr_t(unsafe::Pointer(returnedLen)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string LookupAccountName(uint16_t* systemName, uint16_t* accountName, SID* sid, uint32_t* sidLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use)
+    gocpp::error LookupAccountName(uint16_t* systemName, uint16_t* accountName, SID* sid, uint32_t* sidLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_21, e1] = Syscall9(Addr(gocpp::recv(procLookupAccountNameW)), 7, uintptr_t(unsafe::Pointer(systemName)), uintptr_t(unsafe::Pointer(accountName)), uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(sidLen)), uintptr_t(unsafe::Pointer(refdDomainName)), uintptr_t(unsafe::Pointer(refdDomainNameLen)), uintptr_t(unsafe::Pointer(use)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string LookupAccountSid(uint16_t* systemName, SID* sid, uint16_t* name, uint32_t* nameLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use)
+    gocpp::error LookupAccountSid(uint16_t* systemName, SID* sid, uint16_t* name, uint32_t* nameLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_23, e1] = Syscall9(Addr(gocpp::recv(procLookupAccountSidW)), 7, uintptr_t(unsafe::Pointer(systemName)), uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(nameLen)), uintptr_t(unsafe::Pointer(refdDomainName)), uintptr_t(unsafe::Pointer(refdDomainNameLen)), uintptr_t(unsafe::Pointer(use)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string OpenProcessToken(Handle h, uint32_t access, Token* token)
+    gocpp::error OpenProcessToken(Handle h, uint32_t access, Token* token)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_25, e1] = Syscall(Addr(gocpp::recv(procOpenProcessToken)), 3, uintptr_t(h), uintptr_t(access), uintptr_t(unsafe::Pointer(token)));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string RegCloseKey(Handle key)
+    gocpp::error RegCloseKey(Handle key)
     {
-        std::string regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_28, gocpp_id_29] = Syscall(Addr(gocpp::recv(procRegCloseKey)), 1, uintptr_t(key), 0, 0);
         if(r0 != 0)
         {
-            std::string regerrno;
+            gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
     }
 
-    std::string regEnumKeyEx(Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime)
+    gocpp::error regEnumKeyEx(Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime)
     {
-        std::string regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_32, gocpp_id_33] = Syscall9(Addr(gocpp::recv(procRegEnumKeyExW)), 8, uintptr_t(key), uintptr_t(index), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(nameLen)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(unsafe::Pointer(classLen)), uintptr_t(unsafe::Pointer(lastWriteTime)), 0);
         if(r0 != 0)
         {
-            std::string regerrno;
+            gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
     }
 
-    std::string RegOpenKeyEx(Handle key, uint16_t* subkey, uint32_t options, uint32_t desiredAccess, Handle* result)
+    gocpp::error RegOpenKeyEx(Handle key, uint16_t* subkey, uint32_t options, uint32_t desiredAccess, Handle* result)
     {
-        std::string regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_36, gocpp_id_37] = Syscall6(Addr(gocpp::recv(procRegOpenKeyExW)), 5, uintptr_t(key), uintptr_t(unsafe::Pointer(subkey)), uintptr_t(options), uintptr_t(desiredAccess), uintptr_t(unsafe::Pointer(result)), 0);
         if(r0 != 0)
         {
-            std::string regerrno;
+            gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
     }
 
-    std::string RegQueryInfoKey(Handle key, uint16_t* go_class, uint32_t* classLen, uint32_t* reserved, uint32_t* subkeysLen, uint32_t* maxSubkeyLen, uint32_t* maxClassLen, uint32_t* valuesLen, uint32_t* maxValueNameLen, uint32_t* maxValueLen, uint32_t* saLen, Filetime* lastWriteTime)
+    gocpp::error RegQueryInfoKey(Handle key, uint16_t* go_class, uint32_t* classLen, uint32_t* reserved, uint32_t* subkeysLen, uint32_t* maxSubkeyLen, uint32_t* maxClassLen, uint32_t* valuesLen, uint32_t* maxValueNameLen, uint32_t* maxValueLen, uint32_t* saLen, Filetime* lastWriteTime)
     {
-        std::string regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_40, gocpp_id_41] = Syscall12(Addr(gocpp::recv(procRegQueryInfoKeyW)), 12, uintptr_t(key), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(unsafe::Pointer(classLen)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(subkeysLen)), uintptr_t(unsafe::Pointer(maxSubkeyLen)), uintptr_t(unsafe::Pointer(maxClassLen)), uintptr_t(unsafe::Pointer(valuesLen)), uintptr_t(unsafe::Pointer(maxValueNameLen)), uintptr_t(unsafe::Pointer(maxValueLen)), uintptr_t(unsafe::Pointer(saLen)), uintptr_t(unsafe::Pointer(lastWriteTime)));
         if(r0 != 0)
         {
-            std::string regerrno;
+            gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
     }
 
-    std::string RegQueryValueEx(Handle key, uint16_t* name, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
+    gocpp::error RegQueryValueEx(Handle key, uint16_t* name, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
     {
-        std::string regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_44, gocpp_id_45] = Syscall6(Addr(gocpp::recv(procRegQueryValueExW)), 6, uintptr_t(key), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(valtype)), uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(buflen)));
         if(r0 != 0)
         {
-            std::string regerrno;
+            gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
     }
 
-    std::string CertAddCertificateContextToStore(Handle store, CertContext* certContext, uint32_t addDisposition, CertContext** storeContext)
+    gocpp::error CertAddCertificateContextToStore(Handle store, CertContext* certContext, uint32_t addDisposition, CertContext** storeContext)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_47, e1] = Syscall6(Addr(gocpp::recv(procCertAddCertificateContextToStore)), 4, uintptr_t(store), uintptr_t(unsafe::Pointer(certContext)), uintptr_t(addDisposition), uintptr_t(unsafe::Pointer(storeContext)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CertCloseStore(Handle store, uint32_t flags)
+    gocpp::error CertCloseStore(Handle store, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_49, e1] = Syscall(Addr(gocpp::recv(procCertCloseStore)), 2, uintptr_t(store), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<CertContext*, std::string> CertCreateCertificateContext(uint32_t certEncodingType, unsigned char* certEncoded, uint32_t encodedLen)
+    std::tuple<CertContext*, gocpp::error> CertCreateCertificateContext(uint32_t certEncodingType, unsigned char* certEncoded, uint32_t encodedLen)
     {
         CertContext* context;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_51, e1] = Syscall(Addr(gocpp::recv(procCertCreateCertificateContext)), 3, uintptr_t(certEncodingType), uintptr_t(unsafe::Pointer(certEncoded)), uintptr_t(encodedLen));
         context = (CertContext*)(unsafe::Pointer(r0));
         if(context == nullptr)
         {
             CertContext* context;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {context, err};
     }
 
-    std::tuple<CertContext*, std::string> CertEnumCertificatesInStore(Handle store, CertContext* prevContext)
+    std::tuple<CertContext*, gocpp::error> CertEnumCertificatesInStore(Handle store, CertContext* prevContext)
     {
         CertContext* context;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_53, e1] = Syscall(Addr(gocpp::recv(procCertEnumCertificatesInStore)), 2, uintptr_t(store), uintptr_t(unsafe::Pointer(prevContext)), 0);
         context = (CertContext*)(unsafe::Pointer(r0));
         if(context == nullptr)
         {
             CertContext* context;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {context, err};
@@ -474,67 +474,67 @@ namespace golang::syscall
         return;
     }
 
-    std::string CertFreeCertificateContext(CertContext* ctx)
+    gocpp::error CertFreeCertificateContext(CertContext* ctx)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_55, e1] = Syscall(Addr(gocpp::recv(procCertFreeCertificateContext)), 1, uintptr_t(unsafe::Pointer(ctx)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CertGetCertificateChain(Handle engine, CertContext* leaf, Filetime* time, Handle additionalStore, CertChainPara* para, uint32_t flags, uintptr_t reserved, CertChainContext** chainCtx)
+    gocpp::error CertGetCertificateChain(Handle engine, CertContext* leaf, Filetime* time, Handle additionalStore, CertChainPara* para, uint32_t flags, uintptr_t reserved, CertChainContext** chainCtx)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_57, e1] = Syscall9(Addr(gocpp::recv(procCertGetCertificateChain)), 8, uintptr_t(engine), uintptr_t(unsafe::Pointer(leaf)), uintptr_t(unsafe::Pointer(time)), uintptr_t(additionalStore), uintptr_t(unsafe::Pointer(para)), uintptr_t(flags), uintptr_t(reserved), uintptr_t(unsafe::Pointer(chainCtx)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> CertOpenStore(uintptr_t storeProvider, uint32_t msgAndCertEncodingType, uintptr_t cryptProv, uint32_t flags, uintptr_t para)
+    std::tuple<Handle, gocpp::error> CertOpenStore(uintptr_t storeProvider, uint32_t msgAndCertEncodingType, uintptr_t cryptProv, uint32_t flags, uintptr_t para)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_59, e1] = Syscall6(Addr(gocpp::recv(procCertOpenStore)), 5, uintptr_t(storeProvider), uintptr_t(msgAndCertEncodingType), uintptr_t(cryptProv), uintptr_t(flags), uintptr_t(para), 0);
         handle = Handle(r0);
         if(handle == 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::tuple<Handle, std::string> CertOpenSystemStore(Handle hprov, uint16_t* name)
+    std::tuple<Handle, gocpp::error> CertOpenSystemStore(Handle hprov, uint16_t* name)
     {
         Handle store;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_61, e1] = Syscall(Addr(gocpp::recv(procCertOpenSystemStoreW)), 2, uintptr_t(hprov), uintptr_t(unsafe::Pointer(name)), 0);
         store = Handle(r0);
         if(store == 0)
         {
             Handle store;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {store, err};
     }
 
-    std::string CertVerifyCertificateChainPolicy(uintptr_t policyOID, CertChainContext* chain, CertChainPolicyPara* para, CertChainPolicyStatus* status)
+    gocpp::error CertVerifyCertificateChainPolicy(uintptr_t policyOID, CertChainContext* chain, CertChainPolicyPara* para, CertChainPolicyStatus* status)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_63, e1] = Syscall6(Addr(gocpp::recv(procCertVerifyCertificateChainPolicy)), 4, uintptr_t(policyOID), uintptr_t(unsafe::Pointer(chain)), uintptr_t(unsafe::Pointer(para)), uintptr_t(unsafe::Pointer(status)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -548,26 +548,26 @@ namespace golang::syscall
         return same;
     }
 
-    std::string DnsQuery(std::string name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr)
+    gocpp::error DnsQuery(std::string name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr)
     {
-        std::string status;
+        gocpp::error status;
         uint16_t* _p0 = {};
         std::tie(_p0, status) = UTF16PtrFromString(name);
         if(status != nullptr)
         {
-            std::string status;
+            gocpp::error status;
             return status;
         }
         return _DnsQuery(_p0, qtype, options, extra, qrs, pr);
     }
 
-    std::string _DnsQuery(uint16_t* name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr)
+    gocpp::error _DnsQuery(uint16_t* name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr)
     {
-        std::string status;
+        gocpp::error status;
         auto [r0, gocpp_id_70, gocpp_id_71] = Syscall6(Addr(gocpp::recv(procDnsQuery_W)), 6, uintptr_t(unsafe::Pointer(name)), uintptr_t(qtype), uintptr_t(options), uintptr_t(unsafe::Pointer(extra)), uintptr_t(unsafe::Pointer(qrs)), uintptr_t(unsafe::Pointer(pr)));
         if(r0 != 0)
         {
-            std::string status;
+            gocpp::error status;
             status = Errno(r0);
         }
         return status;
@@ -579,199 +579,199 @@ namespace golang::syscall
         return;
     }
 
-    std::string GetAdaptersInfo(IpAdapterInfo* ai, uint32_t* ol)
+    gocpp::error GetAdaptersInfo(IpAdapterInfo* ai, uint32_t* ol)
     {
-        std::string errcode;
+        gocpp::error errcode;
         auto [r0, gocpp_id_74, gocpp_id_75] = Syscall(Addr(gocpp::recv(procGetAdaptersInfo)), 2, uintptr_t(unsafe::Pointer(ai)), uintptr_t(unsafe::Pointer(ol)), 0);
         if(r0 != 0)
         {
-            std::string errcode;
+            gocpp::error errcode;
             errcode = Errno(r0);
         }
         return errcode;
     }
 
-    std::string GetIfEntry(MibIfRow* pIfRow)
+    gocpp::error GetIfEntry(MibIfRow* pIfRow)
     {
-        std::string errcode;
+        gocpp::error errcode;
         auto [r0, gocpp_id_78, gocpp_id_79] = Syscall(Addr(gocpp::recv(procGetIfEntry)), 1, uintptr_t(unsafe::Pointer(pIfRow)), 0, 0);
         if(r0 != 0)
         {
-            std::string errcode;
+            gocpp::error errcode;
             errcode = Errno(r0);
         }
         return errcode;
     }
 
-    std::string CancelIo(Handle s)
+    gocpp::error CancelIo(Handle s)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_81, e1] = Syscall(Addr(gocpp::recv(procCancelIo)), 1, uintptr_t(s), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CancelIoEx(Handle s, Overlapped* o)
+    gocpp::error CancelIoEx(Handle s, Overlapped* o)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_83, e1] = Syscall(Addr(gocpp::recv(procCancelIoEx)), 2, uintptr_t(s), uintptr_t(unsafe::Pointer(o)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CloseHandle(Handle handle)
+    gocpp::error CloseHandle(Handle handle)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_85, e1] = Syscall(Addr(gocpp::recv(procCloseHandle)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CreateDirectory(uint16_t* path, SecurityAttributes* sa)
+    gocpp::error CreateDirectory(uint16_t* path, SecurityAttributes* sa)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_87, e1] = Syscall(Addr(gocpp::recv(procCreateDirectoryW)), 2, uintptr_t(unsafe::Pointer(path)), uintptr_t(unsafe::Pointer(sa)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> CreateFileMapping(Handle fhandle, SecurityAttributes* sa, uint32_t prot, uint32_t maxSizeHigh, uint32_t maxSizeLow, uint16_t* name)
+    std::tuple<Handle, gocpp::error> CreateFileMapping(Handle fhandle, SecurityAttributes* sa, uint32_t prot, uint32_t maxSizeHigh, uint32_t maxSizeLow, uint16_t* name)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_89, e1] = Syscall6(Addr(gocpp::recv(procCreateFileMappingW)), 6, uintptr_t(fhandle), uintptr_t(unsafe::Pointer(sa)), uintptr_t(prot), uintptr_t(maxSizeHigh), uintptr_t(maxSizeLow), uintptr_t(unsafe::Pointer(name)));
         handle = Handle(r0);
         if(handle == 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::tuple<Handle, std::string> CreateFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile)
+    std::tuple<Handle, gocpp::error> CreateFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_91, e1] = Syscall9(Addr(gocpp::recv(procCreateFileW)), 7, uintptr_t(unsafe::Pointer(name)), uintptr_t(access), uintptr_t(mode), uintptr_t(unsafe::Pointer(sa)), uintptr_t(createmode), uintptr_t(attrs), uintptr_t(templatefile), 0, 0);
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::string CreateHardLink(uint16_t* filename, uint16_t* existingfilename, uintptr_t reserved)
+    gocpp::error CreateHardLink(uint16_t* filename, uint16_t* existingfilename, uintptr_t reserved)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_93, e1] = Syscall(Addr(gocpp::recv(procCreateHardLinkW)), 3, uintptr_t(unsafe::Pointer(filename)), uintptr_t(unsafe::Pointer(existingfilename)), uintptr_t(reserved));
         if(r1 & 0xff == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> createIoCompletionPort(Handle filehandle, Handle cphandle, uintptr_t key, uint32_t threadcnt)
+    std::tuple<Handle, gocpp::error> createIoCompletionPort(Handle filehandle, Handle cphandle, uintptr_t key, uint32_t threadcnt)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_95, e1] = Syscall6(Addr(gocpp::recv(procCreateIoCompletionPort)), 4, uintptr_t(filehandle), uintptr_t(cphandle), uintptr_t(key), uintptr_t(threadcnt), 0, 0);
         handle = Handle(r0);
         if(handle == 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::string CreatePipe(Handle* readhandle, Handle* writehandle, SecurityAttributes* sa, uint32_t size)
+    gocpp::error CreatePipe(Handle* readhandle, Handle* writehandle, SecurityAttributes* sa, uint32_t size)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_97, e1] = Syscall6(Addr(gocpp::recv(procCreatePipe)), 4, uintptr_t(unsafe::Pointer(readhandle)), uintptr_t(unsafe::Pointer(writehandle)), uintptr_t(unsafe::Pointer(sa)), uintptr_t(size), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CreateProcess(uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
+    gocpp::error CreateProcess(uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
     {
-        std::string err;
+        gocpp::error err;
         uint32_t _p0 = {};
         if(inheritHandles)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_99, e1] = Syscall12(Addr(gocpp::recv(procCreateProcessW)), 10, uintptr_t(unsafe::Pointer(appName)), uintptr_t(unsafe::Pointer(commandLine)), uintptr_t(unsafe::Pointer(procSecurity)), uintptr_t(unsafe::Pointer(threadSecurity)), uintptr_t(_p0), uintptr_t(creationFlags), uintptr_t(unsafe::Pointer(env)), uintptr_t(unsafe::Pointer(currentDir)), uintptr_t(unsafe::Pointer(startupInfo)), uintptr_t(unsafe::Pointer(outProcInfo)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string CreateSymbolicLink(uint16_t* symlinkfilename, uint16_t* targetfilename, uint32_t flags)
+    gocpp::error CreateSymbolicLink(uint16_t* symlinkfilename, uint16_t* targetfilename, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_101, e1] = Syscall(Addr(gocpp::recv(procCreateSymbolicLinkW)), 3, uintptr_t(unsafe::Pointer(symlinkfilename)), uintptr_t(unsafe::Pointer(targetfilename)), uintptr_t(flags));
         if(r1 & 0xff == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> CreateToolhelp32Snapshot(uint32_t flags, uint32_t processId)
+    std::tuple<Handle, gocpp::error> CreateToolhelp32Snapshot(uint32_t flags, uint32_t processId)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_103, e1] = Syscall(Addr(gocpp::recv(procCreateToolhelp32Snapshot)), 2, uintptr_t(flags), uintptr_t(processId), 0);
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::string DeleteFile(uint16_t* path)
+    gocpp::error DeleteFile(uint16_t* path)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_105, e1] = Syscall(Addr(gocpp::recv(procDeleteFileW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -783,31 +783,31 @@ namespace golang::syscall
         return;
     }
 
-    std::string DeviceIoControl(Handle handle, uint32_t ioControlCode, unsigned char* inBuffer, uint32_t inBufferSize, unsigned char* outBuffer, uint32_t outBufferSize, uint32_t* bytesReturned, Overlapped* overlapped)
+    gocpp::error DeviceIoControl(Handle handle, uint32_t ioControlCode, unsigned char* inBuffer, uint32_t inBufferSize, unsigned char* outBuffer, uint32_t outBufferSize, uint32_t* bytesReturned, Overlapped* overlapped)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_107, e1] = Syscall9(Addr(gocpp::recv(procDeviceIoControl)), 8, uintptr_t(handle), uintptr_t(ioControlCode), uintptr_t(unsafe::Pointer(inBuffer)), uintptr_t(inBufferSize), uintptr_t(unsafe::Pointer(outBuffer)), uintptr_t(outBufferSize), uintptr_t(unsafe::Pointer(bytesReturned)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string DuplicateHandle(Handle hSourceProcessHandle, Handle hSourceHandle, Handle hTargetProcessHandle, Handle* lpTargetHandle, uint32_t dwDesiredAccess, bool bInheritHandle, uint32_t dwOptions)
+    gocpp::error DuplicateHandle(Handle hSourceProcessHandle, Handle hSourceHandle, Handle hTargetProcessHandle, Handle* lpTargetHandle, uint32_t dwDesiredAccess, bool bInheritHandle, uint32_t dwOptions)
     {
-        std::string err;
+        gocpp::error err;
         uint32_t _p0 = {};
         if(bInheritHandle)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_109, e1] = Syscall9(Addr(gocpp::recv(procDuplicateHandle)), 7, uintptr_t(hSourceProcessHandle), uintptr_t(hSourceHandle), uintptr_t(hTargetProcessHandle), uintptr_t(unsafe::Pointer(lpTargetHandle)), uintptr_t(dwDesiredAccess), uintptr_t(_p0), uintptr_t(dwOptions), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -819,78 +819,78 @@ namespace golang::syscall
         return;
     }
 
-    std::string FindClose(Handle handle)
+    gocpp::error FindClose(Handle handle)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_111, e1] = Syscall(Addr(gocpp::recv(procFindClose)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> findFirstFile1(uint16_t* name, win32finddata1* data)
+    std::tuple<Handle, gocpp::error> findFirstFile1(uint16_t* name, win32finddata1* data)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_113, e1] = Syscall(Addr(gocpp::recv(procFindFirstFileW)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(data)), 0);
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::string findNextFile1(Handle handle, win32finddata1* data)
+    gocpp::error findNextFile1(Handle handle, win32finddata1* data)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_115, e1] = Syscall(Addr(gocpp::recv(procFindNextFileW)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(data)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string FlushFileBuffers(Handle handle)
+    gocpp::error FlushFileBuffers(Handle handle)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_117, e1] = Syscall(Addr(gocpp::recv(procFlushFileBuffers)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string FlushViewOfFile(uintptr_t addr, uintptr_t length)
+    gocpp::error FlushViewOfFile(uintptr_t addr, uintptr_t length)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_119, e1] = Syscall(Addr(gocpp::recv(procFlushViewOfFile)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> formatMessage(uint32_t flags, uintptr_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args)
+    std::tuple<uint32_t, gocpp::error> formatMessage(uint32_t flags, uintptr_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         uint16_t* _p0 = {};
         if(len(buf) > 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r0, gocpp_id_121, e1] = Syscall9(Addr(gocpp::recv(procFormatMessageW)), 7, uintptr_t(flags), uintptr_t(msgsrc), uintptr_t(msgid), uintptr_t(langid), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(args)), 0, 0);
@@ -898,31 +898,31 @@ namespace golang::syscall
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::string FreeEnvironmentStrings(uint16_t* envs)
+    gocpp::error FreeEnvironmentStrings(uint16_t* envs)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_123, e1] = Syscall(Addr(gocpp::recv(procFreeEnvironmentStringsW)), 1, uintptr_t(unsafe::Pointer(envs)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string FreeLibrary(Handle handle)
+    gocpp::error FreeLibrary(Handle handle)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_125, e1] = Syscall(Addr(gocpp::recv(procFreeLibrary)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -936,55 +936,55 @@ namespace golang::syscall
         return cmd;
     }
 
-    std::string GetComputerName(uint16_t* buf, uint32_t* n)
+    gocpp::error GetComputerName(uint16_t* buf, uint32_t* n)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_131, e1] = Syscall(Addr(gocpp::recv(procGetComputerNameW)), 2, uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(n)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string GetConsoleMode(Handle console, uint32_t* mode)
+    gocpp::error GetConsoleMode(Handle console, uint32_t* mode)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_133, e1] = Syscall(Addr(gocpp::recv(procGetConsoleMode)), 2, uintptr_t(console), uintptr_t(unsafe::Pointer(mode)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> GetCurrentDirectory(uint32_t buflen, uint16_t* buf)
+    std::tuple<uint32_t, gocpp::error> GetCurrentDirectory(uint32_t buflen, uint16_t* buf)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_135, e1] = Syscall(Addr(gocpp::recv(procGetCurrentDirectoryW)), 2, uintptr_t(buflen), uintptr_t(unsafe::Pointer(buf)), 0);
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::tuple<Handle, std::string> GetCurrentProcess()
+    std::tuple<Handle, gocpp::error> GetCurrentProcess()
     {
         Handle pseudoHandle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_137, e1] = Syscall(Addr(gocpp::recv(procGetCurrentProcess)), 0, 0, 0, 0);
         pseudoHandle = Handle(r0);
         if(pseudoHandle == 0)
         {
             Handle pseudoHandle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {pseudoHandle, err};
@@ -998,223 +998,223 @@ namespace golang::syscall
         return pid;
     }
 
-    std::tuple<uint16_t*, std::string> GetEnvironmentStrings()
+    std::tuple<uint16_t*, gocpp::error> GetEnvironmentStrings()
     {
         uint16_t* envs;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_143, e1] = Syscall(Addr(gocpp::recv(procGetEnvironmentStringsW)), 0, 0, 0, 0);
         envs = (uint16_t*)(unsafe::Pointer(r0));
         if(envs == nullptr)
         {
             uint16_t* envs;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {envs, err};
     }
 
-    std::tuple<uint32_t, std::string> GetEnvironmentVariable(uint16_t* name, uint16_t* buffer, uint32_t size)
+    std::tuple<uint32_t, gocpp::error> GetEnvironmentVariable(uint16_t* name, uint16_t* buffer, uint32_t size)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_145, e1] = Syscall(Addr(gocpp::recv(procGetEnvironmentVariableW)), 3, uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(buffer)), uintptr_t(size));
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::string GetExitCodeProcess(Handle handle, uint32_t* exitcode)
+    gocpp::error GetExitCodeProcess(Handle handle, uint32_t* exitcode)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_147, e1] = Syscall(Addr(gocpp::recv(procGetExitCodeProcess)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(exitcode)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string GetFileAttributesEx(uint16_t* name, uint32_t level, unsigned char* info)
+    gocpp::error GetFileAttributesEx(uint16_t* name, uint32_t level, unsigned char* info)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_149, e1] = Syscall(Addr(gocpp::recv(procGetFileAttributesExW)), 3, uintptr_t(unsafe::Pointer(name)), uintptr_t(level), uintptr_t(unsafe::Pointer(info)));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> GetFileAttributes(uint16_t* name)
+    std::tuple<uint32_t, gocpp::error> GetFileAttributes(uint16_t* name)
     {
         uint32_t attrs;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_151, e1] = Syscall(Addr(gocpp::recv(procGetFileAttributesW)), 1, uintptr_t(unsafe::Pointer(name)), 0, 0);
         attrs = uint32_t(r0);
         if(attrs == INVALID_FILE_ATTRIBUTES)
         {
             uint32_t attrs;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {attrs, err};
     }
 
-    std::string GetFileInformationByHandle(Handle handle, ByHandleFileInformation* data)
+    gocpp::error GetFileInformationByHandle(Handle handle, ByHandleFileInformation* data)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_153, e1] = Syscall(Addr(gocpp::recv(procGetFileInformationByHandle)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(data)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> GetFileType(Handle filehandle)
+    std::tuple<uint32_t, gocpp::error> GetFileType(Handle filehandle)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_155, e1] = Syscall(Addr(gocpp::recv(procGetFileType)), 1, uintptr_t(filehandle), 0, 0);
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::tuple<uint32_t, std::string> getFinalPathNameByHandle(Handle file, uint16_t* filePath, uint32_t filePathSize, uint32_t flags)
+    std::tuple<uint32_t, gocpp::error> getFinalPathNameByHandle(Handle file, uint16_t* filePath, uint32_t filePathSize, uint32_t flags)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_157, e1] = Syscall6(Addr(gocpp::recv(procGetFinalPathNameByHandleW)), 4, uintptr_t(file), uintptr_t(unsafe::Pointer(filePath)), uintptr_t(filePathSize), uintptr_t(flags), 0, 0);
         n = uint32_t(r0);
         if(n == 0 || n >= filePathSize)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::tuple<uint32_t, std::string> GetFullPathName(uint16_t* path, uint32_t buflen, uint16_t* buf, uint16_t** fname)
+    std::tuple<uint32_t, gocpp::error> GetFullPathName(uint16_t* path, uint32_t buflen, uint16_t* buf, uint16_t** fname)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_159, e1] = Syscall6(Addr(gocpp::recv(procGetFullPathNameW)), 4, uintptr_t(unsafe::Pointer(path)), uintptr_t(buflen), uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(fname)), 0, 0);
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::string GetLastError()
+    gocpp::error GetLastError()
     {
-        std::string lasterr;
+        gocpp::error lasterr;
         auto [r0, gocpp_id_162, gocpp_id_163] = Syscall(Addr(gocpp::recv(procGetLastError)), 0, 0, 0, 0);
         if(r0 != 0)
         {
-            std::string lasterr;
+            gocpp::error lasterr;
             lasterr = Errno(r0);
         }
         return lasterr;
     }
 
-    std::tuple<uint32_t, std::string> GetLongPathName(uint16_t* path, uint16_t* buf, uint32_t buflen)
+    std::tuple<uint32_t, gocpp::error> GetLongPathName(uint16_t* path, uint16_t* buf, uint32_t buflen)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_165, e1] = Syscall(Addr(gocpp::recv(procGetLongPathNameW)), 3, uintptr_t(unsafe::Pointer(path)), uintptr_t(unsafe::Pointer(buf)), uintptr_t(buflen));
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::tuple<uintptr_t, std::string> GetProcAddress(Handle module, std::string procname)
+    std::tuple<uintptr_t, gocpp::error> GetProcAddress(Handle module, std::string procname)
     {
         uintptr_t proc;
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         std::tie(_p0, err) = BytePtrFromString(procname);
         if(err != nullptr)
         {
             uintptr_t proc;
-            std::string err;
+            gocpp::error err;
             return {proc, err};
         }
         return _GetProcAddress(module, _p0);
     }
 
-    std::tuple<uintptr_t, std::string> _GetProcAddress(Handle module, unsigned char* procname)
+    std::tuple<uintptr_t, gocpp::error> _GetProcAddress(Handle module, unsigned char* procname)
     {
         uintptr_t proc;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_167, e1] = Syscall(Addr(gocpp::recv(procGetProcAddress)), 2, uintptr_t(module), uintptr_t(unsafe::Pointer(procname)), 0);
         proc = uintptr_t(r0);
         if(proc == 0)
         {
             uintptr_t proc;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {proc, err};
     }
 
-    std::string GetProcessTimes(Handle handle, Filetime* creationTime, Filetime* exitTime, Filetime* kernelTime, Filetime* userTime)
+    gocpp::error GetProcessTimes(Handle handle, Filetime* creationTime, Filetime* exitTime, Filetime* kernelTime, Filetime* userTime)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_169, e1] = Syscall6(Addr(gocpp::recv(procGetProcessTimes)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(creationTime)), uintptr_t(unsafe::Pointer(exitTime)), uintptr_t(unsafe::Pointer(kernelTime)), uintptr_t(unsafe::Pointer(userTime)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string getQueuedCompletionStatus(Handle cphandle, uint32_t* qty, uintptr_t* key, Overlapped** overlapped, uint32_t timeout)
+    gocpp::error getQueuedCompletionStatus(Handle cphandle, uint32_t* qty, uintptr_t* key, Overlapped** overlapped, uint32_t timeout)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_171, e1] = Syscall6(Addr(gocpp::recv(procGetQueuedCompletionStatus)), 5, uintptr_t(cphandle), uintptr_t(unsafe::Pointer(qty)), uintptr_t(unsafe::Pointer(key)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(timeout), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> GetShortPathName(uint16_t* longpath, uint16_t* shortpath, uint32_t buflen)
+    std::tuple<uint32_t, gocpp::error> GetShortPathName(uint16_t* longpath, uint16_t* shortpath, uint32_t buflen)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_173, e1] = Syscall(Addr(gocpp::recv(procGetShortPathNameW)), 3, uintptr_t(unsafe::Pointer(longpath)), uintptr_t(unsafe::Pointer(shortpath)), uintptr_t(buflen));
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1226,16 +1226,16 @@ namespace golang::syscall
         return;
     }
 
-    std::tuple<Handle, std::string> GetStdHandle(int stdhandle)
+    std::tuple<Handle, gocpp::error> GetStdHandle(int stdhandle)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_175, e1] = Syscall(Addr(gocpp::recv(procGetStdHandle)), 1, uintptr_t(stdhandle), 0, 0);
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -1247,144 +1247,144 @@ namespace golang::syscall
         return;
     }
 
-    std::tuple<uint32_t, std::string> GetTempPath(uint32_t buflen, uint16_t* buf)
+    std::tuple<uint32_t, gocpp::error> GetTempPath(uint32_t buflen, uint16_t* buf)
     {
         uint32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_177, e1] = Syscall(Addr(gocpp::recv(procGetTempPathW)), 2, uintptr_t(buflen), uintptr_t(unsafe::Pointer(buf)), 0);
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::tuple<uint32_t, std::string> GetTimeZoneInformation(Timezoneinformation* tzi)
+    std::tuple<uint32_t, gocpp::error> GetTimeZoneInformation(Timezoneinformation* tzi)
     {
         uint32_t rc;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_179, e1] = Syscall(Addr(gocpp::recv(procGetTimeZoneInformation)), 1, uintptr_t(unsafe::Pointer(tzi)), 0, 0);
         rc = uint32_t(r0);
         if(rc == 0xffffffff)
         {
             uint32_t rc;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {rc, err};
     }
 
-    std::tuple<uint32_t, std::string> GetVersion()
+    std::tuple<uint32_t, gocpp::error> GetVersion()
     {
         uint32_t ver;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_181, e1] = Syscall(Addr(gocpp::recv(procGetVersion)), 0, 0, 0, 0);
         ver = uint32_t(r0);
         if(ver == 0)
         {
             uint32_t ver;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {ver, err};
     }
 
-    std::string initializeProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size)
+    gocpp::error initializeProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_183, e1] = Syscall6(Addr(gocpp::recv(procInitializeProcThreadAttributeList)), 4, uintptr_t(unsafe::Pointer(attrlist)), uintptr_t(attrcount), uintptr_t(flags), uintptr_t(unsafe::Pointer(size)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> LoadLibrary(std::string libname)
+    std::tuple<Handle, gocpp::error> LoadLibrary(std::string libname)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         uint16_t* _p0 = {};
         std::tie(_p0, err) = UTF16PtrFromString(libname);
         if(err != nullptr)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             return {handle, err};
         }
         return _LoadLibrary(_p0);
     }
 
-    std::tuple<Handle, std::string> _LoadLibrary(uint16_t* libname)
+    std::tuple<Handle, gocpp::error> _LoadLibrary(uint16_t* libname)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_185, e1] = Syscall(Addr(gocpp::recv(procLoadLibraryW)), 1, uintptr_t(unsafe::Pointer(libname)), 0, 0);
         handle = Handle(r0);
         if(handle == 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::tuple<Handle, std::string> LocalFree(Handle hmem)
+    std::tuple<Handle, gocpp::error> LocalFree(Handle hmem)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_187, e1] = Syscall(Addr(gocpp::recv(procLocalFree)), 1, uintptr_t(hmem), 0, 0);
         handle = Handle(r0);
         if(handle != 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::tuple<uintptr_t, std::string> MapViewOfFile(Handle handle, uint32_t access, uint32_t offsetHigh, uint32_t offsetLow, uintptr_t length)
+    std::tuple<uintptr_t, gocpp::error> MapViewOfFile(Handle handle, uint32_t access, uint32_t offsetHigh, uint32_t offsetLow, uintptr_t length)
     {
         uintptr_t addr;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_189, e1] = Syscall6(Addr(gocpp::recv(procMapViewOfFile)), 5, uintptr_t(handle), uintptr_t(access), uintptr_t(offsetHigh), uintptr_t(offsetLow), uintptr_t(length), 0);
         addr = uintptr_t(r0);
         if(addr == 0)
         {
             uintptr_t addr;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {addr, err};
     }
 
-    std::string MoveFile(uint16_t* from, uint16_t* to)
+    gocpp::error MoveFile(uint16_t* from, uint16_t* to)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_191, e1] = Syscall(Addr(gocpp::recv(procMoveFileW)), 2, uintptr_t(unsafe::Pointer(from)), uintptr_t(unsafe::Pointer(to)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> OpenProcess(uint32_t da, bool inheritHandle, uint32_t pid)
+    std::tuple<Handle, gocpp::error> OpenProcess(uint32_t da, bool inheritHandle, uint32_t pid)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         uint32_t _p0 = {};
         if(inheritHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             _p0 = 1;
         }
         auto [r0, gocpp_id_193, e1] = Syscall(Addr(gocpp::recv(procOpenProcess)), 3, uintptr_t(da), uintptr_t(_p0), uintptr_t(pid));
@@ -1392,319 +1392,319 @@ namespace golang::syscall
         if(handle == 0)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
     }
 
-    std::string postQueuedCompletionStatus(Handle cphandle, uint32_t qty, uintptr_t key, Overlapped* overlapped)
+    gocpp::error postQueuedCompletionStatus(Handle cphandle, uint32_t qty, uintptr_t key, Overlapped* overlapped)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_195, e1] = Syscall6(Addr(gocpp::recv(procPostQueuedCompletionStatus)), 4, uintptr_t(cphandle), uintptr_t(qty), uintptr_t(key), uintptr_t(unsafe::Pointer(overlapped)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string Process32First(Handle snapshot, ProcessEntry32* procEntry)
+    gocpp::error Process32First(Handle snapshot, ProcessEntry32* procEntry)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_197, e1] = Syscall(Addr(gocpp::recv(procProcess32FirstW)), 2, uintptr_t(snapshot), uintptr_t(unsafe::Pointer(procEntry)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string Process32Next(Handle snapshot, ProcessEntry32* procEntry)
+    gocpp::error Process32Next(Handle snapshot, ProcessEntry32* procEntry)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_199, e1] = Syscall(Addr(gocpp::recv(procProcess32NextW)), 2, uintptr_t(snapshot), uintptr_t(unsafe::Pointer(procEntry)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string ReadConsole(Handle console, uint16_t* buf, uint32_t toread, uint32_t* read, unsigned char* inputControl)
+    gocpp::error ReadConsole(Handle console, uint16_t* buf, uint32_t toread, uint32_t* read, unsigned char* inputControl)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_201, e1] = Syscall6(Addr(gocpp::recv(procReadConsoleW)), 5, uintptr_t(console), uintptr_t(unsafe::Pointer(buf)), uintptr_t(toread), uintptr_t(unsafe::Pointer(read)), uintptr_t(unsafe::Pointer(inputControl)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string ReadDirectoryChanges(Handle handle, unsigned char* buf, uint32_t buflen, bool watchSubTree, uint32_t mask, uint32_t* retlen, Overlapped* overlapped, uintptr_t completionRoutine)
+    gocpp::error ReadDirectoryChanges(Handle handle, unsigned char* buf, uint32_t buflen, bool watchSubTree, uint32_t mask, uint32_t* retlen, Overlapped* overlapped, uintptr_t completionRoutine)
     {
-        std::string err;
+        gocpp::error err;
         uint32_t _p0 = {};
         if(watchSubTree)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_203, e1] = Syscall9(Addr(gocpp::recv(procReadDirectoryChangesW)), 8, uintptr_t(handle), uintptr_t(unsafe::Pointer(buf)), uintptr_t(buflen), uintptr_t(_p0), uintptr_t(mask), uintptr_t(unsafe::Pointer(retlen)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(completionRoutine), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string readFile(Handle handle, gocpp::slice<unsigned char> buf, uint32_t* done, Overlapped* overlapped)
+    gocpp::error readFile(Handle handle, gocpp::slice<unsigned char> buf, uint32_t* done, Overlapped* overlapped)
     {
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         if(len(buf) > 0)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r1, gocpp_id_205, e1] = Syscall6(Addr(gocpp::recv(procReadFile)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(done)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string RemoveDirectory(uint16_t* path)
+    gocpp::error RemoveDirectory(uint16_t* path)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_207, e1] = Syscall(Addr(gocpp::recv(procRemoveDirectoryW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetCurrentDirectory(uint16_t* path)
+    gocpp::error SetCurrentDirectory(uint16_t* path)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_209, e1] = Syscall(Addr(gocpp::recv(procSetCurrentDirectoryW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetEndOfFile(Handle handle)
+    gocpp::error SetEndOfFile(Handle handle)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_211, e1] = Syscall(Addr(gocpp::recv(procSetEndOfFile)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetEnvironmentVariable(uint16_t* name, uint16_t* value)
+    gocpp::error SetEnvironmentVariable(uint16_t* name, uint16_t* value)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_213, e1] = Syscall(Addr(gocpp::recv(procSetEnvironmentVariableW)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(value)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetFileAttributes(uint16_t* name, uint32_t attrs)
+    gocpp::error SetFileAttributes(uint16_t* name, uint32_t attrs)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_215, e1] = Syscall(Addr(gocpp::recv(procSetFileAttributesW)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(attrs), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetFileCompletionNotificationModes(Handle handle, uint8_t flags)
+    gocpp::error SetFileCompletionNotificationModes(Handle handle, uint8_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_217, e1] = Syscall(Addr(gocpp::recv(procSetFileCompletionNotificationModes)), 2, uintptr_t(handle), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> SetFilePointer(Handle handle, int32_t lowoffset, int32_t* highoffsetptr, uint32_t whence)
+    std::tuple<uint32_t, gocpp::error> SetFilePointer(Handle handle, int32_t lowoffset, int32_t* highoffsetptr, uint32_t whence)
     {
         uint32_t newlowoffset;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_219, e1] = Syscall6(Addr(gocpp::recv(procSetFilePointer)), 4, uintptr_t(handle), uintptr_t(lowoffset), uintptr_t(unsafe::Pointer(highoffsetptr)), uintptr_t(whence), 0, 0);
         newlowoffset = uint32_t(r0);
         if(newlowoffset == 0xffffffff)
         {
             uint32_t newlowoffset;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {newlowoffset, err};
     }
 
-    std::string SetFileTime(Handle handle, Filetime* ctime, Filetime* atime, Filetime* wtime)
+    gocpp::error SetFileTime(Handle handle, Filetime* ctime, Filetime* atime, Filetime* wtime)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_221, e1] = Syscall6(Addr(gocpp::recv(procSetFileTime)), 4, uintptr_t(handle), uintptr_t(unsafe::Pointer(ctime)), uintptr_t(unsafe::Pointer(atime)), uintptr_t(unsafe::Pointer(wtime)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string SetHandleInformation(Handle handle, uint32_t mask, uint32_t flags)
+    gocpp::error SetHandleInformation(Handle handle, uint32_t mask, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_223, e1] = Syscall(Addr(gocpp::recv(procSetHandleInformation)), 3, uintptr_t(handle), uintptr_t(mask), uintptr_t(flags));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string TerminateProcess(Handle handle, uint32_t exitcode)
+    gocpp::error TerminateProcess(Handle handle, uint32_t exitcode)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_225, e1] = Syscall(Addr(gocpp::recv(procTerminateProcess)), 2, uintptr_t(handle), uintptr_t(exitcode), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string UnmapViewOfFile(uintptr_t addr)
+    gocpp::error UnmapViewOfFile(uintptr_t addr)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_227, e1] = Syscall(Addr(gocpp::recv(procUnmapViewOfFile)), 1, uintptr_t(addr), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string updateProcThreadAttribute(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, unsafe::Pointer value, uintptr_t size, unsafe::Pointer prevvalue, uintptr_t* returnedsize)
+    gocpp::error updateProcThreadAttribute(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, unsafe::Pointer value, uintptr_t size, unsafe::Pointer prevvalue, uintptr_t* returnedsize)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_229, e1] = Syscall9(Addr(gocpp::recv(procUpdateProcThreadAttribute)), 7, uintptr_t(unsafe::Pointer(attrlist)), uintptr_t(flags), uintptr_t(attr), uintptr_t(value), uintptr_t(size), uintptr_t(prevvalue), uintptr_t(unsafe::Pointer(returnedsize)), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string VirtualLock(uintptr_t addr, uintptr_t length)
+    gocpp::error VirtualLock(uintptr_t addr, uintptr_t length)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_231, e1] = Syscall(Addr(gocpp::recv(procVirtualLock)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string VirtualUnlock(uintptr_t addr, uintptr_t length)
+    gocpp::error VirtualUnlock(uintptr_t addr, uintptr_t length)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_233, e1] = Syscall(Addr(gocpp::recv(procVirtualUnlock)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<uint32_t, std::string> WaitForSingleObject(Handle handle, uint32_t waitMilliseconds)
+    std::tuple<uint32_t, gocpp::error> WaitForSingleObject(Handle handle, uint32_t waitMilliseconds)
     {
         uint32_t event;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_235, e1] = Syscall(Addr(gocpp::recv(procWaitForSingleObject)), 2, uintptr_t(handle), uintptr_t(waitMilliseconds), 0);
         event = uint32_t(r0);
         if(event == 0xffffffff)
         {
             uint32_t event;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {event, err};
     }
 
-    std::string WriteConsole(Handle console, uint16_t* buf, uint32_t towrite, uint32_t* written, unsigned char* reserved)
+    gocpp::error WriteConsole(Handle console, uint16_t* buf, uint32_t towrite, uint32_t* written, unsigned char* reserved)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_237, e1] = Syscall6(Addr(gocpp::recv(procWriteConsoleW)), 5, uintptr_t(console), uintptr_t(unsafe::Pointer(buf)), uintptr_t(towrite), uintptr_t(unsafe::Pointer(written)), uintptr_t(unsafe::Pointer(reserved)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string writeFile(Handle handle, gocpp::slice<unsigned char> buf, uint32_t* done, Overlapped* overlapped)
+    gocpp::error writeFile(Handle handle, gocpp::slice<unsigned char> buf, uint32_t* done, Overlapped* overlapped)
     {
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         if(len(buf) > 0)
         {
-            std::string err;
+            gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r1, gocpp_id_239, e1] = Syscall6(Addr(gocpp::recv(procWriteFile)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(done)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string AcceptEx(Handle ls, Handle as, unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, uint32_t* recvd, Overlapped* overlapped)
+    gocpp::error AcceptEx(Handle ls, Handle as, unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, uint32_t* recvd, Overlapped* overlapped)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_241, e1] = Syscall9(Addr(gocpp::recv(procAcceptEx)), 8, uintptr_t(ls), uintptr_t(as), uintptr_t(unsafe::Pointer(buf)), uintptr_t(rxdatalen), uintptr_t(laddrlen), uintptr_t(raddrlen), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1716,49 +1716,49 @@ namespace golang::syscall
         return;
     }
 
-    std::string TransmitFile(Handle s, Handle handle, uint32_t bytesToWrite, uint32_t bytsPerSend, Overlapped* overlapped, TransmitFileBuffers* transmitFileBuf, uint32_t flags)
+    gocpp::error TransmitFile(Handle s, Handle handle, uint32_t bytesToWrite, uint32_t bytsPerSend, Overlapped* overlapped, TransmitFileBuffers* transmitFileBuf, uint32_t flags)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_243, e1] = Syscall9(Addr(gocpp::recv(procTransmitFile)), 7, uintptr_t(s), uintptr_t(handle), uintptr_t(bytesToWrite), uintptr_t(bytsPerSend), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(transmitFileBuf)), uintptr_t(flags), 0, 0);
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string NetApiBufferFree(unsigned char* buf)
+    gocpp::error NetApiBufferFree(unsigned char* buf)
     {
-        std::string neterr;
+        gocpp::error neterr;
         auto [r0, gocpp_id_246, gocpp_id_247] = Syscall(Addr(gocpp::recv(procNetApiBufferFree)), 1, uintptr_t(unsafe::Pointer(buf)), 0, 0);
         if(r0 != 0)
         {
-            std::string neterr;
+            gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
     }
 
-    std::string NetGetJoinInformation(uint16_t* server, uint16_t** name, uint32_t* bufType)
+    gocpp::error NetGetJoinInformation(uint16_t* server, uint16_t** name, uint32_t* bufType)
     {
-        std::string neterr;
+        gocpp::error neterr;
         auto [r0, gocpp_id_250, gocpp_id_251] = Syscall(Addr(gocpp::recv(procNetGetJoinInformation)), 3, uintptr_t(unsafe::Pointer(server)), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(bufType)));
         if(r0 != 0)
         {
-            std::string neterr;
+            gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
     }
 
-    std::string NetUserGetInfo(uint16_t* serverName, uint16_t* userName, uint32_t level, unsigned char** buf)
+    gocpp::error NetUserGetInfo(uint16_t* serverName, uint16_t* userName, uint32_t level, unsigned char** buf)
     {
-        std::string neterr;
+        gocpp::error neterr;
         auto [r0, gocpp_id_254, gocpp_id_255] = Syscall6(Addr(gocpp::recv(procNetUserGetInfo)), 4, uintptr_t(unsafe::Pointer(serverName)), uintptr_t(unsafe::Pointer(userName)), uintptr_t(level), uintptr_t(unsafe::Pointer(buf)), 0, 0);
         if(r0 != 0)
         {
-            std::string neterr;
+            gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
@@ -1770,52 +1770,52 @@ namespace golang::syscall
         return;
     }
 
-    std::string GetUserNameEx(uint32_t nameFormat, uint16_t* nameBuffre, uint32_t* nSize)
+    gocpp::error GetUserNameEx(uint32_t nameFormat, uint16_t* nameBuffre, uint32_t* nSize)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_257, e1] = Syscall(Addr(gocpp::recv(procGetUserNameExW)), 3, uintptr_t(nameFormat), uintptr_t(unsafe::Pointer(nameBuffre)), uintptr_t(unsafe::Pointer(nSize)));
         if(r1 & 0xff == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string TranslateName(uint16_t* accName, uint32_t accNameFormat, uint32_t desiredNameFormat, uint16_t* translatedName, uint32_t* nSize)
+    gocpp::error TranslateName(uint16_t* accName, uint32_t accNameFormat, uint32_t desiredNameFormat, uint16_t* translatedName, uint32_t* nSize)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_259, e1] = Syscall6(Addr(gocpp::recv(procTranslateNameW)), 5, uintptr_t(unsafe::Pointer(accName)), uintptr_t(accNameFormat), uintptr_t(desiredNameFormat), uintptr_t(unsafe::Pointer(translatedName)), uintptr_t(unsafe::Pointer(nSize)), 0);
         if(r1 & 0xff == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>*, std::string> CommandLineToArgv(uint16_t* cmd, int32_t* argc)
+    std::tuple<gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>*, gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc)
     {
         gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>* argv;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_261, e1] = Syscall(Addr(gocpp::recv(procCommandLineToArgvW)), 2, uintptr_t(unsafe::Pointer(cmd)), uintptr_t(unsafe::Pointer(argc)), 0);
         argv = (gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>*)(unsafe::Pointer(r0));
         if(argv == nullptr)
         {
             gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>* argv;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {argv, err};
     }
 
-    std::string GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen)
+    gocpp::error GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_263, e1] = Syscall(Addr(gocpp::recv(procGetUserProfileDirectoryW)), 3, uintptr_t(t), uintptr_t(unsafe::Pointer(dir)), uintptr_t(unsafe::Pointer(dirLen)));
         if(r1 == 0)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1827,235 +1827,235 @@ namespace golang::syscall
         return;
     }
 
-    std::string GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, AddrinfoW* hints, AddrinfoW** result)
+    gocpp::error GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, AddrinfoW* hints, AddrinfoW** result)
     {
-        std::string sockerr;
+        gocpp::error sockerr;
         auto [r0, gocpp_id_266, gocpp_id_267] = Syscall6(Addr(gocpp::recv(procGetAddrInfoW)), 4, uintptr_t(unsafe::Pointer(nodename)), uintptr_t(unsafe::Pointer(servicename)), uintptr_t(unsafe::Pointer(hints)), uintptr_t(unsafe::Pointer(result)), 0, 0);
         if(r0 != 0)
         {
-            std::string sockerr;
+            gocpp::error sockerr;
             sockerr = Errno(r0);
         }
         return sockerr;
     }
 
-    std::string WSACleanup()
+    gocpp::error WSACleanup()
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_269, e1] = Syscall(Addr(gocpp::recv(procWSACleanup)), 0, 0, 0, 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<int32_t, std::string> WSAEnumProtocols(int32_t* protocols, WSAProtocolInfo* protocolBuffer, uint32_t* bufferLength)
+    std::tuple<int32_t, gocpp::error> WSAEnumProtocols(int32_t* protocols, WSAProtocolInfo* protocolBuffer, uint32_t* bufferLength)
     {
         int32_t n;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_271, e1] = Syscall(Addr(gocpp::recv(procWSAEnumProtocolsW)), 3, uintptr_t(unsafe::Pointer(protocols)), uintptr_t(unsafe::Pointer(protocolBuffer)), uintptr_t(unsafe::Pointer(bufferLength)));
         n = int32_t(r0);
         if(n == - 1)
         {
             int32_t n;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
     }
 
-    std::string WSAIoctl(Handle s, uint32_t iocc, unsigned char* inbuf, uint32_t cbif, unsigned char* outbuf, uint32_t cbob, uint32_t* cbbr, Overlapped* overlapped, uintptr_t completionRoutine)
+    gocpp::error WSAIoctl(Handle s, uint32_t iocc, unsigned char* inbuf, uint32_t cbif, unsigned char* outbuf, uint32_t cbob, uint32_t* cbbr, Overlapped* overlapped, uintptr_t completionRoutine)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_273, e1] = Syscall9(Addr(gocpp::recv(procWSAIoctl)), 9, uintptr_t(s), uintptr_t(iocc), uintptr_t(unsafe::Pointer(inbuf)), uintptr_t(cbif), uintptr_t(unsafe::Pointer(outbuf)), uintptr_t(cbob), uintptr_t(unsafe::Pointer(cbbr)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(completionRoutine));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string WSARecv(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSARecv(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, Overlapped* overlapped, unsigned char* croutine)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_275, e1] = Syscall9(Addr(gocpp::recv(procWSARecv)), 7, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(flags)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0, 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string WSARecvFrom(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, RawSockaddrAny* from, int32_t* fromlen, Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSARecvFrom(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, RawSockaddrAny* from, int32_t* fromlen, Overlapped* overlapped, unsigned char* croutine)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_277, e1] = Syscall9(Addr(gocpp::recv(procWSARecvFrom)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(flags)), uintptr_t(unsafe::Pointer(from)), uintptr_t(unsafe::Pointer(fromlen)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string WSASend(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSASend(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, Overlapped* overlapped, unsigned char* croutine)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_279, e1] = Syscall9(Addr(gocpp::recv(procWSASend)), 7, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0, 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string WSASendTo(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, RawSockaddrAny* to, int32_t tolen, Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSASendTo(Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, RawSockaddrAny* to, int32_t tolen, Overlapped* overlapped, unsigned char* croutine)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_281, e1] = Syscall9(Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(to)), uintptr_t(tolen), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string WSAStartup(uint32_t verreq, WSAData* data)
+    gocpp::error WSAStartup(uint32_t verreq, WSAData* data)
     {
-        std::string sockerr;
+        gocpp::error sockerr;
         auto [r0, gocpp_id_284, gocpp_id_285] = Syscall(Addr(gocpp::recv(procWSAStartup)), 2, uintptr_t(verreq), uintptr_t(unsafe::Pointer(data)), 0);
         if(r0 != 0)
         {
-            std::string sockerr;
+            gocpp::error sockerr;
             sockerr = Errno(r0);
         }
         return sockerr;
     }
 
-    std::string bind(Handle s, unsafe::Pointer name, int32_t namelen)
+    gocpp::error bind(Handle s, unsafe::Pointer name, int32_t namelen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_287, e1] = Syscall(Addr(gocpp::recv(procbind)), 3, uintptr_t(s), uintptr_t(name), uintptr_t(namelen));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string Closesocket(Handle s)
+    gocpp::error Closesocket(Handle s)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_289, e1] = Syscall(Addr(gocpp::recv(procclosesocket)), 1, uintptr_t(s), 0, 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string connect(Handle s, unsafe::Pointer name, int32_t namelen)
+    gocpp::error connect(Handle s, unsafe::Pointer name, int32_t namelen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_291, e1] = Syscall(Addr(gocpp::recv(procconnect)), 3, uintptr_t(s), uintptr_t(name), uintptr_t(namelen));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Hostent*, std::string> GetHostByName(std::string name)
+    std::tuple<Hostent*, gocpp::error> GetHostByName(std::string name)
     {
         Hostent* h;
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
             Hostent* h;
-            std::string err;
+            gocpp::error err;
             return {h, err};
         }
         return _GetHostByName(_p0);
     }
 
-    std::tuple<Hostent*, std::string> _GetHostByName(unsigned char* name)
+    std::tuple<Hostent*, gocpp::error> _GetHostByName(unsigned char* name)
     {
         Hostent* h;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_293, e1] = Syscall(Addr(gocpp::recv(procgethostbyname)), 1, uintptr_t(unsafe::Pointer(name)), 0, 0);
         h = (Hostent*)(unsafe::Pointer(r0));
         if(h == nullptr)
         {
             Hostent* h;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {h, err};
     }
 
-    std::string getpeername(Handle s, RawSockaddrAny* rsa, int32_t* addrlen)
+    gocpp::error getpeername(Handle s, RawSockaddrAny* rsa, int32_t* addrlen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_295, e1] = Syscall(Addr(gocpp::recv(procgetpeername)), 3, uintptr_t(s), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(unsafe::Pointer(addrlen)));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Protoent*, std::string> GetProtoByName(std::string name)
+    std::tuple<Protoent*, gocpp::error> GetProtoByName(std::string name)
     {
         Protoent* p;
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
             Protoent* p;
-            std::string err;
+            gocpp::error err;
             return {p, err};
         }
         return _GetProtoByName(_p0);
     }
 
-    std::tuple<Protoent*, std::string> _GetProtoByName(unsigned char* name)
+    std::tuple<Protoent*, gocpp::error> _GetProtoByName(unsigned char* name)
     {
         Protoent* p;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_297, e1] = Syscall(Addr(gocpp::recv(procgetprotobyname)), 1, uintptr_t(unsafe::Pointer(name)), 0, 0);
         p = (Protoent*)(unsafe::Pointer(r0));
         if(p == nullptr)
         {
             Protoent* p;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {p, err};
     }
 
-    std::tuple<Servent*, std::string> GetServByName(std::string name, std::string proto)
+    std::tuple<Servent*, gocpp::error> GetServByName(std::string name, std::string proto)
     {
         Servent* s;
-        std::string err;
+        gocpp::error err;
         unsigned char* _p0 = {};
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
             Servent* s;
-            std::string err;
+            gocpp::error err;
             return {s, err};
         }
         unsigned char* _p1 = {};
@@ -2063,58 +2063,58 @@ namespace golang::syscall
         if(err != nullptr)
         {
             Servent* s;
-            std::string err;
+            gocpp::error err;
             return {s, err};
         }
         return _GetServByName(_p0, _p1);
     }
 
-    std::tuple<Servent*, std::string> _GetServByName(unsigned char* name, unsigned char* proto)
+    std::tuple<Servent*, gocpp::error> _GetServByName(unsigned char* name, unsigned char* proto)
     {
         Servent* s;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_299, e1] = Syscall(Addr(gocpp::recv(procgetservbyname)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(proto)), 0);
         s = (Servent*)(unsafe::Pointer(r0));
         if(s == nullptr)
         {
             Servent* s;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {s, err};
     }
 
-    std::string getsockname(Handle s, RawSockaddrAny* rsa, int32_t* addrlen)
+    gocpp::error getsockname(Handle s, RawSockaddrAny* rsa, int32_t* addrlen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_301, e1] = Syscall(Addr(gocpp::recv(procgetsockname)), 3, uintptr_t(s), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(unsafe::Pointer(addrlen)));
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string Getsockopt(Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t* optlen)
+    gocpp::error Getsockopt(Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t* optlen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_303, e1] = Syscall6(Addr(gocpp::recv(procgetsockopt)), 5, uintptr_t(s), uintptr_t(level), uintptr_t(optname), uintptr_t(unsafe::Pointer(optval)), uintptr_t(unsafe::Pointer(optlen)), 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string listen(Handle s, int32_t backlog)
+    gocpp::error listen(Handle s, int32_t backlog)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_305, e1] = Syscall(Addr(gocpp::recv(proclisten)), 2, uintptr_t(s), uintptr_t(backlog), 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2128,40 +2128,40 @@ namespace golang::syscall
         return u;
     }
 
-    std::string Setsockopt(Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t optlen)
+    gocpp::error Setsockopt(Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t optlen)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_311, e1] = Syscall6(Addr(gocpp::recv(procsetsockopt)), 5, uintptr_t(s), uintptr_t(level), uintptr_t(optname), uintptr_t(unsafe::Pointer(optval)), uintptr_t(optlen), 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::string shutdown(Handle s, int32_t how)
+    gocpp::error shutdown(Handle s, int32_t how)
     {
-        std::string err;
+        gocpp::error err;
         auto [r1, gocpp_id_313, e1] = Syscall(Addr(gocpp::recv(procshutdown)), 2, uintptr_t(s), uintptr_t(how), 0);
         if(r1 == socket_error)
         {
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
     }
 
-    std::tuple<Handle, std::string> socket(int32_t af, int32_t typ, int32_t protocol)
+    std::tuple<Handle, gocpp::error> socket(int32_t af, int32_t typ, int32_t protocol)
     {
         Handle handle;
-        std::string err;
+        gocpp::error err;
         auto [r0, gocpp_id_315, e1] = Syscall(Addr(gocpp::recv(procsocket)), 3, uintptr_t(af), uintptr_t(typ), uintptr_t(protocol));
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
             Handle handle;
-            std::string err;
+            gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};

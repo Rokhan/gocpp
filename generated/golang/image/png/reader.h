@@ -72,20 +72,20 @@ namespace golang::png
     std::string Error(FormatError e);
     extern FormatError chunkOrderError;
     std::string Error(UnsupportedError e);
-    std::string parseIHDR(struct decoder* d, uint32_t length);
-    std::string parsePLTE(struct decoder* d, uint32_t length);
-    std::string parsetRNS(struct decoder* d, uint32_t length);
-    std::tuple<int, std::string> Read(struct decoder* d, gocpp::slice<unsigned char> p);
-    std::tuple<image::Image, std::string> decode(struct decoder* d);
-    std::tuple<image::Image, std::string> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
+    gocpp::error parseIHDR(struct decoder* d, uint32_t length);
+    gocpp::error parsePLTE(struct decoder* d, uint32_t length);
+    gocpp::error parsetRNS(struct decoder* d, uint32_t length);
+    std::tuple<int, gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
+    std::tuple<image::Image, gocpp::error> decode(struct decoder* d);
+    std::tuple<image::Image, gocpp::error> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
     void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass);
-    std::string parseIDAT(struct decoder* d, uint32_t length);
-    std::string parseIEND(struct decoder* d, uint32_t length);
-    std::string parseChunk(struct decoder* d, bool configOnly);
-    std::string verifyChecksum(struct decoder* d);
-    std::string checkHeader(struct decoder* d);
-    std::tuple<image::Image, std::string> Decode(io::Reader r);
-    std::tuple<image::Config, std::string> DecodeConfig(io::Reader r);
+    gocpp::error parseIDAT(struct decoder* d, uint32_t length);
+    gocpp::error parseIEND(struct decoder* d, uint32_t length);
+    gocpp::error parseChunk(struct decoder* d, bool configOnly);
+    gocpp::error verifyChecksum(struct decoder* d);
+    gocpp::error checkHeader(struct decoder* d);
+    std::tuple<image::Image, gocpp::error> Decode(io::Reader r);
+    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r);
     void init();
 }
 

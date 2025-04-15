@@ -19,7 +19,7 @@
 
 namespace golang::syscall
 {
-    std::tuple<std::string, std::string> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)
+    std::tuple<std::string, gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)
     {
         auto [u, e] = UTF16PtrFromString(username);
         if(e != nullptr)
@@ -110,7 +110,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<SID*, std::string> StringToSid(std::string s)
+    std::tuple<SID*, gocpp::error> StringToSid(std::string s)
     {
         gocpp::Defer defer;
         try
@@ -135,18 +135,18 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<SID*, std::string, uint32_t, std::string> LookupSID(std::string system, std::string account)
+    std::tuple<SID*, std::string, uint32_t, gocpp::error> LookupSID(std::string system, std::string account)
     {
         SID* sid;
         std::string domain;
         uint32_t accType;
-        std::string err;
+        gocpp::error err;
         if(len(account) == 0)
         {
             SID* sid;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             return {nullptr, "", 0, EINVAL};
         }
         auto [acc, e] = UTF16PtrFromString(account);
@@ -155,7 +155,7 @@ namespace golang::syscall
             SID* sid;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             return {nullptr, "", 0, e};
         }
         uint16_t* sys = {};
@@ -164,14 +164,14 @@ namespace golang::syscall
             SID* sid;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             std::tie(sys, e) = UTF16PtrFromString(system);
             if(e != nullptr)
             {
                 SID* sid;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {nullptr, "", 0, e};
             }
         }
@@ -182,7 +182,7 @@ namespace golang::syscall
             SID* sid;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
             sid = (SID*)(unsafe::Pointer(& b[0]));
@@ -192,7 +192,7 @@ namespace golang::syscall
                 SID* sid;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {sid, UTF16ToString(db), accType, nullptr};
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
@@ -200,7 +200,7 @@ namespace golang::syscall
                 SID* sid;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {nullptr, "", 0, e};
             }
             if(n <= uint32_t(len(b)))
@@ -208,13 +208,13 @@ namespace golang::syscall
                 SID* sid;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {nullptr, "", 0, e};
             }
         }
     }
 
-    std::tuple<std::string, std::string> String(struct SID* sid)
+    std::tuple<std::string, gocpp::error> String(struct SID* sid)
     {
         gocpp::Defer defer;
         try
@@ -239,7 +239,7 @@ namespace golang::syscall
         return int(GetLengthSid(sid));
     }
 
-    std::tuple<SID*, std::string> Copy(struct SID* sid)
+    std::tuple<SID*, gocpp::error> Copy(struct SID* sid)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), Len(gocpp::recv(sid)));
         auto sid2 = (SID*)(unsafe::Pointer(& b[0]));
@@ -251,26 +251,26 @@ namespace golang::syscall
         return {sid2, nullptr};
     }
 
-    std::tuple<std::string, std::string, uint32_t, std::string> LookupAccount(struct SID* sid, std::string system)
+    std::tuple<std::string, std::string, uint32_t, gocpp::error> LookupAccount(struct SID* sid, std::string system)
     {
         std::string account;
         std::string domain;
         uint32_t accType;
-        std::string err;
+        gocpp::error err;
         uint16_t* sys = {};
         if(len(system) > 0)
         {
             std::string account;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             std::tie(sys, err) = UTF16PtrFromString(system);
             if(err != nullptr)
             {
                 std::string account;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {"", "", 0, err};
             }
         }
@@ -281,7 +281,7 @@ namespace golang::syscall
             std::string account;
             std::string domain;
             uint32_t accType;
-            std::string err;
+            gocpp::error err;
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
             auto e = LookupAccountSid(sys, sid, & b[0], & n, & db[0], & dn, & accType);
@@ -290,7 +290,7 @@ namespace golang::syscall
                 std::string account;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {UTF16ToString(b), UTF16ToString(db), accType, nullptr};
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
@@ -298,7 +298,7 @@ namespace golang::syscall
                 std::string account;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {"", "", 0, e};
             }
             if(n <= uint32_t(len(b)))
@@ -306,7 +306,7 @@ namespace golang::syscall
                 std::string account;
                 std::string domain;
                 uint32_t accType;
-                std::string err;
+                gocpp::error err;
                 return {"", "", 0, e};
             }
         }
@@ -402,7 +402,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<Token, std::string> OpenCurrentProcessToken()
+    std::tuple<Token, gocpp::error> OpenCurrentProcessToken()
     {
         auto [p, e] = GetCurrentProcess();
         if(e != nullptr)
@@ -418,12 +418,12 @@ namespace golang::syscall
         return {t, nullptr};
     }
 
-    std::string Close(Token t)
+    gocpp::error Close(Token t)
     {
         return CloseHandle(Handle(t));
     }
 
-    std::tuple<unsafe::Pointer, std::string> getInfo(Token t, uint32_t go_class, int initSize)
+    std::tuple<unsafe::Pointer, gocpp::error> getInfo(Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -445,7 +445,7 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<Tokenuser*, std::string> GetTokenUser(Token t)
+    std::tuple<Tokenuser*, gocpp::error> GetTokenUser(Token t)
     {
         auto [i, e] = getInfo(gocpp::recv(t), TokenUser, 50);
         if(e != nullptr)
@@ -455,7 +455,7 @@ namespace golang::syscall
         return {(Tokenuser*)(i), nullptr};
     }
 
-    std::tuple<Tokenprimarygroup*, std::string> GetTokenPrimaryGroup(Token t)
+    std::tuple<Tokenprimarygroup*, gocpp::error> GetTokenPrimaryGroup(Token t)
     {
         auto [i, e] = getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
         if(e != nullptr)
@@ -465,7 +465,7 @@ namespace golang::syscall
         return {(Tokenprimarygroup*)(i), nullptr};
     }
 
-    std::tuple<std::string, std::string> GetUserProfileDirectory(Token t)
+    std::tuple<std::string, gocpp::error> GetUserProfileDirectory(Token t)
     {
         auto n = uint32_t(100);
         for(; ; )

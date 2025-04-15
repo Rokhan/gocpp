@@ -15,9 +15,9 @@
 namespace golang::syscall
 {
     gocpp::slice<unsigned char> StringByteSlice(std::string s);
-    std::tuple<gocpp::slice<unsigned char>, std::string> ByteSliceFromString(std::string s);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ByteSliceFromString(std::string s);
     unsigned char* StringBytePtr(std::string s);
-    std::tuple<unsigned char*, std::string> BytePtrFromString(std::string s);
+    std::tuple<unsigned char*, gocpp::error> BytePtrFromString(std::string s);
     std::tuple<int64_t, int64_t> Unix(struct Timespec* ts);
     std::tuple<int64_t, int64_t> Unix(struct Timeval* tv);
     int64_t Nano(struct Timespec* ts);

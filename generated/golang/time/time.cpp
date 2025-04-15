@@ -967,7 +967,7 @@ namespace golang::time
         return (unixSec(gocpp::recv(t))) * 1e9 + int64_t(nsec(gocpp::recv(t)));
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalBinary(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct Time t)
     {
         int16_t offsetMin = {};
         int8_t offsetSec = {};
@@ -1001,7 +1001,7 @@ namespace golang::time
         return {enc, nullptr};
     }
 
-    std::string UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data)
     {
         auto buf = data;
         if(len(buf) == 0)
@@ -1051,21 +1051,21 @@ namespace golang::time
         return nullptr;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> GobEncode(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> GobEncode(struct Time t)
     {
         return MarshalBinary(gocpp::recv(t));
     }
 
-    std::string GobDecode(struct Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error GobDecode(struct Time* t, gocpp::slice<unsigned char> data)
     {
         return UnmarshalBinary(gocpp::recv(t), data);
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalJSON(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(struct Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""));
         b = append(b, '"');
-        std::string err;
+        gocpp::error err;
         std::tie(b, err) = appendStrictRFC3339(gocpp::recv(t), b);
         b = append(b, '"');
         if(err != nullptr)
@@ -1075,7 +1075,7 @@ namespace golang::time
         return {b, nullptr};
     }
 
-    std::string UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
     {
         if(string(data) == "null")
         {
@@ -1086,15 +1086,15 @@ namespace golang::time
             return errors::New("Time.UnmarshalJSON: input is not a JSON string");
         }
         data = data.make_slice(len("""), len(data) - len("""));
-        std::string err = {};
+        gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
         return err;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, std::string> MarshalText(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(struct Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano));
-        std::string err;
+        gocpp::error err;
         std::tie(b, err) = appendStrictRFC3339(gocpp::recv(t), b);
         if(err != nullptr)
         {
@@ -1103,9 +1103,9 @@ namespace golang::time
         return {b, nullptr};
     }
 
-    std::string UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data)
     {
-        std::string err = {};
+        gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
         return err;
     }

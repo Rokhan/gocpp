@@ -112,8 +112,8 @@ namespace golang::time
     std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max);
     int tzruleTime(int year, rule r, int off);
     std::tuple<int, bool> lookupName(struct Location* l, std::string name, int64_t unix);
-    extern std::string errLocation;
-    std::tuple<Location*, std::string> LoadLocation(std::string name);
+    extern gocpp::error errLocation;
+    std::tuple<Location*, gocpp::error> LoadLocation(std::string name);
     bool containsDotDot(std::string s);
 }
 

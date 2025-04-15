@@ -109,21 +109,21 @@ namespace golang::strings
         }
     }
 
-    std::tuple<int, std::string> Write(struct Builder* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Write(struct Builder* b, gocpp::slice<unsigned char> p)
     {
         copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, p);
         return {len(p), nullptr};
     }
 
-    std::string WriteByte(struct Builder* b, unsigned char c)
+    gocpp::error WriteByte(struct Builder* b, unsigned char c)
     {
         copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, c);
         return nullptr;
     }
 
-    std::tuple<int, std::string> WriteRune(struct Builder* b, gocpp::rune r)
+    std::tuple<int, gocpp::error> WriteRune(struct Builder* b, gocpp::rune r)
     {
         copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
@@ -131,7 +131,7 @@ namespace golang::strings
         return {len(b->buf) - n, nullptr};
     }
 
-    std::tuple<int, std::string> WriteString(struct Builder* b, std::string s)
+    std::tuple<int, gocpp::error> WriteString(struct Builder* b, std::string s)
     {
         copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);

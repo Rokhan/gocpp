@@ -41,19 +41,19 @@ namespace golang::main
     }
 
     template<typename T, typename StoreT>
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
     {
-        return Fetch(gocpp::PtrRecv<T, false>(value.get()));
+        return Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
     {
-        return self.ptr->value->vFetch(std::string url);
+        return self.ptr->value->vFetch(url);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
     {
-        return self.obj.value->vFetch(std::string url);
+        return self.obj.value->vFetch(url);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value)
@@ -118,13 +118,13 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(fakeFetcher f, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(fakeFetcher f, std::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {
             return {res->body, res->urls, nullptr};
         }
-        return {"", nullptr, fmt::Errorf("not found: %s", url)};
+        return {"", nullptr, mocklib::Errorf("not found: %s", url)};
     }
 
     fakeFetcher fetcher = fakeFetcher {{ "https://golang.org/", new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};

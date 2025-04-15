@@ -165,7 +165,7 @@ namespace golang::chacha8rand
         return "invalid ChaCha8 encoding";
     }
 
-    std::string Unmarshal(State* s, gocpp::slice<unsigned char> data)
+    gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data)
     {
         if(len(data) != 6 * 8 || string(data.make_slice(0, 8)) != "chacha8:")
         {

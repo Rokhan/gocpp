@@ -26,7 +26,7 @@ namespace golang::zlib
         gocpp::slice<unsigned char> dict;
         flate::Writer* compressor;
         hash::Hash32 digest;
-        std::string err;
+        gocpp::error err;
         gocpp::array<unsigned char, 4> scratch;
         bool wroteHeader;
 
@@ -43,12 +43,12 @@ namespace golang::zlib
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     Writer* NewWriter(io::Writer w);
-    std::tuple<Writer*, std::string> NewWriterLevel(io::Writer w, int level);
-    std::tuple<Writer*, std::string> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int level);
+    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
     void Reset(struct Writer* z, io::Writer w);
-    std::string writeHeader(struct Writer* z);
-    std::tuple<int, std::string> Write(struct Writer* z, gocpp::slice<unsigned char> p);
-    std::string Flush(struct Writer* z);
-    std::string Close(struct Writer* z);
+    gocpp::error writeHeader(struct Writer* z);
+    std::tuple<int, gocpp::error> Write(struct Writer* z, gocpp::slice<unsigned char> p);
+    gocpp::error Flush(struct Writer* z);
+    gocpp::error Close(struct Writer* z);
 }
 

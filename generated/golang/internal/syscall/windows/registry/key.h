@@ -13,11 +13,11 @@
 
 namespace golang::registry
 {
-    std::string Close(Key k);
-    std::tuple<Key, std::string> OpenKey(Key k, std::string path, uint32_t access);
-    std::tuple<gocpp::slice<std::string>, std::string> ReadSubKeyNames(Key k);
-    std::tuple<Key, bool, std::string> CreateKey(Key k, std::string path, uint32_t access);
-    std::string DeleteKey(Key k, std::string path);
+    gocpp::error Close(Key k);
+    std::tuple<Key, gocpp::error> OpenKey(Key k, std::string path, uint32_t access);
+    std::tuple<gocpp::slice<std::string>, gocpp::error> ReadSubKeyNames(Key k);
+    std::tuple<Key, bool, gocpp::error> CreateKey(Key k, std::string path, uint32_t access);
+    gocpp::error DeleteKey(Key k, std::string path);
     struct KeyInfo
     {
         uint32_t SubKeyCount;
@@ -39,6 +39,6 @@ namespace golang::registry
     };
 
     std::ostream& operator<<(std::ostream& os, const struct KeyInfo& value);
-    std::tuple<KeyInfo*, std::string> Stat(Key k);
+    std::tuple<KeyInfo*, gocpp::error> Stat(Key k);
 }
 

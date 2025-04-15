@@ -66,14 +66,14 @@ namespace golang::strings
         return int64_t(len(r->s));
     }
 
-    std::tuple<int, std::string> Read(struct Reader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Read(struct Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, io::go_EOF};
         }
         r->prevRune = - 1;
@@ -82,33 +82,33 @@ namespace golang::strings
         return {n, err};
     }
 
-    std::tuple<int, std::string> ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, gocpp::error> ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(off < 0)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, errors::New("strings.Reader.ReadAt: negative offset")};
         }
         if(off >= int64_t(len(r->s)))
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, io::go_EOF};
         }
         n = copy(b, r->s.make_slice(off));
         if(n < len(b))
         {
             int n;
-            std::string err;
+            gocpp::error err;
             err = io::go_EOF;
         }
         return {n, err};
     }
 
-    std::tuple<unsigned char, std::string> ReadByte(struct Reader* r)
+    std::tuple<unsigned char, gocpp::error> ReadByte(struct Reader* r)
     {
         r->prevRune = - 1;
         if(r->i >= int64_t(len(r->s)))
@@ -120,7 +120,7 @@ namespace golang::strings
         return {b, nullptr};
     }
 
-    std::string UnreadByte(struct Reader* r)
+    gocpp::error UnreadByte(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -131,16 +131,16 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<gocpp::rune, int, std::string> ReadRune(struct Reader* r)
+    std::tuple<gocpp::rune, int, gocpp::error> ReadRune(struct Reader* r)
     {
         gocpp::rune ch;
         int size;
-        std::string err;
+        gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
             gocpp::rune ch;
             int size;
-            std::string err;
+            gocpp::error err;
             r->prevRune = - 1;
             return {0, 0, io::go_EOF};
         }
@@ -149,7 +149,7 @@ namespace golang::strings
         {
             gocpp::rune ch;
             int size;
-            std::string err;
+            gocpp::error err;
             r->i++;
             return {rune(c), 1, nullptr};
         }
@@ -158,7 +158,7 @@ namespace golang::strings
         return {ch, size, err};
     }
 
-    std::string UnreadRune(struct Reader* r)
+    gocpp::error UnreadRune(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -173,7 +173,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<int64_t, std::string> Seek(struct Reader* r, int64_t offset, int whence)
+    std::tuple<int64_t, gocpp::error> Seek(struct Reader* r, int64_t offset, int whence)
     {
         r->prevRune = - 1;
         int64_t abs = {};
@@ -208,15 +208,15 @@ namespace golang::strings
         return {abs, nullptr};
     }
 
-    std::tuple<int64_t, std::string> WriteTo(struct Reader* r, io::Writer w)
+    std::tuple<int64_t, gocpp::error> WriteTo(struct Reader* r, io::Writer w)
     {
         int64_t n;
-        std::string err;
+        gocpp::error err;
         r->prevRune = - 1;
         if(r->i >= int64_t(len(r->s)))
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             return {0, nullptr};
         }
         auto s = r->s.make_slice(r->i);
@@ -224,7 +224,7 @@ namespace golang::strings
         if(m > len(s))
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             gocpp::panic("strings.Reader.WriteTo: invalid WriteString count");
         }
         r->i += int64_t(m);
@@ -232,7 +232,7 @@ namespace golang::strings
         if(m != len(s) && err == nullptr)
         {
             int64_t n;
-            std::string err;
+            gocpp::error err;
             err = io::ErrShortWrite;
         }
         return {n, err};

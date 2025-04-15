@@ -41,7 +41,7 @@ namespace golang::runtime
 {
     extern uint32_t traceAdvanceSema;
     extern uint32_t traceShutdownSema;
-    std::string StartTrace();
+    gocpp::error StartTrace();
     void StopTrace();
     void traceAdvance(bool stopTrace);
     uintptr_t traceNextGen(uintptr_t gen);

@@ -35,7 +35,7 @@ namespace golang::main
 
         struct IFetcher
         {
-            virtual std::tuple<std::string, gocpp::slice<std::string>, std::string> vFetch(std::string url) = 0;
+            virtual std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> vFetch(std::string url) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -46,7 +46,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            std::tuple<std::string, gocpp::slice<std::string>, std::string> vFetch(std::string url) override;
+            std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> vFetch(std::string url) override;
 
             StoreT value;
         };
@@ -54,8 +54,8 @@ namespace golang::main
         std::shared_ptr<IFetcher> value;
     };
 
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
     void Crawl(std::string url, int depth, Fetcher fetcher);
@@ -77,7 +77,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    std::tuple<std::string, gocpp::slice<std::string>, std::string> Fetch(fakeFetcher f, std::string url);
+    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(fakeFetcher f, std::string url);
     extern fakeFetcher fetcher;
 }
 

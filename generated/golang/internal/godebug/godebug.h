@@ -101,7 +101,7 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    std::tuple<int, std::string> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
+    std::tuple<int, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
 }
 

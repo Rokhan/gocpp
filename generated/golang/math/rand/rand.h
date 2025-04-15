@@ -153,8 +153,8 @@ namespace golang::rand
     double Float32(struct Rand* r);
     gocpp::slice<int> Perm(struct Rand* r, int n);
     void Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, std::string> Read(struct Rand* r, gocpp::slice<unsigned char> p);
-    std::tuple<int, std::string> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
+    std::tuple<int, gocpp::error> Read(struct Rand* r, gocpp::slice<unsigned char> p);
+    std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
     extern godebug::Setting* randautoseed;
     Rand* globalRand();
     uint64_t runtime_rand();
@@ -177,7 +177,7 @@ namespace golang::rand
     int64_t Int63(runtimeSource*);
     void Seed(runtimeSource*, int64_t);
     uint64_t Uint64(runtimeSource*);
-    std::tuple<int, std::string> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+    std::tuple<int, gocpp::error> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
     void Seed(int64_t seed);
     int64_t Int63();
     uint32_t Uint32();
@@ -191,7 +191,7 @@ namespace golang::rand
     double Float32();
     gocpp::slice<int> Perm(int n);
     void Shuffle(int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, std::string> Read(gocpp::slice<unsigned char> p);
+    std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p);
     double NormFloat64();
     double ExpFloat64();
     struct lockedSource
@@ -216,6 +216,6 @@ namespace golang::rand
     void Seed(struct lockedSource* r, int64_t seed);
     void seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos);
     void seed(struct lockedSource* r, int64_t seed);
-    std::tuple<int, std::string> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+    std::tuple<int, gocpp::error> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
 }
 

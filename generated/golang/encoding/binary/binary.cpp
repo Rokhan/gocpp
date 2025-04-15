@@ -86,62 +86,62 @@ namespace golang::binary
 
     uint16_t Uint16(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
     {
-        return self.ptr->value->vUint16(gocpp::slice<unsigned char>);
+        return self.ptr->value->vUint16();
     }
 
     uint16_t Uint16(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
     {
-        return self.obj.value->vUint16(gocpp::slice<unsigned char>);
+        return self.obj.value->vUint16();
     }
 
     uint32_t Uint32(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
     {
-        return self.ptr->value->vUint32(gocpp::slice<unsigned char>);
+        return self.ptr->value->vUint32();
     }
 
     uint32_t Uint32(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
     {
-        return self.obj.value->vUint32(gocpp::slice<unsigned char>);
+        return self.obj.value->vUint32();
     }
 
     uint64_t Uint64(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
     {
-        return self.ptr->value->vUint64(gocpp::slice<unsigned char>);
+        return self.ptr->value->vUint64();
     }
 
     uint64_t Uint64(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
     {
-        return self.obj.value->vUint64(gocpp::slice<unsigned char>);
+        return self.obj.value->vUint64();
     }
 
     void PutUint16(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
     {
-        return self.ptr->value->vPutUint16(gocpp::slice<unsigned char>, uint16_t);
+        return self.ptr->value->vPutUint16();
     }
 
     void PutUint16(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
     {
-        return self.obj.value->vPutUint16(gocpp::slice<unsigned char>, uint16_t);
+        return self.obj.value->vPutUint16();
     }
 
     void PutUint32(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
     {
-        return self.ptr->value->vPutUint32(gocpp::slice<unsigned char>, uint32_t);
+        return self.ptr->value->vPutUint32();
     }
 
     void PutUint32(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
     {
-        return self.obj.value->vPutUint32(gocpp::slice<unsigned char>, uint32_t);
+        return self.obj.value->vPutUint32();
     }
 
     void PutUint64(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
     {
-        return self.ptr->value->vPutUint64(gocpp::slice<unsigned char>, uint64_t);
+        return self.ptr->value->vPutUint64();
     }
 
     void PutUint64(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
     {
-        return self.obj.value->vPutUint64(gocpp::slice<unsigned char>, uint64_t);
+        return self.obj.value->vPutUint64();
     }
 
     std::string String(const gocpp::PtrRecv<ByteOrder, false>& self)
@@ -206,32 +206,32 @@ namespace golang::binary
 
     gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
     {
-        return self.ptr->value->vAppendUint16(gocpp::slice<unsigned char>, uint16_t);
+        return self.ptr->value->vAppendUint16();
     }
 
     gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
     {
-        return self.obj.value->vAppendUint16(gocpp::slice<unsigned char>, uint16_t);
+        return self.obj.value->vAppendUint16();
     }
 
     gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
     {
-        return self.ptr->value->vAppendUint32(gocpp::slice<unsigned char>, uint32_t);
+        return self.ptr->value->vAppendUint32();
     }
 
     gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
     {
-        return self.obj.value->vAppendUint32(gocpp::slice<unsigned char>, uint32_t);
+        return self.obj.value->vAppendUint32();
     }
 
     gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
     {
-        return self.ptr->value->vAppendUint64(gocpp::slice<unsigned char>, uint64_t);
+        return self.ptr->value->vAppendUint64();
     }
 
     gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
     {
-        return self.obj.value->vAppendUint64(gocpp::slice<unsigned char>, uint64_t);
+        return self.obj.value->vAppendUint64();
     }
 
     std::string String(const gocpp::PtrRecv<AppendByteOrder, false>& self)
@@ -457,7 +457,7 @@ namespace golang::binary
         return "binary.NativeEndian";
     }
 
-    std::string Read(io::Reader r, ByteOrder order, go_any data)
+    gocpp::error Read(io::Reader r, ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -701,7 +701,7 @@ namespace golang::binary
         return nullptr;
     }
 
-    std::string Write(io::Writer w, ByteOrder order, go_any data)
+    gocpp::error Write(io::Writer w, ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {

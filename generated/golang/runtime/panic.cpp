@@ -244,35 +244,35 @@ namespace golang::runtime
     void panicSliceConvert(int x, int y)
     /* convertBlockStmt, nil block */;
 
-    std::string shiftError = error(errorString("negative shift amount"));
+    gocpp::error shiftError = error(errorString("negative shift amount"));
     void panicshift()
     {
         panicCheck1(getcallerpc(), "negative shift amount");
         gocpp::panic(shiftError);
     }
 
-    std::string divideError = error(errorString("integer divide by zero"));
+    gocpp::error divideError = error(errorString("integer divide by zero"));
     void panicdivide()
     {
         panicCheck2("integer divide by zero");
         gocpp::panic(divideError);
     }
 
-    std::string overflowError = error(errorString("integer overflow"));
+    gocpp::error overflowError = error(errorString("integer overflow"));
     void panicoverflow()
     {
         panicCheck2("integer overflow");
         gocpp::panic(overflowError);
     }
 
-    std::string floatError = error(errorString("floating point error"));
+    gocpp::error floatError = error(errorString("floating point error"));
     void panicfloat()
     {
         panicCheck2("floating point error");
         gocpp::panic(floatError);
     }
 
-    std::string memoryError = error(errorString("invalid memory address or nil pointer dereference"));
+    gocpp::error memoryError = error(errorString("invalid memory address or nil pointer dereference"));
     void panicmem()
     {
         panicCheck2("invalid memory address or nil pointer dereference");
@@ -301,7 +301,7 @@ namespace golang::runtime
         return0();
     }
 
-    std::string rangeExitError = error(errorString("range function continued iteration after exit"));
+    gocpp::error rangeExitError = error(errorString("range function continued iteration after exit"));
     void panicrangeexit()
     {
         gocpp::panic(rangeExitError);
@@ -564,13 +564,13 @@ namespace golang::runtime
                 {
                     const auto& gocpp_id_1 = gocpp::type_info(p->arg);
                     int conditionId = -1;
-                    if(gocpp_id_1 == typeid(std::string)) { conditionId = 0; }
+                    if(gocpp_id_1 == typeid(gocpp::error)) { conditionId = 0; }
                     else if(gocpp_id_1 == typeid(stringer)) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
                         {
-                            std::string v = gocpp::any_cast<std::string>(p->arg);
+                            gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
                             p->arg = Error(gocpp::recv(v));
                             break;
                         }

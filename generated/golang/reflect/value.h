@@ -172,7 +172,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value);
     Value Field(struct Value v, int i);
     Value FieldByIndex(struct Value v, gocpp::slice<int> index);
-    std::tuple<Value, std::string> FieldByIndexErr(struct Value v, gocpp::slice<int> index);
+    std::tuple<Value, gocpp::error> FieldByIndexErr(struct Value v, gocpp::slice<int> index);
     Value FieldByName(struct Value v, std::string name);
     Value FieldByNameFunc(struct Value v, std::function<bool (std::string)> match);
     bool CanFloat(struct Value v);

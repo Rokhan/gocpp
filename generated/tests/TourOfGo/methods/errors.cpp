@@ -54,7 +54,7 @@ namespace golang::main
         return mocklib::Sprintf("at %v, %s", e->When, e->What);
     }
 
-    std::string run()
+    gocpp::error run()
     {
         return new MyError {mocklib::Date::Now(), "it didn't work"};
     }

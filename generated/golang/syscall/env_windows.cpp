@@ -52,7 +52,7 @@ namespace golang::syscall
         }
     }
 
-    std::string Setenv(std::string key, std::string value)
+    gocpp::error Setenv(std::string key, std::string value)
     {
         auto [v, err] = UTF16PtrFromString(value);
         if(err != nullptr)
@@ -74,7 +74,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    std::string Unsetenv(std::string key)
+    gocpp::error Unsetenv(std::string key)
     {
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)

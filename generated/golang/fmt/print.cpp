@@ -63,9 +63,9 @@ namespace golang::fmt
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, std::string> State::StateImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> State::StateImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> b)
     {
-        return Write(gocpp::PtrRecv<T, false>(value.get()));
+        return Write(gocpp::PtrRecv<T, false>(value.get()), b);
     }
     template<typename T, typename StoreT>
     std::tuple<int, bool> State::StateImpl<T, StoreT>::vWidth()
@@ -80,17 +80,17 @@ namespace golang::fmt
     template<typename T, typename StoreT>
     bool State::StateImpl<T, StoreT>::vFlag(int c)
     {
-        return Flag(gocpp::PtrRecv<T, false>(value.get()));
+        return Flag(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
-    std::tuple<int, std::string> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b)
     {
-        return self.ptr->value->vWrite(gocpp::slice<unsigned char> b);
+        return self.ptr->value->vWrite(b);
     }
 
-    std::tuple<int, std::string> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b)
     {
-        return self.obj.value->vWrite(gocpp::slice<unsigned char> b);
+        return self.obj.value->vWrite(b);
     }
 
     std::tuple<int, bool> Width(const gocpp::PtrRecv<State, false>& self)
@@ -115,12 +115,12 @@ namespace golang::fmt
 
     bool Flag(const gocpp::PtrRecv<State, false>& self, int c)
     {
-        return self.ptr->value->vFlag(int c);
+        return self.ptr->value->vFlag(c);
     }
 
     bool Flag(const gocpp::ObjRecv<State>& self, int c)
     {
-        return self.obj.value->vFlag(int c);
+        return self.obj.value->vFlag(c);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct State& value)
@@ -155,17 +155,17 @@ namespace golang::fmt
     template<typename T, typename StoreT>
     void Formatter::FormatterImpl<T, StoreT>::vFormat(State f, gocpp::rune verb)
     {
-        return Format(gocpp::PtrRecv<T, false>(value.get()));
+        return Format(gocpp::PtrRecv<T, false>(value.get()), f, verb);
     }
 
     void Format(const gocpp::PtrRecv<Formatter, false>& self, State f, gocpp::rune verb)
     {
-        return self.ptr->value->vFormat(State f, gocpp::rune verb);
+        return self.ptr->value->vFormat(f, verb);
     }
 
     void Format(const gocpp::ObjRecv<Formatter>& self, State f, gocpp::rune verb)
     {
-        return self.obj.value->vFormat(State f, gocpp::rune verb);
+        return self.obj.value->vFormat(f, verb);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Formatter& value)
@@ -444,26 +444,26 @@ namespace golang::fmt
         return false;
     }
 
-    std::tuple<int, std::string> Write(struct pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(struct pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
-        std::string err;
+        gocpp::error err;
         write(gocpp::recv(p->buf), b);
         return {len(b), nullptr};
     }
 
-    std::tuple<int, std::string> WriteString(struct pp* p, std::string s)
+    std::tuple<int, gocpp::error> WriteString(struct pp* p, std::string s)
     {
         int ret;
-        std::string err;
+        gocpp::error err;
         writeString(gocpp::recv(p->buf), s);
         return {len(s), nullptr};
     }
 
-    std::tuple<int, std::string> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         auto p = newPrinter();
         doPrintf(gocpp::recv(p), format, a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -471,10 +471,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, std::string> Printf(std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Printf(std::string format, gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return Fprintf(os::Stdout, format, a);
     }
 
@@ -496,10 +496,10 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, std::string> Fprint(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         auto p = newPrinter();
         doPrint(gocpp::recv(p), a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -507,10 +507,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, std::string> Print(gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return Fprint(os::Stdout, a);
     }
 
@@ -532,10 +532,10 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, std::string> Fprintln(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         auto p = newPrinter();
         doPrintln(gocpp::recv(p), a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -543,10 +543,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, std::string> Println(gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return Fprintln(os::Stdout, a);
     }
 
@@ -1072,7 +1072,7 @@ namespace golang::fmt
             if(verb == 'w')
             {
                 bool handled;
-                auto [gocpp_id_1, ok] = gocpp::getValue<std::string>(p->arg);
+                auto [gocpp_id_1, ok] = gocpp::getValue<gocpp::error>(p->arg);
                 if(! ok || ! p->wrapErrs)
                 {
                     bool handled;
@@ -1125,14 +1125,14 @@ namespace golang::fmt
                             {
                                 const auto& gocpp_id_2 = gocpp::type_info(p->arg);
                                 int conditionId = -1;
-                                if(gocpp_id_2 == typeid(std::string)) { conditionId = 0; }
+                                if(gocpp_id_2 == typeid(gocpp::error)) { conditionId = 0; }
                                 else if(gocpp_id_2 == typeid(Stringer)) { conditionId = 1; }
                                 switch(conditionId)
                                 {
                                     bool handled;
                                     case 0:
                                     {
-                                        std::string v = gocpp::any_cast<std::string>(p->arg);
+                                        gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
                                         handled = true;
                                         defer.push_back([=]{ catchPanic(gocpp::recv(p), p->arg, verb, "Error"); });
                                         fmtString(gocpp::recv(p), Error(gocpp::recv(v)), verb);

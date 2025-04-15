@@ -26,7 +26,7 @@
 
 namespace golang::bisect
 {
-    std::tuple<Matcher*, std::string> New(std::string pattern)
+    std::tuple<Matcher*, gocpp::error> New(std::string pattern)
     {
         if(pattern == "")
         {
@@ -379,7 +379,7 @@ namespace golang::bisect
         return ShouldEnable(gocpp::recv(m), h);
     }
 
-    std::string printFileLine(Writer w, uint64_t h, std::string file, int line)
+    gocpp::error printFileLine(Writer w, uint64_t h, std::string file, int line)
     {
         auto markerLen = 40;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, markerLen + len(file) + 24);
@@ -499,19 +499,19 @@ namespace golang::bisect
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, std::string> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
+    std::tuple<int, gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
     {
         return Write(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<int, std::string> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
+    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
     {
-        return self.ptr->value->vWrite(gocpp::slice<unsigned char>);
+        return self.ptr->value->vWrite();
     }
 
-    std::tuple<int, std::string> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
+    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
     {
-        return self.obj.value->vWrite(gocpp::slice<unsigned char>);
+        return self.obj.value->vWrite();
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value)
@@ -519,7 +519,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    std::string PrintMarker(Writer w, uint64_t h)
+    gocpp::error PrintMarker(Writer w, uint64_t h)
     {
         gocpp::array<unsigned char, 50> buf = {};
         auto b = AppendMarker(buf.make_slice(0, 0), h);
@@ -528,7 +528,7 @@ namespace golang::bisect
         return err;
     }
 
-    std::string printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk)
+    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk)
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 2048);
         gocpp::array<unsigned char, 100> prefixBuf = {};

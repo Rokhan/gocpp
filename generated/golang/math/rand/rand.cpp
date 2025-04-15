@@ -55,7 +55,7 @@ namespace golang::rand
     template<typename T, typename StoreT>
     void Source::SourceImpl<T, StoreT>::vSeed(int64_t seed)
     {
-        return Seed(gocpp::PtrRecv<T, false>(value.get()));
+        return Seed(gocpp::PtrRecv<T, false>(value.get()), seed);
     }
 
     int64_t Int63(const gocpp::PtrRecv<Source, false>& self)
@@ -70,12 +70,12 @@ namespace golang::rand
 
     void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed)
     {
-        return self.ptr->value->vSeed(int64_t seed);
+        return self.ptr->value->vSeed(seed);
     }
 
     void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed)
     {
-        return self.obj.value->vSeed(int64_t seed);
+        return self.obj.value->vSeed(seed);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value)
@@ -347,10 +347,10 @@ namespace golang::rand
         }
     }
 
-    std::tuple<int, std::string> Read(struct Rand* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(struct Rand* r, gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         //Go type switch emulation
         {
             const auto& gocpp_id_2 = gocpp::type_info(r->src);
@@ -360,7 +360,7 @@ namespace golang::rand
             switch(conditionId)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 case 0:
                 {
                     lockedSource* src = gocpp::any_cast<lockedSource*>(r->src);
@@ -378,31 +378,31 @@ namespace golang::rand
         return read(p, r->src, & r->readVal, & r->readPos);
     }
 
-    std::tuple<int, std::string> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         auto pos = *readPos;
         auto val = *readVal;
         auto [rng, gocpp_id_4] = gocpp::getValue<rngSource*>(src);
         for(n = 0; n < len(p); n++)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             if(pos == 0)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 if(rng != nullptr)
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     val = Int63(gocpp::recv(rng));
                 }
                 else
                 {
                     int n;
-                    std::string err;
+                    gocpp::error err;
                     val = Int63(gocpp::recv(src));
                 }
                 pos = 7;
@@ -489,10 +489,10 @@ namespace golang::rand
         return runtime_rand();
     }
 
-    std::tuple<int, std::string> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         Lock(gocpp::recv(fs->mu));
         std::tie(n, err) = read(p, fs, readVal, readPos);
         Unlock(gocpp::recv(fs->mu));
@@ -578,10 +578,10 @@ namespace golang::rand
         Shuffle(gocpp::recv(globalRand()), n, swap);
     }
 
-    std::tuple<int, std::string> Read(gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return Read(gocpp::recv(globalRand()), p);
     }
 
@@ -672,10 +672,10 @@ namespace golang::rand
         }
     }
 
-    std::tuple<int, std::string> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         Lock(gocpp::recv(r->lk));
         std::tie(n, err) = read(p, r->s, readVal, readPos);
         Unlock(gocpp::recv(r->lk));

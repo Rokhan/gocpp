@@ -264,7 +264,7 @@ namespace golang::runtime
         }
     }
 
-    std::string mapKeyError(maptype* t, unsafe::Pointer p)
+    gocpp::error mapKeyError(maptype* t, unsafe::Pointer p)
     {
         if(! HashMightPanic(gocpp::recv(t)))
         {
@@ -273,7 +273,7 @@ namespace golang::runtime
         return mapKeyError2(t->Key, p);
     }
 
-    std::string mapKeyError2(_type* t, unsafe::Pointer p)
+    gocpp::error mapKeyError2(_type* t, unsafe::Pointer p)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {

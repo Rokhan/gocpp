@@ -14,8 +14,8 @@
 
 namespace golang::time
 {
-    std::tuple<bool, std::string> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname);
-    std::tuple<std::string, std::string> toEnglishName(std::string stdname, std::string dstname);
+    std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname);
+    std::tuple<std::string, gocpp::error> toEnglishName(std::string stdname, std::string dstname);
     std::string extractCAPS(std::string desc);
     std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z);
     int64_t pseudoUnix(int year, syscall::Systemtime* d);

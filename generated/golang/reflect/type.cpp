@@ -109,17 +109,17 @@ namespace golang::reflect
     template<typename T, typename StoreT>
     bool Type::TypeImpl<T, StoreT>::vImplements(Type u)
     {
-        return Implements(gocpp::PtrRecv<T, false>(value.get()));
+        return Implements(gocpp::PtrRecv<T, false>(value.get()), u);
     }
     template<typename T, typename StoreT>
     bool Type::TypeImpl<T, StoreT>::vAssignableTo(Type u)
     {
-        return AssignableTo(gocpp::PtrRecv<T, false>(value.get()));
+        return AssignableTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
     template<typename T, typename StoreT>
     bool Type::TypeImpl<T, StoreT>::vConvertibleTo(Type u)
     {
-        return ConvertibleTo(gocpp::PtrRecv<T, false>(value.get()));
+        return ConvertibleTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
     template<typename T, typename StoreT>
     bool Type::TypeImpl<T, StoreT>::vComparable()
@@ -149,27 +149,27 @@ namespace golang::reflect
     template<typename T, typename StoreT>
     StructField Type::TypeImpl<T, StoreT>::vField(int i)
     {
-        return Field(gocpp::PtrRecv<T, false>(value.get()));
+        return Field(gocpp::PtrRecv<T, false>(value.get()), i);
     }
     template<typename T, typename StoreT>
     StructField Type::TypeImpl<T, StoreT>::vFieldByIndex(gocpp::slice<int> index)
     {
-        return FieldByIndex(gocpp::PtrRecv<T, false>(value.get()));
+        return FieldByIndex(gocpp::PtrRecv<T, false>(value.get()), index);
     }
     template<typename T, typename StoreT>
     std::tuple<StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByName(std::string name)
     {
-        return FieldByName(gocpp::PtrRecv<T, false>(value.get()));
+        return FieldByName(gocpp::PtrRecv<T, false>(value.get()), name);
     }
     template<typename T, typename StoreT>
     std::tuple<StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByNameFunc(std::function<bool (std::string)> match)
     {
-        return FieldByNameFunc(gocpp::PtrRecv<T, false>(value.get()));
+        return FieldByNameFunc(gocpp::PtrRecv<T, false>(value.get()), match);
     }
     template<typename T, typename StoreT>
     Type Type::TypeImpl<T, StoreT>::vIn(int i)
     {
-        return In(gocpp::PtrRecv<T, false>(value.get()));
+        return In(gocpp::PtrRecv<T, false>(value.get()), i);
     }
     template<typename T, typename StoreT>
     Type Type::TypeImpl<T, StoreT>::vKey()
@@ -199,7 +199,7 @@ namespace golang::reflect
     template<typename T, typename StoreT>
     Type Type::TypeImpl<T, StoreT>::vOut(int i)
     {
-        return Out(gocpp::PtrRecv<T, false>(value.get()));
+        return Out(gocpp::PtrRecv<T, false>(value.get()), i);
     }
     template<typename T, typename StoreT>
     abi::Type* Type::TypeImpl<T, StoreT>::vcommon()
@@ -234,22 +234,22 @@ namespace golang::reflect
 
     Method Method(const gocpp::PtrRecv<Type, false>& self, int)
     {
-        return self.ptr->value->vMethod(int);
+        return self.ptr->value->vMethod();
     }
 
     Method Method(const gocpp::ObjRecv<Type>& self, int)
     {
-        return self.obj.value->vMethod(int);
+        return self.obj.value->vMethod();
     }
 
     std::tuple<Method, bool> MethodByName(const gocpp::PtrRecv<Type, false>& self, std::string)
     {
-        return self.ptr->value->vMethodByName(std::string);
+        return self.ptr->value->vMethodByName();
     }
 
     std::tuple<Method, bool> MethodByName(const gocpp::ObjRecv<Type>& self, std::string)
     {
-        return self.obj.value->vMethodByName(std::string);
+        return self.obj.value->vMethodByName();
     }
 
     int NumMethod(const gocpp::PtrRecv<Type, false>& self)
@@ -314,32 +314,32 @@ namespace golang::reflect
 
     bool Implements(const gocpp::PtrRecv<Type, false>& self, Type u)
     {
-        return self.ptr->value->vImplements(Type u);
+        return self.ptr->value->vImplements(u);
     }
 
     bool Implements(const gocpp::ObjRecv<Type>& self, Type u)
     {
-        return self.obj.value->vImplements(Type u);
+        return self.obj.value->vImplements(u);
     }
 
     bool AssignableTo(const gocpp::PtrRecv<Type, false>& self, Type u)
     {
-        return self.ptr->value->vAssignableTo(Type u);
+        return self.ptr->value->vAssignableTo(u);
     }
 
     bool AssignableTo(const gocpp::ObjRecv<Type>& self, Type u)
     {
-        return self.obj.value->vAssignableTo(Type u);
+        return self.obj.value->vAssignableTo(u);
     }
 
     bool ConvertibleTo(const gocpp::PtrRecv<Type, false>& self, Type u)
     {
-        return self.ptr->value->vConvertibleTo(Type u);
+        return self.ptr->value->vConvertibleTo(u);
     }
 
     bool ConvertibleTo(const gocpp::ObjRecv<Type>& self, Type u)
     {
-        return self.obj.value->vConvertibleTo(Type u);
+        return self.obj.value->vConvertibleTo(u);
     }
 
     bool Comparable(const gocpp::PtrRecv<Type, false>& self)
@@ -394,52 +394,52 @@ namespace golang::reflect
 
     StructField Field(const gocpp::PtrRecv<Type, false>& self, int i)
     {
-        return self.ptr->value->vField(int i);
+        return self.ptr->value->vField(i);
     }
 
     StructField Field(const gocpp::ObjRecv<Type>& self, int i)
     {
-        return self.obj.value->vField(int i);
+        return self.obj.value->vField(i);
     }
 
     StructField FieldByIndex(const gocpp::PtrRecv<Type, false>& self, gocpp::slice<int> index)
     {
-        return self.ptr->value->vFieldByIndex(gocpp::slice<int> index);
+        return self.ptr->value->vFieldByIndex(index);
     }
 
     StructField FieldByIndex(const gocpp::ObjRecv<Type>& self, gocpp::slice<int> index)
     {
-        return self.obj.value->vFieldByIndex(gocpp::slice<int> index);
+        return self.obj.value->vFieldByIndex(index);
     }
 
     std::tuple<StructField, bool> FieldByName(const gocpp::PtrRecv<Type, false>& self, std::string name)
     {
-        return self.ptr->value->vFieldByName(std::string name);
+        return self.ptr->value->vFieldByName(name);
     }
 
     std::tuple<StructField, bool> FieldByName(const gocpp::ObjRecv<Type>& self, std::string name)
     {
-        return self.obj.value->vFieldByName(std::string name);
+        return self.obj.value->vFieldByName(name);
     }
 
     std::tuple<StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<Type, false>& self, std::function<bool (std::string)> match)
     {
-        return self.ptr->value->vFieldByNameFunc(std::function<bool (std::string)> match);
+        return self.ptr->value->vFieldByNameFunc(match);
     }
 
     std::tuple<StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<Type>& self, std::function<bool (std::string)> match)
     {
-        return self.obj.value->vFieldByNameFunc(std::function<bool (std::string)> match);
+        return self.obj.value->vFieldByNameFunc(match);
     }
 
     Type In(const gocpp::PtrRecv<Type, false>& self, int i)
     {
-        return self.ptr->value->vIn(int i);
+        return self.ptr->value->vIn(i);
     }
 
     Type In(const gocpp::ObjRecv<Type>& self, int i)
     {
-        return self.obj.value->vIn(int i);
+        return self.obj.value->vIn(i);
     }
 
     Type Key(const gocpp::PtrRecv<Type, false>& self)
@@ -494,12 +494,12 @@ namespace golang::reflect
 
     Type Out(const gocpp::PtrRecv<Type, false>& self, int i)
     {
-        return self.ptr->value->vOut(int i);
+        return self.ptr->value->vOut(i);
     }
 
     Type Out(const gocpp::ObjRecv<Type>& self, int i)
     {
-        return self.obj.value->vOut(int i);
+        return self.obj.value->vOut(i);
     }
 
     abi::Type* common(const gocpp::PtrRecv<Type, false>& self)

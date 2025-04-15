@@ -220,8 +220,8 @@ namespace golang::binary
     std::string GoString(bigEndian);
     std::string String(nativeEndian);
     std::string GoString(nativeEndian);
-    std::string Read(io::Reader r, ByteOrder order, go_any data);
-    std::string Write(io::Writer w, ByteOrder order, go_any data);
+    gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
+    gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
     int Size(go_any v);
     int dataSize(reflect::Value v);
     int sizeof(reflect::Type t);

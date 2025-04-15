@@ -49,12 +49,12 @@ namespace golang::sort
     template<typename T, typename StoreT>
     bool Interface::InterfaceImpl<T, StoreT>::vLess(int i, int j)
     {
-        return Less(gocpp::PtrRecv<T, false>(value.get()));
+        return Less(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vSwap(int i, int j)
     {
-        return Swap(gocpp::PtrRecv<T, false>(value.get()));
+        return Swap(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
 
     int Len(const gocpp::PtrRecv<Interface, false>& self)
@@ -69,22 +69,22 @@ namespace golang::sort
 
     bool Less(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
     {
-        return self.ptr->value->vLess(int i, int j);
+        return self.ptr->value->vLess(i, j);
     }
 
     bool Less(const gocpp::ObjRecv<Interface>& self, int i, int j)
     {
-        return self.obj.value->vLess(int i, int j);
+        return self.obj.value->vLess(i, j);
     }
 
     void Swap(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
     {
-        return self.ptr->value->vSwap(int i, int j);
+        return self.ptr->value->vSwap(i, j);
     }
 
     void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j)
     {
-        return self.obj.value->vSwap(int i, int j);
+        return self.obj.value->vSwap(i, j);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value)

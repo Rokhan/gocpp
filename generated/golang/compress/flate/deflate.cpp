@@ -206,7 +206,7 @@ namespace golang::flate
         return n;
     }
 
-    std::string writeBlock(struct compressor* d, gocpp::slice<token> tokens, int index)
+    gocpp::error writeBlock(struct compressor* d, gocpp::slice<token> tokens, int index)
     {
         if(index > 0)
         {
@@ -348,7 +348,7 @@ namespace golang::flate
         return {length, offset, ok};
     }
 
-    std::string writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf)
+    gocpp::error writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf)
     {
         if(writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
         {
@@ -634,34 +634,34 @@ namespace golang::flate
         d->windowEnd = 0;
     }
 
-    std::tuple<int, std::string> write(struct compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> write(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         if(d->err != nullptr)
         {
             int n;
-            std::string err;
+            gocpp::error err;
             return {0, d->err};
         }
         n = len(b);
         for(; len(b) > 0; )
         {
             int n;
-            std::string err;
+            gocpp::error err;
             step(gocpp::recv(d), d);
             b = b.make_slice(fill(gocpp::recv(d), d, b));
             if(d->err != nullptr)
             {
                 int n;
-                std::string err;
+                gocpp::error err;
                 return {0, d->err};
             }
         }
         return {n, nullptr};
     }
 
-    std::string syncFlush(struct compressor* d)
+    gocpp::error syncFlush(struct compressor* d)
     {
         if(d->err != nullptr)
         {
@@ -679,9 +679,9 @@ namespace golang::flate
         return d->err;
     }
 
-    std::string init(struct compressor* d, io::Writer w, int level)
+    gocpp::error init(struct compressor* d, io::Writer w, int level)
     {
-        std::string err;
+        gocpp::error err;
         d->w = newHuffmanBitWriter(w);
         //Go switch emulation
         {
@@ -693,7 +693,7 @@ namespace golang::flate
             else if(2 <= level && level <= 9) { conditionId = 4; }
             switch(conditionId)
             {
-                std::string err;
+                gocpp::error err;
                 case 0:
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
                     d->fill = (*compressor)->fillStore;
@@ -721,7 +721,7 @@ namespace golang::flate
                     d->step = (*compressor)->deflate;
                     break;
                 default:
-                    return fmt::Errorf("flate: invalid compression level %d: want value in range [-2, 9]", level);
+                    return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]", level);
                     break;
             }
         }
@@ -771,7 +771,7 @@ namespace golang::flate
         }
     }
 
-    std::string close(struct compressor* d)
+    gocpp::error close(struct compressor* d)
     {
         if(d->err == errWriterClosed)
         {
@@ -800,7 +800,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    std::tuple<Writer*, std::string> NewWriter(io::Writer w, int level)
+    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int level)
     {
         Writer dw = {};
         if(auto err = init(gocpp::recv(dw.d), w, level); err != nullptr)
@@ -810,7 +810,7 @@ namespace golang::flate
         return {& dw, nullptr};
     }
 
-    std::tuple<Writer*, std::string> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         auto dw = new dictWriter {w};
         auto [zw, err] = NewWriter(dw, level);
@@ -852,14 +852,14 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Write(struct dictWriter* w, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> Write(struct dictWriter* w, gocpp::slice<unsigned char> b)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return Write(gocpp::recv(w->w), b);
     }
 
-    std::string errWriterClosed = errors::New("flate: closed writer");
+    gocpp::error errWriterClosed = errors::New("flate: closed writer");
     
     template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
@@ -892,19 +892,19 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, std::string> Write(struct Writer* w, gocpp::slice<unsigned char> data)
+    std::tuple<int, gocpp::error> Write(struct Writer* w, gocpp::slice<unsigned char> data)
     {
         int n;
-        std::string err;
+        gocpp::error err;
         return write(gocpp::recv(w->d), data);
     }
 
-    std::string Flush(struct Writer* w)
+    gocpp::error Flush(struct Writer* w)
     {
         return syncFlush(gocpp::recv(w->d));
     }
 
-    std::string Close(struct Writer* w)
+    gocpp::error Close(struct Writer* w)
     {
         return close(gocpp::recv(w->d));
     }

@@ -13,13 +13,13 @@
 namespace golang::strconv
 {
     unsigned char lower(unsigned char c);
-    extern std::string ErrRange;
-    extern std::string ErrSyntax;
+    extern gocpp::error ErrRange;
+    extern gocpp::error ErrSyntax;
     struct NumError
     {
         std::string Func;
         std::string Num;
-        std::string Err;
+        gocpp::error Err;
 
         using isGoStruct = void;
 
@@ -34,15 +34,15 @@ namespace golang::strconv
 
     std::ostream& operator<<(std::ostream& os, const struct NumError& value);
     std::string Error(struct NumError* e);
-    std::string Unwrap(struct NumError* e);
+    gocpp::error Unwrap(struct NumError* e);
     std::string cloneString(std::string x);
     NumError* syntaxError(std::string fn, std::string str);
     NumError* rangeError(std::string fn, std::string str);
     NumError* baseError(std::string fn, std::string str, int base);
     NumError* bitSizeError(std::string fn, std::string str, int bitSize);
-    std::tuple<uint64_t, std::string> ParseUint(std::string s, int base, int bitSize);
-    std::tuple<int64_t, std::string> ParseInt(std::string s, int base, int bitSize);
-    std::tuple<int, std::string> Atoi(std::string s);
+    std::tuple<uint64_t, gocpp::error> ParseUint(std::string s, int base, int bitSize);
+    std::tuple<int64_t, gocpp::error> ParseInt(std::string s, int base, int bitSize);
+    std::tuple<int, gocpp::error> Atoi(std::string s);
     bool underscoreOK(std::string s);
 }
 

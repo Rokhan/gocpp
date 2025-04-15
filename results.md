@@ -29,8 +29,8 @@
 | [TourOfGo/concurrency/channels.go](tests/TourOfGo/concurrency/channels.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/channels.cpp)) | ❌ |
 | [TourOfGo/concurrency/channels-opt.go](tests/TourOfGo/concurrency/channels-opt.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/channels-opt.cpp)) | ✔️ |
 | [TourOfGo/concurrency/default-selection.go](tests/TourOfGo/concurrency/default-selection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/default-selection.cpp)) | ❌ |
-| [TourOfGo/concurrency/exercise-equivalent-binary-trees.go](tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.go) | ✔️ | ❌ | ❌ | ❌ |
-| [TourOfGo/concurrency/exercise-web-crawler.go](tests/TourOfGo/concurrency/exercise-web-crawler.go) | ✔️ | ❌ | ❌ | ❌ |
+| [TourOfGo/concurrency/exercise-equivalent-binary-trees.go](tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.cpp)) | ❌ |
+| [TourOfGo/concurrency/exercise-web-crawler.go](tests/TourOfGo/concurrency/exercise-web-crawler.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/exercise-web-crawler.cpp)) | ❌ |
 | [TourOfGo/concurrency/goroutines.go](tests/TourOfGo/concurrency/goroutines.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
 | [TourOfGo/concurrency/mutex-counter.go](tests/TourOfGo/concurrency/mutex-counter.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter.cpp)) | ✔️ |
 | [TourOfGo/concurrency/mutex-counter-ptr.go](tests/TourOfGo/concurrency/mutex-counter-ptr.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/mutex-counter-ptr.cpp)) | ✔️ |
@@ -56,7 +56,7 @@
 | [TourOfGo/generics/generics.go](tests/TourOfGo/generics/generics.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/generics/generics.cpp)) | ✔️ |
 | [TourOfGo/methods/empty-interface.go](tests/TourOfGo/methods/empty-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/empty-interface.cpp)) | ❌ |
 | [TourOfGo/methods/errors.go](tests/TourOfGo/methods/errors.go) | ✔️ | ❌ | ❌ | ❌ |
-| [TourOfGo/methods/exercise-errors.go](tests/TourOfGo/methods/exercise-errors.go) | ✔️ | ✔️ | ❌ | ❌ |
+| [TourOfGo/methods/exercise-errors.go](tests/TourOfGo/methods/exercise-errors.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/exercise-errors.cpp)) | ❌ |
 | [TourOfGo/methods/exercise-images.go](tests/TourOfGo/methods/exercise-images.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-reader.go](tests/TourOfGo/methods/exercise-reader.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-rot-reader.go](tests/TourOfGo/methods/exercise-rot-reader.go) | ✔️ | ❌ | ❌ | ❌ |

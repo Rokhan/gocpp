@@ -30,8 +30,8 @@ var stdTypeMapping = map[string]string{
 	"untyped int":     "int",
 	"untyped rune":    "gocpp::rune",
 	"untyped string":  "std::string",
-	// predefined types
-	"error": "std::string",
+	// predefined types. To do: need a way to map them to type defined in "golang/runtime"
+	"error": "gocpp::error",
 }
 
 // TODO, make a dynamic mapping
@@ -63,6 +63,7 @@ var stdFuncMapping = map[string]string{
 	"fmt::Println": "mocklib::Println",
 	"fmt::Sprint":  "mocklib::Sprint",
 	"fmt::Sprintf": "mocklib::Sprintf",
+	"fmt::Errorf":  "mocklib::Errorf",
 	// rand
 	"rand::Intn": "mocklib::Intn",
 	// runtime

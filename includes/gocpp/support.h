@@ -48,6 +48,16 @@ namespace golang
     {
         struct CacheLinePad{};
     }
+
+    namespace tree
+    {
+        struct Tree;
+        std::ostream& operator<<(std::ostream& os, Tree const&)
+        {
+            os << "Tree";
+            return os;
+        }
+    }
 }
 
 namespace mocklib
@@ -413,6 +423,51 @@ namespace gocpp
         }
     };
 
+    // Maybe should be put in mocklib as we probably want use 
+    // the translated definition from "runtime/error.go" at target
+    struct error : std::optional<std::string> 
+    {
+        using optional::optional;
+
+        error() : optional(std::nullopt) {}
+        error(std::nullptr_t) : optional(std::nullopt) {}
+        error(const std::string& msg) : optional(msg) {}
+
+        error& operator=(const std::string& msg)
+        {
+            this->optional::operator=(msg);
+            return *this;
+        }
+
+        error& operator=(std::nullptr_t)
+        {
+            this->optional::operator=(std::nullopt);
+            return *this;
+        }
+
+        friend bool operator==(const error& lhs, const error& rhs) = default;
+
+        friend bool operator==(const error& lhs, const std::string& rhs)
+        {
+            return lhs.has_value() && lhs.value() == rhs;
+        }
+
+        friend bool operator==(const error& lhs, std::nullptr_t)
+        {
+            return !lhs.has_value();
+        }
+
+        friend bool operator==(const std::string& lhs, const error& rhs)
+        {
+            return rhs == lhs;
+        }
+
+        friend bool operator==(std::nullptr_t, const error& rhs)
+        {
+            return rhs == nullptr;
+        }
+    };
+
     template<typename T>
     struct CheckType
     {
@@ -658,12 +713,9 @@ namespace gocpp
         using typename array_base<T>::store_type;
         using typename array_base<T>::range_iterator;
 
-        slice()
-        {
-            this->mArray = std::make_shared<store_type>();
-            mStart = 0;
-            mEnd = this->size();
-        }
+        slice() : slice(0) { }
+        
+        slice(std::nullptr_t) : slice(0) { }
 
         slice(int n)
         {
@@ -1396,6 +1448,12 @@ namespace mocklib
         result += Sprintf(std::forward<Args>(args)...);
         return result;
     }    
+
+    template<typename... Args>
+    gocpp::error Errorf(Args&&... args)
+    {
+        return Sprintf(std::forward<Args>(args)...);
+    }
 
     void PrintToVect(std::vector<std::string>&) { }
 

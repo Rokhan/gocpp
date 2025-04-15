@@ -136,12 +136,35 @@ func (tn typeName) ParamDecl() []string {
 	return strs
 }
 
+// String containing list of parameter names, with types
 func (tns typeNames) String() string {
 	var strs []string
 	for _, tn := range tns {
 		strs = append(strs, tn.ParamDecl()...)
 	}
 	return strings.Join(strs, ", ")
+}
+
+// String containing list of parameter names, without types
+func (tns typeNames) NamesStr() string {
+	return strings.Join(tns.Names(), ", ")
+}
+
+// List of parameter names
+func (tns typeNames) Names() []string {
+	var strs []string
+	for _, tn := range tns {
+		strs = append(strs, tn.names...)
+	}
+	return strs
+}
+
+// JoinWithPrefix adds a separator at the start if the input slice is not empty
+func JoinWithPrefix(elements []string, separator string) string {
+	if len(elements) == 0 {
+		return ""
+	}
+	return separator + strings.Join(elements, separator)
 }
 
 type outFile struct {
@@ -1182,7 +1205,7 @@ func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
 type method struct {
 	name   string
 	result string
-	params string
+	params typeNames
 }
 
 func (cv *cppConverter) readMethods(fields *ast.FieldList) (methods []method) {
@@ -2819,7 +2842,7 @@ func (cv *cppConverter) checkIsParam(n *ast.Ident, identType *cppType) {
 	}
 }
 
-func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, string) {
+func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, typeNames) {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -2829,7 +2852,7 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, string) {
 		params := cv.readFields(n.Params)
 		_, outTypes := cv.getResultInfos(n)
 		resultType := buildOutType(outTypes)
-		return resultType, params.String()
+		return resultType, params
 
 	default:
 		panic(fmt.Sprintf("Not a function type %v", n))
@@ -3209,8 +3232,9 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			fmt.Fprintf(buf, "\n")
 			fmt.Fprintf(buf, "%s    %s v%s(%s) override%s\n", data.out.Indent(), method.result, method.name, method.params, data.declEnd)
 			if data.needBody {
+				forwardParams := JoinWithPrefix(method.params.Names(), ", ")
 				fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
-				fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, false>(value.get()));\n", data.out.Indent(), method.name)
+				fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), method.name, forwardParams)
 				fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 			}
 		}
@@ -3221,10 +3245,11 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 	case implem:
 		for _, method := range methods {
+			forwardParams := JoinWithPrefix(method.params.Names(), ", ")
 			fmt.Fprintf(buf, "%[1]s    template<typename T, typename StoreT>\n", data.out.Indent())
 			fmt.Fprintf(buf, "%[1]s    %[2]s %[5]s::%[5]sImpl<T, StoreT>::v%[3]s(%[4]s)\n", data.out.Indent(), method.result, method.name, method.params, structName)
 			fmt.Fprintf(buf, "%[1]s    {\n", data.out.Indent())
-			fmt.Fprintf(buf, "%[1]s        return %s(gocpp::PtrRecv<T, false>(value.get()));\n", data.out.Indent(), method.name)
+			fmt.Fprintf(buf, "%[1]s        return %s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), method.name, forwardParams)
 			fmt.Fprintf(buf, "%[1]s    }\n", data.out.Indent())
 		}
 	}
@@ -3242,7 +3267,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 	for _, method := range methods {
 		endParams := ""
-		if method.params != "" {
+		if method.params != nil {
 			endParams = fmt.Sprintf(", %s", method.params)
 		}
 		fmt.Fprintf(buf, "\n")
@@ -3250,7 +3275,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<%s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-			fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", data.out.Indent(), method.name, method.params)
+			fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
 			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 			fmt.Fprintf(buf, "\n")
 		}
@@ -3258,7 +3283,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<%s>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-			fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", data.out.Indent(), method.name, method.params)
+			fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
 			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 		}
 	}

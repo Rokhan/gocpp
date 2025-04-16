@@ -163,6 +163,21 @@ namespace gocpp
         T* ptr = nullptr;
     };
 
+    struct complex64 : std::complex<float>
+    {
+        using std::complex<float>::complex;
+
+        inline complex64(const std::complex<float>& c) : complex(c) {}
+
+        inline std::complex<float>& base() { return *this; }
+        inline const std::complex<float>& base() const { return *this; }
+    };
+
+    inline static complex64 operator+(int i, complex64 c) { return float(i) + c.base(); };
+    inline static complex64 operator+(complex64 c, int i) { return c.base() + float(i); };
+    inline static complex64 operator-(int i, complex64 c) { return float(i) - c.base(); };
+    inline static complex64 operator-(complex64 c, int i) { return c.base() - float(i); };
+
     struct complex128 : std::complex<double>
     {
         using std::complex<double>::complex;

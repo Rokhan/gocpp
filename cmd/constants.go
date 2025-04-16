@@ -6,6 +6,7 @@ package main
 //	=> "go\types\universe.go"
 var stdTypeMapping = map[string]string{
 	"byte":       "unsigned char",
+	"complex64":  "gocpp::complex64",
 	"complex128": "gocpp::complex128",
 	"float":      "double",
 	"float32":    "float",
@@ -105,6 +106,7 @@ var stdFuncMapping = map[string]string{
 
 	// type conversions
 	"byte":       "unsigned char",
+	"complex64":  "gocpp::complex64",
 	"complex128": "gocpp::complex128",
 	"float":      "double",
 	"float32":    "float",

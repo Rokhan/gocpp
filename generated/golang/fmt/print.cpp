@@ -1212,7 +1212,7 @@ namespace golang::fmt
             if(gocpp_id_3 == typeid(bool)) { conditionId = 0; }
             else if(gocpp_id_3 == typeid(float)) { conditionId = 1; }
             else if(gocpp_id_3 == typeid(double)) { conditionId = 2; }
-            else if(gocpp_id_3 == typeid(complex64)) { conditionId = 3; }
+            else if(gocpp_id_3 == typeid(gocpp::complex64)) { conditionId = 3; }
             else if(gocpp_id_3 == typeid(gocpp::complex128)) { conditionId = 4; }
             else if(gocpp_id_3 == typeid(int)) { conditionId = 5; }
             else if(gocpp_id_3 == typeid(int8_t)) { conditionId = 6; }
@@ -1250,7 +1250,7 @@ namespace golang::fmt
                 }
                 case 3:
                 {
-                    complex64 f = gocpp::any_cast<complex64>(arg);
+                    gocpp::complex64 f = gocpp::any_cast<gocpp::complex64>(arg);
                     fmtComplex(gocpp::recv(p), gocpp::complex128(f), 64, verb);
                     break;
                 }

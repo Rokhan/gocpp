@@ -417,7 +417,7 @@ namespace golang::runtime
 
     bool c64equal(unsafe::Pointer p, unsafe::Pointer q)
     {
-        return *(complex64*)(p) == *(complex64*)(q);
+        return *(gocpp::complex64*)(p) == *(gocpp::complex64*)(q);
     }
 
     bool c128equal(unsafe::Pointer p, unsafe::Pointer q)

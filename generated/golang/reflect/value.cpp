@@ -1295,7 +1295,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    return gocpp::complex128(*(complex64*)(v.ptr));
+                    return gocpp::complex128(*(gocpp::complex64*)(v.ptr));
                     break;
                 case 1:
                     return *(gocpp::complex128*)(v.ptr);
@@ -2056,7 +2056,7 @@ namespace golang::reflect
                     *(double*)(v.ptr) = 0;
                     break;
                 case 14:
-                    *(complex64*)(v.ptr) = 0;
+                    *(gocpp::complex64*)(v.ptr) = 0;
                     break;
                 case 15:
                     *(gocpp::complex128*)(v.ptr) = 0;
@@ -2822,7 +2822,7 @@ namespace golang::reflect
                     gocpp::panic(new ValueError {"reflect.Value.SetComplex", kind(gocpp::recv(v))});
                     break;
                 case 0:
-                    *(complex64*)(v.ptr) = complex64(x);
+                    *(gocpp::complex64*)(v.ptr) = gocpp::complex64(x);
                     break;
                 case 1:
                     *(gocpp::complex128*)(v.ptr) = x;
@@ -4595,7 +4595,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    *(complex64*)(ptr) = complex64(v);
+                    *(gocpp::complex64*)(ptr) = gocpp::complex64(v);
                     break;
                 case 1:
                     *(gocpp::complex128*)(ptr) = v;

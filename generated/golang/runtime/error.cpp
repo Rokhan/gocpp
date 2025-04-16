@@ -384,7 +384,7 @@ namespace golang::runtime
             else if(gocpp_id_0 == typeid(uintptr_t)) { conditionId = 12; }
             else if(gocpp_id_0 == typeid(float)) { conditionId = 13; }
             else if(gocpp_id_0 == typeid(double)) { conditionId = 14; }
-            else if(gocpp_id_0 == typeid(complex64)) { conditionId = 15; }
+            else if(gocpp_id_0 == typeid(gocpp::complex64)) { conditionId = 15; }
             else if(gocpp_id_0 == typeid(gocpp::complex128)) { conditionId = 16; }
             else if(gocpp_id_0 == typeid(std::string)) { conditionId = 17; }
             switch(conditionId)
@@ -481,7 +481,7 @@ namespace golang::runtime
                 }
                 case 15:
                 {
-                    complex64 v = gocpp::any_cast<complex64>(i);
+                    gocpp::complex64 v = gocpp::any_cast<gocpp::complex64>(i);
                     print(v);
                     break;
                 }
@@ -580,7 +580,7 @@ namespace golang::runtime
                     print(typestring, "(", *(double*)(eface->data), ")");
                     break;
                 case 15:
-                    print(typestring, *(complex64*)(eface->data));
+                    print(typestring, *(gocpp::complex64*)(eface->data));
                     break;
                 case 16:
                     print(typestring, *(gocpp::complex128*)(eface->data));

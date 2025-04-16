@@ -55,7 +55,7 @@
 | [TourOfGo/flowcontrol/switch-with-no-condition.go](tests/TourOfGo/flowcontrol/switch-with-no-condition.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/flowcontrol/switch-with-no-condition.cpp)) | ➖ | 
 | [TourOfGo/generics/generics.go](tests/TourOfGo/generics/generics.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/generics/generics.cpp)) | ✔️ |
 | [TourOfGo/methods/empty-interface.go](tests/TourOfGo/methods/empty-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/empty-interface.cpp)) | ❌ |
-| [TourOfGo/methods/errors.go](tests/TourOfGo/methods/errors.go) | ✔️ | ❌ | ❌ | ❌ |
+| [TourOfGo/methods/errors.go](tests/TourOfGo/methods/errors.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/errors.cpp)) | ❌ |
 | [TourOfGo/methods/exercise-errors.go](tests/TourOfGo/methods/exercise-errors.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/exercise-errors.cpp)) | ❌ |
 | [TourOfGo/methods/exercise-images.go](tests/TourOfGo/methods/exercise-images.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/methods/exercise-reader.go](tests/TourOfGo/methods/exercise-reader.go) | ✔️ | ❌ | ❌ | ❌ |

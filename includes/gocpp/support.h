@@ -58,6 +58,11 @@ namespace golang
             return os;
         }
     }
+
+    namespace time
+    {
+        struct Time;
+    }
 }
 
 namespace mocklib
@@ -438,6 +443,19 @@ namespace gocpp
         }
     };
 
+    template <typename T>
+    concept IsRefError = requires(const T& t) {
+        { Error(t) } -> std::convertible_to<std::string>;
+    };
+    
+    template <typename T>
+    concept IsPtrError = requires(const T *t) {
+        { Error(t) } -> std::convertible_to<std::string>;
+    };
+    
+    template <typename T>
+    concept IsError = IsRefError<T> || IsPtrError<T>;
+
     // Maybe should be put in mocklib as we probably want use 
     // the translated definition from "runtime/error.go" at target
     struct error : std::optional<std::string> 
@@ -447,6 +465,14 @@ namespace gocpp
         error() : optional(std::nullopt) {}
         error(std::nullptr_t) : optional(std::nullopt) {}
         error(const std::string& msg) : optional(msg) {}
+        
+        // Temporary mock, we lose the original type
+        template<typename T> requires IsRefError<T>
+        error(const T& t) : optional(Error(t)) {}
+        
+        // Temporary mock, we lose the original type
+        template<typename T> requires IsPtrError<T>
+        error(const T* t) : optional(Error(t)) {}
 
         error& operator=(const std::string& msg)
         {
@@ -1153,6 +1179,12 @@ namespace mocklib
         static Date Now() { return Date{}; };
         static const int Saturday = 6;
     };
+    
+    std::ostream& operator<<(std::ostream& os, const Date& date)
+    {
+        os << "[mocklib::DATE]";
+        return os;
+    }
 
     inline int Weekday(const Date &) { return Date::Saturday; };
     inline int Hour(const Date &) { return 17; };

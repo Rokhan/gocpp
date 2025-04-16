@@ -79,6 +79,7 @@ var stdFuncMapping = map[string]string{
 	// pic
 	"pic::Show": "mocklib::picShow",
 	// time
+	"time::Time":        "mocklib::Date",
 	"time::After":       "mocklib::After",
 	"time::Tick":        "mocklib::Tick",
 	"time::Now":         "mocklib::Date::Now",

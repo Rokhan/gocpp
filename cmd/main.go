@@ -56,6 +56,17 @@ func GetCppType(goType string) string {
 	}
 }
 
+// TODO: find a way to add "struct" only when needed.
+// (when there is an ambiguity because of function with the same name)
+func GetCppOutType(goType outType) string {
+	outType := GetCppType(goType.str)
+	if goType.isStruct {
+		return "struct " + outType
+	} else {
+		return outType
+	}
+}
+
 func GetCppGoType(goType types.Type) string {
 	switch t := goType.(type) {
 	case *types.Tuple:
@@ -101,19 +112,8 @@ type typeName struct {
 	isRecv bool
 }
 
-type typeNames []typeName
-
-func (receivers *typeNames) setIsRecv() {
-	for i := range *receivers {
-		(*receivers)[i].isRecv = true
-	}
-}
-
-func (tns typeNames) getDefs() (defs []place) {
-	for _, tn := range tns {
-		defs = append(defs, tn.Type.defs...)
-	}
-	return
+func (tn typeName) outType() outType {
+	return outType{tn.Type.str, tn.Type.isStruct}
 }
 
 func (tn typeName) ParamDecl() []string {
@@ -121,7 +121,7 @@ func (tn typeName) ParamDecl() []string {
 
 	if len(tn.names) != 0 {
 		for _, name := range tn.names {
-			if tn.isRecv && tn.Type.isSimple {
+			if tn.Type.isStruct {
 				// Need to add 'struct' to avoid conflicts when function have the same name than the struct
 				//   => exemple "RGBA" in "image\color\color.go"
 				strs = append(strs, fmt.Sprintf("struct %v %v", GetCppType(tn.Type.str), name))
@@ -134,6 +134,21 @@ func (tn typeName) ParamDecl() []string {
 	}
 
 	return strs
+}
+
+type typeNames []typeName
+
+func (tns *typeNames) setIsRecv() {
+	for i := range *tns {
+		(*tns)[i].isRecv = true
+	}
+}
+
+func (tns typeNames) getDefs() (defs []place) {
+	for _, tn := range tns {
+		defs = append(defs, tn.Type.defs...)
+	}
+	return
 }
 
 // String containing list of parameter names, with types
@@ -1251,7 +1266,7 @@ func needPriority(t token.Token) bool {
 
 type stmtEnv struct {
 	outNames []string
-	outTypes []string
+	outTypes []outType
 	varNames *[]string // maybe use map for perfs
 }
 
@@ -1260,7 +1275,7 @@ func (env *stmtEnv) startVarScope() {
 	env.varNames = &[]string{}
 }
 
-func makeStmtEnv(outNames []string, outTypes []string) stmtEnv {
+func makeStmtEnv(outNames []string, outTypes []outType) stmtEnv {
 	varNames := outNames
 	return stmtEnv{outNames, outTypes, &varNames}
 }
@@ -1447,7 +1462,7 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 
 	cppOut := cv.withCppBuffer(func() {
 		for i := range env.outNames {
-			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppType(env.outTypes[i]), env.outNames[i])
+			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), env.outNames[i])
 		}
 
 		for _, stmt := range block.List {
@@ -2068,7 +2083,12 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 	panic("inlineStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames, outTypes []string) {
+type outType struct {
+	str      string
+	isStruct bool
+}
+
+func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []string, outTypes []outType) {
 	goResults := cv.readFields(funcType.Results)
 	defs := []place{}
 
@@ -2076,11 +2096,11 @@ func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames, outTyp
 	for _, result := range goResults {
 		if result.names == nil {
 			useNamedResults = false
-			outTypes = append(outTypes, result.Type.str)
+			outTypes = append(outTypes, result.outType())
 		}
 		for _, name := range result.names {
 			outNames = append(outNames, name)
-			outTypes = append(outTypes, result.Type.str)
+			outTypes = append(outTypes, result.outType())
 		}
 		defs = append(defs, result.Type.defs...)
 	}
@@ -2096,17 +2116,17 @@ func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames, outTyp
 	return
 }
 
-func buildOutType(outTypes []string) string {
+func buildOutType(outTypes []outType) string {
 	var resultType string
 	switch len(outTypes) {
 	case 0:
 		resultType = "void"
 	case 1:
-		resultType = GetCppType(outTypes[0])
+		resultType = GetCppOutType(outTypes[0])
 	default:
 		var types []string
 		for _, outType := range outTypes {
-			types = append(types, GetCppType(outType))
+			types = append(types, GetCppOutType(outType))
 		}
 		resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
 	}
@@ -2495,7 +2515,7 @@ func mkCppExpr(str string) cppExpr {
 type cppType struct {
 	cppExpr
 	isPtr      bool // is type a pointer ?
-	isSimple   bool // is the name of a stuct or an interface
+	isStruct   bool // is the name of a stuct or an interface
 	isEllipsis bool // is type created by an ellipsis
 	eltType    string
 	typenames  []string
@@ -2703,21 +2723,21 @@ func isMapType(node ast.Expr) bool {
 	}
 }
 
-func (cv *cppConverter) checkSimpleType(expr ast.Expr, cppType *cppType) {
+func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 	tv := cv.typeInfo.Types[expr].Type
 
 	switch tv.(type) {
 	case *types.Named:
 		switch tv.Underlying().(type) {
 		case *types.Interface:
-			cppType.isSimple = true
+			cppType.isStruct = true
 		case *types.Struct:
-			cppType.isSimple = true
+			cppType.isStruct = true
 		}
 	}
 
 	if cv.shared.verbose {
-		cv.Logf("checkSimpleType, %v => %v, %T, %T\n", types.ExprString(expr), cppType.isSimple, tv, tv.Underlying())
+		cv.Logf("checkStructType, %v => %v, %T, %T\n", types.ExprString(expr), cppType.isStruct, tv, tv.Underlying())
 	}
 }
 
@@ -2726,7 +2746,7 @@ func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	case "std::string":
 		cppType.canFwd = false
 	case "gocpp::complex128":
-		cppType.isSimple = true
+		cppType.isStruct = true
 	}
 }
 
@@ -2754,7 +2774,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	switch n := node.(type) {
 	case *ast.Ident:
 		identType := mkCppType(GetCppType(n.Name), nil)
-		cv.checkSimpleType(n, &identType)
+		cv.checkStructType(n, &identType)
 		cv.checkCanFwd(&identType)
 		cv.checkIsParam(n, &identType)
 		return identType
@@ -2782,16 +2802,22 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		return cv.convertTypeExpr(n.X)
 
 	case *ast.SelectorExpr:
-		typeName := GetCppExprFunc(ExprPrintf("%s::%s", cv.convertExpr(n.X), cv.convertExpr(n.Sel)))
+		namespace := cv.convertExpr(n.X)
+		field := cv.convertTypeExpr(n.Sel)
+		cv.checkStructType(n, &field)
+		typeName := GetCppExprFunc(ExprPrintf("%s::%s", namespace, field))
 		// TODO: Check this. Why mkCppPtrType and not mkCppType ?
-		return mkCppPtrType(typeName)
+		cppType := mkCppPtrType(typeName)
+		cppType.isStruct = field.isStruct
+		return cppType
 
 	case *ast.StarExpr:
 		typeExpr := cv.convertTypeExpr(n.X)
-		identType := mkCppPtrType(ExprPrintf("%s*", typeExpr))
-		cv.checkSimpleType(n.X, &identType)
-		identType.typenames = append(identType.typenames, typeExpr.typenames...)
-		return identType
+		cppType := mkCppPtrType(ExprPrintf("%s*", typeExpr))
+		cv.checkStructType(n.X, &cppType)
+		cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
+		cppType.isStruct = typeExpr.isStruct
+		return cppType
 
 	case *ast.StructType:
 		name, first := cv.GenerateExprId(node)

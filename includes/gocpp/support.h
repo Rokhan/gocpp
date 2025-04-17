@@ -884,6 +884,7 @@ namespace gocpp
 
         gocpp::slice<T> make_slice(size_t low);
         gocpp::slice<T> make_slice(size_t low, size_t high);
+        gocpp::slice<T> make_slice(size_t low, size_t high, size_t max);
 
     //private:    
         // [mStart, mEnd[
@@ -1043,6 +1044,23 @@ namespace gocpp
 
         high = std::min(high, this->size());
         return slice(*this, low, high);
+    }
+
+    // FIXME: golang permit to access all element between size and capacity    
+    template<typename T>
+    gocpp::slice<T> slice<T>::make_slice(size_t low, size_t high, size_t max)
+    {
+        low = low + this->mStart;
+        high = high + this->mStart;
+        max = max + this->mStart;
+        if(!this->mArray || low >= this->size())
+        {
+            return {};
+        }
+
+        high = std::min(high, this->size());
+        max = std::min(max, this->size());
+        return slice(*this, low, high, max);
     }
 
     template <typename T>

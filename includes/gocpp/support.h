@@ -1586,5 +1586,5 @@ namespace mocklib
     }
 
     template<typename T>
-    void picShow(const T& func) { /* Just a mock */ }
+    void picShowImage(const T& func) { /* Just a mock */ }
 }

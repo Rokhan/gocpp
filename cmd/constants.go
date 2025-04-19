@@ -77,7 +77,8 @@ var stdFuncMapping = map[string]string{
 	"math::Sqrt2": "mocklib::Sqrt2",
 	"math::Pi":    "mocklib::Pi",
 	// pic
-	"pic::Show": "mocklib::picShow",
+	"pic::Show":      "mocklib::picShow",
+	"pic::ShowImage": "mocklib::picShowImage",
 	// time
 	"time::Time":        "mocklib::Date",
 	"time::After":       "mocklib::After",
@@ -131,7 +132,6 @@ var knownCompilationErrors = []*errorFilter{
 	{"cpu", "internal/cpu/cpu.go"},
 	{"atomic", "sync/atomic/doc.go"},
 	{"fmtsort", "internal/fmtsort/sort.go"},
-	{"pic", "golang.org/x/tour@v0.1.0/pic/pic.go"},
 	{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 	{"png", "image/png/writer.go"},
 	{"race", "internal/race/norace.go"},

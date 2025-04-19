@@ -128,8 +128,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
-    scavChunkData load(struct atomicScavChunkData* sc);
-    void store(struct atomicScavChunkData* sc, scavChunkData ssc);
+    struct scavChunkData load(struct atomicScavChunkData* sc);
+    void store(struct atomicScavChunkData* sc, struct scavChunkData ssc);
     struct scavChunkData
     {
         uint16_t inUse;
@@ -148,7 +148,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
-    scavChunkData unpackScavChunkData(uint64_t sc);
+    struct scavChunkData unpackScavChunkData(uint64_t sc);
     uint64_t pack(struct scavChunkData sc);
     bool isEmpty(scavChunkFlags* sc);
     void setEmpty(scavChunkFlags* sc);

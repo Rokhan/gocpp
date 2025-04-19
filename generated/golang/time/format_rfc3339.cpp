@@ -59,7 +59,7 @@ namespace golang::time
         return b;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
     {
         auto n0 = len(b);
         b = appendFormatRFC3339(gocpp::recv(t), b, true);
@@ -91,13 +91,13 @@ namespace golang::time
 
 
     template<typename bytes>
-    std::tuple<Time, bool> parseRFC3339(bytes s, Location* local)
+    std::tuple<struct Time, bool> parseRFC3339(bytes s, struct Location* local)
     {
         auto ok = true;
         auto parseUint = [=](bytes s, int min, int max) mutable -> int
         {
             int x;
-            for(auto [_, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
+            for(auto [gocpp_ignored, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
             {
                 int x;
                 if(c < '0' || '9' < c)
@@ -172,7 +172,7 @@ namespace golang::time
         return {t, true};
     }
 
-    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
+    std::tuple<struct Time, struct gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
     {
         auto [t, ok] = parseRFC3339(b, Local);
         if(! ok)

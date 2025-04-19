@@ -13,6 +13,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goos/zgoos_windows.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/chan.h"
@@ -27,10 +28,15 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mem.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
@@ -39,6 +45,7 @@
 #include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
@@ -830,12 +837,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    scavChunkData load(struct atomicScavChunkData* sc)
+    struct scavChunkData load(struct atomicScavChunkData* sc)
     {
         return unpackScavChunkData(Load(gocpp::recv(sc->value)));
     }
 
-    void store(struct atomicScavChunkData* sc, scavChunkData ssc)
+    void store(struct atomicScavChunkData* sc, struct scavChunkData ssc)
     {
         Store(gocpp::recv(sc->value), pack(gocpp::recv(ssc)));
     }
@@ -875,7 +882,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    scavChunkData unpackScavChunkData(uint64_t sc)
+    struct scavChunkData unpackScavChunkData(uint64_t sc)
     {
         return gocpp::Init<scavChunkData>([](scavChunkData& x) { x.inUse = uint16_t(sc); x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask; x.gen = uint32_t(sc >> 32); x.scavChunkFlags = scavChunkFlags(uint8_t(sc >> (16 + logScavChunkInUseMax)) & scavChunkFlagsMask); });
     }

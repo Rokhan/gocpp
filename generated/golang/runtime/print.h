@@ -24,7 +24,7 @@ namespace golang::runtime
     void printnl();
     void printbool(bool v);
     void printfloat(double v);
-    void printcomplex(gocpp::complex128 c);
+    void printcomplex(struct gocpp::complex128 c);
     void printuint(uint64_t v);
     void printint(int64_t v);
     extern long minhexdigits;
@@ -33,8 +33,8 @@ namespace golang::runtime
     void printuintptr(uintptr_t p);
     void printstring(std::string s);
     void printslice(gocpp::slice<unsigned char> s);
-    void printeface(eface e);
-    void printiface(iface i);
+    void printeface(struct eface e);
+    void printiface(struct iface i);
     void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark);
 }
 

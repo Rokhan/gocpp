@@ -14,7 +14,7 @@
 
 namespace golang::runtime
 {
-    dlogger* dlog();
+    struct dlogger* dlog();
     struct dlogger
     {
         sys::NotInHeap _;
@@ -35,23 +35,23 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
     void end(struct dlogger* l);
-    dlogger* b(struct dlogger* l, bool x);
-    dlogger* i(struct dlogger* l, int x);
-    dlogger* i8(struct dlogger* l, int8_t x);
-    dlogger* i16(struct dlogger* l, int16_t x);
-    dlogger* i32(struct dlogger* l, int32_t x);
-    dlogger* i64(struct dlogger* l, int64_t x);
-    dlogger* u(struct dlogger* l, unsigned int x);
-    dlogger* uptr(struct dlogger* l, uintptr_t x);
-    dlogger* u8(struct dlogger* l, uint8_t x);
-    dlogger* u16(struct dlogger* l, uint16_t x);
-    dlogger* u32(struct dlogger* l, uint32_t x);
-    dlogger* u64(struct dlogger* l, uint64_t x);
-    dlogger* hex(struct dlogger* l, uint64_t x);
-    dlogger* p(struct dlogger* l, go_any x);
-    dlogger* s(struct dlogger* l, std::string x);
-    dlogger* pc(struct dlogger* l, uintptr_t x);
-    dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x);
+    struct dlogger* b(struct dlogger* l, bool x);
+    struct dlogger* i(struct dlogger* l, int x);
+    struct dlogger* i8(struct dlogger* l, int8_t x);
+    struct dlogger* i16(struct dlogger* l, int16_t x);
+    struct dlogger* i32(struct dlogger* l, int32_t x);
+    struct dlogger* i64(struct dlogger* l, int64_t x);
+    struct dlogger* u(struct dlogger* l, unsigned int x);
+    struct dlogger* uptr(struct dlogger* l, uintptr_t x);
+    struct dlogger* u8(struct dlogger* l, uint8_t x);
+    struct dlogger* u16(struct dlogger* l, uint16_t x);
+    struct dlogger* u32(struct dlogger* l, uint32_t x);
+    struct dlogger* u64(struct dlogger* l, uint64_t x);
+    struct dlogger* hex(struct dlogger* l, uint64_t x);
+    struct dlogger* p(struct dlogger* l, go_any x);
+    struct dlogger* s(struct dlogger* l, std::string x);
+    struct dlogger* pc(struct dlogger* l, uintptr_t x);
+    struct dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x);
     struct debugLogWriter
     {
         sys::NotInHeap _;

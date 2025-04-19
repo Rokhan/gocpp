@@ -57,7 +57,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
+    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
     {
         auto r = addrRange {offAddr {base}, offAddr {limit}};
         if((base - arenaBaseOffset >= base) != (limit - arenaBaseOffset >= limit))
@@ -81,7 +81,7 @@ namespace golang::runtime
         return lessEqual(gocpp::recv(a.base), offAddr {addr}) && lessThan(gocpp::recv((offAddr {addr})), a.limit);
     }
 
-    addrRange subtract(struct addrRange a, addrRange b)
+    struct addrRange subtract(struct addrRange a, struct addrRange b)
     {
         if(lessEqual(gocpp::recv(b.base), a.base) && lessEqual(gocpp::recv(a.limit), b.limit))
         {
@@ -127,7 +127,7 @@ namespace golang::runtime
         return {limit, true};
     }
 
-    addrRange removeGreaterEqual(struct addrRange a, uintptr_t addr)
+    struct addrRange removeGreaterEqual(struct addrRange a, uintptr_t addr)
     {
         if(lessEqual(gocpp::recv((offAddr {addr})), a.base))
         {
@@ -171,32 +171,32 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    offAddr add(struct offAddr l, uintptr_t bytes)
+    struct offAddr add(struct offAddr l, uintptr_t bytes)
     {
         return gocpp::Init<offAddr>([](offAddr& x) { x.a = l.a + bytes; });
     }
 
-    offAddr sub(struct offAddr l, uintptr_t bytes)
+    struct offAddr sub(struct offAddr l, uintptr_t bytes)
     {
         return gocpp::Init<offAddr>([](offAddr& x) { x.a = l.a - bytes; });
     }
 
-    uintptr_t diff(struct offAddr l1, offAddr l2)
+    uintptr_t diff(struct offAddr l1, struct offAddr l2)
     {
         return l1.a - l2.a;
     }
 
-    bool lessThan(struct offAddr l1, offAddr l2)
+    bool lessThan(struct offAddr l1, struct offAddr l2)
     {
         return (l1.a - arenaBaseOffset) < (l2.a - arenaBaseOffset);
     }
 
-    bool lessEqual(struct offAddr l1, offAddr l2)
+    bool lessEqual(struct offAddr l1, struct offAddr l2)
     {
         return (l1.a - arenaBaseOffset) <= (l2.a - arenaBaseOffset);
     }
 
-    bool equal(struct offAddr l1, offAddr l2)
+    bool equal(struct offAddr l1, struct offAddr l2)
     {
         return l1 == l2;
     }
@@ -394,7 +394,7 @@ namespace golang::runtime
         return contains(gocpp::recv(a->ranges[i - 1]), addr);
     }
 
-    void add(struct addrRanges* a, addrRange r)
+    void add(struct addrRanges* a, struct addrRange r)
     {
         if(size(gocpp::recv(r)) == 0)
         {
@@ -442,7 +442,7 @@ namespace golang::runtime
         a->totalBytes += size(gocpp::recv(r));
     }
 
-    addrRange removeLast(struct addrRanges* a, uintptr_t nBytes)
+    struct addrRange removeLast(struct addrRanges* a, uintptr_t nBytes)
     {
         if(len(a->ranges) == 0)
         {
@@ -472,7 +472,7 @@ namespace golang::runtime
             return;
         }
         auto removed = uintptr_t(0);
-        for(auto [_, r] : a->ranges.make_slice(pivot))
+        for(auto [gocpp_ignored, r] : a->ranges.make_slice(pivot))
         {
             removed += size(gocpp::recv(r));
         }
@@ -494,7 +494,7 @@ namespace golang::runtime
         a->totalBytes -= removed;
     }
 
-    void cloneInto(struct addrRanges* a, addrRanges* b)
+    void cloneInto(struct addrRanges* a, struct addrRanges* b)
     {
         if(len(a->ranges) > cap(b->ranges))
         {

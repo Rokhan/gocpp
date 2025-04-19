@@ -79,7 +79,7 @@ namespace golang::flate
 
         struct IResetter
         {
-            virtual gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
+            virtual struct gocpp::error vReset(struct io::Reader r, gocpp::slice<unsigned char> dict) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -90,7 +90,7 @@ namespace golang::flate
                 value.reset(ptr);
             }
 
-            gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) override;
+            struct gocpp::error vReset(struct io::Reader r, gocpp::slice<unsigned char> dict) override;
 
             StoreT value;
         };
@@ -98,8 +98,8 @@ namespace golang::flate
         std::shared_ptr<IResetter> value;
     };
 
-    gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict);
-    gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict);
+    struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
+    struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     struct huffmanDecoder
@@ -198,21 +198,21 @@ namespace golang::flate
 
     std::ostream& operator<<(std::ostream& os, const struct decompressor& value);
     void nextBlock(struct decompressor* f);
-    std::tuple<int, gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b);
-    gocpp::error Close(struct decompressor* f);
+    std::tuple<int, struct gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b);
+    struct gocpp::error Close(struct decompressor* f);
     extern gocpp::array_base<int> codeOrder;
-    gocpp::error readHuffman(struct decompressor* f);
+    struct gocpp::error readHuffman(struct decompressor* f);
     void huffmanBlock(struct decompressor* f);
     void dataBlock(struct decompressor* f);
     void copyData(struct decompressor* f);
     void finishBlock(struct decompressor* f);
-    gocpp::error noEOF(gocpp::error e);
-    gocpp::error moreBits(struct decompressor* f);
-    std::tuple<int, gocpp::error> huffSym(struct decompressor* f, huffmanDecoder* h);
-    void makeReader(struct decompressor* f, io::Reader r);
+    struct gocpp::error noEOF(struct gocpp::error e);
+    struct gocpp::error moreBits(struct decompressor* f);
+    std::tuple<int, struct gocpp::error> huffSym(struct decompressor* f, struct huffmanDecoder* h);
+    void makeReader(struct decompressor* f, struct io::Reader r);
     void fixedHuffmanDecoderInit();
-    gocpp::error Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
-    io::ReadCloser NewReader(io::Reader r);
-    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
+    struct gocpp::error Reset(struct decompressor* f, struct io::Reader r, gocpp::slice<unsigned char> dict);
+    struct io::ReadCloser NewReader(struct io::Reader r);
+    struct io::ReadCloser NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict);
 }
 

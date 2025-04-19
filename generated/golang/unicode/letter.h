@@ -86,8 +86,8 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
     bool is16(gocpp::slice<Range16> ranges, uint16_t r);
     bool is32(gocpp::slice<Range32> ranges, uint32_t r);
-    bool Is(RangeTable* rangeTab, gocpp::rune r);
-    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
+    bool Is(struct RangeTable* rangeTab, gocpp::rune r);
+    bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r);
     bool IsUpper(gocpp::rune r);
     bool IsLower(gocpp::rune r);
     bool IsTitle(gocpp::rune r);

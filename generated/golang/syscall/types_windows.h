@@ -35,7 +35,7 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Timeval& value);
     int64_t Nanoseconds(struct Timeval* tv);
-    Timeval NsecToTimeval(int64_t nsec);
+    struct Timeval NsecToTimeval(int64_t nsec);
     struct SecurityAttributes
     {
         uint32_t Length;
@@ -111,7 +111,7 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
     int64_t Nanoseconds(struct Filetime* ft);
-    Filetime NsecToFiletime(int64_t nsec);
+    struct Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
         uint32_t FileAttributes;
@@ -162,7 +162,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct win32finddata1& value);
-    void copyFindData(Win32finddata* dst, win32finddata1* src);
+    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src);
     struct ByHandleFileInformation
     {
         uint32_t FileAttributes;

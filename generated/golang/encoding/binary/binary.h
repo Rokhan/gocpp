@@ -220,11 +220,11 @@ namespace golang::binary
     std::string GoString(bigEndian);
     std::string String(nativeEndian);
     std::string GoString(nativeEndian);
-    gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
-    gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
+    struct gocpp::error Read(struct io::Reader r, struct ByteOrder order, go_any data);
+    struct gocpp::error Write(struct io::Writer w, struct ByteOrder order, go_any data);
     int Size(go_any v);
-    int dataSize(reflect::Value v);
-    int sizeof(reflect::Type t);
+    int dataSize(struct reflect::Value v);
+    int sizeof(struct reflect::Type t);
     struct coder
     {
         ByteOrder order;
@@ -261,10 +261,10 @@ namespace golang::binary
     void int32(struct encoder* e, int32_t x);
     int64_t int64(struct decoder* d);
     void int64(struct encoder* e, int64_t x);
-    void value(struct decoder* d, reflect::Value v);
-    void value(struct encoder* e, reflect::Value v);
-    void skip(struct decoder* d, reflect::Value v);
-    void skip(struct encoder* e, reflect::Value v);
+    void value(struct decoder* d, struct reflect::Value v);
+    void value(struct encoder* e, struct reflect::Value v);
+    void skip(struct decoder* d, struct reflect::Value v);
+    void skip(struct encoder* e, struct reflect::Value v);
     int intDataSize(go_any data);
 }
 

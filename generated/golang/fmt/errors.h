@@ -12,10 +12,10 @@
 
 namespace golang::fmt
 {
-    gocpp::error Errorf(std::string format, gocpp::slice<go_any> a);
+    struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
-    gocpp::error Errorf(std::string format, Args... a)
+    struct gocpp::error Errorf(std::string format, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(a...));
     }
@@ -38,7 +38,7 @@ namespace golang::fmt
 
     std::ostream& operator<<(std::ostream& os, const struct wrapError& value);
     std::string Error(struct wrapError* e);
-    gocpp::error Unwrap(struct wrapError* e);
+    struct gocpp::error Unwrap(struct wrapError* e);
     struct wrapErrors
     {
         std::string msg;

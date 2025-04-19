@@ -19,22 +19,23 @@
 #include "golang/syscall/zsyscall_windows.h"
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
+#include "golang/time/zoneinfo_abbrs_windows.h"
 
 namespace golang::time
 {
     gocpp::slice<std::string> platformZoneSources;
-    std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
+    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
         try
         {
             bool matched;
-            gocpp::error err2;
+            struct gocpp::error err2;
             auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
             if(err != nullptr)
             {
                 bool matched;
-                gocpp::error err2;
+                struct gocpp::error err2;
                 return {false, err};
             }
             defer.push_back([=]{ Close(gocpp::recv(k)); });
@@ -44,36 +45,36 @@ namespace golang::time
             if(err == nullptr)
             {
                 bool matched;
-                gocpp::error err2;
+                struct gocpp::error err2;
                 std::tie(dlt, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
             }
             if(err != nullptr)
             {
                 bool matched;
-                gocpp::error err2;
+                struct gocpp::error err2;
                 if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
                 {
                     bool matched;
-                    gocpp::error err2;
+                    struct gocpp::error err2;
                     return {false, err};
                 }
                 if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
                 {
                     bool matched;
-                    gocpp::error err2;
+                    struct gocpp::error err2;
                     return {false, err};
                 }
             }
             if(std != stdname)
             {
                 bool matched;
-                gocpp::error err2;
+                struct gocpp::error err2;
                 return {false, nullptr};
             }
             if(dlt != dstname && dstname != stdname)
             {
                 bool matched;
-                gocpp::error err2;
+                struct gocpp::error err2;
                 return {false, nullptr};
             }
             return {true, nullptr};
@@ -84,7 +85,7 @@ namespace golang::time
         }
     }
 
-    std::tuple<std::string, gocpp::error> toEnglishName(std::string stdname, std::string dstname)
+    std::tuple<std::string, struct gocpp::error> toEnglishName(std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
         try
@@ -101,7 +102,7 @@ namespace golang::time
             {
                 return {"", err};
             }
-            for(auto [_, name] : names)
+            for(auto [gocpp_ignored, name] : names)
             {
                 auto [matched, err] = matchZoneKey(k, name, stdname, dstname);
                 if(err == nullptr && matched)
@@ -120,7 +121,7 @@ namespace golang::time
     std::string extractCAPS(std::string desc)
     {
         gocpp::slice<gocpp::rune> short = {};
-        for(auto [_, c] : desc)
+        for(auto [gocpp_ignored, c] : desc)
         {
             if('A' <= c && c <= 'Z')
             {
@@ -130,7 +131,7 @@ namespace golang::time
         return string(short);
     }
 
-    std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z)
+    std::tuple<std::string, std::string> abbrev(struct syscall::Timezoneinformation* z)
     {
         std::string std;
         std::string dst;
@@ -159,7 +160,7 @@ namespace golang::time
         return {a.std, a.dst};
     }
 
-    int64_t pseudoUnix(int year, syscall::Systemtime* d)
+    int64_t pseudoUnix(int year, struct syscall::Systemtime* d)
     {
         auto day = 1;
         auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, UTC);
@@ -184,7 +185,7 @@ namespace golang::time
         return sec(gocpp::recv(t)) + int64_t(day - 1) * secondsPerDay + internalToUnix;
     }
 
-    void initLocalFromTZI(syscall::Timezoneinformation* i)
+    void initLocalFromTZI(struct syscall::Timezoneinformation* i)
     {
         auto l = & localLoc;
         l->name = "Local";

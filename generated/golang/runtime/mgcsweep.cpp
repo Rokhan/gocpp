@@ -37,6 +37,7 @@
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
@@ -56,6 +57,7 @@
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -137,7 +139,7 @@ namespace golang::runtime
         return {spanClass(s >> 1), s & 1 == 0};
     }
 
-    mspan* nextSpanForSweep(struct mheap* h)
+    struct mspan* nextSpanForSweep(struct mheap* h)
     {
         auto sg = h->sweepgen;
         for(auto sc = load(gocpp::recv(sweep.centralIndex)); sc < numSweepClasses; sc++)
@@ -192,7 +194,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    sweepLocker begin(struct activeSweep* a)
+    struct sweepLocker begin(struct activeSweep* a)
     {
         for(; ; )
         {
@@ -208,7 +210,7 @@ namespace golang::runtime
         }
     }
 
-    void end(struct activeSweep* a, sweepLocker sl)
+    void end(struct activeSweep* a, struct sweepLocker sl)
     {
         if(sl.sweepGen != mheap_.sweepgen)
         {
@@ -383,7 +385,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    std::tuple<sweepLocked, bool> tryAcquire(struct sweepLocker* l, mspan* s)
+    std::tuple<struct sweepLocked, bool> tryAcquire(struct sweepLocker* l, struct mspan* s)
     {
         if(! l->valid)
         {

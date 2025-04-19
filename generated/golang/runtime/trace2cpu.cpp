@@ -51,6 +51,7 @@
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
 #include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2string.h"
 #include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
@@ -250,7 +251,7 @@ namespace golang::runtime
         }
     }
 
-    void traceCPUSample(g* gp, m* mp, p* pp, gocpp::slice<uintptr_t> stk)
+    void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk)
     {
         if(! traceEnabled())
         {

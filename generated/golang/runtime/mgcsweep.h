@@ -71,7 +71,7 @@ namespace golang::runtime
     void update(sweepClass* s, sweepClass sNew);
     void clear(sweepClass* s);
     std::tuple<spanClass, bool> split(sweepClass s);
-    mspan* nextSpanForSweep(struct mheap* h);
+    struct mspan* nextSpanForSweep(struct mheap* h);
     struct activeSweep
     {
         atomic::Uint32 state;
@@ -88,8 +88,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
-    sweepLocker begin(struct activeSweep* a);
-    void end(struct activeSweep* a, sweepLocker sl);
+    struct sweepLocker begin(struct activeSweep* a);
+    void end(struct activeSweep* a, struct sweepLocker sl);
     bool markDrained(struct activeSweep* a);
     uint32_t sweepers(struct activeSweep* a);
     bool isDone(struct activeSweep* a);
@@ -128,7 +128,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
-    std::tuple<sweepLocked, bool> tryAcquire(struct sweepLocker* l, mspan* s);
+    std::tuple<struct sweepLocked, bool> tryAcquire(struct sweepLocker* l, struct mspan* s);
     uintptr_t sweepone();
     bool isSweepDone();
     void ensureSwept(struct mspan* s);

@@ -20,6 +20,7 @@
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "golang/runtime/internal/atomic/types.h"
@@ -439,7 +440,7 @@ namespace golang::runtime
         return true;
     }
 
-    void gcStart(gcTrigger trigger)
+    void gcStart(struct gcTrigger trigger)
     {
         auto mp = acquirem();
         if(auto gp = getg(); gp == mp->g0 || mp->locks > 1 || mp->preemptoff != "")
@@ -477,7 +478,7 @@ namespace golang::runtime
             GCStart(gocpp::recv(trace));
             traceRelease(trace);
         }
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             if(auto fg = Load(gocpp::recv(p->mcache->flushGen)); fg != mheap_.sweepgen)
             {
@@ -551,7 +552,7 @@ namespace golang::runtime
         }
         semacquire(& worldsema);
         gcMarkDoneFlushed = 0;
-        forEachP(waitReasonGCMarkTermination, [=](p* pp) mutable -> void
+        forEachP(waitReasonGCMarkTermination, [=](struct p* pp) mutable -> void
         {
             wbBufFlush1(pp);
             dispose(gocpp::recv(pp->gcw));
@@ -577,7 +578,7 @@ namespace golang::runtime
         auto restart = false;
         systemstack([=]() mutable -> void
         {
-            for(auto [_, p] : allp)
+            for(auto [gocpp_ignored, p] : allp)
             {
                 wbBufFlush1(p);
                 if(! empty(gocpp::recv(p->gcw)))
@@ -608,7 +609,7 @@ namespace golang::runtime
         gcMarkTermination(stw);
     }
 
-    void gcMarkTermination(worldStop stw)
+    void gcMarkTermination(struct worldStop stw)
     {
         setGCPhase(_GCmarktermination);
         work.heap1 = Load(gocpp::recv(gcController.heapLive));
@@ -700,7 +701,7 @@ namespace golang::runtime
         mProf_Flush();
         prepareFreeWorkbufs();
         systemstack(freeStackSpans);
-        forEachP(waitReasonFlushProcCaches, [=](p* pp) mutable -> void
+        forEachP(waitReasonFlushProcCaches, [=](struct p* pp) mutable -> void
         {
             prepareForSweep(gocpp::recv(pp->mcache));
             if(pp->status == _Pidle)
@@ -760,7 +761,7 @@ namespace golang::runtime
         auto faultList = userArenaState.fault;
         userArenaState.fault = nullptr;
         unlock(& userArenaState.lock);
-        for(auto [_, lc] : faultList)
+        for(auto [gocpp_ignored, lc] : faultList)
         {
             setUserArenaChunkToFault(gocpp::recv(lc.mspan));
         }
@@ -844,7 +845,7 @@ namespace golang::runtime
         notewakeup(& work.bgMarkReady);
         for(; ; )
         {
-            gopark([=](g* g, unsafe::Pointer nodep) mutable -> bool
+            gopark([=](struct g* g, unsafe::Pointer nodep) mutable -> bool
             {
                 auto node = (gcBgMarkWorkerNode*)(nodep);
                 if(auto mp = ptr(gocpp::recv(node->m)); mp != nullptr)
@@ -943,7 +944,7 @@ namespace golang::runtime
         }
     }
 
-    bool gcMarkWorkAvailable(p* p)
+    bool gcMarkWorkAvailable(struct p* p)
     {
         if(p != nullptr && ! empty(gocpp::recv(p->gcw)))
         {
@@ -981,7 +982,7 @@ namespace golang::runtime
             gcMarkRootCheck();
         }
         work.stackRoots = nullptr;
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             if(debug.gccheckmark > 0)
             {
@@ -1017,7 +1018,7 @@ namespace golang::runtime
             }
             dispose(gocpp::recv(gcw));
         }
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             auto c = p->mcache;
             if(c == nullptr)
@@ -1050,7 +1051,7 @@ namespace golang::runtime
             lock(& mheap_.lock);
             mheap_.sweepPagesPerByte = 0;
             unlock(& mheap_.lock);
-            for(auto [_, pp] : allp)
+            for(auto [gocpp_ignored, pp] : allp)
             {
                 prepareForSweep(gocpp::recv(pp->mcache));
             }
@@ -1077,7 +1078,7 @@ namespace golang::runtime
 
     void gcResetMarkState()
     {
-        forEachG([=](g* gp) mutable -> void
+        forEachG([=](struct g* gp) mutable -> void
         {
             gp->gcscandone = false;
             gp->gcAssistBytes = 0;
@@ -1085,7 +1086,7 @@ namespace golang::runtime
         lock(& mheap_.lock);
         auto arenas = mheap_.allArenas;
         unlock(& mheap_.lock);
-        for(auto [_, ai] : arenas)
+        for(auto [gocpp_ignored, ai] : arenas)
         {
             auto ha = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
             for(auto [i, gocpp_ignored] : ha->pageMarks)
@@ -1115,7 +1116,7 @@ namespace golang::runtime
         {
             poolcleanup();
         }
-        for(auto [_, p] : boringCaches)
+        for(auto [gocpp_ignored, p] : boringCaches)
         {
             atomicstorep(p, nullptr);
         }
@@ -1248,7 +1249,7 @@ namespace golang::runtime
         {
             return "heap";
         }
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(datap->data <= p2 && p2 < datap->edata || datap->noptrdata <= p2 && p2 < datap->enoptrdata)
             {

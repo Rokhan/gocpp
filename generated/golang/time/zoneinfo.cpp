@@ -149,7 +149,7 @@ namespace golang::time
     Location* Local = & localLoc;
     Location localLoc;
     sync::Once localOnce;
-    Location* get(struct Location* l)
+    struct Location* get(struct Location* l)
     {
         if(l == nullptr)
         {
@@ -169,7 +169,7 @@ namespace golang::time
 
     gocpp::slice<Location*> unnamedFixedZones;
     sync::Once unnamedFixedZonesOnce;
-    Location* FixedZone(std::string name, int offset)
+    struct Location* FixedZone(std::string name, int offset)
     {
         auto hoursBeforeUTC = 12;
         auto hoursAfterUTC = 14;
@@ -189,7 +189,7 @@ namespace golang::time
         return fixedZone(name, offset);
     }
 
-    Location* fixedZone(std::string name, int offset)
+    struct Location* fixedZone(std::string name, int offset)
     {
         auto l = gocpp::InitPtr<Location>([](Location& x) { x.name = name; x.zone = gocpp::slice<zone> { {name, offset, false}}; x.tx = gocpp::slice<zoneTrans> { {alpha, 0, false, false}}; x.cacheStart = alpha; x.cacheEnd = omega; });
         l->cacheZone = & l->zone[0];
@@ -350,7 +350,7 @@ namespace golang::time
 
     bool firstZoneUsed(struct Location* l)
     {
-        for(auto [_, tx] : l->tx)
+        for(auto [gocpp_ignored, tx] : l->tx)
         {
             if(tx.index == 0)
             {
@@ -753,7 +753,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    std::tuple<rule, std::string, bool> tzsetRule(std::string s)
+    std::tuple<struct rule, std::string, bool> tzsetRule(std::string s)
     {
         rule r = {};
         if(len(s) == 0)
@@ -877,7 +877,7 @@ namespace golang::time
         return {num, "", true};
     }
 
-    int tzruleTime(int year, rule r, int off)
+    int tzruleTime(int year, struct rule r, int off)
     {
         int s = {};
         //Go switch emulation
@@ -979,7 +979,7 @@ namespace golang::time
     gocpp::error errLocation = errors::New("time: invalid location name");
     std::string* zoneinfo;
     sync::Once zoneinfoOnce;
-    std::tuple<Location*, gocpp::error> LoadLocation(std::string name)
+    std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name)
     {
         if(name == "" || name == "UTC")
         {

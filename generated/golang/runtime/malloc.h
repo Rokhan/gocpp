@@ -47,20 +47,20 @@
 namespace golang::runtime
 {
     void mallocinit();
-    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, arenaHint** hintList, bool go_register);
+    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register);
     std::tuple<unsafe::Pointer, uintptr_t> sysReserveAligned(unsafe::Pointer v, uintptr_t size, uintptr_t align);
     void enableMetadataHugePages(struct mheap* h);
-    gclinkptr nextFreeFast(mspan* s);
-    std::tuple<gclinkptr, mspan*, bool> nextFree(struct mcache* c, spanClass spc);
-    unsafe::Pointer mallocgc(uintptr_t size, _type* typ, bool needzero);
-    g* deductAssistCredit(uintptr_t size);
+    gclinkptr nextFreeFast(struct mspan* s);
+    std::tuple<gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, spanClass spc);
+    unsafe::Pointer mallocgc(uintptr_t size, struct _type* typ, bool needzero);
+    struct g* deductAssistCredit(uintptr_t size);
     void memclrNoHeapPointersChunked(uintptr_t size, unsafe::Pointer x);
-    unsafe::Pointer newobject(_type* typ);
-    unsafe::Pointer reflect_unsafe_New(_type* typ);
-    unsafe::Pointer reflectlite_unsafe_New(_type* typ);
-    unsafe::Pointer newarray(_type* typ, int n);
-    unsafe::Pointer reflect_unsafe_NewArray(_type* typ, int n);
-    void profilealloc(m* mp, unsafe::Pointer x, uintptr_t size);
+    unsafe::Pointer newobject(struct _type* typ);
+    unsafe::Pointer reflect_unsafe_New(struct _type* typ);
+    unsafe::Pointer reflectlite_unsafe_New(struct _type* typ);
+    unsafe::Pointer newarray(struct _type* typ, int n);
+    unsafe::Pointer reflect_unsafe_NewArray(struct _type* typ, int n);
+    void profilealloc(struct m* mp, unsafe::Pointer x, uintptr_t size);
     uintptr_t nextSample();
     int32_t fastexprand(int mean);
     uintptr_t nextSampleNoFP();
@@ -82,7 +82,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct persistentAlloc& value);
     unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
-    notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
     bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
@@ -121,7 +121,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
-    notInHeap* add(struct notInHeap* p, uintptr_t bytes);
+    struct notInHeap* add(struct notInHeap* p, uintptr_t bytes);
     uintptr_t computeRZlog(uintptr_t userSize);
 }
 

@@ -52,6 +52,7 @@
 #include "golang/runtime/pinner.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
@@ -123,7 +124,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
+    struct markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = bitp(gocpp::recv(s->allocBits), allocBitIndex);
         return markBits {bytep, mask, allocBitIndex};
@@ -215,20 +216,20 @@ namespace golang::runtime
         return divideByElemSize(gocpp::recv(s), p - base(gocpp::recv(s)));
     }
 
-    markBits markBitsForAddr(uintptr_t p)
+    struct markBits markBitsForAddr(uintptr_t p)
     {
         auto s = spanOf(p);
         auto objIndex = objIndex(gocpp::recv(s), p);
         return markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex)
+    struct markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex)
     {
         auto [bytep, mask] = bitp(gocpp::recv(s->gcmarkBits), objIndex);
         return markBits {bytep, mask, objIndex};
     }
 
-    markBits markBitsForBase(struct mspan* s)
+    struct markBits markBitsForBase(struct mspan* s)
     {
         return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
@@ -253,13 +254,13 @@ namespace golang::runtime
         atomic::And8(m.bytep, ~ m.mask);
     }
 
-    markBits markBitsForSpan(uintptr_t base)
+    struct markBits markBitsForSpan(uintptr_t base)
     {
-        markBits mbits;
+        struct markBits mbits;
         mbits = markBitsForAddr(base);
         if(mbits.mask != 1)
         {
-            markBits mbits;
+            struct markBits mbits;
             go_throw("markBitsForSpan: unaligned start");
         }
         return mbits;
@@ -279,7 +280,7 @@ namespace golang::runtime
         m->index++;
     }
 
-    void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
+    void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         printlock();
         print("runtime: pointer ", hex(p));
@@ -306,21 +307,21 @@ namespace golang::runtime
         go_throw("found bad pointer in Go heap (incorrect use of unsafe or cgo?)");
     }
 
-    std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
+    std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         uintptr_t base;
-        mspan* s;
+        struct mspan* s;
         uintptr_t objIndex;
         s = spanOf(p);
         if(s == nullptr)
         {
             uintptr_t base;
-            mspan* s;
+            struct mspan* s;
             uintptr_t objIndex;
             if((GOARCH == "amd64" || GOARCH == "arm64") && p == clobberdeadPtr && debug.invalidptr != 0)
             {
                 uintptr_t base;
-                mspan* s;
+                struct mspan* s;
                 uintptr_t objIndex;
                 badPointer(s, p, refBase, refOff);
             }
@@ -329,19 +330,19 @@ namespace golang::runtime
         if(auto state = get(gocpp::recv(s->state)); state != mSpanInUse || p < base(gocpp::recv(s)) || p >= s->limit)
         {
             uintptr_t base;
-            mspan* s;
+            struct mspan* s;
             uintptr_t objIndex;
             if(state == mSpanManual)
             {
                 uintptr_t base;
-                mspan* s;
+                struct mspan* s;
                 uintptr_t objIndex;
                 return {base, s, objIndex};
             }
             if(debug.invalidptr != 0)
             {
                 uintptr_t base;
-                mspan* s;
+                struct mspan* s;
                 uintptr_t objIndex;
                 badPointer(s, p, refBase, refOff);
             }
@@ -395,7 +396,7 @@ namespace golang::runtime
         }
     }
 
-    void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
+    void typeBitsBulkBarrier(struct _type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
     {
         if(typ == nullptr)
         {
@@ -507,7 +508,7 @@ namespace golang::runtime
 
 
     gocpp_id_0 debugPtrmask;
-    bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
+    struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch::PtrSize + 7) / 8;
         auto x = (gocpp::array<unsigned char, 1 << 30>*)(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
@@ -694,7 +695,7 @@ namespace golang::runtime
         return totalBits;
     }
 
-    mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
+    struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
     {
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch::PtrSize);
         auto pages = divRoundUp(bitmapBytes, pageSize);
@@ -703,7 +704,7 @@ namespace golang::runtime
         return s;
     }
 
-    void dematerializeGCProg(mspan* s)
+    void dematerializeGCProg(struct mspan* s)
     {
         freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
     }

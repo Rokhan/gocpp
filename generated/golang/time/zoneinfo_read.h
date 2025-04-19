@@ -13,7 +13,7 @@
 
 namespace golang::time
 {
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, gocpp::error> (std::string)> f);
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f);
     std::string Error(fileSizeError f);
     struct dataIO
     {
@@ -39,14 +39,14 @@ namespace golang::time
     gocpp::slice<unsigned char> rest(struct dataIO* d);
     std::string byteString(gocpp::slice<unsigned char> p);
     extern gocpp::error errBadData;
-    std::tuple<Location*, gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data);
+    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data);
     int findZone(gocpp::slice<zone> zones, std::string name, int offset, bool isDST);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name);
     int get4(gocpp::slice<unsigned char> b);
     int get2(gocpp::slice<unsigned char> b);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfo(std::string name, std::string source);
-    std::tuple<Location*, gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFile(std::string name);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source);
+    std::tuple<struct Location*, struct gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name);
 }
 

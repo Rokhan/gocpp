@@ -414,7 +414,7 @@ namespace golang::slices
     S Concat(gocpp::slice<S> slices)
     {
         auto size = 0;
-        for(auto [_, s] : slices)
+        for(auto [gocpp_ignored, s] : slices)
         {
             size += len(s);
             if(size < 0)
@@ -423,7 +423,7 @@ namespace golang::slices
             }
         }
         auto newslice = Grow[S](nullptr, size);
-        for(auto [_, s] : slices)
+        for(auto [gocpp_ignored, s] : slices)
         {
             newslice = append(newslice, s);
         }

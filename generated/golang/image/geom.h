@@ -31,14 +31,14 @@ namespace golang::image
 
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
     std::string String(struct Point p);
-    Point Add(struct Point p, Point q);
-    Point Sub(struct Point p, Point q);
-    Point Mul(struct Point p, int k);
-    Point Div(struct Point p, int k);
-    bool In(struct Point p, Rectangle r);
-    Point Mod(struct Point p, Rectangle r);
-    bool Eq(struct Point p, Point q);
-    Point Pt(int X, int Y);
+    struct Point Add(struct Point p, struct Point q);
+    struct Point Sub(struct Point p, struct Point q);
+    struct Point Mul(struct Point p, int k);
+    struct Point Div(struct Point p, int k);
+    bool In(struct Point p, struct Rectangle r);
+    struct Point Mod(struct Point p, struct Rectangle r);
+    bool Eq(struct Point p, struct Point q);
+    struct Point Pt(int X, int Y);
     struct Rectangle
     {
         Point Min;
@@ -59,22 +59,22 @@ namespace golang::image
     std::string String(struct Rectangle r);
     int Dx(struct Rectangle r);
     int Dy(struct Rectangle r);
-    Point Size(struct Rectangle r);
-    Rectangle Add(struct Rectangle r, Point p);
-    Rectangle Sub(struct Rectangle r, Point p);
-    Rectangle Inset(struct Rectangle r, int n);
-    Rectangle Intersect(struct Rectangle r, Rectangle s);
-    Rectangle Union(struct Rectangle r, Rectangle s);
+    struct Point Size(struct Rectangle r);
+    struct Rectangle Add(struct Rectangle r, struct Point p);
+    struct Rectangle Sub(struct Rectangle r, struct Point p);
+    struct Rectangle Inset(struct Rectangle r, int n);
+    struct Rectangle Intersect(struct Rectangle r, struct Rectangle s);
+    struct Rectangle Union(struct Rectangle r, struct Rectangle s);
     bool Empty(struct Rectangle r);
-    bool Eq(struct Rectangle r, Rectangle s);
-    bool Overlaps(struct Rectangle r, Rectangle s);
-    bool In(struct Rectangle r, Rectangle s);
-    Rectangle Canon(struct Rectangle r);
-    color::Color At(struct Rectangle r, int x, int y);
-    color::RGBA64 RGBA64At(struct Rectangle r, int x, int y);
-    Rectangle Bounds(struct Rectangle r);
-    color::Model ColorModel(struct Rectangle r);
-    Rectangle Rect(int x0, int y0, int x1, int y1);
+    bool Eq(struct Rectangle r, struct Rectangle s);
+    bool Overlaps(struct Rectangle r, struct Rectangle s);
+    bool In(struct Rectangle r, struct Rectangle s);
+    struct Rectangle Canon(struct Rectangle r);
+    struct color::Color At(struct Rectangle r, int x, int y);
+    struct color::RGBA64 RGBA64At(struct Rectangle r, int x, int y);
+    struct Rectangle Bounds(struct Rectangle r);
+    struct color::Model ColorModel(struct Rectangle r);
+    struct Rectangle Rect(int x0, int y0, int x1, int y1);
     int mul3NonNeg(int x, int y, int z);
     int add2NonNeg(int x, int y);
 }

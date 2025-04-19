@@ -96,12 +96,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t itabHashFunc(interfacetype* inter, _type* typ)
+    uintptr_t itabHashFunc(struct interfacetype* inter, struct _type* typ)
     {
         return uintptr_t(inter->Type.Hash ^ typ->Hash);
     }
 
-    itab* getitab(interfacetype* inter, _type* typ, bool canfail)
+    struct itab* getitab(struct interfacetype* inter, struct _type* typ, bool canfail)
     {
         if(len(inter->Methods) == 0)
         {
@@ -147,7 +147,7 @@ namespace golang::runtime
         gocpp::panic(gocpp::InitPtr<TypeAssertionError>([](TypeAssertionError& x) { x.concrete = typ; x.asserted = & inter->Type; x.missingMethod = init(gocpp::recv(m)); }));
     }
 
-    itab* find(struct itabTableType* t, interfacetype* inter, _type* typ)
+    struct itab* find(struct itabTableType* t, struct interfacetype* inter, struct _type* typ)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(inter, typ) & mask;
@@ -168,7 +168,7 @@ namespace golang::runtime
         }
     }
 
-    void itabAdd(itab* m)
+    void itabAdd(struct itab* m)
     {
         if(getg()->m->mallocing != 0)
         {
@@ -190,7 +190,7 @@ namespace golang::runtime
         add(gocpp::recv(t), m);
     }
 
-    void add(struct itabTableType* t, itab* m)
+    void add(struct itabTableType* t, struct itab* m)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(m->inter, m->_type) & mask;
@@ -280,9 +280,9 @@ namespace golang::runtime
     {
         lockInit(& itabLock, lockRankItab);
         lock(& itabLock);
-        for(auto [_, md] : activeModules())
+        for(auto [gocpp_ignored, md] : activeModules())
         {
-            for(auto [_, i] : md->itablinks)
+            for(auto [gocpp_ignored, i] : md->itablinks)
             {
                 itabAdd(i);
             }
@@ -290,12 +290,12 @@ namespace golang::runtime
         unlock(& itabLock);
     }
 
-    void panicdottypeE(_type* have, _type* want, _type* iface)
+    void panicdottypeE(struct _type* have, struct _type* want, struct _type* iface)
     {
         gocpp::panic(new TypeAssertionError {iface, have, want, ""});
     }
 
-    void panicdottypeI(itab* have, _type* want, _type* iface)
+    void panicdottypeI(struct itab* have, struct _type* want, struct _type* iface)
     {
         _type* t = {};
         if(have != nullptr)
@@ -305,7 +305,7 @@ namespace golang::runtime
         panicdottypeE(t, want, iface);
     }
 
-    void panicnildottype(_type* want)
+    void panicnildottype(struct _type* want)
     {
         gocpp::panic(new TypeAssertionError {nullptr, nullptr, want, ""});
     }
@@ -320,7 +320,7 @@ namespace golang::runtime
     _type* uint64Type = efaceOf(& uint64Eface)->_type;
     _type* stringType = efaceOf(& stringEface)->_type;
     _type* sliceType = efaceOf(& sliceEface)->_type;
-    unsafe::Pointer convT(_type* t, unsafe::Pointer v)
+    unsafe::Pointer convT(struct _type* t, unsafe::Pointer v)
     {
         if(raceenabled)
         {
@@ -339,7 +339,7 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convTnoptr(_type* t, unsafe::Pointer v)
+    unsafe::Pointer convTnoptr(struct _type* t, unsafe::Pointer v)
     {
         if(raceenabled)
         {
@@ -453,7 +453,7 @@ namespace golang::runtime
         return x;
     }
 
-    itab* assertE2I(interfacetype* inter, _type* t)
+    struct itab* assertE2I(struct interfacetype* inter, struct _type* t)
     {
         if(t == nullptr)
         {
@@ -462,7 +462,7 @@ namespace golang::runtime
         return getitab(inter, t, false);
     }
 
-    itab* assertE2I2(interfacetype* inter, _type* t)
+    struct itab* assertE2I2(struct interfacetype* inter, struct _type* t)
     {
         if(t == nullptr)
         {
@@ -471,7 +471,7 @@ namespace golang::runtime
         return getitab(inter, t, true);
     }
 
-    itab* typeAssert(abi::TypeAssert* s, _type* t)
+    struct itab* typeAssert(struct abi::TypeAssert* s, struct _type* t)
     {
         itab* tab = {};
         if(t == nullptr)
@@ -503,11 +503,11 @@ namespace golang::runtime
         return tab;
     }
 
-    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, _type* typ, itab* tab)
+    struct abi::TypeAssertCache* buildTypeAssertCache(struct abi::TypeAssertCache* oldC, struct _type* typ, struct itab* tab)
     {
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
         auto n = 1;
-        for(auto [_, e] : oldEntries)
+        for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
             {
@@ -520,7 +520,7 @@ namespace golang::runtime
         auto newC = (abi::TypeAssertCache*)(mallocgc(newSize, nullptr, true));
         newC->Mask = uintptr_t(newN - 1);
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
-        auto addEntry = [=](_type* typ, itab* tab) mutable -> void
+        auto addEntry = [=](struct _type* typ, struct itab* tab) mutable -> void
         {
             auto h = int(typ->Hash) & (newN - 1);
             for(; ; )
@@ -534,7 +534,7 @@ namespace golang::runtime
                 h = (h + 1) & (newN - 1);
             }
         };
-        for(auto [_, e] : oldEntries)
+        for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
             {
@@ -546,7 +546,7 @@ namespace golang::runtime
     }
 
     abi::TypeAssertCache emptyTypeAssertCache = gocpp::Init<abi::TypeAssertCache>([](abi::TypeAssertCache& x) { x.Mask = 0; });
-    std::tuple<int, itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t)
+    std::tuple<int, struct itab*> interfaceSwitch(struct abi::InterfaceSwitch* s, struct _type* t)
     {
         auto cases = unsafe::Slice(& s->Cases[0], s->NCases);
         auto case_ = len(cases);
@@ -578,11 +578,11 @@ namespace golang::runtime
         return {case_, tab};
     }
 
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab)
+    struct abi::InterfaceSwitchCache* buildInterfaceSwitchCache(struct abi::InterfaceSwitchCache* oldC, struct _type* typ, int case_, struct itab* tab)
     {
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
         auto n = 1;
-        for(auto [_, e] : oldEntries)
+        for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
             {
@@ -595,7 +595,7 @@ namespace golang::runtime
         auto newC = (abi::InterfaceSwitchCache*)(mallocgc(newSize, nullptr, true));
         newC->Mask = uintptr_t(newN - 1);
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
-        auto addEntry = [=](_type* typ, int case_, itab* tab) mutable -> void
+        auto addEntry = [=](struct _type* typ, int case_, struct itab* tab) mutable -> void
         {
             auto h = int(typ->Hash) & (newN - 1);
             for(; ; )
@@ -610,7 +610,7 @@ namespace golang::runtime
                 h = (h + 1) & (newN - 1);
             }
         };
-        for(auto [_, e] : oldEntries)
+        for(auto [gocpp_ignored, e] : oldEntries)
         {
             if(e.Typ != 0)
             {
@@ -622,12 +622,12 @@ namespace golang::runtime
     }
 
     abi::InterfaceSwitchCache emptyInterfaceSwitchCache = gocpp::Init<abi::InterfaceSwitchCache>([](abi::InterfaceSwitchCache& x) { x.Mask = 0; });
-    void reflect_ifaceE2I(interfacetype* inter, eface e, iface* dst)
+    void reflect_ifaceE2I(struct interfacetype* inter, struct eface e, struct iface* dst)
     {
         *dst = iface {assertE2I(inter, e._type), e.data};
     }
 
-    void reflectlite_ifaceE2I(interfacetype* inter, eface e, iface* dst)
+    void reflectlite_ifaceE2I(struct interfacetype* inter, struct eface e, struct iface* dst)
     {
         *dst = iface {assertE2I(inter, e._type), e.data};
     }

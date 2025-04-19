@@ -27,14 +27,20 @@
 #include "golang/runtime/mstats.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2event.h"
+// #include "golang/runtime/trace2map.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2region.h"  [Ignored, known errors]
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2string.h"
 #include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
@@ -65,12 +71,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    traceWriter writer(struct traceLocker tl)
+    struct traceWriter writer(struct traceLocker tl)
     {
         return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = tl; x.traceBuf = tl.mp->trace.buf[tl.gen % 2]; });
     }
 
-    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf)
+    struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf)
     {
         return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = gocpp::Init<traceLocker>([](traceLocker& x) { x.gen = gen; }); x.traceBuf = buf; });
     }
@@ -84,7 +90,7 @@ namespace golang::runtime
         w.mp->trace.buf[w.gen % 2] = w.traceBuf;
     }
 
-    std::tuple<traceWriter, bool> ensure(struct traceWriter w, int maxSize)
+    std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize)
     {
         auto refill = w.traceBuf == nullptr || ! available(gocpp::recv(w), maxSize);
         if(refill)
@@ -94,7 +100,7 @@ namespace golang::runtime
         return {w, refill};
     }
 
-    traceWriter flush(struct traceWriter w)
+    struct traceWriter flush(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -109,7 +115,7 @@ namespace golang::runtime
         return w;
     }
 
-    traceWriter refill(struct traceWriter w)
+    struct traceWriter refill(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -187,7 +193,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void push(struct traceBufQueue* q, traceBuf* buf)
+    void push(struct traceBufQueue* q, struct traceBuf* buf)
     {
         buf->link = nullptr;
         if(q->head == nullptr)
@@ -201,7 +207,7 @@ namespace golang::runtime
         q->tail = buf;
     }
 
-    traceBuf* pop(struct traceBufQueue* q)
+    struct traceBuf* pop(struct traceBufQueue* q)
     {
         auto buf = q->head;
         if(buf == nullptr)
@@ -354,7 +360,7 @@ namespace golang::runtime
         }
     }
 
-    void traceBufFlush(traceBuf* buf, uintptr_t gen)
+    void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
         varintAt(gocpp::recv(buf), buf->lenPos, uint64_t(buf->pos - (buf->lenPos + traceBytesPerNumber)));

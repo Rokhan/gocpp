@@ -18,7 +18,7 @@ namespace golang::wc
     void Test(std::function<gocpp::map<std::string, int> (std::string)> f)
     {
         auto ok = true;
-        for(auto [_, c] : testCases)
+        for(auto [gocpp_ignored, c] : testCases)
         {
             auto got = f(c.in);
             if(len(c.want) != len(got))

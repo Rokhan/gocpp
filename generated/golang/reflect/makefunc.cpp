@@ -55,7 +55,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    Value MakeFunc(Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn)
+    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn)
     {
         if(Kind(gocpp::recv(typ)) != Func)
         {
@@ -104,7 +104,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    Value makeMethodValue(std::string op, Value v)
+    struct Value makeMethodValue(std::string op, struct Value v)
     {
         if(v.flag & flagMethod == 0)
         {
@@ -167,7 +167,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void moveMakeFuncArgPtrs(makeFuncCtxt* ctxt, abi::RegArgs* args)
+    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, struct abi::RegArgs* args)
     {
         for(auto [i, arg] : args->Ints)
         {

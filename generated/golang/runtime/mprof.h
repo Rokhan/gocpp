@@ -90,7 +90,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct memRecordCycle& value);
-    void add(struct memRecordCycle* a, memRecordCycle* b);
+    void add(struct memRecordCycle* a, struct memRecordCycle* b);
     struct blockRecord
     {
         double count;
@@ -127,18 +127,18 @@ namespace golang::runtime
     uint32_t read(struct mProfCycleHolder* c);
     std::tuple<uint32_t, bool> setFlushed(struct mProfCycleHolder* c);
     void increment(struct mProfCycleHolder* c);
-    bucket* newBucket(bucketType typ, int nstk);
+    struct bucket* newBucket(bucketType typ, int nstk);
     gocpp::slice<uintptr_t> stk(struct bucket* b);
-    memRecord* mp(struct bucket* b);
-    blockRecord* bp(struct bucket* b);
-    bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
+    struct memRecord* mp(struct bucket* b);
+    struct blockRecord* bp(struct bucket* b);
+    struct bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
     bool eqslice(gocpp::slice<uintptr_t> x, gocpp::slice<uintptr_t> y);
     void mProf_NextCycle();
     void mProf_Flush();
     void mProf_FlushLocked(uint32_t index);
     void mProf_PostSweep();
     void mProf_Malloc(unsafe::Pointer p, uintptr_t size);
-    void mProf_Free(bucket* b, uintptr_t size);
+    void mProf_Free(struct bucket* b, uintptr_t size);
     void SetBlockProfileRate(int rate);
     void blockevent(int64_t cycles, int skip);
     bool blocksampled(int64_t cycles, int64_t rate);
@@ -185,8 +185,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
-    /* void recordLock(struct mLockProfile* prof, int64_t cycles, mutex* l); [Ignored, known name conflict] */ 
-    /* void recordUnlock(struct mLockProfile* prof, mutex* l); [Ignored, known name conflict] */ 
+    /* void recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l); [Ignored, known name conflict] */ 
+    /* void recordUnlock(struct mLockProfile* prof, struct mutex* l); [Ignored, known name conflict] */ 
     void captureStack(struct mLockProfile* prof);
     void store(struct mLockProfile* prof);
     void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, bucketType which);
@@ -234,7 +234,7 @@ namespace golang::runtime
     int64_t InUseObjects(struct MemProfileRecord* r);
     gocpp::slice<uintptr_t> Stack(struct MemProfileRecord* r);
     std::tuple<int, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero);
-    void record(MemProfileRecord* r, bucket* b);
+    void record(struct MemProfileRecord* r, struct bucket* b);
     void iterate_memprof(std::function<void (bucket*, uintptr_t, uintptr_t*, uintptr_t, uintptr_t, uintptr_t)> fn);
     struct BlockProfileRecord
     {
@@ -263,14 +263,14 @@ namespace golang::runtime
     void Store(struct goroutineProfileStateHolder* p, goroutineProfileState value);
     bool CompareAndSwap(struct goroutineProfileStateHolder* p, goroutineProfileState old, goroutineProfileState go_new);
     std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
-    /* void tryRecordGoroutineProfileWB(g* gp1); [Ignored, known name conflict] */ 
-    /* void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield); [Ignored, known name conflict] */ 
-    /* void doRecordGoroutineProfile(g* gp1); [Ignored, known name conflict] */ 
+    /* void tryRecordGoroutineProfileWB(struct g* gp1); [Ignored, known name conflict] */ 
+    /* void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield); [Ignored, known name conflict] */ 
+    /* void doRecordGoroutineProfile(struct g* gp1); [Ignored, known name conflict] */ 
     std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
-    /* void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r); [Ignored, known name conflict] */ 
+    /* void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r); [Ignored, known name conflict] */ 
     int Stack(gocpp::slice<unsigned char> buf, bool all);
-    void tracealloc(unsafe::Pointer p, uintptr_t size, _type* typ);
+    void tracealloc(unsafe::Pointer p, uintptr_t size, struct _type* typ);
     void tracefree(unsafe::Pointer p, uintptr_t size);
     void tracegc();
 }

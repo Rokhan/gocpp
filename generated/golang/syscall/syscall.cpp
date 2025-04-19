@@ -28,7 +28,7 @@ namespace golang::syscall
         return a;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ByteSliceFromString(std::string s)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
@@ -44,7 +44,7 @@ namespace golang::syscall
         return & StringByteSlice(s)[0];
     }
 
-    std::tuple<unsigned char*, gocpp::error> BytePtrFromString(std::string s)
+    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
         if(err != nullptr)

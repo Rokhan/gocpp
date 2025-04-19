@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
@@ -176,7 +177,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t typehash(_type* t, unsafe::Pointer p, uintptr_t h)
+    uintptr_t typehash(struct _type* t, unsafe::Pointer p, uintptr_t h)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
@@ -247,7 +248,7 @@ namespace golang::runtime
                     break;
                 case 7:
                     auto s = (structtype*)(unsafe::Pointer(t));
-                    for(auto [_, f] : s->Fields)
+                    for(auto [gocpp_ignored, f] : s->Fields)
                     {
                         if(IsBlank(gocpp::recv(f.Name)))
                         {
@@ -264,7 +265,7 @@ namespace golang::runtime
         }
     }
 
-    gocpp::error mapKeyError(maptype* t, unsafe::Pointer p)
+    struct gocpp::error mapKeyError(struct maptype* t, unsafe::Pointer p)
     {
         if(! HashMightPanic(gocpp::recv(t)))
         {
@@ -273,7 +274,7 @@ namespace golang::runtime
         return mapKeyError2(t->Key, p);
     }
 
-    gocpp::error mapKeyError2(_type* t, unsafe::Pointer p)
+    struct gocpp::error mapKeyError2(struct _type* t, unsafe::Pointer p)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
@@ -350,7 +351,7 @@ namespace golang::runtime
                     break;
                 case 7:
                     auto s = (structtype*)(unsafe::Pointer(t));
-                    for(auto [_, f] : s->Fields)
+                    for(auto [gocpp_ignored, f] : s->Fields)
                     {
                         if(IsBlank(gocpp::recv(f.Name)))
                         {
@@ -370,7 +371,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t reflect_typehash(_type* t, unsafe::Pointer p, uintptr_t h)
+    uintptr_t reflect_typehash(struct _type* t, unsafe::Pointer p, uintptr_t h)
     {
         return typehash(t, p, h);
     }
@@ -444,7 +445,7 @@ namespace golang::runtime
         return x._type == y._type && efaceeq(x._type, x.data, y.data);
     }
 
-    bool efaceeq(_type* t, unsafe::Pointer x, unsafe::Pointer y)
+    bool efaceeq(struct _type* t, unsafe::Pointer x, unsafe::Pointer y)
     {
         if(t == nullptr)
         {
@@ -462,7 +463,7 @@ namespace golang::runtime
         return eq(x, y);
     }
 
-    bool ifaceeq(itab* tab, unsafe::Pointer x, unsafe::Pointer y)
+    bool ifaceeq(struct itab* tab, unsafe::Pointer x, unsafe::Pointer y)
     {
         if(tab == nullptr)
         {

@@ -67,8 +67,8 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    entry* newEntry(go_any i);
-    readOnly loadReadOnly(struct Map* m);
+    struct entry* newEntry(go_any i);
+    struct readOnly loadReadOnly(struct Map* m);
     std::tuple<go_any, bool> Load(struct Map* m, go_any key);
     std::tuple<go_any, bool> load(struct entry* e);
     void Store(struct Map* m, go_any key, go_any value);

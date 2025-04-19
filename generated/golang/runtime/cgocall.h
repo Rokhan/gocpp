@@ -58,7 +58,7 @@ namespace golang::runtime
     }
 
     int32_t cgocall(unsafe::Pointer fn, unsafe::Pointer arg);
-    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
+    void callbackUpdateSystemStack(struct m* mp, uintptr_t sp, bool signal);
     void cgocallbackg(unsafe::Pointer fn, unsafe::Pointer frame, uintptr_t ctxt);
     void cgocallbackg1(unsafe::Pointer fn, unsafe::Pointer frame, uintptr_t ctxt);
     void unwindm(bool* restore);
@@ -67,7 +67,7 @@ namespace golang::runtime
     void cgoCheckPointer(go_any ptr, go_any arg);
     extern std::string cgoCheckPointerFail;
     extern std::string cgoResultFail;
-    void cgoCheckArg(_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
+    void cgoCheckArg(struct _type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
     std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg);
     bool cgoIsGoPointer(unsafe::Pointer p);
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end);

@@ -91,12 +91,12 @@ namespace golang::runtime
         });
     }
 
-    void cgoCheckMemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void cgoCheckMemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         cgoCheckMemmove2(typ, dst, src, 0, typ->Size_);
     }
 
-    void cgoCheckMemmove2(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckMemmove2(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -113,7 +113,7 @@ namespace golang::runtime
         cgoCheckTypedBlock(typ, src, off, size);
     }
 
-    void cgoCheckSliceCopy(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
+    void cgoCheckSliceCopy(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
     {
         if(typ->PtrBytes == 0)
         {
@@ -135,7 +135,7 @@ namespace golang::runtime
         }
     }
 
-    void cgoCheckTypedBlock(_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckTypedBlock(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes <= off)
         {
@@ -150,7 +150,7 @@ namespace golang::runtime
             cgoCheckBits(src, typ->GCData, off, size);
             return;
         }
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(cgoInRange(src, datap->data, datap->edata))
             {
@@ -248,7 +248,7 @@ namespace golang::runtime
         }
     }
 
-    void cgoCheckUsingType(_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckUsingType(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -303,7 +303,7 @@ namespace golang::runtime
                     break;
                 case 1:
                     auto st = (structtype*)(unsafe::Pointer(typ));
-                    for(auto [_, f] : st->Fields)
+                    for(auto [gocpp_ignored, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)
                         {

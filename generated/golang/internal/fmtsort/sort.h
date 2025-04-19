@@ -34,9 +34,9 @@ namespace golang::fmtsort
     int Len(struct SortedMap* o);
     bool Less(struct SortedMap* o, int i, int j);
     void Swap(struct SortedMap* o, int i, int j);
-    SortedMap* Sort(reflect::Value mapValue);
-    int compare(reflect::Value aVal, reflect::Value bVal);
-    std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
+    struct SortedMap* Sort(struct reflect::Value mapValue);
+    int compare(struct reflect::Value aVal, struct reflect::Value bVal);
+    std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal);
     int floatCompare(double a, double b);
     bool isNaN(double a);
 }

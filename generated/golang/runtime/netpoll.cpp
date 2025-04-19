@@ -258,7 +258,7 @@ namespace golang::runtime
         return netpollIsPollDescriptor(fd);
     }
 
-    std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
+    std::tuple<struct pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
     {
         auto pd = alloc(gocpp::recv(pollcache));
         lock(& pd->lock);
@@ -297,7 +297,7 @@ namespace golang::runtime
         return {pd, 0};
     }
 
-    void poll_runtime_pollClose(pollDesc* pd)
+    void poll_runtime_pollClose(struct pollDesc* pd)
     {
         if(! pd->closing)
         {
@@ -317,7 +317,7 @@ namespace golang::runtime
         free(gocpp::recv(pollcache), pd);
     }
 
-    void free(struct pollCache* c, pollDesc* pd)
+    void free(struct pollCache* c, struct pollDesc* pd)
     {
         lock(& pd->lock);
         auto fdseq = Load(gocpp::recv(pd->fdseq));
@@ -331,7 +331,7 @@ namespace golang::runtime
         unlock(& c->lock);
     }
 
-    int poll_runtime_pollReset(pollDesc* pd, int mode)
+    int poll_runtime_pollReset(struct pollDesc* pd, int mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
@@ -350,7 +350,7 @@ namespace golang::runtime
         return pollNoError;
     }
 
-    int poll_runtime_pollWait(pollDesc* pd, int mode)
+    int poll_runtime_pollWait(struct pollDesc* pd, int mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
         if(errcode != pollNoError)
@@ -372,14 +372,14 @@ namespace golang::runtime
         return pollNoError;
     }
 
-    void poll_runtime_pollWaitCanceled(pollDesc* pd, int mode)
+    void poll_runtime_pollWaitCanceled(struct pollDesc* pd, int mode)
     {
         for(; ! netpollblock(pd, int32_t(mode), true); )
         {
         }
     }
 
-    void poll_runtime_pollSetDeadline(pollDesc* pd, int64_t d, int mode)
+    void poll_runtime_pollSetDeadline(struct pollDesc* pd, int64_t d, int mode)
     {
         lock(& pd->lock);
         if(pd->closing)
@@ -483,7 +483,7 @@ namespace golang::runtime
         netpollAdjustWaiters(delta);
     }
 
-    void poll_runtime_pollUnblock(pollDesc* pd)
+    void poll_runtime_pollUnblock(struct pollDesc* pd)
     {
         lock(& pd->lock);
         if(pd->closing)
@@ -521,7 +521,7 @@ namespace golang::runtime
         netpollAdjustWaiters(delta);
     }
 
-    int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode)
+    int32_t netpollready(struct gList* toRun, struct pollDesc* pd, int32_t mode)
     {
         auto delta = int32_t(0);
         g* rg = {};
@@ -545,7 +545,7 @@ namespace golang::runtime
         return delta;
     }
 
-    int netpollcheckerr(pollDesc* pd, int32_t mode)
+    int netpollcheckerr(struct pollDesc* pd, int32_t mode)
     {
         auto info = info(gocpp::recv(pd));
         if(closing(gocpp::recv(info)))
@@ -563,7 +563,7 @@ namespace golang::runtime
         return pollNoError;
     }
 
-    bool netpollblockcommit(g* gp, unsafe::Pointer gpp)
+    bool netpollblockcommit(struct g* gp, unsafe::Pointer gpp)
     {
         auto r = atomic::Casuintptr((uintptr_t*)(gpp), pdWait, uintptr_t(unsafe::Pointer(gp)));
         if(r)
@@ -573,12 +573,12 @@ namespace golang::runtime
         return r;
     }
 
-    void netpollgoready(g* gp, int traceskip)
+    void netpollgoready(struct g* gp, int traceskip)
     {
         goready(gp, traceskip + 1);
     }
 
-    bool netpollblock(pollDesc* pd, int32_t mode, bool waitio)
+    bool netpollblock(struct pollDesc* pd, int32_t mode, bool waitio)
     {
         auto gpp = & pd->rg;
         if(mode == 'w')
@@ -612,7 +612,7 @@ namespace golang::runtime
         return old == pdReady;
     }
 
-    g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta)
+    struct g* netpollunblock(struct pollDesc* pd, int32_t mode, bool ioready, int32_t* delta)
     {
         auto gpp = & pd->rg;
         if(mode == 'w')
@@ -651,7 +651,7 @@ namespace golang::runtime
         }
     }
 
-    void netpolldeadlineimpl(pollDesc* pd, uintptr_t seq, bool read, bool write)
+    void netpolldeadlineimpl(struct pollDesc* pd, uintptr_t seq, bool read, bool write)
     {
         lock(& pd->lock);
         auto currentSeq = pd->rseq;
@@ -727,7 +727,7 @@ namespace golang::runtime
         }
     }
 
-    pollDesc* alloc(struct pollCache* c)
+    struct pollDesc* alloc(struct pollCache* c)
     {
         lock(& c->lock);
         if(c->first == nullptr)

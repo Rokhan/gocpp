@@ -58,7 +58,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stringStructDWARF& value);
-    stringStruct* stringStructOf(std::string* sp);
+    struct stringStruct* stringStructOf(std::string* sp);
     std::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v);
     std::tuple<std::string, gocpp::slice<unsigned char>> rawstring(int size);
     gocpp::slice<unsigned char> rawbyteslice(int size);

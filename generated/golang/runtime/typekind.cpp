@@ -16,7 +16,7 @@
 
 namespace golang::runtime
 {
-    bool isDirectIface(_type* t)
+    bool isDirectIface(struct _type* t)
     {
         return t->Kind_ & kindDirectIface != 0;
     }

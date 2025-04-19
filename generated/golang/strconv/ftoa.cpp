@@ -233,7 +233,7 @@ namespace golang::strconv
         return formatDigits(dst, shortest, neg, digs, prec, fmt);
     }
 
-    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt)
+    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
         auto d = go_new(decimal);
         Assign(gocpp::recv(d), mant);
@@ -304,7 +304,7 @@ namespace golang::strconv
         return formatDigits(dst, shortest, neg, digs, prec, fmt);
     }
 
-    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, decimalSlice digs, int prec, unsigned char fmt)
+    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, struct decimalSlice digs, int prec, unsigned char fmt)
     {
         //Go switch emulation
         {
@@ -355,7 +355,7 @@ namespace golang::strconv
         return append(dst, '%', fmt);
     }
 
-    void roundShortest(decimal* d, uint64_t mant, int exp, floatInfo* flt)
+    void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt)
     {
         if(mant == 0)
         {
@@ -491,7 +491,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec, unsigned char fmt)
+    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec, unsigned char fmt)
     {
         if(neg)
         {
@@ -555,7 +555,7 @@ namespace golang::strconv
         return dst;
     }
 
-    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec)
+    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec)
     {
         if(neg)
         {
@@ -590,7 +590,7 @@ namespace golang::strconv
         return dst;
     }
 
-    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, floatInfo* flt)
+    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
         if(neg)
         {
@@ -607,7 +607,7 @@ namespace golang::strconv
         return dst;
     }
 
-    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt)
+    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
         if(mant == 0)
         {

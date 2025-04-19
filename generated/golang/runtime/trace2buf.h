@@ -47,12 +47,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
-    traceWriter writer(struct traceLocker tl);
-    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf);
+    struct traceWriter writer(struct traceLocker tl);
+    struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf);
     void end(struct traceWriter w);
-    std::tuple<traceWriter, bool> ensure(struct traceWriter w, int maxSize);
-    traceWriter flush(struct traceWriter w);
-    traceWriter refill(struct traceWriter w);
+    std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize);
+    struct traceWriter flush(struct traceWriter w);
+    struct traceWriter refill(struct traceWriter w);
     struct traceBufQueue
     {
         traceBuf* head;
@@ -70,8 +70,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBufQueue& value);
-    void push(struct traceBufQueue* q, traceBuf* buf);
-    traceBuf* pop(struct traceBufQueue* q);
+    void push(struct traceBufQueue* q, struct traceBuf* buf);
+    struct traceBuf* pop(struct traceBufQueue* q);
     bool empty(struct traceBufQueue* q);
     struct traceBufHeader
     {
@@ -115,6 +115,6 @@ namespace golang::runtime
     void stringData(struct traceBuf* buf, std::string s);
     bool available(struct traceBuf* buf, int size);
     void varintAt(struct traceBuf* buf, int pos, uint64_t v);
-    void traceBufFlush(traceBuf* buf, uintptr_t gen);
+    void traceBufFlush(struct traceBuf* buf, uintptr_t gen);
 }
 

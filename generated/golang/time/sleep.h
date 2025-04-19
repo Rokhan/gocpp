@@ -42,7 +42,7 @@ namespace golang::time
     void startTimer(runtimeTimer*);
     bool stopTimer(runtimeTimer*);
     bool resetTimer(runtimeTimer*, int64_t);
-    void modTimer(runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq);
+    void modTimer(struct runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq);
     struct Timer
     {
         gocpp::channel<Time> C;
@@ -61,11 +61,11 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
     bool Stop(struct Timer* t);
-    Timer* NewTimer(Duration d);
+    struct Timer* NewTimer(Duration d);
     bool Reset(struct Timer* t, Duration d);
     void sendTime(go_any c, uintptr_t seq);
     gocpp::channel<Time> After(Duration d);
-    Timer* AfterFunc(Duration d, std::function<void ()> f);
+    struct Timer* AfterFunc(Duration d, std::function<void ()> f);
     void goFunc(go_any arg, uintptr_t seq);
 }
 

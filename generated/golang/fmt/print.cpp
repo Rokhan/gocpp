@@ -14,12 +14,22 @@
 #include "golang/fmt/format.h"
 #include "golang/internal/abi/type.h"
 // #include "golang/internal/fmtsort/sort.h"  [Ignored, known errors]
+#include "golang/internal/poll/fd_mutex.h"
+#include "golang/internal/poll/fd_poll_runtime.h"
+#include "golang/internal/poll/fd_windows.h"
+#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/io.h"
+#include "golang/os/dir_windows.h"
+#include "golang/os/file_windows.h"
+#include "golang/os/types.h"
 #include "golang/reflect/type.h"
 // #include "golang/reflect/value.h"  [Ignored, known errors]
 #include "golang/strconv/itoa.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::fmt
@@ -63,7 +73,7 @@ namespace golang::fmt
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> State::StateImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> State::StateImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> b)
     {
         return Write(gocpp::PtrRecv<T, false>(value.get()), b);
     }
@@ -83,12 +93,12 @@ namespace golang::fmt
         return Flag(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b)
     {
         return self.ptr->value->vWrite(b);
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b)
     {
         return self.obj.value->vWrite(b);
     }
@@ -153,17 +163,17 @@ namespace golang::fmt
     }
 
     template<typename T, typename StoreT>
-    void Formatter::FormatterImpl<T, StoreT>::vFormat(State f, gocpp::rune verb)
+    void Formatter::FormatterImpl<T, StoreT>::vFormat(struct State f, gocpp::rune verb)
     {
         return Format(gocpp::PtrRecv<T, false>(value.get()), f, verb);
     }
 
-    void Format(const gocpp::PtrRecv<Formatter, false>& self, State f, gocpp::rune verb)
+    void Format(const gocpp::PtrRecv<Formatter, false>& self, struct State f, gocpp::rune verb)
     {
         return self.ptr->value->vFormat(f, verb);
     }
 
-    void Format(const gocpp::ObjRecv<Formatter>& self, State f, gocpp::rune verb)
+    void Format(const gocpp::ObjRecv<Formatter>& self, struct State f, gocpp::rune verb)
     {
         return self.obj.value->vFormat(f, verb);
     }
@@ -263,11 +273,11 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    std::string FormatString(State state, gocpp::rune verb)
+    std::string FormatString(struct State state, gocpp::rune verb)
     {
         gocpp::array<unsigned char, 16> tmp = {};
         auto b = append(tmp.make_slice(0, 0), '%');
-        for(auto [_, c] : " +-#0")
+        for(auto [gocpp_ignored, c] : " +-#0")
         {
             if(Flag(gocpp::recv(state), int(c)))
             {
@@ -367,7 +377,7 @@ namespace golang::fmt
     {
         return go_new(pp);
     }; });
-    pp* newPrinter()
+    struct pp* newPrinter()
     {
         auto p = gocpp::getValue<pp*>(Get(gocpp::recv(ppFree)));
         p->panicking = false;
@@ -444,26 +454,26 @@ namespace golang::fmt
         return false;
     }
 
-    std::tuple<int, gocpp::error> Write(struct pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Write(struct pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
-        gocpp::error err;
+        struct gocpp::error err;
         write(gocpp::recv(p->buf), b);
         return {len(b), nullptr};
     }
 
-    std::tuple<int, gocpp::error> WriteString(struct pp* p, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(struct pp* p, std::string s)
     {
         int ret;
-        gocpp::error err;
+        struct gocpp::error err;
         writeString(gocpp::recv(p->buf), s);
         return {len(s), nullptr};
     }
 
-    std::tuple<int, gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprintf(struct io::Writer w, std::string format, gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         auto p = newPrinter();
         doPrintf(gocpp::recv(p), format, a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -471,10 +481,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> Printf(std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Printf(std::string format, gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         return Fprintf(os::Stdout, format, a);
     }
 
@@ -496,10 +506,10 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprint(struct io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         auto p = newPrinter();
         doPrint(gocpp::recv(p), a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -507,10 +517,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Print(gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         return Fprint(os::Stdout, a);
     }
 
@@ -532,10 +542,10 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprintln(struct io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         auto p = newPrinter();
         doPrintln(gocpp::recv(p), a);
         std::tie(n, err) = Write(gocpp::recv(w), p->buf);
@@ -543,10 +553,10 @@ namespace golang::fmt
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Println(gocpp::slice<go_any> a)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         return Fprintln(os::Stdout, a);
     }
 
@@ -568,7 +578,7 @@ namespace golang::fmt
         return b;
     }
 
-    reflect::Value getField(reflect::Value v, int i)
+    struct reflect::Value getField(struct reflect::Value v, int i)
     {
         auto val = Field(gocpp::recv(v), i);
         if(Kind(gocpp::recv(val)) == reflect::Interface && ! IsNil(gocpp::recv(val)))
@@ -614,7 +624,7 @@ namespace golang::fmt
         return {num, isnum, newi};
     }
 
-    void unknownType(struct pp* p, reflect::Value v)
+    void unknownType(struct pp* p, struct reflect::Value v)
     {
         if(! IsValid(gocpp::recv(v)))
         {
@@ -790,7 +800,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtComplex(struct pp* p, gocpp::complex128 v, int size, gocpp::rune verb)
+    void fmtComplex(struct pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -943,7 +953,7 @@ namespace golang::fmt
         }
     }
 
-    void fmtPointer(struct pp* p, reflect::Value value, gocpp::rune verb)
+    void fmtPointer(struct pp* p, struct reflect::Value value, gocpp::rune verb)
     {
         uintptr_t u = {};
         //Go switch emulation
@@ -1365,7 +1375,7 @@ namespace golang::fmt
         }
     }
 
-    void printValue(struct pp* p, reflect::Value value, gocpp::rune verb, int depth)
+    void printValue(struct pp* p, struct reflect::Value value, gocpp::rune verb, int depth)
     {
         if(depth > 0 && IsValid(gocpp::recv(value)) && CanInterface(gocpp::recv(value)))
         {

@@ -213,37 +213,37 @@ namespace golang::runtime
     unsigned int l2(arenaIdx i);
     bool inheap(uintptr_t b);
     bool inHeapOrStack(uintptr_t b);
-    mspan* spanOf(uintptr_t p);
-    mspan* spanOfUnchecked(uintptr_t p);
-    mspan* spanOfHeap(uintptr_t p);
-    std::tuple<heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
+    struct mspan* spanOf(uintptr_t p);
+    struct mspan* spanOfUnchecked(uintptr_t p);
+    struct mspan* spanOfHeap(uintptr_t p);
+    std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
     void init(struct mheap* h);
     void reclaim(struct mheap* h, uintptr_t npage);
     uintptr_t reclaimChunk(struct mheap* h, gocpp::slice<arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n);
     bool manual(spanAllocType s);
-    mspan* alloc(struct mheap* h, uintptr_t npages, spanClass spanclass);
-    mspan* allocManual(struct mheap* h, uintptr_t npages, spanAllocType typ);
-    void setSpans(struct mheap* h, uintptr_t base, uintptr_t npage, mspan* s);
+    struct mspan* alloc(struct mheap* h, uintptr_t npages, spanClass spanclass);
+    struct mspan* allocManual(struct mheap* h, uintptr_t npages, spanAllocType typ);
+    void setSpans(struct mheap* h, uintptr_t base, uintptr_t npage, struct mspan* s);
     bool allocNeedsZero(struct mheap* h, uintptr_t base, uintptr_t npage);
-    mspan* tryAllocMSpan(struct mheap* h);
-    mspan* allocMSpanLocked(struct mheap* h);
-    void freeMSpanLocked(struct mheap* h, mspan* s);
-    mspan* allocSpan(struct mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
-    void initSpan(struct mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages);
+    struct mspan* tryAllocMSpan(struct mheap* h);
+    struct mspan* allocMSpanLocked(struct mheap* h);
+    void freeMSpanLocked(struct mheap* h, struct mspan* s);
+    struct mspan* allocSpan(struct mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
+    void initSpan(struct mheap* h, struct mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages);
     std::tuple<uintptr_t, bool> grow(struct mheap* h, uintptr_t npage);
-    void freeSpan(struct mheap* h, mspan* s);
-    void freeManual(struct mheap* h, mspan* s, spanAllocType typ);
-    void freeSpanLocked(struct mheap* h, mspan* s, spanAllocType typ);
+    void freeSpan(struct mheap* h, struct mspan* s);
+    void freeManual(struct mheap* h, struct mspan* s, spanAllocType typ);
+    void freeSpanLocked(struct mheap* h, struct mspan* s, spanAllocType typ);
     void scavengeAll(struct mheap* h);
     void runtime_debug_freeOSMemory();
     void init(struct mspan* span, uintptr_t base, uintptr_t npages);
     bool inList(struct mspan* span);
     void init(struct mSpanList* list);
-    void remove(struct mSpanList* list, mspan* span);
+    void remove(struct mSpanList* list, struct mspan* span);
     bool isEmpty(struct mSpanList* list);
-    void insert(struct mSpanList* list, mspan* span);
-    void insertBack(struct mSpanList* list, mspan* span);
-    void takeAll(struct mSpanList* list, mSpanList* other);
+    void insert(struct mSpanList* list, struct mspan* span);
+    void insertBack(struct mSpanList* list, struct mspan* span);
+    void takeAll(struct mSpanList* list, struct mSpanList* other);
     struct special
     {
         sys::NotInHeap _;
@@ -263,11 +263,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct special& value);
-    void spanHasSpecials(mspan* s);
-    void spanHasNoSpecials(mspan* s);
-    bool addspecial(unsafe::Pointer p, special* s);
-    special* removespecial(unsafe::Pointer p, uint8_t kind);
-    std::tuple<special**, bool> specialFindSplicePoint(struct mspan* span, uintptr_t offset, unsigned char kind);
+    void spanHasSpecials(struct mspan* s);
+    void spanHasNoSpecials(struct mspan* s);
+    bool addspecial(unsafe::Pointer p, struct special* s);
+    struct special* removespecial(unsafe::Pointer p, uint8_t kind);
+    std::tuple<struct special**, bool> specialFindSplicePoint(struct mspan* span, uintptr_t offset, unsigned char kind);
     struct specialfinalizer
     {
         sys::NotInHeap _;
@@ -289,7 +289,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialfinalizer& value);
-    bool addfinalizer(unsafe::Pointer p, funcval* f, uintptr_t nret, _type* fint, ptrtype* ot);
+    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, struct _type* fint, struct ptrtype* ot);
     void removefinalizer(unsafe::Pointer p);
     struct specialprofile
     {
@@ -309,7 +309,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialprofile& value);
-    void setprofilebucket(unsafe::Pointer p, bucket* b);
+    void setprofilebucket(unsafe::Pointer p, struct bucket* b);
     struct specialReachable
     {
         special special;
@@ -362,11 +362,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialsIter& value);
-    specialsIter newSpecialsIter(mspan* span);
+    struct specialsIter newSpecialsIter(struct mspan* span);
     bool valid(struct specialsIter* i);
     void next(struct specialsIter* i);
-    special* unlinkAndNext(struct specialsIter* i);
-    void freeSpecial(special* s, unsafe::Pointer p, uintptr_t size);
+    struct special* unlinkAndNext(struct specialsIter* i);
+    void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size);
     struct gcBits
     {
         sys::NotInHeap _;
@@ -422,10 +422,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsArena& value);
-    gcBits* tryAlloc(struct gcBitsArena* b, uintptr_t bytes);
-    gcBits* newMarkBits(uintptr_t nelems);
-    gcBits* newAllocBits(uintptr_t nelems);
+    struct gcBits* tryAlloc(struct gcBitsArena* b, uintptr_t bytes);
+    struct gcBits* newMarkBits(uintptr_t nelems);
+    struct gcBits* newAllocBits(uintptr_t nelems);
     void nextMarkBitArenaEpoch();
-    gcBitsArena* newArenaMayUnlock();
+    struct gcBitsArena* newArenaMayUnlock();
 }
 

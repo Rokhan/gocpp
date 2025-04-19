@@ -11,8 +11,10 @@
 #include "golang/runtime/mem.h"
 #include "gocpp/support.h"
 
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mem_windows.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 #include "golang/runtime/mstats.h"
 #include "golang/unsafe/unsafe.h"
 

@@ -121,7 +121,7 @@ namespace golang::chacha8rand
         Init64(gocpp::recv(s), seed);
     }
 
-    gocpp::slice<unsigned char> Marshal(State* s)
+    gocpp::slice<unsigned char> Marshal(struct State* s)
     {
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 6 * 8);
         copy(data, "chacha8:");
@@ -165,7 +165,7 @@ namespace golang::chacha8rand
         return "invalid ChaCha8 encoding";
     }
 
-    gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data)
+    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data)
     {
         if(len(data) != 6 * 8 || string(data.make_slice(0, 8)) != "chacha8:")
         {

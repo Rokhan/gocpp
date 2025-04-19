@@ -51,7 +51,7 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct deflateFast& value);
-    deflateFast* newDeflateFast();
+    struct deflateFast* newDeflateFast();
     gocpp::slice<token> encode(struct deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit);
     int32_t matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);

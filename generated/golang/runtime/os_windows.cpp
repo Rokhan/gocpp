@@ -133,7 +133,7 @@ namespace golang::runtime
     gocpp::array_base<uint16_t> powrprofdll = gocpp::array_base<uint16_t> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
     gocpp::array_base<uint16_t> winmmdll = gocpp::array_base<uint16_t> {'w', 'i', 'n', 'm', 'm', '.', 'd', 'l', 'l', 0};
     gocpp::array_base<uint16_t> ws2_32dll = gocpp::array_base<uint16_t> {'w', 's', '2', '_', '3', '2', '.', 'd', 'l', 'l', 0};
-    void tstart_stdcall(m* newm)
+    void tstart_stdcall(struct m* newm)
     /* convertBlockStmt, nil block */;
 
     void wintls()
@@ -590,7 +590,7 @@ namespace golang::runtime
         }
         auto isASCII = true;
         auto b = (gocpp::array<unsigned char, 1 << 30>*)(buf).make_slice(0, n);
-        for(auto [_, x] : b)
+        for(auto [gocpp_ignored, x] : b)
         {
             if(x >= 0x80)
             {
@@ -623,7 +623,7 @@ namespace golang::runtime
         auto utf16tmp = utf16ConsoleBack.make_slice(0, );
         auto total = len(s);
         auto w = 0;
-        for(auto [_, r] : s)
+        for(auto [gocpp_ignored, r] : s)
         {
             if(w >= len(utf16tmp) - 2)
             {
@@ -735,7 +735,7 @@ namespace golang::runtime
         return - 1;
     }
 
-    void semawakeup(m* mp)
+    void semawakeup(struct m* mp)
     {
         if(stdcall1(_SetEvent, mp->waitsema) == 0)
         {
@@ -747,7 +747,7 @@ namespace golang::runtime
         }
     }
 
-    void semacreate(m* mp)
+    void semacreate(struct m* mp)
     {
         if(mp->waitsema != 0)
         {
@@ -775,7 +775,7 @@ namespace golang::runtime
         }
     }
 
-    void newosproc(m* mp)
+    void newosproc(struct m* mp)
     {
         auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(unsafe::Pointer(mp)), 0, 0);
         if(thandle == 0)
@@ -791,25 +791,25 @@ namespace golang::runtime
         stdcall1(_CloseHandle, thandle);
     }
 
-    void newosproc0(m* mp, unsafe::Pointer stk)
+    void newosproc0(struct m* mp, unsafe::Pointer stk)
     {
         go_throw("bad newosproc0");
     }
 
-    void exitThread(atomic::Uint32* wait)
+    void exitThread(struct atomic::Uint32* wait)
     {
         go_throw("exitThread");
     }
 
-    void mpreinit(m* mp)
+    void mpreinit(struct m* mp)
     {
     }
 
-    void sigsave(sigset* p)
+    void sigsave(struct sigset* p)
     {
     }
 
-    void msigrestore(sigset sigmask)
+    void msigrestore(struct sigset sigmask)
     {
     }
 
@@ -876,7 +876,7 @@ namespace golang::runtime
         mp->procid = 0;
     }
 
-    void mdestroy(m* mp)
+    void mdestroy(struct m* mp)
     {
         if(mp->highResTimer != 0)
         {
@@ -1083,7 +1083,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     uintptr_t profiletimer;
-    void profilem(m* mp, uintptr_t thread)
+    void profilem(struct m* mp, uintptr_t thread)
     {
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
@@ -1094,7 +1094,7 @@ namespace golang::runtime
         sigprof(ip(gocpp::recv(c)), sp(gocpp::recv(c)), lr(gocpp::recv(c)), gp, mp);
     }
 
-    g* gFromSP(m* mp, uintptr_t sp)
+    struct g* gFromSP(struct m* mp, uintptr_t sp)
     {
         if(auto gp = mp->g0; gp != nullptr && gp->stack.lo < sp && sp < gp->stack.hi)
         {
@@ -1188,7 +1188,7 @@ namespace golang::runtime
     }
 
     mutex suspendLock;
-    void preemptM(m* mp)
+    void preemptM(struct m* mp)
     {
         if(mp == getg()->m)
         {
@@ -1282,7 +1282,7 @@ namespace golang::runtime
         stdcall1(_CloseHandle, thread);
     }
 
-    void osPreemptExtEnter(m* mp)
+    void osPreemptExtEnter(struct m* mp)
     {
         for(; ! atomic::Cas(& mp->preemptExtLock, 0, 1); )
         {
@@ -1290,7 +1290,7 @@ namespace golang::runtime
         }
     }
 
-    void osPreemptExtExit(m* mp)
+    void osPreemptExtExit(struct m* mp)
     {
         atomic::Store(& mp->preemptExtLock, 0);
     }

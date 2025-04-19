@@ -41,12 +41,12 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct mcentral& value);
     void init(struct mcentral* c, spanClass spc);
-    /* spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    mspan* cacheSpan(struct mcentral* c);
-    void uncacheSpan(struct mcentral* c, mspan* s);
-    mspan* grow(struct mcentral* c);
+    /* struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+    /* struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+    /* struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+    /* struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+    struct mspan* cacheSpan(struct mcentral* c);
+    void uncacheSpan(struct mcentral* c, struct mspan* s);
+    struct mspan* grow(struct mcentral* c);
 }
 

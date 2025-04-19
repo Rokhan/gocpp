@@ -607,7 +607,7 @@ namespace golang::runtime
         auto p = go_new(string);
         *p = godebug;
         Store(gocpp::recv(godebugEnv), p);
-        for(auto [_, v] : dbgvars)
+        for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->def != 0)
             {
@@ -634,7 +634,7 @@ namespace golang::runtime
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
         parsegodebug(env, seen);
         parsegodebug(godebugDefault, seen);
-        for(auto [_, v] : dbgvars)
+        for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->atomic != nullptr && ! seen[v->name])
             {
@@ -699,7 +699,7 @@ namespace golang::runtime
             }
             else
             {
-                for(auto [_, v] : dbgvars)
+                for(auto [gocpp_ignored, v] : dbgvars)
                 {
                     if(v->name == key)
                     {
@@ -807,14 +807,14 @@ namespace golang::runtime
         return res;
     }
 
-    m* acquirem()
+    struct m* acquirem()
     {
         auto gp = getg();
         gp->m->locks++;
         return gp->m;
     }
 
-    void releasem(m* mp)
+    void releasem(struct m* mp)
     {
         auto gp = getg();
         mp->locks--;
@@ -829,7 +829,7 @@ namespace golang::runtime
         auto modules = activeModules();
         auto sections = gocpp::slice<unsafe::Pointer> {unsafe::Pointer(modules[0]->types)};
         auto ret = gocpp::slice<gocpp::slice<int32_t>> {modules[0]->typelinks};
-        for(auto [_, md] : modules.make_slice(1))
+        for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
             sections = append(sections, unsafe::Pointer(md->types));
             ret = append(ret, md->typelinks);

@@ -60,7 +60,7 @@ namespace golang::syscall
         return e->Msg;
     }
 
-    gocpp::error Unwrap(struct DLLError* e)
+    struct gocpp::error Unwrap(struct DLLError* e)
     {
         return e->Err;
     }
@@ -127,7 +127,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<DLL*, gocpp::error> LoadDLL(std::string name)
+    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(std::string name)
     {
         auto [namep, err] = UTF16PtrFromString(name);
         if(err != nullptr)
@@ -152,7 +152,7 @@ namespace golang::syscall
         return {d, nullptr};
     }
 
-    DLL* MustLoadDLL(std::string name)
+    struct DLL* MustLoadDLL(std::string name)
     {
         auto [d, e] = LoadDLL(name);
         if(e != nullptr)
@@ -162,29 +162,29 @@ namespace golang::syscall
         return d;
     }
 
-    std::tuple<Proc*, gocpp::error> FindProc(struct DLL* d, std::string name)
+    std::tuple<struct Proc*, struct gocpp::error> FindProc(struct DLL* d, std::string name)
     {
-        Proc* proc;
-        gocpp::error err;
+        struct Proc* proc;
+        struct gocpp::error err;
         auto [namep, err] = BytePtrFromString(name);
         if(err != nullptr)
         {
-            Proc* proc;
-            gocpp::error err;
+            struct Proc* proc;
+            struct gocpp::error err;
             return {nullptr, err};
         }
         auto [a, e] = getprocaddress(uintptr_t(d->Handle), namep);
         if(e != 0)
         {
-            Proc* proc;
-            gocpp::error err;
+            struct Proc* proc;
+            struct gocpp::error err;
             return {nullptr, gocpp::InitPtr<DLLError>([](DLLError& x) { x.Err = e; x.ObjName = name; x.Msg = "Failed to find " + name + " procedure in " + d->Name + ": " + Error(gocpp::recv(e)); })};
         }
         auto p = gocpp::InitPtr<Proc>([](Proc& x) { x.Dll = d; x.Name = name; x.addr = a; });
         return {p, nullptr};
     }
 
-    Proc* MustFindProc(struct DLL* d, std::string name)
+    struct Proc* MustFindProc(struct DLL* d, std::string name)
     {
         auto [p, e] = FindProc(gocpp::recv(d), name);
         if(e != nullptr)
@@ -194,9 +194,9 @@ namespace golang::syscall
         return p;
     }
 
-    gocpp::error Release(struct DLL* d)
+    struct gocpp::error Release(struct DLL* d)
     {
-        gocpp::error err;
+        struct gocpp::error err;
         return FreeLibrary(d->Handle);
     }
 
@@ -240,7 +240,7 @@ namespace golang::syscall
         return p->addr;
     }
 
-    std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(struct Proc* p, gocpp::slice<uintptr_t> a)
+    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct Proc* p, gocpp::slice<uintptr_t> a)
     {
         return SyscallN(Addr(gocpp::recv(p)), a);
     }
@@ -280,7 +280,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    gocpp::error Load(struct LazyDLL* d)
+    struct gocpp::error Load(struct LazyDLL* d)
     {
         gocpp::Defer defer;
         try
@@ -322,12 +322,12 @@ namespace golang::syscall
         return uintptr_t(d->dll->Handle);
     }
 
-    LazyProc* NewProc(struct LazyDLL* d, std::string name)
+    struct LazyProc* NewProc(struct LazyDLL* d, std::string name)
     {
         return gocpp::InitPtr<LazyProc>([](LazyProc& x) { x.l = d; x.Name = name; });
     }
 
-    LazyDLL* NewLazyDLL(std::string name)
+    struct LazyDLL* NewLazyDLL(std::string name)
     {
         return gocpp::InitPtr<LazyDLL>([](LazyDLL& x) { x.Name = name; });
     }
@@ -370,7 +370,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    gocpp::error Find(struct LazyProc* p)
+    struct gocpp::error Find(struct LazyProc* p)
     {
         gocpp::Defer defer;
         try
@@ -418,11 +418,11 @@ namespace golang::syscall
         return Addr(gocpp::recv(p->proc));
     }
 
-    std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(struct LazyProc* p, gocpp::slice<uintptr_t> a)
+    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct LazyProc* p, gocpp::slice<uintptr_t> a)
     {
         uintptr_t r1;
         uintptr_t r2;
-        gocpp::error lastErr;
+        struct gocpp::error lastErr;
         mustFind(gocpp::recv(p));
         return Call(gocpp::recv(p->proc), a);
     }

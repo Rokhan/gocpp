@@ -58,8 +58,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlock& value);
-    void push(struct spanSet* b, mspan* s);
-    mspan* pop(struct spanSet* b);
+    void push(struct spanSet* b, struct mspan* s);
+    struct mspan* pop(struct spanSet* b);
     void reset(struct spanSet* b);
     struct atomicSpanSetSpinePointer
     {
@@ -77,8 +77,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicSpanSetSpinePointer& value);
-    spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s);
-    void StoreNoWB(struct atomicSpanSetSpinePointer* s, spanSetSpinePointer p);
+    struct spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s);
+    void StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p);
     struct spanSetSpinePointer
     {
         unsafe::Pointer p;
@@ -112,8 +112,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
-    spanSetBlock* alloc(struct spanSetBlockAlloc* p);
-    void free(struct spanSetBlockAlloc* p, spanSetBlock* block);
+    struct spanSetBlock* alloc(struct spanSetBlockAlloc* p);
+    void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block);
     headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     uint32_t head(headTailIndex h);
     uint32_t tail(headTailIndex h);
@@ -156,7 +156,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
-    mspan* Load(struct atomicMSpanPointer* p);
-    void StoreNoWB(struct atomicMSpanPointer* p, mspan* s);
+    struct mspan* Load(struct atomicMSpanPointer* p);
+    void StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s);
 }
 

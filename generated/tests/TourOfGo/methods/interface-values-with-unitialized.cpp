@@ -111,7 +111,7 @@ namespace golang::main
         M(gocpp::recv(i));
     }
 
-    void describe(I i)
+    void describe(struct I i)
     {
         mocklib::Printf("(%v, %T)\n", i, i);
     }

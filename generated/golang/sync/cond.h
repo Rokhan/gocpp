@@ -33,7 +33,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Cond& value);
-    Cond* NewCond(Locker l);
+    struct Cond* NewCond(struct Locker l);
     void Wait(struct Cond* c);
     void Signal(struct Cond* c);
     void Broadcast(struct Cond* c);

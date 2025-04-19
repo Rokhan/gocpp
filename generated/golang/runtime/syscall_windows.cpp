@@ -191,7 +191,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool tryMerge(struct abiPart* a, abiPart b)
+    bool tryMerge(struct abiPart* a, struct abiPart b)
     {
         if(a->kind != abiPartStack || b.kind != abiPartStack)
         {
@@ -249,7 +249,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void assignArg(struct abiDesc* p, _type* t)
+    void assignArg(struct abiDesc* p, struct _type* t)
     {
         if(t->Size_ > goarch::PtrSize)
         {
@@ -284,7 +284,7 @@ namespace golang::runtime
         p->srcStackSize += goarch::PtrSize;
     }
 
-    bool tryRegAssignArg(struct abiDesc* p, _type* t, uintptr_t offset)
+    bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -429,7 +429,7 @@ namespace golang::runtime
         return abi::FuncPCABI0(callbackasm) + uintptr_t(i * entrySize);
     }
 
-    uintptr_t compileCallback(eface fn, bool cdecl)
+    uintptr_t compileCallback(struct eface fn, bool cdecl)
     {
         uintptr_t code;
         if(GOARCH != "386")
@@ -444,7 +444,7 @@ namespace golang::runtime
         }
         auto ft = (functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
-        for(auto [_, t] : InSlice(gocpp::recv(ft)))
+        for(auto [gocpp_ignored, t] : InSlice(gocpp::recv(ft)))
         {
             uintptr_t code;
             assignArg(gocpp::recv(abiMap), t);
@@ -550,14 +550,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void callbackWrap(callbackArgs* a)
+    void callbackWrap(struct callbackArgs* a)
     {
         auto c = cbs.ctxt[a->index];
         a->retPop = c.retPop;
         abi::RegArgs regs = {};
         gocpp::array<unsigned char, callbackMaxFrame> frame = {};
         auto goArgs = unsafe::Pointer(& frame);
-        for(auto [_, part] : c.abiMap.parts)
+        for(auto [gocpp_ignored, part] : c.abiMap.parts)
         {
             //Go switch emulation
             {

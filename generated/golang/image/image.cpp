@@ -77,47 +77,47 @@ namespace golang::image
     }
 
     template<typename T, typename StoreT>
-    color::Model Image::ImageImpl<T, StoreT>::vColorModel()
+    struct color::Model Image::ImageImpl<T, StoreT>::vColorModel()
     {
         return ColorModel(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    Rectangle Image::ImageImpl<T, StoreT>::vBounds()
+    struct Rectangle Image::ImageImpl<T, StoreT>::vBounds()
     {
         return Bounds(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    color::Color Image::ImageImpl<T, StoreT>::vAt(int x, int y)
+    struct color::Color Image::ImageImpl<T, StoreT>::vAt(int x, int y)
     {
         return At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
-    color::Model ColorModel(const gocpp::PtrRecv<Image, false>& self)
+    struct color::Model ColorModel(const gocpp::PtrRecv<Image, false>& self)
     {
         return self.ptr->value->vColorModel();
     }
 
-    color::Model ColorModel(const gocpp::ObjRecv<Image>& self)
+    struct color::Model ColorModel(const gocpp::ObjRecv<Image>& self)
     {
         return self.obj.value->vColorModel();
     }
 
-    Rectangle Bounds(const gocpp::PtrRecv<Image, false>& self)
+    struct Rectangle Bounds(const gocpp::PtrRecv<Image, false>& self)
     {
         return self.ptr->value->vBounds();
     }
 
-    Rectangle Bounds(const gocpp::ObjRecv<Image>& self)
+    struct Rectangle Bounds(const gocpp::ObjRecv<Image>& self)
     {
         return self.obj.value->vBounds();
     }
 
-    color::Color At(const gocpp::PtrRecv<Image, false>& self, int x, int y)
+    struct color::Color At(const gocpp::PtrRecv<Image, false>& self, int x, int y)
     {
         return self.ptr->value->vAt(x, y);
     }
 
-    color::Color At(const gocpp::ObjRecv<Image>& self, int x, int y)
+    struct color::Color At(const gocpp::ObjRecv<Image>& self, int x, int y)
     {
         return self.obj.value->vAt(x, y);
     }
@@ -152,17 +152,17 @@ namespace golang::image
     }
 
     template<typename T, typename StoreT>
-    color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, StoreT>::vRGBA64At(int x, int y)
+    struct color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, StoreT>::vRGBA64At(int x, int y)
     {
         return RGBA64At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
-    color::RGBA64 RGBA64At(const gocpp::PtrRecv<RGBA64Image, false>& self, int x, int y)
+    struct color::RGBA64 RGBA64At(const gocpp::PtrRecv<RGBA64Image, false>& self, int x, int y)
     {
         return self.ptr->value->vRGBA64At(x, y);
     }
 
-    color::RGBA64 RGBA64At(const gocpp::ObjRecv<RGBA64Image>& self, int x, int y)
+    struct color::RGBA64 RGBA64At(const gocpp::ObjRecv<RGBA64Image>& self, int x, int y)
     {
         return self.obj.value->vRGBA64At(x, y);
     }
@@ -217,7 +217,7 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    int pixelBufferLength(int bytesPerPixel, Rectangle r, std::string imageTypeName)
+    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, std::string imageTypeName)
     {
         auto totalLength = mul3NonNeg(bytesPerPixel, Dx(gocpp::recv(r)), Dy(gocpp::recv(r)));
         if(totalLength < 0)
@@ -262,22 +262,22 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct RGBA* p)
+    struct color::Model ColorModel(struct RGBA* p)
     {
         return color::RGBAModel;
     }
 
-    Rectangle Bounds(struct RGBA* p)
+    struct Rectangle Bounds(struct RGBA* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct RGBA* p, int x, int y)
+    struct color::Color At(struct RGBA* p, int x, int y)
     {
         return RGBAAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct RGBA* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct RGBA* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -292,7 +292,7 @@ namespace golang::image
         return color::RGBA64 {(r << 8) | r, (g << 8) | g, (b << 8) | b, (a << 8) | a};
     }
 
-    color::RGBA RGBAAt(struct RGBA* p, int x, int y)
+    struct color::RGBA RGBAAt(struct RGBA* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -308,7 +308,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void Set(struct RGBA* p, int x, int y, color::Color c)
+    void Set(struct RGBA* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -323,7 +323,7 @@ namespace golang::image
         s[3] = c1.A;
     }
 
-    void SetRGBA64(struct RGBA* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct RGBA* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -337,7 +337,7 @@ namespace golang::image
         s[3] = uint8_t(c->A >> 8);
     }
 
-    void SetRGBA(struct RGBA* p, int x, int y, color::RGBA c)
+    void SetRGBA(struct RGBA* p, int x, int y, struct color::RGBA c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -351,7 +351,7 @@ namespace golang::image
         s[3] = c->A;
     }
 
-    Image SubImage(struct RGBA* p, Rectangle r)
+    struct Image SubImage(struct RGBA* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -384,7 +384,7 @@ namespace golang::image
         return true;
     }
 
-    RGBA* NewRGBA(Rectangle r)
+    struct RGBA* NewRGBA(struct Rectangle r)
     {
         return gocpp::InitPtr<RGBA>([](RGBA& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "RGBA")); x.Stride = 4 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -424,22 +424,22 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct RGBA64* p)
+    struct color::Model ColorModel(struct RGBA64* p)
     {
         return color::RGBA64Model;
     }
 
-    Rectangle Bounds(struct RGBA64* p)
+    struct Rectangle Bounds(struct RGBA64* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct RGBA64* p, int x, int y)
+    struct color::Color At(struct RGBA64* p, int x, int y)
     {
         return RGBA64At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct RGBA64* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct RGBA64* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -455,7 +455,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
     }
 
-    void Set(struct RGBA64* p, int x, int y, color::Color c)
+    void Set(struct RGBA64* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -474,7 +474,7 @@ namespace golang::image
         s[7] = uint8_t(c1.A);
     }
 
-    void SetRGBA64(struct RGBA64* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct RGBA64* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -492,7 +492,7 @@ namespace golang::image
         s[7] = uint8_t(c->A);
     }
 
-    Image SubImage(struct RGBA64* p, Rectangle r)
+    struct Image SubImage(struct RGBA64* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -525,7 +525,7 @@ namespace golang::image
         return true;
     }
 
-    RGBA64* NewRGBA64(Rectangle r)
+    struct RGBA64* NewRGBA64(struct Rectangle r)
     {
         return gocpp::InitPtr<RGBA64>([](RGBA64& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "RGBA64")); x.Stride = 8 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -565,28 +565,28 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct NRGBA* p)
+    struct color::Model ColorModel(struct NRGBA* p)
     {
         return color::NRGBAModel;
     }
 
-    Rectangle Bounds(struct NRGBA* p)
+    struct Rectangle Bounds(struct NRGBA* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct NRGBA* p, int x, int y)
+    struct color::Color At(struct NRGBA* p, int x, int y)
     {
         return NRGBAAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct NRGBA* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct NRGBA* p, int x, int y)
     {
         auto [r, g, b, a] = RGBA(gocpp::recv(NRGBAAt(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::NRGBA NRGBAAt(struct NRGBA* p, int x, int y)
+    struct color::NRGBA NRGBAAt(struct NRGBA* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -602,7 +602,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void Set(struct NRGBA* p, int x, int y, color::Color c)
+    void Set(struct NRGBA* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -617,7 +617,7 @@ namespace golang::image
         s[3] = c1.A;
     }
 
-    void SetRGBA64(struct NRGBA* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct NRGBA* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -638,7 +638,7 @@ namespace golang::image
         s[3] = uint8_t(a >> 8);
     }
 
-    void SetNRGBA(struct NRGBA* p, int x, int y, color::NRGBA c)
+    void SetNRGBA(struct NRGBA* p, int x, int y, struct color::NRGBA c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -652,7 +652,7 @@ namespace golang::image
         s[3] = c->A;
     }
 
-    Image SubImage(struct NRGBA* p, Rectangle r)
+    struct Image SubImage(struct NRGBA* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -685,7 +685,7 @@ namespace golang::image
         return true;
     }
 
-    NRGBA* NewNRGBA(Rectangle r)
+    struct NRGBA* NewNRGBA(struct Rectangle r)
     {
         return gocpp::InitPtr<NRGBA>([](NRGBA& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "NRGBA")); x.Stride = 4 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -725,28 +725,28 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct NRGBA64* p)
+    struct color::Model ColorModel(struct NRGBA64* p)
     {
         return color::NRGBA64Model;
     }
 
-    Rectangle Bounds(struct NRGBA64* p)
+    struct Rectangle Bounds(struct NRGBA64* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct NRGBA64* p, int x, int y)
+    struct color::Color At(struct NRGBA64* p, int x, int y)
     {
         return NRGBA64At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct NRGBA64* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct NRGBA64* p, int x, int y)
     {
         auto [r, g, b, a] = RGBA(gocpp::recv(NRGBA64At(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::NRGBA64 NRGBA64At(struct NRGBA64* p, int x, int y)
+    struct color::NRGBA64 NRGBA64At(struct NRGBA64* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -762,7 +762,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
     }
 
-    void Set(struct NRGBA64* p, int x, int y, color::Color c)
+    void Set(struct NRGBA64* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -781,7 +781,7 @@ namespace golang::image
         s[7] = uint8_t(c1.A);
     }
 
-    void SetRGBA64(struct NRGBA64* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct NRGBA64* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -806,7 +806,7 @@ namespace golang::image
         s[7] = uint8_t(a);
     }
 
-    void SetNRGBA64(struct NRGBA64* p, int x, int y, color::NRGBA64 c)
+    void SetNRGBA64(struct NRGBA64* p, int x, int y, struct color::NRGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -824,7 +824,7 @@ namespace golang::image
         s[7] = uint8_t(c->A);
     }
 
-    Image SubImage(struct NRGBA64* p, Rectangle r)
+    struct Image SubImage(struct NRGBA64* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -857,7 +857,7 @@ namespace golang::image
         return true;
     }
 
-    NRGBA64* NewNRGBA64(Rectangle r)
+    struct NRGBA64* NewNRGBA64(struct Rectangle r)
     {
         return gocpp::InitPtr<NRGBA64>([](NRGBA64& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "NRGBA64")); x.Stride = 8 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -897,29 +897,29 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct Alpha* p)
+    struct color::Model ColorModel(struct Alpha* p)
     {
         return color::AlphaModel;
     }
 
-    Rectangle Bounds(struct Alpha* p)
+    struct Rectangle Bounds(struct Alpha* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct Alpha* p, int x, int y)
+    struct color::Color At(struct Alpha* p, int x, int y)
     {
         return AlphaAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct Alpha* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct Alpha* p, int x, int y)
     {
         auto a = uint16_t(AlphaAt(gocpp::recv(p), x, y).A);
         a |= a << 8;
         return color::RGBA64 {a, a, a, a};
     }
 
-    color::Alpha AlphaAt(struct Alpha* p, int x, int y)
+    struct color::Alpha AlphaAt(struct Alpha* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -934,7 +934,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void Set(struct Alpha* p, int x, int y, color::Color c)
+    void Set(struct Alpha* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -944,7 +944,7 @@ namespace golang::image
         p->Pix[i] = gocpp::getValue<color::Alpha>(Convert(gocpp::recv(color::AlphaModel), c)).A;
     }
 
-    void SetRGBA64(struct Alpha* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct Alpha* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -954,7 +954,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(c->A >> 8);
     }
 
-    void SetAlpha(struct Alpha* p, int x, int y, color::Alpha c)
+    void SetAlpha(struct Alpha* p, int x, int y, struct color::Alpha c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -964,7 +964,7 @@ namespace golang::image
         p->Pix[i] = c->A;
     }
 
-    Image SubImage(struct Alpha* p, Rectangle r)
+    struct Image SubImage(struct Alpha* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -997,7 +997,7 @@ namespace golang::image
         return true;
     }
 
-    Alpha* NewAlpha(Rectangle r)
+    struct Alpha* NewAlpha(struct Rectangle r)
     {
         return gocpp::InitPtr<Alpha>([](Alpha& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Alpha")); x.Stride = 1 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -1037,28 +1037,28 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct Alpha16* p)
+    struct color::Model ColorModel(struct Alpha16* p)
     {
         return color::Alpha16Model;
     }
 
-    Rectangle Bounds(struct Alpha16* p)
+    struct Rectangle Bounds(struct Alpha16* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct Alpha16* p, int x, int y)
+    struct color::Color At(struct Alpha16* p, int x, int y)
     {
         return Alpha16At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct Alpha16* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct Alpha16* p, int x, int y)
     {
         auto a = Alpha16At(gocpp::recv(p), x, y).A;
         return color::RGBA64 {a, a, a, a};
     }
 
-    color::Alpha16 Alpha16At(struct Alpha16* p, int x, int y)
+    struct color::Alpha16 Alpha16At(struct Alpha16* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1073,7 +1073,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
     }
 
-    void Set(struct Alpha16* p, int x, int y, color::Color c)
+    void Set(struct Alpha16* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1085,7 +1085,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c1.A);
     }
 
-    void SetRGBA64(struct Alpha16* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct Alpha16* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1096,7 +1096,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c->A);
     }
 
-    void SetAlpha16(struct Alpha16* p, int x, int y, color::Alpha16 c)
+    void SetAlpha16(struct Alpha16* p, int x, int y, struct color::Alpha16 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1107,7 +1107,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c->A);
     }
 
-    Image SubImage(struct Alpha16* p, Rectangle r)
+    struct Image SubImage(struct Alpha16* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -1140,7 +1140,7 @@ namespace golang::image
         return true;
     }
 
-    Alpha16* NewAlpha16(Rectangle r)
+    struct Alpha16* NewAlpha16(struct Rectangle r)
     {
         return gocpp::InitPtr<Alpha16>([](Alpha16& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Alpha16")); x.Stride = 2 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -1180,29 +1180,29 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct Gray* p)
+    struct color::Model ColorModel(struct Gray* p)
     {
         return color::GrayModel;
     }
 
-    Rectangle Bounds(struct Gray* p)
+    struct Rectangle Bounds(struct Gray* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct Gray* p, int x, int y)
+    struct color::Color At(struct Gray* p, int x, int y)
     {
         return GrayAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct Gray* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct Gray* p, int x, int y)
     {
         auto gray = uint16_t(GrayAt(gocpp::recv(p), x, y).Y);
         gray |= gray << 8;
         return color::RGBA64 {gray, gray, gray, 0xffff};
     }
 
-    color::Gray GrayAt(struct Gray* p, int x, int y)
+    struct color::Gray GrayAt(struct Gray* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1217,7 +1217,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void Set(struct Gray* p, int x, int y, color::Color c)
+    void Set(struct Gray* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1227,7 +1227,7 @@ namespace golang::image
         p->Pix[i] = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), c)).Y;
     }
 
-    void SetRGBA64(struct Gray* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct Gray* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1238,7 +1238,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(gray);
     }
 
-    void SetGray(struct Gray* p, int x, int y, color::Gray c)
+    void SetGray(struct Gray* p, int x, int y, struct color::Gray c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1248,7 +1248,7 @@ namespace golang::image
         p->Pix[i] = c->Y;
     }
 
-    Image SubImage(struct Gray* p, Rectangle r)
+    struct Image SubImage(struct Gray* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -1264,7 +1264,7 @@ namespace golang::image
         return true;
     }
 
-    Gray* NewGray(Rectangle r)
+    struct Gray* NewGray(struct Rectangle r)
     {
         return gocpp::InitPtr<Gray>([](Gray& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Gray")); x.Stride = 1 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -1304,28 +1304,28 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct Gray16* p)
+    struct color::Model ColorModel(struct Gray16* p)
     {
         return color::Gray16Model;
     }
 
-    Rectangle Bounds(struct Gray16* p)
+    struct Rectangle Bounds(struct Gray16* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct Gray16* p, int x, int y)
+    struct color::Color At(struct Gray16* p, int x, int y)
     {
         return Gray16At(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct Gray16* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct Gray16* p, int x, int y)
     {
         auto gray = Gray16At(gocpp::recv(p), x, y).Y;
         return color::RGBA64 {gray, gray, gray, 0xffff};
     }
 
-    color::Gray16 Gray16At(struct Gray16* p, int x, int y)
+    struct color::Gray16 Gray16At(struct Gray16* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1340,7 +1340,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
     }
 
-    void Set(struct Gray16* p, int x, int y, color::Color c)
+    void Set(struct Gray16* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1352,7 +1352,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c1.Y);
     }
 
-    void SetRGBA64(struct Gray16* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct Gray16* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1364,7 +1364,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(gray);
     }
 
-    void SetGray16(struct Gray16* p, int x, int y, color::Gray16 c)
+    void SetGray16(struct Gray16* p, int x, int y, struct color::Gray16 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1375,7 +1375,7 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c->Y);
     }
 
-    Image SubImage(struct Gray16* p, Rectangle r)
+    struct Image SubImage(struct Gray16* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -1391,7 +1391,7 @@ namespace golang::image
         return true;
     }
 
-    Gray16* NewGray16(Rectangle r)
+    struct Gray16* NewGray16(struct Rectangle r)
     {
         return gocpp::InitPtr<Gray16>([](Gray16& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Gray16")); x.Stride = 2 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -1431,28 +1431,28 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct CMYK* p)
+    struct color::Model ColorModel(struct CMYK* p)
     {
         return color::CMYKModel;
     }
 
-    Rectangle Bounds(struct CMYK* p)
+    struct Rectangle Bounds(struct CMYK* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct CMYK* p, int x, int y)
+    struct color::Color At(struct CMYK* p, int x, int y)
     {
         return CMYKAt(gocpp::recv(p), x, y);
     }
 
-    color::RGBA64 RGBA64At(struct CMYK* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct CMYK* p, int x, int y)
     {
         auto [r, g, b, a] = RGBA(gocpp::recv(CMYKAt(gocpp::recv(p), x, y)));
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    color::CMYK CMYKAt(struct CMYK* p, int x, int y)
+    struct color::CMYK CMYKAt(struct CMYK* p, int x, int y)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1468,7 +1468,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
     }
 
-    void Set(struct CMYK* p, int x, int y, color::Color c)
+    void Set(struct CMYK* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1483,7 +1483,7 @@ namespace golang::image
         s[3] = c1.K;
     }
 
-    void SetRGBA64(struct CMYK* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct CMYK* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1498,7 +1498,7 @@ namespace golang::image
         s[3] = kk;
     }
 
-    void SetCMYK(struct CMYK* p, int x, int y, color::CMYK c)
+    void SetCMYK(struct CMYK* p, int x, int y, struct color::CMYK c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1512,7 +1512,7 @@ namespace golang::image
         s[3] = c->K;
     }
 
-    Image SubImage(struct CMYK* p, Rectangle r)
+    struct Image SubImage(struct CMYK* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -1528,7 +1528,7 @@ namespace golang::image
         return true;
     }
 
-    CMYK* NewCMYK(Rectangle r)
+    struct CMYK* NewCMYK(struct Rectangle r)
     {
         return gocpp::InitPtr<CMYK>([](CMYK& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "CMYK")); x.Stride = 4 * Dx(gocpp::recv(r)); x.Rect = r; });
     }
@@ -1571,17 +1571,17 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(struct Paletted* p)
+    struct color::Model ColorModel(struct Paletted* p)
     {
         return p->Palette;
     }
 
-    Rectangle Bounds(struct Paletted* p)
+    struct Rectangle Bounds(struct Paletted* p)
     {
         return p->Rect;
     }
 
-    color::Color At(struct Paletted* p, int x, int y)
+    struct color::Color At(struct Paletted* p, int x, int y)
     {
         if(len(p->Palette) == 0)
         {
@@ -1595,7 +1595,7 @@ namespace golang::image
         return p->Palette[p->Pix[i]];
     }
 
-    color::RGBA64 RGBA64At(struct Paletted* p, int x, int y)
+    struct color::RGBA64 RGBA64At(struct Paletted* p, int x, int y)
     {
         if(len(p->Palette) == 0)
         {
@@ -1620,7 +1620,7 @@ namespace golang::image
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
     }
 
-    void Set(struct Paletted* p, int x, int y, color::Color c)
+    void Set(struct Paletted* p, int x, int y, struct color::Color c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1630,7 +1630,7 @@ namespace golang::image
         p->Pix[i] = uint8_t(Index(gocpp::recv(p->Palette), c));
     }
 
-    void SetRGBA64(struct Paletted* p, int x, int y, color::RGBA64 c)
+    void SetRGBA64(struct Paletted* p, int x, int y, struct color::RGBA64 c)
     {
         if(! (In(gocpp::recv(Point {x, y}), p->Rect)))
         {
@@ -1660,7 +1660,7 @@ namespace golang::image
         p->Pix[i] = index;
     }
 
-    Image SubImage(struct Paletted* p, Rectangle r)
+    struct Image SubImage(struct Paletted* p, struct Rectangle r)
     {
         r = Intersect(gocpp::recv(r), p->Rect);
         if(Empty(gocpp::recv(r)))
@@ -1677,7 +1677,7 @@ namespace golang::image
         auto [i0, i1] = std::tuple{0, Dx(gocpp::recv(p->Rect))};
         for(auto y = p->Rect.Min.Y; y < p->Rect.Max.Y; y++)
         {
-            for(auto [_, c] : p->Pix.make_slice(i0, i1))
+            for(auto [gocpp_ignored, c] : p->Pix.make_slice(i0, i1))
             {
                 present[c] = true;
             }
@@ -1699,7 +1699,7 @@ namespace golang::image
         return true;
     }
 
-    Paletted* NewPaletted(Rectangle r, color::Palette p)
+    struct Paletted* NewPaletted(struct Rectangle r, color::Palette p)
     {
         return gocpp::InitPtr<Paletted>([](Paletted& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Paletted")); x.Stride = 1 * Dx(gocpp::recv(r)); x.Rect = r; x.Palette = p; });
     }

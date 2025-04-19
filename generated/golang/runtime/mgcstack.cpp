@@ -205,7 +205,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void setRecord(struct stackObject* obj, stackObjectRecord* r)
+    void setRecord(struct stackObject* obj, struct stackObjectRecord* r)
     {
         *(uintptr_t*)(unsafe::Pointer(& obj->r)) = uintptr_t(unsafe::Pointer(r));
     }
@@ -306,7 +306,7 @@ namespace golang::runtime
     {
         uintptr_t p;
         bool conservative;
-        for(auto [_, head] : gocpp::slice<stackWorkBuf**> {& s->buf, & s->cbuf})
+        for(auto [gocpp_ignored, head] : gocpp::slice<stackWorkBuf**> {& s->buf, & s->cbuf})
         {
             uintptr_t p;
             bool conservative;
@@ -350,7 +350,7 @@ namespace golang::runtime
         return {0, false};
     }
 
-    void addObject(struct stackScanState* s, uintptr_t addr, stackObjectRecord* r)
+    void addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
     {
         auto x = s->tail;
         if(x == nullptr)
@@ -385,15 +385,15 @@ namespace golang::runtime
         std::tie(s->root, gocpp_id_0, gocpp_id_1) = binarySearchTree(s->head, 0, s->nobjs);
     }
 
-    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n)
+    std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n)
     {
-        stackObject* root;
-        stackObjectBuf* restBuf;
+        struct stackObject* root;
+        struct stackObjectBuf* restBuf;
         int restIdx;
         if(n == 0)
         {
-            stackObject* root;
-            stackObjectBuf* restBuf;
+            struct stackObject* root;
+            struct stackObjectBuf* restBuf;
             int restIdx;
             return {nullptr, x, idx};
         }
@@ -404,8 +404,8 @@ namespace golang::runtime
         idx++;
         if(idx == len(x->obj))
         {
-            stackObject* root;
-            stackObjectBuf* restBuf;
+            struct stackObject* root;
+            struct stackObjectBuf* restBuf;
             int restIdx;
             x = x->next;
             idx = 0;
@@ -416,7 +416,7 @@ namespace golang::runtime
         return {root, x, idx};
     }
 
-    stackObject* findObject(struct stackScanState* s, uintptr_t a)
+    struct stackObject* findObject(struct stackScanState* s, uintptr_t a)
     {
         auto off = uint32_t(a - s->stack.lo);
         auto obj = s->root;

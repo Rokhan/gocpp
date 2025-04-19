@@ -22,7 +22,7 @@ namespace golang::main
         {
             pow[i] = 1 << (unsigned int)(i);
         }
-        for(auto [_, value] : pow)
+        for(auto [gocpp_ignored, value] : pow)
         {
             mocklib::Printf("%v\n", value);
         }

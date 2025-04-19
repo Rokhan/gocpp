@@ -53,7 +53,7 @@ namespace golang::main
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    double AbsFunc(Vertex v)
+    double AbsFunc(struct Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }

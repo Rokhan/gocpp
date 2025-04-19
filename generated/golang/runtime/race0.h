@@ -33,8 +33,8 @@
 
 namespace golang::runtime
 {
-    void raceReadObjectPC(_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void raceWriteObjectPC(_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceReadObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceWriteObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
     std::tuple<uintptr_t, uintptr_t> raceinit();
     void racefini();
     uintptr_t raceproccreate();
@@ -45,14 +45,14 @@ namespace golang::runtime
     void racereadrangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
     void racewriterangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
     void raceacquire(unsafe::Pointer addr);
-    void raceacquireg(g* gp, unsafe::Pointer addr);
+    void raceacquireg(struct g* gp, unsafe::Pointer addr);
     void raceacquirectx(uintptr_t racectx, unsafe::Pointer addr);
     void racerelease(unsafe::Pointer addr);
-    void racereleaseg(g* gp, unsafe::Pointer addr);
+    void racereleaseg(struct g* gp, unsafe::Pointer addr);
     void racereleaseacquire(unsafe::Pointer addr);
-    void racereleaseacquireg(g* gp, unsafe::Pointer addr);
+    void racereleaseacquireg(struct g* gp, unsafe::Pointer addr);
     void racereleasemerge(unsafe::Pointer addr);
-    void racereleasemergeg(g* gp, unsafe::Pointer addr);
+    void racereleasemergeg(struct g* gp, unsafe::Pointer addr);
     void racefingo();
     void racemalloc(unsafe::Pointer p, uintptr_t sz);
     void racefree(unsafe::Pointer p, uintptr_t sz);

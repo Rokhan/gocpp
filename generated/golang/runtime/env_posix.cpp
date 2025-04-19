@@ -26,7 +26,7 @@ namespace golang::runtime
         {
             go_throw("getenv before env init");
         }
-        for(auto [_, s] : env)
+        for(auto [gocpp_ignored, s] : env)
         {
             if(len(s) > len(key) && s[len(key)] == '=' && envKeyEqual(s.make_slice(0, len(key)), key))
             {

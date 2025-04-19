@@ -67,8 +67,8 @@ namespace golang::runtime
     void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen);
     void setTraceback(std::string level);
     int32_t timediv(int64_t v, int32_t div, int32_t* rem);
-    m* acquirem();
-    void releasem(m* mp);
+    struct m* acquirem();
+    void releasem(struct m* mp);
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
     unsafe::Pointer reflect_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off);

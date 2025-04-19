@@ -48,7 +48,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(Vertex v)
+    double Abs(struct Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }

@@ -116,14 +116,14 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    entry* newEntry(go_any i)
+    struct entry* newEntry(go_any i)
     {
         auto e = new entry {};
         Store(gocpp::recv(e->p), & i);
         return e;
     }
 
-    readOnly loadReadOnly(struct Map* m)
+    struct readOnly loadReadOnly(struct Map* m)
     {
         if(auto p = Load(gocpp::recv(m->read)); p != nullptr)
         {

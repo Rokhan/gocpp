@@ -60,7 +60,7 @@
 
 namespace golang::runtime
 {
-    dlogger* dlog()
+    struct dlogger* dlog()
     {
         if(! dlogEnabled)
         {
@@ -180,7 +180,7 @@ namespace golang::runtime
         Store(gocpp::recv(l->owned), 0);
     }
 
-    dlogger* b(struct dlogger* l, bool x)
+    struct dlogger* b(struct dlogger* l, bool x)
     {
         if(! dlogEnabled)
         {
@@ -197,27 +197,27 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* i(struct dlogger* l, int x)
+    struct dlogger* i(struct dlogger* l, int x)
     {
         return i64(gocpp::recv(l), int64_t(x));
     }
 
-    dlogger* i8(struct dlogger* l, int8_t x)
+    struct dlogger* i8(struct dlogger* l, int8_t x)
     {
         return i64(gocpp::recv(l), int64_t(x));
     }
 
-    dlogger* i16(struct dlogger* l, int16_t x)
+    struct dlogger* i16(struct dlogger* l, int16_t x)
     {
         return i64(gocpp::recv(l), int64_t(x));
     }
 
-    dlogger* i32(struct dlogger* l, int32_t x)
+    struct dlogger* i32(struct dlogger* l, int32_t x)
     {
         return i64(gocpp::recv(l), int64_t(x));
     }
 
-    dlogger* i64(struct dlogger* l, int64_t x)
+    struct dlogger* i64(struct dlogger* l, int64_t x)
     {
         if(! dlogEnabled)
         {
@@ -228,32 +228,32 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* u(struct dlogger* l, unsigned int x)
+    struct dlogger* u(struct dlogger* l, unsigned int x)
     {
         return u64(gocpp::recv(l), uint64_t(x));
     }
 
-    dlogger* uptr(struct dlogger* l, uintptr_t x)
+    struct dlogger* uptr(struct dlogger* l, uintptr_t x)
     {
         return u64(gocpp::recv(l), uint64_t(x));
     }
 
-    dlogger* u8(struct dlogger* l, uint8_t x)
+    struct dlogger* u8(struct dlogger* l, uint8_t x)
     {
         return u64(gocpp::recv(l), uint64_t(x));
     }
 
-    dlogger* u16(struct dlogger* l, uint16_t x)
+    struct dlogger* u16(struct dlogger* l, uint16_t x)
     {
         return u64(gocpp::recv(l), uint64_t(x));
     }
 
-    dlogger* u32(struct dlogger* l, uint32_t x)
+    struct dlogger* u32(struct dlogger* l, uint32_t x)
     {
         return u64(gocpp::recv(l), uint64_t(x));
     }
 
-    dlogger* u64(struct dlogger* l, uint64_t x)
+    struct dlogger* u64(struct dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
         {
@@ -264,7 +264,7 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* hex(struct dlogger* l, uint64_t x)
+    struct dlogger* hex(struct dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
         {
@@ -275,7 +275,7 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* p(struct dlogger* l, go_any x)
+    struct dlogger* p(struct dlogger* l, go_any x)
     {
         if(! dlogEnabled)
         {
@@ -316,7 +316,7 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* s(struct dlogger* l, std::string x)
+    struct dlogger* s(struct dlogger* l, std::string x)
     {
         if(! dlogEnabled)
         {
@@ -352,7 +352,7 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* pc(struct dlogger* l, uintptr_t x)
+    struct dlogger* pc(struct dlogger* l, uintptr_t x)
     {
         if(! dlogEnabled)
         {
@@ -363,7 +363,7 @@ namespace golang::runtime
         return l;
     }
 
-    dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x)
+    struct dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x)
     {
         if(! dlogEnabled)
         {
@@ -371,7 +371,7 @@ namespace golang::runtime
         }
         unsigned char(gocpp::recv(l->w), debugLogTraceback);
         uvarint(gocpp::recv(l->w), uint64_t(len(x)));
-        for(auto [_, pc] : x)
+        for(auto [gocpp_ignored, pc] : x)
         {
             uvarint(gocpp::recv(l->w), uint64_t(pc));
         }

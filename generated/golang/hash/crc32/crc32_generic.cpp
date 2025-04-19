@@ -45,7 +45,7 @@ namespace golang::crc32
     uint32_t simpleUpdate(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p)
     {
         crc = ~ crc;
-        for(auto [_, v] : p)
+        for(auto [gocpp_ignored, v] : p)
         {
             crc = tab[unsigned char(crc) ^ v] ^ (crc >> 8);
         }

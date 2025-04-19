@@ -55,9 +55,9 @@ namespace golang::runtime
     void selectsetpc(uintptr_t* pc);
     void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
     void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    bool selparkcommit(g* gp, unsafe::Pointer _);
+    bool selparkcommit(struct g* gp, unsafe::Pointer _);
     void block();
-    std::tuple<int, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
+    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     uintptr_t sortkey(struct hchan* c);
     struct runtimeSelect
     {
@@ -79,6 +79,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
     std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
-    void dequeueSudoG(struct waitq* q, sudog* sgp);
+    void dequeueSudoG(struct waitq* q, struct sudog* sgp);
 }
 

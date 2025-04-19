@@ -124,7 +124,7 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     int Len(struct Type* t);
-    Type* Common(struct Type* t);
+    struct Type* Common(struct Type* t);
     struct ChanType
     {
         Type* Elem;
@@ -159,13 +159,13 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
     /* ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
-    UncommonType* Uncommon(struct Type* t);
-    Type* Elem(struct Type* t);
-    /* StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
-    /* MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
-    /* ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
-    /* FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
-    /* InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
+    struct UncommonType* Uncommon(struct Type* t);
+    struct Type* Elem(struct Type* t);
+    /* struct StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
+    /* struct MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
+    /* struct ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
+    /* struct FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
+    /* struct InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
     uintptr_t Size(struct Type* t);
     int Align(struct Type* t);
     int FieldAlign(struct Type* t);
@@ -217,7 +217,7 @@ namespace golang::abi
     bool ReflexiveKey(struct MapType* mt);
     bool NeedKeyUpdate(struct MapType* mt);
     bool HashMightPanic(struct MapType* mt);
-    Type* Key(struct Type* t);
+    struct Type* Key(struct Type* t);
     struct SliceType
     {
         Type* Elem;
@@ -251,10 +251,10 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
-    Type* In(struct FuncType* t, int i);
+    struct Type* In(struct FuncType* t, int i);
     int NumIn(struct FuncType* t);
     int NumOut(struct FuncType* t);
-    Type* Out(struct FuncType* t, int i);
+    struct Type* Out(struct FuncType* t, int i);
     gocpp::slice<Type*> InSlice(struct FuncType* t);
     gocpp::slice<Type*> OutSlice(struct FuncType* t);
     bool IsVariadic(struct FuncType* t);
@@ -336,6 +336,6 @@ namespace golang::abi
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
     /* std::string Name(struct Name n); [Ignored, known name conflict] */ 
     std::string Tag(struct Name n);
-    Name NewName(std::string n, std::string tag, bool exported, bool embedded);
+    struct Name NewName(std::string n, std::string tag, bool exported, bool embedded);
 }
 

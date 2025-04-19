@@ -63,11 +63,11 @@ namespace golang::runtime
     extern atomic::Uint32 netpollWakeSig;
     void netpollinit();
     bool netpollIsPollDescriptor(uintptr_t fd);
-    int32_t netpollopen(uintptr_t fd, pollDesc* pd);
+    int32_t netpollopen(uintptr_t fd, struct pollDesc* pd);
     int32_t netpollclose(uintptr_t fd);
-    void netpollarm(pollDesc* pd, int mode);
+    void netpollarm(struct pollDesc* pd, int mode);
     void netpollBreak();
-    std::tuple<gList, int32_t> netpoll(int64_t delay);
-    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty);
+    std::tuple<struct gList, int32_t> netpoll(int64_t delay);
+    int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty);
 }
 

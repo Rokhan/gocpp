@@ -17,14 +17,27 @@
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/malloc.h"
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagecache.h"
 #include "golang/runtime/mprof.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/pinner.h"
+#include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
@@ -189,7 +202,7 @@ namespace golang::runtime
         if(! l->test)
         {
             auto mp = acquirem();
-            for(auto [_, pp] : allp)
+            for(auto [gocpp_ignored, pp] : allp)
             {
                 auto [typ, duration] = consume(gocpp::recv(pp->limiterEvent), now);
                 //Go switch emulation

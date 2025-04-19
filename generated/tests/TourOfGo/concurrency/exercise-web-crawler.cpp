@@ -41,17 +41,17 @@ namespace golang::main
     }
 
     template<typename T, typename StoreT>
-    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
     {
         return Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
     {
         return self.ptr->value->vFetch(url);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
     {
         return self.obj.value->vFetch(url);
     }
@@ -61,7 +61,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void Crawl(std::string url, int depth, Fetcher fetcher)
+    void Crawl(std::string url, int depth, struct Fetcher fetcher)
     {
         if(depth <= 0)
         {
@@ -74,7 +74,7 @@ namespace golang::main
             return;
         }
         mocklib::Printf("found: %s %q\n", url, body);
-        for(auto [_, u] : urls)
+        for(auto [gocpp_ignored, u] : urls)
         {
             Crawl(u, depth - 1, fetcher);
         }
@@ -118,7 +118,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, gocpp::error> Fetch(fakeFetcher f, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(fakeFetcher f, std::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {

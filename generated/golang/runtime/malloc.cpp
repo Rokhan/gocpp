@@ -47,6 +47,7 @@
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 #include "golang/runtime/mgcmark.h"
+// #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
@@ -63,6 +64,7 @@
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
+#include "golang/runtime/plugin.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
@@ -251,7 +253,7 @@ namespace golang::runtime
             }
             p = alignUp(p + (256 << 10), heapArenaBytes);
             auto arenaSizes = gocpp::slice<uintptr_t> {512 << 20, 256 << 20, 128 << 20};
-            for(auto [_, arenaSize] : arenaSizes)
+            for(auto [gocpp_ignored, arenaSize] : arenaSizes)
             {
                 auto [a, size] = sysReserveAligned(unsafe::Pointer(p), arenaSize, heapArenaBytes);
                 if(a != nullptr)
@@ -271,7 +273,7 @@ namespace golang::runtime
         Store(gocpp::recv(gcController.memoryLimit), maxInt64);
     }
 
-    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, arenaHint** hintList, bool go_register)
+    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
     {
         unsafe::Pointer v;
         uintptr_t size;
@@ -576,7 +578,7 @@ namespace golang::runtime
     }
 
     uintptr_t zerobase;
-    gclinkptr nextFreeFast(mspan* s)
+    gclinkptr nextFreeFast(struct mspan* s)
     {
         auto theBit = sys::TrailingZeros64(s->allocCache);
         if(theBit < 64)
@@ -598,10 +600,10 @@ namespace golang::runtime
         return 0;
     }
 
-    std::tuple<gclinkptr, mspan*, bool> nextFree(struct mcache* c, spanClass spc)
+    std::tuple<gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, spanClass spc)
     {
         gclinkptr v;
-        mspan* s;
+        struct mspan* s;
         bool shouldhelpgc;
         s = c->alloc[spc];
         shouldhelpgc = false;
@@ -609,12 +611,12 @@ namespace golang::runtime
         if(freeIndex == s->nelems)
         {
             gclinkptr v;
-            mspan* s;
+            struct mspan* s;
             bool shouldhelpgc;
             if(s->allocCount != s->nelems)
             {
                 gclinkptr v;
-                mspan* s;
+                struct mspan* s;
                 bool shouldhelpgc;
                 println("runtime: s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
                 go_throw("s.allocCount != s.nelems && freeIndex == s.nelems");
@@ -627,7 +629,7 @@ namespace golang::runtime
         if(freeIndex >= s->nelems)
         {
             gclinkptr v;
-            mspan* s;
+            struct mspan* s;
             bool shouldhelpgc;
             go_throw("freeIndex is not valid");
         }
@@ -636,7 +638,7 @@ namespace golang::runtime
         if(s->allocCount > s->nelems)
         {
             gclinkptr v;
-            mspan* s;
+            struct mspan* s;
             bool shouldhelpgc;
             println("s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
             go_throw("s.allocCount > s.nelems");
@@ -644,7 +646,7 @@ namespace golang::runtime
         return {v, s, shouldhelpgc};
     }
 
-    unsafe::Pointer mallocgc(uintptr_t size, _type* typ, bool needzero)
+    unsafe::Pointer mallocgc(uintptr_t size, struct _type* typ, bool needzero)
     {
         if(gcphase == _GCmarktermination)
         {
@@ -929,7 +931,7 @@ namespace golang::runtime
         return x;
     }
 
-    g* deductAssistCredit(uintptr_t size)
+    struct g* deductAssistCredit(uintptr_t size)
     {
         g* assistG = {};
         if(gcBlackenEnabled != 0)
@@ -968,22 +970,22 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer newobject(_type* typ)
+    unsafe::Pointer newobject(struct _type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer reflect_unsafe_New(_type* typ)
+    unsafe::Pointer reflect_unsafe_New(struct _type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer reflectlite_unsafe_New(_type* typ)
+    unsafe::Pointer reflectlite_unsafe_New(struct _type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer newarray(_type* typ, int n)
+    unsafe::Pointer newarray(struct _type* typ, int n)
     {
         if(n == 1)
         {
@@ -997,12 +999,12 @@ namespace golang::runtime
         return mallocgc(mem, typ, true);
     }
 
-    unsafe::Pointer reflect_unsafe_NewArray(_type* typ, int n)
+    unsafe::Pointer reflect_unsafe_NewArray(struct _type* typ, int n)
     {
         return newarray(typ, n);
     }
 
-    void profilealloc(m* mp, unsafe::Pointer x, uintptr_t size)
+    void profilealloc(struct m* mp, unsafe::Pointer x, uintptr_t size)
     {
         auto c = getMCache(mp);
         if(c == nullptr)
@@ -1147,7 +1149,7 @@ namespace golang::runtime
         return unsafe::Pointer(p);
     }
 
-    notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
         if(size == 0)
@@ -1335,7 +1337,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    notInHeap* add(struct notInHeap* p, uintptr_t bytes)
+    struct notInHeap* add(struct notInHeap* p, uintptr_t bytes)
     {
         return (notInHeap*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + bytes));
     }

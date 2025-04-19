@@ -69,7 +69,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    coro* newcoro(std::function<void (coro*)> f)
+    struct coro* newcoro(std::function<void (coro*)> f)
     {
         auto c = go_new(coro);
         c->f = f;
@@ -97,7 +97,7 @@ namespace golang::runtime
         coroexit(c);
     }
 
-    void coroexit(coro* c)
+    void coroexit(struct coro* c)
     {
         auto gp = getg();
         gp->coroarg = c;
@@ -105,14 +105,14 @@ namespace golang::runtime
         mcall(coroswitch_m);
     }
 
-    void coroswitch(coro* c)
+    void coroswitch(struct coro* c)
     {
         auto gp = getg();
         gp->coroarg = c;
         mcall(coroswitch_m);
     }
 
-    void coroswitch_m(g* gp)
+    void coroswitch_m(struct g* gp)
     {
         auto c = gp->coroarg;
         gp->coroarg = nullptr;

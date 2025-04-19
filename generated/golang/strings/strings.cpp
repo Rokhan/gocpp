@@ -487,7 +487,7 @@ namespace golang::strings
             }
             n += len(sep) * (len(elems) - 1);
         }
-        for(auto [_, elem] : elems)
+        for(auto [gocpp_ignored, elem] : elems)
         {
             if(len(elem) > maxInt - n)
             {
@@ -498,7 +498,7 @@ namespace golang::strings
         Builder b = {};
         Grow(gocpp::recv(b), n);
         WriteString(gocpp::recv(b), elems[0]);
-        for(auto [_, s] : elems.make_slice(1))
+        for(auto [gocpp_ignored, s] : elems.make_slice(1))
         {
             WriteString(gocpp::recv(b), sep);
             WriteString(gocpp::recv(b), s);
@@ -552,7 +552,7 @@ namespace golang::strings
         {
             return s;
         }
-        for(auto [_, c] : s)
+        for(auto [gocpp_ignored, c] : s)
         {
             auto r = mapping(c);
             if(r >= 0)
@@ -1188,7 +1188,7 @@ namespace golang::strings
         hasUnicode:
         s = s.make_slice(i);
         t = t.make_slice(i);
-        for(auto [_, sr] : s)
+        for(auto [gocpp_ignored, sr] : s)
         {
             if(len(t) == 0)
             {

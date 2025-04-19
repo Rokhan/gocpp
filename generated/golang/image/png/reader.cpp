@@ -154,7 +154,7 @@ namespace golang::png
         return "png: unsupported feature: " + string(e);
     }
 
-    gocpp::error parseIHDR(struct decoder* d, uint32_t length)
+    struct gocpp::error parseIHDR(struct decoder* d, uint32_t length)
     {
         if(length != 13)
         {
@@ -327,7 +327,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    gocpp::error parsePLTE(struct decoder* d, uint32_t length)
+    struct gocpp::error parsePLTE(struct decoder* d, uint32_t length)
     {
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
@@ -382,7 +382,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    gocpp::error parsetRNS(struct decoder* d, uint32_t length)
+    struct gocpp::error parsetRNS(struct decoder* d, uint32_t length)
     {
         //Go switch emulation
         {
@@ -486,7 +486,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    std::tuple<int, gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -520,7 +520,7 @@ namespace golang::png
         return {n, err};
     }
 
-    std::tuple<image::Image, gocpp::error> decode(struct decoder* d)
+    std::tuple<struct image::Image, struct gocpp::error> decode(struct decoder* d)
     {
         gocpp::Defer defer;
         try
@@ -586,7 +586,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<image::Image, gocpp::error> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)
+    std::tuple<struct image::Image, struct gocpp::error> readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -1115,7 +1115,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
-    void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass)
+    void mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
@@ -1230,20 +1230,20 @@ namespace golang::png
         }
     }
 
-    gocpp::error parseIDAT(struct decoder* d, uint32_t length)
+    struct gocpp::error parseIDAT(struct decoder* d, uint32_t length)
     {
-        gocpp::error err;
+        struct gocpp::error err;
         d->idatLength = length;
         std::tie(d->img, err) = decode(gocpp::recv(d));
         if(err != nullptr)
         {
-            gocpp::error err;
+            struct gocpp::error err;
             return err;
         }
         return verifyChecksum(gocpp::recv(d));
     }
 
-    gocpp::error parseIEND(struct decoder* d, uint32_t length)
+    struct gocpp::error parseIEND(struct decoder* d, uint32_t length)
     {
         if(length != 0)
         {
@@ -1252,7 +1252,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    gocpp::error parseChunk(struct decoder* d, bool configOnly)
+    struct gocpp::error parseChunk(struct decoder* d, bool configOnly)
     {
         if(auto [gocpp_id_8, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
@@ -1357,7 +1357,7 @@ namespace golang::png
         return verifyChecksum(gocpp::recv(d));
     }
 
-    gocpp::error verifyChecksum(struct decoder* d)
+    struct gocpp::error verifyChecksum(struct decoder* d)
     {
         if(auto [gocpp_id_10, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
@@ -1370,7 +1370,7 @@ namespace golang::png
         return nullptr;
     }
 
-    gocpp::error checkHeader(struct decoder* d)
+    struct gocpp::error checkHeader(struct decoder* d)
     {
         auto [gocpp_id_12, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)
@@ -1384,7 +1384,7 @@ namespace golang::png
         return nullptr;
     }
 
-    std::tuple<image::Image, gocpp::error> Decode(io::Reader r)
+    std::tuple<struct image::Image, struct gocpp::error> Decode(struct io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
         if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)
@@ -1409,7 +1409,7 @@ namespace golang::png
         return {d->img, nullptr};
     }
 
-    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<struct image::Config, struct gocpp::error> DecodeConfig(struct io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
         if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)

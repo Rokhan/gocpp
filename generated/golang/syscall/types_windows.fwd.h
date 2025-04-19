@@ -6,29 +6,6 @@
 
 namespace golang::syscall
 {
-    const Errno ERROR_FILE_NOT_FOUND = 2;
-    const Errno ERROR_PATH_NOT_FOUND = 3;
-    const Errno ERROR_ACCESS_DENIED = 5;
-    const Errno ERROR_NO_MORE_FILES = 18;
-    const Errno ERROR_HANDLE_EOF = 38;
-    const Errno ERROR_NETNAME_DELETED = 64;
-    const Errno ERROR_FILE_EXISTS = 80;
-    const Errno ERROR_BROKEN_PIPE = 109;
-    const Errno ERROR_BUFFER_OVERFLOW = 111;
-    const Errno ERROR_INSUFFICIENT_BUFFER = 122;
-    const Errno ERROR_MOD_NOT_FOUND = 126;
-    const Errno ERROR_PROC_NOT_FOUND = 127;
-    const Errno ERROR_DIR_NOT_EMPTY = 145;
-    const Errno ERROR_ALREADY_EXISTS = 183;
-    const Errno ERROR_ENVVAR_NOT_FOUND = 203;
-    const Errno ERROR_MORE_DATA = 234;
-    const Errno ERROR_OPERATION_ABORTED = 995;
-    const Errno ERROR_IO_PENDING = 997;
-    const Errno ERROR_NOT_FOUND = 1168;
-    const Errno ERROR_PRIVILEGE_NOT_HELD = 1314;
-    const Errno WSAEACCES = 10013;
-    const Errno WSAECONNABORTED = 10053;
-    const Errno WSAECONNRESET = 10054;
     const long O_RDONLY = 0x00000;
     const long O_WRONLY = 0x00001;
     const long O_RDWR = 0x00002;
@@ -510,6 +487,29 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
+    const Errno ERROR_FILE_NOT_FOUND = 2;
+    const Errno ERROR_PATH_NOT_FOUND = 3;
+    const Errno ERROR_ACCESS_DENIED = 5;
+    const Errno ERROR_NO_MORE_FILES = 18;
+    const Errno ERROR_HANDLE_EOF = 38;
+    const Errno ERROR_NETNAME_DELETED = 64;
+    const Errno ERROR_FILE_EXISTS = 80;
+    const Errno ERROR_BROKEN_PIPE = 109;
+    const Errno ERROR_BUFFER_OVERFLOW = 111;
+    const Errno ERROR_INSUFFICIENT_BUFFER = 122;
+    const Errno ERROR_MOD_NOT_FOUND = 126;
+    const Errno ERROR_PROC_NOT_FOUND = 127;
+    const Errno ERROR_DIR_NOT_EMPTY = 145;
+    const Errno ERROR_ALREADY_EXISTS = 183;
+    const Errno ERROR_ENVVAR_NOT_FOUND = 203;
+    const Errno ERROR_MORE_DATA = 234;
+    const Errno ERROR_OPERATION_ABORTED = 995;
+    const Errno ERROR_IO_PENDING = 997;
+    const Errno ERROR_NOT_FOUND = 1168;
+    const Errno ERROR_PRIVILEGE_NOT_HELD = 1314;
+    const Errno WSAEACCES = 10013;
+    const Errno WSAECONNABORTED = 10053;
+    const Errno WSAECONNRESET = 10054;
     const Signal SIGHUP = Signal(0x1);
     const Signal SIGINT = Signal(0x2);
     const Signal SIGQUIT = Signal(0x3);

@@ -44,7 +44,7 @@ namespace golang::utf16
     gocpp::slice<uint16_t> Encode(gocpp::slice<gocpp::rune> s)
     {
         auto n = len(s);
-        for(auto [_, v] : s)
+        for(auto [gocpp_ignored, v] : s)
         {
             if(v >= surrSelf)
             {
@@ -53,7 +53,7 @@ namespace golang::utf16
         }
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
         n = 0;
-        for(auto [_, v] : s)
+        for(auto [gocpp_ignored, v] : s)
         {
             //Go switch emulation
             {

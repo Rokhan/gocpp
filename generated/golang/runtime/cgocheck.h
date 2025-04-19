@@ -15,11 +15,11 @@ namespace golang::runtime
 {
     extern std::string cgoWriteBarrierFail;
     void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src);
-    void cgoCheckMemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void cgoCheckMemmove2(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckSliceCopy(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n);
-    void cgoCheckTypedBlock(_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckMemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void cgoCheckMemmove2(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckSliceCopy(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n);
+    void cgoCheckTypedBlock(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
     void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
-    void cgoCheckUsingType(_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckUsingType(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
 }
 

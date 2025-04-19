@@ -106,7 +106,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObject& value);
-    void setRecord(struct stackObject* obj, stackObjectRecord* r);
+    void setRecord(struct stackObject* obj, struct stackObjectRecord* r);
     struct stackScanState
     {
         stack stack;
@@ -133,9 +133,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
     void putPtr(struct stackScanState* s, uintptr_t p, bool conservative);
     std::tuple<uintptr_t, bool> getPtr(struct stackScanState* s);
-    void addObject(struct stackScanState* s, uintptr_t addr, stackObjectRecord* r);
+    void addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r);
     void buildIndex(struct stackScanState* s);
-    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
-    stackObject* findObject(struct stackScanState* s, uintptr_t a);
+    std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
+    struct stackObject* findObject(struct stackScanState* s, uintptr_t a);
 }
 

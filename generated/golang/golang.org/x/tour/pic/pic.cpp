@@ -24,7 +24,17 @@
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
 // #include "golang/image/png/writer.h"  [Ignored, known errors]
+#include "golang/internal/poll/fd_mutex.h"
+#include "golang/internal/poll/fd_poll_runtime.h"
+#include "golang/internal/poll/fd_windows.h"
+#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/io.h"
+#include "golang/os/dir_windows.h"
+#include "golang/os/file_windows.h"
+#include "golang/os/types.h"
+#include "golang/sync/mutex.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
 
 namespace golang::pic
 {
@@ -49,7 +59,7 @@ namespace golang::pic
         ShowImage(m);
     }
 
-    void ShowImage(image::Image m)
+    void ShowImage(struct image::Image m)
     {
         gocpp::Defer defer;
         try

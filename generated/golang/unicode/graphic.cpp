@@ -37,7 +37,7 @@ namespace golang::unicode
 
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r)
     {
-        for(auto [_, inside] : ranges)
+        for(auto [gocpp_ignored, inside] : ranges)
         {
             if(Is(inside, r))
             {
@@ -49,7 +49,7 @@ namespace golang::unicode
 
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges)
     {
-        for(auto [_, inside] : ranges)
+        for(auto [gocpp_ignored, inside] : ranges)
         {
             if(Is(inside, r))
             {

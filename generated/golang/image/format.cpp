@@ -63,7 +63,7 @@ namespace golang::image
 
     mocklib::Mutex formatsMu;
     atomic::Value atomicFormats;
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader)> decodeConfig)
+    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig)
     {
         Lock(gocpp::recv(formatsMu));
         auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
@@ -96,17 +96,17 @@ namespace golang::image
     }
 
     template<typename T, typename StoreT>
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reader::readerImpl<T, StoreT>::vPeek(int)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> reader::readerImpl<T, StoreT>::vPeek(int)
     {
         return Peek(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
     {
         return self.ptr->value->vPeek();
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
     {
         return self.obj.value->vPeek();
     }
@@ -116,7 +116,7 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    reader asReader(io::Reader r)
+    struct reader asReader(struct io::Reader r)
     {
         if(auto [rr, ok] = gocpp::getValue<reader>(r); ok)
         {
@@ -141,10 +141,10 @@ namespace golang::image
         return true;
     }
 
-    format sniff(reader r)
+    struct format sniff(struct reader r)
     {
         auto [formats, gocpp_id_3] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
-        for(auto [_, f] : formats)
+        for(auto [gocpp_ignored, f] : formats)
         {
             auto [b, err] = Peek(gocpp::recv(r), len(f.magic));
             if(err == nullptr && match(f.magic, b))
@@ -155,7 +155,7 @@ namespace golang::image
         return format {};
     }
 
-    std::tuple<Image, std::string, gocpp::error> Decode(io::Reader r)
+    std::tuple<struct Image, std::string, struct gocpp::error> Decode(struct io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
@@ -167,7 +167,7 @@ namespace golang::image
         return {m, f.name, err};
     }
 
-    std::tuple<Config, std::string, gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(struct io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);

@@ -32,6 +32,6 @@ namespace golang::godebugs
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
     extern gocpp::slice<Info> All;
-    Info* Lookup(std::string name);
+    struct Info* Lookup(std::string name);
 }
 

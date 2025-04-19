@@ -81,7 +81,7 @@ namespace golang::runtime
         Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
     }
 
-    void write(struct timeHistogram* h, metricValue* out)
+    void write(struct timeHistogram* h, struct metricValue* out)
     {
         auto hist = float64HistOrInit(gocpp::recv(out), timeHistBuckets);
         hist->counts[0] = Load(gocpp::recv(h->underflow));

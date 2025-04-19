@@ -137,12 +137,13 @@ namespace golang::syscall
     const Errno EXDEV = APPLICATION_ERROR + 128;
     const Errno EXFULL = APPLICATION_ERROR + 129;
     const Errno EWINDOWS = APPLICATION_ERROR + 130;
-    const Errno E2BIG = APPLICATION_ERROR + 0;
 }
+#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {
     const Errno ENOENT = ERROR_FILE_NOT_FOUND;
     const Errno ENOTDIR = ERROR_PATH_NOT_FOUND;
+    const Errno E2BIG = APPLICATION_ERROR + 0;
 }

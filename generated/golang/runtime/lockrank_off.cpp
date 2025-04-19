@@ -43,16 +43,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void lockInit(mutex* l, lockRank rank)
+    void lockInit(struct mutex* l, lockRank rank)
     {
     }
 
-    lockRank getLockRank(mutex* l)
+    lockRank getLockRank(struct mutex* l)
     {
         return 0;
     }
 
-    void lockWithRank(mutex* l, lockRank rank)
+    void lockWithRank(struct mutex* l, lockRank rank)
     {
         lock2(l);
     }
@@ -61,7 +61,7 @@ namespace golang::runtime
     {
     }
 
-    void unlockWithRank(mutex* l)
+    void unlockWithRank(struct mutex* l)
     {
         unlock2(l);
     }
@@ -70,11 +70,11 @@ namespace golang::runtime
     {
     }
 
-    void lockWithRankMayAcquire(mutex* l, lockRank rank)
+    void lockWithRankMayAcquire(struct mutex* l, lockRank rank)
     {
     }
 
-    void assertLockHeld(mutex* l)
+    void assertLockHeld(struct mutex* l)
     {
     }
 
@@ -94,7 +94,7 @@ namespace golang::runtime
     {
     }
 
-    void assertWorldStoppedOrLockHeld(mutex* l)
+    void assertWorldStoppedOrLockHeld(struct mutex* l)
     {
     }
 

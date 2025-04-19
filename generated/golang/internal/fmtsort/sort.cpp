@@ -66,7 +66,7 @@ namespace golang::fmtsort
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
     }
 
-    SortedMap* Sort(reflect::Value mapValue)
+    struct SortedMap* Sort(struct reflect::Value mapValue)
     {
         if(Kind(gocpp::recv(Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
@@ -86,7 +86,7 @@ namespace golang::fmtsort
         return sorted;
     }
 
-    int compare(reflect::Value aVal, reflect::Value bVal)
+    int compare(struct reflect::Value aVal, struct reflect::Value bVal)
     {
         auto [aType, bType] = std::tuple{Type(gocpp::recv(aVal)), Type(gocpp::recv(bVal))};
         if(aType != bType)
@@ -314,7 +314,7 @@ namespace golang::fmtsort
         }
     }
 
-    std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal)
+    std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal)
     {
         if(IsNil(gocpp::recv(aVal)))
         {

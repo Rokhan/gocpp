@@ -33,18 +33,18 @@
 
 namespace golang::runtime
 {
-    bool mutexContended(mutex* l);
-    void lock(mutex* l);
-    void lock2(mutex* l);
-    void unlock(mutex* l);
-    void unlock2(mutex* l);
-    void noteclear(note* n);
-    void notewakeup(note* n);
-    void notesleep(note* n);
-    bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline);
-    bool notetsleep(note* n, int64_t ns);
-    bool notetsleepg(note* n, int64_t ns);
-    std::tuple<g*, bool> beforeIdle(int64_t, int64_t);
+    bool mutexContended(struct mutex* l);
+    void lock(struct mutex* l);
+    void lock2(struct mutex* l);
+    void unlock(struct mutex* l);
+    void unlock2(struct mutex* l);
+    void noteclear(struct note* n);
+    void notewakeup(struct note* n);
+    void notesleep(struct note* n);
+    bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline);
+    bool notetsleep(struct note* n, int64_t ns);
+    bool notetsleepg(struct note* n, int64_t ns);
+    std::tuple<struct g*, bool> beforeIdle(int64_t, int64_t);
     void checkTimeouts();
 }
 

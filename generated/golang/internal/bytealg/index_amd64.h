@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/index_amd64.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
     void init();

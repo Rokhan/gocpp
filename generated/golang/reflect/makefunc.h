@@ -35,7 +35,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncImpl& value);
-    Value MakeFunc(Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
+    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
     void makeFuncStub();
     struct methodValue
     {
@@ -54,7 +54,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct methodValue& value);
-    Value makeMethodValue(std::string op, Value v);
+    struct Value makeMethodValue(std::string op, struct Value v);
     uintptr_t methodValueCallCodePtr();
     void methodValueCall();
     struct makeFuncCtxt
@@ -76,6 +76,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncCtxt& value);
-    void moveMakeFuncArgPtrs(makeFuncCtxt* ctxt, abi::RegArgs* args);
+    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, struct abi::RegArgs* args);
 }
 

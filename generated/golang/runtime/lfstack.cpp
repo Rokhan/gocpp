@@ -29,7 +29,7 @@
 
 namespace golang::runtime
 {
-    void push(lfstack* head, lfnode* node)
+    void push(lfstack* head, struct lfnode* node)
     {
         node->pushcnt++;
         auto go_new = lfstackPack(node, node->pushcnt);
@@ -72,7 +72,7 @@ namespace golang::runtime
         return atomic::Load64((uint64_t*)(head)) == 0;
     }
 
-    void lfnodeValidate(lfnode* node)
+    void lfnodeValidate(struct lfnode* node)
     {
         if(auto [base, gocpp_id_2, gocpp_id_3] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)
         {
@@ -86,12 +86,12 @@ namespace golang::runtime
         }
     }
 
-    uint64_t lfstackPack(lfnode* node, uintptr_t cnt)
+    uint64_t lfstackPack(struct lfnode* node, uintptr_t cnt)
     {
         return uint64_t(taggedPointerPack(unsafe::Pointer(node), cnt));
     }
 
-    lfnode* lfstackUnpack(uint64_t val)
+    struct lfnode* lfstackUnpack(uint64_t val)
     {
         return (lfnode*)(pointer(gocpp::recv(taggedPointer(val))));
     }

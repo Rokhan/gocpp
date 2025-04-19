@@ -66,7 +66,7 @@ namespace golang::runtime
         return s;
     }
 
-    uncommontype* uncommon(struct rtype t)
+    struct uncommontype* uncommon(struct rtype t)
     {
         return Uncommon(gocpp::recv(t));
     }
@@ -197,7 +197,7 @@ namespace golang::runtime
         unlock(& reflectOffs.lock);
     }
 
-    name resolveNameOff(unsafe::Pointer ptrInModule, nameOff off)
+    struct name resolveNameOff(unsafe::Pointer ptrInModule, nameOff off)
     {
         if(off == 0)
         {
@@ -232,12 +232,12 @@ namespace golang::runtime
         return gocpp::Init<name>([](name& x) { x.Bytes = (unsigned char*)(res); });
     }
 
-    name nameOff(struct rtype t, nameOff off)
+    struct name nameOff(struct rtype t, nameOff off)
     {
         return resolveNameOff(unsafe::Pointer(t.Type), off);
     }
 
-    _type* resolveTypeOff(unsafe::Pointer ptrInModule, typeOff off)
+    struct _type* resolveTypeOff(unsafe::Pointer ptrInModule, typeOff off)
     {
         if(off == 0 || off == - 1)
         {
@@ -282,7 +282,7 @@ namespace golang::runtime
         return (_type*)(unsafe::Pointer(res));
     }
 
-    _type* typeOff(struct rtype t, typeOff off)
+    struct _type* typeOff(struct rtype t, typeOff off)
     {
         return resolveTypeOff(unsafe::Pointer(t.Type), off);
     }
@@ -323,7 +323,7 @@ namespace golang::runtime
         return unsafe::Pointer(res);
     }
 
-    std::string pkgPath(name n)
+    std::string pkgPath(struct name n)
     {
         if(n.Bytes == nullptr || *Data(gocpp::recv(n), 0) & (1 << 2) == 0)
         {
@@ -383,10 +383,10 @@ namespace golang::runtime
         auto typehash = gocpp::make(gocpp::Tag<gocpp::map<uint32_t, gocpp::slice<_type*>>>(), len(firstmoduledata.typelinks));
         auto modules = activeModules();
         auto prev = modules[0];
-        for(auto [_, md] : modules.make_slice(1))
+        for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
             collect:
-            for(auto [_, tl] : prev->typelinks)
+            for(auto [gocpp_ignored, tl] : prev->typelinks)
             {
                 _type* t = {};
                 if(prev->typemap == nullptr)
@@ -398,7 +398,7 @@ namespace golang::runtime
                     t = prev->typemap[typeOff(tl)];
                 }
                 auto tlist = typehash[t->Hash];
-                for(auto [_, tcur] : tlist)
+                for(auto [gocpp_ignored, tcur] : tlist)
                 {
                     if(tcur == t)
                     {
@@ -418,10 +418,10 @@ namespace golang::runtime
                 auto tm = gocpp::make(gocpp::Tag<gocpp::map<typeOff, _type*>>(), len(md->typelinks));
                 pinnedTypemaps = append(pinnedTypemaps, tm);
                 md->typemap = tm;
-                for(auto [_, tl] : md->typelinks)
+                for(auto [gocpp_ignored, tl] : md->typelinks)
                 {
                     auto t = (_type*)(unsafe::Pointer(md->types + uintptr_t(tl)));
-                    for(auto [_, candidate] : typehash[t->Hash])
+                    for(auto [gocpp_ignored, candidate] : typehash[t->Hash])
                     {
                         auto seen = gocpp::map<_typePair, gocpp_id_1> {};
                         if(typesEqual(t, candidate, seen))
@@ -469,7 +469,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    rtype toRType(abi::Type* t)
+    struct rtype toRType(struct abi::Type* t)
     {
         return rtype {t};
     }
@@ -538,7 +538,7 @@ namespace golang::runtime
         }
 
 
-    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen)
+    bool typesEqual(struct _type* t, struct _type* v, gocpp::map<_typePair, gocpp_id_2> seen)
     {
         auto tp = _typePair {t, v};
         if(auto [gocpp_id_4, ok] = seen[tp]; ok)

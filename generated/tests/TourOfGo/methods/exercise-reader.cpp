@@ -42,7 +42,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer)
+    std::tuple<int, struct gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer)
     {
         buffer = gocpp::slice<unsigned char> {'A'};
         return {1, nullptr};

@@ -50,6 +50,6 @@ namespace golang::runtime
     void traceStopReadCPU();
     bool traceReadCPU(uintptr_t gen);
     void traceCPUFlush(uintptr_t gen);
-    void traceCPUSample(g* gp, m* mp, p* pp, gocpp::slice<uintptr_t> stk);
+    void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk);
 }
 

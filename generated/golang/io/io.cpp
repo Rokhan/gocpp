@@ -48,17 +48,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> Reader::ReaderImpl<T, StoreT>::vRead(gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Reader::ReaderImpl<T, StoreT>::vRead(gocpp::slice<unsigned char> p)
     {
         return Read(gocpp::PtrRecv<T, false>(value.get()), p);
     }
 
-    std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<Reader, false>& self, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<Reader, false>& self, gocpp::slice<unsigned char> p)
     {
         return self.ptr->value->vRead(p);
     }
 
-    std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<Reader>& self, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<Reader>& self, gocpp::slice<unsigned char> p)
     {
         return self.obj.value->vRead(p);
     }
@@ -93,17 +93,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> p)
     {
         return Write(gocpp::PtrRecv<T, false>(value.get()), p);
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char> p)
     {
         return self.ptr->value->vWrite(p);
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char> p)
     {
         return self.obj.value->vWrite(p);
     }
@@ -138,17 +138,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    gocpp::error Closer::CloserImpl<T, StoreT>::vClose()
+    struct gocpp::error Closer::CloserImpl<T, StoreT>::vClose()
     {
         return Close(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    gocpp::error Close(const gocpp::PtrRecv<Closer, false>& self)
+    struct gocpp::error Close(const gocpp::PtrRecv<Closer, false>& self)
     {
         return self.ptr->value->vClose();
     }
 
-    gocpp::error Close(const gocpp::ObjRecv<Closer>& self)
+    struct gocpp::error Close(const gocpp::ObjRecv<Closer>& self)
     {
         return self.obj.value->vClose();
     }
@@ -183,17 +183,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int64_t, gocpp::error> Seeker::SeekerImpl<T, StoreT>::vSeek(int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seeker::SeekerImpl<T, StoreT>::vSeek(int64_t offset, int whence)
     {
         return Seek(gocpp::PtrRecv<T, false>(value.get()), offset, whence);
     }
 
-    std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<Seeker, false>& self, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seek(const gocpp::PtrRecv<Seeker, false>& self, int64_t offset, int whence)
     {
         return self.ptr->value->vSeek(offset, whence);
     }
 
-    std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<Seeker>& self, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seek(const gocpp::ObjRecv<Seeker>& self, int64_t offset, int whence)
     {
         return self.obj.value->vSeek(offset, whence);
     }
@@ -468,17 +468,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int64_t, gocpp::error> ReaderFrom::ReaderFromImpl<T, StoreT>::vReadFrom(Reader r)
+    std::tuple<int64_t, struct gocpp::error> ReaderFrom::ReaderFromImpl<T, StoreT>::vReadFrom(struct Reader r)
     {
         return ReadFrom(gocpp::PtrRecv<T, false>(value.get()), r);
     }
 
-    std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<ReaderFrom, false>& self, Reader r)
+    std::tuple<int64_t, struct gocpp::error> ReadFrom(const gocpp::PtrRecv<ReaderFrom, false>& self, struct Reader r)
     {
         return self.ptr->value->vReadFrom(r);
     }
 
-    std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<ReaderFrom>& self, Reader r)
+    std::tuple<int64_t, struct gocpp::error> ReadFrom(const gocpp::ObjRecv<ReaderFrom>& self, struct Reader r)
     {
         return self.obj.value->vReadFrom(r);
     }
@@ -513,17 +513,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int64_t, gocpp::error> WriterTo::WriterToImpl<T, StoreT>::vWriteTo(Writer w)
+    std::tuple<int64_t, struct gocpp::error> WriterTo::WriterToImpl<T, StoreT>::vWriteTo(struct Writer w)
     {
         return WriteTo(gocpp::PtrRecv<T, false>(value.get()), w);
     }
 
-    std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<WriterTo, false>& self, Writer w)
+    std::tuple<int64_t, struct gocpp::error> WriteTo(const gocpp::PtrRecv<WriterTo, false>& self, struct Writer w)
     {
         return self.ptr->value->vWriteTo(w);
     }
 
-    std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<WriterTo>& self, Writer w)
+    std::tuple<int64_t, struct gocpp::error> WriteTo(const gocpp::ObjRecv<WriterTo>& self, struct Writer w)
     {
         return self.obj.value->vWriteTo(w);
     }
@@ -558,17 +558,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> ReaderAt::ReaderAtImpl<T, StoreT>::vReadAt(gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> ReaderAt::ReaderAtImpl<T, StoreT>::vReadAt(gocpp::slice<unsigned char> p, int64_t off)
     {
         return ReadAt(gocpp::PtrRecv<T, false>(value.get()), p, off);
     }
 
-    std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<ReaderAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> ReadAt(const gocpp::PtrRecv<ReaderAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
     {
         return self.ptr->value->vReadAt(p, off);
     }
 
-    std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<ReaderAt>& self, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> ReadAt(const gocpp::ObjRecv<ReaderAt>& self, gocpp::slice<unsigned char> p, int64_t off)
     {
         return self.obj.value->vReadAt(p, off);
     }
@@ -603,17 +603,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> WriterAt::WriterAtImpl<T, StoreT>::vWriteAt(gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> WriterAt::WriterAtImpl<T, StoreT>::vWriteAt(gocpp::slice<unsigned char> p, int64_t off)
     {
         return WriteAt(gocpp::PtrRecv<T, false>(value.get()), p, off);
     }
 
-    std::tuple<int, gocpp::error> WriteAt(const gocpp::PtrRecv<WriterAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> WriteAt(const gocpp::PtrRecv<WriterAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
     {
         return self.ptr->value->vWriteAt(p, off);
     }
 
-    std::tuple<int, gocpp::error> WriteAt(const gocpp::ObjRecv<WriterAt>& self, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> WriteAt(const gocpp::ObjRecv<WriterAt>& self, gocpp::slice<unsigned char> p, int64_t off)
     {
         return self.obj.value->vWriteAt(p, off);
     }
@@ -648,17 +648,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<unsigned char, gocpp::error> ByteReader::ByteReaderImpl<T, StoreT>::vReadByte()
+    std::tuple<unsigned char, struct gocpp::error> ByteReader::ByteReaderImpl<T, StoreT>::vReadByte()
     {
         return ReadByte(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<ByteReader, false>& self)
+    std::tuple<unsigned char, struct gocpp::error> ReadByte(const gocpp::PtrRecv<ByteReader, false>& self)
     {
         return self.ptr->value->vReadByte();
     }
 
-    std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<ByteReader>& self)
+    std::tuple<unsigned char, struct gocpp::error> ReadByte(const gocpp::ObjRecv<ByteReader>& self)
     {
         return self.obj.value->vReadByte();
     }
@@ -693,17 +693,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    gocpp::error ByteScanner::ByteScannerImpl<T, StoreT>::vUnreadByte()
+    struct gocpp::error ByteScanner::ByteScannerImpl<T, StoreT>::vUnreadByte()
     {
         return UnreadByte(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    gocpp::error UnreadByte(const gocpp::PtrRecv<ByteScanner, false>& self)
+    struct gocpp::error UnreadByte(const gocpp::PtrRecv<ByteScanner, false>& self)
     {
         return self.ptr->value->vUnreadByte();
     }
 
-    gocpp::error UnreadByte(const gocpp::ObjRecv<ByteScanner>& self)
+    struct gocpp::error UnreadByte(const gocpp::ObjRecv<ByteScanner>& self)
     {
         return self.obj.value->vUnreadByte();
     }
@@ -738,17 +738,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    gocpp::error ByteWriter::ByteWriterImpl<T, StoreT>::vWriteByte(unsigned char c)
+    struct gocpp::error ByteWriter::ByteWriterImpl<T, StoreT>::vWriteByte(unsigned char c)
     {
         return WriteByte(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
-    gocpp::error WriteByte(const gocpp::PtrRecv<ByteWriter, false>& self, unsigned char c)
+    struct gocpp::error WriteByte(const gocpp::PtrRecv<ByteWriter, false>& self, unsigned char c)
     {
         return self.ptr->value->vWriteByte(c);
     }
 
-    gocpp::error WriteByte(const gocpp::ObjRecv<ByteWriter>& self, unsigned char c)
+    struct gocpp::error WriteByte(const gocpp::ObjRecv<ByteWriter>& self, unsigned char c)
     {
         return self.obj.value->vWriteByte(c);
     }
@@ -783,17 +783,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<gocpp::rune, int, gocpp::error> RuneReader::RuneReaderImpl<T, StoreT>::vReadRune()
+    std::tuple<gocpp::rune, int, struct gocpp::error> RuneReader::RuneReaderImpl<T, StoreT>::vReadRune()
     {
         return ReadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self)
+    std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(const gocpp::PtrRecv<RuneReader, false>& self)
     {
         return self.ptr->value->vReadRune();
     }
 
-    std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<RuneReader>& self)
+    std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(const gocpp::ObjRecv<RuneReader>& self)
     {
         return self.obj.value->vReadRune();
     }
@@ -828,17 +828,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    gocpp::error RuneScanner::RuneScannerImpl<T, StoreT>::vUnreadRune()
+    struct gocpp::error RuneScanner::RuneScannerImpl<T, StoreT>::vUnreadRune()
     {
         return UnreadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    gocpp::error UnreadRune(const gocpp::PtrRecv<RuneScanner, false>& self)
+    struct gocpp::error UnreadRune(const gocpp::PtrRecv<RuneScanner, false>& self)
     {
         return self.ptr->value->vUnreadRune();
     }
 
-    gocpp::error UnreadRune(const gocpp::ObjRecv<RuneScanner>& self)
+    struct gocpp::error UnreadRune(const gocpp::ObjRecv<RuneScanner>& self)
     {
         return self.obj.value->vUnreadRune();
     }
@@ -873,17 +873,17 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> StringWriter::StringWriterImpl<T, StoreT>::vWriteString(std::string s)
+    std::tuple<int, struct gocpp::error> StringWriter::StringWriterImpl<T, StoreT>::vWriteString(std::string s)
     {
         return WriteString(gocpp::PtrRecv<T, false>(value.get()), s);
     }
 
-    std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<StringWriter, false>& self, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(const gocpp::PtrRecv<StringWriter, false>& self, std::string s)
     {
         return self.ptr->value->vWriteString(s);
     }
 
-    std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<StringWriter>& self, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(const gocpp::ObjRecv<StringWriter>& self, std::string s)
     {
         return self.obj.value->vWriteString(s);
     }
@@ -893,33 +893,33 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> WriteString(Writer w, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(struct Writer w, std::string s)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(auto [sw, ok] = gocpp::getValue<StringWriter>(w); ok)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return WriteString(gocpp::recv(sw), s);
         }
         return Write(gocpp::recv(w), gocpp::Tag<gocpp::slice<unsigned char>>()(s));
     }
 
-    std::tuple<int, gocpp::error> ReadAtLeast(Reader r, gocpp::slice<unsigned char> buf, int min)
+    std::tuple<int, struct gocpp::error> ReadAtLeast(struct Reader r, gocpp::slice<unsigned char> buf, int min)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(len(buf) < min)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, ErrShortBuffer};
         }
         for(; n < min && err == nullptr; )
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             int nn = {};
             std::tie(nn, err) = Read(gocpp::recv(r), buf.make_slice(n));
             n += nn;
@@ -927,101 +927,101 @@ namespace golang::io
         if(n >= min)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             err = nullptr;
         }
         else
         if(n > 0 && err == go_EOF)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             err = ErrUnexpectedEOF;
         }
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> ReadFull(Reader r, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> ReadFull(struct Reader r, gocpp::slice<unsigned char> buf)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         return ReadAtLeast(r, buf, len(buf));
     }
 
-    std::tuple<int64_t, gocpp::error> CopyN(Writer dst, Reader src, int64_t n)
+    std::tuple<int64_t, struct gocpp::error> CopyN(struct Writer dst, struct Reader src, int64_t n)
     {
         int64_t written;
-        gocpp::error err;
+        struct gocpp::error err;
         std::tie(written, err) = Copy(dst, LimitReader(src, n));
         if(written == n)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             return {n, nullptr};
         }
         if(written < n && err == nullptr)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             err = go_EOF;
         }
         return {written, err};
     }
 
-    std::tuple<int64_t, gocpp::error> Copy(Writer dst, Reader src)
+    std::tuple<int64_t, struct gocpp::error> Copy(struct Writer dst, struct Reader src)
     {
         int64_t written;
-        gocpp::error err;
+        struct gocpp::error err;
         return copyBuffer(dst, src, nullptr);
     }
 
-    std::tuple<int64_t, gocpp::error> CopyBuffer(Writer dst, Reader src, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, struct gocpp::error> CopyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf)
     {
         int64_t written;
-        gocpp::error err;
+        struct gocpp::error err;
         if(buf != nullptr && len(buf) == 0)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             gocpp::panic("empty buffer in CopyBuffer");
         }
         return copyBuffer(dst, src, buf);
     }
 
-    std::tuple<int64_t, gocpp::error> copyBuffer(Writer dst, Reader src, gocpp::slice<unsigned char> buf)
+    std::tuple<int64_t, struct gocpp::error> copyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf)
     {
         int64_t written;
-        gocpp::error err;
+        struct gocpp::error err;
         if(auto [wt, ok] = gocpp::getValue<WriterTo>(src); ok)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             return WriteTo(gocpp::recv(wt), dst);
         }
         if(auto [rt, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             return ReadFrom(gocpp::recv(rt), src);
         }
         if(buf == nullptr)
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             auto size = 32 * 1024;
             if(auto [l, ok] = gocpp::getValue<LimitedReader*>(src); ok && int64_t(size) > l->N)
             {
                 int64_t written;
-                gocpp::error err;
+                struct gocpp::error err;
                 if(l->N < 1)
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     size = 1;
                 }
                 else
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     size = int(l->N);
                 }
             }
@@ -1030,22 +1030,22 @@ namespace golang::io
         for(; ; )
         {
             int64_t written;
-            gocpp::error err;
+            struct gocpp::error err;
             auto [nr, er] = Read(gocpp::recv(src), buf);
             if(nr > 0)
             {
                 int64_t written;
-                gocpp::error err;
+                struct gocpp::error err;
                 auto [nw, ew] = Write(gocpp::recv(dst), buf.make_slice(0, nr));
                 if(nw < 0 || nr < nw)
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     nw = 0;
                     if(ew == nullptr)
                     {
                         int64_t written;
-                        gocpp::error err;
+                        struct gocpp::error err;
                         ew = errInvalidWrite;
                     }
                 }
@@ -1053,14 +1053,14 @@ namespace golang::io
                 if(ew != nullptr)
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     err = ew;
                     break;
                 }
                 if(nr != nw)
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     err = ErrShortWrite;
                     break;
                 }
@@ -1068,11 +1068,11 @@ namespace golang::io
             if(er != nullptr)
             {
                 int64_t written;
-                gocpp::error err;
+                struct gocpp::error err;
                 if(er != go_EOF)
                 {
                     int64_t written;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     err = er;
                 }
                 break;
@@ -1081,7 +1081,7 @@ namespace golang::io
         return {written, err};
     }
 
-    Reader LimitReader(Reader r, int64_t n)
+    struct Reader LimitReader(struct Reader r, int64_t n)
     {
         return new LimitedReader {r, n};
     }
@@ -1118,20 +1118,20 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> Read(struct LimitedReader* l, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(struct LimitedReader* l, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(l->N <= 0)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, go_EOF};
         }
         if(int64_t(len(p)) > l->N)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             p = p.make_slice(0, l->N);
         }
         std::tie(n, err) = Read(gocpp::recv(l->R), p);
@@ -1139,7 +1139,7 @@ namespace golang::io
         return {n, err};
     }
 
-    SectionReader* NewSectionReader(ReaderAt r, int64_t off, int64_t n)
+    struct SectionReader* NewSectionReader(struct ReaderAt r, int64_t off, int64_t n)
     {
         int64_t remaining = {};
         auto maxint64 = (1 << 63) - 1;
@@ -1195,20 +1195,20 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> Read(struct SectionReader* s, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(struct SectionReader* s, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(s->off >= s->limit)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, go_EOF};
         }
         if(auto max = s->limit - s->off; int64_t(len(p)) > max)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             p = p.make_slice(0, max);
         }
         std::tie(n, err) = ReadAt(gocpp::recv(s->r), p, s->off);
@@ -1218,7 +1218,7 @@ namespace golang::io
 
     gocpp::error errWhence = errors::New("Seek: invalid whence");
     gocpp::error errOffset = errors::New("Seek: invalid offset");
-    std::tuple<int64_t, gocpp::error> Seek(struct SectionReader* s, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seek(struct SectionReader* s, int64_t offset, int whence)
     {
         //Go switch emulation
         {
@@ -1251,27 +1251,27 @@ namespace golang::io
         return {offset - s->base, nullptr};
     }
 
-    std::tuple<int, gocpp::error> ReadAt(struct SectionReader* s, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> ReadAt(struct SectionReader* s, gocpp::slice<unsigned char> p, int64_t off)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(off < 0 || off >= Size(gocpp::recv(s)))
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, go_EOF};
         }
         off += s->base;
         if(auto max = s->limit - off; int64_t(len(p)) > max)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             p = p.make_slice(0, max);
             std::tie(n, err) = ReadAt(gocpp::recv(s->r), p, off);
             if(err == nullptr)
             {
                 int n;
-                gocpp::error err;
+                struct gocpp::error err;
                 err = go_EOF;
             }
             return {n, err};
@@ -1284,9 +1284,9 @@ namespace golang::io
         return s->limit - s->base;
     }
 
-    std::tuple<ReaderAt, int64_t, int64_t> Outer(struct SectionReader* s)
+    std::tuple<struct ReaderAt, int64_t, int64_t> Outer(struct SectionReader* s)
     {
-        ReaderAt r;
+        struct ReaderAt r;
         int64_t off;
         int64_t n;
         return {s->r, s->base, s->n};
@@ -1327,35 +1327,35 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    OffsetWriter* NewOffsetWriter(WriterAt w, int64_t off)
+    struct OffsetWriter* NewOffsetWriter(struct WriterAt w, int64_t off)
     {
         return new OffsetWriter {w, off, off};
     }
 
-    std::tuple<int, gocpp::error> Write(struct OffsetWriter* o, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(struct OffsetWriter* o, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         std::tie(n, err) = WriteAt(gocpp::recv(o->w), p, o->off);
         o->off += int64_t(n);
         return {n, err};
     }
 
-    std::tuple<int, gocpp::error> WriteAt(struct OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off)
+    std::tuple<int, struct gocpp::error> WriteAt(struct OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(off < 0)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, errOffset};
         }
         off += o->base;
         return WriteAt(gocpp::recv(o->w), p, off);
     }
 
-    std::tuple<int64_t, gocpp::error> Seek(struct OffsetWriter* o, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seek(struct OffsetWriter* o, int64_t offset, int whence)
     {
         //Go switch emulation
         {
@@ -1384,7 +1384,7 @@ namespace golang::io
         return {offset - o->base, nullptr};
     }
 
-    Reader TeeReader(Reader r, Writer w)
+    struct Reader TeeReader(struct Reader r, struct Writer w)
     {
         return new teeReader {r, w};
     }
@@ -1421,19 +1421,19 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    std::tuple<int, gocpp::error> Read(struct teeReader* t, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(struct teeReader* t, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         std::tie(n, err) = Read(gocpp::recv(t->r), p);
         if(n > 0)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             if(auto [n, err] = Write(gocpp::recv(t->w), p.make_slice(0, n)); err != nullptr)
             {
                 int n;
-                gocpp::error err;
+                struct gocpp::error err;
                 return {n, err};
             }
         }
@@ -1468,12 +1468,12 @@ namespace golang::io
     }
 
     ReaderFrom _ = discard {};
-    std::tuple<int, gocpp::error> Write(discard, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(discard, gocpp::slice<unsigned char> p)
     {
         return {len(p), nullptr};
     }
 
-    std::tuple<int, gocpp::error> WriteString(discard, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(discard, std::string s)
     {
         return {len(s), nullptr};
     }
@@ -1483,27 +1483,27 @@ namespace golang::io
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8192);
         return & b;
     }; });
-    std::tuple<int64_t, gocpp::error> ReadFrom(discard, Reader r)
+    std::tuple<int64_t, struct gocpp::error> ReadFrom(discard, struct Reader r)
     {
         int64_t n;
-        gocpp::error err;
+        struct gocpp::error err;
         auto bufp = gocpp::getValue<[]byte*>(Get(gocpp::recv(blackHolePool)));
         auto readSize = 0;
         for(; ; )
         {
             int64_t n;
-            gocpp::error err;
+            struct gocpp::error err;
             std::tie(readSize, err) = Read(gocpp::recv(r), *bufp);
             n += int64_t(readSize);
             if(err != nullptr)
             {
                 int64_t n;
-                gocpp::error err;
+                struct gocpp::error err;
                 Put(gocpp::recv(blackHolePool), bufp);
                 if(err == go_EOF)
                 {
                     int64_t n;
-                    gocpp::error err;
+                    struct gocpp::error err;
                     return {n, nullptr};
                 }
                 return {n, err};
@@ -1511,7 +1511,7 @@ namespace golang::io
         }
     }
 
-    ReadCloser NopCloser(Reader r)
+    struct ReadCloser NopCloser(struct Reader r)
     {
         if(auto [gocpp_id_1, ok] = gocpp::getValue<WriterTo>(r); ok)
         {
@@ -1546,7 +1546,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    gocpp::error Close(nopCloser)
+    struct gocpp::error Close(nopCloser)
     {
         return nullptr;
     }
@@ -1577,19 +1577,19 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
-    gocpp::error Close(nopCloserWriterTo)
+    struct gocpp::error Close(nopCloserWriterTo)
     {
         return nullptr;
     }
 
-    std::tuple<int64_t, gocpp::error> WriteTo(struct nopCloserWriterTo c, Writer w)
+    std::tuple<int64_t, struct gocpp::error> WriteTo(struct nopCloserWriterTo c, struct Writer w)
     {
         int64_t n;
-        gocpp::error err;
+        struct gocpp::error err;
         return WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)), w);
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadAll(Reader r)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 512);
         for(; ; )

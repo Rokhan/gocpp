@@ -48,12 +48,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(Vertex v)
+    double Abs(struct Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    void Scale(Vertex* v, double f)
+    void Scale(struct Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;

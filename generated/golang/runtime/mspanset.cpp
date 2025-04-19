@@ -103,7 +103,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void push(struct spanSet* b, mspan* s)
+    void push(struct spanSet* b, struct mspan* s)
     {
         auto cursor = uintptr_t(tail(gocpp::recv(incTail(gocpp::recv(b->index)))) - 1);
         auto [top, bottom] = std::tuple{cursor / spanSetBlockEntries, cursor % spanSetBlockEntries};
@@ -148,7 +148,7 @@ namespace golang::runtime
         StoreNoWB(gocpp::recv(block->spans[bottom]), s);
     }
 
-    mspan* pop(struct spanSet* b)
+    struct mspan* pop(struct spanSet* b)
     {
         uint32_t head = {};
         uint32_t tail = {};
@@ -260,12 +260,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s)
+    struct spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s)
     {
         return spanSetSpinePointer {Load(gocpp::recv(s->a))};
     }
 
-    void StoreNoWB(struct atomicSpanSetSpinePointer* s, spanSetSpinePointer p)
+    void StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p)
     {
         StoreNoWB(gocpp::recv(s->a), p.p);
     }
@@ -334,7 +334,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    spanSetBlock* alloc(struct spanSetBlockAlloc* p)
+    struct spanSetBlock* alloc(struct spanSetBlockAlloc* p)
     {
         if(auto s = (spanSetBlock*)(pop(gocpp::recv(p->stack))); s != nullptr)
         {
@@ -343,7 +343,7 @@ namespace golang::runtime
         return (spanSetBlock*)(persistentalloc(gocpp::Sizeof<spanSetBlock>(), cpu::CacheLineSize, & memstats.gcMiscSys));
     }
 
-    void free(struct spanSetBlockAlloc* p, spanSetBlock* block)
+    void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block)
     {
         Store(gocpp::recv(block->popped), 0);
         push(gocpp::recv(p->stack), & block->lfnode);
@@ -465,12 +465,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    mspan* Load(struct atomicMSpanPointer* p)
+    struct mspan* Load(struct atomicMSpanPointer* p)
     {
         return (mspan*)(Load(gocpp::recv(p->p)));
     }
 
-    void StoreNoWB(struct atomicMSpanPointer* p, mspan* s)
+    void StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s)
     {
         StoreNoWB(gocpp::recv(p->p), unsafe::Pointer(s));
     }

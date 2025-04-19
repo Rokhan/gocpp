@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/moretypes/exercise-slices.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/pic/pic.h"  [Ignored, known errors]
+#include "golang/golang.org/x/tour/pic/pic.h"
 
 namespace golang::main
 {

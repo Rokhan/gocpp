@@ -29,6 +29,8 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/plugin.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/profbuf.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
@@ -37,6 +39,7 @@
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/symtabinl.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2event.h"
 // #include "golang/runtime/trace2map.h"  [Ignored, known errors]
@@ -50,7 +53,7 @@
 
 namespace golang::runtime
 {
-    uint64_t traceStack(int skip, m* mp, uintptr_t gen)
+    uint64_t traceStack(int skip, struct m* mp, uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
         auto gp = getg();
@@ -154,7 +157,7 @@ namespace golang::runtime
                 unsigned char(gocpp::recv(w), unsigned char(traceEvStack));
                 varint(gocpp::recv(w), uint64_t(stk->id));
                 varint(gocpp::recv(w), uint64_t(len(frames)));
-                for(auto [_, frame] : frames)
+                for(auto [gocpp_ignored, frame] : frames)
                 {
                     varint(gocpp::recv(w), uint64_t(frame.PC));
                     varint(gocpp::recv(w), frame.funcID);
@@ -222,7 +225,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    traceFrame makeTraceFrame(uintptr_t gen, Frame f)
+    struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f)
     {
         traceFrame frame = {};
         frame.PC = f.PC;
@@ -282,7 +285,7 @@ namespace golang::runtime
             return len(newPCBuf) < cap(newPCBuf);
         };
         outer:
-        for(auto [_, retPC] : pcBuf.make_slice(1))
+        for(auto [gocpp_ignored, retPC] : pcBuf.make_slice(1))
         {
             auto callPC = retPC - 1;
             auto fi = findfunc(callPC);

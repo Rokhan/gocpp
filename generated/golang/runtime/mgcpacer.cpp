@@ -27,16 +27,23 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
@@ -46,6 +53,7 @@
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 // #include "golang/runtime/rand.h"  [Ignored, known errors]
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/string.h"
@@ -213,7 +221,7 @@ namespace golang::runtime
         commit(gocpp::recv(c), true);
     }
 
-    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, gcTrigger trigger)
+    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
     {
         Store(gocpp::recv(c->heapScanWork), 0);
         Store(gocpp::recv(c->stackScanWork), 0);
@@ -246,7 +254,7 @@ namespace golang::runtime
             dedicatedMarkWorkersNeeded = int64_t(procs);
             c->fractionalUtilizationGoal = 0;
         }
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             p->gcAssistTime = 0;
             p->gcFractionalMarkTime = 0;
@@ -402,7 +410,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, p* pp, int64_t now)
+    std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
         {
@@ -425,7 +433,7 @@ namespace golang::runtime
         {
             return {nullptr, now};
         }
-        auto decIfPositive = [=](atomic::Int64* val) mutable -> bool
+        auto decIfPositive = [=](struct atomic::Int64* val) mutable -> bool
         {
             for(; ; )
             {
@@ -541,7 +549,7 @@ namespace golang::runtime
         }
     }
 
-    void addScannableStack(struct gcControllerState* c, p* pp, int64_t amount)
+    void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount)
     {
         if(pp == nullptr)
         {

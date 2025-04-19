@@ -30,8 +30,10 @@
 #include "golang/runtime/mprof.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
 // #include "golang/runtime/preempt.h"  [Ignored, known errors]
 // #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/proc.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
@@ -94,7 +96,7 @@ namespace golang::runtime
         }
     }
 
-    bool isAbort(context* r)
+    bool isAbort(struct context* r)
     {
         auto pc = ip(gocpp::recv(r));
         if(GOARCH == "386" || GOARCH == "amd64" || GOARCH == "arm")
@@ -104,7 +106,7 @@ namespace golang::runtime
         return isAbortPC(pc);
     }
 
-    bool isgoexception(exceptionrecord* info, context* r)
+    bool isgoexception(struct exceptionrecord* info, struct context* r)
     {
         if(ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < ip(gocpp::recv(r)))
         {
@@ -157,10 +159,10 @@ namespace golang::runtime
         return true;
     }
 
-    g* sigFetchGSafe()
+    struct g* sigFetchGSafe()
     /* convertBlockStmt, nil block */;
 
-    g* sigFetchG()
+    struct g* sigFetchG()
     {
         if(GOARCH == "386")
         {
@@ -169,14 +171,14 @@ namespace golang::runtime
         return getg();
     }
 
-    int32_t sigtrampgo(exceptionpointers* ep, int kind)
+    int32_t sigtrampgo(struct exceptionpointers* ep, int kind)
     {
         auto gp = sigFetchG();
         if(gp == nullptr)
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
-        std::function<int32_t (exceptionrecord* info, context* r, g* gp)> fn = {};
+        std::function<int32_t (struct exceptionrecord* info, struct context* r, struct g* gp)> fn = {};
         //Go switch emulation
         {
             auto condition = kind;
@@ -226,7 +228,7 @@ namespace golang::runtime
         return ret;
     }
 
-    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp)
+    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(! isgoexception(info, r))
         {
@@ -260,7 +262,7 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
-    int32_t sehhandler(exceptionrecord* _, uint64_t _, context* _, _DISPATCHER_CONTEXT* dctxt)
+    int32_t sehhandler(struct exceptionrecord* _, uint64_t _, struct context* _, struct _DISPATCHER_CONTEXT* dctxt)
     {
         auto g0 = getg();
         if(g0 == nullptr || g0->m->curg == nullptr)
@@ -287,7 +289,7 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_SEARCH_SEH;
     }
 
-    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp)
+    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(! isgoexception(info, r))
         {
@@ -296,7 +298,7 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
-    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp)
+    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(islibrary || isarchive)
         {
@@ -310,7 +312,7 @@ namespace golang::runtime
         return 0;
     }
 
-    void winthrow(exceptionrecord* info, context* r, g* gp)
+    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         auto g0 = getg();
         if(Load(gocpp::recv(panicking)) != 0)
@@ -434,7 +436,7 @@ namespace golang::runtime
         dieFromException(nullptr, nullptr);
     }
 
-    void dieFromException(exceptionrecord* info, context* r)
+    void dieFromException(struct exceptionrecord* info, struct context* r)
     {
         if(info == nullptr)
         {

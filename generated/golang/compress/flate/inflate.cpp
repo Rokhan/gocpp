@@ -135,17 +135,17 @@ namespace golang::flate
     }
 
     template<typename T, typename StoreT>
-    gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
-    gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return self.ptr->value->vReset(r, dict);
     }
 
-    gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return self.obj.value->vReset(r, dict);
     }
@@ -203,7 +203,7 @@ namespace golang::flate
         gocpp::array<int, maxCodeLen> count = {};
         int min = {};
         int max = {};
-        for(auto [_, n] : lengths)
+        for(auto [gocpp_ignored, n] : lengths)
         {
             if(n == 0)
             {
@@ -310,9 +310,9 @@ namespace golang::flate
                     gocpp::panic("impossible: missing chunk");
                 }
             }
-            for(auto [_, linktab] : h->links)
+            for(auto [gocpp_ignored, linktab] : h->links)
             {
-                for(auto [_, chunk] : linktab)
+                for(auto [gocpp_ignored, chunk] : linktab)
                 {
                     if(chunk == 0)
                     {
@@ -487,7 +487,7 @@ namespace golang::flate
         }
     }
 
-    std::tuple<int, gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b)
     {
         for(; ; )
         {
@@ -513,7 +513,7 @@ namespace golang::flate
         }
     }
 
-    gocpp::error Close(struct decompressor* f)
+    struct gocpp::error Close(struct decompressor* f)
     {
         if(f->err == io::go_EOF)
         {
@@ -523,7 +523,7 @@ namespace golang::flate
     }
 
     gocpp::array_base<int> codeOrder = gocpp::array_base<int> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
-    gocpp::error readHuffman(struct decompressor* f)
+    struct gocpp::error readHuffman(struct decompressor* f)
     {
         for(; f->nb < 5 + 5 + 4; )
         {
@@ -903,7 +903,7 @@ namespace golang::flate
         f->step = (*decompressor)->nextBlock;
     }
 
-    gocpp::error noEOF(gocpp::error e)
+    struct gocpp::error noEOF(struct gocpp::error e)
     {
         if(e == io::go_EOF)
         {
@@ -912,7 +912,7 @@ namespace golang::flate
         return e;
     }
 
-    gocpp::error moreBits(struct decompressor* f)
+    struct gocpp::error moreBits(struct decompressor* f)
     {
         auto [c, err] = ReadByte(gocpp::recv(f->r));
         if(err != nullptr)
@@ -925,7 +925,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    std::tuple<int, gocpp::error> huffSym(struct decompressor* f, huffmanDecoder* h)
+    std::tuple<int, struct gocpp::error> huffSym(struct decompressor* f, struct huffmanDecoder* h)
     {
         auto n = (unsigned int)(h->min);
         auto [nb, b] = std::tuple{f->nb, f->b};
@@ -967,7 +967,7 @@ namespace golang::flate
         }
     }
 
-    void makeReader(struct decompressor* f, io::Reader r)
+    void makeReader(struct decompressor* f, struct io::Reader r)
     {
         if(auto [rr, ok] = gocpp::getValue<Reader>(r); ok)
         {
@@ -1011,7 +1011,7 @@ namespace golang::flate
         });
     }
 
-    gocpp::error Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Reset(struct decompressor* f, struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *f = gocpp::Init<decompressor>([](decompressor& x) { x.rBuf = f->rBuf; x.bits = f->bits; x.codebits = f->codebits; x.dict = f->dict; x.step = (*decompressor)->nextBlock; });
         makeReader(gocpp::recv(f), r);
@@ -1019,7 +1019,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    io::ReadCloser NewReader(io::Reader r)
+    struct io::ReadCloser NewReader(struct io::Reader r)
     {
         fixedHuffmanDecoderInit();
         decompressor f = {};
@@ -1031,7 +1031,7 @@ namespace golang::flate
         return & f;
     }
 
-    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
+    struct io::ReadCloser NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         fixedHuffmanDecoderInit();
         decompressor f = {};

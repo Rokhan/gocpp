@@ -41,6 +41,7 @@
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/plugin.h"
 #include "golang/runtime/proc.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
@@ -92,7 +93,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    suspendGState suspendG(g* gp)
+    struct suspendGState suspendG(struct g* gp)
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
@@ -198,7 +199,7 @@ namespace golang::runtime
         }
     }
 
-    void resumeG(suspendGState state)
+    void resumeG(struct suspendGState state)
     {
         if(state.dead)
         {
@@ -232,7 +233,7 @@ namespace golang::runtime
         }
     }
 
-    bool canPreemptM(m* mp)
+    bool canPreemptM(struct m* mp)
     {
         return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == "" && ptr(gocpp::recv(mp->p))->status == _Prunning;
     }
@@ -270,12 +271,12 @@ namespace golang::runtime
         }
     }
 
-    bool wantAsyncPreempt(g* gp)
+    bool wantAsyncPreempt(struct g* gp)
     {
         return (gp->preempt || gp->m->p != 0 && ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
     }
 
-    std::tuple<bool, uintptr_t> isAsyncSafePoint(g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
+    std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
     {
         auto mp = gp->m;
         if(mp->curg != gp)

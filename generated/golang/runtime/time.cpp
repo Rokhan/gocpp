@@ -128,14 +128,14 @@ namespace golang::runtime
         gopark(resetForSleep, unsafe::Pointer(t), waitReasonSleep, traceBlockSleep, 1);
     }
 
-    bool resetForSleep(g* gp, unsafe::Pointer ut)
+    bool resetForSleep(struct g* gp, unsafe::Pointer ut)
     {
         auto t = (timer*)(ut);
         resettimer(t, t->nextwhen);
         return true;
     }
 
-    void startTimer(timer* t)
+    void startTimer(struct timer* t)
     {
         if(raceenabled)
         {
@@ -144,12 +144,12 @@ namespace golang::runtime
         addtimer(t);
     }
 
-    bool stopTimer(timer* t)
+    bool stopTimer(struct timer* t)
     {
         return deltimer(t);
     }
 
-    bool resetTimer(timer* t, int64_t when)
+    bool resetTimer(struct timer* t, int64_t when)
     {
         if(raceenabled)
         {
@@ -158,7 +158,7 @@ namespace golang::runtime
         return resettimer(t, when);
     }
 
-    void modTimer(timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
     {
         modtimer(t, when, period, f, arg, seq);
     }
@@ -168,7 +168,7 @@ namespace golang::runtime
         goready(gocpp::getValue<g*>(arg), 0);
     }
 
-    void addtimer(timer* t)
+    void addtimer(struct timer* t)
     {
         if(t->when <= 0)
         {
@@ -194,7 +194,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    void doaddtimer(p* pp, timer* t)
+    void doaddtimer(struct p* pp, struct timer* t)
     {
         if(Load(gocpp::recv(netpollInited)) == 0)
         {
@@ -215,7 +215,7 @@ namespace golang::runtime
         Add(gocpp::recv(pp->numTimers), 1);
     }
 
-    bool deltimer(timer* t)
+    bool deltimer(struct timer* t)
     {
         for(; ; )
         {
@@ -296,7 +296,7 @@ namespace golang::runtime
         }
     }
 
-    int dodeltimer(p* pp, int i)
+    int dodeltimer(struct p* pp, int i)
     {
         if(auto t = pp->timers[i]; ptr(gocpp::recv(t->pp)) != pp)
         {
@@ -331,7 +331,7 @@ namespace golang::runtime
         return smallestChanged;
     }
 
-    void dodeltimer0(p* pp)
+    void dodeltimer0(struct p* pp)
     {
         if(auto t = pp->timers[0]; ptr(gocpp::recv(t->pp)) != pp)
         {
@@ -360,7 +360,7 @@ namespace golang::runtime
         }
     }
 
-    bool modtimer(timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
     {
         if(when <= 0)
         {
@@ -490,12 +490,12 @@ namespace golang::runtime
         return pending;
     }
 
-    bool resettimer(timer* t, int64_t when)
+    bool resettimer(struct timer* t, int64_t when)
     {
         return modtimer(t, when, t->period, t->f, t->arg, t->seq);
     }
 
-    void cleantimers(p* pp)
+    void cleantimers(struct p* pp)
     {
         auto gp = getg();
         for(; ; )
@@ -557,9 +557,9 @@ namespace golang::runtime
         }
     }
 
-    void moveTimers(p* pp, gocpp::slice<timer*> timers)
+    void moveTimers(struct p* pp, gocpp::slice<timer*> timers)
     {
-        for(auto [_, t] : timers)
+        for(auto [gocpp_ignored, t] : timers)
         {
             loop:
             for(; ; )
@@ -644,7 +644,7 @@ namespace golang::runtime
         }
     }
 
-    void adjusttimers(p* pp, int64_t now)
+    void adjusttimers(struct p* pp, int64_t now)
     {
         auto first = Load(gocpp::recv(pp->timerModifiedEarliest));
         if(first == 0 || first > now)
@@ -732,9 +732,9 @@ namespace golang::runtime
         }
     }
 
-    void addAdjustedTimers(p* pp, gocpp::slice<timer*> moved)
+    void addAdjustedTimers(struct p* pp, gocpp::slice<timer*> moved)
     {
-        for(auto [_, t] : moved)
+        for(auto [gocpp_ignored, t] : moved)
         {
             doaddtimer(pp, t);
             if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
@@ -744,7 +744,7 @@ namespace golang::runtime
         }
     }
 
-    int64_t nobarrierWakeTime(p* pp)
+    int64_t nobarrierWakeTime(struct p* pp)
     {
         auto next = Load(gocpp::recv(pp->timer0When));
         auto nextAdj = Load(gocpp::recv(pp->timerModifiedEarliest));
@@ -755,7 +755,7 @@ namespace golang::runtime
         return next;
     }
 
-    int64_t runtimer(p* pp, int64_t now)
+    int64_t runtimer(struct p* pp, int64_t now)
     {
         for(; ; )
         {
@@ -843,7 +843,7 @@ namespace golang::runtime
         }
     }
 
-    void runOneTimer(p* pp, timer* t, int64_t now)
+    void runOneTimer(struct p* pp, struct timer* t, int64_t now)
     {
         if(raceenabled)
         {
@@ -899,7 +899,7 @@ namespace golang::runtime
         }
     }
 
-    void clearDeletedTimers(p* pp)
+    void clearDeletedTimers(struct p* pp)
     {
         Store(gocpp::recv(pp->timerModifiedEarliest), 0);
         auto cdel = int32_t(0);
@@ -907,7 +907,7 @@ namespace golang::runtime
         auto changedHeap = false;
         auto timers = pp->timers;
         nextTimer:
-        for(auto [_, t] : timers)
+        for(auto [gocpp_ignored, t] : timers)
         {
             for(; ; )
             {
@@ -1006,7 +1006,7 @@ namespace golang::runtime
         }
     }
 
-    void verifyTimerHeap(p* pp)
+    void verifyTimerHeap(struct p* pp)
     {
         for(auto [i, t] : pp->timers)
         {
@@ -1028,7 +1028,7 @@ namespace golang::runtime
         }
     }
 
-    void updateTimer0When(p* pp)
+    void updateTimer0When(struct p* pp)
     {
         if(len(pp->timers) == 0)
         {
@@ -1040,7 +1040,7 @@ namespace golang::runtime
         }
     }
 
-    void updateTimerModifiedEarliest(p* pp, int64_t nextwhen)
+    void updateTimerModifiedEarliest(struct p* pp, int64_t nextwhen)
     {
         for(; ; )
         {
@@ -1060,7 +1060,7 @@ namespace golang::runtime
     {
         auto next = int64_t(maxWhen);
         lock(& allpLock);
-        for(auto [_, pp] : allp)
+        for(auto [gocpp_ignored, pp] : allp)
         {
             if(pp == nullptr)
             {

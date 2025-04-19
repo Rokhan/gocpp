@@ -21,7 +21,7 @@ namespace golang::main
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
     void DummyPrintList(std::string format, gocpp::slice<std::any> elts)
     {
-        for(auto [_, elt] : elts)
+        for(auto [gocpp_ignored, elt] : elts)
         {
             mocklib::Printf("%v, ", elt);
         }

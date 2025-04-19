@@ -81,7 +81,7 @@ namespace golang::cmp
     T Or(gocpp::slice<T> vals)
     {
         T zero = {};
-        for(auto [_, val] : vals)
+        for(auto [gocpp_ignored, val] : vals)
         {
             if(val != zero)
             {

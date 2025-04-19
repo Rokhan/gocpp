@@ -192,7 +192,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void add(struct memRecordCycle* a, memRecordCycle* b)
+    void add(struct memRecordCycle* a, struct memRecordCycle* b)
     {
         a->allocs += b->allocs;
         a->frees += b->frees;
@@ -311,7 +311,7 @@ namespace golang::runtime
         }
     }
 
-    bucket* newBucket(bucketType typ, int nstk)
+    struct bucket* newBucket(bucketType typ, int nstk)
     {
         auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
         //Go switch emulation
@@ -351,7 +351,7 @@ namespace golang::runtime
         return stk.make_slice(, b->nstk, b->nstk);
     }
 
-    memRecord* mp(struct bucket* b)
+    struct memRecord* mp(struct bucket* b)
     {
         if(b->typ != memProfile)
         {
@@ -361,7 +361,7 @@ namespace golang::runtime
         return (memRecord*)(data);
     }
 
-    blockRecord* bp(struct bucket* b)
+    struct blockRecord* bp(struct bucket* b)
     {
         if(b->typ != blockProfile && b->typ != mutexProfile)
         {
@@ -371,7 +371,7 @@ namespace golang::runtime
         return (blockRecord*)(data);
     }
 
-    bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
+    struct bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
     {
         auto bh = (buckhashArray*)(Load(gocpp::recv(buckhash)));
         if(bh == nullptr)
@@ -390,7 +390,7 @@ namespace golang::runtime
             unlock(& profInsertLock);
         }
         uintptr_t h = {};
-        for(auto [_, pc] : stk)
+        for(auto [gocpp_ignored, pc] : stk)
         {
             h += pc;
             h += h << 10;
@@ -527,7 +527,7 @@ namespace golang::runtime
         });
     }
 
-    void mProf_Free(bucket* b, uintptr_t size)
+    void mProf_Free(struct bucket* b, uintptr_t size)
     {
         auto index = (read(gocpp::recv(mProfCycle)) + 1) % uint32_t(len(memRecord {}.future));
         auto mp = mp(gocpp::recv(b));
@@ -715,7 +715,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void recordLock(struct mLockProfile* prof, int64_t cycles, mutex* l)
+    void recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l)
     {
         if(cycles <= 0)
         {
@@ -749,7 +749,7 @@ namespace golang::runtime
         prof->cycles = cycles;
     }
 
-    void recordUnlock(struct mLockProfile* prof, mutex* l)
+    void recordUnlock(struct mLockProfile* prof, struct mutex* l)
     {
         if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
         {
@@ -1053,7 +1053,7 @@ namespace golang::runtime
         return {n, ok};
     }
 
-    void record(MemProfileRecord* r, bucket* b)
+    void record(struct MemProfileRecord* r, struct bucket* b)
     {
         auto mp = mp(gocpp::recv(b));
         r->AllocBytes = int64_t(mp->active.alloc_bytes);
@@ -1445,7 +1445,7 @@ namespace golang::runtime
             }
         }
         startTheWorld(stw);
-        forEachGRace([=](g* gp1) mutable -> void
+        forEachGRace([=](struct g* gp1) mutable -> void
         {
             tryRecordGoroutineProfile(gp1, Gosched);
         });
@@ -1455,7 +1455,7 @@ namespace golang::runtime
         goroutineProfile.records = nullptr;
         goroutineProfile.labels = nullptr;
         startTheWorld(stw);
-        forEachGRace([=](g* gp1) mutable -> void
+        forEachGRace([=](struct g* gp1) mutable -> void
         {
             Store(gocpp::recv(gp1->goroutineProfiled), goroutineProfileAbsent);
         });
@@ -1474,7 +1474,7 @@ namespace golang::runtime
         return {n, true};
     }
 
-    void tryRecordGoroutineProfileWB(g* gp1)
+    void tryRecordGoroutineProfileWB(struct g* gp1)
     {
         if(ptr(gocpp::recv(getg()->m->p)) == nullptr)
         {
@@ -1483,7 +1483,7 @@ namespace golang::runtime
         tryRecordGoroutineProfile(gp1, osyield);
     }
 
-    void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield)
+    void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield)
     {
         if(readgstatus(gp1) == _Gdead)
         {
@@ -1515,7 +1515,7 @@ namespace golang::runtime
         }
     }
 
-    void doRecordGoroutineProfile(g* gp1)
+    void doRecordGoroutineProfile(struct g* gp1)
     {
         if(readgstatus(gp1) == _Grunning)
         {
@@ -1542,13 +1542,13 @@ namespace golang::runtime
         int n;
         bool ok;
         auto gp = getg();
-        auto isOK = [=](g* gp1) mutable -> bool
+        auto isOK = [=](struct g* gp1) mutable -> bool
         {
             return gp1 != gp && readgstatus(gp1) != _Gdead && ! isSystemGoroutine(gp1, false);
         };
         auto stw = stopTheWorld(stwGoroutineProfile);
         n = 1;
-        forEachGRace([=](g* gp1) mutable -> void
+        forEachGRace([=](struct g* gp1) mutable -> void
         {
             if(isOK(gp1))
             {
@@ -1575,7 +1575,7 @@ namespace golang::runtime
                 lbl[0] = gp->labels;
                 lbl = lbl.make_slice(1);
             }
-            forEachGRace([=](g* gp1) mutable -> void
+            forEachGRace([=](struct g* gp1) mutable -> void
             {
                 if(! isOK(gp1))
                 {
@@ -1614,7 +1614,7 @@ namespace golang::runtime
         return goroutineProfileWithLabels(p, nullptr);
     }
 
-    void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r)
+    void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r)
     {
         unwinder u = {};
         initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors);
@@ -1662,7 +1662,7 @@ namespace golang::runtime
     }
 
     mutex tracelock;
-    void tracealloc(unsafe::Pointer p, uintptr_t size, _type* typ)
+    void tracealloc(unsafe::Pointer p, uintptr_t size, struct _type* typ)
     {
         lock(& tracelock);
         auto gp = getg();

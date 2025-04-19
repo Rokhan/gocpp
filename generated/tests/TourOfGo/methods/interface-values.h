@@ -77,6 +77,6 @@ namespace golang::main
     void M(struct T* t);
     void M(F f);
     void main();
-    void describe(I i);
+    void describe(struct I i);
 }
 

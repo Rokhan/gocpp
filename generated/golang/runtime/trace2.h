@@ -41,15 +41,15 @@ namespace golang::runtime
 {
     extern uint32_t traceAdvanceSema;
     extern uint32_t traceShutdownSema;
-    gocpp::error StartTrace();
+    struct gocpp::error StartTrace();
     void StopTrace();
     void traceAdvance(bool stopTrace);
     uintptr_t traceNextGen(uintptr_t gen);
     void traceRegisterLabelsAndReasons(uintptr_t gen);
     gocpp::slice<unsigned char> ReadTrace();
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0();
-    g* traceReader();
-    g* traceReaderAvailable();
+    struct g* traceReader();
+    struct g* traceReaderAvailable();
     struct traceAdvancerState
     {
         wakeableSleep* timer;
@@ -87,7 +87,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
-    wakeableSleep* newWakeableSleep();
+    struct wakeableSleep* newWakeableSleep();
     void sleep(struct wakeableSleep* s, int64_t ns);
     void wake(struct wakeableSleep* s);
     void close(struct wakeableSleep* s);

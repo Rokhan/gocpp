@@ -72,20 +72,20 @@ namespace golang::png
     std::string Error(FormatError e);
     extern FormatError chunkOrderError;
     std::string Error(UnsupportedError e);
-    gocpp::error parseIHDR(struct decoder* d, uint32_t length);
-    gocpp::error parsePLTE(struct decoder* d, uint32_t length);
-    gocpp::error parsetRNS(struct decoder* d, uint32_t length);
-    std::tuple<int, gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
-    std::tuple<image::Image, gocpp::error> decode(struct decoder* d);
-    std::tuple<image::Image, gocpp::error> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
-    void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass);
-    gocpp::error parseIDAT(struct decoder* d, uint32_t length);
-    gocpp::error parseIEND(struct decoder* d, uint32_t length);
-    gocpp::error parseChunk(struct decoder* d, bool configOnly);
-    gocpp::error verifyChecksum(struct decoder* d);
-    gocpp::error checkHeader(struct decoder* d);
-    std::tuple<image::Image, gocpp::error> Decode(io::Reader r);
-    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r);
+    struct gocpp::error parseIHDR(struct decoder* d, uint32_t length);
+    struct gocpp::error parsePLTE(struct decoder* d, uint32_t length);
+    struct gocpp::error parsetRNS(struct decoder* d, uint32_t length);
+    std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
+    std::tuple<struct image::Image, struct gocpp::error> decode(struct decoder* d);
+    std::tuple<struct image::Image, struct gocpp::error> readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly);
+    void mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass);
+    struct gocpp::error parseIDAT(struct decoder* d, uint32_t length);
+    struct gocpp::error parseIEND(struct decoder* d, uint32_t length);
+    struct gocpp::error parseChunk(struct decoder* d, bool configOnly);
+    struct gocpp::error verifyChecksum(struct decoder* d);
+    struct gocpp::error checkHeader(struct decoder* d);
+    std::tuple<struct image::Image, struct gocpp::error> Decode(struct io::Reader r);
+    std::tuple<struct image::Config, struct gocpp::error> DecodeConfig(struct io::Reader r);
     void init();
 }
 

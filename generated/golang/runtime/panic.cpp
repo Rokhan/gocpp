@@ -15,6 +15,7 @@
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
@@ -24,6 +25,7 @@
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
@@ -32,14 +34,23 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
@@ -324,7 +335,7 @@ namespace golang::runtime
         return d->head;
     }
 
-    _defer* badDefer()
+    struct _defer* badDefer()
     {
         return (_defer*)(unsafe::Pointer(uintptr_t(1)));
     }
@@ -353,7 +364,7 @@ namespace golang::runtime
         return0();
     }
 
-    _defer* deferconvert(_defer* d)
+    struct _defer* deferconvert(struct _defer* d)
     {
         auto head = d->head;
         if(raceenabled)
@@ -390,7 +401,7 @@ namespace golang::runtime
         return d;
     }
 
-    void deferprocStack(_defer* d)
+    void deferprocStack(struct _defer* d)
     {
         auto gp = getg();
         if(gp->m->curg != gp)
@@ -407,7 +418,7 @@ namespace golang::runtime
         return0();
     }
 
-    _defer* newdefer()
+    struct _defer* newdefer()
     {
         _defer* d = {};
         auto mp = acquirem();
@@ -440,7 +451,7 @@ namespace golang::runtime
         return d;
     }
 
-    void freedefer(_defer* d)
+    void freedefer(struct _defer* d)
     {
         d->link = nullptr;
         if(d->fn != nullptr)
@@ -522,7 +533,7 @@ namespace golang::runtime
         goexit1();
     }
 
-    void preprintpanics(_panic* p)
+    void preprintpanics(struct _panic* p)
     {
         gocpp::Defer defer;
         try
@@ -591,7 +602,7 @@ namespace golang::runtime
         }
     }
 
-    void printpanics(_panic* p)
+    void printpanics(struct _panic* p)
     {
         if(p->link != nullptr)
         {
@@ -856,7 +867,7 @@ namespace golang::runtime
         return ok;
     }
 
-    bool initOpenCodedDefers(struct _panic* p, funcInfo fn, unsafe::Pointer varp)
+    bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp)
     {
         auto fd = funcdata(fn, abi::FUNCDATA_OpenCodedDeferInfo);
         if(fd == nullptr)
@@ -925,7 +936,7 @@ namespace golang::runtime
     atomic::Uint32 runningPanicDefers;
     atomic::Uint32 panicking;
     mutex paniclk;
-    void recovery(g* gp)
+    void recovery(struct g* gp)
     {
         auto p = gp->_panic;
         auto [pc, sp, fp] = std::tuple{p->retpc, uintptr_t(p->sp), uintptr_t(p->fp)};
@@ -1005,7 +1016,7 @@ namespace golang::runtime
         *(int*)(nullptr) = 0;
     }
 
-    void fatalpanic(_panic* msgs)
+    void fatalpanic(struct _panic* msgs)
     {
         auto pc = getcallerpc();
         auto sp = getcallersp();
@@ -1082,7 +1093,7 @@ namespace golang::runtime
 
     bool didothers;
     mutex deadlock;
-    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp)
+    bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp)
     {
         if(gp->sig != 0)
         {
@@ -1161,7 +1172,7 @@ namespace golang::runtime
         return true;
     }
 
-    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr)
+    bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr)
     {
         if(pc == 0)
         {

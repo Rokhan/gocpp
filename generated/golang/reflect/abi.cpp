@@ -117,7 +117,7 @@ namespace golang::reflect
             println("part", i, p.kind, p.offset, p.size, p.stkOff, p.ireg, p.freg);
         }
         print("values ");
-        for(auto [_, i] : a->valueStart)
+        for(auto [gocpp_ignored, i] : a->valueStart)
         {
             print(i, " ");
         }
@@ -142,7 +142,7 @@ namespace golang::reflect
         return a->steps.make_slice(s, e);
     }
 
-    abiStep* addArg(struct abiSeq* a, abi::Type* t)
+    struct abiStep* addArg(struct abiSeq* a, struct abi::Type* t)
     {
         auto pStart = len(a->steps);
         a->valueStart = append(a->valueStart, pStart);
@@ -161,7 +161,7 @@ namespace golang::reflect
         return nullptr;
     }
 
-    std::tuple<abiStep*, bool> addRcvr(struct abiSeq* a, abi::Type* rcvr)
+    std::tuple<struct abiStep*, bool> addRcvr(struct abiSeq* a, struct abi::Type* rcvr)
     {
         a->valueStart = append(a->valueStart, len(a->steps));
         bool ok = {};
@@ -184,7 +184,7 @@ namespace golang::reflect
         return {nullptr, ptr};
     }
 
-    bool regAssign(struct abiSeq* a, abi::Type* t, uintptr_t offset)
+    bool regAssign(struct abiSeq* a, struct abi::Type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -451,7 +451,7 @@ namespace golang::reflect
         }
     }
 
-    abiDesc newAbiDesc(funcType* t, abi::Type* rcvr)
+    struct abiDesc newAbiDesc(struct funcType* t, struct abi::Type* rcvr)
     {
         auto spill = uintptr_t(0);
         auto stackPtrs = go_new(bitVector);
@@ -487,7 +487,7 @@ namespace golang::reflect
             {
                 spill = align(spill, uintptr_t(Align(gocpp::recv(arg))));
                 spill += Size(gocpp::recv(arg));
-                for(auto [_, st] : stepsForValue(gocpp::recv(in), i))
+                for(auto [gocpp_ignored, st] : stepsForValue(gocpp::recv(in), i))
                 {
                     if(st.kind == abiStepPointer)
                     {
@@ -511,7 +511,7 @@ namespace golang::reflect
             }
             else
             {
-                for(auto [_, st] : stepsForValue(gocpp::recv(out), i))
+                for(auto [gocpp_ignored, st] : stepsForValue(gocpp::recv(out), i))
                 {
                     if(st.kind == abiStepPointer)
                     {
@@ -524,17 +524,17 @@ namespace golang::reflect
         return abiDesc {in, out, stackCallArgsSize, retOffset, spill, stackPtrs, inRegPtrs, outRegPtrs};
     }
 
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void intFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
     {
         memmove(to, IntRegArgAddr(gocpp::recv(r), reg, argSize), argSize);
     }
 
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void intToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
     {
         memmove(IntRegArgAddr(gocpp::recv(r), reg, argSize), from, argSize);
     }
 
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void floatFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
     {
         //Go switch emulation
         {
@@ -557,7 +557,7 @@ namespace golang::reflect
         }
     }
 
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void floatToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
     {
         //Go switch emulation
         {

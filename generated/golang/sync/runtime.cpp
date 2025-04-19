@@ -30,16 +30,16 @@ namespace golang::sync
     void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes)
     /* convertBlockStmt, nil block */;
 
-    uint32_t runtime_notifyListAdd(notifyList* l)
+    uint32_t runtime_notifyListAdd(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
-    void runtime_notifyListWait(notifyList* l, uint32_t t)
+    void runtime_notifyListWait(struct notifyList* l, uint32_t t)
     /* convertBlockStmt, nil block */;
 
-    void runtime_notifyListNotifyAll(notifyList* l)
+    void runtime_notifyListNotifyAll(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
-    void runtime_notifyListNotifyOne(notifyList* l)
+    void runtime_notifyListNotifyOne(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
     void runtime_notifyListCheck(uintptr_t size)

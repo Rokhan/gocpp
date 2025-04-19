@@ -24,7 +24,7 @@ namespace golang::registry
     unsafe::Pointer _;
     gocpp::error errERROR_IO_PENDING = syscall::Errno(errnoERROR_IO_PENDING);
     gocpp::error errERROR_EINVAL = syscall::EINVAL;
-    gocpp::error errnoErr(syscall::Errno e)
+    struct gocpp::error errnoErr(syscall::Errno e)
     {
         //Go switch emulation
         {
@@ -54,88 +54,88 @@ namespace golang::registry
     syscall::LazyProc* procRegLoadMUIStringW = NewProc(gocpp::recv(modadvapi32), "RegLoadMUIStringW");
     syscall::LazyProc* procRegSetValueExW = NewProc(gocpp::recv(modadvapi32), "RegSetValueExW");
     syscall::LazyProc* procExpandEnvironmentStringsW = NewProc(gocpp::recv(modkernel32), "ExpandEnvironmentStringsW");
-    gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
+    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, struct syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_2, gocpp_id_3] = syscall::Syscall9(Addr(gocpp::recv(procRegCreateKeyExW)), 9, uintptr_t(key), uintptr_t(unsafe::Pointer(subkey)), uintptr_t(reserved), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(options), uintptr_t(desired), uintptr_t(unsafe::Pointer(sa)), uintptr_t(unsafe::Pointer(result)), uintptr_t(unsafe::Pointer(disposition)));
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey)
+    struct gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_6, gocpp_id_7] = syscall::Syscall(Addr(gocpp::recv(procRegDeleteKeyW)), 2, uintptr_t(key), uintptr_t(unsafe::Pointer(subkey)), 0);
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name)
+    struct gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_10, gocpp_id_11] = syscall::Syscall(Addr(gocpp::recv(procRegDeleteValueW)), 2, uintptr_t(key), uintptr_t(unsafe::Pointer(name)), 0);
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
+    struct gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_14, gocpp_id_15] = syscall::Syscall9(Addr(gocpp::recv(procRegEnumValueW)), 8, uintptr_t(key), uintptr_t(index), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(nameLen)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(valtype)), uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(buflen)), 0);
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir)
+    struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_18, gocpp_id_19] = syscall::Syscall9(Addr(gocpp::recv(procRegLoadMUIStringW)), 7, uintptr_t(key), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(buf)), uintptr_t(buflen), uintptr_t(unsafe::Pointer(buflenCopied)), uintptr_t(flags), uintptr_t(unsafe::Pointer(dir)), 0, 0);
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize)
+    struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize)
     {
-        gocpp::error regerrno;
+        struct gocpp::error regerrno;
         auto [r0, gocpp_id_22, gocpp_id_23] = syscall::Syscall6(Addr(gocpp::recv(procRegSetValueExW)), 6, uintptr_t(key), uintptr_t(unsafe::Pointer(valueName)), uintptr_t(reserved), uintptr_t(vtype), uintptr_t(unsafe::Pointer(buf)), uintptr_t(bufsize));
         if(r0 != 0)
         {
-            gocpp::error regerrno;
+            struct gocpp::error regerrno;
             regerrno = syscall::Errno(r0);
         }
         return regerrno;
     }
 
-    std::tuple<uint32_t, gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size)
+    std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size)
     {
         uint32_t n;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [r0, gocpp_id_25, e1] = syscall::Syscall(Addr(gocpp::recv(procExpandEnvironmentStringsW)), 3, uintptr_t(unsafe::Pointer(src)), uintptr_t(unsafe::Pointer(dst)), uintptr_t(size));
         n = uint32_t(r0);
         if(n == 0)
         {
             uint32_t n;
-            gocpp::error err;
+            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};

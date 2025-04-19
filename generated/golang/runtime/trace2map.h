@@ -56,12 +56,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceMapNode& value);
-    traceMapNode* next(struct traceMapNode* n);
+    struct traceMapNode* next(struct traceMapNode* n);
     uint64_t stealID(struct traceMap* tab);
     std::tuple<uint64_t, bool> put(struct traceMap* tab, unsafe::Pointer data, uintptr_t size);
     uint64_t find(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash);
-    traceMapNode* bucket(struct traceMap* tab, int part);
-    traceMapNode* newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
+    struct traceMapNode* bucket(struct traceMap* tab, int part);
+    struct traceMapNode* newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
     void reset(struct traceMap* tab);
 }
 

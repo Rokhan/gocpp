@@ -39,7 +39,7 @@
 
 namespace golang::runtime
 {
-    uint64_t traceStack(int skip, m* mp, uintptr_t gen);
+    uint64_t traceStack(int skip, struct m* mp, uintptr_t gen);
     struct traceStackTable
     {
         traceMap tab;
@@ -78,7 +78,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceFrame& value);
-    traceFrame makeTraceFrame(uintptr_t gen, Frame f);
+    struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f);
     bool tracefpunwindoff();
     int fpTracebackPCs(unsafe::Pointer fp, gocpp::slice<uintptr_t> pcBuf);
     gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);

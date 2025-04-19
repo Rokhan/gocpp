@@ -102,15 +102,15 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcControllerState& value);
     void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
-    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, gcTrigger trigger);
+    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger);
     void revise(struct gcControllerState* c);
     void endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced);
     void enlistWorker(struct gcControllerState* c);
-    std::tuple<g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, p* pp, int64_t now);
+    std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now);
     void resetLive(struct gcControllerState* c, uint64_t bytesMarked);
     void markWorkerStop(struct gcControllerState* c, gcMarkWorkerMode mode, int64_t duration);
     void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
-    void addScannableStack(struct gcControllerState* c, p* pp, int64_t amount);
+    void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount);
     void addGlobals(struct gcControllerState* c, int64_t amount);
     uint64_t heapGoal(struct gcControllerState* c);
     std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c);

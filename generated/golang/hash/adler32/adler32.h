@@ -15,16 +15,16 @@
 namespace golang::adler32
 {
     void Reset(digest* d);
-    hash::Hash32 New();
+    struct hash::Hash32 New();
     int Size(digest* d);
     int BlockSize(digest* d);
     extern std::string magic;
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
-    gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(digest* d);
+    struct gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     digest update(digest d, gocpp::slice<unsigned char> p);
-    std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
+    std::tuple<int, struct gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
     uint32_t Sum32(digest* d);
     gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);
     uint32_t Checksum(gocpp::slice<unsigned char> data);

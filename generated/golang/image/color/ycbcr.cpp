@@ -148,7 +148,7 @@ namespace golang::color
     }
 
     Model YCbCrModel = ModelFunc(yCbCrModel);
-    Color yCbCrModel(Color c)
+    struct Color yCbCrModel(struct Color c)
     {
         if(auto [gocpp_id_1, ok] = gocpp::getValue<YCbCr>(c); ok)
         {
@@ -225,7 +225,7 @@ namespace golang::color
     }
 
     Model NYCbCrAModel = ModelFunc(nYCbCrAModel);
-    Color nYCbCrAModel(Color c)
+    struct Color nYCbCrAModel(struct Color c)
     {
         //Go type switch emulation
         {
@@ -341,7 +341,7 @@ namespace golang::color
     }
 
     Model CMYKModel = ModelFunc(cmykModel);
-    Color cmykModel(Color c)
+    struct Color cmykModel(struct Color c)
     {
         if(auto [gocpp_id_6, ok] = gocpp::getValue<CMYK>(c); ok)
         {

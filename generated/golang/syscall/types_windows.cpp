@@ -88,9 +88,9 @@ namespace golang::syscall
         return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
     }
 
-    Timeval NsecToTimeval(int64_t nsec)
+    struct Timeval NsecToTimeval(int64_t nsec)
     {
-        Timeval tv;
+        struct Timeval tv;
         tv->Sec = int32_t(nsec / 1e9);
         tv->Usec = int32_t(nsec % 1e9 / 1e3);
         return tv;
@@ -250,9 +250,9 @@ namespace golang::syscall
         return nsec;
     }
 
-    Filetime NsecToFiletime(int64_t nsec)
+    struct Filetime NsecToFiletime(int64_t nsec)
     {
-        Filetime ft;
+        struct Filetime ft;
         nsec /= 100;
         nsec += 116444736000000000;
         ft->LowDateTime = uint32_t(nsec & 0xffffffff);
@@ -372,7 +372,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    void copyFindData(Win32finddata* dst, win32finddata1* src)
+    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src)
     {
         dst->FileAttributes = src->FileAttributes;
         dst->CreationTime = src->CreationTime;

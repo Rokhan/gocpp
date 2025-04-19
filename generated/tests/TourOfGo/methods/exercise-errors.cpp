@@ -15,7 +15,7 @@
 
 namespace golang::main
 {
-    std::tuple<double, gocpp::error> Sqrt(double x)
+    std::tuple<double, struct gocpp::error> Sqrt(double x)
     {
         return {0, nullptr};
     }

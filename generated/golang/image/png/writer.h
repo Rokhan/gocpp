@@ -64,7 +64,7 @@ namespace golang::png
 
         struct IEncoderBufferPool
         {
-            virtual EncoderBuffer* vGet() = 0;
+            virtual struct EncoderBuffer* vGet() = 0;
             virtual void vPut(EncoderBuffer*) = 0;
         };
 
@@ -76,7 +76,7 @@ namespace golang::png
                 value.reset(ptr);
             }
 
-            EncoderBuffer* vGet() override;
+            struct EncoderBuffer* vGet() override;
 
             void vPut(EncoderBuffer*) override;
 
@@ -86,8 +86,8 @@ namespace golang::png
         std::shared_ptr<IEncoderBufferPool> value;
     };
 
-    EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self);
-    EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self);
+    struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self);
+    struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self);
 
     void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*);
     void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*);
@@ -167,19 +167,19 @@ namespace golang::png
     bool Opaque(const gocpp::ObjRecv<opaquer>& self);
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
-    bool opaque(image::Image m);
+    bool opaque(struct image::Image m);
     int abs8(uint8_t d);
     void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
     void writeIHDR(struct encoder* e);
     void writePLTEAndTRNS(struct encoder* e, color::Palette p);
-    std::tuple<int, gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
+    std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
     int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
-    gocpp::error writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level);
+    struct gocpp::error writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level);
     void writeIDATs(struct encoder* e);
     int levelToZlib(CompressionLevel l);
     void writeIEND(struct encoder* e);
-    gocpp::error Encode(io::Writer w, image::Image m);
-    gocpp::error Encode(struct Encoder* enc, io::Writer w, image::Image m);
+    struct gocpp::error Encode(struct io::Writer w, struct image::Image m);
+    struct gocpp::error Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m);
 }
 

@@ -21,6 +21,7 @@
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
+#include "golang/runtime/mgc.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/msize_allocheaders.h"
 #include "golang/runtime/race0.h"
@@ -110,7 +111,7 @@ namespace golang::runtime
         gocpp::panic(errorString("makeslice: cap out of range"));
     }
 
-    unsafe::Pointer makeslicecopy(_type* et, int tolen, int fromlen, unsafe::Pointer from)
+    unsafe::Pointer makeslicecopy(struct _type* et, int tolen, int fromlen, unsafe::Pointer from)
     {
         uintptr_t tomem = {};
         uintptr_t copymem = {};
@@ -164,7 +165,7 @@ namespace golang::runtime
         return to;
     }
 
-    unsafe::Pointer makeslice(_type* et, int len, int cap)
+    unsafe::Pointer makeslice(struct _type* et, int len, int cap)
     {
         auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
@@ -179,7 +180,7 @@ namespace golang::runtime
         return mallocgc(mem, et, true);
     }
 
-    unsafe::Pointer makeslice64(_type* et, int64_t len64, int64_t cap64)
+    unsafe::Pointer makeslice64(struct _type* et, int64_t len64, int64_t cap64)
     {
         auto len = int(len64);
         if(int64_t(len) != len64)
@@ -194,7 +195,7 @@ namespace golang::runtime
         return makeslice(et, len, cap);
     }
 
-    slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, _type* et)
+    struct slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, struct _type* et)
     {
         auto oldLen = newLen - num;
         if(raceenabled)
@@ -323,7 +324,7 @@ namespace golang::runtime
         return newcap;
     }
 
-    slice reflect_growslice(_type* et, slice old, int num)
+    struct slice reflect_growslice(struct _type* et, struct slice old, int num)
     {
         num -= old.cap - old.len;
         auto go_new = growslice(old.array, old.cap + num, old.cap, num, et);

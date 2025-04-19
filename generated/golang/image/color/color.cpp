@@ -461,17 +461,17 @@ namespace golang::color
     }
 
     template<typename T, typename StoreT>
-    Color Model::ModelImpl<T, StoreT>::vConvert(Color c)
+    struct Color Model::ModelImpl<T, StoreT>::vConvert(struct Color c)
     {
         return Convert(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
-    Color Convert(const gocpp::PtrRecv<Model, false>& self, Color c)
+    struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c)
     {
         return self.ptr->value->vConvert(c);
     }
 
-    Color Convert(const gocpp::ObjRecv<Model>& self, Color c)
+    struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c)
     {
         return self.obj.value->vConvert(c);
     }
@@ -481,7 +481,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    Model ModelFunc(std::function<Color (Color)> f)
+    struct Model ModelFunc(std::function<struct Color (Color)> f)
     {
         return new modelFunc {f};
     }
@@ -515,7 +515,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    Color Convert(struct modelFunc* m, Color c)
+    struct Color Convert(struct modelFunc* m, struct Color c)
     {
         return f(gocpp::recv(m), c);
     }
@@ -528,7 +528,7 @@ namespace golang::color
     Model Alpha16Model = ModelFunc(alpha16Model);
     Model GrayModel = ModelFunc(grayModel);
     Model Gray16Model = ModelFunc(gray16Model);
-    Color rgbaModel(Color c)
+    struct Color rgbaModel(struct Color c)
     {
         if(auto [gocpp_id_1, ok] = gocpp::getValue<RGBA>(c); ok)
         {
@@ -538,7 +538,7 @@ namespace golang::color
         return RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
-    Color rgba64Model(Color c)
+    struct Color rgba64Model(struct Color c)
     {
         if(auto [gocpp_id_3, ok] = gocpp::getValue<RGBA64>(c); ok)
         {
@@ -548,7 +548,7 @@ namespace golang::color
         return RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    Color nrgbaModel(Color c)
+    struct Color nrgbaModel(struct Color c)
     {
         if(auto [gocpp_id_5, ok] = gocpp::getValue<NRGBA>(c); ok)
         {
@@ -569,7 +569,7 @@ namespace golang::color
         return NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
-    Color nrgba64Model(Color c)
+    struct Color nrgba64Model(struct Color c)
     {
         if(auto [gocpp_id_7, ok] = gocpp::getValue<NRGBA64>(c); ok)
         {
@@ -590,7 +590,7 @@ namespace golang::color
         return NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
-    Color alphaModel(Color c)
+    struct Color alphaModel(struct Color c)
     {
         if(auto [gocpp_id_9, ok] = gocpp::getValue<Alpha>(c); ok)
         {
@@ -600,7 +600,7 @@ namespace golang::color
         return Alpha {uint8_t(a >> 8)};
     }
 
-    Color alpha16Model(Color c)
+    struct Color alpha16Model(struct Color c)
     {
         if(auto [gocpp_id_17, ok] = gocpp::getValue<Alpha16>(c); ok)
         {
@@ -610,7 +610,7 @@ namespace golang::color
         return Alpha16 {uint16_t(a)};
     }
 
-    Color grayModel(Color c)
+    struct Color grayModel(struct Color c)
     {
         if(auto [gocpp_id_25, ok] = gocpp::getValue<Gray>(c); ok)
         {
@@ -621,7 +621,7 @@ namespace golang::color
         return Gray {uint8_t(y)};
     }
 
-    Color gray16Model(Color c)
+    struct Color gray16Model(struct Color c)
     {
         if(auto [gocpp_id_29, ok] = gocpp::getValue<Gray16>(c); ok)
         {
@@ -632,7 +632,7 @@ namespace golang::color
         return Gray16 {uint16_t(y)};
     }
 
-    Color Convert(Palette p, Color c)
+    struct Color Convert(Palette p, struct Color c)
     {
         if(len(p) == 0)
         {
@@ -641,7 +641,7 @@ namespace golang::color
         return p[Index(gocpp::recv(p), c)];
     }
 
-    int Index(Palette p, Color c)
+    int Index(Palette p, struct Color c)
     {
         auto [cr, cg, cb, ca] = RGBA(gocpp::recv(c));
         auto [ret, bestSum] = std::tuple{0, uint32_t((1 << 32) - 1)};

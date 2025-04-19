@@ -131,9 +131,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
     bool test(struct gcTrigger t);
-    void gcStart(gcTrigger trigger);
+    void gcStart(struct gcTrigger trigger);
     void gcMarkDone();
-    void gcMarkTermination(worldStop stw);
+    void gcMarkTermination(struct worldStop stw);
     void gcBgMarkStartWorkers();
     void gcBgMarkPrepare();
     struct gcBgMarkWorkerNode
@@ -155,7 +155,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
     void gcBgMarkWorker();
-    bool gcMarkWorkAvailable(p* p);
+    bool gcMarkWorkAvailable(struct p* p);
     void gcMark(int64_t startTime);
     bool gcSweep(gcMode mode);
     void gcResetMarkState();

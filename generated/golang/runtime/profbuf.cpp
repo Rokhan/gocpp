@@ -172,7 +172,7 @@ namespace golang::runtime
         }
     }
 
-    profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
+    struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
     {
         if(auto min = 2 + hdrsize + 1; bufwords < min)
         {

@@ -28,6 +28,7 @@
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
@@ -35,10 +36,15 @@
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
 #include "golang/runtime/time_nofake.h"
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2event.h"
+// #include "golang/runtime/trace2map.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2region.h"  [Ignored, known errors]
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2string.h"
 
 namespace golang::runtime
 {

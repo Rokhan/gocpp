@@ -457,7 +457,7 @@ namespace golang::binary
         return "binary.NativeEndian";
     }
 
-    gocpp::error Read(io::Reader r, ByteOrder order, go_any data)
+    struct gocpp::error Read(struct io::Reader r, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -701,7 +701,7 @@ namespace golang::binary
         return nullptr;
     }
 
-    gocpp::error Write(io::Writer w, ByteOrder order, go_any data)
+    struct gocpp::error Write(struct io::Writer w, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -1018,7 +1018,7 @@ namespace golang::binary
     }
 
     sync::Map structSize;
-    int dataSize(reflect::Value v)
+    int dataSize(struct reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1055,7 +1055,7 @@ namespace golang::binary
         return - 1;
     }
 
-    int sizeof(reflect::Type t)
+    int sizeof(struct reflect::Type t)
     {
         //Go switch emulation
         {
@@ -1264,7 +1264,7 @@ namespace golang::binary
         uint64_t(gocpp::recv(e), uint64_t(x));
     }
 
-    void value(struct decoder* d, reflect::Value v)
+    void value(struct decoder* d, struct reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1360,7 +1360,7 @@ namespace golang::binary
         }
     }
 
-    void value(struct encoder* e, reflect::Value v)
+    void value(struct encoder* e, struct reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1526,12 +1526,12 @@ namespace golang::binary
         }
     }
 
-    void skip(struct decoder* d, reflect::Value v)
+    void skip(struct decoder* d, struct reflect::Value v)
     {
         d->offset += dataSize(v);
     }
 
-    void skip(struct encoder* e, reflect::Value v)
+    void skip(struct encoder* e, struct reflect::Value v)
     {
         auto n = dataSize(v);
         auto zero = e->buf.make_slice(e->offset, e->offset + n);

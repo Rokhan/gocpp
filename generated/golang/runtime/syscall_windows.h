@@ -55,7 +55,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiPart& value);
-    bool tryMerge(struct abiPart* a, abiPart b);
+    bool tryMerge(struct abiPart* a, struct abiPart b);
     struct abiDesc
     {
         gocpp::slice<abiPart> parts;
@@ -77,8 +77,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void assignArg(struct abiDesc* p, _type* t);
-    bool tryRegAssignArg(struct abiDesc* p, _type* t, uintptr_t offset);
+    void assignArg(struct abiDesc* p, struct _type* t);
+    bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset);
     bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset);
     struct winCallbackKey
     {
@@ -99,7 +99,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
-    uintptr_t compileCallback(eface fn, bool cdecl);
+    uintptr_t compileCallback(struct eface fn, bool cdecl);
     struct callbackArgs
     {
         uintptr_t index;
@@ -119,7 +119,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
-    void callbackWrap(callbackArgs* a);
+    void callbackWrap(struct callbackArgs* a);
     std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname);

@@ -20,7 +20,7 @@
 
 namespace golang::runtime
 {
-    void osStackAlloc(mspan* s);
-    void osStackFree(mspan* s);
+    void osStackAlloc(struct mspan* s);
+    void osStackFree(struct mspan* s);
 }
 

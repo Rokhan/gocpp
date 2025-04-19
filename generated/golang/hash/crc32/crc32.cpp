@@ -124,7 +124,7 @@ namespace golang::crc32
         return value.PrintTo(os);
     }
 
-    hash::Hash32 New(Table* tab)
+    struct hash::Hash32 New(Table* tab)
     {
         if(tab == IEEETable)
         {
@@ -133,7 +133,7 @@ namespace golang::crc32
         return new digest {0, tab};
     }
 
-    hash::Hash32 NewIEEE()
+    struct hash::Hash32 NewIEEE()
     {
         return New(IEEETable);
     }
@@ -154,7 +154,7 @@ namespace golang::crc32
     }
 
     std::string magic = "crc\x01";
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -163,7 +163,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -223,10 +223,10 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         d->crc = update(d->crc, d->tab, p, false);
         return {len(p), nullptr};
     }
@@ -259,7 +259,7 @@ namespace golang::crc32
         auto b = a.make_slice(0, 0);
         if(t != nullptr)
         {
-            for(auto [_, x] : t)
+            for(auto [gocpp_ignored, x] : t)
             {
                 b = appendUint32(b, x);
             }

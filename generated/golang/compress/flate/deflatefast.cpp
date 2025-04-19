@@ -101,7 +101,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    deflateFast* newDeflateFast()
+    struct deflateFast* newDeflateFast()
     {
         return gocpp::InitPtr<deflateFast>([](deflateFast& x) { x.cur = maxStoreBlockSize; x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize); });
     }
@@ -193,7 +193,7 @@ namespace golang::flate
 
     gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit)
     {
-        for(auto [_, v] : lit)
+        for(auto [gocpp_ignored, v] : lit)
         {
             dst = append(dst, literalToken(uint32_t(v)));
         }

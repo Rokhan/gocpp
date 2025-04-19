@@ -152,7 +152,7 @@ namespace golang::runtime
         });
     }
 
-    void wbBufFlush1(p* pp)
+    void wbBufFlush1(struct p* pp)
     {
         auto start = uintptr_t(unsafe::Pointer(& pp->wbBuf.buf[0]));
         auto n = (pp->wbBuf.next - start) / gocpp::Sizeof<uintptr_t>();
@@ -160,7 +160,7 @@ namespace golang::runtime
         pp->wbBuf.next = 0;
         if(useCheckmark)
         {
-            for(auto [_, ptr] : ptrs)
+            for(auto [gocpp_ignored, ptr] : ptrs)
             {
                 shade(ptr);
             }
@@ -169,7 +169,7 @@ namespace golang::runtime
         }
         auto gcw = & pp->gcw;
         auto pos = 0;
-        for(auto [_, ptr] : ptrs)
+        for(auto [gocpp_ignored, ptr] : ptrs)
         {
             if(ptr < minLegalPointer)
             {

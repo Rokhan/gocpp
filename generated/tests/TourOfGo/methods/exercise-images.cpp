@@ -11,7 +11,7 @@
 #include "tests/TourOfGo/methods/exercise-images.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/pic/pic.h"  [Ignored, known errors]
+#include "golang/golang.org/x/tour/pic/pic.h"
 #include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
@@ -44,17 +44,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    color::Model ColorModel(Image)
+    struct color::Model ColorModel(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    image::Rectangle Bounds(Image)
+    struct image::Rectangle Bounds(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    color::Color At(Image, int x, int y)
+    struct color::Color At(Image, int x, int y)
     {
         gocpp::panic("not implemented");
     }
@@ -62,7 +62,7 @@ namespace golang::main
     void main()
     {
         auto m = Image {};
-        pic::ShowImage(m);
+        mocklib::picShowImage(m);
     }
 
 }

@@ -61,9 +61,9 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
     void dump(struct abiSeq* a);
     gocpp::slice<abiStep> stepsForValue(struct abiSeq* a, int i);
-    abiStep* addArg(struct abiSeq* a, abi::Type* t);
-    std::tuple<abiStep*, bool> addRcvr(struct abiSeq* a, abi::Type* rcvr);
-    bool regAssign(struct abiSeq* a, abi::Type* t, uintptr_t offset);
+    struct abiStep* addArg(struct abiSeq* a, struct abi::Type* t);
+    std::tuple<struct abiStep*, bool> addRcvr(struct abiSeq* a, struct abi::Type* rcvr);
+    bool regAssign(struct abiSeq* a, struct abi::Type* t, uintptr_t offset);
     bool assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
     bool assignFloatN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n);
     void stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment);
@@ -92,10 +92,10 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
     void dump(struct abiDesc* a);
     void dumpPtrBitMap(abi::IntArgRegBitmap b);
-    abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
+    struct abiDesc newAbiDesc(struct funcType* t, struct abi::Type* rcvr);
+    void intFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
+    void intToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
+    void floatFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
+    void floatToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
 }
 

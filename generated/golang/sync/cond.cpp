@@ -57,7 +57,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    Cond* NewCond(Locker l)
+    struct Cond* NewCond(struct Locker l)
     {
         return gocpp::InitPtr<Cond>([](Cond& x) { x.L = l; });
     }

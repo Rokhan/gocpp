@@ -110,7 +110,7 @@ namespace golang::strconv
         return len(dst);
     }
 
-    void trim(decimal* a)
+    void trim(struct decimal* a)
     {
         for(; a->nd > 0 && a->d[a->nd - 1] == '0'; )
         {
@@ -144,7 +144,7 @@ namespace golang::strconv
         trim(a);
     }
 
-    void rightShift(decimal* a, unsigned int k)
+    void rightShift(struct decimal* a, unsigned int k)
     {
         auto r = 0;
         auto w = 0;
@@ -248,7 +248,7 @@ namespace golang::strconv
         return false;
     }
 
-    void leftShift(decimal* a, unsigned int k)
+    void leftShift(struct decimal* a, unsigned int k)
     {
         auto delta = leftcheats[k].delta;
         if(prefixIsLessThan(a->d.make_slice(0, a->nd), leftcheats[k].cutoff))
@@ -332,7 +332,7 @@ namespace golang::strconv
         }
     }
 
-    bool shouldRoundUp(decimal* a, int nd)
+    bool shouldRoundUp(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {

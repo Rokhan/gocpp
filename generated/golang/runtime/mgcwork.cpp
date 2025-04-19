@@ -44,6 +44,7 @@
 #include "golang/runtime/mstats.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
@@ -385,7 +386,7 @@ namespace golang::runtime
         }
     }
 
-    workbuf* getempty()
+    struct workbuf* getempty()
     {
         workbuf* b = {};
         if(work.empty != 0)
@@ -444,19 +445,19 @@ namespace golang::runtime
         return b;
     }
 
-    void putempty(workbuf* b)
+    void putempty(struct workbuf* b)
     {
         checkempty(gocpp::recv(b));
         push(gocpp::recv(work.empty), & b->node);
     }
 
-    void putfull(workbuf* b)
+    void putfull(struct workbuf* b)
     {
         checknonempty(gocpp::recv(b));
         push(gocpp::recv(work.full), & b->node);
     }
 
-    workbuf* trygetfull()
+    struct workbuf* trygetfull()
     {
         auto b = (workbuf*)(pop(gocpp::recv(work.full)));
         if(b != nullptr)
@@ -467,7 +468,7 @@ namespace golang::runtime
         return b;
     }
 
-    workbuf* handoff(workbuf* b)
+    struct workbuf* handoff(struct workbuf* b)
     {
         auto b1 = getempty();
         auto n = b->nobj / 2;

@@ -37,7 +37,7 @@ namespace golang::runtime
     extern gocpp::array_base<uint16_t> powrprofdll;
     extern gocpp::array_base<uint16_t> winmmdll;
     extern gocpp::array_base<uint16_t> ws2_32dll;
-    void tstart_stdcall(m* newm);
+    void tstart_stdcall(struct m* newm);
     void wintls();
     struct mOS
     {
@@ -104,19 +104,19 @@ namespace golang::runtime
     int writeConsole(uintptr_t handle, unsafe::Pointer buf, int32_t bufLen);
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
     int32_t semasleep(int64_t ns);
-    void semawakeup(m* mp);
-    void semacreate(m* mp);
-    void newosproc(m* mp);
-    void newosproc0(m* mp, unsafe::Pointer stk);
-    void exitThread(atomic::Uint32* wait);
-    void mpreinit(m* mp);
-    void sigsave(sigset* p);
-    void msigrestore(sigset sigmask);
+    void semawakeup(struct m* mp);
+    void semacreate(struct m* mp);
+    void newosproc(struct m* mp);
+    void newosproc0(struct m* mp, unsafe::Pointer stk);
+    void exitThread(struct atomic::Uint32* wait);
+    void mpreinit(struct m* mp);
+    void sigsave(struct sigset* p);
+    void msigrestore(struct sigset sigmask);
     void clearSignalHandlers();
     void sigblock(bool exiting);
     void minit();
     void unminit();
-    void mdestroy(m* mp);
+    void mdestroy(struct m* mp);
     void asmstdcall_trampoline(unsafe::Pointer args);
     uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args);
     uintptr_t stdcall(stdFunction fn);
@@ -135,13 +135,13 @@ namespace golang::runtime
     void usleep(uint32_t us);
     uintptr_t ctrlHandler(uint32_t _type);
     void callbackasm1();
-    void profilem(m* mp, uintptr_t thread);
-    g* gFromSP(m* mp, uintptr_t sp);
+    void profilem(struct m* mp, uintptr_t thread);
+    struct g* gFromSP(struct m* mp, uintptr_t sp);
     void profileLoop();
     void setProcessCPUProfiler(int32_t hz);
     void setThreadCPUProfiler(int32_t hz);
-    void preemptM(m* mp);
-    void osPreemptExtEnter(m* mp);
-    void osPreemptExtExit(m* mp);
+    void preemptM(struct m* mp);
+    void osPreemptExtEnter(struct m* mp);
+    void osPreemptExtExit(struct m* mp);
 }
 

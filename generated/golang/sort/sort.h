@@ -70,7 +70,7 @@ namespace golang::sort
     void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j);
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
-    void Sort(Interface data);
+    void Sort(struct Interface data);
     uint64_t Next(xorshift* r);
     unsigned int nextPowerOfTwo(int length);
     struct lessSwap
@@ -106,8 +106,8 @@ namespace golang::sort
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
     bool Less(struct reverse r, int i, int j);
-    Interface Reverse(Interface data);
-    bool IsSorted(Interface data);
+    struct Interface Reverse(struct Interface data);
+    bool IsSorted(struct Interface data);
     int Len(IntSlice x);
     bool Less(IntSlice x, int i, int j);
     void Swap(IntSlice x, int i, int j);
@@ -127,6 +127,6 @@ namespace golang::sort
     bool IntsAreSorted(gocpp::slice<int> x);
     bool Float64sAreSorted(gocpp::slice<double> x);
     bool StringsAreSorted(gocpp::slice<std::string> x);
-    void Stable(Interface data);
+    void Stable(struct Interface data);
 }
 

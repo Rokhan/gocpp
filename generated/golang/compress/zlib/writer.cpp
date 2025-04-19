@@ -74,18 +74,18 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
-    Writer* NewWriter(io::Writer w)
+    struct Writer* NewWriter(struct io::Writer w)
     {
         auto [z, gocpp_id_1] = NewWriterLevelDict(w, DefaultCompression, nullptr);
         return z;
     }
 
-    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int level)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(struct io::Writer w, int level)
     {
         return NewWriterLevelDict(w, level, nullptr);
     }
 
-    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(struct io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         if(level < HuffmanOnly || level > BestCompression)
         {
@@ -94,7 +94,7 @@ namespace golang::zlib
         return {gocpp::InitPtr<Writer>([](Writer& x) { x.w = w; x.level = level; x.dict = dict; }), nullptr};
     }
 
-    void Reset(struct Writer* z, io::Writer w)
+    void Reset(struct Writer* z, struct io::Writer w)
     {
         z->w = w;
         if(z->compressor != nullptr)
@@ -110,9 +110,9 @@ namespace golang::zlib
         z->wroteHeader = false;
     }
 
-    gocpp::error writeHeader(struct Writer* z)
+    struct gocpp::error writeHeader(struct Writer* z)
     {
-        gocpp::error err;
+        struct gocpp::error err;
         z->wroteHeader = true;
         z->scratch[0] = 0x78;
         //Go switch emulation
@@ -133,7 +133,7 @@ namespace golang::zlib
             else if(condition == 9) { conditionId = 11; }
             switch(conditionId)
             {
-                gocpp::error err;
+                struct gocpp::error err;
                 case 0:
                 case 1:
                 case 2:
@@ -161,32 +161,32 @@ namespace golang::zlib
         }
         if(z->dict != nullptr)
         {
-            gocpp::error err;
+            struct gocpp::error err;
             z->scratch[1] |= 1 << 5;
         }
         z->scratch[1] += uint8_t(31 - Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
         if(std::tie(gocpp_id_2, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
         {
-            gocpp::error err;
+            struct gocpp::error err;
             return err;
         }
         if(z->dict != nullptr)
         {
-            gocpp::error err;
+            struct gocpp::error err;
             PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), adler32::Checksum(z->dict));
             if(std::tie(gocpp_id_3, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
-                gocpp::error err;
+                struct gocpp::error err;
                 return err;
             }
         }
         if(z->compressor == nullptr)
         {
-            gocpp::error err;
+            struct gocpp::error err;
             std::tie(z->compressor, err) = flate::NewWriterDict(z->w, z->level, z->dict);
             if(err != nullptr)
             {
-                gocpp::error err;
+                struct gocpp::error err;
                 return err;
             }
             z->digest = adler32::New();
@@ -194,33 +194,33 @@ namespace golang::zlib
         return nullptr;
     }
 
-    std::tuple<int, gocpp::error> Write(struct Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(struct Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
-        gocpp::error err;
+        struct gocpp::error err;
         if(! z->wroteHeader)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             z->err = writeHeader(gocpp::recv(z));
         }
         if(z->err != nullptr)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, z->err};
         }
         if(len(p) == 0)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, nullptr};
         }
         std::tie(n, err) = Write(gocpp::recv(z->compressor), p);
         if(err != nullptr)
         {
             int n;
-            gocpp::error err;
+            struct gocpp::error err;
             z->err = err;
             return {n, err};
         }
@@ -228,7 +228,7 @@ namespace golang::zlib
         return {n, err};
     }
 
-    gocpp::error Flush(struct Writer* z)
+    struct gocpp::error Flush(struct Writer* z)
     {
         if(! z->wroteHeader)
         {
@@ -242,7 +242,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    gocpp::error Close(struct Writer* z)
+    struct gocpp::error Close(struct Writer* z)
     {
         if(! z->wroteHeader)
         {

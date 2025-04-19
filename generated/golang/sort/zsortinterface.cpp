@@ -15,7 +15,7 @@
 
 namespace golang::sort
 {
-    void insertionSort(Interface data, int a, int b)
+    void insertionSort(struct Interface data, int a, int b)
     {
         for(auto i = a + 1; i < b; i++)
         {
@@ -26,7 +26,7 @@ namespace golang::sort
         }
     }
 
-    void siftDown(Interface data, int lo, int hi, int first)
+    void siftDown(struct Interface data, int lo, int hi, int first)
     {
         auto root = lo;
         for(; ; )
@@ -49,7 +49,7 @@ namespace golang::sort
         }
     }
 
-    void heapSort(Interface data, int a, int b)
+    void heapSort(struct Interface data, int a, int b)
     {
         auto first = a;
         auto lo = 0;
@@ -65,7 +65,7 @@ namespace golang::sort
         }
     }
 
-    void pdqsort(Interface data, int a, int b, int limit)
+    void pdqsort(struct Interface data, int a, int b, int limit)
     {
         auto maxInsertion = 12;
         auto wasBalanced = true;
@@ -127,7 +127,7 @@ namespace golang::sort
         }
     }
 
-    std::tuple<int, bool> partition(Interface data, int a, int b, int pivot)
+    std::tuple<int, bool> partition(struct Interface data, int a, int b, int pivot)
     {
         int newpivot;
         bool alreadyPartitioned;
@@ -185,7 +185,7 @@ namespace golang::sort
         return {j, false};
     }
 
-    int partitionEqual(Interface data, int a, int b, int pivot)
+    int partitionEqual(struct Interface data, int a, int b, int pivot)
     {
         int newpivot;
         Swap(gocpp::recv(data), a, pivot);
@@ -215,7 +215,7 @@ namespace golang::sort
         return i;
     }
 
-    bool partialInsertionSort(Interface data, int a, int b)
+    bool partialInsertionSort(struct Interface data, int a, int b)
     {
         auto maxSteps = 5;
         auto shortestShifting = 50;
@@ -261,7 +261,7 @@ namespace golang::sort
         return false;
     }
 
-    void breakPatterns(Interface data, int a, int b)
+    void breakPatterns(struct Interface data, int a, int b)
     {
         auto length = b - a;
         if(length >= 8)
@@ -280,7 +280,7 @@ namespace golang::sort
         }
     }
 
-    std::tuple<int, sortedHint> choosePivot(Interface data, int a, int b)
+    std::tuple<int, sortedHint> choosePivot(struct Interface data, int a, int b)
     {
         int pivot;
         sortedHint hint;
@@ -328,7 +328,7 @@ namespace golang::sort
         }
     }
 
-    std::tuple<int, int> order2(Interface data, int a, int b, int* swaps)
+    std::tuple<int, int> order2(struct Interface data, int a, int b, int* swaps)
     {
         if(Less(gocpp::recv(data), b, a))
         {
@@ -338,7 +338,7 @@ namespace golang::sort
         return {a, b};
     }
 
-    int median(Interface data, int a, int b, int c, int* swaps)
+    int median(struct Interface data, int a, int b, int c, int* swaps)
     {
         std::tie(a, b) = order2(data, a, b, swaps);
         std::tie(b, c) = order2(data, b, c, swaps);
@@ -346,12 +346,12 @@ namespace golang::sort
         return b;
     }
 
-    int medianAdjacent(Interface data, int a, int* swaps)
+    int medianAdjacent(struct Interface data, int a, int* swaps)
     {
         return median(data, a - 1, a, a + 1, swaps);
     }
 
-    void reverseRange(Interface data, int a, int b)
+    void reverseRange(struct Interface data, int a, int b)
     {
         auto i = a;
         auto j = b - 1;
@@ -363,7 +363,7 @@ namespace golang::sort
         }
     }
 
-    void swapRange(Interface data, int a, int b, int n)
+    void swapRange(struct Interface data, int a, int b, int n)
     {
         for(auto i = 0; i < n; i++)
         {
@@ -371,7 +371,7 @@ namespace golang::sort
         }
     }
 
-    void stable(Interface data, int n)
+    void stable(struct Interface data, int n)
     {
         auto blockSize = 20;
         auto [a, b] = std::tuple{0, blockSize};
@@ -399,7 +399,7 @@ namespace golang::sort
         }
     }
 
-    void symMerge(Interface data, int a, int m, int b)
+    void symMerge(struct Interface data, int a, int m, int b)
     {
         if(m - a == 1)
         {
@@ -487,7 +487,7 @@ namespace golang::sort
         }
     }
 
-    void rotate(Interface data, int a, int m, int b)
+    void rotate(struct Interface data, int a, int m, int b)
     {
         auto i = m - a;
         auto j = b - m;

@@ -58,38 +58,38 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    void init(struct unwinder* u, g* gp, unwindFlags flags);
-    void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, g* gp, unwindFlags flags);
+    void init(struct unwinder* u, struct g* gp, unwindFlags flags);
+    void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, unwindFlags flags);
     bool valid(struct unwinder* u);
     void resolveInternal(struct unwinder* u, bool innermost, bool isSyscall);
     void next(struct unwinder* u);
     void finishInternal(struct unwinder* u);
     uintptr_t symPC(struct unwinder* u);
     int cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf);
-    int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
-    void printArgs(funcInfo f, unsafe::Pointer argp, uintptr_t pc);
+    int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
+    void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc);
     std::tuple<std::string, std::string, std::string> funcNamePiecesForPrint(std::string name);
     std::string funcNameForPrint(std::string name);
     void printFuncName(std::string name);
-    void printcreatedby(g* gp);
-    void printcreatedby1(funcInfo f, uintptr_t pc, uint64_t goid);
-    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
-    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
-    std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max);
-    void printAncestorTraceback(ancestorInfo ancestor);
-    void printAncestorTracebackFuncInfo(funcInfo f, uintptr_t pc);
+    void printcreatedby(struct g* gp);
+    void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
+    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
+    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, unwindFlags flags);
+    std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max);
+    void printAncestorTraceback(struct ancestorInfo ancestor);
+    void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc);
     int callers(int skip, gocpp::slice<uintptr_t> pcbuf);
-    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
-    bool showframe(srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
-    bool showfuncinfo(srcFunc sf, bool firstFrame, abi::FuncID calleeID);
+    int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID);
+    bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID);
     bool isExportedRuntime(std::string name);
     bool elideWrapperCalling(abi::FuncID id);
     extern gocpp::array_base<std::string> gStatusStrings;
-    void goroutineheader(g* gp);
-    void tracebackothers(g* me);
-    void tracebackHexdump(stack stk, stkframe* frame, uintptr_t bad);
-    bool isSystemGoroutine(g* gp, bool fixed);
+    void goroutineheader(struct g* gp);
+    void tracebackothers(struct g* me);
+    void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);
+    bool isSystemGoroutine(struct g* gp, bool fixed);
     void SetCgoTraceback(int version, unsafe::Pointer traceback, unsafe::Pointer context, unsafe::Pointer symbolizer);
     struct cgoTracebackArg
     {
@@ -149,8 +149,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct cgoSymbolizerArg& value);
     void printCgoTraceback(cgoCallers* callers);
-    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg);
-    void callCgoSymbolizer(cgoSymbolizerArg* arg);
+    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg);
+    void callCgoSymbolizer(struct cgoSymbolizerArg* arg);
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
 }
 

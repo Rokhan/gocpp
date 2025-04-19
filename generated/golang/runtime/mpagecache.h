@@ -41,7 +41,7 @@ namespace golang::runtime
     bool empty(struct pageCache* c);
     std::tuple<uintptr_t, uintptr_t> alloc(struct pageCache* c, uintptr_t npages);
     std::tuple<uintptr_t, uintptr_t> allocN(struct pageCache* c, uintptr_t npages);
-    void flush(struct pageCache* c, pageAlloc* p);
-    pageCache allocToCache(struct pageAlloc* p);
+    void flush(struct pageCache* c, struct pageAlloc* p);
+    struct pageCache allocToCache(struct pageAlloc* p);
 }
 

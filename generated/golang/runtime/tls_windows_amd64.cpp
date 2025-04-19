@@ -35,7 +35,7 @@
 
 namespace golang::runtime
 {
-    void osSetupTLS(m* mp)
+    void osSetupTLS(struct m* mp)
     /* convertBlockStmt, nil block */;
 
 }

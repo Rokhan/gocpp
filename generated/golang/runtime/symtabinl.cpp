@@ -127,7 +127,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(funcInfo f, uintptr_t pc)
+    std::tuple<struct inlineUnwinder, struct inlineFrame> newInlineUnwinder(struct funcInfo f, uintptr_t pc)
     {
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
@@ -139,7 +139,7 @@ namespace golang::runtime
         return {u, resolveInternal(gocpp::recv(u), pc)};
     }
 
-    inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
+    struct inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
         return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false); });
     }
@@ -149,7 +149,7 @@ namespace golang::runtime
         return uf.pc != 0;
     }
 
-    inlineFrame next(struct inlineUnwinder* u, inlineFrame uf)
+    struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -160,12 +160,12 @@ namespace golang::runtime
         return resolveInternal(gocpp::recv(u), entry(gocpp::recv(u->f)) + uintptr_t(parentPc));
     }
 
-    bool isInlined(struct inlineUnwinder* u, inlineFrame uf)
+    bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         return uf.index >= 0;
     }
 
-    srcFunc srcFunc(struct inlineUnwinder* u, inlineFrame uf)
+    struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -175,7 +175,7 @@ namespace golang::runtime
         return srcFunc {u->f.datap, t->nameOff, t->startLine, t->funcID};
     }
 
-    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, inlineFrame uf)
+    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         std::string file;
         int line;

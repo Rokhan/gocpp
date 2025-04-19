@@ -11,16 +11,25 @@
 #include "golang/runtime/mpagealloc.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/abi/type.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
+// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mem.h"
+#include "golang/runtime/mfixalloc.h"
 // #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc_64bit.h"
 #include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 // #include "golang/runtime/print.h"  [Ignored, known errors]
@@ -30,7 +39,7 @@
 
 namespace golang::runtime
 {
-    offAddr maxSearchAddr()
+    struct offAddr maxSearchAddr()
     {
         return maxOffAddr;
     }
@@ -74,12 +83,12 @@ namespace golang::runtime
         }
     }
 
-    int offAddrToLevelIndex(int level, offAddr addr)
+    int offAddrToLevelIndex(int level, struct offAddr addr)
     {
         return int((addr.a - arenaBaseOffset) >> levelShift[level]);
     }
 
-    offAddr levelIndexToOffAddr(int level, int idx)
+    struct offAddr levelIndexToOffAddr(int level, int idx)
     {
         return offAddr {(uintptr_t(idx) << levelShift[level]) + arenaBaseOffset};
     }
@@ -161,7 +170,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct pageAlloc* p, mutex* mheapLock, sysMemStat* sysStat, bool test)
+    void init(struct pageAlloc* p, struct mutex* mheapLock, sysMemStat* sysStat, bool test)
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
@@ -178,7 +187,7 @@ namespace golang::runtime
         p->test = test;
     }
 
-    pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci)
+    struct pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci)
     {
         auto l2 = p->chunks[l1(gocpp::recv(ci))];
         if(l2 == nullptr)
@@ -188,7 +197,7 @@ namespace golang::runtime
         return & l2[l2(gocpp::recv(ci))];
     }
 
-    pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci)
+    struct pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci)
     {
         return & p->chunks[l1(gocpp::recv(ci))][l2(gocpp::recv(ci))];
     }
@@ -256,7 +265,7 @@ namespace golang::runtime
         inUse.sysStat = p->sysStat;
         cloneInto(gocpp::recv(p->inUse), & inUse);
         unlock(& mheap_.lock);
-        for(auto [_, r] : p->inUse.ranges)
+        for(auto [gocpp_ignored, r] : p->inUse.ranges)
         {
             for(auto i = l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.base))))); i < l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.limit)) - 1))); i++)
             {
@@ -367,7 +376,7 @@ namespace golang::runtime
         return uintptr_t(scav) * pageSize;
     }
 
-    offAddr findMappedAddr(struct pageAlloc* p, offAddr addr)
+    struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr)
     {
         assertLockHeld(p->mheapLock);
         auto ai = arenaIndex(addr(gocpp::recv(addr)));
@@ -466,12 +475,12 @@ namespace golang::runtime
         }
 
 
-    std::tuple<uintptr_t, offAddr> find(struct pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto i = 0;
         auto firstFree = gocpp::Init<gocpp_id_1>([](gocpp_id_1& x) { x.base = minOffAddr; x.bound = maxOffAddr; });
-        auto foundFree = [=](offAddr addr, uintptr_t size) mutable -> void
+        auto foundFree = [=](struct offAddr addr, uintptr_t size) mutable -> void
         {
             if(lessEqual(gocpp::recv(firstFree.base), addr) && lessEqual(gocpp::recv(add(gocpp::recv(addr), size - 1)), firstFree.bound))
             {

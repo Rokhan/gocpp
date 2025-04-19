@@ -63,11 +63,11 @@ namespace golang::runtime
     int stacklog2(uintptr_t n);
     gclinkptr stackpoolalloc(uint8_t order);
     void stackpoolfree(gclinkptr x, uint8_t order);
-    void stackcacherefill(mcache* c, uint8_t order);
-    void stackcacherelease(mcache* c, uint8_t order);
-    void stackcache_clear(mcache* c);
-    stack stackalloc(uint32_t n);
-    void stackfree(stack stk);
+    void stackcacherefill(struct mcache* c, uint8_t order);
+    void stackcacherelease(struct mcache* c, uint8_t order);
+    void stackcache_clear(struct mcache* c);
+    struct stack stackalloc(uint32_t n);
+    void stackfree(struct stack stk);
     extern uintptr_t maxstacksize;
     extern uintptr_t maxstackceiling;
     extern gocpp::slice<std::string> ptrnames;
@@ -89,7 +89,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
-    void adjustpointer(adjustinfo* adjinfo, unsafe::Pointer vpp);
+    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp);
     struct bitvector
     {
         int32_t n;
@@ -108,22 +108,22 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct bitvector& value);
     uint8_t ptrbit(struct bitvector* bv, uintptr_t i);
-    void adjustpointers(unsafe::Pointer scanp, bitvector* bv, adjustinfo* adjinfo, funcInfo f);
-    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
-    void adjustctxt(g* gp, adjustinfo* adjinfo);
-    void adjustdefers(g* gp, adjustinfo* adjinfo);
-    void adjustpanics(g* gp, adjustinfo* adjinfo);
-    void adjustsudogs(g* gp, adjustinfo* adjinfo);
-    void fillstack(stack stk, unsigned char b);
-    uintptr_t findsghi(g* gp, stack stk);
-    uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo);
-    void copystack(g* gp, uintptr_t newsize);
+    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
+    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
+    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo);
+    void fillstack(struct stack stk, unsigned char b);
+    uintptr_t findsghi(struct g* gp, struct stack stk);
+    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo);
+    void copystack(struct g* gp, uintptr_t newsize);
     int32_t round2(int32_t x);
     void newstack();
     void nilfunc();
-    void gostartcallfn(gobuf* gobuf, funcval* fv);
-    bool isShrinkStackSafe(g* gp);
-    void shrinkstack(g* gp);
+    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv);
+    bool isShrinkStackSafe(struct g* gp);
+    void shrinkstack(struct g* gp);
     void freeStackSpans();
     struct stackObjectRecord
     {

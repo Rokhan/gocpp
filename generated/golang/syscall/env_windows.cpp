@@ -52,7 +52,7 @@ namespace golang::syscall
         }
     }
 
-    gocpp::error Setenv(std::string key, std::string value)
+    struct gocpp::error Setenv(std::string key, std::string value)
     {
         auto [v, err] = UTF16PtrFromString(value);
         if(err != nullptr)
@@ -74,7 +74,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    gocpp::error Unsetenv(std::string key)
+    struct gocpp::error Unsetenv(std::string key)
     {
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)
@@ -92,7 +92,7 @@ namespace golang::syscall
 
     void Clearenv()
     {
-        for(auto [_, s] : Environ())
+        for(auto [gocpp_ignored, s] : Environ())
         {
             for(auto j = 1; j < len(s); j++)
             {

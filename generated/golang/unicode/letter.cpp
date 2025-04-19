@@ -236,7 +236,7 @@ namespace golang::unicode
         return false;
     }
 
-    bool Is(RangeTable* rangeTab, gocpp::rune r)
+    bool Is(struct RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
         if(len(r16) > 0 && uint32_t(r) <= uint32_t(r16[len(r16) - 1].Hi))
@@ -251,7 +251,7 @@ namespace golang::unicode
         return false;
     }
 
-    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r)
+    bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
         if(auto off = rangeTab->LatinOffset; len(r16) > off && uint32_t(r) <= uint32_t(r16[len(r16) - 1].Hi))

@@ -129,17 +129,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
-    eface* efaceOf(go_any* ep);
-    g* ptr(guintptr gp);
-    void set(guintptr* gp, g* g);
+    struct eface* efaceOf(go_any* ep);
+    struct g* ptr(guintptr gp);
+    void set(guintptr* gp, struct g* g);
     bool cas(guintptr* gp, guintptr old, guintptr go_new);
     guintptr guintptr(struct g* gp);
-    void setGNoWB(g** gp, g* go_new);
-    p* ptr(puintptr pp);
-    void set(puintptr* pp, p* p);
-    m* ptr(muintptr mp);
-    void set(muintptr* mp, m* m);
-    void setMNoWB(m** mp, m* go_new);
+    void setGNoWB(struct g** gp, struct g* go_new);
+    struct p* ptr(puintptr pp);
+    void set(puintptr* pp, struct p* p);
+    struct m* ptr(muintptr mp);
+    void set(muintptr* mp, struct m* m);
+    void setMNoWB(struct m** mp, struct m* go_new);
     struct gobuf
     {
         uintptr_t sp;

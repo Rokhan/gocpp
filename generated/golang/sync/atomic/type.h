@@ -56,16 +56,16 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
 
     template<typename T>
-    T* Load(struct Pointer<T>* x);
+    T* Load(Pointer<T>* x);
 
     template<typename T>
-    void Store(struct Pointer<T>* x, T* val);
+    void Store(Pointer<T>* x, T* val);
 
     template<typename T>
-    T* Swap(struct Pointer<T>* x, T* go_new);
+    T* Swap(Pointer<T>* x, T* go_new);
 
     template<typename T>
-    bool CompareAndSwap(struct Pointer<T>* x, T* old, T* go_new);
+    bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new);
     struct Int32
     {
         /* noCopy _; [Known incomplete type] */

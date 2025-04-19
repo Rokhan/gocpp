@@ -99,27 +99,27 @@ namespace golang::runtime
         lockInit(& c->full[1].spineLock, lockRankSpanSetSpine);
     }
 
-    spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[1 - sweepgen / 2 % 2];
     }
 
-    spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[sweepgen / 2 % 2];
     }
 
-    spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->full[1 - sweepgen / 2 % 2];
     }
 
-    spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->full[sweepgen / 2 % 2];
     }
 
-    mspan* cacheSpan(struct mcentral* c)
+    struct mspan* cacheSpan(struct mcentral* c)
     {
         auto spanBytes = uintptr_t(class_to_allocnpages[sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
         deductSweepCredit(spanBytes, 0);
@@ -211,7 +211,7 @@ namespace golang::runtime
         return s;
     }
 
-    void uncacheSpan(struct mcentral* c, mspan* s)
+    void uncacheSpan(struct mcentral* c, struct mspan* s)
     {
         if(s->allocCount == 0)
         {
@@ -245,7 +245,7 @@ namespace golang::runtime
         }
     }
 
-    mspan* grow(struct mcentral* c)
+    struct mspan* grow(struct mcentral* c)
     {
         auto npages = uintptr_t(class_to_allocnpages[sizeclass(gocpp::recv(c->spanclass))]);
         auto size = uintptr_t(class_to_size[sizeclass(gocpp::recv(c->spanclass))]);

@@ -223,7 +223,7 @@ namespace golang::runtime
         gwrite(buf.make_slice(0, ));
     }
 
-    void printcomplex(gocpp::complex128 c)
+    void printcomplex(struct gocpp::complex128 c)
     {
         print("(", real(c), imag(c), "i)");
     }
@@ -298,12 +298,12 @@ namespace golang::runtime
         printpointer(sp->array);
     }
 
-    void printeface(eface e)
+    void printeface(struct eface e)
     {
         print("(", e._type, ",", e.data, ")");
     }
 
-    void printiface(iface i)
+    void printiface(struct iface i)
     {
         print("(", i.tab, ",", i.data, ")");
     }

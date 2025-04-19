@@ -127,14 +127,14 @@ namespace golang::runtime
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
 
-    std::tuple<bitvector, bool> argMapInternal(struct stkframe* frame)
+    std::tuple<struct bitvector, bool> argMapInternal(struct stkframe* frame)
     {
-        bitvector argMap;
+        struct bitvector argMap;
         bool hasReflectStackObj;
         auto f = frame->fn;
         if(f.args != abi::ArgsSizeUnknown)
         {
-            bitvector argMap;
+            struct bitvector argMap;
             bool hasReflectStackObj;
             argMap.n = f.args / goarch::PtrSize;
             return {argMap, hasReflectStackObj};
@@ -147,7 +147,7 @@ namespace golang::runtime
             if(condition == "reflect.methodValueCall") { conditionId = 1; }
             switch(conditionId)
             {
-                bitvector argMap;
+                struct bitvector argMap;
                 bool hasReflectStackObj;
                 case 0:
                 case 1:
@@ -155,17 +155,17 @@ namespace golang::runtime
                     auto minSP = frame->fp;
                     if(! usesLR)
                     {
-                        bitvector argMap;
+                        struct bitvector argMap;
                         bool hasReflectStackObj;
                         minSP -= goarch::PtrSize;
                     }
                     if(arg0 >= minSP)
                     {
-                        bitvector argMap;
+                        struct bitvector argMap;
                         bool hasReflectStackObj;
                         if(frame->pc != entry(gocpp::recv(f)))
                         {
-                            bitvector argMap;
+                            struct bitvector argMap;
                             bool hasReflectStackObj;
                             print("runtime: confused by ", funcname(f), ": no frame (sp=", hex(frame->sp), " fp=", hex(frame->fp), ") at entry+", hex(frame->pc - entry(gocpp::recv(f))), "\n");
                             go_throw("reflect mismatch");
@@ -177,7 +177,7 @@ namespace golang::runtime
                     auto retValid = *(bool*)(unsafe::Pointer(arg0 + 4 * goarch::PtrSize));
                     if(mv->fn != entry(gocpp::recv(f)))
                     {
-                        bitvector argMap;
+                        struct bitvector argMap;
                         bool hasReflectStackObj;
                         print("runtime: confused by ", funcname(f), "\n");
                         go_throw("reflect mismatch");
@@ -185,12 +185,12 @@ namespace golang::runtime
                     argMap = *mv->stack;
                     if(! retValid)
                     {
-                        bitvector argMap;
+                        struct bitvector argMap;
                         bool hasReflectStackObj;
                         auto n = int32_t((mv->argLen &^ (goarch::PtrSize - 1)) / goarch::PtrSize);
                         if(n < argMap.n)
                         {
-                            bitvector argMap;
+                            struct bitvector argMap;
                             bool hasReflectStackObj;
                             argMap.n = n;
                         }
@@ -201,16 +201,16 @@ namespace golang::runtime
         return {argMap, hasReflectStackObj};
     }
 
-    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug)
+    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug)
     {
-        bitvector locals;
-        bitvector args;
+        struct bitvector locals;
+        struct bitvector args;
         gocpp::slice<stackObjectRecord> objs;
         auto targetpc = frame->continpc;
         if(targetpc == 0)
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             return {locals, args, objs};
         }
@@ -218,16 +218,16 @@ namespace golang::runtime
         auto pcdata = int32_t(- 1);
         if(targetpc != entry(gocpp::recv(f)))
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             targetpc--;
             pcdata = pcdatavalue(f, abi::PCDATA_StackMapIndex, targetpc);
         }
         if(pcdata == - 1)
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             pcdata = 0;
         }
@@ -240,8 +240,8 @@ namespace golang::runtime
             if(condition == goarch::ARM64) { conditionId = 0; }
             switch(conditionId)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 case 0:
                     minsize = sys::StackAlign;
@@ -253,28 +253,28 @@ namespace golang::runtime
         }
         if(size > minsize)
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             auto stackid = pcdata;
             auto stkmap = (stackmap*)(funcdata(f, abi::FUNCDATA_LocalsPointerMaps));
             if(stkmap == nullptr || stkmap->n <= 0)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 print("runtime: frame ", funcname(f), " untyped locals ", hex(frame->varp - size), "+", hex(size), "\n");
                 go_throw("missing stackmap");
             }
             if(stkmap->nbit > 0)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 if(stackid < 0 || stackid >= stkmap->n)
                 {
-                    bitvector locals;
-                    bitvector args;
+                    struct bitvector locals;
+                    struct bitvector args;
                     gocpp::slice<stackObjectRecord> objs;
                     print("runtime: pcdata is ", stackid, " and ", stkmap->n, " locals stack map entries for ", funcname(f), " (targetpc=", hex(targetpc), ")\n");
                     go_throw("bad symbol table");
@@ -282,8 +282,8 @@ namespace golang::runtime
                 locals = stackmapdata(stkmap, stackid);
                 if(stackDebug >= 3 && debug)
                 {
-                    bitvector locals;
-                    bitvector args;
+                    struct bitvector locals;
+                    struct bitvector args;
                     gocpp::slice<stackObjectRecord> objs;
                     print("      locals ", stackid, "/", stkmap->n, " ", locals.n, " words ", locals.bytedata, "\n");
                 }
@@ -291,8 +291,8 @@ namespace golang::runtime
             else
             if(stackDebug >= 3 && debug)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 print("      no locals to adjust\n");
             }
@@ -301,58 +301,58 @@ namespace golang::runtime
         std::tie(args, isReflect) = argMapInternal(gocpp::recv(frame));
         if(args.n > 0 && args.bytedata == nullptr)
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             auto stackmap = (stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
             if(stackmap == nullptr || stackmap->n <= 0)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 print("runtime: frame ", funcname(f), " untyped args ", hex(frame->argp), "+", hex(args.n * goarch::PtrSize), "\n");
                 go_throw("missing stackmap");
             }
             if(pcdata < 0 || pcdata >= stackmap->n)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 print("runtime: pcdata is ", pcdata, " and ", stackmap->n, " args stack map entries for ", funcname(f), " (targetpc=", hex(targetpc), ")\n");
                 go_throw("bad symbol table");
             }
             if(stackmap->nbit == 0)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 args.n = 0;
             }
             else
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 args = stackmapdata(stackmap, pcdata);
             }
         }
         if((GOARCH == "amd64" || GOARCH == "arm64" || GOARCH == "loong64" || GOARCH == "ppc64" || GOARCH == "ppc64le" || GOARCH == "riscv64") && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             objs = methodValueCallFrameObjs.make_slice(0, );
         }
         else
         {
-            bitvector locals;
-            bitvector args;
+            struct bitvector locals;
+            struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
             auto p = funcdata(f, abi::FUNCDATA_StackObjects);
             if(p != nullptr)
             {
-                bitvector locals;
-                bitvector args;
+                struct bitvector locals;
+                struct bitvector args;
                 gocpp::slice<stackObjectRecord> objs;
                 auto n = *(uintptr_t*)(p);
                 p = add(p, goarch::PtrSize);

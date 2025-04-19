@@ -18,6 +18,7 @@
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -25,21 +26,30 @@
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/profbuf.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
@@ -48,9 +58,15 @@
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2buf.h"
+#include "golang/runtime/trace2event.h"
+// #include "golang/runtime/trace2map.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2region.h"  [Ignored, known errors]
 // #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2string.h"
 #include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
@@ -269,7 +285,7 @@ namespace golang::runtime
         }
     }
 
-    void ReadMemStats(MemStats* m)
+    void ReadMemStats(struct MemStats* m)
     {
         _ = m->Alloc;
         auto stw = stopTheWorld(stwReadMemStats);
@@ -325,7 +341,7 @@ namespace golang::runtime
         }
 
 
-    void readmemstats_m(MemStats* stats)
+    void readmemstats_m(struct MemStats* stats)
     {
         assertWorldStopped();
         systemstack(flushallmcaches);
@@ -571,7 +587,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void merge(struct heapStatsDelta* a, heapStatsDelta* b)
+    void merge(struct heapStatsDelta* a, struct heapStatsDelta* b)
     {
         a->committed += b->committed;
         a->released += b->released;
@@ -629,7 +645,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    heapStatsDelta* acquire(struct consistentHeapStats* m)
+    struct heapStatsDelta* acquire(struct consistentHeapStats* m)
     {
         if(auto pp = ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -665,7 +681,7 @@ namespace golang::runtime
         }
     }
 
-    void unsafeRead(struct consistentHeapStats* m, heapStatsDelta* out)
+    void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -683,7 +699,7 @@ namespace golang::runtime
         }
     }
 
-    void read(struct consistentHeapStats* m, heapStatsDelta* out)
+    void read(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         auto mp = acquirem();
         auto currGen = Load(gocpp::recv(m->gen));
@@ -695,7 +711,7 @@ namespace golang::runtime
         lock(& m->noPLock);
         Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
         unlock(& m->noPLock);
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             for(; Load(gocpp::recv(p->statsSeq)) % 2 != 0; )
             {

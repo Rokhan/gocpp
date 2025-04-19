@@ -68,6 +68,6 @@ namespace golang::runtime
     gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b);
     gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b);
     void wbBufFlush();
-    void wbBufFlush1(p* pp);
+    void wbBufFlush1(struct p* pp);
 }
 

@@ -75,11 +75,11 @@ namespace golang::sync
     void Put(struct Pool* p, go_any x);
     go_any Get(struct Pool* p);
     go_any getSlow(struct Pool* p, int pid);
-    std::tuple<poolLocal*, int> pin(struct Pool* p);
-    std::tuple<poolLocal*, int> pinSlow(struct Pool* p);
+    std::tuple<struct poolLocal*, int> pin(struct Pool* p);
+    std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p);
     void poolCleanup();
     void init();
-    poolLocal* indexLocal(unsafe::Pointer l, int i);
+    struct poolLocal* indexLocal(unsafe::Pointer l, int i);
     void runtime_registerPoolCleanup(std::function<void ()> cleanup);
     int runtime_procPin();
     void runtime_procUnpin();

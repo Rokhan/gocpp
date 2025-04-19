@@ -48,7 +48,7 @@
 
 namespace golang::runtime
 {
-    traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
+    struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
     {
         if(status == traceGoBad)
         {
@@ -63,7 +63,7 @@ namespace golang::runtime
         return w;
     }
 
-    traceWriter writeProcStatusForP(struct traceWriter w, p* pp, bool inSTW)
+    struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW)
     {
         if(! acquireStatus(gocpp::recv(pp->trace), w.gen))
         {
@@ -107,7 +107,7 @@ namespace golang::runtime
         return w;
     }
 
-    traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
+    struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
     {
         if(status == traceProcBad)
         {

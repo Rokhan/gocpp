@@ -18,12 +18,12 @@ namespace golang::main
     void main()
     {
         mocklib::Println(fetcher["https://golang.org/"]->body);
-        for(auto [_, url] : fetcher["https://golang.org/"]->urls)
+        for(auto [gocpp_ignored, url] : fetcher["https://golang.org/"]->urls)
         {
             mocklib::Println(" -> ", url);
         }
         mocklib::Print("Small primes:");
-        for(auto [_, prime] : smallPrimes)
+        for(auto [gocpp_ignored, prime] : smallPrimes)
         {
             mocklib::Printf(" %v", prime);
         }

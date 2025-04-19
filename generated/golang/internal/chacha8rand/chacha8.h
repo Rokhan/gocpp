@@ -37,7 +37,7 @@ namespace golang::chacha8rand
     void Init64(struct State* s, gocpp::array<uint64_t, 4> seed);
     void Refill(struct State* s);
     void Reseed(struct State* s);
-    gocpp::slice<unsigned char> Marshal(State* s);
+    gocpp::slice<unsigned char> Marshal(struct State* s);
     struct errUnmarshalChaCha8
     {
 
@@ -54,7 +54,7 @@ namespace golang::chacha8rand
 
     std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value);
     std::string Error(errUnmarshalChaCha8*);
-    gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
+    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data);
     uint64_t beUint64(gocpp::slice<unsigned char> b);
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
     uint64_t leUint64(gocpp::slice<unsigned char> b);

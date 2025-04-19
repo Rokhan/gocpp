@@ -13,8 +13,8 @@
 namespace golang::syscall
 {
     std::tuple<std::string, bool> Getenv(std::string key);
-    gocpp::error Setenv(std::string key, std::string value);
-    gocpp::error Unsetenv(std::string key);
+    struct gocpp::error Setenv(std::string key, std::string value);
+    struct gocpp::error Unsetenv(std::string key);
     void Clearenv();
     gocpp::slice<std::string> Environ();
 }

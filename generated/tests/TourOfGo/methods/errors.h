@@ -32,7 +32,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct MyError& value);
     std::string Error(struct MyError* e);
-    gocpp::error run();
+    struct gocpp::error run();
     void main();
 }
 

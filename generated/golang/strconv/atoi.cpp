@@ -64,7 +64,7 @@ namespace golang::strconv
         return "strconv." + e->Func + ": " + "parsing " + Quote(e->Num) + ": " + Error(gocpp::recv(e->Err));
     }
 
-    gocpp::error Unwrap(struct NumError* e)
+    struct gocpp::error Unwrap(struct NumError* e)
     {
         return e->Err;
     }
@@ -74,27 +74,27 @@ namespace golang::strconv
         return string(gocpp::Tag<gocpp::slice<unsigned char>>()(x));
     }
 
-    NumError* syntaxError(std::string fn, std::string str)
+    struct NumError* syntaxError(std::string fn, std::string str)
     {
         return new NumError {fn, cloneString(str), ErrSyntax};
     }
 
-    NumError* rangeError(std::string fn, std::string str)
+    struct NumError* rangeError(std::string fn, std::string str)
     {
         return new NumError {fn, cloneString(str), ErrRange};
     }
 
-    NumError* baseError(std::string fn, std::string str, int base)
+    struct NumError* baseError(std::string fn, std::string str, int base)
     {
         return new NumError {fn, cloneString(str), errors::New("invalid base " + Itoa(base))};
     }
 
-    NumError* bitSizeError(std::string fn, std::string str, int bitSize)
+    struct NumError* bitSizeError(std::string fn, std::string str, int bitSize)
     {
         return new NumError {fn, cloneString(str), errors::New("invalid bit size " + Itoa(bitSize))};
     }
 
-    std::tuple<uint64_t, gocpp::error> ParseUint(std::string s, int base, int bitSize)
+    std::tuple<uint64_t, struct gocpp::error> ParseUint(std::string s, int base, int bitSize)
     {
         auto fnParseUint = "ParseUint";
         if(s == "")
@@ -181,7 +181,7 @@ namespace golang::strconv
         auto maxVal = (uint64_t(1) << (unsigned int)(bitSize)) - 1;
         auto underscores = false;
         uint64_t n = {};
-        for(auto [_, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
+        for(auto [gocpp_ignored, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
         {
             unsigned char d = {};
             //Go switch emulation
@@ -230,15 +230,15 @@ namespace golang::strconv
         return {n, nullptr};
     }
 
-    std::tuple<int64_t, gocpp::error> ParseInt(std::string s, int base, int bitSize)
+    std::tuple<int64_t, struct gocpp::error> ParseInt(std::string s, int base, int bitSize)
     {
         int64_t i;
-        gocpp::error err;
+        struct gocpp::error err;
         auto fnParseInt = "ParseInt";
         if(s == "")
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, syntaxError(fnParseInt, s)};
         }
         auto s0 = s;
@@ -246,14 +246,14 @@ namespace golang::strconv
         if(s[0] == '+')
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             s = s.make_slice(1);
         }
         else
         if(s[0] == '-')
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             neg = true;
             s = s.make_slice(1);
         }
@@ -262,7 +262,7 @@ namespace golang::strconv
         if(err != nullptr && gocpp::getValue<NumError*>(err)->Err != ErrRange)
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             gocpp::getValue<NumError*>(err)->Func = fnParseInt;
             gocpp::getValue<NumError*>(err)->Num = cloneString(s0);
             return {0, err};
@@ -270,33 +270,33 @@ namespace golang::strconv
         if(bitSize == 0)
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             bitSize = IntSize;
         }
         auto cutoff = uint64_t(1 << (unsigned int)(bitSize - 1));
         if(! neg && un >= cutoff)
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             return {int64_t(cutoff - 1), rangeError(fnParseInt, s0)};
         }
         if(neg && un > cutoff)
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             return {- int64_t(cutoff), rangeError(fnParseInt, s0)};
         }
         auto n = int64_t(un);
         if(neg)
         {
             int64_t i;
-            gocpp::error err;
+            struct gocpp::error err;
             n = - n;
         }
         return {n, nullptr};
     }
 
-    std::tuple<int, gocpp::error> Atoi(std::string s)
+    std::tuple<int, struct gocpp::error> Atoi(std::string s)
     {
         auto fnAtoi = "Atoi";
         auto sLen = len(s);
@@ -312,7 +312,7 @@ namespace golang::strconv
                 }
             }
             auto n = 0;
-            for(auto [_, ch] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
+            for(auto [gocpp_ignored, ch] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
             {
                 ch -= '0';
                 if(ch > 9)

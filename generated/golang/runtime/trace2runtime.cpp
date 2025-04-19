@@ -19,6 +19,7 @@
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
@@ -41,16 +42,21 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/profbuf.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2event.h"
+// #include "golang/runtime/trace2map.h"  [Ignored, known errors]
+// #include "golang/runtime/trace2region.h"  [Ignored, known errors]
 #include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/trace2string.h"
 #include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
@@ -222,7 +228,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    traceLocker traceAcquire()
+    struct traceLocker traceAcquire()
     {
         if(! traceEnabled())
         {
@@ -231,7 +237,7 @@ namespace golang::runtime
         return traceAcquireEnabled();
     }
 
-    traceLocker traceAcquireEnabled()
+    struct traceLocker traceAcquireEnabled()
     {
         lockRankMayTraceFlush();
         auto mp = acquirem();
@@ -255,7 +261,7 @@ namespace golang::runtime
         return tl.gen != 0;
     }
 
-    void traceRelease(traceLocker tl)
+    void traceRelease(struct traceLocker tl)
     {
         auto seq = Add(gocpp::recv(tl.mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 0)
@@ -287,7 +293,7 @@ namespace golang::runtime
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcIdle)), traceEvProcStart, traceArg(pp->id), nextSeq(gocpp::recv(pp->trace), tl.gen));
     }
 
-    void ProcStop(struct traceLocker tl, p* pp)
+    void ProcStop(struct traceLocker tl, struct p* pp)
     {
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcRunning)), traceEvProcStop);
     }
@@ -369,7 +375,7 @@ namespace golang::runtime
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistEnd);
     }
 
-    void GoCreate(struct traceLocker tl, g* newg, uintptr_t pc)
+    void GoCreate(struct traceLocker tl, struct g* newg, uintptr_t pc)
     {
         setStatusTraced(gocpp::recv(newg->trace), tl.gen);
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoCreate, traceArg(newg->goid), startPC(gocpp::recv(tl), pc), stack(gocpp::recv(tl), 2));
@@ -413,7 +419,7 @@ namespace golang::runtime
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoBlock, traceArg(trace.goBlockReasons[tl.gen % 2][reason]), stack(gocpp::recv(tl), skip));
     }
 
-    void GoUnpark(struct traceLocker tl, g* gp, int skip)
+    void GoUnpark(struct traceLocker tl, struct g* gp, int skip)
     {
         auto w = eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning);
         if(! statusWasTraced(gocpp::recv(gp->trace), tl.gen) && acquireStatus(gocpp::recv(gp->trace), tl.gen))
@@ -465,7 +471,7 @@ namespace golang::runtime
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, procStatus)), ev);
     }
 
-    void ProcSteal(struct traceLocker tl, p* pp, bool inSyscall)
+    void ProcSteal(struct traceLocker tl, struct p* pp, bool inSyscall)
     {
         auto mStolenFrom = pp->trace.mSyscallID;
         pp->trace.mSyscallID = - 1;
@@ -484,7 +490,7 @@ namespace golang::runtime
         commit(gocpp::recv(w), traceEvProcSteal, traceArg(pp->id), nextSeq(gocpp::recv(pp->trace), tl.gen), traceArg(mStolenFrom));
     }
 
-    void GoSysBlock(struct traceLocker tl, p* pp)
+    void GoSysBlock(struct traceLocker tl, struct p* pp)
     {
     }
 
@@ -503,11 +509,11 @@ namespace golang::runtime
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapGoal, traceArg(heapGoal));
     }
 
-    void OneNewExtraM(struct traceLocker tl, g* _)
+    void OneNewExtraM(struct traceLocker tl, struct g* _)
     {
     }
 
-    void GoCreateSyscall(struct traceLocker tl, g* gp)
+    void GoCreateSyscall(struct traceLocker tl, struct g* gp)
     {
         setStatusTraced(gocpp::recv(gp->trace), tl.gen);
         commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoBad, traceProcBad)), traceEvGoCreateSyscall, traceArg(gp->goid));
@@ -582,11 +588,11 @@ namespace golang::runtime
         traceRelease(tl);
     }
 
-    void traceProcFree(p* _)
+    void traceProcFree(struct p* _)
     {
     }
 
-    void traceThreadDestroy(m* mp)
+    void traceThreadDestroy(struct m* mp)
     {
         assertLockHeld(& sched.lock);
         auto seq = Add(gocpp::recv(mp->trace.seqlock), 1);
@@ -615,7 +621,7 @@ namespace golang::runtime
         }
     }
 
-    void RecordSyscallExitedTime(struct traceLocker _, g* _, p* _)
+    void RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _)
     {
     }
 

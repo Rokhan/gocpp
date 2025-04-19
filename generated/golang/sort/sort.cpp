@@ -92,7 +92,7 @@ namespace golang::sort
         return value.PrintTo(os);
     }
 
-    void Sort(Interface data)
+    void Sort(struct Interface data)
     {
         auto n = Len(gocpp::recv(data));
         if(n <= 1)
@@ -181,12 +181,12 @@ namespace golang::sort
         return Less(gocpp::recv(r.Interface), j, i);
     }
 
-    Interface Reverse(Interface data)
+    struct Interface Reverse(struct Interface data)
     {
         return new reverse {data};
     }
 
-    bool IsSorted(Interface data)
+    bool IsSorted(struct Interface data)
     {
         auto n = Len(gocpp::recv(data));
         for(auto i = n - 1; i > 0; i--)
@@ -294,7 +294,7 @@ namespace golang::sort
         return stringsAreSortedImpl(x);
     }
 
-    void Stable(Interface data)
+    void Stable(struct Interface data)
     {
         stable(data, Len(gocpp::recv(data)));
     }

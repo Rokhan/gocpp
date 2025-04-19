@@ -68,6 +68,7 @@
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/sizeclasses.h"
@@ -299,7 +300,7 @@ namespace golang::runtime
         }
     }
 
-    void stackcacherefill(mcache* c, uint8_t order)
+    void stackcacherefill(struct mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
         {
@@ -320,7 +321,7 @@ namespace golang::runtime
         c->stackcache[order].size = size;
     }
 
-    void stackcacherelease(mcache* c, uint8_t order)
+    void stackcacherelease(struct mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
         {
@@ -341,7 +342,7 @@ namespace golang::runtime
         c->stackcache[order].size = size;
     }
 
-    void stackcache_clear(mcache* c)
+    void stackcache_clear(struct mcache* c)
     {
         if(stackDebug >= 1)
         {
@@ -363,7 +364,7 @@ namespace golang::runtime
         }
     }
 
-    stack stackalloc(uint32_t n)
+    struct stack stackalloc(uint32_t n)
     {
         auto thisg = getg();
         if(thisg != thisg->m->g0)
@@ -463,7 +464,7 @@ namespace golang::runtime
         return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
     }
 
-    void stackfree(stack stk)
+    void stackfree(struct stack stk)
     {
         auto gp = getg();
         auto v = unsafe::Pointer(stk.lo);
@@ -590,7 +591,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void adjustpointer(adjustinfo* adjinfo, unsafe::Pointer vpp)
+    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp)
     {
         auto pp = (uintptr_t*)(vpp);
         auto p = *pp;
@@ -646,7 +647,7 @@ namespace golang::runtime
         return (b >> (i % 8)) & 1;
     }
 
-    void adjustpointers(unsafe::Pointer scanp, bitvector* bv, adjustinfo* adjinfo, funcInfo f)
+    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f)
     {
         auto minp = adjinfo->old.lo;
         auto maxp = adjinfo->old.hi;
@@ -699,7 +700,7 @@ namespace golang::runtime
         }
     }
 
-    void adjustframe(stkframe* frame, adjustinfo* adjinfo)
+    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo)
     {
         if(frame->continpc == 0)
         {
@@ -781,7 +782,7 @@ namespace golang::runtime
         }
     }
 
-    void adjustctxt(g* gp, adjustinfo* adjinfo)
+    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo)
     {
         adjustpointer(adjinfo, unsafe::Pointer(& gp->sched.ctxt));
         if(! framepointer_enabled)
@@ -810,7 +811,7 @@ namespace golang::runtime
         }
     }
 
-    void adjustdefers(g* gp, adjustinfo* adjinfo)
+    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo)
     {
         adjustpointer(adjinfo, unsafe::Pointer(& gp->_defer));
         for(auto d = gp->_defer; d != nullptr; d = d->link)
@@ -821,12 +822,12 @@ namespace golang::runtime
         }
     }
 
-    void adjustpanics(g* gp, adjustinfo* adjinfo)
+    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo)
     {
         adjustpointer(adjinfo, unsafe::Pointer(& gp->_panic));
     }
 
-    void adjustsudogs(g* gp, adjustinfo* adjinfo)
+    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo)
     {
         for(auto s = gp->waiting; s != nullptr; s = s->waitlink)
         {
@@ -834,7 +835,7 @@ namespace golang::runtime
         }
     }
 
-    void fillstack(stack stk, unsigned char b)
+    void fillstack(struct stack stk, unsigned char b)
     {
         for(auto p = stk.lo; p < stk.hi; p++)
         {
@@ -842,7 +843,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t findsghi(g* gp, stack stk)
+    uintptr_t findsghi(struct g* gp, struct stack stk)
     {
         uintptr_t sghi = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
@@ -856,7 +857,7 @@ namespace golang::runtime
         return sghi;
     }
 
-    uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo)
+    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo)
     {
         if(gp->waiting == nullptr)
         {
@@ -892,7 +893,7 @@ namespace golang::runtime
         return sgsize;
     }
 
-    void copystack(g* gp, uintptr_t newsize)
+    void copystack(struct g* gp, uintptr_t newsize)
     {
         if(gp->syscallsp != 0)
         {
@@ -1096,7 +1097,7 @@ namespace golang::runtime
         *(uint8_t*)(nullptr) = 0;
     }
 
-    void gostartcallfn(gobuf* gobuf, funcval* fv)
+    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv)
     {
         unsafe::Pointer fn = {};
         if(fv != nullptr)
@@ -1110,12 +1111,12 @@ namespace golang::runtime
         gostartcall(gobuf, fn, unsafe::Pointer(fv));
     }
 
-    bool isShrinkStackSafe(g* gp)
+    bool isShrinkStackSafe(struct g* gp)
     {
         return gp->syscallsp == 0 && ! gp->asyncSafePoint && ! Load(gocpp::recv(gp->parkingOnChan));
     }
 
-    void shrinkstack(g* gp)
+    void shrinkstack(struct g* gp)
     {
         if(gp->stack.lo == 0)
         {
@@ -1281,7 +1282,7 @@ namespace golang::runtime
         }
         uint64_t scannedStackSize = {};
         uint64_t scannedStacks = {};
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             scannedStackSize += p->scannedStackSize;
             scannedStacks += p->scannedStacks;

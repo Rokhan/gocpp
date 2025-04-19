@@ -34,6 +34,6 @@ namespace golang::runtime
     extern bool useCheckmark;
     void startCheckmarks();
     void endCheckmarks();
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits);
 }
 

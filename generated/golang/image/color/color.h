@@ -228,7 +228,7 @@ namespace golang::color
 
         struct IModel
         {
-            virtual Color vConvert(Color c) = 0;
+            virtual struct Color vConvert(struct Color c) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -239,7 +239,7 @@ namespace golang::color
                 value.reset(ptr);
             }
 
-            Color vConvert(Color c) override;
+            struct Color vConvert(struct Color c) override;
 
             StoreT value;
         };
@@ -247,14 +247,14 @@ namespace golang::color
         std::shared_ptr<IModel> value;
     };
 
-    Color Convert(const gocpp::PtrRecv<Model, false>& self, Color c);
-    Color Convert(const gocpp::ObjRecv<Model>& self, Color c);
+    struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c);
+    struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c);
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
-    Model ModelFunc(std::function<Color (Color)> f);
+    struct Model ModelFunc(std::function<struct Color (Color)> f);
     struct modelFunc
     {
-        std::function<Color (Color)> f;
+        std::function<struct Color (Color)> f;
 
         using isGoStruct = void;
 
@@ -268,7 +268,7 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
-    Color Convert(struct modelFunc* m, Color c);
+    struct Color Convert(struct modelFunc* m, struct Color c);
     extern Model RGBAModel;
     extern Model RGBA64Model;
     extern Model NRGBAModel;
@@ -277,16 +277,16 @@ namespace golang::color
     extern Model Alpha16Model;
     extern Model GrayModel;
     extern Model Gray16Model;
-    Color rgbaModel(Color c);
-    Color rgba64Model(Color c);
-    Color nrgbaModel(Color c);
-    Color nrgba64Model(Color c);
-    Color alphaModel(Color c);
-    Color alpha16Model(Color c);
-    Color grayModel(Color c);
-    Color gray16Model(Color c);
-    Color Convert(Palette p, Color c);
-    int Index(Palette p, Color c);
+    struct Color rgbaModel(struct Color c);
+    struct Color rgba64Model(struct Color c);
+    struct Color nrgbaModel(struct Color c);
+    struct Color nrgba64Model(struct Color c);
+    struct Color alphaModel(struct Color c);
+    struct Color alpha16Model(struct Color c);
+    struct Color grayModel(struct Color c);
+    struct Color gray16Model(struct Color c);
+    struct Color Convert(Palette p, struct Color c);
+    int Index(Palette p, struct Color c);
     uint32_t sqDiff(uint32_t x, uint32_t y);
     extern Gray16 Black;
     extern Gray16 White;

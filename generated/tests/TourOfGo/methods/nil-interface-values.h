@@ -59,6 +59,6 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct I& value);
     void main();
-    void describe(I i);
+    void describe(struct I i);
 }
 

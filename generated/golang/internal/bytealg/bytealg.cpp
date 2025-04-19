@@ -11,6 +11,8 @@
 #include "golang/internal/bytealg/bytealg.h"
 #include "gocpp/support.h"
 
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+
 namespace golang::bytealg
 {
     int MaxLen;

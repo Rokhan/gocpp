@@ -17,7 +17,7 @@
 
 namespace golang::runtime
 {
-    void gostartcall(gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt)
+    void gostartcall(struct gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt)
     {
         auto sp = buf->sp;
         sp -= goarch::PtrSize;

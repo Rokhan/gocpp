@@ -13,6 +13,6 @@
 
 namespace golang::reader
 {
-    void Validate(io::Reader r);
+    void Validate(struct io::Reader r);
 }
 

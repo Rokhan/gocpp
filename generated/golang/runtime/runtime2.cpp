@@ -205,17 +205,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    eface* efaceOf(go_any* ep)
+    struct eface* efaceOf(go_any* ep)
     {
         return (eface*)(unsafe::Pointer(ep));
     }
 
-    g* ptr(guintptr gp)
+    struct g* ptr(guintptr gp)
     {
         return (g*)(unsafe::Pointer(gp));
     }
 
-    void set(guintptr* gp, g* g)
+    void set(guintptr* gp, struct g* g)
     {
         *gp = guintptr(unsafe::Pointer(g));
     }
@@ -230,32 +230,32 @@ namespace golang::runtime
         return guintptr(unsafe::Pointer(gp));
     }
 
-    void setGNoWB(g** gp, g* go_new)
+    void setGNoWB(struct g** gp, struct g* go_new)
     {
         set(gocpp::recv((guintptr*)(unsafe::Pointer(gp))), go_new);
     }
 
-    p* ptr(puintptr pp)
+    struct p* ptr(puintptr pp)
     {
         return (p*)(unsafe::Pointer(pp));
     }
 
-    void set(puintptr* pp, p* p)
+    void set(puintptr* pp, struct p* p)
     {
         *pp = puintptr(unsafe::Pointer(p));
     }
 
-    m* ptr(muintptr mp)
+    struct m* ptr(muintptr mp)
     {
         return (m*)(unsafe::Pointer(mp));
     }
 
-    void set(muintptr* mp, m* m)
+    void set(muintptr* mp, struct m* m)
     {
         *mp = muintptr(unsafe::Pointer(m));
     }
 
-    void setMNoWB(m** mp, m* go_new)
+    void setMNoWB(struct m** mp, struct m* go_new)
     {
         set(gocpp::recv((muintptr*)(unsafe::Pointer(mp))), go_new);
     }

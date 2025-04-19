@@ -45,9 +45,9 @@
 
 namespace golang::runtime
 {
-    traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist);
-    traceWriter writeProcStatusForP(struct traceWriter w, p* pp, bool inSTW);
-    traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep);
+    struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist);
+    struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW);
+    struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep);
     traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr);
     struct traceSchedResourceState
     {

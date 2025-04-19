@@ -49,10 +49,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
-    coro* newcoro(std::function<void (coro*)> f);
+    struct coro* newcoro(std::function<void (coro*)> f);
     void corostart();
-    void coroexit(coro* c);
-    void coroswitch(coro* c);
-    void coroswitch_m(g* gp);
+    void coroexit(struct coro* c);
+    void coroswitch(struct coro* c);
+    void coroswitch_m(struct g* gp);
 }
 

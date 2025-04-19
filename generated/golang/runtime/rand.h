@@ -39,7 +39,7 @@ namespace golang::runtime
     void bootstrapRandReseed();
     uint32_t rand32();
     uint64_t rand();
-    void mrandinit(m* mp);
+    void mrandinit(struct m* mp);
     uint32_t randn(uint32_t n);
     uint32_t cheaprand();
     int64_t cheaprand64();

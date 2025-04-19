@@ -104,7 +104,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    traceMapNode* next(struct traceMapNode* n)
+    struct traceMapNode* next(struct traceMapNode* n)
     {
         return (traceMapNode*)(Load(gocpp::recv(n->link)));
     }
@@ -162,12 +162,12 @@ namespace golang::runtime
         return 0;
     }
 
-    traceMapNode* bucket(struct traceMap* tab, int part)
+    struct traceMapNode* bucket(struct traceMap* tab, int part)
     {
         return (traceMapNode*)(Load(gocpp::recv(tab->tab[part])));
     }
 
-    traceMapNode* newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
+    struct traceMapNode* newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
         auto sl = gocpp::Init<notInHeapSlice>([](notInHeapSlice& x) { x.array = alloc(gocpp::recv(tab->mem), size); x.len = int(size); x.cap = int(size); });
         memmove(unsafe::Pointer(sl.array), data, size);

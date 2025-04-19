@@ -35,7 +35,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value);
 
     template<typename T>
-    T Get(struct Wrapper<T>* p);
+    T Get(Wrapper<T>* p);
     void main();
 }
 

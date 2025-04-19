@@ -136,7 +136,7 @@ namespace golang::runtime
         return fd == iocphandle;
     }
 
-    int32_t netpollopen(uintptr_t fd, pollDesc* pd)
+    int32_t netpollopen(uintptr_t fd, struct pollDesc* pd)
     {
         if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(unsafe::Pointer(pd)), 0) == 0)
         {
@@ -150,7 +150,7 @@ namespace golang::runtime
         return 0;
     }
 
-    void netpollarm(pollDesc* pd, int mode)
+    void netpollarm(struct pollDesc* pd, int mode)
     {
         go_throw("runtime: unused");
     }
@@ -168,7 +168,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<gList, int32_t> netpoll(int64_t delay)
+    std::tuple<struct gList, int32_t> netpoll(int64_t delay)
     {
         gocpp::array<overlappedEntry, 64> entries = {};
         uint32_t wait = {};
@@ -254,7 +254,7 @@ namespace golang::runtime
         return {toRun, delta};
     }
 
-    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty)
+    int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty)
     {
         auto mode = op->mode;
         if(mode != 'r' && mode != 'w')

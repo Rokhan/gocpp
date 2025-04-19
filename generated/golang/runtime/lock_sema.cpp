@@ -41,17 +41,17 @@
 
 namespace golang::runtime
 {
-    bool mutexContended(mutex* l)
+    bool mutexContended(struct mutex* l)
     {
         return atomic::Loaduintptr(& l->key) > locked;
     }
 
-    void lock(mutex* l)
+    void lock(struct mutex* l)
     {
         lockWithRank(l, getLockRank(l));
     }
 
-    void lock2(mutex* l)
+    void lock2(struct mutex* l)
     {
         auto gp = getg();
         if(gp->m->locks < 0)
@@ -123,12 +123,12 @@ namespace golang::runtime
         }
     }
 
-    void unlock(mutex* l)
+    void unlock(struct mutex* l)
     {
         unlockWithRank(l);
     }
 
-    void unlock2(mutex* l)
+    void unlock2(struct mutex* l)
     {
         auto gp = getg();
         m* mp = {};
@@ -164,12 +164,12 @@ namespace golang::runtime
         }
     }
 
-    void noteclear(note* n)
+    void noteclear(struct note* n)
     {
         n->key = 0;
     }
 
-    void notewakeup(note* n)
+    void notewakeup(struct note* n)
     {
         uintptr_t v = {};
         for(; ; )
@@ -199,7 +199,7 @@ namespace golang::runtime
         }
     }
 
-    void notesleep(note* n)
+    void notesleep(struct note* n)
     {
         auto gp = getg();
         if(gp != gp->m->g0)
@@ -232,7 +232,7 @@ namespace golang::runtime
         gp->m->blocked = false;
     }
 
-    bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline)
+    bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline)
     {
         gp = getg();
         if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
@@ -319,7 +319,7 @@ namespace golang::runtime
         }
     }
 
-    bool notetsleep(note* n, int64_t ns)
+    bool notetsleep(struct note* n, int64_t ns)
     {
         auto gp = getg();
         if(gp != gp->m->g0)
@@ -330,7 +330,7 @@ namespace golang::runtime
         return notetsleep_internal(n, ns, nullptr, 0);
     }
 
-    bool notetsleepg(note* n, int64_t ns)
+    bool notetsleepg(struct note* n, int64_t ns)
     {
         auto gp = getg();
         if(gp == gp->m->g0)
@@ -344,7 +344,7 @@ namespace golang::runtime
         return ok;
     }
 
-    std::tuple<g*, bool> beforeIdle(int64_t, int64_t)
+    std::tuple<struct g*, bool> beforeIdle(int64_t, int64_t)
     {
         return {nullptr, false};
     }

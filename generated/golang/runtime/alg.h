@@ -30,10 +30,10 @@ namespace golang::runtime
     uintptr_t c128hash(unsafe::Pointer p, uintptr_t h);
     uintptr_t interhash(unsafe::Pointer p, uintptr_t h);
     uintptr_t nilinterhash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t typehash(_type* t, unsafe::Pointer p, uintptr_t h);
-    gocpp::error mapKeyError(maptype* t, unsafe::Pointer p);
-    gocpp::error mapKeyError2(_type* t, unsafe::Pointer p);
-    uintptr_t reflect_typehash(_type* t, unsafe::Pointer p, uintptr_t h);
+    uintptr_t typehash(struct _type* t, unsafe::Pointer p, uintptr_t h);
+    struct gocpp::error mapKeyError(struct maptype* t, unsafe::Pointer p);
+    struct gocpp::error mapKeyError2(struct _type* t, unsafe::Pointer p);
+    uintptr_t reflect_typehash(struct _type* t, unsafe::Pointer p, uintptr_t h);
     bool memequal0(unsafe::Pointer p, unsafe::Pointer q);
     bool memequal8(unsafe::Pointer p, unsafe::Pointer q);
     bool memequal16(unsafe::Pointer p, unsafe::Pointer q);
@@ -47,8 +47,8 @@ namespace golang::runtime
     bool strequal(unsafe::Pointer p, unsafe::Pointer q);
     bool interequal(unsafe::Pointer p, unsafe::Pointer q);
     bool nilinterequal(unsafe::Pointer p, unsafe::Pointer q);
-    bool efaceeq(_type* t, unsafe::Pointer x, unsafe::Pointer y);
-    bool ifaceeq(itab* tab, unsafe::Pointer x, unsafe::Pointer y);
+    bool efaceeq(struct _type* t, unsafe::Pointer x, unsafe::Pointer y);
+    bool ifaceeq(struct itab* tab, unsafe::Pointer x, unsafe::Pointer y);
     uintptr_t stringHash(std::string s, uintptr_t seed);
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed);
     uintptr_t int32Hash(uint32_t i, uintptr_t seed);

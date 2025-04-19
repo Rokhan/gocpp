@@ -96,12 +96,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct unwinder* u, g* gp, unwindFlags flags)
+    void init(struct unwinder* u, struct g* gp, unwindFlags flags)
     {
         initAt(gocpp::recv(u), ~ uintptr_t(0), ~ uintptr_t(0), ~ uintptr_t(0), gp, flags);
     }
 
-    void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, g* gp, unwindFlags flags)
+    void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, unwindFlags flags)
     {
         if(auto ourg = getg(); ourg == gp && ourg == ourg->m->curg)
         {
@@ -412,7 +412,7 @@ namespace golang::runtime
         return len(pcBuf);
     }
 
-    int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf)
+    int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf)
     {
         gocpp::array<uintptr_t, 32> cgoBuf = {};
         auto n = 0;
@@ -446,7 +446,7 @@ namespace golang::runtime
         return n;
     }
 
-    void printArgs(funcInfo f, unsafe::Pointer argp, uintptr_t pc)
+    void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc)
     {
         auto _endSeq = 0xff;
         auto _startAgg = 0xfe;
@@ -606,7 +606,7 @@ namespace golang::runtime
         print(a, b, c);
     }
 
-    void printcreatedby(g* gp)
+    void printcreatedby(struct g* gp)
     {
         auto pc = gp->gopc;
         auto f = findfunc(pc);
@@ -616,7 +616,7 @@ namespace golang::runtime
         }
     }
 
-    void printcreatedby1(funcInfo f, uintptr_t pc, uint64_t goid)
+    void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid)
     {
         print("created by ");
         printFuncName(funcname(f));
@@ -639,12 +639,12 @@ namespace golang::runtime
         print("\n");
     }
 
-    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp)
+    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp)
     {
         traceback1(pc, sp, lr, gp, 0);
     }
 
-    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp)
+    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp)
     {
         if(gp->m->libcallsp != 0)
         {
@@ -654,7 +654,7 @@ namespace golang::runtime
         traceback1(pc, sp, lr, gp, unwindTrap);
     }
 
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags)
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, unwindFlags flags)
     {
         if(iscgo && gp->m != nullptr && gp->m->ncgo > 0 && gp->syscallsp != 0 && gp->m->cgoCallers != nullptr && gp->m->cgoCallers[0] != 0)
         {
@@ -711,13 +711,13 @@ namespace golang::runtime
         {
             return;
         }
-        for(auto [_, ancestor] : *gp->ancestors)
+        for(auto [gocpp_ignored, ancestor] : *gp->ancestors)
         {
             printAncestorTraceback(ancestor);
         }
     }
 
-    std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max)
+    std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max)
     {
         int n;
         int lastN;
@@ -823,7 +823,7 @@ namespace golang::runtime
                 cgoSymbolizerArg arg = {};
                 auto anySymbolized = false;
                 auto stop = false;
-                for(auto [_, pc] : cgoBuf.make_slice(0, cgoN))
+                for(auto [gocpp_ignored, pc] : cgoBuf.make_slice(0, cgoN))
                 {
                     int n;
                     int lastN;
@@ -877,7 +877,7 @@ namespace golang::runtime
         return {n, 0};
     }
 
-    void printAncestorTraceback(ancestorInfo ancestor)
+    void printAncestorTraceback(struct ancestorInfo ancestor)
     {
         print("[originating from goroutine ", ancestor.goid, "]:\n");
         for(auto [fidx, pc] : ancestor.pcs)
@@ -899,7 +899,7 @@ namespace golang::runtime
         }
     }
 
-    void printAncestorTracebackFuncInfo(funcInfo f, uintptr_t pc)
+    void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc)
     {
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto [file, line] = fileLine(gocpp::recv(u), uf);
@@ -928,14 +928,14 @@ namespace golang::runtime
         return n;
     }
 
-    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf)
+    int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf)
     {
         unwinder u = {};
         init(gocpp::recv(u), gp, unwindSilentErrors);
         return tracebackPCs(& u, skip, pcbuf);
     }
 
-    bool showframe(srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID)
+    bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID)
     {
         auto mp = getg()->m;
         if(mp->throwing >= throwTypeRuntime && gp != nullptr && (gp == mp->curg || gp == ptr(gocpp::recv(mp->caughtsig))))
@@ -945,7 +945,7 @@ namespace golang::runtime
         return showfuncinfo(sf, firstFrame, calleeID);
     }
 
-    bool showfuncinfo(srcFunc sf, bool firstFrame, abi::FuncID calleeID)
+    bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID)
     {
         auto [level, gocpp_id_8, gocpp_id_9] = gotraceback();
         if(level > 1)
@@ -976,7 +976,7 @@ namespace golang::runtime
     }
 
     gocpp::array_base<std::string> gStatusStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x._Gidle = "idle"; x._Grunnable = "runnable"; x._Grunning = "running"; x._Gsyscall = "syscall"; x._Gwaiting = "waiting"; x._Gdead = "dead"; x._Gcopystack = "copystack"; x._Gpreempted = "preempted"; });
-    void goroutineheader(g* gp)
+    void goroutineheader(struct g* gp)
     {
         auto [level, gocpp_id_12, gocpp_id_13] = gotraceback();
         auto gpstatus = readgstatus(gp);
@@ -1029,7 +1029,7 @@ namespace golang::runtime
         print("]:\n");
     }
 
-    void tracebackothers(g* me)
+    void tracebackothers(struct g* me)
     {
         auto [level, gocpp_id_16, gocpp_id_17] = gotraceback();
         auto curgp = getg()->m->curg;
@@ -1039,7 +1039,7 @@ namespace golang::runtime
             goroutineheader(curgp);
             traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, curgp);
         }
-        forEachGRace([=](g* gp) mutable -> void
+        forEachGRace([=](struct g* gp) mutable -> void
         {
             if(gp == me || gp == curgp || readgstatus(gp) == _Gdead || isSystemGoroutine(gp, false) && level < 2)
             {
@@ -1059,7 +1059,7 @@ namespace golang::runtime
         });
     }
 
-    void tracebackHexdump(stack stk, stkframe* frame, uintptr_t bad)
+    void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad)
     {
         auto expand = 32 * goarch::PtrSize;
         auto maxExpand = 256 * goarch::PtrSize;
@@ -1116,7 +1116,7 @@ namespace golang::runtime
         });
     }
 
-    bool isSystemGoroutine(g* gp, bool fixed)
+    bool isSystemGoroutine(struct g* gp, bool fixed)
     {
         auto f = findfunc(gp->startpc);
         if(! valid(gocpp::recv(f)))
@@ -1278,7 +1278,7 @@ namespace golang::runtime
     {
         if(cgoSymbolizer == nullptr)
         {
-            for(auto [_, c] : callers)
+            for(auto [gocpp_ignored, c] : callers)
             {
                 if(c == 0)
                 {
@@ -1295,7 +1295,7 @@ namespace golang::runtime
             return {true, false};
         };
         cgoSymbolizerArg arg = {};
-        for(auto [_, c] : callers)
+        for(auto [gocpp_ignored, c] : callers)
         {
             if(c == 0)
             {
@@ -1307,7 +1307,7 @@ namespace golang::runtime
         callCgoSymbolizer(& arg);
     }
 
-    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg)
+    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg)
     {
         arg->pc = pc;
         for(; ; )
@@ -1343,7 +1343,7 @@ namespace golang::runtime
         }
     }
 
-    void callCgoSymbolizer(cgoSymbolizerArg* arg)
+    void callCgoSymbolizer(struct cgoSymbolizerArg* arg)
     {
         auto call = cgocall;
         if(Load(gocpp::recv(panicking)) > 0 || getg()->m->curg != getg())

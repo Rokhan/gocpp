@@ -6,10 +6,15 @@
 
 namespace golang::bytealg
 {
+    const long PrimeRK = 16777619;
+}
+// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
+
+namespace golang::bytealg
+{
     const uintptr_t offsetX86HasSSE42 = unsafe::Offsetof(cpu::X86.HasSSE42);
     const uintptr_t offsetX86HasAVX2 = unsafe::Offsetof(cpu::X86.HasAVX2);
     const uintptr_t offsetX86HasPOPCNT = unsafe::Offsetof(cpu::X86.HasPOPCNT);
     const uintptr_t offsetS390xHasVX = unsafe::Offsetof(cpu::S390X.HasVX);
     const uintptr_t offsetPPC64HasPOWER9 = unsafe::Offsetof(cpu::PPC64.IsPOWER9);
-    const long PrimeRK = 16777619;
 }

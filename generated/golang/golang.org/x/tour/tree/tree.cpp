@@ -51,17 +51,17 @@ namespace golang::tree
         return value.PrintTo(os);
     }
 
-    Tree* New(int k)
+    struct Tree* New(int k)
     {
         Tree* t = {};
-        for(auto [_, v] : rand::Perm(10))
+        for(auto [gocpp_ignored, v] : rand::Perm(10))
         {
             t = insert(t, (1 + v) * k);
         }
         return t;
     }
 
-    Tree* insert(Tree* t, int v)
+    struct Tree* insert(struct Tree* t, int v)
     {
         if(t == nullptr)
         {

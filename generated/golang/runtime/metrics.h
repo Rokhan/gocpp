@@ -21,7 +21,7 @@ namespace golang::runtime
     struct metricData
     {
         statDepSet deps;
-        std::function<void (statAggregate* in, metricValue* out)> compute;
+        std::function<void (struct statAggregate* in, struct metricValue* out)> compute;
 
         using isGoStruct = void;
 
@@ -38,8 +38,8 @@ namespace golang::runtime
     void metricsLock();
     void metricsUnlock();
     void initMetrics();
-    void compute0(statAggregate* _, metricValue* out);
-    void compute(metricReader f, statAggregate* _, metricValue* out);
+    void compute0(struct statAggregate* _, struct metricValue* out);
+    void compute(metricReader f, struct statAggregate* _, struct metricValue* out);
     void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
     statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
 
@@ -195,7 +195,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
-    metricFloat64Histogram* float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets);
+    struct metricFloat64Histogram* float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets);
     struct metricFloat64Histogram
     {
         gocpp::slice<uint64_t> counts;

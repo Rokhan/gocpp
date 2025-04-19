@@ -121,21 +121,21 @@ namespace golang::atomic
 
 
     template<typename T>
-    T* Load(struct Pointer<T>* x)
+    T* Load(Pointer<T>* x)
     {
         return (T*)(LoadPointer(& x->v));
     }
 
 
     template<typename T>
-    void Store(struct Pointer<T>* x, T* val)
+    void Store(Pointer<T>* x, T* val)
     {
         StorePointer(& x->v, unsafe::Pointer(val));
     }
 
 
     template<typename T>
-    T* Swap(struct Pointer<T>* x, T* go_new)
+    T* Swap(Pointer<T>* x, T* go_new)
     {
         T* old;
         return (T*)(SwapPointer(& x->v, unsafe::Pointer(go_new)));
@@ -143,7 +143,7 @@ namespace golang::atomic
 
 
     template<typename T>
-    bool CompareAndSwap(struct Pointer<T>* x, T* old, T* go_new)
+    bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new)
     {
         bool swapped;
         return CompareAndSwapPointer(& x->v, unsafe::Pointer(old), unsafe::Pointer(go_new));

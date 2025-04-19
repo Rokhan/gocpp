@@ -289,18 +289,18 @@ namespace golang::runtime
         return top;
     }
 
-    bool evacuated(bmap* b)
+    bool evacuated(struct bmap* b)
     {
         auto h = b->tophash[0];
         return h > emptyOne && h < minTopHash;
     }
 
-    bmap* overflow(struct bmap* b, maptype* t)
+    struct bmap* overflow(struct bmap* b, struct maptype* t)
     {
         return *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
     }
 
-    void setoverflow(struct bmap* b, maptype* t, bmap* ovf)
+    void setoverflow(struct bmap* b, struct maptype* t, struct bmap* ovf)
     {
         *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
     }
@@ -324,7 +324,7 @@ namespace golang::runtime
         }
     }
 
-    bmap* newoverflow(struct hmap* h, maptype* t, bmap* b)
+    struct bmap* newoverflow(struct hmap* h, struct maptype* t, struct bmap* b)
     {
         bmap* ovf = {};
         if(h->extra != nullptr && h->extra->nextOverflow != nullptr)
@@ -366,7 +366,7 @@ namespace golang::runtime
         }
     }
 
-    hmap* makemap64(maptype* t, int64_t hint, hmap* h)
+    struct hmap* makemap64(struct maptype* t, int64_t hint, struct hmap* h)
     {
         if(int64_t(int(hint)) != hint)
         {
@@ -375,14 +375,14 @@ namespace golang::runtime
         return makemap(t, int(hint), h);
     }
 
-    hmap* makemap_small()
+    struct hmap* makemap_small()
     {
         auto h = go_new(hmap);
         h->hash0 = uint32_t(rand());
         return h;
     }
 
-    hmap* makemap(maptype* t, int hint, hmap* h)
+    struct hmap* makemap(struct maptype* t, int hint, struct hmap* h)
     {
         auto [mem, overflow] = math::MulUintptr(uintptr_t(hint), t->Bucket->Size_);
         if(overflow || mem > maxAlloc)
@@ -413,55 +413,55 @@ namespace golang::runtime
         return h;
     }
 
-    std::tuple<unsafe::Pointer, bmap*> makeBucketArray(maptype* t, uint8_t b, unsafe::Pointer dirtyalloc)
+    std::tuple<unsafe::Pointer, struct bmap*> makeBucketArray(struct maptype* t, uint8_t b, unsafe::Pointer dirtyalloc)
     {
         unsafe::Pointer buckets;
-        bmap* nextOverflow;
+        struct bmap* nextOverflow;
         auto base = bucketShift(b);
         auto nbuckets = base;
         if(b >= 4)
         {
             unsafe::Pointer buckets;
-            bmap* nextOverflow;
+            struct bmap* nextOverflow;
             nbuckets += bucketShift(b - 4);
             auto sz = t->Bucket->Size_ * nbuckets;
             auto up = roundupsize(sz, t->Bucket->PtrBytes == 0);
             if(up != sz)
             {
                 unsafe::Pointer buckets;
-                bmap* nextOverflow;
+                struct bmap* nextOverflow;
                 nbuckets = up / t->Bucket->Size_;
             }
         }
         if(dirtyalloc == nullptr)
         {
             unsafe::Pointer buckets;
-            bmap* nextOverflow;
+            struct bmap* nextOverflow;
             buckets = newarray(t->Bucket, int(nbuckets));
         }
         else
         {
             unsafe::Pointer buckets;
-            bmap* nextOverflow;
+            struct bmap* nextOverflow;
             buckets = dirtyalloc;
             auto size = t->Bucket->Size_ * nbuckets;
             if(t->Bucket->PtrBytes != 0)
             {
                 unsafe::Pointer buckets;
-                bmap* nextOverflow;
+                struct bmap* nextOverflow;
                 memclrHasPointers(buckets, size);
             }
             else
             {
                 unsafe::Pointer buckets;
-                bmap* nextOverflow;
+                struct bmap* nextOverflow;
                 memclrNoHeapPointers(buckets, size);
             }
         }
         if(base != nbuckets)
         {
             unsafe::Pointer buckets;
-            bmap* nextOverflow;
+            struct bmap* nextOverflow;
             nextOverflow = (bmap*)(add(buckets, base * uintptr_t(t->BucketSize)));
             auto last = (bmap*)(add(buckets, (nbuckets - 1) * uintptr_t(t->BucketSize)));
             setoverflow(gocpp::recv(last), t, (bmap*)(buckets));
@@ -469,7 +469,7 @@ namespace golang::runtime
         return {buckets, nextOverflow};
     }
 
-    unsafe::Pointer mapaccess1(maptype* t, hmap* h, unsafe::Pointer key)
+    unsafe::Pointer mapaccess1(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(raceenabled && h != nullptr)
         {
@@ -552,7 +552,7 @@ namespace golang::runtime
         return unsafe::Pointer(& zeroVal[0]);
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2(maptype* t, hmap* h, unsafe::Pointer key)
+    std::tuple<unsafe::Pointer, bool> mapaccess2(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(raceenabled && h != nullptr)
         {
@@ -635,7 +635,7 @@ namespace golang::runtime
         return {unsafe::Pointer(& zeroVal[0]), false};
     }
 
-    std::tuple<unsafe::Pointer, unsafe::Pointer> mapaccessK(maptype* t, hmap* h, unsafe::Pointer key)
+    std::tuple<unsafe::Pointer, unsafe::Pointer> mapaccessK(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(h == nullptr || h->count == 0)
         {
@@ -695,7 +695,7 @@ namespace golang::runtime
         return {nullptr, nullptr};
     }
 
-    unsafe::Pointer mapaccess1_fat(maptype* t, hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
+    unsafe::Pointer mapaccess1_fat(struct maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
     {
         auto e = mapaccess1(t, h, key);
         if(e == unsafe::Pointer(& zeroVal[0]))
@@ -705,7 +705,7 @@ namespace golang::runtime
         return e;
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2_fat(maptype* t, hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
+    std::tuple<unsafe::Pointer, bool> mapaccess2_fat(struct maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
     {
         auto e = mapaccess1(t, h, key);
         if(e == unsafe::Pointer(& zeroVal[0]))
@@ -715,7 +715,7 @@ namespace golang::runtime
         return {e, true};
     }
 
-    unsafe::Pointer mapassign(maptype* t, hmap* h, unsafe::Pointer key)
+    unsafe::Pointer mapassign(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(h == nullptr)
         {
@@ -844,7 +844,7 @@ namespace golang::runtime
         return elem;
     }
 
-    void mapdelete(maptype* t, hmap* h, unsafe::Pointer key)
+    void mapdelete(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(raceenabled && h != nullptr)
         {
@@ -990,7 +990,7 @@ namespace golang::runtime
         h->flags &^= hashWriting;
     }
 
-    void mapiterinit(maptype* t, hmap* h, hiter* it)
+    void mapiterinit(struct maptype* t, struct hmap* h, struct hiter* it)
     {
         if(raceenabled && h != nullptr)
         {
@@ -1026,7 +1026,7 @@ namespace golang::runtime
         mapiternext(it);
     }
 
-    void mapiternext(hiter* it)
+    void mapiternext(struct hiter* it)
     {
         auto h = it->h;
         if(raceenabled)
@@ -1143,7 +1143,7 @@ namespace golang::runtime
         goto next;
     }
 
-    void mapclear(maptype* t, hmap* h)
+    void mapclear(struct maptype* t, struct hmap* h)
     {
         if(raceenabled && h != nullptr)
         {
@@ -1201,7 +1201,7 @@ namespace golang::runtime
         h->flags &^= hashWriting;
     }
 
-    void hashGrow(maptype* t, hmap* h)
+    void hashGrow(struct maptype* t, struct hmap* h)
     {
         auto bigger = uint8_t(1);
         if(! overLoadFactor(h->count + 1, h->B))
@@ -1280,7 +1280,7 @@ namespace golang::runtime
         return noldbuckets(gocpp::recv(h)) - 1;
     }
 
-    void growWork(maptype* t, hmap* h, uintptr_t bucket)
+    void growWork(struct maptype* t, struct hmap* h, uintptr_t bucket)
     {
         evacuate(t, h, bucket & oldbucketmask(gocpp::recv(h)));
         if(growing(gocpp::recv(h)))
@@ -1289,7 +1289,7 @@ namespace golang::runtime
         }
     }
 
-    bool bucketEvacuated(maptype* t, hmap* h, uintptr_t bucket)
+    bool bucketEvacuated(struct maptype* t, struct hmap* h, uintptr_t bucket)
     {
         auto b = (bmap*)(add(h->oldbuckets, bucket * uintptr_t(t->BucketSize)));
         return evacuated(b);
@@ -1333,7 +1333,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void evacuate(maptype* t, hmap* h, uintptr_t oldbucket)
+    void evacuate(struct maptype* t, struct hmap* h, uintptr_t oldbucket)
     {
         auto b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
         auto newbit = noldbuckets(gocpp::recv(h));
@@ -1438,7 +1438,7 @@ namespace golang::runtime
         }
     }
 
-    void advanceEvacuationMark(hmap* h, maptype* t, uintptr_t newbit)
+    void advanceEvacuationMark(struct hmap* h, struct maptype* t, uintptr_t newbit)
     {
         h->nevacuate++;
         auto stop = h->nevacuate + 1024;
@@ -1461,7 +1461,7 @@ namespace golang::runtime
         }
     }
 
-    hmap* reflect_makemap(maptype* t, int cap)
+    struct hmap* reflect_makemap(struct maptype* t, int cap)
     {
         if(t->Key->Equal == nullptr)
         {
@@ -1506,7 +1506,7 @@ namespace golang::runtime
         return makemap(t, cap, nullptr);
     }
 
-    unsafe::Pointer reflect_mapaccess(maptype* t, hmap* h, unsafe::Pointer key)
+    unsafe::Pointer reflect_mapaccess(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         auto [elem, ok] = mapaccess2(t, h, key);
         if(! ok)
@@ -1516,7 +1516,7 @@ namespace golang::runtime
         return elem;
     }
 
-    unsafe::Pointer reflect_mapaccess_faststr(maptype* t, hmap* h, std::string key)
+    unsafe::Pointer reflect_mapaccess_faststr(struct maptype* t, struct hmap* h, std::string key)
     {
         auto [elem, ok] = mapaccess2_faststr(t, h, key);
         if(! ok)
@@ -1526,49 +1526,49 @@ namespace golang::runtime
         return elem;
     }
 
-    void reflect_mapassign(maptype* t, hmap* h, unsafe::Pointer key, unsafe::Pointer elem)
+    void reflect_mapassign(struct maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer elem)
     {
         auto p = mapassign(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
-    void reflect_mapassign_faststr(maptype* t, hmap* h, std::string key, unsafe::Pointer elem)
+    void reflect_mapassign_faststr(struct maptype* t, struct hmap* h, std::string key, unsafe::Pointer elem)
     {
         auto p = mapassign_faststr(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
-    void reflect_mapdelete(maptype* t, hmap* h, unsafe::Pointer key)
+    void reflect_mapdelete(struct maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         mapdelete(t, h, key);
     }
 
-    void reflect_mapdelete_faststr(maptype* t, hmap* h, std::string key)
+    void reflect_mapdelete_faststr(struct maptype* t, struct hmap* h, std::string key)
     {
         mapdelete_faststr(t, h, key);
     }
 
-    void reflect_mapiterinit(maptype* t, hmap* h, hiter* it)
+    void reflect_mapiterinit(struct maptype* t, struct hmap* h, struct hiter* it)
     {
         mapiterinit(t, h, it);
     }
 
-    void reflect_mapiternext(hiter* it)
+    void reflect_mapiternext(struct hiter* it)
     {
         mapiternext(it);
     }
 
-    unsafe::Pointer reflect_mapiterkey(hiter* it)
+    unsafe::Pointer reflect_mapiterkey(struct hiter* it)
     {
         return it->key;
     }
 
-    unsafe::Pointer reflect_mapiterelem(hiter* it)
+    unsafe::Pointer reflect_mapiterelem(struct hiter* it)
     {
         return it->elem;
     }
 
-    int reflect_maplen(hmap* h)
+    int reflect_maplen(struct hmap* h)
     {
         if(h == nullptr)
         {
@@ -1582,12 +1582,12 @@ namespace golang::runtime
         return h->count;
     }
 
-    void reflect_mapclear(maptype* t, hmap* h)
+    void reflect_mapclear(struct maptype* t, struct hmap* h)
     {
         mapclear(t, h);
     }
 
-    int reflectlite_maplen(hmap* h)
+    int reflectlite_maplen(struct hmap* h)
     {
         if(h == nullptr)
         {
@@ -1612,7 +1612,7 @@ namespace golang::runtime
         return m;
     }
 
-    std::tuple<bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src)
+    std::tuple<struct bmap*, int> moveToBmap(struct maptype* t, struct hmap* h, struct bmap* dst, int pos, struct bmap* src)
     {
         for(auto i = 0; i < bucketCnt; i++)
         {
@@ -1669,7 +1669,7 @@ namespace golang::runtime
         return {dst, pos};
     }
 
-    hmap* mapclone2(maptype* t, hmap* src)
+    struct hmap* mapclone2(struct maptype* t, struct hmap* src)
     {
         auto dst = makemap(t, src->count, nullptr);
         dst->hash0 = src->hash0;
@@ -1815,7 +1815,7 @@ namespace golang::runtime
         return;
     }
 
-    void copyKeys(maptype* t, hmap* h, bmap* b, slice* s, uint8_t offset)
+    void copyKeys(struct maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset)
     {
         for(; b != nullptr; )
         {
@@ -1888,7 +1888,7 @@ namespace golang::runtime
         return;
     }
 
-    void copyValues(maptype* t, hmap* h, bmap* b, slice* s, uint8_t offset)
+    void copyValues(struct maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset)
     {
         for(; b != nullptr; )
         {

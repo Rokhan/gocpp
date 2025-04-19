@@ -49,7 +49,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    Ticker* NewTicker(Duration d)
+    struct Ticker* NewTicker(Duration d)
     {
         if(d <= 0)
         {

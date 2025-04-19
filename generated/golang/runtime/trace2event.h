@@ -49,7 +49,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceEventWriter& value);
-    traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus);
+    struct traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus);
     void commit(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
 
     template<typename... Args>
@@ -58,19 +58,19 @@ namespace golang::runtime
         return commit(e, ev, gocpp::ToSlice<traceArg>(args...));
     }
 
-    traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
+    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
 
     template<typename... Args>
-    traceEventWriter write(struct traceEventWriter e, traceEv ev, Args... args)
+    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, Args... args)
     {
         return write(e, ev, gocpp::ToSlice<traceArg>(args...));
     }
 
     void end(struct traceEventWriter e);
-    traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args);
+    struct traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args);
 
     template<typename... Args>
-    traceWriter event(struct traceWriter w, traceEv ev, Args... args)
+    struct traceWriter event(struct traceWriter w, traceEv ev, Args... args)
     {
         return event(w, ev, gocpp::ToSlice<traceArg>(args...));
     }

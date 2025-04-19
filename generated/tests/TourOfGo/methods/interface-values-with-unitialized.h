@@ -76,6 +76,6 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct T& value);
     void M(struct T* t);
     void main();
-    void describe(I i);
+    void describe(struct I i);
 }
 

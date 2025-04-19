@@ -12,7 +12,7 @@
 
 namespace golang::syscall
 {
-    std::tuple<std::string, gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
+    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
     struct UserInfo10
     {
         uint16_t* Name;
@@ -47,12 +47,12 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
-    std::tuple<SID*, gocpp::error> StringToSid(std::string s);
-    std::tuple<SID*, std::string, uint32_t, gocpp::error> LookupSID(std::string system, std::string account);
-    std::tuple<std::string, gocpp::error> String(struct SID* sid);
+    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
+    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
+    std::tuple<std::string, struct gocpp::error> String(struct SID* sid);
     int Len(struct SID* sid);
-    std::tuple<SID*, gocpp::error> Copy(struct SID* sid);
-    std::tuple<std::string, std::string, uint32_t, gocpp::error> LookupAccount(struct SID* sid, std::string system);
+    std::tuple<struct SID*, struct gocpp::error> Copy(struct SID* sid);
+    std::tuple<std::string, std::string, uint32_t, struct gocpp::error> LookupAccount(struct SID* sid, std::string system);
     struct SIDAndAttributes
     {
         SID* Sid;
@@ -102,11 +102,11 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
-    std::tuple<Token, gocpp::error> OpenCurrentProcessToken();
-    gocpp::error Close(Token t);
-    std::tuple<unsafe::Pointer, gocpp::error> getInfo(Token t, uint32_t go_class, int initSize);
-    std::tuple<Tokenuser*, gocpp::error> GetTokenUser(Token t);
-    std::tuple<Tokenprimarygroup*, gocpp::error> GetTokenPrimaryGroup(Token t);
-    std::tuple<std::string, gocpp::error> GetUserProfileDirectory(Token t);
+    std::tuple<Token, struct gocpp::error> OpenCurrentProcessToken();
+    struct gocpp::error Close(Token t);
+    std::tuple<unsafe::Pointer, struct gocpp::error> getInfo(Token t, uint32_t go_class, int initSize);
+    std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(Token t);
+    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(Token t);
+    std::tuple<std::string, struct gocpp::error> GetUserProfileDirectory(Token t);
 }
 

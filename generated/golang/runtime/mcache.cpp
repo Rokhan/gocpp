@@ -146,7 +146,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gclink* ptr(gclinkptr p)
+    struct gclink* ptr(gclinkptr p)
     {
         return (gclink*)(unsafe::Pointer(p));
     }
@@ -184,7 +184,7 @@ namespace golang::runtime
     }
 
     mspan emptymspan;
-    mcache* allocmcache()
+    struct mcache* allocmcache()
     {
         mcache* c = {};
         systemstack([=]() mutable -> void
@@ -202,7 +202,7 @@ namespace golang::runtime
         return c;
     }
 
-    void freemcache(mcache* c)
+    void freemcache(struct mcache* c)
     {
         systemstack([=]() mutable -> void
         {
@@ -214,7 +214,7 @@ namespace golang::runtime
         });
     }
 
-    mcache* getMCache(m* mp)
+    struct mcache* getMCache(struct m* mp)
     {
         auto pp = ptr(gocpp::recv(mp->p));
         mcache* c = {};
@@ -273,7 +273,7 @@ namespace golang::runtime
         c->alloc[spc] = s;
     }
 
-    mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan)
+    struct mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {

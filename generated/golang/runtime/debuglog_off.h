@@ -30,7 +30,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogPerM& value);
-    dlogger* getCachedDlogger();
-    bool putCachedDlogger(dlogger* l);
+    struct dlogger* getCachedDlogger();
+    bool putCachedDlogger(struct dlogger* l);
 }
 

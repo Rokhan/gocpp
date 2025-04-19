@@ -37,10 +37,12 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/trace2.h"
 #include "golang/runtime/trace2buf.h"
 // #include "golang/runtime/trace2map.h"  [Ignored, known errors]
 // #include "golang/runtime/trace2region.h"  [Ignored, known errors]
@@ -81,7 +83,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
+    struct traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
     {
         auto w = writer(gocpp::recv(tl));
         if(auto pp = ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! statusWasTraced(gocpp::recv(pp->trace), tl.gen) && acquireStatus(gocpp::recv(pp->trace), tl.gen))
@@ -101,7 +103,7 @@ namespace golang::runtime
         end(gocpp::recv(e));
     }
 
-    traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
+    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
     {
         e.w = event(gocpp::recv(e.w), ev, args);
         return e;
@@ -112,7 +114,7 @@ namespace golang::runtime
         end(gocpp::recv(e.w));
     }
 
-    traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
+    struct traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
     {
         std::tie(w, gocpp_id_0) = ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();
@@ -124,7 +126,7 @@ namespace golang::runtime
         w.traceBuf->lastTime = ts;
         unsigned char(gocpp::recv(w), unsigned char(ev));
         varint(gocpp::recv(w), tsDiff);
-        for(auto [_, arg] : args)
+        for(auto [gocpp_ignored, arg] : args)
         {
             varint(gocpp::recv(w), uint64_t(arg));
         }

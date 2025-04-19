@@ -12,11 +12,14 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/goarch/goarch.h"
+#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
+// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/runtime2.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 #include "golang/unsafe/unsafe.h"
 
@@ -89,7 +92,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n)
+    struct notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n)
     {
         n = alignUp(n, goarch::PtrSize);
         if(a->head == nullptr || a->off + n > uintptr_t(len(a->head->data)))

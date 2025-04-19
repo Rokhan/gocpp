@@ -22,7 +22,7 @@ namespace golang::adler32
         *d = 1;
     }
 
-    hash::Hash32 New()
+    struct hash::Hash32 New()
     {
         auto d = go_new(digest);
         Reset(gocpp::recv(d));
@@ -40,7 +40,7 @@ namespace golang::adler32
     }
 
     std::string magic = "adl\x01";
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -48,7 +48,7 @@ namespace golang::adler32
         return {b, nullptr};
     }
 
-    gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -95,7 +95,7 @@ namespace golang::adler32
                 s2 += s1;
                 p = p.make_slice(4);
             }
-            for(auto [_, x] : p)
+            for(auto [gocpp_ignored, x] : p)
             {
                 s1 += uint32_t(x);
                 s2 += s1;
@@ -107,10 +107,10 @@ namespace golang::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int nn;
-        gocpp::error err;
+        struct gocpp::error err;
         *d = update(*d, p);
         return {len(p), nullptr};
     }

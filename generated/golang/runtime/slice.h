@@ -53,12 +53,12 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
     void panicmakeslicelen();
     void panicmakeslicecap();
-    unsafe::Pointer makeslicecopy(_type* et, int tolen, int fromlen, unsafe::Pointer from);
-    unsafe::Pointer makeslice(_type* et, int len, int cap);
-    unsafe::Pointer makeslice64(_type* et, int64_t len64, int64_t cap64);
-    slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, _type* et);
+    unsafe::Pointer makeslicecopy(struct _type* et, int tolen, int fromlen, unsafe::Pointer from);
+    unsafe::Pointer makeslice(struct _type* et, int len, int cap);
+    unsafe::Pointer makeslice64(struct _type* et, int64_t len64, int64_t cap64);
+    struct slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, struct _type* et);
     int nextslicecap(int newLen, int oldCap);
-    slice reflect_growslice(_type* et, slice old, int num);
+    struct slice reflect_growslice(struct _type* et, struct slice old, int num);
     bool isPowerOfTwo(uintptr_t x);
     int slicecopy(unsafe::Pointer toPtr, int toLen, unsafe::Pointer fromPtr, int fromLen, uintptr_t width);
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);

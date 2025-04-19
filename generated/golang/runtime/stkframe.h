@@ -62,8 +62,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
     uintptr_t argBytes(struct stkframe* frame);
-    std::tuple<bitvector, bool> argMapInternal(struct stkframe* frame);
-    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug);
+    std::tuple<struct bitvector, bool> argMapInternal(struct stkframe* frame);
+    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug);
     void stkobjinit();
 }
 

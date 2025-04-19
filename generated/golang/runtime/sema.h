@@ -51,7 +51,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    semaRoot* rootFor(semTable* t, uint32_t* addr);
+    struct semaRoot* rootFor(semTable* t, uint32_t* addr);
     void sync_runtime_Semacquire(uint32_t* addr);
     void poll_runtime_Semacquire(uint32_t* addr);
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
@@ -59,16 +59,16 @@ namespace golang::runtime
     void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes);
     void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes);
     void poll_runtime_Semrelease(uint32_t* addr);
-    void readyWithTime(sudog* s, int traceskip);
+    void readyWithTime(struct sudog* s, int traceskip);
     void semacquire(uint32_t* addr);
     void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
     void semrelease(uint32_t* addr);
     void semrelease1(uint32_t* addr, bool handoff, int skipframes);
     bool cansemacquire(uint32_t* addr);
-    void queue(struct semaRoot* root, uint32_t* addr, sudog* s, bool lifo);
-    std::tuple<sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr);
-    void rotateLeft(struct semaRoot* root, sudog* x);
-    void rotateRight(struct semaRoot* root, sudog* y);
+    void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
+    std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr);
+    void rotateLeft(struct semaRoot* root, struct sudog* x);
+    void rotateRight(struct semaRoot* root, struct sudog* y);
     struct notifyList
     {
         atomic::Uint32 wait;
@@ -90,10 +90,10 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
     bool less(uint32_t a, uint32_t b);
-    uint32_t notifyListAdd(notifyList* l);
-    void notifyListWait(notifyList* l, uint32_t t);
-    void notifyListNotifyAll(notifyList* l);
-    void notifyListNotifyOne(notifyList* l);
+    uint32_t notifyListAdd(struct notifyList* l);
+    void notifyListWait(struct notifyList* l, uint32_t t);
+    void notifyListNotifyAll(struct notifyList* l);
+    void notifyListNotifyOne(struct notifyList* l);
     void notifyListCheck(uintptr_t sz);
     int64_t sync_nanotime();
 }

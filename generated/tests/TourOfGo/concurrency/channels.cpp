@@ -18,7 +18,7 @@ namespace golang::main
     void sum(gocpp::slice<int> s, gocpp::channel<int> c)
     {
         auto sum = 0;
-        for(auto [_, v] : s)
+        for(auto [gocpp_ignored, v] : s)
         {
             sum += v;
         }

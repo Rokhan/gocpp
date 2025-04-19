@@ -232,19 +232,19 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
 
     template<typename T>
-    T* Load(struct Pointer<T>* p);
+    T* Load(Pointer<T>* p);
 
     template<typename T>
-    void StoreNoWB(struct Pointer<T>* p, T* value);
+    void StoreNoWB(Pointer<T>* p, T* value);
 
     template<typename T>
-    void Store(struct Pointer<T>* p, T* value);
+    void Store(Pointer<T>* p, T* value);
 
     template<typename T>
-    bool CompareAndSwapNoWB(struct Pointer<T>* p, T* old, T* go_new);
+    bool CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new);
 
     template<typename T>
-    bool CompareAndSwap(struct Pointer<T>* p, T* old, T* go_new);
+    bool CompareAndSwap(Pointer<T>* p, T* old, T* go_new);
     struct noCopy
     {
 

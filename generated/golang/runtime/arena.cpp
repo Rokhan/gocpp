@@ -53,6 +53,7 @@
 #include "golang/runtime/mstats.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
 // #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
@@ -248,10 +249,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    userArena* newUserArena()
+    struct userArena* newUserArena()
     {
         auto a = go_new(userArena);
-        SetFinalizer(a, [=](userArena* a) mutable -> void
+        SetFinalizer(a, [=](struct userArena* a) mutable -> void
         {
             free(gocpp::recv(a));
         });
@@ -259,7 +260,7 @@ namespace golang::runtime
         return a;
     }
 
-    unsafe::Pointer go_new(struct userArena* a, _type* typ)
+    unsafe::Pointer go_new(struct userArena* a, struct _type* typ)
     {
         return alloc(gocpp::recv(a), typ, - 1);
     }
@@ -325,7 +326,7 @@ namespace golang::runtime
         a->refs = nullptr;
     }
 
-    unsafe::Pointer alloc(struct userArena* a, _type* typ, int cap)
+    unsafe::Pointer alloc(struct userArena* a, struct _type* typ, int cap)
     {
         auto s = a->active;
         unsafe::Pointer x = {};
@@ -341,7 +342,7 @@ namespace golang::runtime
         return x;
     }
 
-    mspan* refill(struct userArena* a)
+    struct mspan* refill(struct userArena* a)
     {
         auto s = a->active;
         if(s != nullptr)
@@ -454,7 +455,7 @@ namespace golang::runtime
 
 
     gocpp_id_0 userArenaState;
-    unsafe::Pointer userArenaNextFree(struct mspan* s, _type* typ, int cap)
+    unsafe::Pointer userArenaNextFree(struct mspan* s, struct _type* typ, int cap)
     {
         auto size = typ->Size_;
         if(cap > 0)
@@ -544,7 +545,7 @@ namespace golang::runtime
         return ptr;
     }
 
-    void userArenaHeapBitsSetSliceType(_type* typ, int n, unsafe::Pointer ptr, mspan* s)
+    void userArenaHeapBitsSetSliceType(struct _type* typ, int n, unsafe::Pointer ptr, struct mspan* s)
     {
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
         if(overflow || n < 0 || mem > maxAlloc)
@@ -557,7 +558,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<unsafe::Pointer, mspan*> newUserArenaChunk()
+    std::tuple<unsafe::Pointer, struct mspan*> newUserArenaChunk()
     {
         if(gcphase == _GCmarktermination)
         {
@@ -697,7 +698,7 @@ namespace golang::runtime
         return s->isUserArenaChunk;
     }
 
-    void freeUserArenaChunk(mspan* s, unsafe::Pointer x)
+    void freeUserArenaChunk(struct mspan* s, unsafe::Pointer x)
     {
         if(! s->isUserArenaChunk)
         {
@@ -727,7 +728,7 @@ namespace golang::runtime
             userArenaState.fault = nullptr;
             unlock(& userArenaState.lock);
             setUserArenaChunkToFault(gocpp::recv(s));
-            for(auto [_, lc] : faultList)
+            for(auto [gocpp_ignored, lc] : faultList)
             {
                 setUserArenaChunkToFault(gocpp::recv(lc.mspan));
             }
@@ -743,7 +744,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    mspan* allocUserArenaChunk(struct mheap* h)
+    struct mspan* allocUserArenaChunk(struct mheap* h)
     {
         mspan* s = {};
         uintptr_t base = {};

@@ -39,19 +39,19 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    hash::Hash32 New(Table* tab);
-    hash::Hash32 NewIEEE();
+    struct hash::Hash32 New(Table* tab);
+    struct hash::Hash32 NewIEEE();
     int Size(struct digest* d);
     int BlockSize(struct digest* d);
     void Reset(struct digest* d);
     extern std::string magic;
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct digest* d);
-    gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct digest* d);
+    struct gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
     uint32_t Update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p);
-    std::tuple<int, gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p);
+    std::tuple<int, struct gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p);
     uint32_t Sum32(struct digest* d);
     gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in);
     uint32_t Checksum(gocpp::slice<unsigned char> data, Table* tab);

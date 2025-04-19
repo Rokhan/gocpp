@@ -646,7 +646,7 @@ namespace golang::cpu
                 break;
             }
         }
-        for(auto [_, o] : options)
+        for(auto [gocpp_ignored, o] : options)
         {
             if(! o.Specified)
             {

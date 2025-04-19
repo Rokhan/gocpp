@@ -57,12 +57,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct userArena& value);
-    userArena* newUserArena();
-    unsafe::Pointer go_new(struct userArena* a, _type* typ);
+    struct userArena* newUserArena();
+    unsafe::Pointer go_new(struct userArena* a, struct _type* typ);
     /* void slice(struct userArena* a, go_any sl, int cap); [Ignored, known name conflict] */ 
     void free(struct userArena* a);
-    unsafe::Pointer alloc(struct userArena* a, _type* typ, int cap);
-    mspan* refill(struct userArena* a);
+    unsafe::Pointer alloc(struct userArena* a, struct _type* typ, int cap);
+    struct mspan* refill(struct userArena* a);
     struct liveUserArenaChunk
     {
         unsafe::Pointer x;
@@ -79,13 +79,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
-    unsafe::Pointer userArenaNextFree(struct mspan* s, _type* typ, int cap);
-    void userArenaHeapBitsSetSliceType(_type* typ, int n, unsafe::Pointer ptr, mspan* s);
-    std::tuple<unsafe::Pointer, mspan*> newUserArenaChunk();
+    unsafe::Pointer userArenaNextFree(struct mspan* s, struct _type* typ, int cap);
+    void userArenaHeapBitsSetSliceType(struct _type* typ, int n, unsafe::Pointer ptr, struct mspan* s);
+    std::tuple<unsafe::Pointer, struct mspan*> newUserArenaChunk();
     bool isUnusedUserArenaChunk(struct mspan* s);
     void setUserArenaChunkToFault(struct mspan* s);
     bool inUserArenaChunk(uintptr_t p);
-    void freeUserArenaChunk(mspan* s, unsafe::Pointer x);
-    mspan* allocUserArenaChunk(struct mheap* h);
+    void freeUserArenaChunk(struct mspan* s, unsafe::Pointer x);
+    struct mspan* allocUserArenaChunk(struct mheap* h);
 }
 

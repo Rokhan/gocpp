@@ -39,10 +39,13 @@
 #include "golang/runtime/mstats.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
+#include "golang/runtime/plugin.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+#include "golang/runtime/stack.h"
 // #include "golang/runtime/stubs.h"  [Ignored, known errors]
 // #include "golang/runtime/symtab.h"  [Ignored, known errors]
 // #include "golang/runtime/time.h"  [Ignored, known errors]
@@ -155,7 +158,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& finlock, getLockRank(& finlock));
     }
 
-    void queuefinalizer(unsafe::Pointer p, funcval* fn, uintptr_t nret, _type* fint, ptrtype* ot)
+    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, struct _type* fint, struct ptrtype* ot)
     {
         if(gcphase != _GCoff)
         {
@@ -209,7 +212,7 @@ namespace golang::runtime
         }
     }
 
-    g* wakefing()
+    struct g* wakefing()
     {
         if(auto ok = CompareAndSwap(gocpp::recv(fingStatus), fingCreated | fingWait | fingWake, fingCreated); ok)
         {
@@ -226,7 +229,7 @@ namespace golang::runtime
         }
     }
 
-    bool finalizercommit(g* gp, unsafe::Pointer lock)
+    bool finalizercommit(struct g* gp, unsafe::Pointer lock)
     {
         unlock((mutex*)(lock));
         Or(gocpp::recv(fingStatus), fingWait);
@@ -462,7 +465,7 @@ namespace golang::runtime
         go_throw("runtime.SetFinalizer: cannot pass " + string(gocpp::recv(toRType(etyp))) + " to finalizer " + string(gocpp::recv(toRType(ftyp))));
         okarg:
         auto nret = uintptr_t(0);
-        for(auto [_, t] : OutSlice(gocpp::recv(ft)))
+        for(auto [gocpp_ignored, t] : OutSlice(gocpp::recv(ft)))
         {
             nret = alignUp(nret, uintptr_t(t->Align_)) + t->Size_;
         }

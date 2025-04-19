@@ -245,13 +245,13 @@ namespace golang::runtime
         c->rbp = uint64_t(x);
     }
 
-    void prepareContextForSigResume(context* c)
+    void prepareContextForSigResume(struct context* c)
     {
         c->r8 = c->rsp;
         c->r9 = c->rip;
     }
 
-    void dumpregs(context* r)
+    void dumpregs(struct context* r)
     {
         print("rax     ", hex(r->rax), "\n");
         print("rbx     ", hex(r->rbx), "\n");
@@ -326,7 +326,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    context* ctx(struct _DISPATCHER_CONTEXT* c)
+    struct context* ctx(struct _DISPATCHER_CONTEXT* c)
     {
         return c->context;
     }

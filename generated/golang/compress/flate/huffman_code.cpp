@@ -170,17 +170,17 @@ namespace golang::flate
         h->code = code;
     }
 
-    literalNode maxNode()
+    struct literalNode maxNode()
     {
         return literalNode {math::MaxUint16, math::MaxInt32};
     }
 
-    huffmanEncoder* newHuffmanEncoder(int size)
+    struct huffmanEncoder* newHuffmanEncoder(int size)
     {
         return gocpp::InitPtr<huffmanEncoder>([](huffmanEncoder& x) { x.codes = gocpp::make(gocpp::Tag<gocpp::slice<hcode>>(), size); });
     }
 
-    huffmanEncoder* generateFixedLiteralEncoding()
+    struct huffmanEncoder* generateFixedLiteralEncoding()
     {
         auto h = newHuffmanEncoder(maxNumLit);
         auto codes = h->codes;
@@ -220,7 +220,7 @@ namespace golang::flate
         return h;
     }
 
-    huffmanEncoder* generateFixedOffsetEncoding()
+    struct huffmanEncoder* generateFixedOffsetEncoding()
     {
         auto h = newHuffmanEncoder(30);
         auto codes = h->codes;
@@ -340,7 +340,7 @@ namespace golang::flate
             }
             auto chunk = list.make_slice(len(list) - int(bits));
             sort(gocpp::recv(h->lns), chunk);
-            for(auto [_, node] : chunk)
+            for(auto [gocpp_ignored, node] : chunk)
             {
                 h->codes[node.literal] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(code, uint8_t(n)); x.len = uint16_t(n); });
                 code++;

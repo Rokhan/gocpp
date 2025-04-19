@@ -50,7 +50,7 @@ namespace golang::runtime
     bool hasOverflow(struct profBuf* b);
     std::tuple<uint32_t, uint64_t> takeOverflow(struct profBuf* b);
     void incrementOverflow(struct profBuf* b, int64_t now);
-    profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
+    struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
     bool canWriteRecord(struct profBuf* b, int nstk);
     bool canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2);
     void write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);

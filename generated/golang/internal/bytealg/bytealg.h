@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/bytealg.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
 

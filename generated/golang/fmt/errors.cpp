@@ -20,7 +20,7 @@
 
 namespace golang::fmt
 {
-    gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
+    struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;
@@ -105,7 +105,7 @@ namespace golang::fmt
         return e->msg;
     }
 
-    gocpp::error Unwrap(struct wrapError* e)
+    struct gocpp::error Unwrap(struct wrapError* e)
     {
         return e->err;
     }

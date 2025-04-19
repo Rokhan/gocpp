@@ -35,7 +35,7 @@
 namespace golang::runtime
 {
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x);
-    g* getg();
+    struct g* getg();
     void mcall(std::function<void (g*)> fn);
     void systemstack(std::function<void ()> fn);
     void badsystemstack();
@@ -49,11 +49,11 @@ namespace golang::runtime
     template<typename T>
     T* noEscapePtr(T* p);
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt);
-    void gogo(gobuf* buf);
+    void gogo(struct gobuf* buf);
     void asminit();
-    void setg(g* gg);
+    void setg(struct g* gg);
     void breakpoint();
-    void reflectcall(_type* stackArgsType, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
+    void reflectcall(struct _type* stackArgsType, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
     void procyield(uint32_t cycles);
     struct neverCallThisFunction
     {
@@ -80,33 +80,33 @@ namespace golang::runtime
     void morestack_noctxt();
     void rt0_go();
     void return0();
-    void call16(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call32(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call64(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call128(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call256(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call512(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call1024(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call2048(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call4096(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call8192(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call16384(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call32768(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call65536(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call131072(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call262144(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call524288(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call1048576(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call2097152(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call4194304(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call8388608(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call16777216(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call33554432(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call67108864(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call134217728(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call268435456(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call536870912(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void call1073741824(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
+    void call16(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call32(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call64(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call128(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call256(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call512(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call1024(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call2048(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call4096(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call8192(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call16384(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call32768(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call65536(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call131072(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call262144(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call524288(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call1048576(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call2097152(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call4194304(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call8388608(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call16777216(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call33554432(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call67108864(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call134217728(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call268435456(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call536870912(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
+    void call1073741824(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, struct abi::RegArgs* regArgs);
     void systemstack_switch();
     uintptr_t alignUp(uintptr_t n, uintptr_t a);
     uintptr_t alignDown(uintptr_t n, uintptr_t a);

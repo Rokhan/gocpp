@@ -26,7 +26,7 @@
 
 namespace golang::bisect
 {
-    std::tuple<Matcher*, gocpp::error> New(std::string pattern)
+    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern)
     {
         if(pattern == "")
         {
@@ -272,12 +272,12 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    dedup* Load(struct atomicPointerDedup* p)
+    struct dedup* Load(struct atomicPointerDedup* p)
     {
         return (dedup*)(atomic::LoadPointer(& p->p));
     }
 
-    bool CompareAndSwap(struct atomicPointerDedup* p, dedup* old, dedup* go_new)
+    bool CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
     {
         return atomic::CompareAndSwapPointer(& p->p, unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
@@ -353,7 +353,7 @@ namespace golang::bisect
         return false;
     }
 
-    bool FileLine(struct Matcher* m, Writer w, std::string file, int line)
+    bool FileLine(struct Matcher* m, struct Writer w, std::string file, int line)
     {
         if(m == nullptr)
         {
@@ -362,7 +362,7 @@ namespace golang::bisect
         return fileLine(gocpp::recv(m), w, file, line);
     }
 
-    bool fileLine(struct Matcher* m, Writer w, std::string file, int line)
+    bool fileLine(struct Matcher* m, struct Writer w, std::string file, int line)
     {
         auto h = Hash(file, line);
         if(ShouldPrint(gocpp::recv(m), h))
@@ -379,7 +379,7 @@ namespace golang::bisect
         return ShouldEnable(gocpp::recv(m), h);
     }
 
-    gocpp::error printFileLine(Writer w, uint64_t h, std::string file, int line)
+    struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line)
     {
         auto markerLen = 40;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, markerLen + len(file) + 24);
@@ -412,7 +412,7 @@ namespace golang::bisect
         return dst;
     }
 
-    bool Stack(struct Matcher* m, Writer w)
+    bool Stack(struct Matcher* m, struct Writer w)
     {
         if(m == nullptr)
         {
@@ -421,7 +421,7 @@ namespace golang::bisect
         return stack(gocpp::recv(m), w);
     }
 
-    bool stack(struct Matcher* m, Writer w)
+    bool stack(struct Matcher* m, struct Writer w)
     {
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
@@ -499,17 +499,17 @@ namespace golang::bisect
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
+    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
     {
         return Write(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
     {
         return self.ptr->value->vWrite();
     }
 
-    std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
+    std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
     {
         return self.obj.value->vWrite();
     }
@@ -519,7 +519,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    gocpp::error PrintMarker(Writer w, uint64_t h)
+    struct gocpp::error PrintMarker(struct Writer w, uint64_t h)
     {
         gocpp::array<unsigned char, 50> buf = {};
         auto b = AppendMarker(buf.make_slice(0, 0), h);
@@ -528,7 +528,7 @@ namespace golang::bisect
         return err;
     }
 
-    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk)
+    struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk)
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 2048);
         gocpp::array<unsigned char, 100> prefixBuf = {};
@@ -724,7 +724,7 @@ namespace golang::bisect
     uint64_t Hash(gocpp::slice<go_any> data)
     {
         auto h = offset64;
-        for(auto [_, v] : data)
+        for(auto [gocpp_ignored, v] : data)
         {
             //Go type switch emulation
             {
@@ -813,7 +813,7 @@ namespace golang::bisect
                     case 9:
                     {
                         gocpp::slice<std::string> v = gocpp::any_cast<gocpp::slice<std::string>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvString(h, x);
                         }
@@ -822,7 +822,7 @@ namespace golang::bisect
                     case 10:
                     {
                         gocpp::slice<unsigned char> v = gocpp::any_cast<gocpp::slice<unsigned char>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnv(h, x);
                         }
@@ -831,7 +831,7 @@ namespace golang::bisect
                     case 11:
                     {
                         gocpp::slice<int> v = gocpp::any_cast<gocpp::slice<int>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
                         }
@@ -840,7 +840,7 @@ namespace golang::bisect
                     case 12:
                     {
                         gocpp::slice<unsigned int> v = gocpp::any_cast<gocpp::slice<unsigned int>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
                         }
@@ -849,7 +849,7 @@ namespace golang::bisect
                     case 13:
                     {
                         gocpp::slice<int32_t> v = gocpp::any_cast<gocpp::slice<int32_t>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint32(h, uint32_t(x));
                         }
@@ -858,7 +858,7 @@ namespace golang::bisect
                     case 14:
                     {
                         gocpp::slice<uint32_t> v = gocpp::any_cast<gocpp::slice<uint32_t>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint32(h, x);
                         }
@@ -867,7 +867,7 @@ namespace golang::bisect
                     case 15:
                     {
                         gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
                         }
@@ -876,7 +876,7 @@ namespace golang::bisect
                     case 16:
                     {
                         gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, x);
                         }
@@ -885,7 +885,7 @@ namespace golang::bisect
                     case 17:
                     {
                         gocpp::slice<uintptr_t> v = gocpp::any_cast<gocpp::slice<uintptr_t>>(v);
-                        for(auto [_, x] : v)
+                        for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
                         }
@@ -1029,7 +1029,7 @@ namespace golang::bisect
             }
         }
         auto ch = offset64;
-        for(auto [_, x] : cache)
+        for(auto [gocpp_ignored, x] : cache)
         {
             ch = fnvUint64(ch, x);
         }

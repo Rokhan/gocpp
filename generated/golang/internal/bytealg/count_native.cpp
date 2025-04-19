@@ -22,7 +22,7 @@ namespace golang::bytealg
     int countGeneric(gocpp::slice<unsigned char> b, unsigned char c)
     {
         auto n = 0;
-        for(auto [_, x] : b)
+        for(auto [gocpp_ignored, x] : b)
         {
             if(x == c)
             {

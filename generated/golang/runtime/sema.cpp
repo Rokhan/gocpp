@@ -121,7 +121,7 @@ namespace golang::runtime
     }
 
 
-    semaRoot* rootFor(semTable* t, uint32_t* addr)
+    struct semaRoot* rootFor(semTable* t, uint32_t* addr)
     {
         return & t[(uintptr_t(unsafe::Pointer(addr)) >> 3) % semTabSize].root;
     }
@@ -161,7 +161,7 @@ namespace golang::runtime
         semrelease(addr);
     }
 
-    void readyWithTime(sudog* s, int traceskip)
+    void readyWithTime(struct sudog* s, int traceskip)
     {
         if(s->releasetime != 0)
         {
@@ -300,7 +300,7 @@ namespace golang::runtime
         }
     }
 
-    void queue(struct semaRoot* root, uint32_t* addr, sudog* s, bool lifo)
+    void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
     {
         s->g = getg();
         s->elem = unsafe::Pointer(addr);
@@ -394,35 +394,35 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr)
+    std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr)
     {
-        sudog* found;
+        struct sudog* found;
         int64_t now;
         int64_t tailtime;
         auto ps = & root->treap;
         auto s = *ps;
         for(; s != nullptr; s = *ps)
         {
-            sudog* found;
+            struct sudog* found;
             int64_t now;
             int64_t tailtime;
             if(s->elem == unsafe::Pointer(addr))
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 goto Found;
             }
             if(uintptr_t(unsafe::Pointer(addr)) < uintptr_t(s->elem))
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 ps = & s->prev;
             }
             else
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 ps = & s->next;
@@ -433,14 +433,14 @@ namespace golang::runtime
         now = int64_t(0);
         if(s->acquiretime != 0)
         {
-            sudog* found;
+            struct sudog* found;
             int64_t now;
             int64_t tailtime;
             now = cputicks();
         }
         if(auto t = s->waitlink; t != nullptr)
         {
-            sudog* found;
+            struct sudog* found;
             int64_t now;
             int64_t tailtime;
             *ps = t;
@@ -449,7 +449,7 @@ namespace golang::runtime
             t->prev = s->prev;
             if(t->prev != nullptr)
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 t->prev->parent = t;
@@ -457,21 +457,21 @@ namespace golang::runtime
             t->next = s->next;
             if(t->next != nullptr)
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 t->next->parent = t;
             }
             if(t->waitlink != nullptr)
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 t->waittail = s->waittail;
             }
             else
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 t->waittail = nullptr;
@@ -479,7 +479,7 @@ namespace golang::runtime
             t->waiters = s->waiters;
             if(t->waiters > 1)
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 t->waiters--;
@@ -492,24 +492,24 @@ namespace golang::runtime
         }
         else
         {
-            sudog* found;
+            struct sudog* found;
             int64_t now;
             int64_t tailtime;
             for(; s->next != nullptr || s->prev != nullptr; )
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 if(s->next == nullptr || s->prev != nullptr && s->prev->ticket < s->next->ticket)
                 {
-                    sudog* found;
+                    struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
                     rotateRight(gocpp::recv(root), s);
                 }
                 else
                 {
-                    sudog* found;
+                    struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
                     rotateLeft(gocpp::recv(root), s);
@@ -517,19 +517,19 @@ namespace golang::runtime
             }
             if(s->parent != nullptr)
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 if(s->parent->prev == s)
                 {
-                    sudog* found;
+                    struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
                     s->parent->prev = nullptr;
                 }
                 else
                 {
-                    sudog* found;
+                    struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
                     s->parent->next = nullptr;
@@ -537,7 +537,7 @@ namespace golang::runtime
             }
             else
             {
-                sudog* found;
+                struct sudog* found;
                 int64_t now;
                 int64_t tailtime;
                 root->treap = nullptr;
@@ -552,7 +552,7 @@ namespace golang::runtime
         return {s, now, tailtime};
     }
 
-    void rotateLeft(struct semaRoot* root, sudog* x)
+    void rotateLeft(struct semaRoot* root, struct sudog* x)
     {
         auto p = x->parent;
         auto y = x->next;
@@ -584,7 +584,7 @@ namespace golang::runtime
         }
     }
 
-    void rotateRight(struct semaRoot* root, sudog* y)
+    void rotateRight(struct semaRoot* root, struct sudog* y)
     {
         auto p = y->parent;
         auto x = y->prev;
@@ -662,12 +662,12 @@ namespace golang::runtime
         return int32_t(a - b) < 0;
     }
 
-    uint32_t notifyListAdd(notifyList* l)
+    uint32_t notifyListAdd(struct notifyList* l)
     {
         return Add(gocpp::recv(l->wait), 1) - 1;
     }
 
-    void notifyListWait(notifyList* l, uint32_t t)
+    void notifyListWait(struct notifyList* l, uint32_t t)
     {
         lockWithRank(& l->lock, lockRankNotifyList);
         if(less(t, l->notify))
@@ -702,7 +702,7 @@ namespace golang::runtime
         releaseSudog(s);
     }
 
-    void notifyListNotifyAll(notifyList* l)
+    void notifyListNotifyAll(struct notifyList* l)
     {
         if(Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {
@@ -723,7 +723,7 @@ namespace golang::runtime
         }
     }
 
-    void notifyListNotifyOne(notifyList* l)
+    void notifyListNotifyOne(struct notifyList* l)
     {
         if(Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {

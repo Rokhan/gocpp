@@ -78,7 +78,7 @@ namespace golang::runtime
             return a[idx];
         }
         auto [s, b] = rawstringtmp(buf, l);
-        for(auto [_, x] : a)
+        for(auto [gocpp_ignored, x] : a)
         {
             copy(b, x);
             b = b.make_slice(len(x));
@@ -224,7 +224,7 @@ namespace golang::runtime
             a = rawruneslice(n);
         }
         n = 0;
-        for(auto [_, r] : s)
+        for(auto [gocpp_ignored, r] : s)
         {
             a[n] = r;
             n++;
@@ -248,13 +248,13 @@ namespace golang::runtime
         }
         gocpp::array<unsigned char, 4> dum = {};
         auto size1 = 0;
-        for(auto [_, r] : a)
+        for(auto [gocpp_ignored, r] : a)
         {
             size1 += encoderune(dum.make_slice(0, ), r);
         }
         auto [s, b] = rawstringtmp(buf, size1 + 3);
         auto size2 = 0;
-        for(auto [_, r] : a)
+        for(auto [gocpp_ignored, r] : a)
         {
             if(size2 >= size1)
             {
@@ -329,7 +329,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    stringStruct* stringStructOf(std::string* sp)
+    struct stringStruct* stringStructOf(std::string* sp)
     {
         return (stringStruct*)(unsafe::Pointer(sp));
     }

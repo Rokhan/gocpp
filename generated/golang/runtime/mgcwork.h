@@ -80,11 +80,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
     void checknonempty(struct workbuf* b);
     void checkempty(struct workbuf* b);
-    workbuf* getempty();
-    void putempty(workbuf* b);
-    void putfull(workbuf* b);
-    workbuf* trygetfull();
-    workbuf* handoff(workbuf* b);
+    struct workbuf* getempty();
+    void putempty(struct workbuf* b);
+    void putfull(struct workbuf* b);
+    struct workbuf* trygetfull();
+    struct workbuf* handoff(struct workbuf* b);
     void prepareFreeWorkbufs();
     bool freeSomeWbufs(bool preemptible);
 }

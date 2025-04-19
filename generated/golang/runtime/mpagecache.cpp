@@ -97,7 +97,7 @@ namespace golang::runtime
         return {c->base + uintptr_t(i * pageSize), uintptr_t(scav) * pageSize};
     }
 
-    void flush(struct pageCache* c, pageAlloc* p)
+    void flush(struct pageCache* c, struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
         if(empty(gocpp::recv(c)))
@@ -126,7 +126,7 @@ namespace golang::runtime
         *c = pageCache {};
     }
 
-    pageCache allocToCache(struct pageAlloc* p)
+    struct pageCache allocToCache(struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
         if(chunkIndex(addr(gocpp::recv(p->searchAddr))) >= p->end)

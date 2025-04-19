@@ -88,17 +88,17 @@ namespace golang::runtime
     extern gocpp::error rangeExitError;
     void panicrangeexit();
     go_any deferrangefunc();
-    _defer* badDefer();
+    struct _defer* badDefer();
     void deferprocat(std::function<void ()> fn, go_any frame);
-    _defer* deferconvert(_defer* d);
-    void deferprocStack(_defer* d);
-    _defer* newdefer();
-    void freedefer(_defer* d);
+    struct _defer* deferconvert(struct _defer* d);
+    void deferprocStack(struct _defer* d);
+    struct _defer* newdefer();
+    void freedefer(struct _defer* d);
     void freedeferfn();
     void deferreturn();
     void Goexit();
-    void preprintpanics(_panic* p);
-    void printpanics(_panic* p);
+    void preprintpanics(struct _panic* p);
+    void printpanics(struct _panic* p);
     std::tuple<uint32_t, unsafe::Pointer> readvarintUnsafe(unsafe::Pointer fd);
     struct PanicNilError
     {
@@ -123,19 +123,19 @@ namespace golang::runtime
     void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp);
     std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p);
     bool nextFrame(struct _panic* p);
-    bool initOpenCodedDefers(struct _panic* p, funcInfo fn, unsafe::Pointer varp);
+    bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp);
     go_any gorecover(uintptr_t argp);
     void sync_throw(std::string s);
     void sync_fatal(std::string s);
     void go_throw(std::string s);
     void fatal(std::string s);
-    void recovery(g* gp);
+    void recovery(struct g* gp);
     void fatalthrow(throwType t);
-    void fatalpanic(_panic* msgs);
+    void fatalpanic(struct _panic* msgs);
     bool startpanic_m();
-    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp);
+    bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);
     bool canpanic();
-    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
+    bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr);
     bool isAbortPC(uintptr_t pc);
 }
 

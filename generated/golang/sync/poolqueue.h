@@ -86,8 +86,8 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
-    void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
-    poolChainElt* loadPoolChainElt(poolChainElt** pp);
+    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
+    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
     void pushHead(struct poolChain* c, go_any val);
     std::tuple<go_any, bool> popHead(struct poolChain* c);
     std::tuple<go_any, bool> popTail(struct poolChain* c);

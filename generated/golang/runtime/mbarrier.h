@@ -15,18 +15,18 @@
 
 namespace golang::runtime
 {
-    void typedmemmove(abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void wbZero(_type* typ, unsafe::Pointer dst);
-    void wbMove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflect_typedmemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflectlite_typedmemmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflectcallmove(_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, abi::RegArgs* regs);
-    int typedslicecopy(_type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen);
-    int reflect_typedslicecopy(_type* elemType, slice dst, slice src);
-    void typedmemclr(_type* typ, unsafe::Pointer ptr);
-    void reflect_typedmemclr(_type* typ, unsafe::Pointer ptr);
-    void reflect_typedmemclrpartial(_type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size);
-    void reflect_typedarrayclear(_type* typ, unsafe::Pointer ptr, int len);
+    void typedmemmove(struct abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void wbZero(struct _type* typ, unsafe::Pointer dst);
+    void wbMove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflect_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflectlite_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflectcallmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, struct abi::RegArgs* regs);
+    int typedslicecopy(struct _type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen);
+    int reflect_typedslicecopy(struct _type* elemType, struct slice dst, struct slice src);
+    void typedmemclr(struct _type* typ, unsafe::Pointer ptr);
+    void reflect_typedmemclr(struct _type* typ, unsafe::Pointer ptr);
+    void reflect_typedmemclrpartial(struct _type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size);
+    void reflect_typedarrayclear(struct _type* typ, unsafe::Pointer ptr, int len);
     void memclrHasPointers(unsafe::Pointer ptr, uintptr_t n);
 }
 

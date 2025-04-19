@@ -13,22 +13,22 @@
 
 namespace golang::sort
 {
-    void insertionSort(Interface data, int a, int b);
-    void siftDown(Interface data, int lo, int hi, int first);
-    void heapSort(Interface data, int a, int b);
-    void pdqsort(Interface data, int a, int b, int limit);
-    std::tuple<int, bool> partition(Interface data, int a, int b, int pivot);
-    int partitionEqual(Interface data, int a, int b, int pivot);
-    bool partialInsertionSort(Interface data, int a, int b);
-    void breakPatterns(Interface data, int a, int b);
-    std::tuple<int, sortedHint> choosePivot(Interface data, int a, int b);
-    std::tuple<int, int> order2(Interface data, int a, int b, int* swaps);
-    int median(Interface data, int a, int b, int c, int* swaps);
-    int medianAdjacent(Interface data, int a, int* swaps);
-    void reverseRange(Interface data, int a, int b);
-    void swapRange(Interface data, int a, int b, int n);
-    void stable(Interface data, int n);
-    void symMerge(Interface data, int a, int m, int b);
-    void rotate(Interface data, int a, int m, int b);
+    void insertionSort(struct Interface data, int a, int b);
+    void siftDown(struct Interface data, int lo, int hi, int first);
+    void heapSort(struct Interface data, int a, int b);
+    void pdqsort(struct Interface data, int a, int b, int limit);
+    std::tuple<int, bool> partition(struct Interface data, int a, int b, int pivot);
+    int partitionEqual(struct Interface data, int a, int b, int pivot);
+    bool partialInsertionSort(struct Interface data, int a, int b);
+    void breakPatterns(struct Interface data, int a, int b);
+    std::tuple<int, sortedHint> choosePivot(struct Interface data, int a, int b);
+    std::tuple<int, int> order2(struct Interface data, int a, int b, int* swaps);
+    int median(struct Interface data, int a, int b, int c, int* swaps);
+    int medianAdjacent(struct Interface data, int a, int* swaps);
+    void reverseRange(struct Interface data, int a, int b);
+    void swapRange(struct Interface data, int a, int b, int n);
+    void stable(struct Interface data, int n);
+    void symMerge(struct Interface data, int a, int m, int b);
+    void rotate(struct Interface data, int a, int m, int b);
 }
 

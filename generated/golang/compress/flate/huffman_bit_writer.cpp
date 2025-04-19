@@ -89,12 +89,12 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    huffmanBitWriter* newHuffmanBitWriter(io::Writer w)
+    struct huffmanBitWriter* newHuffmanBitWriter(struct io::Writer w)
     {
         return gocpp::InitPtr<huffmanBitWriter>([](huffmanBitWriter& x) { x.writer = w; x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit); x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount); x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1); x.literalEncoding = newHuffmanEncoder(maxNumLit); x.codegenEncoding = newHuffmanEncoder(codegenCodeCount); x.offsetEncoding = newHuffmanEncoder(offsetCodeCount); });
     }
 
-    void reset(struct huffmanBitWriter* w, io::Writer writer)
+    void reset(struct huffmanBitWriter* w, struct io::Writer writer)
     {
         w->writer = writer;
         std::tie(w->bits, w->nbits, w->nbytes, w->err) = std::tuple{0, 0, 0, nullptr};
@@ -194,7 +194,7 @@ namespace golang::flate
         write(gocpp::recv(w), bytes);
     }
 
-    void generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc)
+    void generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc)
     {
         for(auto [i, gocpp_ignored] : w->codegenFreq)
         {
@@ -283,7 +283,7 @@ namespace golang::flate
         codegen[outIndex] = badCode;
     }
 
-    std::tuple<int, int> dynamicSize(struct huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits)
+    std::tuple<int, int> dynamicSize(struct huffmanBitWriter* w, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc, int extraBits)
     {
         int size;
         int numCodegens;
@@ -317,7 +317,7 @@ namespace golang::flate
         return {0, false};
     }
 
-    void writeCode(struct huffmanBitWriter* w, hcode c)
+    void writeCode(struct huffmanBitWriter* w, struct hcode c)
     {
         if(w->err != nullptr)
         {
@@ -523,7 +523,7 @@ namespace golang::flate
             int numOffsets;
             w->offsetFreq[i] = 0;
         }
-        for(auto [_, t] : tokens)
+        for(auto [gocpp_ignored, t] : tokens)
         {
             int numLiterals;
             int numOffsets;
@@ -571,7 +571,7 @@ namespace golang::flate
         {
             return;
         }
-        for(auto [_, t] : tokens)
+        for(auto [gocpp_ignored, t] : tokens)
         {
             if(t < matchType)
             {
@@ -637,7 +637,7 @@ namespace golang::flate
         writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
         auto encoding = w->literalEncoding->codes.make_slice(0, 257);
         auto n = w->nbytes;
-        for(auto [_, t] : input)
+        for(auto [gocpp_ignored, t] : input)
         {
             auto c = encoding[t];
             w->bits |= uint64_t(c.code) << w->nbits;
@@ -675,7 +675,7 @@ namespace golang::flate
     void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h)
     {
         h = h.make_slice(0, 256);
-        for(auto [_, t] : b)
+        for(auto [gocpp_ignored, t] : b)
         {
             h[t]++;
         }

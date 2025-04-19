@@ -132,7 +132,7 @@ namespace golang::cpu
 
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args)
     {
-        for(auto [_, arg] : args)
+        for(auto [gocpp_ignored, arg] : args)
         {
             b = append(b, unsigned char((arg >> 0)), unsigned char((arg >> 8)), unsigned char((arg >> 16)), unsigned char((arg >> 24)));
         }

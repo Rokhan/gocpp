@@ -195,7 +195,7 @@ namespace golang::runtime
         }
     }
 
-    void mrandinit(m* mp)
+    void mrandinit(struct m* mp)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)

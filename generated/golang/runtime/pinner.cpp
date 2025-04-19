@@ -13,6 +13,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/runtime/arena.h"
 #include "golang/runtime/atomic_pointer.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
@@ -28,17 +29,24 @@
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcsweep.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
@@ -102,7 +110,7 @@ namespace golang::runtime
             {
                 p->pinner = go_new(pinner);
                 p->refs = p->refStore.make_slice(0, 0);
-                SetFinalizer(p->pinner, [=](pinner* i) mutable -> void
+                SetFinalizer(p->pinner, [=](struct pinner* i) mutable -> void
                 {
                     if(len(i->refs) != 0)
                     {
@@ -357,7 +365,7 @@ namespace golang::runtime
         }
     }
 
-    pinState ofObject(struct pinnerBits* p, uintptr_t n)
+    struct pinState ofObject(struct pinnerBits* p, uintptr_t n)
     {
         auto [bytep, mask] = bitp(gocpp::recv((gcBits*)(p)), n * 2);
         auto byteVal = atomic::Load8(bytep);
@@ -369,17 +377,17 @@ namespace golang::runtime
         return divRoundUp(uintptr_t(s->nelems) * 2, 8);
     }
 
-    pinnerBits* newPinnerBits(struct mspan* s)
+    struct pinnerBits* newPinnerBits(struct mspan* s)
     {
         return (pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
 
-    pinnerBits* getPinnerBits(struct mspan* s)
+    struct pinnerBits* getPinnerBits(struct mspan* s)
     {
         return (pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
     }
 
-    void setPinnerBits(struct mspan* s, pinnerBits* p)
+    void setPinnerBits(struct mspan* s, struct pinnerBits* p)
     {
         atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
     }
@@ -393,7 +401,7 @@ namespace golang::runtime
         }
         auto hasPins = false;
         auto bytes = alignUp(pinnerBitSize(gocpp::recv(s)), 8);
-        for(auto [_, x] : unsafe::Slice((uint64_t*)(unsafe::Pointer(& p->x)), bytes / 8))
+        for(auto [gocpp_ignored, x] : unsafe::Slice((uint64_t*)(unsafe::Pointer(& p->x)), bytes / 8))
         {
             if(x != 0)
             {

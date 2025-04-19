@@ -123,7 +123,7 @@ namespace golang::godebug
         return value.PrintTo(os);
     }
 
-    Setting* New(std::string name)
+    struct Setting* New(std::string name)
     {
         return gocpp::InitPtr<Setting>([](Setting& x) { x.name = name; });
     }
@@ -182,7 +182,7 @@ namespace golang::godebug
         return v.text;
     }
 
-    setting* lookup(std::string name)
+    struct setting* lookup(std::string name)
     {
         if(auto [v, ok] = Load(gocpp::recv(cache), name); ok)
         {
@@ -311,7 +311,7 @@ namespace golang::godebug
     }
 
     runtimeStderr stderr;
-    std::tuple<int, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

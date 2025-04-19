@@ -92,7 +92,7 @@ namespace golang::time
     bool resetTimer(runtimeTimer*, int64_t)
     /* convertBlockStmt, nil block */;
 
-    void modTimer(runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    void modTimer(struct runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
     /* convertBlockStmt, nil block */;
 
     
@@ -136,7 +136,7 @@ namespace golang::time
         return stopTimer(& t->r);
     }
 
-    Timer* NewTimer(Duration d)
+    struct Timer* NewTimer(Duration d)
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
         auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.C = c; x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = sendTime; x.arg = c; }); });
@@ -176,7 +176,7 @@ namespace golang::time
         return NewTimer(d)->C;
     }
 
-    Timer* AfterFunc(Duration d, std::function<void ()> f)
+    struct Timer* AfterFunc(Duration d, std::function<void ()> f)
     {
         auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = goFunc; x.arg = f; }); });
         startTimer(& t->r);

@@ -292,7 +292,7 @@ namespace golang::abi
         return 0;
     }
 
-    Type* Common(struct Type* t)
+    struct Type* Common(struct Type* t)
     {
         return t;
     }
@@ -368,7 +368,7 @@ namespace golang::abi
         return InvalidDir;
     }
 
-    UncommonType* Uncommon(struct Type* t)
+    struct UncommonType* Uncommon(struct Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
         {
@@ -651,7 +651,7 @@ namespace golang::abi
         }
     }
 
-    Type* Elem(struct Type* t)
+    struct Type* Elem(struct Type* t)
     {
         //Go switch emulation
         {
@@ -689,7 +689,7 @@ namespace golang::abi
         return nullptr;
     }
 
-    StructType* StructType(struct Type* t)
+    struct StructType* StructType(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) != Struct)
         {
@@ -698,7 +698,7 @@ namespace golang::abi
         return (StructType*)(unsafe::Pointer(t));
     }
 
-    MapType* MapType(struct Type* t)
+    struct MapType* MapType(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) != Map)
         {
@@ -707,7 +707,7 @@ namespace golang::abi
         return (MapType*)(unsafe::Pointer(t));
     }
 
-    ArrayType* ArrayType(struct Type* t)
+    struct ArrayType* ArrayType(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) != Array)
         {
@@ -716,7 +716,7 @@ namespace golang::abi
         return (ArrayType*)(unsafe::Pointer(t));
     }
 
-    FuncType* FuncType(struct Type* t)
+    struct FuncType* FuncType(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) != Func)
         {
@@ -725,7 +725,7 @@ namespace golang::abi
         return (FuncType*)(unsafe::Pointer(t));
     }
 
-    InterfaceType* InterfaceType(struct Type* t)
+    struct InterfaceType* InterfaceType(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) != Interface)
         {
@@ -881,7 +881,7 @@ namespace golang::abi
         return mt->Flags & 16 != 0;
     }
 
-    Type* Key(struct Type* t)
+    struct Type* Key(struct Type* t)
     {
         if(Kind(gocpp::recv(t)) == Map)
         {
@@ -951,7 +951,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    Type* In(struct FuncType* t, int i)
+    struct Type* In(struct FuncType* t, int i)
     {
         return InSlice(gocpp::recv(t))[i];
     }
@@ -966,7 +966,7 @@ namespace golang::abi
         return int(t->OutCount & ((1 << 15) - 1));
     }
 
-    Type* Out(struct FuncType* t, int i)
+    struct Type* Out(struct FuncType* t, int i)
     {
         return (OutSlice(gocpp::recv(t))[i]);
     }
@@ -1220,7 +1220,7 @@ namespace golang::abi
         return unsafe::String(DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
     }
 
-    Name NewName(std::string n, std::string tag, bool exported, bool embedded)
+    struct Name NewName(std::string n, std::string tag, bool exported, bool embedded)
     {
         if(len(n) >= (1 << 29))
         {

@@ -238,7 +238,7 @@ namespace golang::sync
         return nullptr;
     }
 
-    std::tuple<poolLocal*, int> pin(struct Pool* p)
+    std::tuple<struct poolLocal*, int> pin(struct Pool* p)
     {
         if(p == nullptr)
         {
@@ -254,7 +254,7 @@ namespace golang::sync
         return pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<poolLocal*, int> pinSlow(struct Pool* p)
+    std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p)
     {
         gocpp::Defer defer;
         try
@@ -287,12 +287,12 @@ namespace golang::sync
 
     void poolCleanup()
     {
-        for(auto [_, p] : oldPools)
+        for(auto [gocpp_ignored, p] : oldPools)
         {
             p->victim = nullptr;
             p->victimSize = 0;
         }
-        for(auto [_, p] : allPools)
+        for(auto [gocpp_ignored, p] : allPools)
         {
             p->victim = p->local;
             p->victimSize = p->localSize;
@@ -310,7 +310,7 @@ namespace golang::sync
         runtime_registerPoolCleanup(poolCleanup);
     }
 
-    poolLocal* indexLocal(unsafe::Pointer l, int i)
+    struct poolLocal* indexLocal(unsafe::Pointer l, int i)
     {
         auto lp = unsafe::Pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
         return (poolLocal*)(lp);

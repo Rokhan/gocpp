@@ -53,7 +53,7 @@ namespace golang::main
         v->Y = v->Y * f;
     }
 
-    void ScaleFunc(Vertex* v, double f)
+    void ScaleFunc(struct Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;

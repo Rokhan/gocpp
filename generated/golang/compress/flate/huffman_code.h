@@ -87,10 +87,10 @@ namespace golang::flate
 
     std::ostream& operator<<(std::ostream& os, const struct levelInfo& value);
     void set(struct hcode* h, uint16_t code, uint16_t length);
-    literalNode maxNode();
-    huffmanEncoder* newHuffmanEncoder(int size);
-    huffmanEncoder* generateFixedLiteralEncoding();
-    huffmanEncoder* generateFixedOffsetEncoding();
+    struct literalNode maxNode();
+    struct huffmanEncoder* newHuffmanEncoder(int size);
+    struct huffmanEncoder* generateFixedLiteralEncoding();
+    struct huffmanEncoder* generateFixedOffsetEncoding();
     extern huffmanEncoder* fixedLiteralEncoding;
     extern huffmanEncoder* fixedOffsetEncoding;
     int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);

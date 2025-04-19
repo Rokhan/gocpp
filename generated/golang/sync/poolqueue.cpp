@@ -272,12 +272,12 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void storePoolChainElt(poolChainElt** pp, poolChainElt* v)
+    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v)
     {
         atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(pp)), unsafe::Pointer(v));
     }
 
-    poolChainElt* loadPoolChainElt(poolChainElt** pp)
+    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp)
     {
         return (poolChainElt*)(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(pp))));
     }

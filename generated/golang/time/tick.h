@@ -32,7 +32,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Ticker& value);
-    Ticker* NewTicker(Duration d);
+    struct Ticker* NewTicker(Duration d);
     void Stop(struct Ticker* t);
     void Reset(struct Ticker* t, Duration d);
     gocpp::channel<Time> Tick(Duration d);

@@ -13,6 +13,6 @@
 
 namespace golang::runtime
 {
-    bool isDirectIface(_type* t);
+    bool isDirectIface(struct _type* t);
 }
 

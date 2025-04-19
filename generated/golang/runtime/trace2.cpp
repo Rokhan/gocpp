@@ -18,6 +18,7 @@
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
@@ -205,7 +206,7 @@ namespace golang::runtime
     gocpp_id_0 trace;
     uint32_t traceAdvanceSema = 1;
     uint32_t traceShutdownSema = 1;
-    gocpp::error StartTrace()
+    struct gocpp::error StartTrace()
     {
         if(traceEnabled() || traceShuttingDown())
         {
@@ -223,7 +224,7 @@ namespace golang::runtime
         traceRegisterLabelsAndReasons(firstGen);
         auto stw = stopTheWorld(stwStartTrace);
         lock(& sched.sysmonlock);
-        for(auto [_, pp] : allp)
+        for(auto [gocpp_ignored, pp] : allp)
         {
             pp->trace.mSyscallID = - 1;
         }
@@ -240,7 +241,7 @@ namespace golang::runtime
             GCActive(gocpp::recv(tl));
         }
         HeapGoal(gocpp::recv(tl));
-        for(auto [_, pp] : allp)
+        for(auto [gocpp_ignored, pp] : allp)
         {
             end(gocpp::recv(writeProcStatusForP(gocpp::recv(writer(gocpp::recv(tl))), pp, pp == ptr(gocpp::recv(tl.mp->p)))));
         }
@@ -313,7 +314,7 @@ namespace golang::runtime
         }
 
         gocpp::slice<untracedG> untracedGs = {};
-        forEachGRace([=](g* gp) mutable -> void
+        forEachGRace([=](struct g* gp) mutable -> void
         {
             readyNextGen(gocpp::recv(gp->trace), gen);
             if(statusWasTraced(gocpp::recv(gp->trace), gen))
@@ -440,7 +441,7 @@ namespace golang::runtime
             }
         });
         auto statusWriter = unsafeTraceWriter(gen, nullptr);
-        for(auto [_, ug] : untracedGs)
+        for(auto [gocpp_ignored, ug] : untracedGs)
         {
             if(statusWasTraced(gocpp::recv(ug.gp->trace), gen))
             {
@@ -468,7 +469,7 @@ namespace golang::runtime
         else
         {
             semacquire(& worldsema);
-            forEachP(waitReasonTraceProcStatus, [=](p* pp) mutable -> void
+            forEachP(waitReasonTraceProcStatus, [=](struct p* pp) mutable -> void
             {
                 auto tl = traceAcquire();
                 if(! statusWasTraced(gocpp::recv(pp->trace), tl.gen))
@@ -477,7 +478,7 @@ namespace golang::runtime
                 }
                 traceRelease(tl);
             });
-            for(auto [_, pp] : allp.make_slice(len(allp), cap(allp)))
+            for(auto [gocpp_ignored, pp] : allp.make_slice(len(allp), cap(allp)))
             {
                 readyNextGen(gocpp::recv(pp->trace), traceNextGen(gen));
             }
@@ -519,7 +520,7 @@ namespace golang::runtime
         if(stopTrace)
         {
             auto mp = acquirem();
-            for(auto [_, pp] : allp.make_slice(0, cap(allp)))
+            for(auto [gocpp_ignored, pp] : allp.make_slice(0, cap(allp)))
             {
                 pp->trace.inSweep = false;
                 pp->trace.maySweep = false;
@@ -572,7 +573,7 @@ namespace golang::runtime
         });
         if(park)
         {
-            gopark([=](g* gp, unsafe::Pointer _) mutable -> bool
+            gopark([=](struct g* gp, unsafe::Pointer _) mutable -> bool
             {
                 if(! CompareAndSwapNoWB(gocpp::recv(trace.reader), nullptr, gp))
                 {
@@ -708,7 +709,7 @@ namespace golang::runtime
         }
     }
 
-    g* traceReader()
+    struct g* traceReader()
     {
         auto gp = traceReaderAvailable();
         if(gp == nullptr || ! CompareAndSwapNoWB(gocpp::recv(trace.reader), gp, nullptr))
@@ -718,7 +719,7 @@ namespace golang::runtime
         return gp;
     }
 
-    g* traceReaderAvailable()
+    struct g* traceReaderAvailable()
     {
         if(Load(gocpp::recv(trace.flushedGen)) == Load(gocpp::recv(trace.readerGen)) || Load(gocpp::recv(trace.workAvailable)) || Load(gocpp::recv(trace.shutdown)))
         {
@@ -914,7 +915,7 @@ namespace golang::runtime
         }
 
 
-    wakeableSleep* newWakeableSleep()
+    struct wakeableSleep* newWakeableSleep()
     {
         auto s = go_new(wakeableSleep);
         lockInit(& s->lock, lockRankWakeableSleep);

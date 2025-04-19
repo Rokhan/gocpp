@@ -95,9 +95,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
     void init();
-    void ReadMemStats(MemStats* m);
+    void ReadMemStats(struct MemStats* m);
     extern bool doubleCheckReadMemStats;
-    void readmemstats_m(MemStats* stats);
+    void readmemstats_m(struct MemStats* stats);
     void readGCStats(gocpp::slice<uint64_t>* pauses);
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
     void flushmcache(int i);
@@ -132,7 +132,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
-    void merge(struct heapStatsDelta* a, heapStatsDelta* b);
+    void merge(struct heapStatsDelta* a, struct heapStatsDelta* b);
     struct consistentHeapStats
     {
         gocpp::array<heapStatsDelta, 3> stats;
@@ -151,11 +151,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
-    heapStatsDelta* acquire(struct consistentHeapStats* m);
+    struct heapStatsDelta* acquire(struct consistentHeapStats* m);
     void release(struct consistentHeapStats* m);
-    void unsafeRead(struct consistentHeapStats* m, heapStatsDelta* out);
+    void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out);
     void unsafeClear(struct consistentHeapStats* m);
-    void read(struct consistentHeapStats* m, heapStatsDelta* out);
+    void read(struct consistentHeapStats* m, struct heapStatsDelta* out);
     struct cpuStats
     {
         int64_t gcAssistTime;

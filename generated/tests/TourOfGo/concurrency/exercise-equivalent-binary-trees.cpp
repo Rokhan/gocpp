@@ -16,12 +16,12 @@
 
 namespace golang::main
 {
-    void Walk(tree::Tree* t, gocpp::channel<int> ch)
+    void Walk(struct tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::panic("Not implemented");
     }
 
-    bool Same(tree::Tree* t1, tree::Tree* t2)
+    bool Same(struct tree::Tree* t1, struct tree::Tree* t2)
     {
         gocpp::panic("Not implemented");
     }

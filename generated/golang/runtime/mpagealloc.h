@@ -19,14 +19,14 @@
 
 namespace golang::runtime
 {
-    offAddr maxSearchAddr();
+    struct offAddr maxSearchAddr();
     chunkIdx chunkIndex(uintptr_t p);
     uintptr_t chunkBase(chunkIdx ci);
     unsigned int chunkPageIndex(uintptr_t p);
     unsigned int l1(chunkIdx i);
     unsigned int l2(chunkIdx i);
-    int offAddrToLevelIndex(int level, offAddr addr);
-    offAddr levelIndexToOffAddr(int level, int idx);
+    int offAddrToLevelIndex(int level, struct offAddr addr);
+    struct offAddr levelIndexToOffAddr(int level, int idx);
     std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
     struct pageAlloc
@@ -56,15 +56,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageAlloc& value);
-    void init(struct pageAlloc* p, mutex* mheapLock, sysMemStat* sysStat, bool test);
-    pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci);
-    pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci);
+    void init(struct pageAlloc* p, struct mutex* mheapLock, sysMemStat* sysStat, bool test);
+    struct pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci);
+    struct pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci);
     void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size);
     void enableChunkHugePages(struct pageAlloc* p);
     void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
     uintptr_t allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
-    offAddr findMappedAddr(struct pageAlloc* p, offAddr addr);
-    std::tuple<uintptr_t, offAddr> find(struct pageAlloc* p, uintptr_t npages);
+    struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr);
+    std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages);
     std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages);
     void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
     pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);

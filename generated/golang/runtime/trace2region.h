@@ -49,7 +49,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlock& value);
-    notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n);
+    struct notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n);
     void drop(struct traceRegionAlloc* a);
 }
 

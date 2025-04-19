@@ -101,7 +101,7 @@ namespace golang::time
         }
     }
 
-    void setLoc(struct Time* t, Location* loc)
+    void setLoc(struct Time* t, struct Location* loc)
     {
         if(loc == & utcLoc)
         {
@@ -143,7 +143,7 @@ namespace golang::time
         return t->ext;
     }
 
-    bool After(struct Time t, Time u)
+    bool After(struct Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -154,7 +154,7 @@ namespace golang::time
         return ts > us || ts == us && nsec(gocpp::recv(t)) > nsec(gocpp::recv(u));
     }
 
-    bool Before(struct Time t, Time u)
+    bool Before(struct Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -165,7 +165,7 @@ namespace golang::time
         return ts < us || ts == us && nsec(gocpp::recv(t)) < nsec(gocpp::recv(u));
     }
 
-    int Compare(struct Time t, Time u)
+    int Compare(struct Time t, struct Time u)
     {
         int64_t tc = {};
         int64_t uc = {};
@@ -199,7 +199,7 @@ namespace golang::time
         return 0;
     }
 
-    bool Equal(struct Time t, Time u)
+    bool Equal(struct Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -642,7 +642,7 @@ namespace golang::time
         }
     }
 
-    Time Add(struct Time t, Duration d)
+    struct Time Add(struct Time t, Duration d)
     {
         auto dsec = int64_t(d / 1e9);
         auto nsec = nsec(gocpp::recv(t)) + int32_t(d % 1e9);
@@ -674,7 +674,7 @@ namespace golang::time
         return t;
     }
 
-    Duration Sub(struct Time t, Time u)
+    Duration Sub(struct Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -715,7 +715,7 @@ namespace golang::time
         return d;
     }
 
-    Duration Since(Time t)
+    Duration Since(struct Time t)
     {
         if(t.wall & hasMonotonic != 0)
         {
@@ -724,7 +724,7 @@ namespace golang::time
         return Sub(gocpp::recv(Now()), t);
     }
 
-    Duration Until(Time t)
+    Duration Until(struct Time t)
     {
         if(t.wall & hasMonotonic != 0)
         {
@@ -733,7 +733,7 @@ namespace golang::time
         return Sub(gocpp::recv(t), Now());
     }
 
-    Time AddDate(struct Time t, int years, int months, int days)
+    struct Time AddDate(struct Time t, int years, int months, int days)
     {
         auto [year, month, day] = Date(gocpp::recv(t));
         auto [hour, min, sec] = Clock(gocpp::recv(t));
@@ -868,7 +868,7 @@ namespace golang::time
     /* convertBlockStmt, nil block */;
 
     int64_t startNano = runtimeNano() - 1;
-    Time Now()
+    struct Time Now()
     {
         auto [sec, nsec, mono] = now();
         mono -= startNano;
@@ -880,24 +880,24 @@ namespace golang::time
         return Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, Local};
     }
 
-    Time unixTime(int64_t sec, int32_t nsec)
+    struct Time unixTime(int64_t sec, int32_t nsec)
     {
         return Time {uint64_t(nsec), sec + unixToInternal, Local};
     }
 
-    Time UTC(struct Time t)
+    struct Time UTC(struct Time t)
     {
         setLoc(gocpp::recv(t), & utcLoc);
         return t;
     }
 
-    Time Local(struct Time t)
+    struct Time Local(struct Time t)
     {
         setLoc(gocpp::recv(t), Local);
         return t;
     }
 
-    Time In(struct Time t, Location* loc)
+    struct Time In(struct Time t, struct Location* loc)
     {
         if(loc == nullptr)
         {
@@ -907,7 +907,7 @@ namespace golang::time
         return t;
     }
 
-    Location* Location(struct Time t)
+    struct Location* Location(struct Time t)
     {
         auto l = t.loc;
         if(l == nullptr)
@@ -925,22 +925,22 @@ namespace golang::time
         return {name, offset};
     }
 
-    std::tuple<Time, Time> ZoneBounds(struct Time t)
+    std::tuple<struct Time, struct Time> ZoneBounds(struct Time t)
     {
-        Time start;
-        Time end;
+        struct Time start;
+        struct Time end;
         auto [gocpp_id_46, gocpp_id_47, startSec, endSec, gocpp_id_48] = lookup(gocpp::recv(t.loc), unixSec(gocpp::recv(t)));
         if(startSec != alpha)
         {
-            Time start;
-            Time end;
+            struct Time start;
+            struct Time end;
             start = unixTime(startSec, 0);
             setLoc(gocpp::recv(start), t.loc);
         }
         if(endSec != omega)
         {
-            Time start;
-            Time end;
+            struct Time start;
+            struct Time end;
             end = unixTime(endSec, 0);
             setLoc(gocpp::recv(end), t.loc);
         }
@@ -967,7 +967,7 @@ namespace golang::time
         return (unixSec(gocpp::recv(t))) * 1e9 + int64_t(nsec(gocpp::recv(t)));
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct Time t)
     {
         int16_t offsetMin = {};
         int8_t offsetSec = {};
@@ -1001,7 +1001,7 @@ namespace golang::time
         return {enc, nullptr};
     }
 
-    gocpp::error UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data)
     {
         auto buf = data;
         if(len(buf) == 0)
@@ -1051,17 +1051,17 @@ namespace golang::time
         return nullptr;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> GobEncode(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(struct Time t)
     {
         return MarshalBinary(gocpp::recv(t));
     }
 
-    gocpp::error GobDecode(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error GobDecode(struct Time* t, gocpp::slice<unsigned char> data)
     {
         return UnmarshalBinary(gocpp::recv(t), data);
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(struct Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""));
         b = append(b, '"');
@@ -1075,7 +1075,7 @@ namespace golang::time
         return {b, nullptr};
     }
 
-    gocpp::error UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
     {
         if(string(data) == "null")
         {
@@ -1091,7 +1091,7 @@ namespace golang::time
         return err;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(struct Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano));
         gocpp::error err;
@@ -1103,14 +1103,14 @@ namespace golang::time
         return {b, nullptr};
     }
 
-    gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data)
     {
         gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
         return err;
     }
 
-    Time Unix(int64_t sec, int64_t nsec)
+    struct Time Unix(int64_t sec, int64_t nsec)
     {
         if(nsec < 0 || nsec >= 1e9)
         {
@@ -1126,12 +1126,12 @@ namespace golang::time
         return unixTime(sec, int32_t(nsec));
     }
 
-    Time UnixMilli(int64_t msec)
+    struct Time UnixMilli(int64_t msec)
     {
         return Unix(msec / 1e3, (msec % 1e3) * 1e6);
     }
 
-    Time UnixMicro(int64_t usec)
+    struct Time UnixMicro(int64_t usec)
     {
         return Unix(usec / 1e6, (usec % 1e6) * 1e3);
     }
@@ -1170,7 +1170,7 @@ namespace golang::time
         return {hi, lo};
     }
 
-    Time Date(int year, Month month, int day, int hour, int min, int sec, int nsec, Location* loc)
+    struct Time Date(int year, Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1208,7 +1208,7 @@ namespace golang::time
         return t;
     }
 
-    Time Truncate(struct Time t, Duration d)
+    struct Time Truncate(struct Time t, Duration d)
     {
         stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1219,7 +1219,7 @@ namespace golang::time
         return Add(gocpp::recv(t), - r);
     }
 
-    Time Round(struct Time t, Duration d)
+    struct Time Round(struct Time t, Duration d)
     {
         stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1234,7 +1234,7 @@ namespace golang::time
         return Add(gocpp::recv(t), d - r);
     }
 
-    std::tuple<int, Duration> div(Time t, Duration d)
+    std::tuple<int, Duration> div(struct Time t, Duration d)
     {
         int qmod2;
         Duration r;

@@ -89,7 +89,7 @@ namespace golang::runtime
     void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder)
     {
         hchan* c = {};
-        for(auto [_, o] : lockorder)
+        for(auto [gocpp_ignored, o] : lockorder)
         {
             auto c0 = scases[o].c;
             if(c0 != c)
@@ -113,7 +113,7 @@ namespace golang::runtime
         }
     }
 
-    bool selparkcommit(g* gp, unsafe::Pointer _)
+    bool selparkcommit(struct g* gp, unsafe::Pointer _)
     {
         gp->activeStackChans = true;
         Store(gocpp::recv(gp->parkingOnChan), false);
@@ -138,7 +138,7 @@ namespace golang::runtime
         gopark(nullptr, nullptr, waitReasonSelectNoCases, traceBlockForever, 1);
     }
 
-    std::tuple<int, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
+    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
     {
         if(debugSelect)
         {
@@ -249,7 +249,7 @@ namespace golang::runtime
         bool caseSuccess = {};
         int64_t caseReleaseTime = - 1;
         bool recvOK = {};
-        for(auto [_, casei] : pollorder)
+        for(auto [gocpp_ignored, casei] : pollorder)
         {
             casi = int(casei);
             cas = & scases[casi];
@@ -303,7 +303,7 @@ namespace golang::runtime
             go_throw("gp.waiting != nil");
         }
         nextp = & gp->waiting;
-        for(auto [_, casei] : lockorder)
+        for(auto [gocpp_ignored, casei] : lockorder)
         {
             casi = int(casei);
             cas = & scases[casi];
@@ -348,7 +348,7 @@ namespace golang::runtime
             sg1->c = nullptr;
         }
         gp->waiting = nullptr;
-        for(auto [_, casei] : lockorder)
+        for(auto [gocpp_ignored, casei] : lockorder)
         {
             k = & scases[casei];
             if(sg == sglist)
@@ -661,7 +661,7 @@ namespace golang::runtime
         return {chosen, recvOK};
     }
 
-    void dequeueSudoG(struct waitq* q, sudog* sgp)
+    void dequeueSudoG(struct waitq* q, struct sudog* sgp)
     {
         auto x = sgp->prev;
         auto y = sgp->next;

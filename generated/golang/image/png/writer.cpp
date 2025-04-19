@@ -88,7 +88,7 @@ namespace golang::png
     }
 
     template<typename T, typename StoreT>
-    EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vGet()
+    struct EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vGet()
     {
         return Get(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -98,12 +98,12 @@ namespace golang::png
         return Put(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self)
+    struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self)
     {
         return self.ptr->value->vGet();
     }
 
-    EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self)
+    struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self)
     {
         return self.obj.value->vGet();
     }
@@ -233,7 +233,7 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    bool opaque(image::Image m)
+    bool opaque(struct image::Image m)
     {
         if(auto [o, ok] = gocpp::getValue<opaquer>(m); ok)
         {
@@ -393,7 +393,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<int, gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
         writeChunk(gocpp::recv(e), b, "IDAT");
         if(e->err != nullptr)
@@ -504,7 +504,7 @@ namespace golang::png
         }
     }
 
-    gocpp::error writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
+    struct gocpp::error writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -886,13 +886,13 @@ namespace golang::png
         writeChunk(gocpp::recv(e), nullptr, "IEND");
     }
 
-    gocpp::error Encode(io::Writer w, image::Image m)
+    struct gocpp::error Encode(struct io::Writer w, struct image::Image m)
     {
         Encoder e = {};
         return Encode(gocpp::recv(e), w, m);
     }
 
-    gocpp::error Encode(struct Encoder* enc, io::Writer w, image::Image m)
+    struct gocpp::error Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m)
     {
         gocpp::Defer defer;
         try

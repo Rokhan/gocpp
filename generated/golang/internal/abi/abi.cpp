@@ -58,19 +58,19 @@ namespace golang::abi
     void Dump(struct RegArgs* r)
     {
         print("Ints:");
-        for(auto [_, x] : r->Ints)
+        for(auto [gocpp_ignored, x] : r->Ints)
         {
             print(" ", x);
         }
         println();
         print("Floats:");
-        for(auto [_, x] : r->Floats)
+        for(auto [gocpp_ignored, x] : r->Floats)
         {
             print(" ", x);
         }
         println();
         print("Ptrs:");
-        for(auto [_, x] : r->Ptrs)
+        for(auto [gocpp_ignored, x] : r->Ptrs)
         {
             print(" ", x);
         }

@@ -77,7 +77,7 @@ namespace golang::runtime
             std::string errstr;
             return {"", nullptr, nullptr, "plugin already loaded"};
         }
-        for(auto [_, pmd] : activeModules())
+        for(auto [gocpp_ignored, pmd] : activeModules())
         {
             std::string path;
             gocpp::map<std::string, go_any> syms;
@@ -110,7 +110,7 @@ namespace golang::runtime
                 go_throw("plugin: new module data overlaps with previous moduledata");
             }
         }
-        for(auto [_, pkghash] : md->pkghashes)
+        for(auto [gocpp_ignored, pkghash] : md->pkghashes)
         {
             std::string path;
             gocpp::map<std::string, go_any> syms;
@@ -131,7 +131,7 @@ namespace golang::runtime
         pluginftabverify(md);
         moduledataverify1(md);
         lock(& itabLock);
-        for(auto [_, i] : md->itablinks)
+        for(auto [gocpp_ignored, i] : md->itablinks)
         {
             std::string path;
             gocpp::map<std::string, go_any> syms;
@@ -141,7 +141,7 @@ namespace golang::runtime
         }
         unlock(& itabLock);
         syms = gocpp::make(gocpp::Tag<gocpp::map<std::string, go_any>>(), len(md->ptab));
-        for(auto [_, ptab] : md->ptab)
+        for(auto [gocpp_ignored, ptab] : md->ptab)
         {
             std::string path;
             gocpp::map<std::string, go_any> syms;
@@ -166,7 +166,7 @@ namespace golang::runtime
         return {md->pluginpath, syms, md->inittasks, ""};
     }
 
-    void pluginftabverify(moduledata* md)
+    void pluginftabverify(struct moduledata* md)
     {
         auto badtable = false;
         for(auto i = 0; i < len(md->ftab); i++)

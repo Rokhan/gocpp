@@ -22,19 +22,27 @@
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/consts.h"
 #include "golang/runtime/internal/sys/nih.h"
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
 #include "golang/runtime/mfinal.h"
+#include "golang/runtime/mgc.h"
+// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagecache.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
 #include "golang/runtime/plugin.h"
@@ -136,7 +144,7 @@ namespace golang::runtime
         return errno;
     }
 
-    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal)
+    void callbackUpdateSystemStack(struct m* mp, uintptr_t sp, bool signal)
     {
         auto g0 = mp->g0;
         if(sp > g0->stack.lo && sp <= g0->stack.hi)
@@ -231,7 +239,7 @@ namespace golang::runtime
                 atomicstorep(unsafe::Pointer(& p->array), unsafe::Pointer(& s[0]));
                 p->cap = cap(s);
                 p->len = len(s);
-                defer.push_back([=]{ [=](g* gp) mutable -> void
+                defer.push_back([=]{ [=](struct g* gp) mutable -> void
                 {
                     auto p = (slice*)(unsafe::Pointer(& gp->cgoCtxt));
                     p->len--;
@@ -356,7 +364,7 @@ namespace golang::runtime
 
     std::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer";
     std::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer";
-    void cgoCheckArg(_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
+    void cgoCheckArg(struct _type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
     {
         if(t->PtrBytes == 0 || p == nullptr)
         {
@@ -478,7 +486,7 @@ namespace golang::runtime
                         cgoCheckArg(st->Fields[0].Typ, p, st->Fields[0].Typ->Kind_ & kindDirectIface == 0, top, msg);
                         return;
                     }
-                    for(auto [_, f] : st->Fields)
+                    for(auto [gocpp_ignored, f] : st->Fields)
                     {
                         if(f.Typ->PtrBytes == 0)
                         {
@@ -580,7 +588,7 @@ namespace golang::runtime
             }
             return {base, i};
         }
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             uintptr_t base;
             uintptr_t i;
@@ -604,7 +612,7 @@ namespace golang::runtime
         {
             return true;
         }
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(cgoInRange(p, datap->data, datap->edata) || cgoInRange(p, datap->bss, datap->ebss))
             {

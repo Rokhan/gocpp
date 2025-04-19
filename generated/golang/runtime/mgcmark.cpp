@@ -14,6 +14,7 @@
 // #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/internal/goexperiment/exp_exectracer2_on.h"
@@ -21,10 +22,12 @@
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/histogram.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/lfstack.h"
 // #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank.h"  [Ignored, known errors]
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
@@ -32,16 +35,24 @@
 #include "golang/runtime/mbitmap.h"
 // #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
 #include "golang/runtime/mcheckmark.h"
+#include "golang/runtime/mfinal.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 // #include "golang/runtime/mgcpacer.h"  [Ignored, known errors]
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcstack.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
+#include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
 // #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
@@ -51,6 +62,7 @@
 // #include "golang/runtime/preempt.h"  [Ignored, known errors]
 // #include "golang/runtime/print.h"  [Ignored, known errors]
 #include "golang/runtime/proc.h"
+// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
 #include "golang/runtime/runtime2.h"
 // #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
 #include "golang/runtime/stack.h"
@@ -77,7 +89,7 @@ namespace golang::runtime
         };
         work.nDataRoots = 0;
         work.nBSSRoots = 0;
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             auto nDataRoots = nBlocks(datap->edata - datap->data);
             if(nDataRoots > work.nDataRoots)
@@ -85,7 +97,7 @@ namespace golang::runtime
                 work.nDataRoots = nDataRoots;
             }
         }
-        for(auto [_, datap] : activeModules())
+        for(auto [gocpp_ignored, datap] : activeModules())
         {
             auto nBSSRoots = nBlocks(datap->ebss - datap->bss);
             if(nBSSRoots > work.nBSSRoots)
@@ -114,7 +126,7 @@ namespace golang::runtime
             go_throw("left over markroot jobs");
         }
         auto i = 0;
-        forEachGRace([=](g* gp) mutable -> void
+        forEachGRace([=](struct g* gp) mutable -> void
         {
             if(i >= work.nStackRoots)
             {
@@ -130,7 +142,7 @@ namespace golang::runtime
     }
 
     gocpp::array_base<uint8_t> oneptrmask = gocpp::array_base<uint8_t> {1};
-    int64_t markroot(gcWork* gcw, uint32_t i, bool flushBgCredit)
+    int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit)
     {
         int64_t workDone = {};
         atomic::Int64* workCounter = {};
@@ -146,14 +158,14 @@ namespace golang::runtime
             {
                 case 0:
                     workCounter = & gcController.globalsScanWork;
-                    for(auto [_, datap] : activeModules())
+                    for(auto [gocpp_ignored, datap] : activeModules())
                     {
                         workDone += markrootBlock(datap->data, datap->edata - datap->data, datap->gcdatamask.bytedata, gcw, int(i - work.baseData));
                     }
                     break;
                 case 1:
                     workCounter = & gcController.globalsScanWork;
-                    for(auto [_, datap] : activeModules())
+                    for(auto [gocpp_ignored, datap] : activeModules())
                     {
                         workDone += markrootBlock(datap->bss, datap->ebss - datap->bss, datap->gcbssmask.bytedata, gcw, int(i - work.baseBSS));
                     }
@@ -225,7 +237,7 @@ namespace golang::runtime
         return workDone;
     }
 
-    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int shard)
+    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard)
     {
         if(rootBlockBytes % (8 * goarch::PtrSize) != 0)
         {
@@ -270,7 +282,7 @@ namespace golang::runtime
         unlock(& sched.gFree.lock);
     }
 
-    void markrootSpans(gcWork* gcw, int shard)
+    void markrootSpans(struct gcWork* gcw, int shard)
     {
         auto sg = mheap_.sweepgen;
         auto ai = mheap_.markArenas[shard / (pagesPerArena / pagesPerSpanRoot)];
@@ -322,7 +334,7 @@ namespace golang::runtime
         }
     }
 
-    void gcAssistAlloc(g* gp)
+    void gcAssistAlloc(struct g* gp)
     {
         if(getg() == gp->m->g0)
         {
@@ -456,7 +468,7 @@ namespace golang::runtime
         }
     }
 
-    void gcAssistAlloc1(g* gp, int64_t scanWork)
+    void gcAssistAlloc1(struct g* gp, int64_t scanWork)
     {
         gp->param = nullptr;
         if(atomic::Load(& gcBlackenEnabled) == 0)
@@ -573,7 +585,7 @@ namespace golang::runtime
         unlock(& work.assistQueue.lock);
     }
 
-    int64_t scanstack(g* gp, gcWork* gcw)
+    int64_t scanstack(struct g* gp, struct gcWork* gcw)
     {
         if(readgstatus(gp) & _Gscan == 0)
         {
@@ -748,7 +760,7 @@ namespace golang::runtime
         return int64_t(scannedSize);
     }
 
-    void scanframeworker(stkframe* frame, stackScanState* state, gcWork* gcw)
+    void scanframeworker(struct stkframe* frame, struct stackScanState* state, struct gcWork* gcw)
     {
         if(_DebugGC > 1 && frame->continpc != 0)
         {
@@ -819,12 +831,12 @@ namespace golang::runtime
         }
     }
 
-    void gcDrainMarkWorkerIdle(gcWork* gcw)
+    void gcDrainMarkWorkerIdle(struct gcWork* gcw)
     {
         gcDrain(gcw, gcDrainIdle | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
-    void gcDrainMarkWorkerDedicated(gcWork* gcw, bool untilPreempt)
+    void gcDrainMarkWorkerDedicated(struct gcWork* gcw, bool untilPreempt)
     {
         auto flags = gcDrainFlushBgCredit;
         if(untilPreempt)
@@ -834,12 +846,12 @@ namespace golang::runtime
         gcDrain(gcw, flags);
     }
 
-    void gcDrainMarkWorkerFractional(gcWork* gcw)
+    void gcDrainMarkWorkerFractional(struct gcWork* gcw)
     {
         gcDrain(gcw, gcDrainFractional | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
-    void gcDrain(gcWork* gcw, gcDrainFlags flags)
+    void gcDrain(struct gcWork* gcw, gcDrainFlags flags)
     {
         if(! writeBarrier.enabled)
         {
@@ -935,7 +947,7 @@ namespace golang::runtime
         }
     }
 
-    int64_t gcDrainN(gcWork* gcw, int64_t scanWork)
+    int64_t gcDrainN(struct gcWork* gcw, int64_t scanWork)
     {
         if(! writeBarrier.enabled)
         {
@@ -983,7 +995,7 @@ namespace golang::runtime
         return workFlushed + gcw->heapScanWork;
     }
 
-    void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, gcWork* gcw, stackScanState* stk)
+    void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk)
     {
         auto b = b0;
         auto n = n0;
@@ -1019,7 +1031,7 @@ namespace golang::runtime
         }
     }
 
-    void scanobject(uintptr_t b, gcWork* gcw)
+    void scanobject(uintptr_t b, struct gcWork* gcw)
     {
         sys::Prefetch(b);
         auto s = spanOfUnchecked(b);
@@ -1103,7 +1115,7 @@ namespace golang::runtime
         gcw->heapScanWork += int64_t(scanSize);
     }
 
-    void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, gcWork* gcw, stackScanState* state)
+    void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* state)
     {
         if(debugScanConservative)
         {
@@ -1189,7 +1201,7 @@ namespace golang::runtime
         }
     }
 
-    void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, mspan* span, gcWork* gcw, uintptr_t objIndex)
+    void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex)
     {
         if(obj & (goarch::PtrSize - 1) != 0)
         {
@@ -1285,7 +1297,7 @@ namespace golang::runtime
         }
     }
 
-    void gcmarknewobject(mspan* span, uintptr_t obj)
+    void gcmarknewobject(struct mspan* span, uintptr_t obj)
     {
         if(useCheckmark)
         {
@@ -1305,7 +1317,7 @@ namespace golang::runtime
     void gcMarkTinyAllocs()
     {
         assertWorldStopped();
-        for(auto [_, p] : allp)
+        for(auto [gocpp_ignored, p] : allp)
         {
             auto c = p->mcache;
             if(c == nullptr || c->tiny == 0)

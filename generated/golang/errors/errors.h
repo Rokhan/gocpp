@@ -11,7 +11,7 @@
 
 namespace golang::errors
 {
-    gocpp::error New(std::string text);
+    struct gocpp::error New(std::string text);
     struct errorString
     {
         std::string s;

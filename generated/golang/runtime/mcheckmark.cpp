@@ -13,6 +13,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
+// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
 #include "golang/internal/goarch/goarch.h"
 // #include "golang/runtime/cgocall.h"  [Ignored, known errors]
 #include "golang/runtime/chan.h"
@@ -25,15 +26,22 @@
 // #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
+// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
 // #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mcentral.h"
+#include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
 // #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
 #include "golang/runtime/mgcmark.h"
+// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpagecache.h"
+#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
 // #include "golang/runtime/os_windows.h"  [Ignored, known errors]
@@ -90,7 +98,7 @@ namespace golang::runtime
     void startCheckmarks()
     {
         assertWorldStopped();
-        for(auto [_, ai] : mheap_.allArenas)
+        for(auto [gocpp_ignored, ai] : mheap_.allArenas)
         {
             auto arena = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
             auto bitmap = arena->checkmarks;
@@ -123,7 +131,7 @@ namespace golang::runtime
         useCheckmark = false;
     }
 
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits)
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits)
     {
         if(! isMarked(gocpp::recv(mbits)))
         {

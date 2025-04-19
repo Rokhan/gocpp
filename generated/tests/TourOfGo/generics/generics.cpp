@@ -72,7 +72,7 @@ namespace golang::main
 
 
     template<typename T>
-    T Get(struct Wrapper<T>* p)
+    T Get(Wrapper<T>* p)
     {
         return p->value;
     }

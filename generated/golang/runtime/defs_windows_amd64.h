@@ -97,8 +97,8 @@ namespace golang::runtime
     void set_ip(struct context* c, uintptr_t x);
     void set_sp(struct context* c, uintptr_t x);
     void set_fp(struct context* c, uintptr_t x);
-    void prepareContextForSigResume(context* c);
-    void dumpregs(context* r);
+    void prepareContextForSigResume(struct context* c);
+    void dumpregs(struct context* r);
     struct _DISPATCHER_CONTEXT
     {
         uint64_t controlPc;
@@ -122,6 +122,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value);
-    context* ctx(struct _DISPATCHER_CONTEXT* c);
+    struct context* ctx(struct _DISPATCHER_CONTEXT* c);
 }
 

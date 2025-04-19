@@ -26,17 +26,17 @@ namespace golang::registry
     syscall::Errno ErrShortBuffer = syscall::ERROR_MORE_DATA;
     syscall::Errno ErrNotExist = syscall::ERROR_FILE_NOT_FOUND;
     gocpp::error ErrUnexpectedType = errors::New("unexpected key value type");
-    std::tuple<int, uint32_t, gocpp::error> GetValue(Key k, std::string name, gocpp::slice<unsigned char> buf)
+    std::tuple<int, uint32_t, struct gocpp::error> GetValue(Key k, std::string name, gocpp::slice<unsigned char> buf)
     {
         int n;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [pname, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
             int n;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, 0, err};
         }
         unsigned char* pbuf = {};
@@ -44,7 +44,7 @@ namespace golang::registry
         {
             int n;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             pbuf = (unsigned char*)(unsafe::Pointer(& buf[0]));
         }
         auto l = uint32_t(len(buf));
@@ -53,23 +53,23 @@ namespace golang::registry
         {
             int n;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {int(l), valtype, err};
         }
         return {int(l), valtype, nullptr};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, uint32_t, gocpp::error> getValue(Key k, std::string name, gocpp::slice<unsigned char> buf)
+    std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> getValue(Key k, std::string name, gocpp::slice<unsigned char> buf)
     {
         gocpp::slice<unsigned char> date;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [p, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
             gocpp::slice<unsigned char> date;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, 0, err};
         }
         uint32_t t = {};
@@ -78,44 +78,44 @@ namespace golang::registry
         {
             gocpp::slice<unsigned char> date;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             err = syscall::RegQueryValueEx(syscall::Handle(k), p, nullptr, & t, (unsigned char*)(unsafe::Pointer(& buf[0])), & n);
             if(err == nullptr)
             {
                 gocpp::slice<unsigned char> date;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 return {buf.make_slice(0, n), t, nullptr};
             }
             if(err != syscall::ERROR_MORE_DATA)
             {
                 gocpp::slice<unsigned char> date;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 return {nullptr, 0, err};
             }
             if(n <= uint32_t(len(buf)))
             {
                 gocpp::slice<unsigned char> date;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 return {nullptr, 0, err};
             }
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
         }
     }
 
-    std::tuple<std::string, uint32_t, gocpp::error> GetStringValue(Key k, std::string name)
+    std::tuple<std::string, uint32_t, struct gocpp::error> GetStringValue(Key k, std::string name)
     {
         std::string val;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [data, typ, err2] = getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
             std::string val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {"", typ, err2};
         }
         //Go switch emulation
@@ -128,7 +128,7 @@ namespace golang::registry
             {
                 std::string val;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 case 0:
                 case 1:
                     break;
@@ -141,14 +141,14 @@ namespace golang::registry
         {
             std::string val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {"", typ, nullptr};
         }
         auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
         return {syscall::UTF16ToString(u), typ, nullptr};
     }
 
-    std::tuple<std::string, gocpp::error> GetMUIStringValue(Key k, std::string name)
+    std::tuple<std::string, struct gocpp::error> GetMUIStringValue(Key k, std::string name)
     {
         auto [pname, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
@@ -190,7 +190,7 @@ namespace golang::registry
         return {syscall::UTF16ToString(buf), nullptr};
     }
 
-    std::tuple<std::string, gocpp::error> ExpandString(std::string value)
+    std::tuple<std::string, struct gocpp::error> ExpandString(std::string value)
     {
         if(value == "")
         {
@@ -217,31 +217,31 @@ namespace golang::registry
         }
     }
 
-    std::tuple<gocpp::slice<std::string>, uint32_t, gocpp::error> GetStringsValue(Key k, std::string name)
+    std::tuple<gocpp::slice<std::string>, uint32_t, struct gocpp::error> GetStringsValue(Key k, std::string name)
     {
         gocpp::slice<std::string> val;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [data, typ, err2] = getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, err2};
         }
         if(typ != MULTI_SZ)
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, ErrUnexpectedType};
         }
         if(len(data) == 0)
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, nullptr};
         }
         auto p = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
@@ -249,14 +249,14 @@ namespace golang::registry
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, nullptr};
         }
         if(p[len(p) - 1] == 0)
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             p = p.make_slice(0, len(p) - 1);
         }
         val = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 5);
@@ -265,12 +265,12 @@ namespace golang::registry
         {
             gocpp::slice<std::string> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             if(c == 0)
             {
                 gocpp::slice<std::string> val;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 val = append(val, syscall::UTF16ToString(p.make_slice(from, i)));
                 from = i + 1;
             }
@@ -278,17 +278,17 @@ namespace golang::registry
         return {val, typ, nullptr};
     }
 
-    std::tuple<uint64_t, uint32_t, gocpp::error> GetIntegerValue(Key k, std::string name)
+    std::tuple<uint64_t, uint32_t, struct gocpp::error> GetIntegerValue(Key k, std::string name)
     {
         uint64_t val;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [data, typ, err2] = getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8));
         if(err2 != nullptr)
         {
             uint64_t val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {0, typ, err2};
         }
         //Go switch emulation
@@ -301,13 +301,13 @@ namespace golang::registry
             {
                 uint64_t val;
                 uint32_t valtype;
-                gocpp::error err;
+                struct gocpp::error err;
                 case 0:
                     if(len(data) != 4)
                     {
                         uint64_t val;
                         uint32_t valtype;
-                        gocpp::error err;
+                        struct gocpp::error err;
                         return {0, typ, errors::New("DWORD value is not 4 bytes long")};
                     }
                     return {uint64_t(*(uint32_t*)(unsafe::Pointer(& data[0]))), DWORD, nullptr};
@@ -317,7 +317,7 @@ namespace golang::registry
                     {
                         uint64_t val;
                         uint32_t valtype;
-                        gocpp::error err;
+                        struct gocpp::error err;
                         return {0, typ, errors::New("QWORD value is not 8 bytes long")};
                     }
                     return {*(uint64_t*)(unsafe::Pointer(& data[0])), QWORD, nullptr};
@@ -329,30 +329,30 @@ namespace golang::registry
         }
     }
 
-    std::tuple<gocpp::slice<unsigned char>, uint32_t, gocpp::error> GetBinaryValue(Key k, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> GetBinaryValue(Key k, std::string name)
     {
         gocpp::slice<unsigned char> val;
         uint32_t valtype;
-        gocpp::error err;
+        struct gocpp::error err;
         auto [data, typ, err2] = getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
             gocpp::slice<unsigned char> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, err2};
         }
         if(typ != BINARY)
         {
             gocpp::slice<unsigned char> val;
             uint32_t valtype;
-            gocpp::error err;
+            struct gocpp::error err;
             return {nullptr, typ, ErrUnexpectedType};
         }
         return {data, typ, nullptr};
     }
 
-    gocpp::error setValue(Key k, std::string name, uint32_t valtype, gocpp::slice<unsigned char> data)
+    struct gocpp::error setValue(Key k, std::string name, uint32_t valtype, gocpp::slice<unsigned char> data)
     {
         auto [p, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
@@ -366,17 +366,17 @@ namespace golang::registry
         return regSetValueEx(syscall::Handle(k), p, 0, valtype, & data[0], uint32_t(len(data)));
     }
 
-    gocpp::error SetDWordValue(Key k, std::string name, uint32_t value)
+    struct gocpp::error SetDWordValue(Key k, std::string name, uint32_t value)
     {
         return setValue(gocpp::recv(k), name, DWORD, (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& value)).make_slice(0, ));
     }
 
-    gocpp::error SetQWordValue(Key k, std::string name, uint64_t value)
+    struct gocpp::error SetQWordValue(Key k, std::string name, uint64_t value)
     {
         return setValue(gocpp::recv(k), name, QWORD, (gocpp::array<unsigned char, 8>*)(unsafe::Pointer(& value)).make_slice(0, ));
     }
 
-    gocpp::error setStringValue(Key k, std::string name, uint32_t valtype, std::string value)
+    struct gocpp::error setStringValue(Key k, std::string name, uint32_t valtype, std::string value)
     {
         auto [v, err] = syscall::UTF16FromString(value);
         if(err != nullptr)
@@ -387,20 +387,20 @@ namespace golang::registry
         return setValue(gocpp::recv(k), name, valtype, buf);
     }
 
-    gocpp::error SetStringValue(Key k, std::string name, std::string value)
+    struct gocpp::error SetStringValue(Key k, std::string name, std::string value)
     {
         return setStringValue(gocpp::recv(k), name, SZ, value);
     }
 
-    gocpp::error SetExpandStringValue(Key k, std::string name, std::string value)
+    struct gocpp::error SetExpandStringValue(Key k, std::string name, std::string value)
     {
         return setStringValue(gocpp::recv(k), name, EXPAND_SZ, value);
     }
 
-    gocpp::error SetStringsValue(Key k, std::string name, gocpp::slice<std::string> value)
+    struct gocpp::error SetStringsValue(Key k, std::string name, gocpp::slice<std::string> value)
     {
         auto ss = "";
-        for(auto [_, s] : value)
+        for(auto [gocpp_ignored, s] : value)
         {
             for(auto i = 0; i < len(s); i++)
             {
@@ -416,17 +416,17 @@ namespace golang::registry
         return setValue(gocpp::recv(k), name, MULTI_SZ, buf);
     }
 
-    gocpp::error SetBinaryValue(Key k, std::string name, gocpp::slice<unsigned char> value)
+    struct gocpp::error SetBinaryValue(Key k, std::string name, gocpp::slice<unsigned char> value)
     {
         return setValue(gocpp::recv(k), name, BINARY, value);
     }
 
-    gocpp::error DeleteValue(Key k, std::string name)
+    struct gocpp::error DeleteValue(Key k, std::string name)
     {
         return regDeleteValue(syscall::Handle(k), syscall::StringToUTF16Ptr(name));
     }
 
-    std::tuple<gocpp::slice<std::string>, gocpp::error> ReadValueNames(Key k)
+    std::tuple<gocpp::slice<std::string>, struct gocpp::error> ReadValueNames(Key k)
     {
         auto [ki, err] = Stat(gocpp::recv(k));
         if(err != nullptr)

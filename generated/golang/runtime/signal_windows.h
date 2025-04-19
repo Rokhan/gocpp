@@ -42,16 +42,16 @@ namespace golang::runtime
     void sehtramp();
     void sigresume();
     void initExceptionHandler();
-    bool isAbort(context* r);
-    bool isgoexception(exceptionrecord* info, context* r);
-    g* sigFetchGSafe();
-    g* sigFetchG();
-    int32_t sigtrampgo(exceptionpointers* ep, int kind);
-    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp);
-    int32_t sehhandler(exceptionrecord* _, uint64_t _, context* _, _DISPATCHER_CONTEXT* dctxt);
-    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp);
-    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp);
-    void winthrow(exceptionrecord* info, context* r, g* gp);
+    bool isAbort(struct context* r);
+    bool isgoexception(struct exceptionrecord* info, struct context* r);
+    struct g* sigFetchGSafe();
+    struct g* sigFetchG();
+    int32_t sigtrampgo(struct exceptionpointers* ep, int kind);
+    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    int32_t sehhandler(struct exceptionrecord* _, uint64_t _, struct context* _, struct _DISPATCHER_CONTEXT* dctxt);
+    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp);
     void sigpanic();
     void initsig(bool preinit);
     void sigenable(uint32_t sig);
@@ -59,7 +59,7 @@ namespace golang::runtime
     void sigignore(uint32_t sig);
     std::string signame(uint32_t sig);
     void crash();
-    void dieFromException(exceptionrecord* info, context* r);
+    void dieFromException(struct exceptionrecord* info, struct context* r);
     struct gsignalStack
     {
 

@@ -20,11 +20,11 @@
 
 namespace golang::runtime
 {
-    void push(lfstack* head, lfnode* node);
+    void push(lfstack* head, struct lfnode* node);
     unsafe::Pointer pop(lfstack* head);
     bool empty(lfstack* head);
-    void lfnodeValidate(lfnode* node);
-    uint64_t lfstackPack(lfnode* node, uintptr_t cnt);
-    lfnode* lfstackUnpack(uint64_t val);
+    void lfnodeValidate(struct lfnode* node);
+    uint64_t lfstackPack(struct lfnode* node, uintptr_t cnt);
+    struct lfnode* lfstackUnpack(uint64_t val);
 }
 

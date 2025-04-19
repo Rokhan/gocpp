@@ -212,7 +212,8 @@ type cppConverterSharedData struct {
 }
 
 type cppConverter struct {
-	shared *cppConverterSharedData
+	shared   *cppConverterSharedData
+	parentCv *cppConverter
 
 	// Logs and error management
 	logPrefix  string
@@ -700,10 +701,10 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			}
 
 			if place.header != nil {
-				Panicf("BUG: place.header should always be nil at this point. position %s\n", cv.Position(place.node))
+				cv.Panicf("BUG: place.header should always be nil at this point. position %s\n", cv.Position(place.node))
 			}
 			if place.inline != nil {
-				Panicf("BUG: place.inline should always be nil at this point. position %s\n", cv.Position(place.node))
+				cv.Panicf("BUG: place.inline should always be nil at this point. position %s\n", cv.Position(place.node))
 			}
 		}
 		fmt.Fprintf(cv.fwd.out, "%s", allFwdOut[i])
@@ -1187,6 +1188,30 @@ type errorFilter struct {
 	file   string
 }
 
+func (cv *cppConverter) includeStack() []string {
+	out := []string{}
+	for currentCv := cv; currentCv != nil; currentCv = currentCv.parentCv {
+		out = append(out, currentCv.srcBaseName)
+	}
+	return out
+}
+
+func (cv *cppConverter) printStack() string {
+	return JoinWithPrefix(cv.includeStack(), "\n -> ")
+}
+
+func (cv *cppConverter) Panicf(format string, params ...interface{}) {
+	if strings.HasSuffix(format, "\n") {
+		format = format[:len(format)-1]
+		format = format + ", stack: %s\n"
+	} else {
+		format = format + ", stack: %s"
+	}
+
+	params = append(params, cv.printStack())
+	Panicf(format, params...)
+}
+
 func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 
 	for _, pkg := range pkgInfos {
@@ -1201,7 +1226,7 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 			if pkgName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 				pkg.fileType = Ignored
 				if cv.shared.strictMode {
-					Panicf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
+					cv.Panicf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v', stack: %s\n", pkg.name, bad.target, pkgFilePath, bad.file)
 				}
 				continue
 			}
@@ -1216,7 +1241,7 @@ func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFi
 	for _, bad := range knownErrors {
 		if funcName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 			if cv.shared.strictMode {
-				Panicf("ignoreKnownError, funcName: '%v', bad.target: '%v', pkgFilePath: '%v', bad.file: '%v'\n", funcName, bad.target, pkgFilePath, bad.file)
+				cv.Panicf("ignoreKnownError, funcName: '%v', bad.target: '%v', pkgFilePath: '%v', bad.file: '%v'\n", funcName, bad.target, pkgFilePath, bad.file)
 			}
 			return true
 		}
@@ -1404,7 +1429,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		if ok && last.Type.isEllipsis {
 
 			if len(last.names) != 1 {
-				Panicf("convertDecls, multiple ellipsis parameters not managed, declararation: [%v], input: %v", d, cv.Position(d))
+				cv.Panicf("convertDecls, multiple ellipsis parameters not managed, declararation: [%v], input: %v", d, cv.Position(d))
 			}
 
 			varidicParams := params[:len(params)-1]
@@ -1644,7 +1669,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		}
 
 	default:
-		Panicf("convertAssignStmt, unmanaged token: %s, input: %v", stmt.Tok, cv.Position(stmt))
+		cv.Panicf("convertAssignStmt, unmanaged token: %s, input: %v", stmt.Tok, cv.Position(stmt))
 	}
 
 	panic("convertAssignStmt, bug, unreacheable code reached !")
@@ -1661,7 +1686,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		case *ast.ForStmt, *ast.RangeStmt:
 			/* Nothing to do */
 		case *ast.SwitchStmt, *ast.SelectStmt, *ast.TypeSwitchStmt:
-			Panicf("convertStmt, label not implemented. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
+			cv.Panicf("convertStmt, label not implemented. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		default:
 			/* Nothing to do */
 		}
@@ -1677,7 +1702,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		var pkgInfos []*pkgInfo
 		outPlaces, pkgInfos = cv.convertDecls(s.Decl, false)
 		if len(pkgInfos) != 0 {
-			Panicf("convertStmt, can't manage pkgInfos here, declaration: [%v], input: %v", s.Decl, cv.Position(s))
+			cv.Panicf("convertStmt, can't manage pkgInfos here, declaration: [%v], input: %v", s.Decl, cv.Position(s))
 		}
 
 	case *ast.ExprStmt:
@@ -1720,7 +1745,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			case token.FALLTHROUGH:
 				isFallThrough = true
 			default:
-				Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
+				cv.Panicf("convertStmt, unmanaged BranchStmt [%v], input: %v", s.Tok, cv.Position(s))
 			}
 		} else {
 			switch s.Tok {
@@ -1733,7 +1758,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			case token.FALLTHROUGH:
 				fallthrough // Not implemented
 			default:
-				Panicf("convertStmt, unmanaged labelled BranchStmt, label: %v, token: %v, input: %v", s.Label, s.Tok, cv.Position(s))
+				cv.Panicf("convertStmt, unmanaged labelled BranchStmt, label: %v, token: %v, input: %v", s.Label, s.Tok, cv.Position(s))
 			}
 		}
 
@@ -1761,7 +1786,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		} else if s.Key == nil && s.Value == nil {
 			cv.WritterExprPrintf(cppOut, "%sfor(const auto& _ : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.X))
 		} else {
-			Panicf("Unmanaged case of '*ast.RangeStmt', token: %v; key: %v, value:%v, input: %v", s.Tok, s.Key, s.Value, cv.Position(s))
+			cv.Panicf("Unmanaged case of '*ast.RangeStmt', token: %v; key: %v, value:%v, input: %v", s.Tok, s.Key, s.Value, cv.Position(s))
 		}
 		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
@@ -1781,7 +1806,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			outPlaces = append(outPlaces, elseOutPlace...)
 			if isFallthrough {
 				// Shouldn't happen correctly go file
-				Panicf("convertStmt, fallthrough not managed in ast.IfStmt, input: %v", cv.Position(s.Else))
+				cv.Panicf("convertStmt, fallthrough not managed in ast.IfStmt, input: %v", cv.Position(s.Else))
 			}
 		}
 
@@ -1869,7 +1894,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		for _, stmt := range s.Body {
 			if isStmtFallthrough {
 				// Shouldn't happen correctly go file
-				Panicf("convertStmt, fallthrough not managed if not the last statement")
+				cv.Panicf("convertStmt, fallthrough not managed if not the last statement")
 			}
 			stmtOutPlace, isStmtFallthrough = cv.convertStmt(stmt, env)
 			outPlaces = append(outPlaces, stmtOutPlace...)
@@ -1906,7 +1931,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.cpp.indent--
 
 	default:
-		Panicf("convertStmt, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+		cv.Panicf("convertStmt, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	// use defer for this ?
@@ -1933,18 +1958,18 @@ func (cv *cppConverter) convertTypeSwitchAssign(stmt ast.Stmt) (varName cppExpr,
 			case *ast.TypeAssertExpr:
 				if expr.Type != nil {
 					// We managed only .(type) syntax
-					Panicf("convertTypeSwitchAssign, unmanaged type switch with type [%v], input: %v", reflect.TypeOf(expr.Type), cv.Position(expr.Type))
+					cv.Panicf("convertTypeSwitchAssign, unmanaged type switch with type [%v], input: %v", reflect.TypeOf(expr.Type), cv.Position(expr.Type))
 				}
 				exprString = cv.convertExpr(expr.X)
 			default:
-				Panicf("convertTypeSwitchAssign, unmanaged right side expression [%v], input: %v", reflect.TypeOf(expr), cv.Position(expr))
+				cv.Panicf("convertTypeSwitchAssign, unmanaged right side expression [%v], input: %v", reflect.TypeOf(expr), cv.Position(expr))
 			}
 		} else {
-			Panicf("convertTypeSwitchAssign, unmanaged multiple assign [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+			cv.Panicf("convertTypeSwitchAssign, unmanaged multiple assign [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 		}
 
 	default:
-		Panicf("convertTypeSwitchAssign, unmanaged statemet type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+		cv.Panicf("convertTypeSwitchAssign, unmanaged statemet type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	return
@@ -1968,7 +1993,7 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 	cv.WritterExprPrintf(cppOut, "%s}\n", cv.cpp.Indent())
 
 	if len(*cppOut.defs) != 0 {
-		Panicf("convertSwitchBody, not Implemented, manage cppOut.defs, type [%v], %s", reflect.TypeOf(body), cv.Position(body))
+		cv.Panicf("convertSwitchBody, not Implemented, manage cppOut.defs, type [%v], %s", reflect.TypeOf(body), cv.Position(body))
 	}
 
 	return
@@ -2012,13 +2037,13 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 		case nil:
 			/* default, nothing to do */
 		default:
-			Panicf("extractCaseExpr, commClause, unmanaged type [%v], input %s", reflect.TypeOf(comm), cv.Position(comm))
+			cv.Panicf("extractCaseExpr, commClause, unmanaged type [%v], input %s", reflect.TypeOf(comm), cv.Position(comm))
 		}
 		cv.currentSwitchId.Back().Value = id + 1
 		se.prefix = "else "
 
 	default:
-		Panicf("extractCaseExpr, unmanaged type [%v], input %s", reflect.TypeOf(s), cv.Position(s))
+		cv.Panicf("extractCaseExpr, unmanaged type [%v], input %s", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	outPlaces = append(outPlaces, *cppOut.defs...)
@@ -2041,11 +2066,11 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
 		case n.Op == token.ARROW:
 			return ExprPrintf("auto [gocpp_ignored , ok] = %s.tryRecv(); ok", cv.convertExpr(n.X))
 		default:
-			Panicf("convertSelectCaseStmt,unmanaged token: [%v], inout: %v", reflect.TypeOf(n.Op), cv.Position(n))
+			cv.Panicf("convertSelectCaseStmt,unmanaged token: [%v], inout: %v", reflect.TypeOf(n.Op), cv.Position(n))
 		}
 
 	default:
-		Panicf("convertSelectCaseStmt, unmanaged node: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
+		cv.Panicf("convertSelectCaseStmt, unmanaged node: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
 	}
 
 	panic("convertSelectCaseStmt, bug, unreacheable code reached !")
@@ -2068,18 +2093,18 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 				}
 				// TODO
 				if declItem.outline != nil {
-					Panicf("inlineStmt, not implemented, can't declare outline from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+					cv.Panicf("inlineStmt, not implemented, can't declare outline from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 				if declItem.header != nil {
-					Panicf("inlineStmt, not implemented, can't declare header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+					cv.Panicf("inlineStmt, not implemented, can't declare header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 				if declItem.fwdHeader != nil {
-					Panicf("inlineStmt, not implemented, can't declare forward header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+					cv.Panicf("inlineStmt, not implemented, can't declare forward header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 			}
 			return
 		default:
-			Panicf("inlineStmt, unmanaged subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+			cv.Panicf("inlineStmt, unmanaged subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 		}
 
 	case *ast.ExprStmt:
@@ -2092,14 +2117,14 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 		case token.DEC:
 			return ExprPrintf("%s--", cv.convertExpr(s.X))
 		default:
-			Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
+			cv.Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
 		}
 
 	case *ast.AssignStmt:
 		assignStmts := cv.convertAssignStmt(s, env)
 		switch nbStmts := len(assignStmts); nbStmts {
 		case 0:
-			Panicf("inlineStmt, unmanaged multiple assignements: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
+			cv.Panicf("inlineStmt, unmanaged multiple assignements: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		case 1:
 			return assignStmts[0]
 		default:
@@ -2112,7 +2137,7 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 		}
 
 	default:
-		Panicf("inlineStmt, unmanaged token: [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+		cv.Panicf("inlineStmt, unmanaged token: [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	panic("inlineStmt, bug, unreacheable code reached !")
@@ -2145,7 +2170,7 @@ func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []strin
 	}
 
 	if len(defs) != 0 {
-		Panicf("getResultInfos, not Implemented, manage defs")
+		cv.Panicf("getResultInfos, not Implemented, manage defs")
 	}
 
 	return
@@ -2227,7 +2252,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 				if s.Type == nil {
 					for i := range s.Names {
 						if len(values) == 0 {
-							Panicf("convertSpecs, can't compute get variable type: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
+							cv.Panicf("convertSpecs, can't compute get variable type: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 						}
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
@@ -2301,7 +2326,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
 
 					default:
-						Panicf("convertSpecs, mismatch declaration length. variable: %v, names:%v, input: %v", reflect.TypeOf(s), s.Names, cv.Position(s))
+						cv.Panicf("convertSpecs, mismatch declaration length. variable: %v, names:%v, input: %v", reflect.TypeOf(s), s.Names, cv.Position(s))
 					}
 				} else {
 					for i := range s.Names {
@@ -2325,7 +2350,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 
 			pkgs, err := packages.Load(cfg, pkg.Path())
 			if err != nil {
-				Panicf("load: %v\n", err)
+				cv.Panicf("load: %v\n", err)
 			}
 			if packages.PrintErrors(pkgs) > 0 {
 				os.Exit(1)
@@ -2350,7 +2375,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 			}
 
 		default:
-			Panicf("convertSpecs, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+			cv.Panicf("convertSpecs, unmanaged type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 		}
 		cv.UpdateIota()
 	}
@@ -2673,7 +2698,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		return mkCppType(cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with}), defs)
 
 	default:
-		Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
+		cv.Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 	}
 
 	panic("convertTypeSpec, bug, unreacheable code reached !")
@@ -2899,7 +2924,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		return cv.convertEllipsisTypeExpr(n)
 
 	default:
-		Panicf("convertTypeExpr, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
+		cv.Panicf("convertTypeExpr, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
@@ -3016,7 +3041,7 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 		res.namePrefix = param.name + templatePrmList + "::"
 		res.out = cv.cpp
 	default:
-		Panicf("unmanaged GenOutputType value %v", param.output)
+		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
 	return res
@@ -3062,7 +3087,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	case implem:
 		// Nothing to do
 	default:
-		Panicf("unmanaged GenOutputType value %v", param.output)
+		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
 	excludedNames := append(templatePrms, param.name)
@@ -3151,7 +3176,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	case implem:
 		// Nothing to do
 	default:
-		Panicf("unmanaged GenOutputType value %v", param.output)
+		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
 	if param.streamOp == with {
@@ -3228,7 +3253,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	case implem:
 		data.out.indent--
 	default:
-		Panicf("unmanaged GenOutputType value %v", param.output)
+		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
 	fmt.Fprintf(buf, "\n")
@@ -3332,7 +3357,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	case implem:
 		data.out.indent++
 	default:
-		Panicf("unmanaged GenOutputType value %v", param.output)
+		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
 	for _, method := range methods {
@@ -3431,7 +3456,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 			basicLit = "std::string"
 			canFwd = false
 		default:
-			Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
+			cv.Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
 		}
 		cppType := mkCppType(basicLit, nil)
 		cppType.canFwd = canFwd
@@ -3486,7 +3511,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		}
 		return cppType
 	} else {
-		Panicf("convertExprCppType, [%T, %s, %s]", node, types.ExprString(node), cv.Position(node))
+		cv.Panicf("convertExprCppType, [%T, %s, %s]", node, types.ExprString(node), cv.Position(node))
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
@@ -3516,7 +3541,7 @@ func (cv *cppConverter) convertExprType(node ast.Expr) types.Type {
 		}
 	}
 
-	Panicf("convertExprType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
+	cv.Panicf("convertExprType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
 	panic("convertExprType, bug, unreacheable code reached !")
 }
 
@@ -3802,7 +3827,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		return ExprPrintf("gocpp::getValue<%s>(%s)", cv.convertExprCppType(n.Type), cv.convertExpr(n.X))
 
 	default:
-		Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
+		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
 	panic("convertExprType, bug, unreacheable code reached !")
 }
@@ -3987,6 +4012,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		parentCv.Logf(" => Loading dependency: %v, %v [%v]\n", pkgInfo.pkgPath, pkgInfo.filePath, pkgInfo.fileType)
 
 		var cv *cppConverter = new(cppConverter)
+		cv.parentCv = parentCv
 		cv.logPrefix = parentCv.logPrefix + "##> "
 		cv.tryRecover = !shared.strictMode
 		cv.shared = parentCv.shared

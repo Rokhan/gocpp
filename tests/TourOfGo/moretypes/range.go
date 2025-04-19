@@ -13,6 +13,14 @@ func main() {
 		fmt.Printf("2**%v = %v\n", i, v)
 	}
 
+	for i := range pow {
+		fmt.Printf("%v\n", i)
+	}
+
+	for _, v := range pow {
+		fmt.Printf("%v\n", v)
+	}
+
 	var n int = 0
 	for range pow {
 		n++

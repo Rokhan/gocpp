@@ -1736,13 +1736,25 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.RangeStmt:
 		if s.Key != nil && s.Value != nil && s.Tok == token.DEFINE {
-			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			if ident, ok := s.Key.(*ast.Ident); ok && ident.Name == "_" {
+				cv.WritterExprPrintf(cppOut, "%sfor(auto [gocpp_ignored, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			} else {
+				cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			}
+		} else if s.Key != nil && s.Value != nil && s.Tok == token.ASSIGN {
+			if ident, ok := s.Key.(*ast.Ident); ok && ident.Name == "_" {
+				cv.WritterExprPrintf(cppOut, "%sfor(std::tie(std::ignored, %s) : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			} else {
+				cv.WritterExprPrintf(cppOut, "%sfor(std::tie(%s, %s) : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			}
 		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
+		} else if s.Key == nil && s.Value != nil && s.Tok == token.DEFINE {
+			cv.WritterExprPrintf(cppOut, "%sfor(auto [gocpp_ignored, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 		} else if s.Key == nil && s.Value == nil {
 			cv.WritterExprPrintf(cppOut, "%sfor(const auto& _ : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.X))
 		} else {
-			Panicf("Unmanaged case of '*ast.RangeStmt', token: %v, input: %v", s.Tok, cv.Position(s))
+			Panicf("Unmanaged case of '*ast.RangeStmt', token: %v; key: %v, value:%v, input: %v", s.Tok, s.Key, s.Value, cv.Position(s))
 		}
 		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 

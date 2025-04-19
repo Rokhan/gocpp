@@ -3362,7 +3362,6 @@ func withFileBuffer(action action, file *outFile) string {
 // Maybe merge this function with "convertExpr" in future ?
 // Maybe merge this function with "convertExprType" in future ?
 // Maybe merge this function with "convertTypeExpr" in future ?
-// Return cppType ?
 func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	if node == nil {
 		return mkCppType("", nil)
@@ -3419,6 +3418,9 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		// 	objType := convertExprType(n.X)
 		// 	indexType := convertExprType(n.Index)
 		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+
+	case *ast.InterfaceType, *ast.StructType:
+		return cv.convertTypeExpr(n)
 	}
 
 	// Generic fallback to guess type

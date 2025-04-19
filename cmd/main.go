@@ -1033,17 +1033,33 @@ func (cv *cppConverter) getReferencedTypesFor(file string) (usedTypes map[types.
 	usedTypes = make(map[types.Object]tagType)
 
 	/*
-	 * We need to manage dependecies in header and cpp like we do in forward header.
+	 * We need to manage dependencies in header and cpp like we do in forward header.
 	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
 	 */
+
+	types := cv.typeInfo.Types
+	cv.filterTypes(types, file, usedTypes, UsesTag)
 	uses := cv.typeInfo.Uses
-	cv.filtereUsedObjects(uses, file, usedTypes, UsesTag)
+	cv.filterUsedObjects(uses, file, usedTypes, UsesTag)
 	defs := cv.typeInfo.Defs
-	cv.filtereUsedObjects(defs, file, usedTypes, DefsTag)
+	cv.filterUsedObjects(defs, file, usedTypes, DefsTag)
 	return
 }
 
-func (cv *cppConverter) filtereUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
+func (cv *cppConverter) filterTypes(srcTypes map[ast.Expr]types.TypeAndValue, file string, usedTypes map[types.Object]tagType, tag tagType) {
+	for expr, typeAndValue := range srcTypes {
+		var filePos = cv.Position(expr)
+		if file != filePos.Filename {
+			continue
+		}
+
+		for _, o := range GetObjectsOfType(typeAndValue.Type) {
+			usedTypes[o] |= tag
+		}
+	}
+}
+
+func (cv *cppConverter) filterUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
 	for id, obj := range objs {
 		var filePos = cv.Position(id)
 		if file != filePos.Filename {
@@ -2502,6 +2518,7 @@ func fwdHeaderStrf(di depInfo, node ast.Node, format string, params ...any) []pl
 type cppExpr struct {
 	str  string  // cpp type as a string
 	defs []place // inline def used by type
+	// probably need some depInfo here
 }
 
 func (expr cppExpr) toCppType() cppType {
@@ -2692,24 +2709,32 @@ func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
 	return depInfo{definedName, map[types.Type]bool{usedType: true}, n.Name.Name, map[string]bool{}, "", pkgs, 0, 0}
 }
 
-func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
-	// // Probably wrong, should be managed differently than types
-	// // We need to manage dependecies on variable names declaration and not on types.
-	// defName := cv.typeInfo.Defs[n.Names[i]].Type()
-	// defType := cv.typeInfo.Types[n.Type].Type
-	// return depInfo{defName, map[types.Type]bool{defType: true}, 0}
+type set[T comparable] map[T]bool
 
-	var pkgs map[string]bool
-	var names map[string]bool
-	if n.Values != nil {
-		pkgs = cv.getAllUsedPackages(n.Values[i])
-		names = cv.getAllUsedNames(n.Values[i])
-	} else {
-		pkgs = map[string]bool{}
-		names = map[string]bool{}
+func (target set[T]) append(src map[T]bool) {
+	for k, v := range src {
+		target[k] = v
 	}
+}
+
+func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	defType := cv.typeInfo.Defs[n.Names[i]].Type()
-	return depInfo{nil, map[types.Type]bool{defType: true}, n.Names[i].Name, names, "", pkgs, 0, 0}
+	deps := map[types.Type]bool{defType: true}
+	pkgs := make(set[string])
+	names := make(set[string])
+	if n.Values != nil {
+		pkgs.append(cv.getAllUsedPackages(n.Values[i]))
+		names.append(cv.getAllUsedNames(n.Values[i]))
+	}
+
+	if n.Type != nil {
+		pkgs.append(cv.getAllUsedPackages(n.Type))
+		names.append(cv.getAllUsedNames(n.Type))
+		declType := cv.typeInfo.Types[n.Type].Type
+		deps[declType] = true
+	}
+
+	return depInfo{nil, deps, n.Names[i].Name, names, "", pkgs, 0, 0}
 }
 
 func isMapType(node ast.Expr) bool {

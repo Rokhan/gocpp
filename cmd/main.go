@@ -1190,16 +1190,19 @@ type errorFilter struct {
 func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 
 	for _, pkg := range pkgInfos {
+		pkgFilePath := strings.ReplaceAll(pkg.filePath, "\\", "/")
+		pkgName := strings.ReplaceAll(pkg.name, "\\", "/")
 
 		// Potentially slow but funtion 'ignoreKnownErrors' should be removed completly in future
 		for _, bad := range knownCompilationErrors {
-			pkgFilePath := strings.ReplaceAll(pkg.filePath, "\\", "/")
-			pkgName := strings.ReplaceAll(pkg.name, "\\", "/")
 			if cv.shared.verbose {
 				cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
 			}
 			if pkgName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 				pkg.fileType = Ignored
+				if cv.shared.strictMode {
+					Panicf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
+				}
 				continue
 			}
 		}
@@ -1207,10 +1210,14 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 }
 
 func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFilter) bool {
+	pkgFilePath := strings.ReplaceAll(cv.srcBaseName, "\\", "/")
+
 	// Potentially slow but funtion 'ignoreKnownErrors' should be removed completly in future
 	for _, bad := range knownErrors {
-		pkgFilePath := strings.ReplaceAll(cv.srcBaseName, "\\", "/")
 		if funcName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
+			if cv.shared.strictMode {
+				Panicf("ignoreKnownError, funcName: '%v', bad.target: '%v', pkgFilePath: '%v', bad.file: '%v'\n", funcName, bad.target, pkgFilePath, bad.file)
+			}
 			return true
 		}
 	}

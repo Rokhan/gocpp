@@ -95,8 +95,8 @@ methods: $(filter $(LOGDIR)/tests/TourOfGo/methods/methods%, $(OUT_EXE_TEST_FILE
 		 $(filter $(LOGDIR)/tests/TourOfGo/methods/indirection%, $(OUT_EXE_TEST_FILES))
 interface: $(filter $(LOGDIR)/tests/TourOfGo/methods/interface%, $(OUT_EXE_TEST_FILES))
 
-gocpp.exe: cmd/main.go cmd/constants.go
-	go build -o gocpp.exe cmd/main.go cmd/constants.go
+gocpp.exe: cmd/main.go cmd/constants.go cmd/utils.go
+	go build -o gocpp.exe cmd/main.go cmd/constants.go cmd/utils.go
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $<")

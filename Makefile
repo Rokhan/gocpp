@@ -28,12 +28,15 @@ CCACHE := $(shell which ccache 2> /dev/null)
 GOCPP_ALWAYS_REGENERATE = false
 GOCPP_STRICT_MODE = false
 GOCPP_VERBOSE = false
+GOCPP_IGNORE_DEPENDENCIES = false
 
-GOCPP_PARAMETERS = -parseFmt=false -strictMode=$(GOCPP_STRICT_MODE) -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE) -verbose=$(GOCPP_VERBOSE) -binOutDir=$(LOGDIR) -cppOutDir=$(OUTDIR)
-### Maybe use something like this if we keep adding more parameters
-#ifeq ($(GOCPP_ALWAYS_REGENERATE), true)
-#	GOCPP_PARAMETERS += -alwaysRegenerate=true
-#endif
+GOCPP_PARAMETERS = -parseFmt=false
+GOCPP_PARAMETERS += -strictMode=$(GOCPP_STRICT_MODE)
+GOCPP_PARAMETERS += -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE)
+GOCPP_PARAMETERS += -ignoreDependencies=$(GOCPP_IGNORE_DEPENDENCIES)
+GOCPP_PARAMETERS += -verbose=$(GOCPP_VERBOSE)
+GOCPP_PARAMETERS += -binOutDir=$(LOGDIR)
+GOCPP_PARAMETERS += -cppOutDir=$(OUTDIR)
 
 ON_DIFF_ERROR = false
 ON_GCC_ERROR = false

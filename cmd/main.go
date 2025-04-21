@@ -32,6 +32,7 @@ type cppConverterSharedData struct {
 	verbose          bool
 	strictMode       bool
 	alwaysRegenerate bool
+	ignoreDeps       bool
 
 	// shared data
 	parsedFiles    map[string]*ast.File
@@ -3363,8 +3364,10 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 				continue
 			}
 			shared.generatedFiles[cv.inputName] = true
-			newGeneratedfiles = true
-			notConverted = append(notConverted, cv.ConvertFile()...)
+			if !shared.ignoreDeps {
+				newGeneratedfiles = true
+				notConverted = append(notConverted, cv.ConvertFile()...)
+			}
 		}
 
 		loopCount++
@@ -3387,6 +3390,7 @@ func main() {
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
 	strictMode := flag.Bool("strictMode", true, "panic on every error")
+	ignoreDeps := flag.Bool("ignoreDependencies", false, "only generate target file")
 	verbose := flag.Bool("verbose", false, "verbose logs")
 	alwaysRegenerate := flag.Bool("alwaysRegenerate", false, "force to always generate, even if more recent")
 
@@ -3420,6 +3424,7 @@ func main() {
 	shared.verbose = *verbose
 	shared.strictMode = *strictMode
 	shared.alwaysRegenerate = *alwaysRegenerate
+	shared.ignoreDeps = *ignoreDeps
 
 	cv := new(cppConverter)
 	cv.shared = shared

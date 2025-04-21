@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -102,12 +103,13 @@ func (cv *cppConverter) GenerateId() (id string) {
 	return id
 }
 
-func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, tag tagType, suffix string) {
+func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, tag tagType, suffix string) []string {
 	if pkgInfos == nil {
-		return
+		return nil
 	}
 
-	var alreadyIncluded map[string]bool = make(map[string]bool)
+	var alreadyIncluded set[string] = make(set[string])
+	var nsSet set[string] = make(set[string])
 
 	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
 		return strings.Compare(p1.basePath(), p2.basePath())
@@ -120,18 +122,23 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 		if _, done := alreadyIncluded[pkgInfo.filePath]; done {
 			continue
 		}
-		alreadyIncluded[pkgInfo.filePath] = true
-
+		alreadyIncluded.add(pkgInfo.filePath)
 		//fmt.Fprintf(out, "// globalSubDir: %v -- pkgInfo.pkgPath: %v -- pkgInfo.filePath: %v \n", globalSubDir, pkgInfo.pkgPath, pkgInfo.filePath)
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
 			fmt.Fprintf(out, "#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
+			nsSet.add(pkgInfo.name)
 		case Ignored:
 			fmt.Fprintf(out, "// #include \"%v%v%v\"  [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
 		}
 	}
 	fmt.Fprintf(out, "\n")
+	nsList := maps.Keys(nsSet)
+	slices.SortFunc(nsList, func(x, y string) int {
+		return strings.Compare(x, y)
+	})
+	return nsList
 }
 
 func (cv *cppConverter) includeFwdHeaderDependencies(pkgInfos []*pkgInfo, suffix string, order int) (result []*place) {
@@ -188,11 +195,20 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, UsesTag, ".h")
+	namespaces := includeDependencies(out, cv.shared.globalSubDir, pkgInfos, UsesTag, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(out, "{\n")
+
+	fmt.Fprintf(out, "    namespace rec\n")
+	fmt.Fprintf(out, "    {\n")
+	fmt.Fprintf(out, "        using namespace mocklib::%s;\n", recNs)
+	for _, ns := range namespaces {
+		fmt.Fprintf(out, "        using namespace %s::%s;\n", ns, recNs)
+	}
+	fmt.Fprintf(out, "    }\n\n")
+
 	cv.cpp.indent++
 }
 
@@ -467,6 +483,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	printCppIntro(cv, usedPkgInfos)
 
 	var fwdHeaderElts []*place
+	var headerEnds []string
 	initialOrder := 0
 	for i := 0; i < len(allOutPlaces); i++ {
 		for _, place := range allOutPlaces[i] {
@@ -477,6 +494,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 				initialOrder++
 				place.depInfo.initialOrder = initialOrder
 				fwdHeaderElts = append(fwdHeaderElts, &place)
+			}
+			if place.headerEnd != nil {
+				headerEnds = append(headerEnds, *place.headerEnd)
 			}
 
 			if place.header != nil {
@@ -490,6 +510,16 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		fmt.Fprintf(cv.hpp.out, "%s", allHppOut[i])
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
+
+	// nb, we want to have always a rec namespace even if empty
+	fmt.Fprintf(cv.hpp.out, "\n%snamespace %s\n", cv.hpp.Indent(), recNs)
+	fmt.Fprintf(cv.hpp.out, "%s{\n", cv.hpp.Indent())
+	cv.hpp.indent++
+	for _, headerEnd := range headerEnds {
+		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), headerEnd)
+	}
+	cv.hpp.indent--
+	fmt.Fprintf(cv.hpp.out, "%s}\n", cv.hpp.Indent())
 
 	fwdHeaderElts = append(fwdHeaderElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".fwd.h", initialOrder)...)
 	inNamespace := false
@@ -927,7 +957,7 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 		pkgFilePath := strings.ReplaceAll(pkg.filePath, "\\", "/")
 		pkgName := strings.ReplaceAll(pkg.name, "\\", "/")
 
-		// Potentially slow but funtion 'ignoreKnownErrors' should be removed completly in future
+		// Potentially slow but funtion 'knownCompilationErrors' should be empty in future
 		for _, bad := range knownCompilationErrors {
 			if cv.shared.verbose {
 				cv.Logf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
@@ -935,7 +965,7 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 			if pkgName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 				pkg.fileType = Ignored
 				if cv.shared.strictMode {
-					cv.Panicf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v', stack: %s\n", pkg.name, bad.target, pkgFilePath, bad.file)
+					cv.Panicf("ignoreKnownErrors, pkg.name: '%v', bad.pkg: '%v', pkgFilePath: '%v', bad.file: '%v'\n", pkg.name, bad.target, pkgFilePath, bad.file)
 				}
 				continue
 			}
@@ -946,7 +976,7 @@ func (cv *cppConverter) ignoreKnownErrors(pkgInfos []*pkgInfo) {
 func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFilter) bool {
 	pkgFilePath := strings.ReplaceAll(cv.srcBaseName, "\\", "/")
 
-	// Potentially slow but funtion 'ignoreKnownErrors' should be removed completly in future
+	// Potentially slow but funtion 'knownErrors' should be empty in future
 	for _, bad := range knownErrors {
 		if funcName == bad.target && strings.HasSuffix(pkgFilePath, bad.file) {
 			if cv.shared.strictMode {
@@ -1004,11 +1034,11 @@ func (cv *cppConverter) printOrKeepPlace(place place, outPlaces *[]place, pkgInf
 		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), *place.header)
 	}
 
-	//outline, fwdHeader and pkgInfo will be managed by caller
-	if place.outline != nil {
-		*outPlaces = append(*outPlaces, place)
-	}
-	if place.fwdHeader != nil {
+	place.inline = nil
+	place.header = nil
+
+	//outline, headerEnd, fwdHeader and pkgInfo will be managed by caller
+	if place.headerEnd != nil || place.outline != nil || place.fwdHeader != nil {
 		*outPlaces = append(*outPlaces, place)
 	}
 	if place.pkgInfo != nil {
@@ -1016,11 +1046,11 @@ func (cv *cppConverter) printOrKeepPlace(place place, outPlaces *[]place, pkgInf
 	}
 }
 
-// func (cv *cppConverter) printOrKeepPlaces(places []place, outPlaces *[]place, pkgInfos *[]*pkgInfo) {
-// 	for _, place := range places {
-// 		cv.printOrKeepPlace(place, outPlaces, pkgInfos)
-// 	}
-// }
+func (cv *cppConverter) printOrKeepPlaces(places []place, outPlaces *[]place, pkgInfos *[]*pkgInfo) {
+	for _, place := range places {
+		cv.printOrKeepPlace(place, outPlaces, pkgInfos)
+	}
+}
 
 func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces []place, pkgInfos []*pkgInfo) {
 	cv.Logf("decl: %v at %v\n", reflect.TypeOf(decl), cv.Position(decl))
@@ -1052,13 +1082,23 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 		name := GetCppName(d.Name.Name)
 
+		funcDef := []place{}
+		var appendStrf func(outPlaces *[]place, format string, args ...interface{})
+		var prefix string = ""
+		if d.Recv == nil || d.Recv.NumFields() == 0 {
+			appendStrf = appendHeaderStrf
+		} else {
+			appendStrf = appendHeaderEndStrf
+			prefix = "rec::"
+		}
+
 		if cv.ignoreKnownError(name, knownNameConflicts) {
-			fmt.Fprintf(cv.hpp.out, "%s/* %s %s(%s); [Ignored, known name conflict] */ \n", cv.cpp.Indent(), resultType, name, params)
+			appendStrf(&funcDef, "/* %s %s(%s); [Ignored, known name conflict] */ \n", resultType, name, params)
 		} else {
 			if len(typenames) != 0 {
-				fmt.Fprintf(cv.hpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typenames))
+				appendStrf(&funcDef, "\n%s\n", mkTemplateDec(typenames))
 			}
-			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s);\n", cv.cpp.Indent(), resultType, name, params)
+			appendStrf(&funcDef, "%s %s(%s);\n", resultType, name, params)
 		}
 
 		last, ok := Last(params)
@@ -1078,25 +1118,25 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			callParams := strings.Join(strs, ", ")
 			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil), false})
 
-			fmt.Fprintf(cv.hpp.out, "\n%stemplate<typename... Args>\n", cv.cpp.Indent())
-			fmt.Fprintf(cv.hpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, varidicParams)
-			fmt.Fprintf(cv.hpp.out, "%s{\n", cv.cpp.Indent())
-			fmt.Fprintf(cv.hpp.out, "%s    return %s(%s);\n", cv.cpp.Indent(), name, callParams)
-			fmt.Fprintf(cv.hpp.out, "%s}\n\n", cv.cpp.Indent())
+			appendStrf(&funcDef, "\ntemplate<typename... Args>\n")
+			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, varidicParams)
+			appendStrf(&funcDef, "{\n")
+			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams)
+			appendStrf(&funcDef, "}\n\n")
 		}
+
+		cv.printOrKeepPlaces(funcDef, &outPlaces, nil)
 
 		if len(typenames) != 0 {
 			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typenames))
 		}
-		fmt.Fprintf(cv.cpp.out, "%s%s %s(%s)\n", cv.cpp.Indent(), resultType, name, params)
+		fmt.Fprintf(cv.cpp.out, "%s%s %s%s(%s)\n", cv.cpp.Indent(), resultType, prefix, name, params)
 		if name == "main" {
 			cv.hasMain = true
 		}
 
 		blockPlaces := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
-		for _, place := range blockPlaces {
-			cv.printOrKeepPlace(place, &outPlaces, nil)
-		}
+		cv.printOrKeepPlaces(blockPlaces, &outPlaces, nil)
 		fmt.Fprintf(cv.cpp.out, "\n")
 
 	case *ast.BadDecl:
@@ -1710,6 +1750,9 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 				}
 				if declItem.header != nil {
 					cv.Panicf("inlineStmt, not implemented, can't declare header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
+				}
+				if declItem.headerEnd != nil {
+					cv.Panicf("inlineStmt, not implemented, can't declare headerEnd from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
 				}
 				if declItem.fwdHeader != nil {
 					cv.Panicf("inlineStmt, not implemented, can't declare forward header from here. subtype [%v], input: %v", reflect.TypeOf(d), cv.Position(s))
@@ -2621,7 +2664,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			if data.needBody {
 				forwardParams := JoinWithPrefix(method.params.Names(), ", ")
 				fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
-				fmt.Fprintf(buf, "%s        return %s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), method.name, forwardParams)
+				fmt.Fprintf(buf, "%s        return %s::%s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), recNs, method.name, forwardParams)
 				fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 			}
 		}
@@ -2636,7 +2679,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			fmt.Fprintf(buf, "%[1]s    template<typename T, typename StoreT>\n", data.out.Indent())
 			fmt.Fprintf(buf, "%[1]s    %[2]s %[5]s::%[5]sImpl<T, StoreT>::v%[3]s(%[4]s)\n", data.out.Indent(), method.result, method.name, method.params, structName)
 			fmt.Fprintf(buf, "%[1]s    {\n", data.out.Indent())
-			fmt.Fprintf(buf, "%[1]s        return %s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), method.name, forwardParams)
+			fmt.Fprintf(buf, "%[1]s        return %s::%s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), recNs, method.name, forwardParams)
 			fmt.Fprintf(buf, "%[1]s    }\n", data.out.Indent())
 		}
 	}
@@ -2651,6 +2694,10 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	default:
 		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
+
+	fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
+	fmt.Fprintf(buf, "%s{", data.out.Indent())
+	data.out.indent++
 
 	for _, method := range methods {
 		endParams := ""
@@ -2674,6 +2721,9 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 		}
 	}
+
+	data.out.indent--
+	fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 
 	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
@@ -3045,7 +3095,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 					cv.BuffExprPrintf(buf, "%v(", funcName)
 				}
 			} else {
-				cv.BuffExprPrintf(buf, "%v(gocpp::recv(%v)", cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
+				cv.BuffExprPrintf(buf, "%s::%v(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				sep = ", "
 			}
 		case *ast.ParenExpr:
@@ -3217,7 +3267,10 @@ func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
 }
 
 func (cv *cppConverter) Position(expr ast.Node) token.Position {
-	return cv.shared.fileSet.Position(expr.Pos())
+	if expr != nil {
+		return cv.shared.fileSet.Position(expr.Pos())
+	}
+	return token.Position{}
 }
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */

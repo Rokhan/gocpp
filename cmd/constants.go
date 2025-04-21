@@ -1,5 +1,10 @@
 package main
 
+var baseIndent string = "    "
+
+// receiver namespace
+var recNs = "rec"
+
 // cf following files to add missing types:
 //
 //	=> "go\types\basic.go"
@@ -128,14 +133,13 @@ var stdFuncMapping = map[string]string{
 var knownCompilationErrors = []*errorFilter{
 	{"abi", "internal/abi/symtab.go"},
 	{"bytealg", "internal/bytealg/bytealg.go"},
-	{"cmp", "cmp/cmp.go"},
+	/**/ {"cmp", "cmp/cmp.go"},
 	{"cpu", "internal/cpu/cpu.go"},
 	{"atomic", "sync/atomic/doc.go"},
 	{"fmtsort", "internal/fmtsort/sort.go"},
-	{"wc", "golang.org/x/tour@v0.1.0/wc/wc.go"},
 	{"png", "image/png/writer.go"},
 	{"race", "internal/race/norace.go"},
-	{"reflect", "reflect/value.go"},
+	/**/ {"reflect", "reflect/value.go"},
 	{"runtime", "runtime/alg.go"},
 	{"runtime", "runtime/cgocall.go"},
 	{"runtime", "runtime/defs_windows.go"},
@@ -170,10 +174,10 @@ var knownCompilationErrors = []*errorFilter{
 	{"runtime", "runtime/trace2runtime.go"},
 	{"runtime", "runtime/time.go"},
 	{"runtime", "runtime/typekind.go"},
-	{"slices", "slices/sort.go"},
-	{"slices", "slices/zsortanyfunc.go"},
-	{"slices", "slices/zsortordered.go"},
-	{"sync", "sync/cond.go"},
+	/**/ {"slices", "slices/sort.go"},
+	/**/ {"slices", "slices/zsortanyfunc.go"},
+	/**/ {"slices", "slices/zsortordered.go"},
+	/**/ {"sync", "sync/cond.go"},
 	{"sync", "sync/runtime.go"},
 	{"sync", "sync/runtime2.go"},
 	{"time", "time/tick.go"},
@@ -217,9 +221,6 @@ var knownNameConflicts = []*errorFilter{
 	{"doRecordGoroutineProfile", "runtime/mprof"},    // missing type from broken include
 	{"saveg", "runtime/mprof"},                       // missing type from broken include
 
-	{"Month", "time/time"},      // func vs type
-	{"Weekday", "time/time"},    // func vs type
-	{"Location", "time/time"},   // func vs type
 	{"Hour", "time/time"},       // func vs constant
 	{"Minute", "time/time"},     // func vs constant
 	{"Second", "time/time"},     // func vs constant

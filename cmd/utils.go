@@ -180,8 +180,6 @@ type outFile struct {
 	indent int
 }
 
-var baseIndent string = "    "
-
 func (of *outFile) Indent() string {
 	return strings.Repeat(baseIndent, of.indent)
 }
@@ -549,12 +547,14 @@ func ComputeDeps(toDo map[types.Type]bool) map[types.Type]bool {
 }
 
 type place struct {
-	// when type/declaration can be used inlined
+	// when type/declaration need be generated inlined
 	inline *string
-	// when type/declaration need to be used outside function
+	// when type/declaration need to be generated outline function
 	outline *string
 	// when type/declaration need to be in header
 	header *string
+	// when type/declaration need to be at end of header
+	headerEnd *string
 	// when type/declaration need to be in forward declarations header
 	fwdHeader *string
 	isInclude bool
@@ -572,27 +572,31 @@ type place struct {
 }
 
 func inlineStr(str string, node ast.Node) place {
-	return place{&str, nil, nil, nil, false, depInfo{}, nil, node}
+	return place{&str, nil, nil, nil, nil, false, depInfo{}, nil, node}
 }
 
 func outlineStr(str string, node ast.Node) place {
-	return place{nil, &str, nil, nil, false, depInfo{}, nil, node}
+	return place{nil, &str, nil, nil, nil, false, depInfo{}, nil, node}
 }
 
 func headerStr(str string, node ast.Node) place {
-	return place{nil, nil, &str, nil, false, depInfo{}, nil, node}
+	return place{nil, nil, &str, nil, nil, false, depInfo{}, nil, node}
+}
+
+func headerEndStr(str string) place {
+	return place{nil, nil, nil, &str, nil, false, depInfo{}, nil, nil}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
-	return place{nil, nil, nil, &str, false, depInfo, nil, node}
+	return place{nil, nil, nil, nil, &str, false, depInfo, nil, node}
 }
 
 func includeStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, &str, true, depInfo, nil, nil}
+	return place{nil, nil, nil, nil, &str, true, depInfo, nil, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node}
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {
@@ -613,10 +617,28 @@ func headerStrf(node ast.Node, format string, params ...any) []place {
 	return expr.defs
 }
 
+func headerEndStrf(format string, params ...any) []place {
+	expr := ExprPrintf(format, params...)
+	expr.defs = append(expr.defs, headerEndStr(expr.str))
+	return expr.defs
+}
+
 func fwdHeaderStrf(di depInfo, node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
 	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, node, di))
 	return expr.defs
+}
+
+// func appendInlineStrf(places *[]place, format string, params ...any) {
+// 	*places = append(*places, inlineStrf(nil, format, params...)...)
+// }
+
+func appendHeaderStrf(places *[]place, format string, params ...any) {
+	*places = append(*places, headerStrf(nil, format, params...)...)
+}
+
+func appendHeaderEndStrf(places *[]place, format string, params ...any) {
+	*places = append(*places, headerEndStrf(format, params...)...)
 }
 
 type cppExpr struct {
@@ -706,6 +728,10 @@ func getAllIdentifiers(expr ast.Expr) map[*ast.Ident]bool {
 }
 
 type set[T comparable] map[T]bool
+
+func (target set[T]) add(elt T) {
+	target[elt] = true
+}
 
 func (target set[T]) append(src map[T]bool) {
 	for k, v := range src {

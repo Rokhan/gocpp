@@ -63,6 +63,30 @@ namespace golang
     {
         struct Time;
     }
+
+    // temporary hack, while we don't use the native runtime::error object
+    namespace errors
+    {
+        namespace rec
+        {
+            std::string Error(struct errorString* e);
+        }
+    }
+    namespace poll
+    {
+        namespace rec
+        {
+            std::string Error(struct errNetClosing e);
+            std::string Error(struct DeadlineExceededError* e);
+        }
+    }
+    namespace main
+    {
+        namespace rec
+        {
+            std::string Error(struct MyError* e);
+        }
+    }
 }
 
 namespace mocklib
@@ -75,6 +99,10 @@ namespace mocklib
         
     template<typename T>
     std::ostream& PrintSliceTo(std::true_type, std::ostream& os, gocpp::slice<T> const& slice);
+
+    namespace rec
+    {
+    }
 }
 
 // Support types implementations
@@ -442,6 +470,11 @@ namespace gocpp
             unwind();
         }
     };
+
+    // temporary hack, while we don't use the native runtime::error object
+    using golang::main::rec::Error;
+    using golang::errors::rec::Error;
+    using golang::poll::rec::Error;
 
     template <typename T>
     concept IsRefError = requires(const T& t) {
@@ -1152,6 +1185,8 @@ namespace golang
 {
     using gocpp::len;
     using go_any = gocpp::go_any;
+    using namespace mocklib;
+    using namespace mocklib::rec;
 }
 
 // temporary mock implementations
@@ -1204,8 +1239,11 @@ namespace mocklib
         return os;
     }
 
-    inline int Weekday(const Date &) { return Date::Saturday; };
-    inline int Hour(const Date &) { return 17; };
+    namespace rec
+    {
+        inline int Weekday(const Date&) { return Date::Saturday; };
+        inline int Hour(const Date&) { return 17; };
+    }
 
     const long Nanosecond = 1;
     const long Microsecond = 1000 * Nanosecond;
@@ -1242,15 +1280,18 @@ namespace mocklib
     {
         Mutex() : std::shared_ptr<std::mutex>(new std::mutex()) { }
     };
-    
-    void Lock(const Mutex& mutex)
-    {
-        mutex->lock();
-    }
 
-    void Unlock(const Mutex& mutex)
+    namespace rec
     {
-        mutex->unlock();
+        void Lock(const Mutex& mutex)
+        {
+            mutex->lock();
+        }
+
+        void Unlock(const Mutex& mutex)
+        {
+            mutex->unlock();
+        }
     }
 
     // internals: operators for tupples/ostream/slices
@@ -1584,6 +1625,9 @@ namespace mocklib
         wcSingleTest(func, "I ate a donut. Then I ate another donut.");
         wcSingleTest(func, "A man a plan a canal panama.");
     }
+
+    template<typename T>
+    void picShow(const T& func) { /* Just a mock */ }
 
     template<typename T>
     void picShowImage(const T& func) { /* Just a mock */ }

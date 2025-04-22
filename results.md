@@ -13,6 +13,8 @@
 | [TourOfGo/basics/inline-values.go](tests/TourOfGo/basics/inline-values.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/inline-values.cpp)) | ✔️ |
 | [TourOfGo/basics/iota.go](tests/TourOfGo/basics/iota.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/iota.cpp)) | ✔️ |
 | [TourOfGo/basics/multiple-results.go](tests/TourOfGo/basics/multiple-results.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/multiple-results.cpp)) | ✔️ |
+| [TourOfGo/basics/name-conflicts.go](tests/TourOfGo/basics/name-conflicts.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/name-conflicts.cpp)) | ❌ |
+| [TourOfGo/basics/name-conflicts-full.go](tests/TourOfGo/basics/name-conflicts-full.go) | ✔️ | ❌ | ❌ | ❌ |
 | [TourOfGo/basics/named-results.go](tests/TourOfGo/basics/named-results.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/named-results.cpp)) | ❌ |
 | [TourOfGo/basics/numeric-constants.go](tests/TourOfGo/basics/numeric-constants.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/numeric-constants.cpp)) | ❌ |
 | [TourOfGo/basics/packages.go](tests/TourOfGo/basics/packages.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/basics/packages.cpp)) | ➖ | 

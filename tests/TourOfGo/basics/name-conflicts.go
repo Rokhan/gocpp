@@ -7,6 +7,8 @@ import "fmt"
 
 const Pi = 3.14
 
+type titi float64
+
 type toto struct{}
 
 func (t toto) Pi() float64 {
@@ -15,6 +17,10 @@ func (t toto) Pi() float64 {
 
 func (t toto) toto() float64 {
 	return 0 + 0
+}
+
+func (t toto) titi(d titi) titi {
+	return d
 }
 
 func main() {

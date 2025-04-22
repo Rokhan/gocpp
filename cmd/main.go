@@ -2145,6 +2145,22 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 	}
 }
 
+func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
+	tv := cv.typeInfo.Types[id].Type
+
+	switch obj := tv.(type) {
+	case *types.Named:
+		switch tv.Underlying().(type) {
+		case *types.Basic:
+			if pkg := obj.Obj().Pkg(); pkg != nil {
+				return true, pkg.Name()
+			}
+			return false, ""
+		}
+	}
+	return false, ""
+}
+
 func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	switch cppType.str {
 	case "std::string":
@@ -2177,7 +2193,14 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 	switch n := node.(type) {
 	case *ast.Ident:
-		identType := mkCppType(GetCppType(n.Name), nil)
+		var identType cppType
+		isTD, pkg := cv.isTypedef(n)
+		if isTD {
+			identType = mkCppType(pkg+"::"+GetCppType(n.Name), nil)
+		} else {
+			identType = mkCppType(GetCppType(n.Name), nil)
+		}
+
 		cv.checkStructType(n, &identType)
 		cv.checkCanFwd(&identType)
 		cv.checkIsParam(n, &identType)

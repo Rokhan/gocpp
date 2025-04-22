@@ -55,7 +55,6 @@ namespace golang::strings
     int indexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
     int lastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
     std::tuple<asciiSet, bool> makeASCIISet(std::string chars);
-    bool contains(asciiSet* as, unsigned char c);
     std::string Trim(std::string s, std::string cutset);
     std::string TrimLeft(std::string s, std::string cutset);
     std::string trimLeftByte(std::string s, unsigned char c);
@@ -75,5 +74,10 @@ namespace golang::strings
     std::tuple<std::string, std::string, bool> Cut(std::string s, std::string sep);
     std::tuple<std::string, bool> CutPrefix(std::string s, std::string prefix);
     std::tuple<std::string, bool> CutSuffix(std::string s, std::string suffix);
+
+    namespace rec
+    {
+        bool contains(asciiSet* as, unsigned char c);
+    }
 }
 

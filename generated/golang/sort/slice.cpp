@@ -20,11 +20,20 @@
 
 namespace golang::sort
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace bits::rec;
+        using namespace reflectlite::rec;
+        using namespace sort::rec;
+    }
+
     void Slice(go_any x, std::function<bool (int i, int j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
         auto swap = reflectlite::Swapper(x);
-        auto length = Len(gocpp::recv(rv));
+        auto length = rec::Len(gocpp::recv(rv));
         auto limit = bits::Len((unsigned int)(length));
         pdqsort_func(lessSwap {less, swap}, 0, length, limit);
     }
@@ -33,13 +42,13 @@ namespace golang::sort
     {
         auto rv = reflectlite::ValueOf(x);
         auto swap = reflectlite::Swapper(x);
-        stable_func(lessSwap {less, swap}, Len(gocpp::recv(rv)));
+        stable_func(lessSwap {less, swap}, rec::Len(gocpp::recv(rv)));
     }
 
     bool SliceIsSorted(go_any x, std::function<bool (int i, int j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
-        auto n = Len(gocpp::recv(rv));
+        auto n = rec::Len(gocpp::recv(rv));
         for(auto i = n - 1; i > 0; i--)
         {
             if(less(i, i - 1))

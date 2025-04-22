@@ -130,21 +130,13 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
     struct eface* efaceOf(go_any* ep);
-    struct g* ptr(guintptr gp);
-    void set(guintptr* gp, struct g* g);
-    bool cas(guintptr* gp, guintptr old, guintptr go_new);
-    guintptr guintptr(struct g* gp);
     void setGNoWB(struct g** gp, struct g* go_new);
-    struct p* ptr(puintptr pp);
-    void set(puintptr* pp, struct p* p);
-    struct m* ptr(muintptr mp);
-    void set(muintptr* mp, struct m* m);
     void setMNoWB(struct m** mp, struct m* go_new);
     struct gobuf
     {
         uintptr_t sp;
         uintptr_t pc;
-        guintptr g;
+        runtime::guintptr g;
         unsafe::Pointer ctxt;
         uintptr_t ret;
         uintptr_t lr;
@@ -232,7 +224,7 @@ namespace golang::runtime
     struct heldLockInfo
     {
         uintptr_t lockAddr;
-        lockRank rank;
+        runtime::lockRank rank;
 
         using isGoStruct = void;
 
@@ -262,9 +254,9 @@ namespace golang::runtime
         atomic::Uint32 atomicstatus;
         uint32_t stackLock;
         uint64_t goid;
-        guintptr schedlink;
+        runtime::guintptr schedlink;
         int64_t waitsince;
-        waitReason waitreason;
+        runtime::waitReason waitreason;
         bool preempt;
         bool preemptStop;
         bool preemptShrink;
@@ -282,7 +274,7 @@ namespace golang::runtime
         uint8_t trackingSeq;
         int64_t trackingStamp;
         int64_t runnableTime;
-        muintptr lockedm;
+        runtime::muintptr lockedm;
         uint32_t sig;
         gocpp::slice<unsigned char> writebuf;
         uintptr_t sigcode0;
@@ -328,13 +320,13 @@ namespace golang::runtime
         gocpp::array<uintptr_t, tlsSlots> tls;
         std::function<void ()> mstartfn;
         g* curg;
-        guintptr caughtsig;
-        puintptr p;
-        puintptr nextp;
-        puintptr oldp;
+        runtime::guintptr caughtsig;
+        runtime::puintptr p;
+        runtime::puintptr nextp;
+        runtime::puintptr oldp;
         int64_t id;
         int32_t mallocing;
-        throwType throwing;
+        runtime::throwType throwing;
         std::string preemptoff;
         int32_t locks;
         int32_t dying;
@@ -356,16 +348,16 @@ namespace golang::runtime
         cgoCallers* cgoCallers;
         note park;
         m* alllink;
-        muintptr schedlink;
-        guintptr lockedg;
+        runtime::muintptr schedlink;
+        runtime::guintptr lockedg;
         gocpp::array<uintptr_t, 32> createstack;
         uint32_t lockedExt;
         uint32_t lockedInt;
-        muintptr nextwaitm;
+        runtime::muintptr nextwaitm;
         mLockProfile mLockProfile;
         std::function<bool (g*, unsafe::Pointer)> waitunlockf;
         unsafe::Pointer waitlock;
-        traceBlockReason waitTraceBlockReason;
+        runtime::traceBlockReason waitTraceBlockReason;
         int waitTraceSkip;
         uint32_t syscalltick;
         m* freelink;
@@ -373,7 +365,7 @@ namespace golang::runtime
         libcall libcall;
         uintptr_t libcallpc;
         uintptr_t libcallsp;
-        guintptr libcallg;
+        runtime::guintptr libcallg;
         libcall syscall;
         uintptr_t vdsoSP;
         uintptr_t vdsoPC;
@@ -401,11 +393,11 @@ namespace golang::runtime
     {
         int32_t id;
         uint32_t status;
-        puintptr link;
+        runtime::puintptr link;
         uint32_t schedtick;
         uint32_t syscalltick;
         sysmontick sysmontick;
-        muintptr m;
+        runtime::muintptr m;
         mcache* mcache;
         pageCache pcache;
         uintptr_t raceprocctx;
@@ -415,8 +407,8 @@ namespace golang::runtime
         uint64_t goidcacheend;
         uint32_t runqhead;
         uint32_t runqtail;
-        gocpp::array<guintptr, 256> runq;
-        guintptr runnext;
+        gocpp::array<runtime::guintptr, 256> runq;
+        runtime::guintptr runnext;
         gocpp_id_0 gFree;
         gocpp::slice<sudog*> sudogcache;
         gocpp::array<sudog*, 128> sudogbuf;
@@ -429,7 +421,7 @@ namespace golang::runtime
         int64_t gcAssistTime;
         int64_t gcFractionalMarkTime;
         limiterEvent limiterEvent;
-        gcMarkWorkerMode gcMarkWorkerMode;
+        runtime::gcMarkWorkerMode gcMarkWorkerMode;
         int64_t gcMarkWorkerStartTime;
         gcWork gcw;
         wbBuf wbBuf;
@@ -464,7 +456,7 @@ namespace golang::runtime
         atomic::Int64 lastpoll;
         atomic::Int64 pollUntil;
         mutex lock;
-        muintptr midle;
+        runtime::muintptr midle;
         int32_t nmidle;
         int32_t nmidlelocked;
         int64_t mnext;
@@ -472,7 +464,7 @@ namespace golang::runtime
         int32_t nmsys;
         int64_t nmfreed;
         atomic::Int32 ngsys;
-        puintptr pidle;
+        runtime::puintptr pidle;
         atomic::Int32 npidle;
         atomic::Int32 nmspinning;
         atomic::Uint32 needspinning;
@@ -711,8 +703,20 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct ancestorInfo& value);
     extern gocpp::array_base<std::string> waitReasonStrings;
-    std::string String(waitReason w);
-    bool isMutexWait(waitReason w);
     extern bool framepointer_enabled;
+
+    namespace rec
+    {
+        struct g* ptr(runtime::guintptr gp);
+        void set(runtime::guintptr* gp, struct g* g);
+        bool cas(runtime::guintptr* gp, runtime::guintptr old, runtime::guintptr go_new);
+        runtime::guintptr guintptr(struct g* gp);
+        struct p* ptr(runtime::puintptr pp);
+        void set(runtime::puintptr* pp, struct p* p);
+        struct m* ptr(runtime::muintptr mp);
+        void set(runtime::muintptr* mp, struct m* m);
+        std::string String(runtime::waitReason w);
+        bool isMutexWait(runtime::waitReason w);
+    }
 }
 

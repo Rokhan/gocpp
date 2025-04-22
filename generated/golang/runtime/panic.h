@@ -116,26 +116,30 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
-    std::string Error(PanicNilError*);
-    void RuntimeError(PanicNilError*);
     extern godebugInc* panicnil;
     void gopanic(go_any e);
-    void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp);
-    std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p);
-    bool nextFrame(struct _panic* p);
-    bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp);
     go_any gorecover(uintptr_t argp);
     void sync_throw(std::string s);
     void sync_fatal(std::string s);
     void go_throw(std::string s);
     void fatal(std::string s);
     void recovery(struct g* gp);
-    void fatalthrow(throwType t);
+    void fatalthrow(runtime::throwType t);
     void fatalpanic(struct _panic* msgs);
     bool startpanic_m();
     bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);
     bool canpanic();
     bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr);
     bool isAbortPC(uintptr_t pc);
+
+    namespace rec
+    {
+        std::string Error(PanicNilError*);
+        void RuntimeError(PanicNilError*);
+        void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp);
+        std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p);
+        bool nextFrame(struct _panic* p);
+        bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp);
+    }
 }
 

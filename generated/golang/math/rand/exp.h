@@ -13,9 +13,13 @@
 
 namespace golang::rand
 {
-    double ExpFloat64(struct Rand* r);
     extern gocpp::array<uint32_t, 256> ke;
     extern gocpp::array<float, 256> we;
     extern gocpp::array<float, 256> fe;
+
+    namespace rec
+    {
+        double ExpFloat64(struct Rand* r);
+    }
 }
 

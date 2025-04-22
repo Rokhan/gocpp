@@ -13,6 +13,11 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void sysargs(int32_t argc, unsigned char** argv)
     {
     }

@@ -19,7 +19,7 @@ namespace golang::runtime
     struct randomEnum;
     struct initTask;
     struct tracestat;
-    const stwReason stwUnknown = 0;
+    const runtime::stwReason stwUnknown = 0;
     const stwReason stwGCMarkTerm = 1;
     const stwReason stwGCSweepTerm = 2;
     const stwReason stwWriteHeapDump = 3;

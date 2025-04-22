@@ -54,12 +54,14 @@ namespace golang::main
         std::shared_ptr<IAbser> value;
     };
 
-    double Abs(const gocpp::PtrRecv<Abser, false>& self);
-    double Abs(const gocpp::ObjRecv<Abser>& self);
+    namespace rec
+    {
+        double Abs(const gocpp::PtrRecv<Abser, false>& self);
+        double Abs(const gocpp::ObjRecv<Abser>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value);
     void main();
-    double Abs(MyFloat f);
     struct Vertex
     {
         double X;
@@ -77,6 +79,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    double Abs(struct Vertex* v);
+
+    namespace rec
+    {
+        double Abs(main::MyFloat f);
+        double Abs(struct Vertex* v);
+    }
 }
 

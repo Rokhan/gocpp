@@ -56,16 +56,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct typePointers& value);
-    struct typePointers typePointersOf(struct mspan* span, uintptr_t addr, uintptr_t size);
-    struct typePointers typePointersOfUnchecked(struct mspan* span, uintptr_t addr);
-    struct typePointers typePointersOfType(struct mspan* span, struct abi::Type* typ, uintptr_t addr);
-    std::tuple<struct typePointers, uintptr_t> nextFast(struct typePointers tp);
-    std::tuple<struct typePointers, uintptr_t> next(struct typePointers tp, uintptr_t limit);
-    struct typePointers fastForward(struct typePointers tp, uintptr_t n, uintptr_t limit);
-    uintptr_t objBase(struct mspan* span, uintptr_t addr);
     void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, struct abi::Type* typ);
     void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, struct abi::Type* typ);
-    void initHeapBits(struct mspan* s, bool forceClear);
     uintptr_t bswapIfBigEndian(uintptr_t x);
     struct writeUserArenaHeapBits
     {
@@ -86,14 +78,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value);
-    struct writeUserArenaHeapBits writeUserArenaHeapBits(struct mspan* s, uintptr_t addr);
-    struct writeUserArenaHeapBits write(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid);
-    struct writeUserArenaHeapBits pad(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t size);
-    void flush(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size);
-    gocpp::slice<uintptr_t> heapBits(struct mspan* span);
     gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize);
-    uintptr_t heapBitsSmallForAddr(struct mspan* span, uintptr_t addr);
-    uintptr_t writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, struct _type* typ);
     void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, struct _type* typ);
     uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, struct _type* typ, struct _type** header, struct mspan* span);
     void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, struct _type* typ, struct _type** header, struct mspan* span);
@@ -119,7 +104,26 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
     struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size);
-    std::tuple<struct heapBits, uintptr_t> next(struct heapBits h);
-    std::tuple<struct heapBits, uintptr_t> nextFast(struct heapBits h);
+
+    namespace rec
+    {
+        struct typePointers typePointersOf(struct mspan* span, uintptr_t addr, uintptr_t size);
+        struct typePointers typePointersOfUnchecked(struct mspan* span, uintptr_t addr);
+        struct typePointers typePointersOfType(struct mspan* span, struct abi::Type* typ, uintptr_t addr);
+        std::tuple<struct typePointers, uintptr_t> nextFast(struct typePointers tp);
+        std::tuple<struct typePointers, uintptr_t> next(struct typePointers tp, uintptr_t limit);
+        struct typePointers fastForward(struct typePointers tp, uintptr_t n, uintptr_t limit);
+        uintptr_t objBase(struct mspan* span, uintptr_t addr);
+        void initHeapBits(struct mspan* s, bool forceClear);
+        struct writeUserArenaHeapBits writeUserArenaHeapBits(struct mspan* s, uintptr_t addr);
+        struct writeUserArenaHeapBits write(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid);
+        struct writeUserArenaHeapBits pad(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t size);
+        void flush(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size);
+        gocpp::slice<uintptr_t> heapBits(struct mspan* span);
+        uintptr_t heapBitsSmallForAddr(struct mspan* span, uintptr_t addr);
+        uintptr_t writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, struct _type* typ);
+        std::tuple<struct heapBits, uintptr_t> next(struct heapBits h);
+        std::tuple<struct heapBits, uintptr_t> nextFast(struct heapBits h);
+    }
 }
 

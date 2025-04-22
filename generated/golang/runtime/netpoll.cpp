@@ -47,6 +47,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     pollDesc::operator T()
@@ -124,32 +135,32 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool closing(pollInfo i)
+    bool rec::closing(runtime::pollInfo i)
     {
         return i & pollClosing != 0;
     }
 
-    bool eventErr(pollInfo i)
+    bool rec::eventErr(runtime::pollInfo i)
     {
         return i & pollEventErr != 0;
     }
 
-    bool expiredReadDeadline(pollInfo i)
+    bool rec::expiredReadDeadline(runtime::pollInfo i)
     {
         return i & pollExpiredReadDeadline != 0;
     }
 
-    bool expiredWriteDeadline(pollInfo i)
+    bool rec::expiredWriteDeadline(runtime::pollInfo i)
     {
         return i & pollExpiredWriteDeadline != 0;
     }
 
-    pollInfo info(struct pollDesc* pd)
+    runtime::pollInfo rec::info(struct pollDesc* pd)
     {
-        return pollInfo(Load(gocpp::recv(pd->atomicInfo)));
+        return pollInfo(rec::Load(gocpp::recv(pd->atomicInfo)));
     }
 
-    void publishInfo(struct pollDesc* pd)
+    void rec::publishInfo(struct pollDesc* pd)
     {
         uint32_t info = {};
         if(pd->closing)
@@ -164,26 +175,26 @@ namespace golang::runtime
         {
             info |= pollExpiredWriteDeadline;
         }
-        info |= uint32_t(Load(gocpp::recv(pd->fdseq)) & pollFDSeqMask) << pollFDSeq;
-        auto x = Load(gocpp::recv(pd->atomicInfo));
-        for(; ! CompareAndSwap(gocpp::recv(pd->atomicInfo), x, (x & pollEventErr) | info); )
+        info |= uint32_t(rec::Load(gocpp::recv(pd->fdseq)) & pollFDSeqMask) << pollFDSeq;
+        auto x = rec::Load(gocpp::recv(pd->atomicInfo));
+        for(; ! rec::CompareAndSwap(gocpp::recv(pd->atomicInfo), x, (x & pollEventErr) | info); )
         {
-            x = Load(gocpp::recv(pd->atomicInfo));
+            x = rec::Load(gocpp::recv(pd->atomicInfo));
         }
     }
 
-    void setEventErr(struct pollDesc* pd, bool b, uintptr_t seq)
+    void rec::setEventErr(struct pollDesc* pd, bool b, uintptr_t seq)
     {
         auto mSeq = uint32_t(seq & pollFDSeqMask);
-        auto x = Load(gocpp::recv(pd->atomicInfo));
+        auto x = rec::Load(gocpp::recv(pd->atomicInfo));
         auto xSeq = (x >> pollFDSeq) & pollFDSeqMask;
         if(seq != 0 && xSeq != mSeq)
         {
             return;
         }
-        for(; (x & pollEventErr != 0) != b && ! CompareAndSwap(gocpp::recv(pd->atomicInfo), x, x ^ pollEventErr); )
+        for(; (x & pollEventErr != 0) != b && ! rec::CompareAndSwap(gocpp::recv(pd->atomicInfo), x, x ^ pollEventErr); )
         {
-            x = Load(gocpp::recv(pd->atomicInfo));
+            x = rec::Load(gocpp::recv(pd->atomicInfo));
             auto xSeq = (x >> pollFDSeq) & pollFDSeqMask;
             if(seq != 0 && xSeq != mSeq)
             {
@@ -235,14 +246,14 @@ namespace golang::runtime
 
     void netpollGenericInit()
     {
-        if(Load(gocpp::recv(netpollInited)) == 0)
+        if(rec::Load(gocpp::recv(netpollInited)) == 0)
         {
             lockInit(& netpollInitLock, lockRankNetpollInit);
             lock(& netpollInitLock);
-            if(Load(gocpp::recv(netpollInited)) == 0)
+            if(rec::Load(gocpp::recv(netpollInited)) == 0)
             {
                 netpollinit();
-                Store(gocpp::recv(netpollInited), 1);
+                rec::Store(gocpp::recv(netpollInited), 1);
             }
             unlock(& netpollInitLock);
         }
@@ -250,7 +261,7 @@ namespace golang::runtime
 
     bool netpollinited()
     {
-        return Load(gocpp::recv(netpollInited)) != 0;
+        return rec::Load(gocpp::recv(netpollInited)) != 0;
     }
 
     bool poll_runtime_isPollServerDescriptor(uintptr_t fd)
@@ -260,38 +271,38 @@ namespace golang::runtime
 
     std::tuple<struct pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
     {
-        auto pd = alloc(gocpp::recv(pollcache));
+        auto pd = rec::alloc(gocpp::recv(pollcache));
         lock(& pd->lock);
-        auto wg = Load(gocpp::recv(pd->wg));
+        auto wg = rec::Load(gocpp::recv(pd->wg));
         if(wg != pdNil && wg != pdReady)
         {
             go_throw("runtime: blocked write on free polldesc");
         }
-        auto rg = Load(gocpp::recv(pd->rg));
+        auto rg = rec::Load(gocpp::recv(pd->rg));
         if(rg != pdNil && rg != pdReady)
         {
             go_throw("runtime: blocked read on free polldesc");
         }
         pd->fd = fd;
-        if(Load(gocpp::recv(pd->fdseq)) == 0)
+        if(rec::Load(gocpp::recv(pd->fdseq)) == 0)
         {
-            Store(gocpp::recv(pd->fdseq), 1);
+            rec::Store(gocpp::recv(pd->fdseq), 1);
         }
         pd->closing = false;
-        setEventErr(gocpp::recv(pd), false, 0);
+        rec::setEventErr(gocpp::recv(pd), false, 0);
         pd->rseq++;
-        Store(gocpp::recv(pd->rg), pdNil);
+        rec::Store(gocpp::recv(pd->rg), pdNil);
         pd->rd = 0;
         pd->wseq++;
-        Store(gocpp::recv(pd->wg), pdNil);
+        rec::Store(gocpp::recv(pd->wg), pdNil);
         pd->wd = 0;
         pd->self = pd;
-        publishInfo(gocpp::recv(pd));
+        rec::publishInfo(gocpp::recv(pd));
         unlock(& pd->lock);
         auto errno = netpollopen(fd, pd);
         if(errno != 0)
         {
-            free(gocpp::recv(pollcache), pd);
+            rec::free(gocpp::recv(pollcache), pd);
             return {nullptr, int(errno)};
         }
         return {pd, 0};
@@ -303,27 +314,27 @@ namespace golang::runtime
         {
             go_throw("runtime: close polldesc w/o unblock");
         }
-        auto wg = Load(gocpp::recv(pd->wg));
+        auto wg = rec::Load(gocpp::recv(pd->wg));
         if(wg != pdNil && wg != pdReady)
         {
             go_throw("runtime: blocked write on closing polldesc");
         }
-        auto rg = Load(gocpp::recv(pd->rg));
+        auto rg = rec::Load(gocpp::recv(pd->rg));
         if(rg != pdNil && rg != pdReady)
         {
             go_throw("runtime: blocked read on closing polldesc");
         }
         netpollclose(pd->fd);
-        free(gocpp::recv(pollcache), pd);
+        rec::free(gocpp::recv(pollcache), pd);
     }
 
-    void free(struct pollCache* c, struct pollDesc* pd)
+    void rec::free(struct pollCache* c, struct pollDesc* pd)
     {
         lock(& pd->lock);
-        auto fdseq = Load(gocpp::recv(pd->fdseq));
+        auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
         fdseq = (fdseq + 1) & ((1 << taggedPointerBits) - 1);
-        Store(gocpp::recv(pd->fdseq), fdseq);
-        publishInfo(gocpp::recv(pd));
+        rec::Store(gocpp::recv(pd->fdseq), fdseq);
+        rec::publishInfo(gocpp::recv(pd));
         unlock(& pd->lock);
         lock(& c->lock);
         pd->link = c->first;
@@ -340,12 +351,12 @@ namespace golang::runtime
         }
         if(mode == 'r')
         {
-            Store(gocpp::recv(pd->rg), pdNil);
+            rec::Store(gocpp::recv(pd->rg), pdNil);
         }
         else
         if(mode == 'w')
         {
-            Store(gocpp::recv(pd->wg), pdNil);
+            rec::Store(gocpp::recv(pd->wg), pdNil);
         }
         return pollNoError;
     }
@@ -405,7 +416,7 @@ namespace golang::runtime
         {
             pd->wd = d;
         }
-        publishInfo(gocpp::recv(pd));
+        rec::publishInfo(gocpp::recv(pd));
         auto combo = pd->rd > 0 && pd->rd == pd->wd;
         auto rtf = netpollReadDeadline;
         if(combo)
@@ -417,7 +428,7 @@ namespace golang::runtime
             if(pd->rd > 0)
             {
                 pd->rt.f = rtf;
-                pd->rt.arg = makeArg(gocpp::recv(pd));
+                pd->rt.arg = rec::makeArg(gocpp::recv(pd));
                 pd->rt.seq = pd->rseq;
                 resettimer(& pd->rt, pd->rd);
             }
@@ -428,7 +439,7 @@ namespace golang::runtime
             pd->rseq++;
             if(pd->rd > 0)
             {
-                modtimer(& pd->rt, pd->rd, 0, rtf, makeArg(gocpp::recv(pd)), pd->rseq);
+                modtimer(& pd->rt, pd->rd, 0, rtf, rec::makeArg(gocpp::recv(pd)), pd->rseq);
             }
             else
             {
@@ -441,7 +452,7 @@ namespace golang::runtime
             if(pd->wd > 0 && ! combo)
             {
                 pd->wt.f = netpollWriteDeadline;
-                pd->wt.arg = makeArg(gocpp::recv(pd));
+                pd->wt.arg = rec::makeArg(gocpp::recv(pd));
                 pd->wt.seq = pd->wseq;
                 resettimer(& pd->wt, pd->wd);
             }
@@ -452,7 +463,7 @@ namespace golang::runtime
             pd->wseq++;
             if(pd->wd > 0 && ! combo)
             {
-                modtimer(& pd->wt, pd->wd, 0, netpollWriteDeadline, makeArg(gocpp::recv(pd)), pd->wseq);
+                modtimer(& pd->wt, pd->wd, 0, netpollWriteDeadline, rec::makeArg(gocpp::recv(pd)), pd->wseq);
             }
             else
             {
@@ -495,7 +506,7 @@ namespace golang::runtime
         pd->wseq++;
         g* rg = {};
         g* wg = {};
-        publishInfo(gocpp::recv(pd));
+        rec::publishInfo(gocpp::recv(pd));
         auto delta = int32_t(0);
         rg = netpollunblock(pd, 'r', false, & delta);
         wg = netpollunblock(pd, 'w', false, & delta);
@@ -536,27 +547,27 @@ namespace golang::runtime
         }
         if(rg != nullptr)
         {
-            push(gocpp::recv(toRun), rg);
+            rec::push(gocpp::recv(toRun), rg);
         }
         if(wg != nullptr)
         {
-            push(gocpp::recv(toRun), wg);
+            rec::push(gocpp::recv(toRun), wg);
         }
         return delta;
     }
 
     int netpollcheckerr(struct pollDesc* pd, int32_t mode)
     {
-        auto info = info(gocpp::recv(pd));
-        if(closing(gocpp::recv(info)))
+        auto info = rec::info(gocpp::recv(pd));
+        if(rec::closing(gocpp::recv(info)))
         {
             return pollErrClosing;
         }
-        if((mode == 'r' && expiredReadDeadline(gocpp::recv(info))) || (mode == 'w' && expiredWriteDeadline(gocpp::recv(info))))
+        if((mode == 'r' && rec::expiredReadDeadline(gocpp::recv(info))) || (mode == 'w' && rec::expiredWriteDeadline(gocpp::recv(info))))
         {
             return pollErrTimeout;
         }
-        if(mode == 'r' && eventErr(gocpp::recv(info)))
+        if(mode == 'r' && rec::eventErr(gocpp::recv(info)))
         {
             return pollErrNotPollable;
         }
@@ -587,15 +598,15 @@ namespace golang::runtime
         }
         for(; ; )
         {
-            if(CompareAndSwap(gocpp::recv(gpp), pdReady, pdNil))
+            if(rec::CompareAndSwap(gocpp::recv(gpp), pdReady, pdNil))
             {
                 return true;
             }
-            if(CompareAndSwap(gocpp::recv(gpp), pdNil, pdWait))
+            if(rec::CompareAndSwap(gocpp::recv(gpp), pdNil, pdWait))
             {
                 break;
             }
-            if(auto v = Load(gocpp::recv(gpp)); v != pdReady && v != pdNil)
+            if(auto v = rec::Load(gocpp::recv(gpp)); v != pdReady && v != pdNil)
             {
                 go_throw("runtime: double wait");
             }
@@ -604,7 +615,7 @@ namespace golang::runtime
         {
             gopark(netpollblockcommit, unsafe::Pointer(gpp), waitReasonIOWait, traceBlockNet, 5);
         }
-        auto old = Swap(gocpp::recv(gpp), pdNil);
+        auto old = rec::Swap(gocpp::recv(gpp), pdNil);
         if(old > pdWait)
         {
             go_throw("runtime: corrupted polldesc");
@@ -621,7 +632,7 @@ namespace golang::runtime
         }
         for(; ; )
         {
-            auto old = Load(gocpp::recv(gpp));
+            auto old = rec::Load(gocpp::recv(gpp));
             if(old == pdReady)
             {
                 return nullptr;
@@ -635,7 +646,7 @@ namespace golang::runtime
             {
                 go_new = pdReady;
             }
-            if(CompareAndSwap(gocpp::recv(gpp), old, go_new))
+            if(rec::CompareAndSwap(gocpp::recv(gpp), old, go_new))
             {
                 if(old == pdWait)
                 {
@@ -673,7 +684,7 @@ namespace golang::runtime
                 go_throw("runtime: inconsistent read deadline");
             }
             pd->rd = - 1;
-            publishInfo(gocpp::recv(pd));
+            rec::publishInfo(gocpp::recv(pd));
             rg = netpollunblock(pd, 'r', false, & delta);
         }
         g* wg = {};
@@ -684,7 +695,7 @@ namespace golang::runtime
                 go_throw("runtime: inconsistent write deadline");
             }
             pd->wd = - 1;
-            publishInfo(gocpp::recv(pd));
+            rec::publishInfo(gocpp::recv(pd));
             wg = netpollunblock(pd, 'w', false, & delta);
         }
         unlock(& pd->lock);
@@ -716,18 +727,18 @@ namespace golang::runtime
 
     bool netpollAnyWaiters()
     {
-        return Load(gocpp::recv(netpollWaiters)) > 0;
+        return rec::Load(gocpp::recv(netpollWaiters)) > 0;
     }
 
     void netpollAdjustWaiters(int32_t delta)
     {
         if(delta != 0)
         {
-            Add(gocpp::recv(netpollWaiters), delta);
+            rec::Add(gocpp::recv(netpollWaiters), delta);
         }
     }
 
-    struct pollDesc* alloc(struct pollCache* c)
+    struct pollDesc* rec::alloc(struct pollCache* c)
     {
         lock(& c->lock);
         if(c->first == nullptr)
@@ -753,7 +764,7 @@ namespace golang::runtime
         return pd;
     }
 
-    go_any makeArg(struct pollDesc* pd)
+    go_any rec::makeArg(struct pollDesc* pd)
     {
         go_any i;
         auto x = (eface*)(unsafe::Pointer(& i));

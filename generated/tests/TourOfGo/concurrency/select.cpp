@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     void fibonacci(gocpp::channel<int> c, gocpp::channel<int> quit)
     {
         auto [x, y] = std::tuple{0, 1};

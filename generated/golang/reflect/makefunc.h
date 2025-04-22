@@ -77,5 +77,9 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncCtxt& value);
     void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, struct abi::RegArgs* args);
+
+    namespace rec
+    {
+    }
 }
 

@@ -13,5 +13,9 @@
 namespace golang::reflectlite
 {
     std::function<void (int i, int j)> Swapper(go_any slice);
+
+    namespace rec
+    {
+    }
 }
 

@@ -13,5 +13,9 @@
 
 namespace golang::registry
 {
+
+    namespace rec
+    {
+    }
 }
 

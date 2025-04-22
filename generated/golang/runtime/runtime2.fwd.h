@@ -53,7 +53,7 @@ namespace golang::runtime
     const int _Gscansyscall = _Gscan + _Gsyscall;
     const int _Gscanwaiting = _Gscan + _Gwaiting;
     const int _Gscanpreempted = _Gscan + _Gpreempted;
-    const waitReason waitReasonZero = 0;
+    const runtime::waitReason waitReasonZero = 0;
     const waitReason waitReasonGCAssistMarking = 1;
     const waitReason waitReasonIOWait = 2;
     const waitReason waitReasonChanReceiveNilChan = 3;

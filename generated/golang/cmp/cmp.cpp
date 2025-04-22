@@ -13,6 +13,11 @@
 
 namespace golang::cmp
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T>
     Ordered::Ordered(T& ref)
@@ -37,6 +42,9 @@ namespace golang::cmp
         return os;
     }
 
+
+    namespace rec
+    {    }
 
     std::ostream& operator<<(std::ostream& os, const struct Ordered& value)
     {

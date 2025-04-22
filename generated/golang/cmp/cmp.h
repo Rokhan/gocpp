@@ -50,23 +50,30 @@ namespace golang::cmp
         std::shared_ptr<IOrdered> value;
     };
 
+    namespace rec
+    {    }
+
     std::ostream& operator<<(std::ostream& os, const struct Ordered& value);
-
-    template<typename T>
+    
+template<typename T>
     bool Less(T x, T y);
-
-    template<typename T>
+    
+template<typename T>
     int Compare(T x, T y);
-
-    template<typename T>
+    
+template<typename T>
     bool isNaN(T x);
     T Or(gocpp::slice<T> vals);
-
-    template<typename... Args>
+    
+template<typename... Args>
     T Or(Args... vals)
     {
         return Or(gocpp::ToSlice<T>(vals...));
     }
 
+
+    namespace rec
+    {
+    }
 }
 

@@ -18,6 +18,15 @@
 
 namespace golang::flate
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+        using namespace flate::rec;
+        using namespace math::rec;
+        using namespace sort::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     hcode::operator T()
@@ -164,7 +173,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    void set(struct hcode* h, uint16_t code, uint16_t length)
+    void rec::set(struct hcode* h, uint16_t code, uint16_t length)
     {
         h->len = length;
         h->code = code;
@@ -233,7 +242,7 @@ namespace golang::flate
 
     huffmanEncoder* fixedLiteralEncoding = generateFixedLiteralEncoding();
     huffmanEncoder* fixedOffsetEncoding = generateFixedOffsetEncoding();
-    int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq)
+    int rec::bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq)
     {
         int total = {};
         for(auto [i, f] : freq)
@@ -246,7 +255,7 @@ namespace golang::flate
         return total;
     }
 
-    gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
+    gocpp::slice<int32_t> rec::bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
     {
         if(maxBits >= maxBitsLimit)
         {
@@ -328,7 +337,7 @@ namespace golang::flate
         return bitCount;
     }
 
-    void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
+    void rec::assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
     {
         auto code = uint16_t(0);
         for(auto [n, bits] : bitCount)
@@ -339,7 +348,7 @@ namespace golang::flate
                 continue;
             }
             auto chunk = list.make_slice(len(list) - int(bits));
-            sort(gocpp::recv(h->lns), chunk);
+            rec::sort(gocpp::recv(h->lns), chunk);
             for(auto [gocpp_ignored, node] : chunk)
             {
                 h->codes[node.literal] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(code, uint8_t(n)); x.len = uint16_t(n); });
@@ -349,7 +358,7 @@ namespace golang::flate
         }
     }
 
-    void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
+    void rec::generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
     {
         if(h->freqcache == nullptr)
         {
@@ -374,48 +383,48 @@ namespace golang::flate
         {
             for(auto [i, node] : list)
             {
-                set(gocpp::recv(h->codes[node.literal]), uint16_t(i), 1);
+                rec::set(gocpp::recv(h->codes[node.literal]), uint16_t(i), 1);
             }
             return;
         }
-        sort(gocpp::recv(h->lfs), list);
-        auto bitCount = bitCounts(gocpp::recv(h), list, maxBits);
-        assignEncodingAndSize(gocpp::recv(h), bitCount, list);
+        rec::sort(gocpp::recv(h->lfs), list);
+        auto bitCount = rec::bitCounts(gocpp::recv(h), list, maxBits);
+        rec::assignEncodingAndSize(gocpp::recv(h), bitCount, list);
     }
 
-    void sort(byLiteral* s, gocpp::slice<literalNode> a)
+    void rec::sort(byLiteral* s, gocpp::slice<literalNode> a)
     {
         *s = byLiteral(a);
         sort::Sort(s);
     }
 
-    int Len(byLiteral s)
+    int rec::Len(byLiteral s)
     {
         return len(s);
     }
 
-    bool Less(byLiteral s, int i, int j)
+    bool rec::Less(byLiteral s, int i, int j)
     {
         return s[i].literal < s[j].literal;
     }
 
-    void Swap(byLiteral s, int i, int j)
+    void rec::Swap(byLiteral s, int i, int j)
     {
         std::tie(s[i], s[j]) = std::tuple{s[j], s[i]};
     }
 
-    void sort(byFreq* s, gocpp::slice<literalNode> a)
+    void rec::sort(byFreq* s, gocpp::slice<literalNode> a)
     {
         *s = byFreq(a);
         sort::Sort(s);
     }
 
-    int Len(byFreq s)
+    int rec::Len(byFreq s)
     {
         return len(s);
     }
 
-    bool Less(byFreq s, int i, int j)
+    bool rec::Less(byFreq s, int i, int j)
     {
         if(s[i].freq == s[j].freq)
         {
@@ -424,7 +433,7 @@ namespace golang::flate
         return s[i].freq < s[j].freq;
     }
 
-    void Swap(byFreq s, int i, int j)
+    void rec::Swap(byFreq s, int i, int j)
     {
         std::tie(s[i], s[j]) = std::tuple{s[j], s[i]};
     }

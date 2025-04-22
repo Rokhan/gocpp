@@ -31,13 +31,17 @@ namespace golang::fmtsort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SortedMap& value);
-    int Len(struct SortedMap* o);
-    bool Less(struct SortedMap* o, int i, int j);
-    void Swap(struct SortedMap* o, int i, int j);
     struct SortedMap* Sort(struct reflect::Value mapValue);
     int compare(struct reflect::Value aVal, struct reflect::Value bVal);
     std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal);
     int floatCompare(double a, double b);
     bool isNaN(double a);
+
+    namespace rec
+    {
+        int Len(struct SortedMap* o);
+        bool Less(struct SortedMap* o, int i, int j);
+        void Swap(struct SortedMap* o, int i, int j);
+    }
 }
 

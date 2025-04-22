@@ -13,5 +13,9 @@
 namespace golang::math
 {
     double Abs(double x);
+
+    namespace rec
+    {
+    }
 }
 

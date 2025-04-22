@@ -16,6 +16,13 @@
 
 namespace golang::safefilepath
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+        using namespace utf8::rec;
+    }
+
     std::tuple<std::string, struct gocpp::error> fromFS(std::string path)
     {
         if(! utf8::ValidString(path))

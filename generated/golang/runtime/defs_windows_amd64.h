@@ -90,13 +90,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct context& value);
-    uintptr_t ip(struct context* c);
-    uintptr_t sp(struct context* c);
-    uintptr_t lr(struct context* c);
-    void set_lr(struct context* c, uintptr_t x);
-    void set_ip(struct context* c, uintptr_t x);
-    void set_sp(struct context* c, uintptr_t x);
-    void set_fp(struct context* c, uintptr_t x);
     void prepareContextForSigResume(struct context* c);
     void dumpregs(struct context* r);
     struct _DISPATCHER_CONTEXT
@@ -122,6 +115,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value);
-    struct context* ctx(struct _DISPATCHER_CONTEXT* c);
+
+    namespace rec
+    {
+        uintptr_t ip(struct context* c);
+        uintptr_t sp(struct context* c);
+        uintptr_t lr(struct context* c);
+        void set_lr(struct context* c, uintptr_t x);
+        void set_ip(struct context* c, uintptr_t x);
+        void set_sp(struct context* c, uintptr_t x);
+        void set_fp(struct context* c, uintptr_t x);
+        struct context* ctx(struct _DISPATCHER_CONTEXT* c);
+    }
 }
 

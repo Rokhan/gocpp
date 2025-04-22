@@ -58,10 +58,9 @@ namespace golang::runtime
     bool selparkcommit(struct g* gp, unsafe::Pointer _);
     void block();
     std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
-    uintptr_t sortkey(struct hchan* c);
     struct runtimeSelect
     {
-        selectDir dir;
+        runtime::selectDir dir;
         unsafe::Pointer typ;
         hchan* ch;
         unsafe::Pointer val;
@@ -79,6 +78,11 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
     std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
-    void dequeueSudoG(struct waitq* q, struct sudog* sgp);
+
+    namespace rec
+    {
+        uintptr_t sortkey(struct hchan* c);
+        void dequeueSudoG(struct waitq* q, struct sudog* sgp);
+    }
 }
 

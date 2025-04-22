@@ -14,5 +14,9 @@ namespace golang::main
 {
     double Sqrt(double x);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

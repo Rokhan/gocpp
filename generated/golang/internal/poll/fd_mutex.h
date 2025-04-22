@@ -37,18 +37,22 @@ namespace golang::poll
 
     std::ostream& operator<<(std::ostream& os, const struct fdMutex& value);
     extern std::string overflowMsg;
-    bool incref(struct fdMutex* mu);
-    bool increfAndClose(struct fdMutex* mu);
-    bool decref(struct fdMutex* mu);
-    bool rwlock(struct fdMutex* mu, bool read);
-    bool rwunlock(struct fdMutex* mu, bool read);
     void runtime_Semacquire(uint32_t* sema);
     void runtime_Semrelease(uint32_t* sema);
-    struct gocpp::error incref(struct FD* fd);
-    struct gocpp::error decref(struct FD* fd);
-    struct gocpp::error readLock(struct FD* fd);
-    void readUnlock(struct FD* fd);
-    struct gocpp::error writeLock(struct FD* fd);
-    void writeUnlock(struct FD* fd);
+
+    namespace rec
+    {
+        bool incref(struct fdMutex* mu);
+        bool increfAndClose(struct fdMutex* mu);
+        bool decref(struct fdMutex* mu);
+        bool rwlock(struct fdMutex* mu, bool read);
+        bool rwunlock(struct fdMutex* mu, bool read);
+        struct gocpp::error incref(struct FD* fd);
+        struct gocpp::error decref(struct FD* fd);
+        struct gocpp::error readLock(struct FD* fd);
+        void readUnlock(struct FD* fd);
+        struct gocpp::error writeLock(struct FD* fd);
+        void writeUnlock(struct FD* fd);
+    }
 }
 

@@ -15,6 +15,12 @@
 
 namespace golang::hash
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace io::rec;
+    }
+
     
     template<typename T>
     Hash::Hash(T& ref)
@@ -42,62 +48,65 @@ namespace golang::hash
     template<typename T, typename StoreT>
     gocpp::slice<unsigned char> Hash::HashImpl<T, StoreT>::vSum(gocpp::slice<unsigned char> b)
     {
-        return Sum(gocpp::PtrRecv<T, false>(value.get()), b);
+        return rec::Sum(gocpp::PtrRecv<T, false>(value.get()), b);
     }
     template<typename T, typename StoreT>
     void Hash::HashImpl<T, StoreT>::vReset()
     {
-        return Reset(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Reset(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     int Hash::HashImpl<T, StoreT>::vSize()
     {
-        return Size(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     int Hash::HashImpl<T, StoreT>::vBlockSize()
     {
-        return BlockSize(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::BlockSize(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<Hash, false>& self, gocpp::slice<unsigned char> b)
+    namespace rec
     {
-        return self.ptr->value->vSum(b);
-    }
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<Hash, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value->vSum(b);
+        }
 
-    gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<Hash>& self, gocpp::slice<unsigned char> b)
-    {
-        return self.obj.value->vSum(b);
-    }
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<Hash>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value->vSum(b);
+        }
 
-    void Reset(const gocpp::PtrRecv<Hash, false>& self)
-    {
-        return self.ptr->value->vReset();
-    }
+        void Reset(const gocpp::PtrRecv<Hash, false>& self)
+        {
+            return self.ptr->value->vReset();
+        }
 
-    void Reset(const gocpp::ObjRecv<Hash>& self)
-    {
-        return self.obj.value->vReset();
-    }
+        void Reset(const gocpp::ObjRecv<Hash>& self)
+        {
+            return self.obj.value->vReset();
+        }
 
-    int Size(const gocpp::PtrRecv<Hash, false>& self)
-    {
-        return self.ptr->value->vSize();
-    }
+        int Size(const gocpp::PtrRecv<Hash, false>& self)
+        {
+            return self.ptr->value->vSize();
+        }
 
-    int Size(const gocpp::ObjRecv<Hash>& self)
-    {
-        return self.obj.value->vSize();
-    }
+        int Size(const gocpp::ObjRecv<Hash>& self)
+        {
+            return self.obj.value->vSize();
+        }
 
-    int BlockSize(const gocpp::PtrRecv<Hash, false>& self)
-    {
-        return self.ptr->value->vBlockSize();
-    }
+        int BlockSize(const gocpp::PtrRecv<Hash, false>& self)
+        {
+            return self.ptr->value->vBlockSize();
+        }
 
-    int BlockSize(const gocpp::ObjRecv<Hash>& self)
-    {
-        return self.obj.value->vBlockSize();
+        int BlockSize(const gocpp::ObjRecv<Hash>& self)
+        {
+            return self.obj.value->vBlockSize();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value)
@@ -132,17 +141,20 @@ namespace golang::hash
     template<typename T, typename StoreT>
     uint32_t Hash32::Hash32Impl<T, StoreT>::vSum32()
     {
-        return Sum32(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Sum32(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    uint32_t Sum32(const gocpp::PtrRecv<Hash32, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vSum32();
-    }
+        uint32_t Sum32(const gocpp::PtrRecv<Hash32, false>& self)
+        {
+            return self.ptr->value->vSum32();
+        }
 
-    uint32_t Sum32(const gocpp::ObjRecv<Hash32>& self)
-    {
-        return self.obj.value->vSum32();
+        uint32_t Sum32(const gocpp::ObjRecv<Hash32>& self)
+        {
+            return self.obj.value->vSum32();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash32& value)
@@ -177,17 +189,20 @@ namespace golang::hash
     template<typename T, typename StoreT>
     uint64_t Hash64::Hash64Impl<T, StoreT>::vSum64()
     {
-        return Sum64(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Sum64(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    uint64_t Sum64(const gocpp::PtrRecv<Hash64, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vSum64();
-    }
+        uint64_t Sum64(const gocpp::PtrRecv<Hash64, false>& self)
+        {
+            return self.ptr->value->vSum64();
+        }
 
-    uint64_t Sum64(const gocpp::ObjRecv<Hash64>& self)
-    {
-        return self.obj.value->vSum64();
+        uint64_t Sum64(const gocpp::ObjRecv<Hash64>& self)
+        {
+            return self.obj.value->vSum64();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value)

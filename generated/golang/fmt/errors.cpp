@@ -20,11 +20,20 @@
 
 namespace golang::fmt
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace errors::rec;
+        using namespace fmt::rec;
+        using namespace sort::rec;
+    }
+
     struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;
-        doPrintf(gocpp::recv(p), format, a);
+        rec::doPrintf(gocpp::recv(p), format, a);
         auto s = string(p->buf);
         gocpp::error err = {};
         //Go switch emulation
@@ -64,7 +73,7 @@ namespace golang::fmt
                     break;
             }
         }
-        free(gocpp::recv(p));
+        rec::free(gocpp::recv(p));
         return err;
     }
 
@@ -100,12 +109,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    std::string Error(struct wrapError* e)
+    std::string rec::Error(struct wrapError* e)
     {
         return e->msg;
     }
 
-    struct gocpp::error Unwrap(struct wrapError* e)
+    struct gocpp::error rec::Unwrap(struct wrapError* e)
     {
         return e->err;
     }
@@ -142,12 +151,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    std::string Error(struct wrapErrors* e)
+    std::string rec::Error(struct wrapErrors* e)
     {
         return e->msg;
     }
 
-    gocpp::slice<gocpp::error> Unwrap(struct wrapErrors* e)
+    gocpp::slice<gocpp::error> rec::Unwrap(struct wrapErrors* e)
     {
         return e->errs;
     }

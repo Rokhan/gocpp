@@ -16,6 +16,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+    }
+
     void sigNoteSetup(note*)
     {
         go_throw("sigNoteSetup");

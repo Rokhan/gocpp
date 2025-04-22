@@ -56,6 +56,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     void traceInitReadCPU()
     {
         if(traceEnabled())
@@ -64,8 +74,8 @@ namespace golang::runtime
         }
         trace.cpuLogRead[0] = newProfBuf(3, profBufWordCount, profBufTagCount);
         trace.cpuLogRead[1] = newProfBuf(3, profBufWordCount, profBufTagCount);
-        Store(gocpp::recv(trace.cpuLogWrite[0]), trace.cpuLogRead[0]);
-        Store(gocpp::recv(trace.cpuLogWrite[1]), trace.cpuLogRead[1]);
+        rec::Store(gocpp::recv(trace.cpuLogWrite[0]), trace.cpuLogRead[0]);
+        rec::Store(gocpp::recv(trace.cpuLogWrite[1]), trace.cpuLogRead[1]);
     }
 
     struct gocpp_id_0
@@ -144,9 +154,9 @@ namespace golang::runtime
         {
             for(; traceEnabled(); )
             {
-                sleep(gocpp::recv(trace.cpuSleep), 100000000);
+                rec::sleep(gocpp::recv(trace.cpuSleep), 100000000);
                 auto tl = traceAcquire();
-                if(! ok(gocpp::recv(tl)))
+                if(! rec::ok(gocpp::recv(tl)))
                 {
                     break;
                 }
@@ -168,22 +178,22 @@ namespace golang::runtime
         {
             go_throw("traceStopReadCPU called with trace enabled");
         }
-        Store(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
-        Store(gocpp::recv(trace.cpuLogWrite[1]), nullptr);
-        close(gocpp::recv(trace.cpuLogRead[0]));
-        close(gocpp::recv(trace.cpuLogRead[1]));
-        wake(gocpp::recv(trace.cpuSleep));
+        rec::Store(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
+        rec::Store(gocpp::recv(trace.cpuLogWrite[1]), nullptr);
+        rec::close(gocpp::recv(trace.cpuLogRead[0]));
+        rec::close(gocpp::recv(trace.cpuLogRead[1]));
+        rec::wake(gocpp::recv(trace.cpuSleep));
         trace.cpuLogDone.recv();
         trace.cpuLogDone = nullptr;
         trace.cpuLogRead[0] = nullptr;
         trace.cpuLogRead[1] = nullptr;
-        close(gocpp::recv(trace.cpuSleep));
+        rec::close(gocpp::recv(trace.cpuSleep));
     }
 
     bool traceReadCPU(uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
-        auto [data, tags, eof] = read(gocpp::recv(trace.cpuLogRead[gen % 2]), profBufNonBlocking);
+        auto [data, tags, eof] = rec::read(gocpp::recv(trace.cpuLogRead[gen % 2]), profBufNonBlocking);
         for(; len(data) > 0; )
         {
             if(len(data) < 4 || data[0] > uint64_t(len(data)))
@@ -223,18 +233,18 @@ namespace golang::runtime
             }
             auto w = unsafeTraceWriter(gen, trace.cpuBuf[gen % 2]);
             bool flushed = {};
-            std::tie(w, flushed) = ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
+            std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
             if(flushed)
             {
-                unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSamples));
+                rec::unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSamples));
             }
-            auto stackID = put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
-            unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSample));
-            varint(gocpp::recv(w), timestamp);
-            varint(gocpp::recv(w), mpid);
-            varint(gocpp::recv(w), ppid);
-            varint(gocpp::recv(w), goid);
-            varint(gocpp::recv(w), stackID);
+            auto stackID = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
+            rec::unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSample));
+            rec::varint(gocpp::recv(w), timestamp);
+            rec::varint(gocpp::recv(w), mpid);
+            rec::varint(gocpp::recv(w), ppid);
+            rec::varint(gocpp::recv(w), goid);
+            rec::varint(gocpp::recv(w), stackID);
             trace.cpuBuf[gen % 2] = w.traceBuf;
         }
         return ! eof;
@@ -262,17 +272,17 @@ namespace golang::runtime
             return;
         }
         auto locked = false;
-        if(Load(gocpp::recv(mp->trace.seqlock)) % 2 == 0)
+        if(rec::Load(gocpp::recv(mp->trace.seqlock)) % 2 == 0)
         {
-            Add(gocpp::recv(mp->trace.seqlock), 1);
+            rec::Add(gocpp::recv(mp->trace.seqlock), 1);
             locked = true;
         }
-        auto gen = Load(gocpp::recv(trace.gen));
+        auto gen = rec::Load(gocpp::recv(trace.gen));
         if(gen == 0)
         {
             if(locked)
             {
-                Add(gocpp::recv(mp->trace.seqlock), 1);
+                rec::Add(gocpp::recv(mp->trace.seqlock), 1);
             }
             return;
         }
@@ -294,18 +304,18 @@ namespace golang::runtime
         {
             hdr[2] = uint64_t(mp->procid);
         }
-        for(; ! CompareAndSwap(gocpp::recv(trace.signalLock), 0, 1); )
+        for(; ! rec::CompareAndSwap(gocpp::recv(trace.signalLock), 0, 1); )
         {
             osyield();
         }
-        if(auto log = Load(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
+        if(auto log = rec::Load(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
         {
-            write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0, ), stk);
+            rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0, ), stk);
         }
-        Store(gocpp::recv(trace.signalLock), 0);
+        rec::Store(gocpp::recv(trace.signalLock), 0);
         if(locked)
         {
-            Add(gocpp::recv(mp->trace.seqlock), 1);
+            rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         }
     }
 

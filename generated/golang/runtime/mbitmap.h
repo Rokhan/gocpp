@@ -43,27 +43,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct markBits& value);
-    struct markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex);
-    void refillAllocCache(struct mspan* s, uint16_t whichByte);
-    uint16_t nextFreeIndex(struct mspan* s);
-    bool isFree(struct mspan* s, uintptr_t index);
-    uintptr_t divideByElemSize(struct mspan* s, uintptr_t n);
-    uintptr_t objIndex(struct mspan* s, uintptr_t p);
     struct markBits markBitsForAddr(uintptr_t p);
-    struct markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex);
-    struct markBits markBitsForBase(struct mspan* s);
-    bool isMarked(struct markBits m);
-    void setMarked(struct markBits m);
-    void setMarkedNonAtomic(struct markBits m);
-    void clearMarked(struct markBits m);
     struct markBits markBitsForSpan(uintptr_t base);
-    void advance(struct markBits* m);
     void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     bool reflect_verifyNotInHeapPtr(uintptr_t p);
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
     void typeBitsBulkBarrier(struct _type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
-    int countAlloc(struct mspan* s);
     uintptr_t readUintptr(unsigned char* p);
     struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);
@@ -71,5 +57,23 @@ namespace golang::runtime
     void dematerializeGCProg(struct mspan* s);
     void dumpGCProg(unsigned char* p);
     gocpp::slice<unsigned char> reflect_gcbits(go_any x);
+
+    namespace rec
+    {
+        struct markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex);
+        void refillAllocCache(struct mspan* s, uint16_t whichByte);
+        uint16_t nextFreeIndex(struct mspan* s);
+        bool isFree(struct mspan* s, uintptr_t index);
+        uintptr_t divideByElemSize(struct mspan* s, uintptr_t n);
+        uintptr_t objIndex(struct mspan* s, uintptr_t p);
+        struct markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex);
+        struct markBits markBitsForBase(struct mspan* s);
+        bool isMarked(struct markBits m);
+        void setMarked(struct markBits m);
+        void setMarkedNonAtomic(struct markBits m);
+        void clearMarked(struct markBits m);
+        void advance(struct markBits* m);
+        int countAlloc(struct mspan* s);
+    }
 }
 

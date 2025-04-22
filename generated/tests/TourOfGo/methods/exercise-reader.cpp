@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace io::rec;
+        using namespace reader::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     MyReader::operator T()
@@ -42,7 +49,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer)
+    std::tuple<int, struct gocpp::error> rec::Read(MyReader, gocpp::slice<unsigned char> buffer)
     {
         buffer = gocpp::slice<unsigned char> {'A'};
         return {1, nullptr};

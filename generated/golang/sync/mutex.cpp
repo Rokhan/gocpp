@@ -18,6 +18,12 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     void go_throw(std::string)
     /* convertBlockStmt, nil block */;
 
@@ -83,32 +89,35 @@ namespace golang::sync
     template<typename T, typename StoreT>
     void Locker::LockerImpl<T, StoreT>::vLock()
     {
-        return Lock(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Lock(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     void Locker::LockerImpl<T, StoreT>::vUnlock()
     {
-        return Unlock(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Unlock(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    void Lock(const gocpp::PtrRecv<Locker, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vLock();
-    }
+        void Lock(const gocpp::PtrRecv<Locker, false>& self)
+        {
+            return self.ptr->value->vLock();
+        }
 
-    void Lock(const gocpp::ObjRecv<Locker>& self)
-    {
-        return self.obj.value->vLock();
-    }
+        void Lock(const gocpp::ObjRecv<Locker>& self)
+        {
+            return self.obj.value->vLock();
+        }
 
-    void Unlock(const gocpp::PtrRecv<Locker, false>& self)
-    {
-        return self.ptr->value->vUnlock();
-    }
+        void Unlock(const gocpp::PtrRecv<Locker, false>& self)
+        {
+            return self.ptr->value->vUnlock();
+        }
 
-    void Unlock(const gocpp::ObjRecv<Locker>& self)
-    {
-        return self.obj.value->vUnlock();
+        void Unlock(const gocpp::ObjRecv<Locker>& self)
+        {
+            return self.obj.value->vUnlock();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value)
@@ -116,7 +125,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void Lock(struct Mutex* m)
+    void rec::Lock(struct Mutex* m)
     {
         if(atomic::CompareAndSwapInt32(& m->state, 0, mutexLocked))
         {
@@ -126,10 +135,10 @@ namespace golang::sync
             }
             return;
         }
-        lockSlow(gocpp::recv(m));
+        rec::lockSlow(gocpp::recv(m));
     }
 
-    bool TryLock(struct Mutex* m)
+    bool rec::TryLock(struct Mutex* m)
     {
         auto old = m->state;
         if(old & (mutexLocked | mutexStarving) != 0)
@@ -147,7 +156,7 @@ namespace golang::sync
         return true;
     }
 
-    void lockSlow(struct Mutex* m)
+    void rec::lockSlow(struct Mutex* m)
     {
         int64_t waitStartTime = {};
         auto starving = false;
@@ -230,7 +239,7 @@ namespace golang::sync
         }
     }
 
-    void Unlock(struct Mutex* m)
+    void rec::Unlock(struct Mutex* m)
     {
         if(race::Enabled)
         {
@@ -240,11 +249,11 @@ namespace golang::sync
         auto go_new = atomic::AddInt32(& m->state, - mutexLocked);
         if(go_new != 0)
         {
-            unlockSlow(gocpp::recv(m), go_new);
+            rec::unlockSlow(gocpp::recv(m), go_new);
         }
     }
 
-    void unlockSlow(struct Mutex* m, int32_t go_new)
+    void rec::unlockSlow(struct Mutex* m, int32_t go_new)
     {
         if((go_new + mutexLocked) & mutexLocked == 0)
         {

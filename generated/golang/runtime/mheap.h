@@ -52,9 +52,9 @@ namespace golang::runtime
         /* linearAlloc heapArenaAlloc; [Known incomplete type] */
         arenaHint* arenaHints;
         /* linearAlloc arena; [Known incomplete type] */
-        gocpp::slice<arenaIdx> allArenas;
-        gocpp::slice<arenaIdx> sweepArenas;
-        gocpp::slice<arenaIdx> markArenas;
+        gocpp::slice<runtime::arenaIdx> allArenas;
+        gocpp::slice<runtime::arenaIdx> sweepArenas;
+        gocpp::slice<runtime::arenaIdx> markArenas;
         /* gocpp_id_0 curArena; [Known incomplete type] */
         gocpp::array<gocpp_id_1, numSpanClasses> central;
         fixalloc spanalloc;
@@ -138,8 +138,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mSpanStateBox& value);
-    void set(struct mSpanStateBox* b, mSpanState s);
-    mSpanState get(struct mSpanStateBox* b);
     struct mSpanList
     {
         sys::NotInHeap _;
@@ -166,7 +164,7 @@ namespace golang::runtime
         mSpanList* list;
         uintptr_t startAddr;
         uintptr_t npages;
-        gclinkptr manualFreeList;
+        runtime::gclinkptr manualFreeList;
         uint16_t freeindex;
         uint16_t nelems;
         uint16_t freeIndexForScan;
@@ -177,7 +175,7 @@ namespace golang::runtime
         uint32_t sweepgen;
         uint32_t divMul;
         uint16_t allocCount;
-        spanClass spanclass;
+        runtime::spanClass spanclass;
         mSpanStateBox state;
         uint8_t needzero;
         bool isUserArenaChunk;
@@ -201,49 +199,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mspan& value);
-    uintptr_t base(struct mspan* s);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> layout(struct mspan* s);
     void recordspan(unsafe::Pointer vh, unsafe::Pointer p);
-    spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
-    int8_t sizeclass(spanClass sc);
-    bool noscan(spanClass sc);
-    arenaIdx arenaIndex(uintptr_t p);
-    uintptr_t arenaBase(arenaIdx i);
-    unsigned int l1(arenaIdx i);
-    unsigned int l2(arenaIdx i);
+    runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
+    runtime::arenaIdx arenaIndex(uintptr_t p);
+    uintptr_t arenaBase(runtime::arenaIdx i);
     bool inheap(uintptr_t b);
     bool inHeapOrStack(uintptr_t b);
     struct mspan* spanOf(uintptr_t p);
     struct mspan* spanOfUnchecked(uintptr_t p);
     struct mspan* spanOfHeap(uintptr_t p);
     std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
-    void init(struct mheap* h);
-    void reclaim(struct mheap* h, uintptr_t npage);
-    uintptr_t reclaimChunk(struct mheap* h, gocpp::slice<arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n);
-    bool manual(spanAllocType s);
-    struct mspan* alloc(struct mheap* h, uintptr_t npages, spanClass spanclass);
-    struct mspan* allocManual(struct mheap* h, uintptr_t npages, spanAllocType typ);
-    void setSpans(struct mheap* h, uintptr_t base, uintptr_t npage, struct mspan* s);
-    bool allocNeedsZero(struct mheap* h, uintptr_t base, uintptr_t npage);
-    struct mspan* tryAllocMSpan(struct mheap* h);
-    struct mspan* allocMSpanLocked(struct mheap* h);
-    void freeMSpanLocked(struct mheap* h, struct mspan* s);
-    struct mspan* allocSpan(struct mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
-    void initSpan(struct mheap* h, struct mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages);
-    std::tuple<uintptr_t, bool> grow(struct mheap* h, uintptr_t npage);
-    void freeSpan(struct mheap* h, struct mspan* s);
-    void freeManual(struct mheap* h, struct mspan* s, spanAllocType typ);
-    void freeSpanLocked(struct mheap* h, struct mspan* s, spanAllocType typ);
-    void scavengeAll(struct mheap* h);
     void runtime_debug_freeOSMemory();
-    void init(struct mspan* span, uintptr_t base, uintptr_t npages);
-    bool inList(struct mspan* span);
-    void init(struct mSpanList* list);
-    void remove(struct mSpanList* list, struct mspan* span);
-    bool isEmpty(struct mSpanList* list);
-    void insert(struct mSpanList* list, struct mspan* span);
-    void insertBack(struct mSpanList* list, struct mspan* span);
-    void takeAll(struct mSpanList* list, struct mSpanList* other);
     struct special
     {
         sys::NotInHeap _;
@@ -267,7 +233,6 @@ namespace golang::runtime
     void spanHasNoSpecials(struct mspan* s);
     bool addspecial(unsafe::Pointer p, struct special* s);
     struct special* removespecial(unsafe::Pointer p, uint8_t kind);
-    std::tuple<struct special**, bool> specialFindSplicePoint(struct mspan* span, uintptr_t offset, unsigned char kind);
     struct specialfinalizer
     {
         sys::NotInHeap _;
@@ -363,9 +328,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct specialsIter& value);
     struct specialsIter newSpecialsIter(struct mspan* span);
-    bool valid(struct specialsIter* i);
-    void next(struct specialsIter* i);
-    struct special* unlinkAndNext(struct specialsIter* i);
     void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size);
     struct gcBits
     {
@@ -384,8 +346,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBits& value);
-    uint8_t* bytep(struct gcBits* b, uintptr_t n);
-    std::tuple<uint8_t*, uint8_t> bitp(struct gcBits* b, uintptr_t n);
     struct gcBitsHeader
     {
         uintptr_t free;
@@ -422,10 +382,54 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsArena& value);
-    struct gcBits* tryAlloc(struct gcBitsArena* b, uintptr_t bytes);
     struct gcBits* newMarkBits(uintptr_t nelems);
     struct gcBits* newAllocBits(uintptr_t nelems);
     void nextMarkBitArenaEpoch();
     struct gcBitsArena* newArenaMayUnlock();
+
+    namespace rec
+    {
+        void set(struct mSpanStateBox* b, runtime::mSpanState s);
+        runtime::mSpanState get(struct mSpanStateBox* b);
+        uintptr_t base(struct mspan* s);
+        std::tuple<uintptr_t, uintptr_t, uintptr_t> layout(struct mspan* s);
+        int8_t sizeclass(runtime::spanClass sc);
+        bool noscan(runtime::spanClass sc);
+        unsigned int l1(runtime::arenaIdx i);
+        unsigned int l2(runtime::arenaIdx i);
+        void init(struct mheap* h);
+        void reclaim(struct mheap* h, uintptr_t npage);
+        uintptr_t reclaimChunk(struct mheap* h, gocpp::slice<runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n);
+        bool manual(runtime::spanAllocType s);
+        struct mspan* alloc(struct mheap* h, uintptr_t npages, runtime::spanClass spanclass);
+        struct mspan* allocManual(struct mheap* h, uintptr_t npages, runtime::spanAllocType typ);
+        void setSpans(struct mheap* h, uintptr_t base, uintptr_t npage, struct mspan* s);
+        bool allocNeedsZero(struct mheap* h, uintptr_t base, uintptr_t npage);
+        struct mspan* tryAllocMSpan(struct mheap* h);
+        struct mspan* allocMSpanLocked(struct mheap* h);
+        void freeMSpanLocked(struct mheap* h, struct mspan* s);
+        struct mspan* allocSpan(struct mheap* h, uintptr_t npages, runtime::spanAllocType typ, runtime::spanClass spanclass);
+        void initSpan(struct mheap* h, struct mspan* s, runtime::spanAllocType typ, runtime::spanClass spanclass, uintptr_t base, uintptr_t npages);
+        std::tuple<uintptr_t, bool> grow(struct mheap* h, uintptr_t npage);
+        void freeSpan(struct mheap* h, struct mspan* s);
+        void freeManual(struct mheap* h, struct mspan* s, runtime::spanAllocType typ);
+        void freeSpanLocked(struct mheap* h, struct mspan* s, runtime::spanAllocType typ);
+        void scavengeAll(struct mheap* h);
+        void init(struct mspan* span, uintptr_t base, uintptr_t npages);
+        bool inList(struct mspan* span);
+        void init(struct mSpanList* list);
+        void remove(struct mSpanList* list, struct mspan* span);
+        bool isEmpty(struct mSpanList* list);
+        void insert(struct mSpanList* list, struct mspan* span);
+        void insertBack(struct mSpanList* list, struct mspan* span);
+        void takeAll(struct mSpanList* list, struct mSpanList* other);
+        std::tuple<struct special**, bool> specialFindSplicePoint(struct mspan* span, uintptr_t offset, unsigned char kind);
+        bool valid(struct specialsIter* i);
+        void next(struct specialsIter* i);
+        struct special* unlinkAndNext(struct specialsIter* i);
+        uint8_t* bytep(struct gcBits* b, uintptr_t n);
+        std::tuple<uint8_t*, uint8_t> bitp(struct gcBits* b, uintptr_t n);
+        struct gcBits* tryAlloc(struct gcBitsArena* b, uintptr_t bytes);
+    }
 }
 

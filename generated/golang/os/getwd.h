@@ -14,5 +14,9 @@
 namespace golang::os
 {
     std::tuple<std::string, struct gocpp::error> Getwd();
+
+    namespace rec
+    {
+    }
 }
 

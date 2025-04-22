@@ -17,5 +17,9 @@ namespace golang::math
     double Exp2(double x);
     double exp2(double x);
     double expmulti(double hi, double lo, int k);
+
+    namespace rec
+    {
+    }
 }
 

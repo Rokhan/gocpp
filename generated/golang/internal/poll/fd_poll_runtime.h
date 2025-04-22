@@ -48,22 +48,26 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    struct gocpp::error init(struct pollDesc* pd, struct FD* fd);
-    void close(struct pollDesc* pd);
-    void evict(struct pollDesc* pd);
-    struct gocpp::error prepare(struct pollDesc* pd, int mode, bool isFile);
-    struct gocpp::error prepareRead(struct pollDesc* pd, bool isFile);
-    struct gocpp::error prepareWrite(struct pollDesc* pd, bool isFile);
-    struct gocpp::error wait(struct pollDesc* pd, int mode, bool isFile);
-    struct gocpp::error waitRead(struct pollDesc* pd, bool isFile);
-    struct gocpp::error waitWrite(struct pollDesc* pd, bool isFile);
-    void waitCanceled(struct pollDesc* pd, int mode);
-    bool pollable(struct pollDesc* pd);
     struct gocpp::error convertErr(int res, bool isFile);
-    struct gocpp::error SetDeadline(struct FD* fd, struct mocklib::Date t);
-    struct gocpp::error SetReadDeadline(struct FD* fd, struct mocklib::Date t);
-    struct gocpp::error SetWriteDeadline(struct FD* fd, struct mocklib::Date t);
     struct gocpp::error setDeadlineImpl(struct FD* fd, struct mocklib::Date t, int mode);
     bool IsPollDescriptor(uintptr_t fd);
+
+    namespace rec
+    {
+        struct gocpp::error init(struct pollDesc* pd, struct FD* fd);
+        void close(struct pollDesc* pd);
+        void evict(struct pollDesc* pd);
+        struct gocpp::error prepare(struct pollDesc* pd, int mode, bool isFile);
+        struct gocpp::error prepareRead(struct pollDesc* pd, bool isFile);
+        struct gocpp::error prepareWrite(struct pollDesc* pd, bool isFile);
+        struct gocpp::error wait(struct pollDesc* pd, int mode, bool isFile);
+        struct gocpp::error waitRead(struct pollDesc* pd, bool isFile);
+        struct gocpp::error waitWrite(struct pollDesc* pd, bool isFile);
+        void waitCanceled(struct pollDesc* pd, int mode);
+        bool pollable(struct pollDesc* pd);
+        struct gocpp::error SetDeadline(struct FD* fd, struct mocklib::Date t);
+        struct gocpp::error SetReadDeadline(struct FD* fd, struct mocklib::Date t);
+        struct gocpp::error SetWriteDeadline(struct FD* fd, struct mocklib::Date t);
+    }
 }
 

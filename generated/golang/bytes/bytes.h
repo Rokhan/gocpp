@@ -60,7 +60,6 @@ namespace golang::bytes
     int indexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
     int lastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
     std::tuple<asciiSet, bool> makeASCIISet(std::string chars);
-    bool contains(asciiSet* as, unsigned char c);
     bool containsRune(std::string s, gocpp::rune r);
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, std::string cutset);
     gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, std::string cutset);
@@ -81,5 +80,10 @@ namespace golang::bytes
     gocpp::slice<unsigned char> Clone(gocpp::slice<unsigned char> b);
     std::tuple<gocpp::slice<unsigned char>, bool> CutPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix);
     std::tuple<gocpp::slice<unsigned char>, bool> CutSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix);
+
+    namespace rec
+    {
+        bool contains(asciiSet* as, unsigned char c);
+    }
 }
 

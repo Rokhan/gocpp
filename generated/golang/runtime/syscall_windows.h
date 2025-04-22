@@ -37,7 +37,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
     struct abiPart
     {
-        abiPartKind kind;
+        runtime::abiPartKind kind;
         uintptr_t srcStackOffset;
         uintptr_t dstStackOffset;
         int dstRegister;
@@ -55,7 +55,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiPart& value);
-    bool tryMerge(struct abiPart* a, struct abiPart b);
     struct abiDesc
     {
         gocpp::slice<abiPart> parts;
@@ -77,9 +76,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void assignArg(struct abiDesc* p, struct _type* t);
-    bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset);
-    bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset);
     struct winCallbackKey
     {
         funcval* fn;
@@ -130,12 +126,20 @@ namespace golang::runtime
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall15(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall18(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
-
-    template<typename... Args>
+    
+template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, Args... args)
     {
         return syscall_SyscallN(trap, gocpp::ToSlice<uintptr_t>(args...));
     }
 
+
+    namespace rec
+    {
+        bool tryMerge(struct abiPart* a, struct abiPart b);
+        void assignArg(struct abiDesc* p, struct _type* t);
+        bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset);
+        bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset);
+    }
 }
 

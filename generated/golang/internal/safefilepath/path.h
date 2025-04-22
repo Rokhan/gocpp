@@ -14,5 +14,9 @@ namespace golang::safefilepath
 {
     extern gocpp::error errInvalidPath;
     std::tuple<std::string, struct gocpp::error> FromFS(std::string path);
+
+    namespace rec
+    {
+    }
 }
 

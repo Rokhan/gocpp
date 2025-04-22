@@ -64,8 +64,11 @@ namespace golang::os
         std::shared_ptr<Itimeout> value;
     };
 
-    bool Timeout(const gocpp::PtrRecv<timeout, false>& self);
-    bool Timeout(const gocpp::ObjRecv<timeout>& self);
+    namespace rec
+    {
+        bool Timeout(const gocpp::PtrRecv<timeout, false>& self);
+        bool Timeout(const gocpp::ObjRecv<timeout>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct timeout& value);
     struct SyscallError
@@ -85,9 +88,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SyscallError& value);
-    std::string Error(struct SyscallError* e);
-    struct gocpp::error Unwrap(struct SyscallError* e);
-    bool Timeout(struct SyscallError* e);
     struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err);
     bool IsExist(struct gocpp::error err);
     bool IsNotExist(struct gocpp::error err);
@@ -95,5 +95,12 @@ namespace golang::os
     bool IsTimeout(struct gocpp::error err);
     bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target);
     struct gocpp::error underlyingError(struct gocpp::error err);
+
+    namespace rec
+    {
+        std::string Error(struct SyscallError* e);
+        struct gocpp::error Unwrap(struct SyscallError* e);
+        bool Timeout(struct SyscallError* e);
+    }
 }
 

@@ -27,6 +27,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     ticksType ticks;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -66,7 +74,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct ticksType* t)
+    void rec::init(struct ticksType* t)
     {
         lock(& ticks.lock);
         t->startTime = nanotime();
@@ -76,7 +84,7 @@ namespace golang::runtime
 
     int64_t ticksPerSecond()
     {
-        auto r = Load(gocpp::recv(ticks.val));
+        auto r = rec::Load(gocpp::recv(ticks.val));
         if(r != 0)
         {
             return r;
@@ -84,7 +92,7 @@ namespace golang::runtime
         for(; ; )
         {
             lock(& ticks.lock);
-            r = Load(gocpp::recv(ticks.val));
+            r = rec::Load(gocpp::recv(ticks.val));
             if(r != 0)
             {
                 unlock(& ticks.lock);
@@ -99,7 +107,7 @@ namespace golang::runtime
                 {
                     r++;
                 }
-                Store(gocpp::recv(ticks.val), r);
+                rec::Store(gocpp::recv(ticks.val), r);
                 unlock(& ticks.lock);
                 break;
             }
@@ -139,7 +147,7 @@ namespace golang::runtime
     {
         auto p = go_new(gocpp::Tag<std::function<void (std::string, std::string)>>());
         *p = update;
-        Store(gocpp::recv(godebugUpdate), p);
+        rec::Store(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
     }
 
@@ -147,7 +155,7 @@ namespace golang::runtime
     {
         auto p = go_new(gocpp::Tag<std::function<std::function<void ()> (std::string)>>());
         *p = newIncNonDefault;
-        Store(gocpp::recv(godebugNewIncNonDefault), p);
+        rec::Store(gocpp::recv(godebugNewIncNonDefault), p);
     }
 
     
@@ -182,12 +190,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void IncNonDefault(struct godebugInc* g)
+    void rec::IncNonDefault(struct godebugInc* g)
     {
-        auto inc = Load(gocpp::recv(g->inc));
+        auto inc = rec::Load(gocpp::recv(g->inc));
         if(inc == nullptr)
         {
-            auto newInc = Load(gocpp::recv(godebugNewIncNonDefault));
+            auto newInc = rec::Load(gocpp::recv(godebugNewIncNonDefault));
             if(newInc == nullptr)
             {
                 return;
@@ -198,9 +206,9 @@ namespace golang::runtime
             {
                 racereleasemerge(unsafe::Pointer(& g->inc));
             }
-            if(! CompareAndSwap(gocpp::recv(g->inc), nullptr, inc))
+            if(! rec::CompareAndSwap(gocpp::recv(g->inc), nullptr, inc))
             {
-                inc = Load(gocpp::recv(g->inc));
+                inc = rec::Load(gocpp::recv(g->inc));
             }
         }
         if(raceenabled)
@@ -212,9 +220,9 @@ namespace golang::runtime
 
     void godebugNotify(bool envChanged)
     {
-        auto update = Load(gocpp::recv(godebugUpdate));
+        auto update = rec::Load(gocpp::recv(godebugUpdate));
         std::string env = {};
-        if(auto p = Load(gocpp::recv(godebugEnv)); p != nullptr)
+        if(auto p = rec::Load(gocpp::recv(godebugEnv)); p != nullptr)
         {
             env = *p;
         }
@@ -235,7 +243,7 @@ namespace golang::runtime
         {
             auto p = go_new(string);
             *p = value;
-            Store(gocpp::recv(godebugEnv), p);
+            rec::Store(gocpp::recv(godebugEnv), p);
             godebugNotify(true);
         }
     }
@@ -245,7 +253,7 @@ namespace golang::runtime
         unsetenv_c(key);
         if(key == "GODEBUG")
         {
-            Store(gocpp::recv(godebugEnv), nullptr);
+            rec::Store(gocpp::recv(godebugEnv), nullptr);
             godebugNotify(true);
         }
     }

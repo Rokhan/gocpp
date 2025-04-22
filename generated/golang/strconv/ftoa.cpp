@@ -20,6 +20,13 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+        using namespace strconv::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     floatInfo::operator T()
@@ -236,8 +243,8 @@ namespace golang::strconv
     gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
         auto d = go_new(decimal);
-        Assign(gocpp::recv(d), mant);
-        Shift(gocpp::recv(d), exp - int(flt->mantbits));
+        rec::Assign(gocpp::recv(d), mant);
+        rec::Shift(gocpp::recv(d), exp - int(flt->mantbits));
         decimalSlice digs = {};
         auto shortest = prec < 0;
         if(shortest)
@@ -284,10 +291,10 @@ namespace golang::strconv
                 {
                     case 0:
                     case 1:
-                        Round(gocpp::recv(d), prec + 1);
+                        rec::Round(gocpp::recv(d), prec + 1);
                         break;
                     case 2:
-                        Round(gocpp::recv(d), d->dp + prec);
+                        rec::Round(gocpp::recv(d), d->dp + prec);
                         break;
                     case 3:
                     case 4:
@@ -295,7 +302,7 @@ namespace golang::strconv
                         {
                             prec = 1;
                         }
-                        Round(gocpp::recv(d), prec);
+                        rec::Round(gocpp::recv(d), prec);
                         break;
                 }
             }
@@ -368,8 +375,8 @@ namespace golang::strconv
             return;
         }
         auto upper = go_new(decimal);
-        Assign(gocpp::recv(upper), mant * 2 + 1);
-        Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
+        rec::Assign(gocpp::recv(upper), mant * 2 + 1);
+        rec::Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
         uint64_t mantlo = {};
         int explo = {};
         if(mant > (1 << flt->mantbits) || exp == minexp)
@@ -383,8 +390,8 @@ namespace golang::strconv
             explo = exp - 1;
         }
         auto lower = go_new(decimal);
-        Assign(gocpp::recv(lower), mantlo * 2 + 1);
-        Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
+        rec::Assign(gocpp::recv(lower), mantlo * 2 + 1);
+        rec::Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
         auto inclusive = mant % 2 == 0;
         uint8_t upperdelta = {};
         for(auto ui = 0; ; ui++)
@@ -440,15 +447,15 @@ namespace golang::strconv
                 switch(conditionId)
                 {
                     case 0:
-                        Round(gocpp::recv(d), mi + 1);
+                        rec::Round(gocpp::recv(d), mi + 1);
                         return;
                         break;
                     case 1:
-                        RoundDown(gocpp::recv(d), mi + 1);
+                        rec::RoundDown(gocpp::recv(d), mi + 1);
                         return;
                         break;
                     case 2:
-                        RoundUp(gocpp::recv(d), mi + 1);
+                        rec::RoundUp(gocpp::recv(d), mi + 1);
                         return;
                         break;
                 }

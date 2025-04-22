@@ -10,10 +10,10 @@ namespace golang::png
     struct EncoderBufferPool;
     using CompressionLevel = int;
     struct opaquer;
-    const CompressionLevel DefaultCompression = 0;
-    const CompressionLevel NoCompression = - 1;
-    const CompressionLevel BestSpeed = - 2;
-    const CompressionLevel BestCompression = - 3;
+    const png::CompressionLevel DefaultCompression = 0;
+    const png::CompressionLevel NoCompression = - 1;
+    const png::CompressionLevel BestSpeed = - 2;
+    const png::CompressionLevel BestCompression = - 3;
 }
 #include "golang/bufio/bufio.fwd.h"
 #include "golang/compress/zlib/writer.fwd.h"

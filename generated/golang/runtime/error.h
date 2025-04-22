@@ -55,8 +55,11 @@ namespace golang::runtime
         std::shared_ptr<IError> value;
     };
 
-    void RuntimeError(const gocpp::PtrRecv<Error, false>& self);
-    void RuntimeError(const gocpp::ObjRecv<Error>& self);
+    namespace rec
+    {
+        void RuntimeError(const gocpp::PtrRecv<Error, false>& self);
+        void RuntimeError(const gocpp::ObjRecv<Error>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
     struct TypeAssertionError
@@ -78,11 +81,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
-    void RuntimeError(TypeAssertionError*);
-    std::string Error(struct TypeAssertionError* e);
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
-    void RuntimeError(errorString e);
-    std::string Error(errorString e);
     struct errorAddressString
     {
         std::string msg;
@@ -100,17 +99,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errorAddressString& value);
-    void RuntimeError(struct errorAddressString e);
-    std::string Error(struct errorAddressString e);
-    uintptr_t Addr(struct errorAddressString e);
-    void RuntimeError(plainError e);
-    std::string Error(plainError e);
     struct boundsError
     {
         int64_t x;
         int y;
         bool go_signed;
-        boundsErrorCode code;
+        runtime::boundsErrorCode code;
 
         using isGoStruct = void;
 
@@ -126,9 +120,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
     extern gocpp::array_base<std::string> boundsErrorFmts;
     extern gocpp::array_base<std::string> boundsNegErrorFmts;
-    void RuntimeError(struct boundsError e);
     gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
-    std::string Error(struct boundsError e);
     struct stringer : gocpp::Interface
     {
         stringer(){}
@@ -171,12 +163,30 @@ namespace golang::runtime
         std::shared_ptr<Istringer> value;
     };
 
-    std::string String(const gocpp::PtrRecv<stringer, false>& self);
-    std::string String(const gocpp::ObjRecv<stringer>& self);
+    namespace rec
+    {
+        std::string String(const gocpp::PtrRecv<stringer, false>& self);
+        std::string String(const gocpp::ObjRecv<stringer>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
     void printany(go_any i);
     void printanycustomtype(go_any i);
     void panicwrap();
+
+    namespace rec
+    {
+        void RuntimeError(TypeAssertionError*);
+        std::string Error(struct TypeAssertionError* e);
+        void RuntimeError(runtime::errorString e);
+        std::string Error(runtime::errorString e);
+        void RuntimeError(struct errorAddressString e);
+        std::string Error(struct errorAddressString e);
+        uintptr_t Addr(struct errorAddressString e);
+        void RuntimeError(runtime::plainError e);
+        std::string Error(runtime::plainError e);
+        void RuntimeError(struct boundsError e);
+        std::string Error(struct boundsError e);
+    }
 }
 

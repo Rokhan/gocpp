@@ -15,7 +15,13 @@
 
 namespace golang::main
 {
-    std::string String(IPAddr ip)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
+    std::string rec::String(IPAddr ip)
     {
         return mocklib::Sprintf("%v.%v.%v.%v", ip[0], ip[1], ip[2], ip[3]);
     }

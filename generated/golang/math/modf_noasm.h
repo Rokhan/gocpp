@@ -12,5 +12,9 @@
 namespace golang::math
 {
     std::tuple<double, double> archModf(double f);
+
+    namespace rec
+    {
+    }
 }
 

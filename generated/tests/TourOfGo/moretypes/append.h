@@ -15,5 +15,9 @@ namespace golang::main
     void main();
     void printSlice(gocpp::slice<int> s);
     void appendValue(gocpp::slice<int> s, int value);
+
+    namespace rec
+    {
+    }
 }
 

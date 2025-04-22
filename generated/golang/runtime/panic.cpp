@@ -80,6 +80,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void panicCheck1(uintptr_t pc, std::string msg)
     {
         if(goarch::IsWasm == 0 && hasPrefix(funcname(findfunc(pc)), "runtime."))
@@ -351,12 +363,12 @@ namespace golang::runtime
         d1->fn = fn;
         for(; ; )
         {
-            d1->link = Load(gocpp::recv(head));
+            d1->link = rec::Load(gocpp::recv(head));
             if(d1->link == badDefer())
             {
                 go_throw("defer after range func returned");
             }
-            if(CompareAndSwap(gocpp::recv(head), d1->link, d1))
+            if(rec::CompareAndSwap(gocpp::recv(head), d1->link, d1))
             {
                 break;
             }
@@ -376,8 +388,8 @@ namespace golang::runtime
         auto d0 = d;
         for(; ; )
         {
-            d = Load(gocpp::recv(head));
-            if(CompareAndSwap(gocpp::recv(head), d, badDefer()))
+            d = rec::Load(gocpp::recv(head));
+            if(rec::CompareAndSwap(gocpp::recv(head), d, badDefer()))
             {
                 break;
             }
@@ -422,7 +434,7 @@ namespace golang::runtime
     {
         _defer* d = {};
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->deferpool) == 0 && sched.deferpool != nullptr)
         {
             lock(& sched.deferlock);
@@ -463,7 +475,7 @@ namespace golang::runtime
             return;
         }
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->deferpool) == cap(pp->deferpool))
         {
             _defer* first = {};
@@ -504,10 +516,10 @@ namespace golang::runtime
     {
         _panic p = {};
         p.deferreturn = true;
-        start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
         for(; ; )
         {
-            auto [fn, ok] = nextDefer(gocpp::recv(p));
+            auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
             if(! ok)
             {
                 break;
@@ -520,10 +532,10 @@ namespace golang::runtime
     {
         _panic p = {};
         p.goexit = true;
-        start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
         for(; ; )
         {
-            auto [fn, ok] = nextDefer(gocpp::recv(p));
+            auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
             if(! ok)
             {
                 break;
@@ -563,7 +575,7 @@ namespace golang::runtime
                         default:
                         {
                             auto r = gocpp::recover();
-                            go_throw(text + ": type " + string(gocpp::recv(toRType(efaceOf(& r)->_type))));
+                            go_throw(text + ": type " + rec::string(gocpp::recv(toRType(efaceOf(& r)->_type))));
                             break;
                         }
                     }
@@ -582,13 +594,13 @@ namespace golang::runtime
                         case 0:
                         {
                             gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
-                            p->arg = Error(gocpp::recv(v));
+                            p->arg = rec::Error(gocpp::recv(v));
                             break;
                         }
                         case 1:
                         {
                             stringer v = gocpp::any_cast<stringer>(p->arg);
-                            p->arg = String(gocpp::recv(v));
+                            p->arg = rec::String(gocpp::recv(v));
                             break;
                         }
                     }
@@ -675,12 +687,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    std::string Error(PanicNilError*)
+    std::string rec::Error(PanicNilError*)
     {
         return "panic called with nil argument";
     }
 
-    void RuntimeError(PanicNilError*)
+    void rec::RuntimeError(PanicNilError*)
     {
     }
 
@@ -689,13 +701,13 @@ namespace golang::runtime
     {
         if(e == nullptr)
         {
-            if(Load(gocpp::recv(debug.panicnil)) != 1)
+            if(rec::Load(gocpp::recv(debug.panicnil)) != 1)
             {
                 e = go_new(PanicNilError);
             }
             else
             {
-                IncNonDefault(gocpp::recv(panicnil));
+                rec::IncNonDefault(gocpp::recv(panicnil));
             }
         }
         auto gp = getg();
@@ -732,11 +744,11 @@ namespace golang::runtime
         }
         _panic p = {};
         p->arg = e;
-        Add(gocpp::recv(runningPanicDefers), 1);
-        start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::Add(gocpp::recv(runningPanicDefers), 1);
+        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
         for(; ; )
         {
-            auto [fn, ok] = nextDefer(gocpp::recv(p));
+            auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
             if(! ok)
             {
                 break;
@@ -748,7 +760,7 @@ namespace golang::runtime
         *(int*)(nullptr) = 0;
     }
 
-    void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp)
+    void rec::start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp)
     {
         auto gp = getg();
         p->startPC = getcallerpc();
@@ -768,10 +780,10 @@ namespace golang::runtime
         p->link = gp->_panic;
         gp->_panic = (_panic*)(noescape(unsafe::Pointer(p)));
         std::tie(p->lr, p->fp) = std::tuple{pc, sp};
-        nextFrame(gocpp::recv(p));
+        rec::nextFrame(gocpp::recv(p));
     }
 
-    std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p)
+    std::tuple<std::function<void ()>, bool> rec::nextDefer(struct _panic* p)
     {
         auto gp = getg();
         if(! p->deferreturn)
@@ -817,14 +829,14 @@ namespace golang::runtime
                 freedefer(d);
                 return {fn, true};
             }
-            if(! nextFrame(gocpp::recv(p)))
+            if(! rec::nextFrame(gocpp::recv(p)))
             {
                 return {nullptr, false};
             }
         }
     }
 
-    bool nextFrame(struct _panic* p)
+    bool rec::nextFrame(struct _panic* p)
     {
         bool ok;
         if(p->lr == 0)
@@ -841,10 +853,10 @@ namespace golang::runtime
                 limit = d->sp;
             }
             unwinder u = {};
-            initAt(gocpp::recv(u), p->lr, uintptr_t(p->fp), 0, gp, 0);
+            rec::initAt(gocpp::recv(u), p->lr, uintptr_t(p->fp), 0, gp, 0);
             for(; ; )
             {
-                if(! valid(gocpp::recv(u)))
+                if(! rec::valid(gocpp::recv(u)))
                 {
                     p->lr = 0;
                     return;
@@ -853,11 +865,11 @@ namespace golang::runtime
                 {
                     break;
                 }
-                if(initOpenCodedDefers(gocpp::recv(p), u.frame.fn, unsafe::Pointer(u.frame.varp)))
+                if(rec::initOpenCodedDefers(gocpp::recv(p), u.frame.fn, unsafe::Pointer(u.frame.varp)))
                 {
                     break;
                 }
-                next(gocpp::recv(u));
+                rec::next(gocpp::recv(u));
             }
             p->lr = u.frame.lr;
             p->sp = unsafe::Pointer(u.frame.sp);
@@ -867,7 +879,7 @@ namespace golang::runtime
         return ok;
     }
 
-    bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp)
+    bool rec::initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp)
     {
         auto fd = funcdata(fn, abi::FUNCDATA_OpenCodedDeferInfo);
         if(fd == nullptr)
@@ -887,7 +899,7 @@ namespace golang::runtime
         }
         uint32_t slotsOffset;
         std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
-        p->retpc = entry(gocpp::recv(fn)) + uintptr_t(fn.deferreturn);
+        p->retpc = rec::entry(gocpp::recv(fn)) + uintptr_t(fn.deferreturn);
         p->deferBitsPtr = deferBitsPtr;
         p->slotsPtr = add(varp, - uintptr_t(slotsOffset));
         return true;
@@ -949,7 +961,7 @@ namespace golang::runtime
                 saveOpenDeferState = false;
                 break;
             }
-            Add(gocpp::recv(runningPanicDefers), - 1);
+            rec::Add(gocpp::recv(runningPanicDefers), - 1);
         }
         gp->_panic = p;
         if(p == nullptr)
@@ -991,7 +1003,7 @@ namespace golang::runtime
         gogo(& gp->sched);
     }
 
-    void fatalthrow(throwType t)
+    void fatalthrow(runtime::throwType t)
     {
         auto pc = getcallerpc();
         auto sp = getcallersp();
@@ -1026,7 +1038,7 @@ namespace golang::runtime
         {
             if(startpanic_m() && msgs != nullptr)
             {
-                Add(gocpp::recv(runningPanicDefers), - 1);
+                rec::Add(gocpp::recv(runningPanicDefers), - 1);
                 printpanics(msgs);
             }
             docrash = dopanic_m(gp, pc, sp);
@@ -1065,7 +1077,7 @@ namespace golang::runtime
             {
                 case 0:
                     gp->m->dying = 1;
-                    Add(gocpp::recv(panicking), 1);
+                    rec::Add(gocpp::recv(panicking), 1);
                     lock(& paniclk);
                     if(debug.schedtrace > 0 || debug.scheddetail > 0)
                     {
@@ -1134,7 +1146,7 @@ namespace golang::runtime
             }
         }
         unlock(& paniclk);
-        if(Add(gocpp::recv(panicking), - 1) != 0)
+        if(rec::Add(gocpp::recv(panicking), - 1) != 0)
         {
             lock(& deadlock);
             lock(& deadlock);
@@ -1178,11 +1190,11 @@ namespace golang::runtime
         {
             return false;
         }
-        if(gp->m->incgo || valid(gocpp::recv(findfunc(pc))))
+        if(gp->m->incgo || rec::valid(gocpp::recv(findfunc(pc))))
         {
             return true;
         }
-        if(valid(gocpp::recv(findfunc(lr))))
+        if(rec::valid(gocpp::recv(findfunc(lr))))
         {
             return false;
         }
@@ -1192,7 +1204,7 @@ namespace golang::runtime
     bool isAbortPC(uintptr_t pc)
     {
         auto f = findfunc(pc);
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return false;
         }

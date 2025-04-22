@@ -15,6 +15,12 @@
 
 namespace golang::color
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace color::rec;
+    }
+
     std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b)
     {
         auto r1 = int32_t(r);
@@ -112,7 +118,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct YCbCr c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct YCbCr c)
     {
         auto yy1 = int32_t(c.Y) * 0x10101;
         auto cb1 = int32_t(c.Cb) - 128;
@@ -154,7 +160,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_3] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_3] = rec::RGBA(gocpp::recv(c));
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
         return YCbCr {y, u, v};
     }
@@ -188,7 +194,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NYCbCrA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NYCbCrA c)
     {
         auto yy1 = int32_t(c.Y) * 0x10101;
         auto cb1 = int32_t(c.Cb) - 128;
@@ -249,7 +255,7 @@ namespace golang::color
                 }
             }
         }
-        auto [r, g, b, a] = RGBA(gocpp::recv(c));
+        auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         if(a != 0)
         {
             r = (r * 0xffff) / a;
@@ -331,7 +337,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct CMYK c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct CMYK c)
     {
         auto w = 0xffff - uint32_t(c.K) * 0x101;
         auto r = (0xffff - uint32_t(c.C) * 0x101) * w / 0xffff;
@@ -347,7 +353,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_8] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_8] = rec::RGBA(gocpp::recv(c));
         auto [cc, mm, yy, kk] = RGBToCMYK(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
         return CMYK {cc, mm, yy, kk};
     }

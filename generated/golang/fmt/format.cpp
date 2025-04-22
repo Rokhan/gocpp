@@ -18,6 +18,14 @@
 
 namespace golang::fmt
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace strconv::rec;
+        using namespace utf8::rec;
+    }
+
     std::string ldigits = "0123456789abcdefx";
     std::string udigits = "0123456789ABCDEFX";
     
@@ -111,18 +119,18 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    void clearflags(struct fmt* f)
+    void rec::clearflags(struct fmt* f)
     {
         f->fmtFlags = fmtFlags {};
     }
 
-    void init(struct fmt* f, buffer* buf)
+    void rec::init(struct fmt* f, buffer* buf)
     {
         f->buf = buf;
-        clearflags(gocpp::recv(f));
+        rec::clearflags(gocpp::recv(f));
     }
 
-    void writePadding(struct fmt* f, int n)
+    void rec::writePadding(struct fmt* f, int n)
     {
         if(n <= 0)
         {
@@ -149,59 +157,59 @@ namespace golang::fmt
         *f->buf = buf.make_slice(0, newLen);
     }
 
-    void pad(struct fmt* f, gocpp::slice<unsigned char> b)
+    void rec::pad(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(! f->widPresent || f->wid == 0)
         {
-            write(gocpp::recv(f->buf), b);
+            rec::write(gocpp::recv(f->buf), b);
             return;
         }
         auto width = f->wid - utf8::RuneCount(b);
         if(! f->minus)
         {
-            writePadding(gocpp::recv(f), width);
-            write(gocpp::recv(f->buf), b);
+            rec::writePadding(gocpp::recv(f), width);
+            rec::write(gocpp::recv(f->buf), b);
         }
         else
         {
-            write(gocpp::recv(f->buf), b);
-            writePadding(gocpp::recv(f), width);
+            rec::write(gocpp::recv(f->buf), b);
+            rec::writePadding(gocpp::recv(f), width);
         }
     }
 
-    void padString(struct fmt* f, std::string s)
+    void rec::padString(struct fmt* f, std::string s)
     {
         if(! f->widPresent || f->wid == 0)
         {
-            writeString(gocpp::recv(f->buf), s);
+            rec::writeString(gocpp::recv(f->buf), s);
             return;
         }
         auto width = f->wid - utf8::RuneCountInString(s);
         if(! f->minus)
         {
-            writePadding(gocpp::recv(f), width);
-            writeString(gocpp::recv(f->buf), s);
+            rec::writePadding(gocpp::recv(f), width);
+            rec::writeString(gocpp::recv(f->buf), s);
         }
         else
         {
-            writeString(gocpp::recv(f->buf), s);
-            writePadding(gocpp::recv(f), width);
+            rec::writeString(gocpp::recv(f->buf), s);
+            rec::writePadding(gocpp::recv(f), width);
         }
     }
 
-    void fmtBoolean(struct fmt* f, bool v)
+    void rec::fmtBoolean(struct fmt* f, bool v)
     {
         if(v)
         {
-            padString(gocpp::recv(f), "true");
+            rec::padString(gocpp::recv(f), "true");
         }
         else
         {
-            padString(gocpp::recv(f), "false");
+            rec::padString(gocpp::recv(f), "false");
         }
     }
 
-    void fmtUnicode(struct fmt* f, uint64_t u)
+    void rec::fmtUnicode(struct fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
         auto prec = 4;
@@ -248,11 +256,11 @@ namespace golang::fmt
         buf[i] = 'U';
         auto oldZero = f->zero;
         f->zero = false;
-        pad(gocpp::recv(f), buf.make_slice(i));
+        rec::pad(gocpp::recv(f), buf.make_slice(i));
         f->zero = oldZero;
     }
 
-    void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
+    void rec::fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
     {
         auto negative = isSigned && int64_t(u) < 0;
         if(negative)
@@ -276,7 +284,7 @@ namespace golang::fmt
             {
                 auto oldZero = f->zero;
                 f->zero = false;
-                writePadding(gocpp::recv(f), f->wid);
+                rec::writePadding(gocpp::recv(f), f->wid);
                 f->zero = oldZero;
                 return;
             }
@@ -405,11 +413,11 @@ namespace golang::fmt
         }
         auto oldZero = f->zero;
         f->zero = false;
-        pad(gocpp::recv(f), buf.make_slice(i));
+        rec::pad(gocpp::recv(f), buf.make_slice(i));
         f->zero = oldZero;
     }
 
-    std::string truncateString(struct fmt* f, std::string s)
+    std::string rec::truncateString(struct fmt* f, std::string s)
     {
         if(f->precPresent)
         {
@@ -426,7 +434,7 @@ namespace golang::fmt
         return s;
     }
 
-    gocpp::slice<unsigned char> truncate(struct fmt* f, gocpp::slice<unsigned char> b)
+    gocpp::slice<unsigned char> rec::truncate(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(f->precPresent)
         {
@@ -449,19 +457,19 @@ namespace golang::fmt
         return b;
     }
 
-    void fmtS(struct fmt* f, std::string s)
+    void rec::fmtS(struct fmt* f, std::string s)
     {
-        s = truncateString(gocpp::recv(f), s);
-        padString(gocpp::recv(f), s);
+        s = rec::truncateString(gocpp::recv(f), s);
+        rec::padString(gocpp::recv(f), s);
     }
 
-    void fmtBs(struct fmt* f, gocpp::slice<unsigned char> b)
+    void rec::fmtBs(struct fmt* f, gocpp::slice<unsigned char> b)
     {
-        b = truncate(gocpp::recv(f), b);
-        pad(gocpp::recv(f), b);
+        b = rec::truncate(gocpp::recv(f), b);
+        rec::pad(gocpp::recv(f), b);
     }
 
-    void fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
+    void rec::fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
     {
         auto length = len(b);
         if(b == nullptr)
@@ -493,13 +501,13 @@ namespace golang::fmt
         {
             if(f->widPresent)
             {
-                writePadding(gocpp::recv(f), f->wid);
+                rec::writePadding(gocpp::recv(f), f->wid);
             }
             return;
         }
         if(f->widPresent && f->wid > width && ! f->minus)
         {
-            writePadding(gocpp::recv(f), f->wid - width);
+            rec::writePadding(gocpp::recv(f), f->wid - width);
         }
         auto buf = *f->buf;
         if(f->sharp)
@@ -530,40 +538,40 @@ namespace golang::fmt
         *f->buf = buf;
         if(f->widPresent && f->wid > width && f->minus)
         {
-            writePadding(gocpp::recv(f), f->wid - width);
+            rec::writePadding(gocpp::recv(f), f->wid - width);
         }
     }
 
-    void fmtSx(struct fmt* f, std::string s, std::string digits)
+    void rec::fmtSx(struct fmt* f, std::string s, std::string digits)
     {
-        fmtSbx(gocpp::recv(f), s, nullptr, digits);
+        rec::fmtSbx(gocpp::recv(f), s, nullptr, digits);
     }
 
-    void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
+    void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
     {
-        fmtSbx(gocpp::recv(f), "", b, digits);
+        rec::fmtSbx(gocpp::recv(f), "", b, digits);
     }
 
-    void fmtQ(struct fmt* f, std::string s)
+    void rec::fmtQ(struct fmt* f, std::string s)
     {
-        s = truncateString(gocpp::recv(f), s);
+        s = rec::truncateString(gocpp::recv(f), s);
         if(f->sharp && strconv::CanBackquote(s))
         {
-            padString(gocpp::recv(f), "`" + s + "`");
+            rec::padString(gocpp::recv(f), "`" + s + "`");
             return;
         }
         auto buf = f->intbuf.make_slice(0, 0);
         if(f->plus)
         {
-            pad(gocpp::recv(f), strconv::AppendQuoteToASCII(buf, s));
+            rec::pad(gocpp::recv(f), strconv::AppendQuoteToASCII(buf, s));
         }
         else
         {
-            pad(gocpp::recv(f), strconv::AppendQuote(buf, s));
+            rec::pad(gocpp::recv(f), strconv::AppendQuote(buf, s));
         }
     }
 
-    void fmtC(struct fmt* f, uint64_t c)
+    void rec::fmtC(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
         if(c > utf8::MaxRune)
@@ -571,10 +579,10 @@ namespace golang::fmt
             r = utf8::RuneError;
         }
         auto buf = f->intbuf.make_slice(0, 0);
-        pad(gocpp::recv(f), utf8::AppendRune(buf, r));
+        rec::pad(gocpp::recv(f), utf8::AppendRune(buf, r));
     }
 
-    void fmtQc(struct fmt* f, uint64_t c)
+    void rec::fmtQc(struct fmt* f, uint64_t c)
     {
         auto r = rune(c);
         if(c > utf8::MaxRune)
@@ -584,15 +592,15 @@ namespace golang::fmt
         auto buf = f->intbuf.make_slice(0, 0);
         if(f->plus)
         {
-            pad(gocpp::recv(f), strconv::AppendQuoteRuneToASCII(buf, r));
+            rec::pad(gocpp::recv(f), strconv::AppendQuoteRuneToASCII(buf, r));
         }
         else
         {
-            pad(gocpp::recv(f), strconv::AppendQuoteRune(buf, r));
+            rec::pad(gocpp::recv(f), strconv::AppendQuoteRune(buf, r));
         }
     }
 
-    void fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec)
+    void rec::fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
         if(f->precPresent)
         {
@@ -619,7 +627,7 @@ namespace golang::fmt
             {
                 num = num.make_slice(1);
             }
-            pad(gocpp::recv(f), num);
+            rec::pad(gocpp::recv(f), num);
             f->zero = oldZero;
             return;
         }
@@ -713,15 +721,15 @@ namespace golang::fmt
         {
             if(f->zero && f->widPresent && f->wid > len(num))
             {
-                writeByte(gocpp::recv(f->buf), num[0]);
-                writePadding(gocpp::recv(f), f->wid - len(num));
-                write(gocpp::recv(f->buf), num.make_slice(1));
+                rec::writeByte(gocpp::recv(f->buf), num[0]);
+                rec::writePadding(gocpp::recv(f), f->wid - len(num));
+                rec::write(gocpp::recv(f->buf), num.make_slice(1));
                 return;
             }
-            pad(gocpp::recv(f), num);
+            rec::pad(gocpp::recv(f), num);
             return;
         }
-        pad(gocpp::recv(f), num.make_slice(1));
+        rec::pad(gocpp::recv(f), num.make_slice(1));
     }
 
 }

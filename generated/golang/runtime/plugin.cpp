@@ -29,6 +29,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit()
     {
         std::string path;
@@ -148,11 +157,11 @@ namespace golang::runtime
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             auto symName = resolveNameOff(unsafe::Pointer(md->types), ptab.name);
-            auto t = typeOff(gocpp::recv(toRType((_type*)(unsafe::Pointer(md->types)))), ptab.typ);
+            auto t = rec::typeOff(gocpp::recv(toRType((_type*)(unsafe::Pointer(md->types)))), ptab.typ);
             go_any val = {};
             auto valp = (gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& val));
             (*valp)[0] = unsafe::Pointer(t);
-            auto name = Name(gocpp::recv(symName));
+            auto name = rec::Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
                 std::string path;
@@ -171,7 +180,7 @@ namespace golang::runtime
         auto badtable = false;
         for(auto i = 0; i < len(md->ftab); i++)
         {
-            auto entry = textAddr(gocpp::recv(md), md->ftab[i].entryoff);
+            auto entry = rec::textAddr(gocpp::recv(md), md->ftab[i].entryoff);
             if(md->minpc <= entry && entry <= md->maxpc)
             {
                 continue;
@@ -181,10 +190,10 @@ namespace golang::runtime
             auto name2 = "none";
             auto entry2 = uintptr_t(0);
             auto f2 = findfunc(entry);
-            if(valid(gocpp::recv(f2)))
+            if(rec::valid(gocpp::recv(f2)))
             {
                 name2 = funcname(f2);
-                entry2 = entry(gocpp::recv(f2));
+                entry2 = rec::entry(gocpp::recv(f2));
             }
             badtable = true;
             println("ftab entry", hex(entry), "/", hex(entry2), ": ", name, "/", name2, "outside pc range:[", hex(md->minpc), ",", hex(md->maxpc), "], modulename=", md->modulename, ", pluginpath=", md->pluginpath);

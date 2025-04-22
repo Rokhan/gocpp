@@ -34,55 +34,68 @@
 
 namespace golang::os
 {
-    struct gocpp::error Close(struct File* f)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace windows::rec;
+    }
+
+    struct gocpp::error rec::Close(struct File* f)
     {
         if(f == nullptr)
         {
             return ErrInvalid;
         }
-        return close(gocpp::recv(f->file));
+        return rec::close(gocpp::recv(f->file));
     }
 
-    std::tuple<int, struct gocpp::error> read(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::read(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = Read(gocpp::recv(f->pfd), b);
+        std::tie(n, err) = rec::Read(gocpp::recv(f->pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
     }
 
-    std::tuple<int, struct gocpp::error> pread(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::pread(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = Pread(gocpp::recv(f->pfd), b, off);
+        std::tie(n, err) = rec::Pread(gocpp::recv(f->pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
     }
 
-    std::tuple<int, struct gocpp::error> write(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::write(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = Write(gocpp::recv(f->pfd), b);
+        std::tie(n, err) = rec::Write(gocpp::recv(f->pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
     }
 
-    std::tuple<int, struct gocpp::error> pwrite(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::pwrite(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = Pwrite(gocpp::recv(f->pfd), b, off);
+        std::tie(n, err) = rec::Pwrite(gocpp::recv(f->pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
     }
 
-    uint32_t syscallMode(FileMode i)
+    uint32_t syscallMode(fs::FileMode i)
     {
         uint32_t o;
-        o |= uint32_t(Perm(gocpp::recv(i)));
+        o |= uint32_t(rec::Perm(gocpp::recv(i)));
         if(i & ModeSetuid != 0)
         {
             uint32_t o;
@@ -101,7 +114,7 @@ namespace golang::os
         return o;
     }
 
-    struct gocpp::error chmod(std::string name, FileMode mode)
+    struct gocpp::error chmod(std::string name, fs::FileMode mode)
     {
         auto longName = fixLongPath(name);
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -115,15 +128,15 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp::error chmod(struct File* f, FileMode mode)
+    struct gocpp::error rec::chmod(struct File* f, fs::FileMode mode)
     {
-        if(auto err = checkValid(gocpp::recv(f), "chmod"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chmod"); err != nullptr)
         {
             return err;
         }
-        if(auto e = Fchmod(gocpp::recv(f->pfd), syscallMode(mode)); e != nullptr)
+        if(auto e = rec::Fchmod(gocpp::recv(f->pfd), syscallMode(mode)); e != nullptr)
         {
-            return wrapErr(gocpp::recv(f), "chmod", e);
+            return rec::wrapErr(gocpp::recv(f), "chmod", e);
         }
         return nullptr;
     }
@@ -154,41 +167,41 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp::error Chown(struct File* f, int uid, int gid)
+    struct gocpp::error rec::Chown(struct File* f, int uid, int gid)
     {
-        if(auto err = checkValid(gocpp::recv(f), "chown"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chown"); err != nullptr)
         {
             return err;
         }
-        if(auto e = Fchown(gocpp::recv(f->pfd), uid, gid); e != nullptr)
+        if(auto e = rec::Fchown(gocpp::recv(f->pfd), uid, gid); e != nullptr)
         {
-            return wrapErr(gocpp::recv(f), "chown", e);
+            return rec::wrapErr(gocpp::recv(f), "chown", e);
         }
         return nullptr;
     }
 
-    struct gocpp::error Truncate(struct File* f, int64_t size)
+    struct gocpp::error rec::Truncate(struct File* f, int64_t size)
     {
-        if(auto err = checkValid(gocpp::recv(f), "truncate"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "truncate"); err != nullptr)
         {
             return err;
         }
-        if(auto e = Ftruncate(gocpp::recv(f->pfd), size); e != nullptr)
+        if(auto e = rec::Ftruncate(gocpp::recv(f->pfd), size); e != nullptr)
         {
-            return wrapErr(gocpp::recv(f), "truncate", e);
+            return rec::wrapErr(gocpp::recv(f), "truncate", e);
         }
         return nullptr;
     }
 
-    struct gocpp::error Sync(struct File* f)
+    struct gocpp::error rec::Sync(struct File* f)
     {
-        if(auto err = checkValid(gocpp::recv(f), "sync"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "sync"); err != nullptr)
         {
             return err;
         }
-        if(auto e = Fsync(gocpp::recv(f->pfd)); e != nullptr)
+        if(auto e = rec::Fsync(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return wrapErr(gocpp::recv(f), "sync", e);
+            return rec::wrapErr(gocpp::recv(f), "sync", e);
         }
         return nullptr;
     }
@@ -198,13 +211,13 @@ namespace golang::os
         gocpp::array<syscall::Timespec, 2> utimes = {};
         auto set = [=](int i, struct mocklib::Date t) mutable -> void
         {
-            if(IsZero(gocpp::recv(t)))
+            if(rec::IsZero(gocpp::recv(t)))
             {
                 utimes[i] = gocpp::Init<syscall::Timespec>([](syscall::Timespec& x) { x.Sec = _UTIME_OMIT; x.Nsec = _UTIME_OMIT; });
             }
             else
             {
-                utimes[i] = syscall::NsecToTimespec(UnixNano(gocpp::recv(t)));
+                utimes[i] = syscall::NsecToTimespec(rec::UnixNano(gocpp::recv(t)));
             }
         };
         set(0, atime);
@@ -216,47 +229,47 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp::error Chdir(struct File* f)
+    struct gocpp::error rec::Chdir(struct File* f)
     {
-        if(auto err = checkValid(gocpp::recv(f), "chdir"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chdir"); err != nullptr)
         {
             return err;
         }
-        if(auto e = Fchdir(gocpp::recv(f->pfd)); e != nullptr)
+        if(auto e = rec::Fchdir(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return wrapErr(gocpp::recv(f), "chdir", e);
+            return rec::wrapErr(gocpp::recv(f), "chdir", e);
         }
         return nullptr;
     }
 
-    struct gocpp::error setDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setDeadline(struct File* f, struct mocklib::Date t)
     {
-        if(auto err = checkValid(gocpp::recv(f), "SetDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"); err != nullptr)
         {
             return err;
         }
-        return SetDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetDeadline(gocpp::recv(f->pfd), t);
     }
 
-    struct gocpp::error setReadDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setReadDeadline(struct File* f, struct mocklib::Date t)
     {
-        if(auto err = checkValid(gocpp::recv(f), "SetReadDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"); err != nullptr)
         {
             return err;
         }
-        return SetReadDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetReadDeadline(gocpp::recv(f->pfd), t);
     }
 
-    struct gocpp::error setWriteDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setWriteDeadline(struct File* f, struct mocklib::Date t)
     {
-        if(auto err = checkValid(gocpp::recv(f), "SetWriteDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"); err != nullptr)
         {
             return err;
         }
-        return SetWriteDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetWriteDeadline(gocpp::recv(f->pfd), t);
     }
 
-    struct gocpp::error checkValid(struct File* f, std::string op)
+    struct gocpp::error rec::checkValid(struct File* f, std::string op)
     {
         if(f == nullptr)
         {

@@ -13,6 +13,11 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     decimal::operator T()
@@ -54,7 +59,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    std::string String(struct decimal* a)
+    std::string rec::String(struct decimal* a)
     {
         auto n = 10 + a->nd;
         if(a->dp > 0)
@@ -122,7 +127,7 @@ namespace golang::strconv
         }
     }
 
-    void Assign(struct decimal* a, uint64_t v)
+    void rec::Assign(struct decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
         auto n = 0;
@@ -300,7 +305,7 @@ namespace golang::strconv
         trim(a);
     }
 
-    void Shift(struct decimal* a, int k)
+    void rec::Shift(struct decimal* a, int k)
     {
         //Go switch emulation
         {
@@ -349,7 +354,7 @@ namespace golang::strconv
         return a->d[nd] >= '5';
     }
 
-    void Round(struct decimal* a, int nd)
+    void rec::Round(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -357,15 +362,15 @@ namespace golang::strconv
         }
         if(shouldRoundUp(a, nd))
         {
-            RoundUp(gocpp::recv(a), nd);
+            rec::RoundUp(gocpp::recv(a), nd);
         }
         else
         {
-            RoundDown(gocpp::recv(a), nd);
+            rec::RoundDown(gocpp::recv(a), nd);
         }
     }
 
-    void RoundDown(struct decimal* a, int nd)
+    void rec::RoundDown(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -375,7 +380,7 @@ namespace golang::strconv
         trim(a);
     }
 
-    void RoundUp(struct decimal* a, int nd)
+    void rec::RoundUp(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -396,7 +401,7 @@ namespace golang::strconv
         a->dp++;
     }
 
-    uint64_t RoundedInteger(struct decimal* a)
+    uint64_t rec::RoundedInteger(struct decimal* a)
     {
         if(a->dp > 20)
         {

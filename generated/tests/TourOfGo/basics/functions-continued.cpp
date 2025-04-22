@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     int add(int x, int y)
     {
         return x + y;

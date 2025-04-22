@@ -18,5 +18,9 @@ namespace golang::utf16
     gocpp::slice<uint16_t> AppendRune(gocpp::slice<uint16_t> a, gocpp::rune r);
     gocpp::slice<gocpp::rune> Decode(gocpp::slice<uint16_t> s);
     gocpp::slice<gocpp::rune> decode(gocpp::slice<uint16_t> s, gocpp::slice<gocpp::rune> buf);
+
+    namespace rec
+    {
+    }
 }
 

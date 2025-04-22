@@ -86,5 +86,9 @@ namespace golang::runtime
     bool blockUntilEmptyFinalizerQueue(int64_t timeout);
     void SetFinalizer(go_any obj, go_any finalizer);
     void KeepAlive(go_any x);
+
+    namespace rec
+    {
+    }
 }
 

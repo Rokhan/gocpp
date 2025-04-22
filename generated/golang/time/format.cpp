@@ -18,6 +18,13 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace time::rec;
+    }
+
     std::string Layout = "01/02 03:04:05PM '06 -0700";
     std::string ANSIC = "Mon Jan _2 15:04:05 2006";
     std::string UnixDate = "Mon Jan _2 15:04:05 MST 2006";
@@ -520,9 +527,9 @@ namespace golang::time
         return b;
     }
 
-    std::string String(struct Time t)
+    std::string rec::String(struct Time t)
     {
-        auto s = Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST");
+        auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST");
         if(t.wall & hasMonotonic != 0)
         {
             auto m2 = uint64_t(t.ext);
@@ -553,9 +560,9 @@ namespace golang::time
         return s;
     }
 
-    std::string GoString(struct Time t)
+    std::string rec::GoString(struct Time t)
     {
-        auto abs = abs(gocpp::recv(t));
+        auto abs = rec::abs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_2] = absDate(abs, true);
         auto [hour, minute, second] = absClock(abs);
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len("time.Date(9999, time.September, 31, 23, 59, 59, 999999999, time.Local)"));
@@ -579,11 +586,11 @@ namespace golang::time
         buf = append(buf, ", ");
         buf = appendInt(buf, second, 0);
         buf = append(buf, ", ");
-        buf = appendInt(buf, Nanosecond(gocpp::recv(t)), 0);
+        buf = appendInt(buf, rec::Nanosecond(gocpp::recv(t)), 0);
         buf = append(buf, ", ");
         //Go switch emulation
         {
-            auto loc = Location(gocpp::recv(t));
+            auto loc = rec::Location(gocpp::recv(t));
             auto condition = loc;
             int conditionId = -1;
             if(condition == UTC) { conditionId = 0; }
@@ -609,7 +616,7 @@ namespace golang::time
         return string(buf);
     }
 
-    std::string Format(struct Time t, std::string layout)
+    std::string rec::Format(struct Time t, std::string layout)
     {
         auto bufSize = 64;
         gocpp::slice<unsigned char> b = {};
@@ -623,11 +630,11 @@ namespace golang::time
         {
             b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, max);
         }
-        b = AppendFormat(gocpp::recv(t), b, layout);
+        b = rec::AppendFormat(gocpp::recv(t), b, layout);
         return string(b);
     }
 
-    gocpp::slice<unsigned char> AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
+    gocpp::slice<unsigned char> rec::AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
     {
         //Go switch emulation
         {
@@ -638,23 +645,23 @@ namespace golang::time
             switch(conditionId)
             {
                 case 0:
-                    return appendFormatRFC3339(gocpp::recv(t), b, false);
+                    return rec::appendFormatRFC3339(gocpp::recv(t), b, false);
                     break;
                 case 1:
-                    return appendFormatRFC3339(gocpp::recv(t), b, true);
+                    return rec::appendFormatRFC3339(gocpp::recv(t), b, true);
                     break;
                 default:
-                    return appendFormat(gocpp::recv(t), b, layout);
+                    return rec::appendFormat(gocpp::recv(t), b, layout);
                     break;
             }
         }
     }
 
-    gocpp::slice<unsigned char> appendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
+    gocpp::slice<unsigned char> rec::appendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
     {
-        auto [name, offset, abs] = locabs(gocpp::recv(t));
+        auto [name, offset, abs] = rec::locabs(gocpp::recv(t));
         int year = - 1;
-        Month month = - 1;
+        time::Month month = - 1;
         int day = - 1;
         int yday = - 1;
         int hour = - 1;
@@ -734,10 +741,10 @@ namespace golang::time
                         b = appendInt(b, year, 4);
                         break;
                     case 2:
-                        b = append(b, String(gocpp::recv(month)).make_slice(0, 3));
+                        b = append(b, rec::String(gocpp::recv(month)).make_slice(0, 3));
                         break;
                     case 3:
-                        auto m = String(gocpp::recv(month));
+                        auto m = rec::String(gocpp::recv(month));
                         b = append(b, m);
                         break;
                     case 4:
@@ -747,10 +754,10 @@ namespace golang::time
                         b = appendInt(b, int(month), 2);
                         break;
                     case 6:
-                        b = append(b, String(gocpp::recv(absWeekday(abs))).make_slice(0, 3));
+                        b = append(b, rec::String(gocpp::recv(absWeekday(abs))).make_slice(0, 3));
                         break;
                     case 7:
-                        auto s = String(gocpp::recv(absWeekday(abs)));
+                        auto s = rec::String(gocpp::recv(absWeekday(abs)));
                         b = append(b, s);
                         break;
                     case 8:
@@ -897,7 +904,7 @@ namespace golang::time
                         break;
                     case 33:
                     case 34:
-                        b = appendNano(b, Nanosecond(gocpp::recv(t)), std);
+                        b = appendNano(b, rec::Nanosecond(gocpp::recv(t)), std);
                         break;
                 }
             }
@@ -1001,7 +1008,7 @@ namespace golang::time
         return string(buf);
     }
 
-    std::string Error(struct ParseError* e)
+    std::string rec::Error(struct ParseError* e)
     {
         if(e->Message == "")
         {
@@ -1598,25 +1605,25 @@ namespace golang::time
         if(zoneOffset != - 1)
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
-            addSec(gocpp::recv(t), - int64_t(zoneOffset));
-            auto [name, offset, gocpp_id_13, gocpp_id_14, gocpp_id_15] = lookup(gocpp::recv(local), unixSec(gocpp::recv(t)));
+            rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+            auto [name, offset, gocpp_id_13, gocpp_id_14, gocpp_id_15] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
             if(offset == zoneOffset && (zoneName == "" || name == zoneName))
             {
-                setLoc(gocpp::recv(t), local);
+                rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
             auto zoneNameCopy = cloneString(zoneName);
-            setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, zoneOffset));
+            rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, zoneOffset));
             return {t, nullptr};
         }
         if(zoneName != "")
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
-            auto [offset, ok] = lookupName(gocpp::recv(local), zoneName, unixSec(gocpp::recv(t)));
+            auto [offset, ok] = rec::lookupName(gocpp::recv(local), zoneName, rec::unixSec(gocpp::recv(t)));
             if(ok)
             {
-                addSec(gocpp::recv(t), - int64_t(offset));
-                setLoc(gocpp::recv(t), local);
+                rec::addSec(gocpp::recv(t), - int64_t(offset));
+                rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
             if(len(zoneName) > 3 && zoneName.make_slice(0, 3) == "GMT")
@@ -1625,7 +1632,7 @@ namespace golang::time
                 offset *= 3600;
             }
             auto zoneNameCopy = cloneString(zoneName);
-            setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, offset));
+            rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, offset));
             return {t, nullptr};
         }
         return {Date(year, Month(month), day, hour, min, sec, nsec, defaultLocation), nullptr};
@@ -1901,7 +1908,7 @@ namespace golang::time
     }
 
     gocpp::map<std::string, uint64_t> unitMap = gocpp::map<std::string, uint64_t> {{ "ns", uint64_t(Nanosecond) }, { "us", uint64_t(Microsecond) }, { "µs", uint64_t(Microsecond) }, { "μs", uint64_t(Microsecond) }, { "ms", uint64_t(Millisecond) }, { "s", uint64_t(Second) }, { "m", uint64_t(Minute) }, { "h", uint64_t(Hour) }};
-    std::tuple<Duration, struct gocpp::error> ParseDuration(std::string s)
+    std::tuple<time::Duration, struct gocpp::error> ParseDuration(std::string s)
     {
         auto orig = s;
         uint64_t d = {};

@@ -16,12 +16,19 @@
 
 namespace golang::main
 {
-    double Abs(MyInt i)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
+    double rec::Abs(main::MyInt i)
     {
         return std::sqrt(double(i * i));
     }
 
-    double Abs(MyFloat f)
+    double rec::Abs(main::MyFloat f)
     {
         return std::sqrt(double(f * f));
     }
@@ -58,7 +65,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(struct Vertex v)
+    double rec::Abs(struct Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
@@ -90,17 +97,20 @@ namespace golang::main
         template<typename T, typename StoreT>
         double gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vAbs()
         {
-            return Abs(gocpp::PtrRecv<T, false>(value.get()));
+            return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        namespace rec
         {
-            return self.ptr->value->vAbs();
-        }
+            double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+            {
+                return self.ptr->value->vAbs();
+            }
 
-        double Abs(const gocpp::ObjRecv<gocpp_id_0>& self)
-        {
-            return self.obj.value->vAbs();
+            double Abs(const gocpp::ObjRecv<gocpp_id_0>& self)
+            {
+                return self.obj.value->vAbs();
+            }
         }
 
         std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
@@ -148,17 +158,20 @@ namespace golang::main
     template<typename T, typename StoreT>
     double gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vAbs()
     {
-        return Abs(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vAbs();
-    }
+        double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self)
+        {
+            return self.ptr->value->vAbs();
+        }
 
-    double Abs(const gocpp::ObjRecv<gocpp_id_1>& self)
-    {
-        return self.obj.value->vAbs();
+        double Abs(const gocpp::ObjRecv<gocpp_id_1>& self)
+        {
+            return self.obj.value->vAbs();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
@@ -171,7 +184,7 @@ namespace golang::main
     {
         if(i != nullptr)
         {
-            mocklib::Printf("(%v, %T) => %v\n", i, i, Abs(gocpp::recv(i)));
+            mocklib::Printf("(%v, %T) => %v\n", i, i, rec::Abs(gocpp::recv(i)));
         }
         else
         {

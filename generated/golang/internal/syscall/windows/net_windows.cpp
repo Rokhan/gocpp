@@ -17,6 +17,13 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+    }
+
     struct gocpp::error WSASendtoInet4(syscall::Handle s, struct syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct syscall::SockaddrInet4* to, struct syscall::Overlapped* overlapped, unsigned char* croutine)
     /* convertBlockStmt, nil block */;
 

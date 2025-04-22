@@ -15,6 +15,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     systeminfo::operator T()

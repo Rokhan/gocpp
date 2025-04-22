@@ -16,6 +16,12 @@
 
 namespace golang::atomic
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Value::operator T()
@@ -77,7 +83,7 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    go_any Load(struct Value* v)
+    go_any rec::Load(struct Value* v)
     {
         go_any val;
         auto vp = (efaceWords*)(unsafe::Pointer(v));
@@ -95,7 +101,7 @@ namespace golang::atomic
     }
 
     unsigned char firstStoreInProgress;
-    void Store(struct Value* v, go_any val)
+    void rec::Store(struct Value* v, go_any val)
     {
         if(val == nullptr)
         {
@@ -132,7 +138,7 @@ namespace golang::atomic
         }
     }
 
-    go_any Swap(struct Value* v, go_any go_new)
+    go_any rec::Swap(struct Value* v, go_any go_new)
     {
         go_any old;
         if(go_new == nullptr)
@@ -177,7 +183,7 @@ namespace golang::atomic
         }
     }
 
-    bool CompareAndSwap(struct Value* v, go_any old, go_any go_new)
+    bool rec::CompareAndSwap(struct Value* v, go_any old, go_any go_new)
     {
         bool swapped;
         if(go_new == nullptr)

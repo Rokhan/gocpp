@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace strings::rec;
+    }
+
     void main()
     {
         auto board = gocpp::slice<gocpp::slice<std::string>> {gocpp::slice<std::string> {"_", "_", "_"}, gocpp::slice<std::string> {"_", "_", "_"}, gocpp::slice<std::string> {"_", "_", "_"}};

@@ -22,6 +22,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     inlinedCall::operator T()
@@ -136,20 +144,20 @@ namespace golang::runtime
         }
         auto inlTree = (gocpp::array<inlinedCall, 1 << 20>*)(inldata);
         auto u = gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; x.inlTree = inlTree; });
-        return {u, resolveInternal(gocpp::recv(u), pc)};
+        return {u, rec::resolveInternal(gocpp::recv(u), pc)};
     }
 
-    struct inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
+    struct inlineFrame rec::resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
         return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false); });
     }
 
-    bool valid(struct inlineFrame uf)
+    bool rec::valid(struct inlineFrame uf)
     {
         return uf.pc != 0;
     }
 
-    struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf)
+    struct inlineFrame rec::next(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -157,25 +165,25 @@ namespace golang::runtime
             return uf;
         }
         auto parentPc = u->inlTree[uf.index].parentPc;
-        return resolveInternal(gocpp::recv(u), entry(gocpp::recv(u->f)) + uintptr_t(parentPc));
+        return rec::resolveInternal(gocpp::recv(u), rec::entry(gocpp::recv(u->f)) + uintptr_t(parentPc));
     }
 
-    bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf)
+    bool rec::isInlined(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         return uf.index >= 0;
     }
 
-    struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf)
+    struct srcFunc rec::srcFunc(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
         {
-            return srcFunc(gocpp::recv(u->f));
+            return rec::srcFunc(gocpp::recv(u->f));
         }
         auto t = & u->inlTree[uf.index];
         return srcFunc {u->f.datap, t->nameOff, t->startLine, t->funcID};
     }
 
-    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
+    std::tuple<std::string, int> rec::fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         std::string file;
         int line;

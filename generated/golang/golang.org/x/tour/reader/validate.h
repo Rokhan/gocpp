@@ -14,5 +14,9 @@
 namespace golang::reader
 {
     void Validate(struct io::Reader r);
+
+    namespace rec
+    {
+    }
 }
 

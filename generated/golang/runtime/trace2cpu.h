@@ -51,5 +51,9 @@ namespace golang::runtime
     bool traceReadCPU(uintptr_t gen);
     void traceCPUFlush(uintptr_t gen);
     void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk);
+
+    namespace rec
+    {
+    }
 }
 

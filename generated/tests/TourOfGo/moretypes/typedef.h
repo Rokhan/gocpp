@@ -30,5 +30,9 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

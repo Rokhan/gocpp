@@ -18,6 +18,12 @@
 
 namespace golang::slices
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+    }
+
 
     template<typename S>
     void Sort(S x)
@@ -182,7 +188,7 @@ namespace golang::slices
     }
 
     // // hint for pdqsort when choosing the pivot
-    uint64_t Next(xorshift* r)
+    uint64_t rec::Next(slices::xorshift* r)
     {
         *r ^= *r << 13;
         *r ^= *r >> 17;

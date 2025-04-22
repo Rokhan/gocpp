@@ -34,7 +34,7 @@ namespace golang::runtime
 {
     struct coro
     {
-        guintptr gp;
+        runtime::guintptr gp;
         std::function<void (coro*)> f;
 
         using isGoStruct = void;
@@ -54,5 +54,9 @@ namespace golang::runtime
     void coroexit(struct coro* c);
     void coroswitch(struct coro* c);
     void coroswitch_m(struct g* gp);
+
+    namespace rec
+    {
+    }
 }
 

@@ -35,5 +35,9 @@ namespace golang::registry
     struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir);
     struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize);
     std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
+
+    namespace rec
+    {
+    }
 }
 

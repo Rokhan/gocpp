@@ -20,7 +20,7 @@ namespace golang::reflect
     extern uintptr_t floatRegSize;
     struct abiStep
     {
-        abiStepKind kind;
+        reflect::abiStepKind kind;
         uintptr_t offset;
         uintptr_t size;
         uintptr_t stkOff;
@@ -59,14 +59,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
-    void dump(struct abiSeq* a);
-    gocpp::slice<abiStep> stepsForValue(struct abiSeq* a, int i);
-    struct abiStep* addArg(struct abiSeq* a, struct abi::Type* t);
-    std::tuple<struct abiStep*, bool> addRcvr(struct abiSeq* a, struct abi::Type* rcvr);
-    bool regAssign(struct abiSeq* a, struct abi::Type* t, uintptr_t offset);
-    bool assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
-    bool assignFloatN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n);
-    void stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment);
     struct abiDesc
     {
         abiSeq call;
@@ -90,12 +82,24 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void dump(struct abiDesc* a);
     void dumpPtrBitMap(abi::IntArgRegBitmap b);
     struct abiDesc newAbiDesc(struct funcType* t, struct abi::Type* rcvr);
     void intFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
     void intToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
     void floatFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
     void floatToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
+
+    namespace rec
+    {
+        void dump(struct abiSeq* a);
+        gocpp::slice<abiStep> stepsForValue(struct abiSeq* a, int i);
+        struct abiStep* addArg(struct abiSeq* a, struct abi::Type* t);
+        std::tuple<struct abiStep*, bool> addRcvr(struct abiSeq* a, struct abi::Type* rcvr);
+        bool regAssign(struct abiSeq* a, struct abi::Type* t, uintptr_t offset);
+        bool assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
+        bool assignFloatN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n);
+        void stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment);
+        void dump(struct abiDesc* a);
+    }
 }
 

@@ -17,12 +17,12 @@ namespace golang::runtime
     struct metricSample;
     struct metricFloat64Histogram;
     struct metricName;
-    const statDep heapStatsDep = 0;
+    const runtime::statDep heapStatsDep = 0;
     const statDep sysStatsDep = 1;
     const statDep cpuStatsDep = 2;
     const statDep gcStatsDep = 3;
     const statDep numStatsDeps = 4;
-    const metricKind metricKindBad = 0;
+    const runtime::metricKind metricKindBad = 0;
     const metricKind metricKindUint64 = 1;
     const metricKind metricKindFloat64 = 2;
     const metricKind metricKindFloat64Histogram = 3;

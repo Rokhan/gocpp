@@ -24,5 +24,9 @@ namespace golang::crc32
     bool archAvailableIEEE();
     void archInitIEEE();
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p);
+
+    namespace rec
+    {
+    }
 }
 

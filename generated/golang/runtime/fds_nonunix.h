@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     void checkfds();
+
+    namespace rec
+    {
+    }
 }
 

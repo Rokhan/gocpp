@@ -35,5 +35,9 @@ namespace golang::runtime
     void startCheckmarks();
     void endCheckmarks();
     bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits);
+
+    namespace rec
+    {
+    }
 }
 

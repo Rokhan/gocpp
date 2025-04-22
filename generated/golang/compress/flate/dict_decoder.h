@@ -30,15 +30,19 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dictDecoder& value);
-    void init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict);
-    int histSize(struct dictDecoder* dd);
-    int availRead(struct dictDecoder* dd);
-    int availWrite(struct dictDecoder* dd);
-    gocpp::slice<unsigned char> writeSlice(struct dictDecoder* dd);
-    void writeMark(struct dictDecoder* dd, int cnt);
-    void writeByte(struct dictDecoder* dd, unsigned char c);
-    int writeCopy(struct dictDecoder* dd, int dist, int length);
-    int tryWriteCopy(struct dictDecoder* dd, int dist, int length);
-    gocpp::slice<unsigned char> readFlush(struct dictDecoder* dd);
+
+    namespace rec
+    {
+        void init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict);
+        int histSize(struct dictDecoder* dd);
+        int availRead(struct dictDecoder* dd);
+        int availWrite(struct dictDecoder* dd);
+        gocpp::slice<unsigned char> writeSlice(struct dictDecoder* dd);
+        void writeMark(struct dictDecoder* dd, int cnt);
+        void writeByte(struct dictDecoder* dd, unsigned char c);
+        int writeCopy(struct dictDecoder* dd, int dist, int length);
+        int tryWriteCopy(struct dictDecoder* dd, int dist, int length);
+        gocpp::slice<unsigned char> readFlush(struct dictDecoder* dd);
+    }
 }
 

@@ -17,6 +17,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace time::rec;
+    }
+
     void say(std::string s)
     {
         for(auto i = 0; i < 5; i++)

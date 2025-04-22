@@ -17,6 +17,13 @@
 
 namespace golang::sort
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+        using namespace sort::rec;
+    }
+
     
     template<typename T>
     Interface::Interface(T& ref)
@@ -44,47 +51,50 @@ namespace golang::sort
     template<typename T, typename StoreT>
     int Interface::InterfaceImpl<T, StoreT>::vLen()
     {
-        return Len(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Len(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     bool Interface::InterfaceImpl<T, StoreT>::vLess(int i, int j)
     {
-        return Less(gocpp::PtrRecv<T, false>(value.get()), i, j);
+        return rec::Less(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vSwap(int i, int j)
     {
-        return Swap(gocpp::PtrRecv<T, false>(value.get()), i, j);
+        return rec::Swap(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
 
-    int Len(const gocpp::PtrRecv<Interface, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vLen();
-    }
+        int Len(const gocpp::PtrRecv<Interface, false>& self)
+        {
+            return self.ptr->value->vLen();
+        }
 
-    int Len(const gocpp::ObjRecv<Interface>& self)
-    {
-        return self.obj.value->vLen();
-    }
+        int Len(const gocpp::ObjRecv<Interface>& self)
+        {
+            return self.obj.value->vLen();
+        }
 
-    bool Less(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
-    {
-        return self.ptr->value->vLess(i, j);
-    }
+        bool Less(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
+        {
+            return self.ptr->value->vLess(i, j);
+        }
 
-    bool Less(const gocpp::ObjRecv<Interface>& self, int i, int j)
-    {
-        return self.obj.value->vLess(i, j);
-    }
+        bool Less(const gocpp::ObjRecv<Interface>& self, int i, int j)
+        {
+            return self.obj.value->vLess(i, j);
+        }
 
-    void Swap(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
-    {
-        return self.ptr->value->vSwap(i, j);
-    }
+        void Swap(const gocpp::PtrRecv<Interface, false>& self, int i, int j)
+        {
+            return self.ptr->value->vSwap(i, j);
+        }
 
-    void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j)
-    {
-        return self.obj.value->vSwap(i, j);
+        void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j)
+        {
+            return self.obj.value->vSwap(i, j);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value)
@@ -94,7 +104,7 @@ namespace golang::sort
 
     void Sort(struct Interface data)
     {
-        auto n = Len(gocpp::recv(data));
+        auto n = rec::Len(gocpp::recv(data));
         if(n <= 1)
         {
             return;
@@ -104,7 +114,7 @@ namespace golang::sort
     }
 
     // // hint for pdqsort when choosing the pivot
-    uint64_t Next(xorshift* r)
+    uint64_t rec::Next(sort::xorshift* r)
     {
         *r ^= *r << 13;
         *r ^= *r >> 17;
@@ -176,9 +186,9 @@ namespace golang::sort
         return value.PrintTo(os);
     }
 
-    bool Less(struct reverse r, int i, int j)
+    bool rec::Less(struct reverse r, int i, int j)
     {
-        return Less(gocpp::recv(r.Interface), j, i);
+        return rec::Less(gocpp::recv(r.Interface), j, i);
     }
 
     struct Interface Reverse(struct Interface data)
@@ -188,10 +198,10 @@ namespace golang::sort
 
     bool IsSorted(struct Interface data)
     {
-        auto n = Len(gocpp::recv(data));
+        auto n = rec::Len(gocpp::recv(data));
         for(auto i = n - 1; i > 0; i--)
         {
-            if(Less(gocpp::recv(data), i, i - 1))
+            if(rec::Less(gocpp::recv(data), i, i - 1))
             {
                 return false;
             }
@@ -199,37 +209,37 @@ namespace golang::sort
         return true;
     }
 
-    int Len(IntSlice x)
+    int rec::Len(IntSlice x)
     {
         return len(x);
     }
 
-    bool Less(IntSlice x, int i, int j)
+    bool rec::Less(IntSlice x, int i, int j)
     {
         return x[i] < x[j];
     }
 
-    void Swap(IntSlice x, int i, int j)
+    void rec::Swap(IntSlice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
-    void Sort(IntSlice x)
+    void rec::Sort(IntSlice x)
     {
         Sort(x);
     }
 
-    int Len(Float64Slice x)
+    int rec::Len(Float64Slice x)
     {
         return len(x);
     }
 
-    bool Less(Float64Slice x, int i, int j)
+    bool rec::Less(Float64Slice x, int i, int j)
     {
         return x[i] < x[j] || (isNaN(x[i]) && ! isNaN(x[j]));
     }
 
-    void Swap(Float64Slice x, int i, int j)
+    void rec::Swap(Float64Slice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
@@ -239,27 +249,27 @@ namespace golang::sort
         return f != f;
     }
 
-    void Sort(Float64Slice x)
+    void rec::Sort(Float64Slice x)
     {
         Sort(x);
     }
 
-    int Len(StringSlice x)
+    int rec::Len(StringSlice x)
     {
         return len(x);
     }
 
-    bool Less(StringSlice x, int i, int j)
+    bool rec::Less(StringSlice x, int i, int j)
     {
         return x[i] < x[j];
     }
 
-    void Swap(StringSlice x, int i, int j)
+    void rec::Swap(StringSlice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
-    void Sort(StringSlice x)
+    void rec::Sort(StringSlice x)
     {
         Sort(x);
     }
@@ -296,7 +306,7 @@ namespace golang::sort
 
     void Stable(struct Interface data)
     {
-        stable(data, Len(gocpp::recv(data)));
+        stable(data, rec::Len(gocpp::recv(data)));
     }
 
 }

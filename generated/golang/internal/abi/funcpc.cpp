@@ -13,6 +13,11 @@
 
 namespace golang::abi
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     uintptr_t FuncPCABI0(std::any f)
     /* convertBlockStmt, nil block */;
 

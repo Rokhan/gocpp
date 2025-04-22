@@ -27,7 +27,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MyReader& value);
-    std::tuple<int, struct gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer);
     void main();
+
+    namespace rec
+    {
+        std::tuple<int, struct gocpp::error> Read(MyReader, gocpp::slice<unsigned char> buffer);
+    }
 }
 

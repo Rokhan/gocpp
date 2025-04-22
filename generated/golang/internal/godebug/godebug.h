@@ -72,12 +72,6 @@ namespace golang::godebug
 
     std::ostream& operator<<(std::ostream& os, const struct value& value);
     struct Setting* New(std::string name);
-    std::string Name(struct Setting* s);
-    bool Undocumented(struct Setting* s);
-    std::string String(struct Setting* s);
-    void IncNonDefault(struct Setting* s);
-    void go_register(struct Setting* s);
-    std::string Value(struct Setting* s);
     struct setting* lookup(std::string name);
     void setUpdate(std::function<void (std::string, std::string)> update);
     void registerMetric(std::string name, std::function<uint64_t ()> read);
@@ -101,7 +95,17 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
+
+    namespace rec
+    {
+        std::string Name(struct Setting* s);
+        bool Undocumented(struct Setting* s);
+        std::string String(struct Setting* s);
+        void IncNonDefault(struct Setting* s);
+        void go_register(struct Setting* s);
+        std::string Value(struct Setting* s);
+        std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
+    }
 }
 

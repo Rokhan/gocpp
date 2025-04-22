@@ -11,5 +11,9 @@
 
 namespace golang::runtime
 {
+
+    namespace rec
+    {
+    }
 }
 

@@ -52,15 +52,19 @@ namespace golang::os
     struct fileStat* newFileStatFromFileIDBothDirInfo(struct windows::FILE_ID_BOTH_DIR_INFO* d);
     struct fileStat* newFileStatFromFileFullDirInfo(struct windows::FILE_FULL_DIR_INFO* d);
     struct fileStat* newFileStatFromWin32finddata(struct syscall::Win32finddata* d);
-    bool isReparseTagNameSurrogate(struct fileStat* fs);
-    bool isSymlink(struct fileStat* fs);
-    int64_t Size(struct fileStat* fs);
-    FileMode Mode(struct fileStat* fs);
-    struct mocklib::Date ModTime(struct fileStat* fs);
-    go_any Sys(struct fileStat* fs);
-    struct gocpp::error loadFileId(struct fileStat* fs);
-    struct gocpp::error saveInfoFromPath(struct fileStat* fs, std::string path);
     bool sameFile(struct fileStat* fs1, struct fileStat* fs2);
     struct mocklib::Date atime(struct FileInfo fi);
+
+    namespace rec
+    {
+        bool isReparseTagNameSurrogate(struct fileStat* fs);
+        bool isSymlink(struct fileStat* fs);
+        int64_t Size(struct fileStat* fs);
+        fs::FileMode Mode(struct fileStat* fs);
+        struct mocklib::Date ModTime(struct fileStat* fs);
+        go_any Sys(struct fileStat* fs);
+        struct gocpp::error loadFileId(struct fileStat* fs);
+        struct gocpp::error saveInfoFromPath(struct fileStat* fs, std::string path);
+    }
 }
 

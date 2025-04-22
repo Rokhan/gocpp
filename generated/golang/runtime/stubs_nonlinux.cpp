@@ -13,6 +13,11 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     uintptr_t sbrk0()
     {
         return 0;

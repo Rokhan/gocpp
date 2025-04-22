@@ -68,6 +68,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     argset::operator T()
@@ -227,7 +240,7 @@ namespace golang::runtime
         try
         {
             auto gp = getg();
-            if(gp->m->needextram || Load(gocpp::recv(extraMWaiters)) > 0)
+            if(gp->m->needextram || rec::Load(gocpp::recv(extraMWaiters)) > 0)
             {
                 gp->m->needextram = false;
                 systemstack(newextram);
@@ -539,13 +552,13 @@ namespace golang::runtime
             {
                 uintptr_t base;
                 uintptr_t i;
-                auto tp = typePointersOfUnchecked(gocpp::recv(span), base);
+                auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), base);
                 for(; ; )
                 {
                     uintptr_t base;
                     uintptr_t i;
                     uintptr_t addr = {};
-                    if(std::tie(tp, addr) = next(gocpp::recv(tp), base + span->elemsize); addr == 0)
+                    if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), base + span->elemsize); addr == 0)
                     {
                         uintptr_t base;
                         uintptr_t i;
@@ -571,7 +584,7 @@ namespace golang::runtime
                     uintptr_t base;
                     uintptr_t i;
                     uintptr_t addr = {};
-                    if(std::tie(hbits, addr) = next(gocpp::recv(hbits)); addr == 0)
+                    if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
                     {
                         uintptr_t base;
                         uintptr_t i;

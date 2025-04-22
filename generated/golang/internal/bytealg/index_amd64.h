@@ -14,5 +14,9 @@ namespace golang::bytealg
 {
     void init();
     int Cutover(int n);
+
+    namespace rec
+    {
+    }
 }
 

@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Vertex::operator T()
@@ -47,7 +53,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void Scale(struct Vertex* v, double f)
+    void rec::Scale(struct Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;
@@ -62,10 +68,10 @@ namespace golang::main
     void main()
     {
         auto v = Vertex {3, 4};
-        Scale(gocpp::recv(v), 2);
+        rec::Scale(gocpp::recv(v), 2);
         ScaleFunc(& v, 10);
         auto p = new Vertex {4, 3};
-        Scale(gocpp::recv(p), 3);
+        rec::Scale(gocpp::recv(p), 3);
         ScaleFunc(p, 8);
         mocklib::Println(v, p);
     }

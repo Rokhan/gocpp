@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     std::tuple<double, struct gocpp::error> Sqrt(double x)
     {
         return {0, nullptr};

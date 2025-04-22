@@ -17,11 +17,18 @@
 
 namespace golang::rand
 {
-    double ExpFloat64(struct Rand* r)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+        using namespace rand::rec;
+    }
+
+    double rec::ExpFloat64(struct Rand* r)
     {
         for(; ; )
         {
-            auto j = Uint32(gocpp::recv(r));
+            auto j = rec::Uint32(gocpp::recv(r));
             auto i = j & 0xFF;
             auto x = double(j) * double(we[i]);
             if(j < ke[i])
@@ -30,9 +37,9 @@ namespace golang::rand
             }
             if(i == 0)
             {
-                return re - math::Log(Float64(gocpp::recv(r)));
+                return re - math::Log(rec::Float64(gocpp::recv(r)));
             }
-            if(fe[i] + float(Float64(gocpp::recv(r))) * (fe[i - 1] - fe[i]) < float(math::Exp(- x)))
+            if(fe[i] + float(rec::Float64(gocpp::recv(r))) * (fe[i - 1] - fe[i]) < float(math::Exp(- x)))
             {
                 return x;
             }

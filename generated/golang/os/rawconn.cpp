@@ -27,6 +27,17 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     rawConn::operator T()
@@ -56,35 +67,35 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    struct gocpp::error Control(struct rawConn* c, std::function<void (uintptr_t)> f)
+    struct gocpp::error rec::Control(struct rawConn* c, std::function<void (uintptr_t)> f)
     {
-        if(auto err = checkValid(gocpp::recv(c->file), "SyscallConn.Control"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Control"); err != nullptr)
         {
             return err;
         }
-        auto err = RawControl(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawControl(gocpp::recv(c->file->pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }
 
-    struct gocpp::error Read(struct rawConn* c, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::Read(struct rawConn* c, std::function<bool (uintptr_t)> f)
     {
-        if(auto err = checkValid(gocpp::recv(c->file), "SyscallConn.Read"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Read"); err != nullptr)
         {
             return err;
         }
-        auto err = RawRead(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawRead(gocpp::recv(c->file->pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }
 
-    struct gocpp::error Write(struct rawConn* c, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::Write(struct rawConn* c, std::function<bool (uintptr_t)> f)
     {
-        if(auto err = checkValid(gocpp::recv(c->file), "SyscallConn.Write"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Write"); err != nullptr)
         {
             return err;
         }
-        auto err = RawWrite(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawWrite(gocpp::recv(c->file->pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }

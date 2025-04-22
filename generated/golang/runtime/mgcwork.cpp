@@ -58,6 +58,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void init()
     {
         if(workbufAlloc % pageSize != 0 || workbufAlloc % _WorkbufSize != 0)
@@ -107,7 +119,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct gcWork* w)
+    void rec::init(struct gcWork* w)
     {
         w->wbuf1 = getempty();
         auto wbuf2 = trygetfull();
@@ -118,7 +130,7 @@ namespace golang::runtime
         w->wbuf2 = wbuf2;
     }
 
-    void put(struct gcWork* w, uintptr_t obj)
+    void rec::put(struct gcWork* w, uintptr_t obj)
     {
         auto flushed = false;
         auto wbuf = w->wbuf1;
@@ -126,7 +138,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
         if(wbuf == nullptr)
         {
-            init(gocpp::recv(w));
+            rec::init(gocpp::recv(w));
             wbuf = w->wbuf1;
         }
         else
@@ -147,11 +159,11 @@ namespace golang::runtime
         wbuf->nobj++;
         if(flushed && gcphase == _GCmark)
         {
-            enlistWorker(gocpp::recv(gcController));
+            rec::enlistWorker(gocpp::recv(gcController));
         }
     }
 
-    bool putFast(struct gcWork* w, uintptr_t obj)
+    bool rec::putFast(struct gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == len(wbuf->obj))
@@ -163,7 +175,7 @@ namespace golang::runtime
         return true;
     }
 
-    void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj)
+    void rec::putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj)
     {
         if(len(obj) == 0)
         {
@@ -173,7 +185,7 @@ namespace golang::runtime
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
         {
-            init(gocpp::recv(w));
+            rec::init(gocpp::recv(w));
             wbuf = w->wbuf1;
         }
         for(; len(obj) > 0; )
@@ -192,16 +204,16 @@ namespace golang::runtime
         }
         if(flushed && gcphase == _GCmark)
         {
-            enlistWorker(gocpp::recv(gcController));
+            rec::enlistWorker(gocpp::recv(gcController));
         }
     }
 
-    uintptr_t tryGet(struct gcWork* w)
+    uintptr_t rec::tryGet(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
         {
-            init(gocpp::recv(w));
+            rec::init(gocpp::recv(w));
             wbuf = w->wbuf1;
         }
         if(wbuf->nobj == 0)
@@ -224,7 +236,7 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
-    uintptr_t tryGetFast(struct gcWork* w)
+    uintptr_t rec::tryGetFast(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == 0)
@@ -235,7 +247,7 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
-    void dispose(struct gcWork* w)
+    void rec::dispose(struct gcWork* w)
     {
         if(auto wbuf = w->wbuf1; wbuf != nullptr)
         {
@@ -268,12 +280,12 @@ namespace golang::runtime
         }
         if(w->heapScanWork != 0)
         {
-            Add(gocpp::recv(gcController.heapScanWork), w->heapScanWork);
+            rec::Add(gocpp::recv(gcController.heapScanWork), w->heapScanWork);
             w->heapScanWork = 0;
         }
     }
 
-    void balance(struct gcWork* w)
+    void rec::balance(struct gcWork* w)
     {
         if(w->wbuf1 == nullptr)
         {
@@ -297,11 +309,11 @@ namespace golang::runtime
         }
         if(gcphase == _GCmark)
         {
-            enlistWorker(gocpp::recv(gcController));
+            rec::enlistWorker(gocpp::recv(gcController));
         }
     }
 
-    bool empty(struct gcWork* w)
+    bool rec::empty(struct gcWork* w)
     {
         return w->wbuf1 == nullptr || (w->wbuf1->nobj == 0 && w->wbuf2->nobj == 0);
     }
@@ -370,7 +382,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void checknonempty(struct workbuf* b)
+    void rec::checknonempty(struct workbuf* b)
     {
         if(b->nobj == 0)
         {
@@ -378,7 +390,7 @@ namespace golang::runtime
         }
     }
 
-    void checkempty(struct workbuf* b)
+    void rec::checkempty(struct workbuf* b)
     {
         if(b->nobj != 0)
         {
@@ -391,10 +403,10 @@ namespace golang::runtime
         workbuf* b = {};
         if(work.empty != 0)
         {
-            b = (workbuf*)(pop(gocpp::recv(work.empty)));
+            b = (workbuf*)(rec::pop(gocpp::recv(work.empty)));
             if(b != nullptr)
             {
-                checkempty(gocpp::recv(b));
+                rec::checkempty(gocpp::recv(b));
             }
         }
         lockWithRankMayAcquire(& work.wbufSpans.lock, lockRankWbufSpans);
@@ -408,8 +420,8 @@ namespace golang::runtime
                 s = work.wbufSpans.free.first;
                 if(s != nullptr)
                 {
-                    remove(gocpp::recv(work.wbufSpans.free), s);
-                    insert(gocpp::recv(work.wbufSpans.busy), s);
+                    rec::remove(gocpp::recv(work.wbufSpans.free), s);
+                    rec::insert(gocpp::recv(work.wbufSpans.busy), s);
                 }
                 unlock(& work.wbufSpans.lock);
             }
@@ -417,19 +429,19 @@ namespace golang::runtime
             {
                 systemstack([=]() mutable -> void
                 {
-                    s = allocManual(gocpp::recv(mheap_), workbufAlloc / pageSize, spanAllocWorkBuf);
+                    s = rec::allocManual(gocpp::recv(mheap_), workbufAlloc / pageSize, spanAllocWorkBuf);
                 });
                 if(s == nullptr)
                 {
                     go_throw("out of memory");
                 }
                 lock(& work.wbufSpans.lock);
-                insert(gocpp::recv(work.wbufSpans.busy), s);
+                rec::insert(gocpp::recv(work.wbufSpans.busy), s);
                 unlock(& work.wbufSpans.lock);
             }
             for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
-                auto newb = (workbuf*)(unsafe::Pointer(base(gocpp::recv(s)) + i));
+                auto newb = (workbuf*)(unsafe::Pointer(rec::base(gocpp::recv(s)) + i));
                 newb->nobj = 0;
                 lfnodeValidate(& newb->node);
                 if(i == 0)
@@ -447,22 +459,22 @@ namespace golang::runtime
 
     void putempty(struct workbuf* b)
     {
-        checkempty(gocpp::recv(b));
-        push(gocpp::recv(work.empty), & b->node);
+        rec::checkempty(gocpp::recv(b));
+        rec::push(gocpp::recv(work.empty), & b->node);
     }
 
     void putfull(struct workbuf* b)
     {
-        checknonempty(gocpp::recv(b));
-        push(gocpp::recv(work.full), & b->node);
+        rec::checknonempty(gocpp::recv(b));
+        rec::push(gocpp::recv(work.full), & b->node);
     }
 
     struct workbuf* trygetfull()
     {
-        auto b = (workbuf*)(pop(gocpp::recv(work.full)));
+        auto b = (workbuf*)(rec::pop(gocpp::recv(work.full)));
         if(b != nullptr)
         {
-            checknonempty(gocpp::recv(b));
+            rec::checknonempty(gocpp::recv(b));
             return b;
         }
         return b;
@@ -487,7 +499,7 @@ namespace golang::runtime
             go_throw("cannot free workbufs when work.full != 0");
         }
         work.empty = 0;
-        takeAll(gocpp::recv(work.wbufSpans.free), & work.wbufSpans.busy);
+        rec::takeAll(gocpp::recv(work.wbufSpans.free), & work.wbufSpans.busy);
         unlock(& work.wbufSpans.lock);
     }
 
@@ -495,7 +507,7 @@ namespace golang::runtime
     {
         auto batchSize = 64;
         lock(& work.wbufSpans.lock);
-        if(gcphase != _GCoff || isEmpty(gocpp::recv(work.wbufSpans.free)))
+        if(gcphase != _GCoff || rec::isEmpty(gocpp::recv(work.wbufSpans.free)))
         {
             unlock(& work.wbufSpans.lock);
             return false;
@@ -510,11 +522,11 @@ namespace golang::runtime
                 {
                     break;
                 }
-                remove(gocpp::recv(work.wbufSpans.free), span);
-                freeManual(gocpp::recv(mheap_), span, spanAllocWorkBuf);
+                rec::remove(gocpp::recv(work.wbufSpans.free), span);
+                rec::freeManual(gocpp::recv(mheap_), span, spanAllocWorkBuf);
             }
         });
-        auto more = ! isEmpty(gocpp::recv(work.wbufSpans.free));
+        auto more = ! rec::isEmpty(gocpp::recv(work.wbufSpans.free));
         unlock(& work.wbufSpans.lock);
         return more;
     }

@@ -86,25 +86,29 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct levelInfo& value);
-    void set(struct hcode* h, uint16_t code, uint16_t length);
     struct literalNode maxNode();
     struct huffmanEncoder* newHuffmanEncoder(int size);
     struct huffmanEncoder* generateFixedLiteralEncoding();
     struct huffmanEncoder* generateFixedOffsetEncoding();
     extern huffmanEncoder* fixedLiteralEncoding;
     extern huffmanEncoder* fixedOffsetEncoding;
-    int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);
-    gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
-    void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
-    void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
-    void sort(byLiteral* s, gocpp::slice<literalNode> a);
-    int Len(byLiteral s);
-    bool Less(byLiteral s, int i, int j);
-    void Swap(byLiteral s, int i, int j);
-    void sort(byFreq* s, gocpp::slice<literalNode> a);
-    int Len(byFreq s);
-    bool Less(byFreq s, int i, int j);
-    void Swap(byFreq s, int i, int j);
     uint16_t reverseBits(uint16_t number, unsigned char bitLength);
+
+    namespace rec
+    {
+        void set(struct hcode* h, uint16_t code, uint16_t length);
+        int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);
+        gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
+        void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
+        void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
+        void sort(byLiteral* s, gocpp::slice<literalNode> a);
+        int Len(byLiteral s);
+        bool Less(byLiteral s, int i, int j);
+        void Swap(byLiteral s, int i, int j);
+        void sort(byFreq* s, gocpp::slice<literalNode> a);
+        int Len(byFreq s);
+        bool Less(byFreq s, int i, int j);
+        void Swap(byFreq s, int i, int j);
+    }
 }
 

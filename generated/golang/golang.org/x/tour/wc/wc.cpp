@@ -15,6 +15,12 @@
 
 namespace golang::wc
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     void Test(std::function<gocpp::map<std::string, int> (std::string)> f)
     {
         auto ok = true;

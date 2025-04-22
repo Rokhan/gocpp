@@ -51,5 +51,9 @@ namespace golang::cpu
     std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(std::string env);
     int indexByte(std::string s, unsigned char c);
+
+    namespace rec
+    {
+    }
 }
 

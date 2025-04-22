@@ -18,13 +18,20 @@
 
 namespace golang::fs
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace time::rec;
+    }
+
     std::string FormatFileInfo(struct FileInfo info)
     {
-        auto name = Name(gocpp::recv(info));
+        auto name = rec::Name(gocpp::recv(info));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 40 + len(name));
-        b = append(b, String(gocpp::recv(Mode(gocpp::recv(info)))));
+        b = append(b, rec::String(gocpp::recv(rec::Mode(gocpp::recv(info)))));
         b = append(b, ' ');
-        auto size = Size(gocpp::recv(info));
+        auto size = rec::Size(gocpp::recv(info));
         uint64_t usize = {};
         if(size >= 0)
         {
@@ -47,10 +54,10 @@ namespace golang::fs
         buf[i] = unsigned char('0' + usize);
         b = append(b, buf.make_slice(i));
         b = append(b, ' ');
-        b = append(b, Format(gocpp::recv(ModTime(gocpp::recv(info))), time::DateTime));
+        b = append(b, rec::Format(gocpp::recv(rec::ModTime(gocpp::recv(info))), time::DateTime));
         b = append(b, ' ');
         b = append(b, name);
-        if(IsDir(gocpp::recv(info)))
+        if(rec::IsDir(gocpp::recv(info)))
         {
             b = append(b, '/');
         }
@@ -59,14 +66,14 @@ namespace golang::fs
 
     std::string FormatDirEntry(struct DirEntry dir)
     {
-        auto name = Name(gocpp::recv(dir));
+        auto name = rec::Name(gocpp::recv(dir));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 5 + len(name));
-        auto mode = String(gocpp::recv(Type(gocpp::recv(dir))));
+        auto mode = rec::String(gocpp::recv(rec::Type(gocpp::recv(dir))));
         mode = mode.make_slice(0, len(mode) - 9);
         b = append(b, mode);
         b = append(b, ' ');
         b = append(b, name);
-        if(IsDir(gocpp::recv(dir)))
+        if(rec::IsDir(gocpp::recv(dir)))
         {
             b = append(b, '/');
         }

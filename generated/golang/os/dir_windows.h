@@ -49,9 +49,7 @@ namespace golang::os
 
     std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
     extern sync::Pool dirBufPool;
-    void close(struct dirInfo* d);
     extern bool allowReadDirFileID;
-    std::tuple<gocpp::slice<std::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, struct gocpp::error> readdir(struct File* file, int n, readdirMode mode);
     struct dirEntry
     {
         fileStat* fs;
@@ -68,10 +66,16 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dirEntry& value);
-    std::string Name(struct dirEntry de);
-    bool IsDir(struct dirEntry de);
-    FileMode Type(struct dirEntry de);
-    std::tuple<struct FileInfo, struct gocpp::error> Info(struct dirEntry de);
-    std::string String(struct dirEntry de);
+
+    namespace rec
+    {
+        void close(struct dirInfo* d);
+        std::tuple<gocpp::slice<std::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, struct gocpp::error> readdir(struct File* file, int n, os::readdirMode mode);
+        std::string Name(struct dirEntry de);
+        bool IsDir(struct dirEntry de);
+        fs::FileMode Type(struct dirEntry de);
+        std::tuple<struct FileInfo, struct gocpp::error> Info(struct dirEntry de);
+        std::string String(struct dirEntry de);
+    }
 }
 

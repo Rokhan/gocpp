@@ -22,6 +22,15 @@
 
 namespace golang::poll
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     fdMutex::operator T()
@@ -58,7 +67,7 @@ namespace golang::poll
     }
 
     std::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)";
-    bool incref(struct fdMutex* mu)
+    bool rec::incref(struct fdMutex* mu)
     {
         for(; ; )
         {
@@ -79,7 +88,7 @@ namespace golang::poll
         }
     }
 
-    bool increfAndClose(struct fdMutex* mu)
+    bool rec::increfAndClose(struct fdMutex* mu)
     {
         for(; ; )
         {
@@ -111,7 +120,7 @@ namespace golang::poll
         }
     }
 
-    bool decref(struct fdMutex* mu)
+    bool rec::decref(struct fdMutex* mu)
     {
         for(; ; )
         {
@@ -128,7 +137,7 @@ namespace golang::poll
         }
     }
 
-    bool rwlock(struct fdMutex* mu, bool read)
+    bool rec::rwlock(struct fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
         uint64_t mutexWait = {};
@@ -183,7 +192,7 @@ namespace golang::poll
         }
     }
 
-    bool rwunlock(struct fdMutex* mu, bool read)
+    bool rec::rwunlock(struct fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
         uint64_t mutexWait = {};
@@ -232,55 +241,55 @@ namespace golang::poll
     void runtime_Semrelease(uint32_t* sema)
     /* convertBlockStmt, nil block */;
 
-    struct gocpp::error incref(struct FD* fd)
+    struct gocpp::error rec::incref(struct FD* fd)
     {
-        if(! incref(gocpp::recv(fd->fdmu)))
+        if(! rec::incref(gocpp::recv(fd->fdmu)))
         {
             return errClosing(fd->isFile);
         }
         return nullptr;
     }
 
-    struct gocpp::error decref(struct FD* fd)
+    struct gocpp::error rec::decref(struct FD* fd)
     {
-        if(decref(gocpp::recv(fd->fdmu)))
+        if(rec::decref(gocpp::recv(fd->fdmu)))
         {
-            return destroy(gocpp::recv(fd));
+            return rec::destroy(gocpp::recv(fd));
         }
         return nullptr;
     }
 
-    struct gocpp::error readLock(struct FD* fd)
+    struct gocpp::error rec::readLock(struct FD* fd)
     {
-        if(! rwlock(gocpp::recv(fd->fdmu), true))
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), true))
         {
             return errClosing(fd->isFile);
         }
         return nullptr;
     }
 
-    void readUnlock(struct FD* fd)
+    void rec::readUnlock(struct FD* fd)
     {
-        if(rwunlock(gocpp::recv(fd->fdmu), true))
+        if(rec::rwunlock(gocpp::recv(fd->fdmu), true))
         {
-            destroy(gocpp::recv(fd));
+            rec::destroy(gocpp::recv(fd));
         }
     }
 
-    struct gocpp::error writeLock(struct FD* fd)
+    struct gocpp::error rec::writeLock(struct FD* fd)
     {
-        if(! rwlock(gocpp::recv(fd->fdmu), false))
+        if(! rec::rwlock(gocpp::recv(fd->fdmu), false))
         {
             return errClosing(fd->isFile);
         }
         return nullptr;
     }
 
-    void writeUnlock(struct FD* fd)
+    void rec::writeUnlock(struct FD* fd)
     {
-        if(rwunlock(gocpp::recv(fd->fdmu), false))
+        if(rec::rwunlock(gocpp::recv(fd->fdmu), false))
         {
-            destroy(gocpp::recv(fd));
+            rec::destroy(gocpp::recv(fd));
         }
     }
 

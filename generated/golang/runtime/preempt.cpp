@@ -58,6 +58,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     suspendGState::operator T()
@@ -154,7 +165,7 @@ namespace golang::runtime
                         return gocpp::Init<suspendGState>([](suspendGState& x) { x.g = gp; x.stopped = stopped; });
                         break;
                     case 6:
-                        if(gp->preemptStop && gp->preempt && gp->stackguard0 == stackPreempt && asyncM == gp->m && Load(gocpp::recv(asyncM->preemptGen)) == asyncGen)
+                        if(gp->preemptStop && gp->preempt && gp->stackguard0 == stackPreempt && asyncM == gp->m && rec::Load(gocpp::recv(asyncM->preemptGen)) == asyncGen)
                         {
                             break;
                         }
@@ -166,7 +177,7 @@ namespace golang::runtime
                         gp->preempt = true;
                         gp->stackguard0 = stackPreempt;
                         auto asyncM2 = gp->m;
-                        auto asyncGen2 = Load(gocpp::recv(asyncM2->preemptGen));
+                        auto asyncGen2 = rec::Load(gocpp::recv(asyncM2->preemptGen));
                         auto needAsync = asyncM != asyncM2 || asyncGen != asyncGen2;
                         asyncM = asyncM2;
                         asyncGen = asyncGen2;
@@ -235,7 +246,7 @@ namespace golang::runtime
 
     bool canPreemptM(struct m* mp)
     {
-        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == "" && ptr(gocpp::recv(mp->p))->status == _Prunning;
+        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == "" && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
     }
 
     void asyncPreempt()
@@ -273,7 +284,7 @@ namespace golang::runtime
 
     bool wantAsyncPreempt(struct g* gp)
     {
-        return (gp->preempt || gp->m->p != 0 && ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
+        return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
     }
 
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
@@ -292,7 +303,7 @@ namespace golang::runtime
             return {false, 0};
         }
         auto f = findfunc(pc);
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return {false, 0};
         }
@@ -310,7 +321,7 @@ namespace golang::runtime
             return {false, 0};
         }
         auto [u, uf] = newInlineUnwinder(f, pc);
-        auto name = name(gocpp::recv(srcFunc(gocpp::recv(u), uf)));
+        auto name = rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf)));
         if(hasPrefix(name, "runtime.") || hasPrefix(name, "runtime/internal/") || hasPrefix(name, "reflect."))
         {
             return {false, 0};
@@ -333,7 +344,7 @@ namespace golang::runtime
                     return {true, startpc};
                     break;
                 case 2:
-                    return {true, entry(gocpp::recv(f))};
+                    return {true, rec::entry(gocpp::recv(f))};
                     break;
             }
         }

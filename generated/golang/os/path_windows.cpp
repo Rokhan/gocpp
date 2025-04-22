@@ -13,6 +13,11 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     bool IsPathSeparator(uint8_t c)
     {
         return c == '\\' || c == '/';

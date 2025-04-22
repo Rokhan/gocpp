@@ -47,5 +47,9 @@ namespace golang::unsafeheader
     };
 
     std::ostream& operator<<(std::ostream& os, const struct String& value);
+
+    namespace rec
+    {
+    }
 }
 

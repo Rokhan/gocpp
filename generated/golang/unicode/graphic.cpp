@@ -15,6 +15,12 @@
 
 namespace golang::unicode
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unicode::rec;
+    }
+
     gocpp::slice<RangeTable*> GraphicRanges = gocpp::slice<RangeTable*> {L, M, N, P, S, Zs};
     gocpp::slice<RangeTable*> PrintRanges = gocpp::slice<RangeTable*> {L, M, N, P, S};
     bool IsGraphic(gocpp::rune r)

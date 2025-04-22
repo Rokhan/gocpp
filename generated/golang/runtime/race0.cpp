@@ -37,6 +37,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void raceReadObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race");

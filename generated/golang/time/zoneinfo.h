@@ -78,19 +78,14 @@ namespace golang::time
     extern Location* UTC;
     extern Location utcLoc;
     extern Location* Local;
-    struct Location* get(struct Location* l);
-    std::string String(struct Location* l);
     struct Location* FixedZone(std::string name, int offset);
     struct Location* fixedZone(std::string name, int offset);
-    std::tuple<std::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec);
-    int lookupFirstZone(struct Location* l);
-    bool firstZoneUsed(struct Location* l);
     std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
     std::tuple<std::string, std::string, bool> tzsetName(std::string s);
     std::tuple<int, std::string, bool> tzsetOffset(std::string s);
     struct rule
     {
-        ruleKind kind;
+        time::ruleKind kind;
         int day;
         int week;
         int mon;
@@ -111,9 +106,18 @@ namespace golang::time
     std::tuple<struct rule, std::string, bool> tzsetRule(std::string s);
     std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max);
     int tzruleTime(int year, struct rule r, int off);
-    std::tuple<int, bool> lookupName(struct Location* l, std::string name, int64_t unix);
     extern gocpp::error errLocation;
     std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name);
     bool containsDotDot(std::string s);
+
+    namespace rec
+    {
+        struct Location* get(struct Location* l);
+        std::string String(struct Location* l);
+        std::tuple<std::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec);
+        int lookupFirstZone(struct Location* l);
+        bool firstZoneUsed(struct Location* l);
+        std::tuple<int, bool> lookupName(struct Location* l, std::string name, int64_t unix);
+    }
 }
 

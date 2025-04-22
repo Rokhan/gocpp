@@ -39,11 +39,15 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct cpuProfile& value);
     void SetCPUProfileRate(int hz);
-    void add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk);
-    void addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk);
-    void addExtra(struct cpuProfile* p);
     gocpp::slice<unsigned char> CPUProfile();
     int64_t runtime_pprof_runtime_cyclesPerSecond();
     std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> runtime_pprof_readProfile();
+
+    namespace rec
+    {
+        void add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk);
+        void addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk);
+        void addExtra(struct cpuProfile* p);
+    }
 }
 

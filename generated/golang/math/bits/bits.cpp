@@ -15,6 +15,12 @@
 
 namespace golang::bits
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+    }
+
     int LeadingZeros(unsigned int x)
     {
         return UintSize - Len(x);

@@ -17,6 +17,13 @@
 
 namespace golang::flate
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace flate::rec;
+        using namespace math::rec;
+    }
+
     uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)
     {
         b = b.make_slice(i, i + 4, len(b));
@@ -106,11 +113,11 @@ namespace golang::flate
         return gocpp::InitPtr<deflateFast>([](deflateFast& x) { x.cur = maxStoreBlockSize; x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize); });
     }
 
-    gocpp::slice<token> encode(struct deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<flate::token> dst, gocpp::slice<unsigned char> src)
     {
         if(e->cur >= bufferReset)
         {
-            shiftOffsets(gocpp::recv(e));
+            rec::shiftOffsets(gocpp::recv(e));
         }
         if(len(src) < minNonLiteralBlockSize)
         {
@@ -155,7 +162,7 @@ namespace golang::flate
             {
                 s += 4;
                 auto t = candidate.offset - e->cur + 4;
-                auto l = matchLen(gocpp::recv(e), s, t, src);
+                auto l = rec::matchLen(gocpp::recv(e), s, t, src);
                 dst = append(dst, matchToken(uint32_t(l + 4 - baseMatchLength), uint32_t(s - t - baseMatchOffset)));
                 s += l;
                 nextEmit = s;
@@ -191,7 +198,7 @@ namespace golang::flate
         return dst;
     }
 
-    gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit)
+    gocpp::slice<flate::token> emitLiteral(gocpp::slice<flate::token> dst, gocpp::slice<unsigned char> lit)
     {
         for(auto [gocpp_ignored, v] : lit)
         {
@@ -200,7 +207,7 @@ namespace golang::flate
         return dst;
     }
 
-    int32_t matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
+    int32_t rec::matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
     {
         auto s1 = int(s) + maxMatchLength - 4;
         if(s1 > len(src))
@@ -257,17 +264,17 @@ namespace golang::flate
         return int32_t(len(a)) + n;
     }
 
-    void reset(struct deflateFast* e)
+    void rec::reset(struct deflateFast* e)
     {
         e->prev = e->prev.make_slice(0, 0);
         e->cur += maxMatchOffset;
         if(e->cur >= bufferReset)
         {
-            shiftOffsets(gocpp::recv(e));
+            rec::shiftOffsets(gocpp::recv(e));
         }
     }
 
-    void shiftOffsets(struct deflateFast* e)
+    void rec::shiftOffsets(struct deflateFast* e)
     {
         if(len(e->prev) == 0)
         {

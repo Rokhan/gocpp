@@ -19,6 +19,13 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace sync::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Cond::operator T()
@@ -62,28 +69,28 @@ namespace golang::sync
         return gocpp::InitPtr<Cond>([](Cond& x) { x.L = l; });
     }
 
-    void Wait(struct Cond* c)
+    void rec::Wait(struct Cond* c)
     {
-        check(gocpp::recv(c->checker));
+        rec::check(gocpp::recv(c->checker));
         auto t = runtime_notifyListAdd(& c->notify);
-        Unlock(gocpp::recv(c->L));
+        rec::Unlock(gocpp::recv(c->L));
         runtime_notifyListWait(& c->notify, t);
-        Lock(gocpp::recv(c->L));
+        rec::Lock(gocpp::recv(c->L));
     }
 
-    void Signal(struct Cond* c)
+    void rec::Signal(struct Cond* c)
     {
-        check(gocpp::recv(c->checker));
+        rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyOne(& c->notify);
     }
 
-    void Broadcast(struct Cond* c)
+    void rec::Broadcast(struct Cond* c)
     {
-        check(gocpp::recv(c->checker));
+        rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyAll(& c->notify);
     }
 
-    void check(copyChecker* c)
+    void rec::check(sync::copyChecker* c)
     {
         if(uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(unsafe::Pointer(c))) && uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)))
         {
@@ -117,11 +124,11 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void Lock(noCopy*)
+    void rec::Lock(noCopy*)
     {
     }
 
-    void Unlock(noCopy*)
+    void rec::Unlock(noCopy*)
     {
     }
 

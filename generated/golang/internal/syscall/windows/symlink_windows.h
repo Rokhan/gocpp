@@ -30,5 +30,9 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FILE_ATTRIBUTE_TAG_INFO& value);
+
+    namespace rec
+    {
+    }
 }
 

@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
 
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
@@ -72,7 +78,7 @@ namespace golang::main
 
 
     template<typename T>
-    T Get(Wrapper<T>* p)
+    T rec::Get(Wrapper<T>* p)
     {
         return p->value;
     }

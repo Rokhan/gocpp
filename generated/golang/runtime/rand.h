@@ -47,5 +47,9 @@ namespace golang::runtime
     uint32_t legacy_fastrand();
     uint32_t legacy_fastrandn(uint32_t n);
     uint64_t legacy_fastrand64();
+
+    namespace rec
+    {
+    }
 }
 

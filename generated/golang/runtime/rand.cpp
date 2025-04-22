@@ -41,6 +41,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace math::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     gocpp::slice<unsigned char> startupRand;
     struct gocpp_id_0
     {
@@ -117,7 +130,7 @@ namespace golang::runtime
                 readTimeRandom(seed.make_slice(0, ));
             }
         }
-        Init(gocpp::recv(globalRand.state), *seed);
+        rec::Init(gocpp::recv(globalRand.state), *seed);
         clear(seed.make_slice(0, ));
         globalRand.init = true;
         unlock(& globalRand.lock);
@@ -153,12 +166,12 @@ namespace golang::runtime
         }
         for(; ; )
         {
-            if(auto [x, ok] = Next(gocpp::recv(globalRand.state)); ok)
+            if(auto [x, ok] = rec::Next(gocpp::recv(globalRand.state)); ok)
             {
                 unlock(& globalRand.lock);
                 return x;
             }
-            Refill(gocpp::recv(globalRand.state));
+            rec::Refill(gocpp::recv(globalRand.state));
         }
     }
 
@@ -169,7 +182,7 @@ namespace golang::runtime
         {
             fatal("randinit missed");
         }
-        Reseed(gocpp::recv(globalRand.state));
+        rec::Reseed(gocpp::recv(globalRand.state));
         unlock(& globalRand.lock);
     }
 
@@ -184,13 +197,13 @@ namespace golang::runtime
         auto c = & mp->chacha8;
         for(; ; )
         {
-            auto [x, ok] = Next(gocpp::recv(c));
+            auto [x, ok] = rec::Next(gocpp::recv(c));
             if(ok)
             {
                 return x;
             }
             mp->locks++;
-            Refill(gocpp::recv(c));
+            rec::Refill(gocpp::recv(c));
             mp->locks--;
         }
     }
@@ -203,7 +216,7 @@ namespace golang::runtime
             seed[i] = bootstrapRand();
         }
         bootstrapRandReseed();
-        Init64(gocpp::recv(mp->chacha8), seed);
+        rec::Init64(gocpp::recv(mp->chacha8), seed);
         mp->cheaprand = rand();
     }
 

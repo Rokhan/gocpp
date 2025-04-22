@@ -9,7 +9,7 @@ namespace golang::main
     using ArbitraryType = int;
     using IntegerType = int;
     struct Vertex;
-    using Pointer = ArbitraryType*;
+    using Pointer = main::ArbitraryType*;
     using VertexAlias = Vertex;
     using VertexPtr = Vertex*;
 }

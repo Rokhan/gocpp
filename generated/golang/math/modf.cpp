@@ -17,6 +17,12 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     std::tuple<double, double> Modf(double f)
     {
         double int;

@@ -61,8 +61,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
     void stackinit();
     int stacklog2(uintptr_t n);
-    gclinkptr stackpoolalloc(uint8_t order);
-    void stackpoolfree(gclinkptr x, uint8_t order);
+    runtime::gclinkptr stackpoolalloc(uint8_t order);
+    void stackpoolfree(runtime::gclinkptr x, uint8_t order);
     void stackcacherefill(struct mcache* c, uint8_t order);
     void stackcacherelease(struct mcache* c, uint8_t order);
     void stackcache_clear(struct mcache* c);
@@ -107,7 +107,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitvector& value);
-    uint8_t ptrbit(struct bitvector* bv, uintptr_t i);
     void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
     void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
     void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
@@ -144,11 +143,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectRecord& value);
-    bool useGCProg(struct stackObjectRecord* r);
-    uintptr_t ptrdata(struct stackObjectRecord* r);
-    unsigned char* gcdata(struct stackObjectRecord* r);
     void morestackc();
     extern uint32_t startingStackSize;
     void gcComputeStartingStackSize();
+
+    namespace rec
+    {
+        uint8_t ptrbit(struct bitvector* bv, uintptr_t i);
+        bool useGCProg(struct stackObjectRecord* r);
+        uintptr_t ptrdata(struct stackObjectRecord* r);
+        unsigned char* gcdata(struct stackObjectRecord* r);
+    }
 }
 

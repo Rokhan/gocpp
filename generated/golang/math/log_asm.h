@@ -12,5 +12,9 @@
 namespace golang::math
 {
     double archLog(double x);
+
+    namespace rec
+    {
+    }
 }
 

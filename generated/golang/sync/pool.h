@@ -72,11 +72,6 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
     uint32_t runtime_randn(uint32_t n);
     unsafe::Pointer poolRaceAddr(go_any x);
-    void Put(struct Pool* p, go_any x);
-    go_any Get(struct Pool* p);
-    go_any getSlow(struct Pool* p, int pid);
-    std::tuple<struct poolLocal*, int> pin(struct Pool* p);
-    std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p);
     void poolCleanup();
     void init();
     struct poolLocal* indexLocal(unsafe::Pointer l, int i);
@@ -85,5 +80,14 @@ namespace golang::sync
     void runtime_procUnpin();
     uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
     uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
+
+    namespace rec
+    {
+        void Put(struct Pool* p, go_any x);
+        go_any Get(struct Pool* p);
+        go_any getSlow(struct Pool* p, int pid);
+        std::tuple<struct poolLocal*, int> pin(struct Pool* p);
+        std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p);
+    }
 }
 

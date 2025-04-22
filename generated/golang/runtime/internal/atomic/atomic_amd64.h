@@ -44,5 +44,9 @@ namespace golang::atomic
     void StoreRel64(uint64_t* ptr, uint64_t val);
     void StoreReluintptr(uintptr_t* ptr, uintptr_t val);
     void StorepNoWB(unsafe::Pointer ptr, unsafe::Pointer val);
+
+    namespace rec
+    {
+    }
 }
 

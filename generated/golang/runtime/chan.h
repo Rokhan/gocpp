@@ -100,10 +100,14 @@ namespace golang::runtime
     int reflectlite_chanlen(struct hchan* c);
     int reflect_chancap(struct hchan* c);
     void reflect_chanclose(struct hchan* c);
-    void enqueue(struct waitq* q, struct sudog* sgp);
-    struct sudog* dequeue(struct waitq* q);
-    unsafe::Pointer raceaddr(struct hchan* c);
     void racesync(struct hchan* c, struct sudog* sg);
     void racenotify(struct hchan* c, unsigned int idx, struct sudog* sg);
+
+    namespace rec
+    {
+        void enqueue(struct waitq* q, struct sudog* sgp);
+        struct sudog* dequeue(struct waitq* q);
+        unsafe::Pointer raceaddr(struct hchan* c);
+    }
 }
 

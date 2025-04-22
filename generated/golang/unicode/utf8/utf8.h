@@ -46,5 +46,9 @@ namespace golang::utf8
     bool Valid(gocpp::slice<unsigned char> p);
     bool ValidString(std::string s);
     bool ValidRune(gocpp::rune r);
+
+    namespace rec
+    {
+    }
 }
 

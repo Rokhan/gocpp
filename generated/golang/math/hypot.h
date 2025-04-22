@@ -14,5 +14,9 @@ namespace golang::math
 {
     double Hypot(double p, double q);
     double hypot(double p, double q);
+
+    namespace rec
+    {
+    }
 }
 

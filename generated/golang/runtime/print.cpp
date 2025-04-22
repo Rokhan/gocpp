@@ -46,6 +46,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     gocpp::slice<unsigned char> bytes(std::string s)
     {
         gocpp::slice<unsigned char> ret;
@@ -62,7 +74,7 @@ namespace golang::runtime
     void recordForPanic(gocpp::slice<unsigned char> b)
     {
         printlock();
-        if(Load(gocpp::recv(panicking)) == 0)
+        if(rec::Load(gocpp::recv(panicking)) == 0)
         {
             for(auto i = 0; i < len(b); )
             {
@@ -337,9 +349,9 @@ namespace golang::runtime
             print(hex(val));
             print(" ");
             auto fn = findfunc(val);
-            if(valid(gocpp::recv(fn)))
+            if(rec::valid(gocpp::recv(fn)))
             {
-                print("<", funcname(fn), "+", hex(val - entry(gocpp::recv(fn))), "> ");
+                print("<", funcname(fn), "+", hex(val - rec::entry(gocpp::recv(fn))), "> ");
             }
         }
         minhexdigits = 0;

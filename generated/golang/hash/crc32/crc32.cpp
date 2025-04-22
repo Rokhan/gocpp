@@ -22,6 +22,17 @@
 
 namespace golang::crc32
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace crc32::rec;
+        using namespace errors::rec;
+        using namespace hash::rec;
+        using namespace io::rec;
+        using namespace sync::rec;
+    }
+
     Table* castagnoliTable;
     slicing8Table* castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
@@ -43,7 +54,7 @@ namespace golang::crc32
                 return slicingUpdate(crc, castagnoliTable8, p);
             };
         }
-        Store(gocpp::recv(haveCastagnoli), true);
+        rec::Store(gocpp::recv(haveCastagnoli), true);
     }
 
     Table* IEEETable = simpleMakeTable(IEEE);
@@ -78,11 +89,11 @@ namespace golang::crc32
             switch(conditionId)
             {
                 case 0:
-                    Do(gocpp::recv(ieeeOnce), ieeeInit);
+                    rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
                     return IEEETable;
                     break;
                 case 1:
-                    Do(gocpp::recv(castagnoliOnce), castagnoliInit);
+                    rec::Do(gocpp::recv(castagnoliOnce), castagnoliInit);
                     return castagnoliTable;
                     break;
                 default:
@@ -128,7 +139,7 @@ namespace golang::crc32
     {
         if(tab == IEEETable)
         {
-            Do(gocpp::recv(ieeeOnce), ieeeInit);
+            rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
         }
         return new digest {0, tab};
     }
@@ -138,23 +149,23 @@ namespace golang::crc32
         return New(IEEETable);
     }
 
-    int Size(struct digest* d)
+    int rec::Size(struct digest* d)
     {
         return Size;
     }
 
-    int BlockSize(struct digest* d)
+    int rec::BlockSize(struct digest* d)
     {
         return 1;
     }
 
-    void Reset(struct digest* d)
+    void rec::Reset(struct digest* d)
     {
         d->crc = 0;
     }
 
     std::string magic = "crc\x01";
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -163,7 +174,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    struct gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error rec::UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -197,7 +208,7 @@ namespace golang::crc32
         //Go switch emulation
         {
             int conditionId = -1;
-            if(Load(gocpp::recv(haveCastagnoli)) && tab == castagnoliTable) { conditionId = 0; }
+            if(rec::Load(gocpp::recv(haveCastagnoli)) && tab == castagnoliTable) { conditionId = 0; }
             else if(tab == IEEETable) { conditionId = 1; }
             switch(conditionId)
             {
@@ -207,7 +218,7 @@ namespace golang::crc32
                 case 1:
                     if(checkInitIEEE)
                     {
-                        Do(gocpp::recv(ieeeOnce), ieeeInit);
+                        rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
                     }
                     return updateIEEE(crc, p);
                     break;
@@ -223,7 +234,7 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(struct digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -231,14 +242,14 @@ namespace golang::crc32
         return {len(p), nullptr};
     }
 
-    uint32_t Sum32(struct digest* d)
+    uint32_t rec::Sum32(struct digest* d)
     {
         return d->crc;
     }
 
-    gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> rec::Sum(struct digest* d, gocpp::slice<unsigned char> in)
     {
-        auto s = Sum32(gocpp::recv(d));
+        auto s = rec::Sum32(gocpp::recv(d));
         return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));
     }
 
@@ -249,7 +260,7 @@ namespace golang::crc32
 
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data)
     {
-        Do(gocpp::recv(ieeeOnce), ieeeInit);
+        rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
         return updateIEEE(0, data);
     }
 

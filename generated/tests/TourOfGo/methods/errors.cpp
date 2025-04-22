@@ -17,6 +17,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace time::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     MyError::operator T()
@@ -49,7 +56,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::string Error(struct MyError* e)
+    std::string rec::Error(struct MyError* e)
     {
         return mocklib::Sprintf("at %v, %s", e->When, e->What);
     }

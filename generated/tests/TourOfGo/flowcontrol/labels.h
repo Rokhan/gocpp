@@ -16,5 +16,9 @@ namespace golang::main
     void testFor(int k);
     void testRange(int k);
     void testGoTo();
+
+    namespace rec
+    {
+    }
 }
 

@@ -15,6 +15,12 @@
 
 namespace golang::abi
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Type::operator T()
@@ -74,7 +80,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    std::string String(Kind k)
+    std::string rec::String(abi::Kind k)
     {
         if(int(k) < len(kindNames))
         {
@@ -84,32 +90,32 @@ namespace golang::abi
     }
 
     gocpp::slice<std::string> kindNames = gocpp::Init<gocpp::slice<std::string>>([](gocpp::slice<std::string>& x) { x.Invalid = "invalid"; x.Bool = "bool"; x.Int = "int"; x.Int8 = "int8"; x.Int16 = "int16"; x.Int32 = "int32"; x.Int64 = "int64"; x.Uint = "uint"; x.Uint8 = "uint8"; x.Uint16 = "uint16"; x.Uint32 = "uint32"; x.Uint64 = "uint64"; x.Uintptr = "uintptr"; x.Float32 = "float32"; x.Float64 = "float64"; x.Complex64 = "complex64"; x.Complex128 = "complex128"; x.Array = "array"; x.Chan = "chan"; x.Func = "func"; x.Interface = "interface"; x.Map = "map"; x.Pointer = "ptr"; x.Slice = "slice"; x.String = "string"; x.Struct = "struct"; x.UnsafePointer = "unsafe.Pointer"; });
-    Kind Kind(struct Type* t)
+    abi::Kind rec::Kind(struct Type* t)
     {
         return Kind(t->Kind_ & KindMask);
     }
 
-    bool HasName(struct Type* t)
+    bool rec::HasName(struct Type* t)
     {
         return t->TFlag & TFlagNamed != 0;
     }
 
-    bool Pointers(struct Type* t)
+    bool rec::Pointers(struct Type* t)
     {
         return t->PtrBytes != 0;
     }
 
-    bool IfaceIndir(struct Type* t)
+    bool rec::IfaceIndir(struct Type* t)
     {
         return t->Kind_ & KindDirectIface == 0;
     }
 
-    bool IsDirectIface(struct Type* t)
+    bool rec::IsDirectIface(struct Type* t)
     {
         return t->Kind_ & KindDirectIface != 0;
     }
 
-    gocpp::slice<unsigned char> GcSlice(struct Type* t, uintptr_t begin, uintptr_t end)
+    gocpp::slice<unsigned char> rec::GcSlice(struct Type* t, uintptr_t begin, uintptr_t end)
     {
         return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
@@ -193,7 +199,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<Method> Methods(struct UncommonType* t)
+    gocpp::slice<Method> rec::Methods(struct UncommonType* t)
     {
         if(t->Mcount == 0)
         {
@@ -202,7 +208,7 @@ namespace golang::abi
         return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0")).make_slice(, t->Mcount, t->Mcount);
     }
 
-    gocpp::slice<Method> ExportedMethods(struct UncommonType* t)
+    gocpp::slice<Method> rec::ExportedMethods(struct UncommonType* t)
     {
         if(t->Xcount == 0)
         {
@@ -283,16 +289,16 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    int Len(struct Type* t)
+    int rec::Len(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) == Array)
+        if(rec::Kind(gocpp::recv(t)) == Array)
         {
             return int((ArrayType*)(unsafe::Pointer(t))->Len);
         }
         return 0;
     }
 
-    struct Type* Common(struct Type* t)
+    struct Type* rec::Common(struct Type* t)
     {
         return t;
     }
@@ -358,9 +364,9 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    ChanDir ChanDir(struct Type* t)
+    abi::ChanDir rec::ChanDir(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) == Chan)
+        if(rec::Kind(gocpp::recv(t)) == Chan)
         {
             auto ch = (ChanType*)(unsafe::Pointer(t));
             return ch->Dir;
@@ -368,7 +374,7 @@ namespace golang::abi
         return InvalidDir;
     }
 
-    struct UncommonType* Uncommon(struct Type* t)
+    struct UncommonType* rec::Uncommon(struct Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
         {
@@ -376,7 +382,7 @@ namespace golang::abi
         }
         //Go switch emulation
         {
-            auto condition = Kind(gocpp::recv(t));
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
             if(condition == Struct) { conditionId = 0; }
             else if(condition == Pointer) { conditionId = 1; }
@@ -651,11 +657,11 @@ namespace golang::abi
         }
     }
 
-    struct Type* Elem(struct Type* t)
+    struct Type* rec::Elem(struct Type* t)
     {
         //Go switch emulation
         {
-            auto condition = Kind(gocpp::recv(t));
+            auto condition = rec::Kind(gocpp::recv(t));
             int conditionId = -1;
             if(condition == Array) { conditionId = 0; }
             else if(condition == Chan) { conditionId = 1; }
@@ -689,62 +695,62 @@ namespace golang::abi
         return nullptr;
     }
 
-    struct StructType* StructType(struct Type* t)
+    struct StructType* rec::StructType(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) != Struct)
+        if(rec::Kind(gocpp::recv(t)) != Struct)
         {
             return nullptr;
         }
         return (StructType*)(unsafe::Pointer(t));
     }
 
-    struct MapType* MapType(struct Type* t)
+    struct MapType* rec::MapType(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) != Map)
+        if(rec::Kind(gocpp::recv(t)) != Map)
         {
             return nullptr;
         }
         return (MapType*)(unsafe::Pointer(t));
     }
 
-    struct ArrayType* ArrayType(struct Type* t)
+    struct ArrayType* rec::ArrayType(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) != Array)
+        if(rec::Kind(gocpp::recv(t)) != Array)
         {
             return nullptr;
         }
         return (ArrayType*)(unsafe::Pointer(t));
     }
 
-    struct FuncType* FuncType(struct Type* t)
+    struct FuncType* rec::FuncType(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) != Func)
+        if(rec::Kind(gocpp::recv(t)) != Func)
         {
             return nullptr;
         }
         return (FuncType*)(unsafe::Pointer(t));
     }
 
-    struct InterfaceType* InterfaceType(struct Type* t)
+    struct InterfaceType* rec::InterfaceType(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) != Interface)
+        if(rec::Kind(gocpp::recv(t)) != Interface)
         {
             return nullptr;
         }
         return (InterfaceType*)(unsafe::Pointer(t));
     }
 
-    uintptr_t Size(struct Type* t)
+    uintptr_t rec::Size(struct Type* t)
     {
         return t->Size_;
     }
 
-    int Align(struct Type* t)
+    int rec::Align(struct Type* t)
     {
         return int(t->Align_);
     }
 
-    int FieldAlign(struct Type* t)
+    int rec::FieldAlign(struct Type* t)
     {
         return int(t->FieldAlign_);
     }
@@ -781,27 +787,27 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<Method> ExportedMethods(struct Type* t)
+    gocpp::slice<Method> rec::ExportedMethods(struct Type* t)
     {
-        auto ut = Uncommon(gocpp::recv(t));
+        auto ut = rec::Uncommon(gocpp::recv(t));
         if(ut == nullptr)
         {
             return nullptr;
         }
-        return ExportedMethods(gocpp::recv(ut));
+        return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int NumMethod(struct Type* t)
+    int rec::NumMethod(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) == Interface)
+        if(rec::Kind(gocpp::recv(t)) == Interface)
         {
             auto tt = (InterfaceType*)(unsafe::Pointer(t));
-            return NumMethod(gocpp::recv(tt));
+            return rec::NumMethod(gocpp::recv(tt));
         }
-        return len(ExportedMethods(gocpp::recv(t)));
+        return len(rec::ExportedMethods(gocpp::recv(t)));
     }
 
-    int NumMethod(struct InterfaceType* t)
+    int rec::NumMethod(struct InterfaceType* t)
     {
         return len(t->Methods);
     }
@@ -856,34 +862,34 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    bool IndirectKey(struct MapType* mt)
+    bool rec::IndirectKey(struct MapType* mt)
     {
         return mt->Flags & 1 != 0;
     }
 
-    bool IndirectElem(struct MapType* mt)
+    bool rec::IndirectElem(struct MapType* mt)
     {
         return mt->Flags & 2 != 0;
     }
 
-    bool ReflexiveKey(struct MapType* mt)
+    bool rec::ReflexiveKey(struct MapType* mt)
     {
         return mt->Flags & 4 != 0;
     }
 
-    bool NeedKeyUpdate(struct MapType* mt)
+    bool rec::NeedKeyUpdate(struct MapType* mt)
     {
         return mt->Flags & 8 != 0;
     }
 
-    bool HashMightPanic(struct MapType* mt)
+    bool rec::HashMightPanic(struct MapType* mt)
     {
         return mt->Flags & 16 != 0;
     }
 
-    struct Type* Key(struct Type* t)
+    struct Type* rec::Key(struct Type* t)
     {
-        if(Kind(gocpp::recv(t)) == Map)
+        if(rec::Kind(gocpp::recv(t)) == Map)
         {
             return (MapType*)(unsafe::Pointer(t))->Key;
         }
@@ -951,27 +957,27 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    struct Type* In(struct FuncType* t, int i)
+    struct Type* rec::In(struct FuncType* t, int i)
     {
-        return InSlice(gocpp::recv(t))[i];
+        return rec::InSlice(gocpp::recv(t))[i];
     }
 
-    int NumIn(struct FuncType* t)
+    int rec::NumIn(struct FuncType* t)
     {
         return int(t->InCount);
     }
 
-    int NumOut(struct FuncType* t)
+    int rec::NumOut(struct FuncType* t)
     {
         return int(t->OutCount & ((1 << 15) - 1));
     }
 
-    struct Type* Out(struct FuncType* t, int i)
+    struct Type* rec::Out(struct FuncType* t, int i)
     {
-        return (OutSlice(gocpp::recv(t))[i]);
+        return (rec::OutSlice(gocpp::recv(t))[i]);
     }
 
-    gocpp::slice<Type*> InSlice(struct FuncType* t)
+    gocpp::slice<Type*> rec::InSlice(struct FuncType* t)
     {
         auto uadd = gocpp::Sizeof<FuncType>();
         if(t->TFlag & TFlagUncommon != 0)
@@ -985,9 +991,9 @@ namespace golang::abi
         return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0")).make_slice(, t->InCount, t->InCount);
     }
 
-    gocpp::slice<Type*> OutSlice(struct FuncType* t)
+    gocpp::slice<Type*> rec::OutSlice(struct FuncType* t)
     {
-        auto outCount = uint16_t(NumOut(gocpp::recv(t)));
+        auto outCount = uint16_t(rec::NumOut(gocpp::recv(t)));
         if(outCount == 0)
         {
             return nullptr;
@@ -1000,7 +1006,7 @@ namespace golang::abi
         return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0")).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
-    bool IsVariadic(struct FuncType* t)
+    bool rec::IsVariadic(struct FuncType* t)
     {
         return t->OutCount & (1 << 15) != 0;
     }
@@ -1069,9 +1075,9 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    bool Embedded(struct StructField* f)
+    bool rec::Embedded(struct StructField* f)
     {
-        return IsEmbedded(gocpp::recv(f->Name));
+        return rec::IsEmbedded(gocpp::recv(f->Name));
     }
 
     
@@ -1135,37 +1141,37 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    unsigned char* DataChecked(struct Name n, int off, std::string whySafe)
+    unsigned char* rec::DataChecked(struct Name n, int off, std::string whySafe)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
-    unsigned char* Data(struct Name n, int off)
+    unsigned char* rec::Data(struct Name n, int off)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"));
     }
 
-    bool IsExported(struct Name n)
+    bool rec::IsExported(struct Name n)
     {
         return (*n.Bytes) & (1 << 0) != 0;
     }
 
-    bool HasTag(struct Name n)
+    bool rec::HasTag(struct Name n)
     {
         return (*n.Bytes) & (1 << 1) != 0;
     }
 
-    bool IsEmbedded(struct Name n)
+    bool rec::IsEmbedded(struct Name n)
     {
         return (*n.Bytes) & (1 << 3) != 0;
     }
 
-    std::tuple<int, int> ReadVarint(struct Name n, int off)
+    std::tuple<int, int> rec::ReadVarint(struct Name n, int off)
     {
         auto v = 0;
         for(auto i = 0; ; i++)
         {
-            auto x = *DataChecked(gocpp::recv(n), off + i, "read varint");
+            auto x = *rec::DataChecked(gocpp::recv(n), off + i, "read varint");
             v += int(x & 0x7f) << (7 * i);
             if(x & 0x80 == 0)
             {
@@ -1174,14 +1180,14 @@ namespace golang::abi
         }
     }
 
-    bool IsBlank(struct Name n)
+    bool rec::IsBlank(struct Name n)
     {
         if(n.Bytes == nullptr)
         {
             return false;
         }
-        auto [gocpp_id_1, l] = ReadVarint(gocpp::recv(n), 1);
-        return l == 1 && *Data(gocpp::recv(n), 2) == '_';
+        auto [gocpp_id_1, l] = rec::ReadVarint(gocpp::recv(n), 1);
+        return l == 1 && *rec::Data(gocpp::recv(n), 2) == '_';
     }
 
     int writeVarint(gocpp::slice<unsigned char> buf, int n)
@@ -1199,25 +1205,25 @@ namespace golang::abi
         }
     }
 
-    std::string Name(struct Name n)
+    std::string rec::Name(struct Name n)
     {
         if(n.Bytes == nullptr)
         {
             return "";
         }
-        auto [i, l] = ReadVarint(gocpp::recv(n), 1);
-        return unsafe::String(DataChecked(gocpp::recv(n), 1 + i, "non-empty string"), l);
+        auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
+        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"), l);
     }
 
-    std::string Tag(struct Name n)
+    std::string rec::Tag(struct Name n)
     {
-        if(! HasTag(gocpp::recv(n)))
+        if(! rec::HasTag(gocpp::recv(n)))
         {
             return "";
         }
-        auto [i, l] = ReadVarint(gocpp::recv(n), 1);
-        auto [i2, l2] = ReadVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
+        auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
+        auto [i2, l2] = rec::ReadVarint(gocpp::recv(n), 1 + i + l);
+        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
     }
 
     struct Name NewName(std::string n, std::string tag, bool exported, bool embedded)

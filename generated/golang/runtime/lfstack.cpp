@@ -29,7 +29,17 @@
 
 namespace golang::runtime
 {
-    void push(lfstack* head, struct lfnode* node)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
+    void rec::push(runtime::lfstack* head, struct lfnode* node)
     {
         node->pushcnt++;
         auto go_new = lfstackPack(node, node->pushcnt);
@@ -49,7 +59,7 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer pop(lfstack* head)
+    unsafe::Pointer rec::pop(runtime::lfstack* head)
     {
         for(; ; )
         {
@@ -67,7 +77,7 @@ namespace golang::runtime
         }
     }
 
-    bool empty(lfstack* head)
+    bool rec::empty(runtime::lfstack* head)
     {
         return atomic::Load64((uint64_t*)(head)) == 0;
     }
@@ -93,7 +103,7 @@ namespace golang::runtime
 
     struct lfnode* lfstackUnpack(uint64_t val)
     {
-        return (lfnode*)(pointer(gocpp::recv(taggedPointer(val))));
+        return (lfnode*)(rec::pointer(gocpp::recv(taggedPointer(val))));
     }
 
 }

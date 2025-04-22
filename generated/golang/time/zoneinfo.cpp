@@ -24,6 +24,16 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace errors::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Location::operator T()
@@ -149,7 +159,7 @@ namespace golang::time
     Location* Local = & localLoc;
     Location localLoc;
     sync::Once localOnce;
-    struct Location* get(struct Location* l)
+    struct Location* rec::get(struct Location* l)
     {
         if(l == nullptr)
         {
@@ -157,14 +167,14 @@ namespace golang::time
         }
         if(l == & localLoc)
         {
-            Do(gocpp::recv(localOnce), initLocal);
+            rec::Do(gocpp::recv(localOnce), initLocal);
         }
         return l;
     }
 
-    std::string String(struct Location* l)
+    std::string rec::String(struct Location* l)
     {
-        return get(gocpp::recv(l))->name;
+        return rec::get(gocpp::recv(l))->name;
     }
 
     gocpp::slice<Location*> unnamedFixedZones;
@@ -176,7 +186,7 @@ namespace golang::time
         auto hour = offset / 60 / 60;
         if(name == "" && - hoursBeforeUTC <= hour && hour <= + hoursAfterUTC && hour * 60 * 60 == offset)
         {
-            Do(gocpp::recv(unnamedFixedZonesOnce), [=]() mutable -> void
+            rec::Do(gocpp::recv(unnamedFixedZonesOnce), [=]() mutable -> void
             {
                 unnamedFixedZones = gocpp::make(gocpp::Tag<gocpp::slice<Location*>>(), hoursBeforeUTC + 1 + hoursAfterUTC);
                 for(auto hr = - hoursBeforeUTC; hr <= + hoursAfterUTC; hr++)
@@ -196,14 +206,14 @@ namespace golang::time
         return l;
     }
 
-    std::tuple<std::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec)
+    std::tuple<std::string, int, int64_t, int64_t, bool> rec::lookup(struct Location* l, int64_t sec)
     {
         std::string name;
         int offset;
         int64_t start;
         int64_t end;
         bool isDST;
-        l = get(gocpp::recv(l));
+        l = rec::get(gocpp::recv(l));
         if(len(l->zone) == 0)
         {
             std::string name;
@@ -239,7 +249,7 @@ namespace golang::time
             int64_t start;
             int64_t end;
             bool isDST;
-            auto zone = & l->zone[lookupFirstZone(gocpp::recv(l))];
+            auto zone = & l->zone[rec::lookupFirstZone(gocpp::recv(l))];
             name = zone->name;
             offset = zone->offset;
             start = alpha;
@@ -322,9 +332,9 @@ namespace golang::time
         return {name, offset, start, end, isDST};
     }
 
-    int lookupFirstZone(struct Location* l)
+    int rec::lookupFirstZone(struct Location* l)
     {
-        if(! firstZoneUsed(gocpp::recv(l)))
+        if(! rec::firstZoneUsed(gocpp::recv(l)))
         {
             return 0;
         }
@@ -348,7 +358,7 @@ namespace golang::time
         return 0;
     }
 
-    bool firstZoneUsed(struct Location* l)
+    bool rec::firstZoneUsed(struct Location* l)
     {
         for(auto [gocpp_ignored, tx] : l->tx)
         {
@@ -938,11 +948,11 @@ namespace golang::time
         return s + r.time - off;
     }
 
-    std::tuple<int, bool> lookupName(struct Location* l, std::string name, int64_t unix)
+    std::tuple<int, bool> rec::lookupName(struct Location* l, std::string name, int64_t unix)
     {
         int offset;
         bool ok;
-        l = get(gocpp::recv(l));
+        l = rec::get(gocpp::recv(l));
         for(auto [i, gocpp_ignored] : l->zone)
         {
             int offset;
@@ -952,7 +962,7 @@ namespace golang::time
             {
                 int offset;
                 bool ok;
-                auto [nam, offset, gocpp_id_7, gocpp_id_8, gocpp_id_9] = lookup(gocpp::recv(l), unix - int64_t(zone->offset));
+                auto [nam, offset, gocpp_id_7, gocpp_id_8, gocpp_id_9] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
                 if(nam == zone->name)
                 {
                     int offset;
@@ -993,7 +1003,7 @@ namespace golang::time
         {
             return {nullptr, errLocation};
         }
-        Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void
+        rec::Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void
         {
             auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO");
             zoneinfo = & env;

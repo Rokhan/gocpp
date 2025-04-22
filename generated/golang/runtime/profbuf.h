@@ -16,15 +16,15 @@ namespace golang::runtime
 {
     struct profBuf
     {
-        profAtomic r;
-        profAtomic w;
+        runtime::profAtomic r;
+        runtime::profAtomic w;
         atomic::Uint64 overflow;
         atomic::Uint64 overflowTime;
         atomic::Uint32 eof;
         uintptr_t hdrsize;
         gocpp::slice<uint64_t> data;
         gocpp::slice<unsafe::Pointer> tags;
-        profIndex rNext;
+        runtime::profIndex rNext;
         gocpp::slice<uint64_t> overflowBuf;
         /* note wait; [Known incomplete type] */
 
@@ -40,22 +40,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
-    profIndex load(profAtomic* x);
-    void store(profAtomic* x, profIndex go_new);
-    bool cas(profAtomic* x, profIndex old, profIndex go_new);
-    uint32_t dataCount(profIndex x);
-    uint32_t tagCount(profIndex x);
     int countSub(uint32_t x, uint32_t y);
-    profIndex addCountsAndClearFlags(profIndex x, int data, int tag);
-    bool hasOverflow(struct profBuf* b);
-    std::tuple<uint32_t, uint64_t> takeOverflow(struct profBuf* b);
-    void incrementOverflow(struct profBuf* b, int64_t now);
     struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
-    bool canWriteRecord(struct profBuf* b, int nstk);
-    bool canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2);
-    void write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);
-    void close(struct profBuf* b);
-    void wakeupExtra(struct profBuf* b);
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> read(struct profBuf* b, profBufReadMode mode);
+
+    namespace rec
+    {
+        runtime::profIndex load(runtime::profAtomic* x);
+        void store(runtime::profAtomic* x, runtime::profIndex go_new);
+        bool cas(runtime::profAtomic* x, runtime::profIndex old, runtime::profIndex go_new);
+        uint32_t dataCount(runtime::profIndex x);
+        uint32_t tagCount(runtime::profIndex x);
+        runtime::profIndex addCountsAndClearFlags(runtime::profIndex x, int data, int tag);
+        bool hasOverflow(struct profBuf* b);
+        std::tuple<uint32_t, uint64_t> takeOverflow(struct profBuf* b);
+        void incrementOverflow(struct profBuf* b, int64_t now);
+        bool canWriteRecord(struct profBuf* b, int nstk);
+        bool canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2);
+        void write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);
+        void close(struct profBuf* b);
+        void wakeupExtra(struct profBuf* b);
+        std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> read(struct profBuf* b, runtime::profBufReadMode mode);
+    }
 }
 

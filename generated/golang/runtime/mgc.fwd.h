@@ -19,14 +19,14 @@ namespace golang::runtime
     using gcMode = int;
     struct gcTrigger;
     using gcTriggerKind = int;
-    const gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
+    const runtime::gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
     const gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
     const gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
     const gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
-    const gcMode gcBackgroundMode = 0;
+    const runtime::gcMode gcBackgroundMode = 0;
     const gcMode gcForceMode = 1;
     const gcMode gcForceBlockMode = 2;
-    const gcTriggerKind gcTriggerHeap = 0;
+    const runtime::gcTriggerKind gcTriggerHeap = 0;
     const gcTriggerKind gcTriggerTime = 1;
     const gcTriggerKind gcTriggerCycle = 2;
 }

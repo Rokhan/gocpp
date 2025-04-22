@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     std::tuple<std::string, std::string> swap(std::string x, std::string y)
     {
         return {y, x};

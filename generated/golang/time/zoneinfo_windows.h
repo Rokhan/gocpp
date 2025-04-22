@@ -23,5 +23,9 @@ namespace golang::time
     extern syscall::Timezoneinformation usPacific;
     extern syscall::Timezoneinformation aus;
     void initLocal();
+
+    namespace rec
+    {
+    }
 }
 

@@ -7,7 +7,7 @@
 namespace golang::os
 {
     using readdirMode = int;
-    const readdirMode readdirName = 0;
+    const os::readdirMode readdirName = 0;
     const readdirMode readdirDirEntry = 1;
     const readdirMode readdirFileInfo = 2;
 }

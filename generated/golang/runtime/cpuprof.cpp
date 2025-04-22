@@ -27,6 +27,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     cpuProfile::operator T()
@@ -97,7 +107,7 @@ namespace golang::runtime
             cpuprof.on = true;
             cpuprof.log = newProfBuf(1, profBufWordCount, profBufTagCount);
             auto hdr = gocpp::array<uint64_t, 1> {uint64_t(hz)};
-            write(gocpp::recv(cpuprof.log), nullptr, nanotime(), hdr.make_slice(0, ), nullptr);
+            rec::write(gocpp::recv(cpuprof.log), nullptr, nanotime(), hdr.make_slice(0, ), nullptr);
             setcpuprofilerate(int32_t(hz));
         }
         else
@@ -105,33 +115,33 @@ namespace golang::runtime
         {
             setcpuprofilerate(0);
             cpuprof.on = false;
-            addExtra(gocpp::recv(cpuprof));
-            close(gocpp::recv(cpuprof.log));
+            rec::addExtra(gocpp::recv(cpuprof));
+            rec::close(gocpp::recv(cpuprof.log));
         }
         unlock(& cpuprof.lock);
     }
 
-    void add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk)
+    void rec::add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk)
     {
-        for(; ! CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
+        for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
             osyield();
         }
-        if(Load(gocpp::recv(prof.hz)) != 0)
+        if(rec::Load(gocpp::recv(prof.hz)) != 0)
         {
             if(p->numExtra > 0 || p->lostExtra > 0 || p->lostAtomic > 0)
             {
-                addExtra(gocpp::recv(p));
+                rec::addExtra(gocpp::recv(p));
             }
             auto hdr = gocpp::array<uint64_t, 1> {1};
-            write(gocpp::recv(cpuprof.log), tagPtr, nanotime(), hdr.make_slice(0, ), stk);
+            rec::write(gocpp::recv(cpuprof.log), tagPtr, nanotime(), hdr.make_slice(0, ), stk);
         }
-        Store(gocpp::recv(prof.signalLock), 0);
+        rec::Store(gocpp::recv(prof.signalLock), 0);
     }
 
-    void addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk)
+    void rec::addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk)
     {
-        for(; ! CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
+        for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
             osyield();
         }
@@ -146,15 +156,15 @@ namespace golang::runtime
         {
             cpuprof.lostExtra++;
         }
-        Store(gocpp::recv(prof.signalLock), 0);
+        rec::Store(gocpp::recv(prof.signalLock), 0);
     }
 
-    void addExtra(struct cpuProfile* p)
+    void rec::addExtra(struct cpuProfile* p)
     {
         auto hdr = gocpp::array<uint64_t, 1> {1};
         for(auto i = 0; i < p->numExtra; )
         {
-            write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), p->extra.make_slice(i + 1, i + int(p->extra[i])));
+            rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), p->extra.make_slice(i + 1, i + int(p->extra[i])));
             i += int(p->extra[i]);
         }
         p->numExtra = 0;
@@ -162,14 +172,14 @@ namespace golang::runtime
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostExtra};
             auto lostStk = gocpp::array<uintptr_t, 2> {abi::FuncPCABIInternal(_LostExternalCode) + sys::PCQuantum, abi::FuncPCABIInternal(_ExternalCode) + sys::PCQuantum};
-            write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), lostStk.make_slice(0, ));
+            rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), lostStk.make_slice(0, ));
             p->lostExtra = 0;
         }
         if(p->lostAtomic > 0)
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostAtomic};
             auto lostStk = gocpp::array<uintptr_t, 2> {abi::FuncPCABIInternal(_LostSIGPROFDuringAtomic64) + sys::PCQuantum, abi::FuncPCABIInternal(_System) + sys::PCQuantum};
-            write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), lostStk.make_slice(0, ));
+            rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0, ), lostStk.make_slice(0, ));
             p->lostAtomic = 0;
         }
     }
@@ -194,7 +204,7 @@ namespace golang::runtime
         {
             readMode = profBufNonBlocking;
         }
-        auto [data, tags, eof] = read(gocpp::recv(log), readMode);
+        auto [data, tags, eof] = rec::read(gocpp::recv(log), readMode);
         if(len(data) == 0 && eof)
         {
             lock(& cpuprof.lock);

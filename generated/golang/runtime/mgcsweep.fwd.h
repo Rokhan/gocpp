@@ -9,7 +9,7 @@ namespace golang::runtime
     using sweepClass = uint32_t;
     const int sweepDrainedMask = 1 << 31;
     struct sweepLocker;
-    const sweepClass sweepClassDone = sweepClass(~ uint32_t(0));
+    const runtime::sweepClass sweepClassDone = sweepClass(~ uint32_t(0));
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/mheap.fwd.h"

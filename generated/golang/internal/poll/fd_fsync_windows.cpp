@@ -21,16 +21,25 @@
 
 namespace golang::poll
 {
-    struct gocpp::error Fsync(struct FD* fd)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
+    struct gocpp::error rec::Fsync(struct FD* fd)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return syscall::Fsync(fd->Sysfd);
         }
         catch(gocpp::GoPanic& gp)

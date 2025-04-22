@@ -14,5 +14,9 @@ namespace golang::syscall
 {
     gocpp::slice<uint16_t> encodeWTF16(std::string s, gocpp::slice<uint16_t> buf);
     gocpp::slice<unsigned char> decodeWTF16(gocpp::slice<uint16_t> s, gocpp::slice<unsigned char> buf);
+
+    namespace rec
+    {
+    }
 }
 

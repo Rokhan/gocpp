@@ -26,13 +26,25 @@
 
 namespace golang::reader
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace io::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
     void Validate(struct io::Reader r)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 1024, 2048);
         auto [i, o] = std::tuple{0, 0};
         for(; i < (1 << 20) && o < (1 << 20); i++)
         {
-            auto [n, err] = Read(gocpp::recv(r), b);
+            auto [n, err] = rec::Read(gocpp::recv(r), b);
             for(auto [i, v] : b.make_slice(0, n))
             {
                 if(v != 'A')

@@ -31,94 +31,98 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Time& value);
-    int32_t nsec(struct Time* t);
-    int64_t sec(struct Time* t);
-    int64_t unixSec(struct Time* t);
-    void addSec(struct Time* t, int64_t d);
-    void setLoc(struct Time* t, struct Location* loc);
-    void stripMono(struct Time* t);
-    void setMono(struct Time* t, int64_t m);
-    int64_t mono(struct Time* t);
-    bool After(struct Time t, struct Time u);
-    bool Before(struct Time t, struct Time u);
-    int Compare(struct Time t, struct Time u);
-    bool Equal(struct Time t, struct Time u);
-    std::string String(Month m);
-    std::string String(Weekday d);
-    bool IsZero(struct Time t);
-    uint64_t abs(struct Time t);
-    std::tuple<std::string, int, uint64_t> locabs(struct Time t);
-    std::tuple<int, Month, int> Date(struct Time t);
-    int Year(struct Time t);
-    /* Month Month(struct Time t); [Ignored, known name conflict] */ 
-    int Day(struct Time t);
-    /* Weekday Weekday(struct Time t); [Ignored, known name conflict] */ 
-    Weekday absWeekday(uint64_t abs);
-    std::tuple<int, int> ISOWeek(struct Time t);
-    std::tuple<int, int, int> Clock(struct Time t);
+    time::Weekday absWeekday(uint64_t abs);
     std::tuple<int, int, int> absClock(uint64_t abs);
-    /* int Hour(struct Time t); [Ignored, known name conflict] */ 
-    /* int Minute(struct Time t); [Ignored, known name conflict] */ 
-    /* int Second(struct Time t); [Ignored, known name conflict] */ 
-    /* int Nanosecond(struct Time t); [Ignored, known name conflict] */ 
-    int YearDay(struct Time t);
-    std::string String(Duration d);
-    int format(Duration d, gocpp::array<unsigned char, 32>* buf);
     std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
     int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
-    int64_t Nanoseconds(Duration d);
-    int64_t Microseconds(Duration d);
-    int64_t Milliseconds(Duration d);
-    double Seconds(Duration d);
-    double Minutes(Duration d);
-    double Hours(Duration d);
-    Duration Truncate(Duration d, Duration m);
-    bool lessThanHalf(Duration x, Duration y);
-    Duration Round(Duration d, Duration m);
-    Duration Abs(Duration d);
-    struct Time Add(struct Time t, Duration d);
-    Duration Sub(struct Time t, struct Time u);
-    Duration subMono(int64_t t, int64_t u);
-    Duration Since(struct Time t);
-    Duration Until(struct Time t);
-    struct Time AddDate(struct Time t, int years, int months, int days);
-    std::tuple<int, Month, int, int> date(struct Time t, bool full);
-    std::tuple<int, Month, int, int> absDate(uint64_t abs, bool full);
+    bool lessThanHalf(time::Duration x, time::Duration y);
+    time::Duration subMono(int64_t t, int64_t u);
+    time::Duration Since(struct Time t);
+    time::Duration Until(struct Time t);
+    std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
     extern gocpp::array_base<int32_t> daysBefore;
-    int daysIn(Month m, int year);
+    int daysIn(time::Month m, int year);
     uint64_t daysSinceEpoch(int year);
     std::tuple<int64_t, int32_t, int64_t> now();
     int64_t runtimeNano();
     extern int64_t startNano;
     struct Time Now();
     struct Time unixTime(int64_t sec, int32_t nsec);
-    /* struct Time UTC(struct Time t); [Ignored, known name conflict] */ 
-    /* struct Time Local(struct Time t); [Ignored, known name conflict] */ 
-    struct Time In(struct Time t, struct Location* loc);
-    /* struct Location* Location(struct Time t); [Ignored, known name conflict] */ 
-    std::tuple<std::string, int> Zone(struct Time t);
-    std::tuple<struct Time, struct Time> ZoneBounds(struct Time t);
-    int64_t Unix(struct Time t);
-    int64_t UnixMilli(struct Time t);
-    int64_t UnixMicro(struct Time t);
-    int64_t UnixNano(struct Time t);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct Time t);
-    struct gocpp::error UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(struct Time t);
-    struct gocpp::error GobDecode(struct Time* t, gocpp::slice<unsigned char> data);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(struct Time t);
-    struct gocpp::error UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(struct Time t);
-    struct gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data);
     struct Time Unix(int64_t sec, int64_t nsec);
     struct Time UnixMilli(int64_t msec);
     struct Time UnixMicro(int64_t usec);
-    bool IsDST(struct Time t);
     bool isLeap(int year);
     std::tuple<int, int> norm(int hi, int lo, int base);
-    struct Time Date(int year, Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
-    struct Time Truncate(struct Time t, Duration d);
-    struct Time Round(struct Time t, Duration d);
-    std::tuple<int, Duration> div(struct Time t, Duration d);
+    struct Time Date(int year, time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
+    std::tuple<int, time::Duration> div(struct Time t, time::Duration d);
+
+    namespace rec
+    {
+        int32_t nsec(struct Time* t);
+        int64_t sec(struct Time* t);
+        int64_t unixSec(struct Time* t);
+        void addSec(struct Time* t, int64_t d);
+        void setLoc(struct Time* t, struct Location* loc);
+        void stripMono(struct Time* t);
+        void setMono(struct Time* t, int64_t m);
+        int64_t mono(struct Time* t);
+        bool After(struct Time t, struct Time u);
+        bool Before(struct Time t, struct Time u);
+        int Compare(struct Time t, struct Time u);
+        bool Equal(struct Time t, struct Time u);
+        std::string String(time::Month m);
+        std::string String(time::Weekday d);
+        bool IsZero(struct Time t);
+        uint64_t abs(struct Time t);
+        std::tuple<std::string, int, uint64_t> locabs(struct Time t);
+        std::tuple<int, time::Month, int> Date(struct Time t);
+        int Year(struct Time t);
+        time::Month Month(struct Time t);
+        int Day(struct Time t);
+        time::Weekday Weekday(struct Time t);
+        std::tuple<int, int> ISOWeek(struct Time t);
+        std::tuple<int, int, int> Clock(struct Time t);
+        /* int Hour(struct Time t); [Ignored, known name conflict] */ 
+        /* int Minute(struct Time t); [Ignored, known name conflict] */ 
+        /* int Second(struct Time t); [Ignored, known name conflict] */ 
+        /* int Nanosecond(struct Time t); [Ignored, known name conflict] */ 
+        int YearDay(struct Time t);
+        std::string String(time::Duration d);
+        int format(time::Duration d, gocpp::array<unsigned char, 32>* buf);
+        int64_t Nanoseconds(time::Duration d);
+        int64_t Microseconds(time::Duration d);
+        int64_t Milliseconds(time::Duration d);
+        double Seconds(time::Duration d);
+        double Minutes(time::Duration d);
+        double Hours(time::Duration d);
+        time::Duration Truncate(time::Duration d, time::Duration m);
+        time::Duration Round(time::Duration d, time::Duration m);
+        time::Duration Abs(time::Duration d);
+        struct Time Add(struct Time t, time::Duration d);
+        time::Duration Sub(struct Time t, struct Time u);
+        struct Time AddDate(struct Time t, int years, int months, int days);
+        std::tuple<int, time::Month, int, int> date(struct Time t, bool full);
+        /* struct Time UTC(struct Time t); [Ignored, known name conflict] */ 
+        /* struct Time Local(struct Time t); [Ignored, known name conflict] */ 
+        struct Time In(struct Time t, struct Location* loc);
+        struct Location* Location(struct Time t);
+        std::tuple<std::string, int> Zone(struct Time t);
+        std::tuple<struct Time, struct Time> ZoneBounds(struct Time t);
+        int64_t Unix(struct Time t);
+        int64_t UnixMilli(struct Time t);
+        int64_t UnixMicro(struct Time t);
+        int64_t UnixNano(struct Time t);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct Time t);
+        struct gocpp::error UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(struct Time t);
+        struct gocpp::error GobDecode(struct Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(struct Time t);
+        struct gocpp::error UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(struct Time t);
+        struct gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data);
+        bool IsDST(struct Time t);
+        struct Time Truncate(struct Time t, time::Duration d);
+        struct Time Round(struct Time t, time::Duration d);
+    }
 }
 

@@ -17,6 +17,13 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace sync::rec;
+    }
+
     std::function<void ()> OnceFunc(std::function<void ()> f)
     {
         Once once = {};
@@ -46,7 +53,7 @@ namespace golang::sync
         };
         return [=]() mutable -> void
         {
-            Do(gocpp::recv(once), g);
+            rec::Do(gocpp::recv(once), g);
             if(! valid)
             {
                 gocpp::panic(p);
@@ -84,7 +91,7 @@ namespace golang::sync
         };
         return [=]() mutable -> T
         {
-            Do(gocpp::recv(once), g);
+            rec::Do(gocpp::recv(once), g);
             if(! valid)
             {
                 gocpp::panic(p);
@@ -124,7 +131,7 @@ namespace golang::sync
         };
         return [=]() mutable -> std::tuple<T1, T2>
         {
-            Do(gocpp::recv(once), g);
+            rec::Do(gocpp::recv(once), g);
             if(! valid)
             {
                 gocpp::panic(p);

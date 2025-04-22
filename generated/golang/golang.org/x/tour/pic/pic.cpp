@@ -38,6 +38,24 @@
 
 namespace golang::pic
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace base64::rec;
+        using namespace bufio::rec;
+        using namespace color::rec;
+        using namespace flate::rec;
+        using namespace hash::rec;
+        using namespace image::rec;
+        using namespace io::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+        using namespace zlib::rec;
+    }
+
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f)
     {
         auto dx = 256;
@@ -65,15 +83,15 @@ namespace golang::pic
         try
         {
             auto w = bufio::NewWriter(os::Stdout);
-            defer.push_back([=]{ Flush(gocpp::recv(w)); });
+            defer.push_back([=]{ rec::Flush(gocpp::recv(w)); });
             io::WriteString(w, "IMAGE:");
             auto b64 = base64::NewEncoder(base64::StdEncoding, w);
-            auto err = Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
+            auto err = rec::Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
             if(err != nullptr)
             {
                 gocpp::panic(err);
             }
-            Close(gocpp::recv(b64));
+            rec::Close(gocpp::recv(b64));
             io::WriteString(w, "\n");
         }
         catch(gocpp::GoPanic& gp)

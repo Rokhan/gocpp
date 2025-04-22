@@ -26,6 +26,18 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace bytealg::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace unsafe::rec;
+        using namespace utf16::rec;
+    }
+
     sync::RWMutex ForkLock;
     std::string EscapeArg(std::string s)
     {
@@ -187,12 +199,12 @@ namespace golang::syscall
         return {b, nullptr};
     }
 
-    void CloseOnExec(Handle fd)
+    void CloseOnExec(syscall::Handle fd)
     {
         SetHandleInformation(Handle(fd), HANDLE_FLAG_INHERIT, 0);
     }
 
-    struct gocpp::error SetNonblock(Handle fd, bool nonblocking)
+    struct gocpp::error SetNonblock(syscall::Handle fd, bool nonblocking)
     {
         struct gocpp::error err;
         return nullptr;
@@ -562,7 +574,7 @@ namespace golang::syscall
                 struct gocpp::error err;
                 parentProcess = sys->ParentProcess;
             }
-            auto fd = gocpp::make(gocpp::Tag<gocpp::slice<Handle>>(), len(attr->Files));
+            auto fd = gocpp::make(gocpp::Tag<gocpp::slice<syscall::Handle>>(), len(attr->Files));
             for(auto [i, gocpp_ignored] : attr->Files)
             {
                 int pid;

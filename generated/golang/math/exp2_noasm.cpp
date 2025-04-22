@@ -13,6 +13,11 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     double archExp2(double x)
     {
         gocpp::panic("not implemented");

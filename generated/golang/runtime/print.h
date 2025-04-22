@@ -36,5 +36,9 @@ namespace golang::runtime
     void printeface(struct eface e);
     void printiface(struct iface i);
     void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark);
+
+    namespace rec
+    {
+    }
 }
 

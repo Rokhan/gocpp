@@ -69,65 +69,77 @@
 
 namespace golang::runtime
 {
-    stdFunction _AddVectoredContinueHandler;
-    stdFunction _AddVectoredExceptionHandler;
-    stdFunction _CloseHandle;
-    stdFunction _CreateEventA;
-    stdFunction _CreateFileA;
-    stdFunction _CreateIoCompletionPort;
-    stdFunction _CreateThread;
-    stdFunction _CreateWaitableTimerA;
-    stdFunction _CreateWaitableTimerExW;
-    stdFunction _DuplicateHandle;
-    stdFunction _ExitProcess;
-    stdFunction _FreeEnvironmentStringsW;
-    stdFunction _GetConsoleMode;
-    stdFunction _GetCurrentThreadId;
-    stdFunction _GetEnvironmentStringsW;
-    stdFunction _GetErrorMode;
-    stdFunction _GetProcAddress;
-    stdFunction _GetProcessAffinityMask;
-    stdFunction _GetQueuedCompletionStatusEx;
-    stdFunction _GetStdHandle;
-    stdFunction _GetSystemDirectoryA;
-    stdFunction _GetSystemInfo;
-    stdFunction _GetThreadContext;
-    stdFunction _SetThreadContext;
-    stdFunction _LoadLibraryExW;
-    stdFunction _LoadLibraryW;
-    stdFunction _PostQueuedCompletionStatus;
-    stdFunction _QueryPerformanceCounter;
-    stdFunction _RaiseFailFastException;
-    stdFunction _ResumeThread;
-    stdFunction _RtlLookupFunctionEntry;
-    stdFunction _RtlVirtualUnwind;
-    stdFunction _SetConsoleCtrlHandler;
-    stdFunction _SetErrorMode;
-    stdFunction _SetEvent;
-    stdFunction _SetProcessPriorityBoost;
-    stdFunction _SetThreadPriority;
-    stdFunction _SetUnhandledExceptionFilter;
-    stdFunction _SetWaitableTimer;
-    stdFunction _SuspendThread;
-    stdFunction _SwitchToThread;
-    stdFunction _TlsAlloc;
-    stdFunction _VirtualAlloc;
-    stdFunction _VirtualFree;
-    stdFunction _VirtualQuery;
-    stdFunction _WaitForSingleObject;
-    stdFunction _WaitForMultipleObjects;
-    stdFunction _WerGetFlags;
-    stdFunction _WerSetFlags;
-    stdFunction _WriteConsoleW;
-    stdFunction _WriteFile;
-    stdFunction _;
-    stdFunction _ProcessPrng;
-    stdFunction _RtlGetCurrentPeb;
-    stdFunction _RtlGetNtVersionNumbers;
-    stdFunction _timeBeginPeriod;
-    stdFunction _timeEndPeriod;
-    stdFunction _WSAGetOverlappedResult;
-    stdFunction _;
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
+    runtime::stdFunction _AddVectoredContinueHandler;
+    runtime::stdFunction _AddVectoredExceptionHandler;
+    runtime::stdFunction _CloseHandle;
+    runtime::stdFunction _CreateEventA;
+    runtime::stdFunction _CreateFileA;
+    runtime::stdFunction _CreateIoCompletionPort;
+    runtime::stdFunction _CreateThread;
+    runtime::stdFunction _CreateWaitableTimerA;
+    runtime::stdFunction _CreateWaitableTimerExW;
+    runtime::stdFunction _DuplicateHandle;
+    runtime::stdFunction _ExitProcess;
+    runtime::stdFunction _FreeEnvironmentStringsW;
+    runtime::stdFunction _GetConsoleMode;
+    runtime::stdFunction _GetCurrentThreadId;
+    runtime::stdFunction _GetEnvironmentStringsW;
+    runtime::stdFunction _GetErrorMode;
+    runtime::stdFunction _GetProcAddress;
+    runtime::stdFunction _GetProcessAffinityMask;
+    runtime::stdFunction _GetQueuedCompletionStatusEx;
+    runtime::stdFunction _GetStdHandle;
+    runtime::stdFunction _GetSystemDirectoryA;
+    runtime::stdFunction _GetSystemInfo;
+    runtime::stdFunction _GetThreadContext;
+    runtime::stdFunction _SetThreadContext;
+    runtime::stdFunction _LoadLibraryExW;
+    runtime::stdFunction _LoadLibraryW;
+    runtime::stdFunction _PostQueuedCompletionStatus;
+    runtime::stdFunction _QueryPerformanceCounter;
+    runtime::stdFunction _RaiseFailFastException;
+    runtime::stdFunction _ResumeThread;
+    runtime::stdFunction _RtlLookupFunctionEntry;
+    runtime::stdFunction _RtlVirtualUnwind;
+    runtime::stdFunction _SetConsoleCtrlHandler;
+    runtime::stdFunction _SetErrorMode;
+    runtime::stdFunction _SetEvent;
+    runtime::stdFunction _SetProcessPriorityBoost;
+    runtime::stdFunction _SetThreadPriority;
+    runtime::stdFunction _SetUnhandledExceptionFilter;
+    runtime::stdFunction _SetWaitableTimer;
+    runtime::stdFunction _SuspendThread;
+    runtime::stdFunction _SwitchToThread;
+    runtime::stdFunction _TlsAlloc;
+    runtime::stdFunction _VirtualAlloc;
+    runtime::stdFunction _VirtualFree;
+    runtime::stdFunction _VirtualQuery;
+    runtime::stdFunction _WaitForSingleObject;
+    runtime::stdFunction _WaitForMultipleObjects;
+    runtime::stdFunction _WerGetFlags;
+    runtime::stdFunction _WerSetFlags;
+    runtime::stdFunction _WriteConsoleW;
+    runtime::stdFunction _WriteFile;
+    runtime::stdFunction _;
+    runtime::stdFunction _ProcessPrng;
+    runtime::stdFunction _RtlGetCurrentPeb;
+    runtime::stdFunction _RtlGetNtVersionNumbers;
+    runtime::stdFunction _timeBeginPeriod;
+    runtime::stdFunction _timeEndPeriod;
+    runtime::stdFunction _WSAGetOverlappedResult;
+    runtime::stdFunction _;
     gocpp::array_base<uint16_t> bcryptprimitivesdll = gocpp::array_base<uint16_t> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
     gocpp::array_base<uint16_t> ntdlldll = gocpp::array_base<uint16_t> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
     gocpp::array_base<uint16_t> powrprofdll = gocpp::array_base<uint16_t> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
@@ -231,7 +243,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     unsafe::Pointer asmstdcallAddr;
-    stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
+    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
     {
         if(name[len(name) - 1] != 0)
         {
@@ -898,14 +910,14 @@ namespace golang::runtime
     void asmstdcall_trampoline(unsafe::Pointer args)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args)
+    uintptr_t stdcall_no_g(runtime::stdFunction fn, int n, uintptr_t args)
     {
         auto libcall = gocpp::Init<libcall>([](libcall& x) { x.fn = uintptr_t(unsafe::Pointer(fn)); x.n = uintptr_t(n); x.args = args; });
         asmstdcall_trampoline(noescape(unsafe::Pointer(& libcall)));
         return libcall.r1;
     }
 
-    uintptr_t stdcall(stdFunction fn)
+    uintptr_t stdcall(runtime::stdFunction fn)
     {
         auto gp = getg();
         auto mp = gp->m;
@@ -913,7 +925,7 @@ namespace golang::runtime
         auto resetLibcall = false;
         if(mp->profilehz != 0 && mp->libcallsp == 0)
         {
-            set(gocpp::recv(mp->libcallg), gp);
+            rec::set(gocpp::recv(mp->libcallg), gp);
             mp->libcallpc = getcallerpc();
             mp->libcallsp = getcallersp();
             resetLibcall = true;
@@ -926,7 +938,7 @@ namespace golang::runtime
         return mp->libcall.r1;
     }
 
-    uintptr_t stdcall0(stdFunction fn)
+    uintptr_t stdcall0(runtime::stdFunction fn)
     {
         auto mp = getg()->m;
         mp->libcall.n = 0;
@@ -934,7 +946,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall1(stdFunction fn, uintptr_t a0)
+    uintptr_t stdcall1(runtime::stdFunction fn, uintptr_t a0)
     {
         auto mp = getg()->m;
         mp->libcall.n = 1;
@@ -942,7 +954,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall2(stdFunction fn, uintptr_t a0, uintptr_t a1)
+    uintptr_t stdcall2(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1)
     {
         auto mp = getg()->m;
         mp->libcall.n = 2;
@@ -950,7 +962,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall3(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
+    uintptr_t stdcall3(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
     {
         auto mp = getg()->m;
         mp->libcall.n = 3;
@@ -958,7 +970,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall4(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
+    uintptr_t stdcall4(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     {
         auto mp = getg()->m;
         mp->libcall.n = 4;
@@ -966,7 +978,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall5(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
+    uintptr_t stdcall5(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
     {
         auto mp = getg()->m;
         mp->libcall.n = 5;
@@ -974,7 +986,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall6(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
+    uintptr_t stdcall6(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
     {
         auto mp = getg()->m;
         mp->libcall.n = 6;
@@ -982,7 +994,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall7(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
+    uintptr_t stdcall7(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     {
         auto mp = getg()->m;
         mp->libcall.n = 7;
@@ -990,7 +1002,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall8(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
+    uintptr_t stdcall8(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
     {
         auto mp = getg()->m;
         mp->libcall.n = 8;
@@ -1090,8 +1102,8 @@ namespace golang::runtime
         c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
         stdcall2(_GetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
-        auto gp = gFromSP(mp, sp(gocpp::recv(c)));
-        sigprof(ip(gocpp::recv(c)), sp(gocpp::recv(c)), lr(gocpp::recv(c)), gp, mp);
+        auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
+        sigprof(rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c)), gp, mp);
     }
 
     struct g* gFromSP(struct m* mp, uintptr_t sp)
@@ -1196,7 +1208,7 @@ namespace golang::runtime
         }
         if(! atomic::Cas(& mp->preemptExtLock, 0, 1))
         {
-            Add(gocpp::recv(mp->preemptGen), 1);
+            rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
         lock(& mp->threadLock);
@@ -1204,7 +1216,7 @@ namespace golang::runtime
         {
             unlock(& mp->threadLock);
             atomic::Store(& mp->preemptExtLock, 0);
-            Add(gocpp::recv(mp->preemptGen), 1);
+            rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
         uintptr_t thread = {};
@@ -1224,15 +1236,15 @@ namespace golang::runtime
             unlock(& suspendLock);
             stdcall1(_CloseHandle, thread);
             atomic::Store(& mp->preemptExtLock, 0);
-            Add(gocpp::recv(mp->preemptGen), 1);
+            rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
         stdcall2(_GetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
         unlock(& suspendLock);
-        auto gp = gFromSP(mp, sp(gocpp::recv(c)));
+        auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
         if(gp != nullptr && wantAsyncPreempt(gp))
         {
-            if(auto [ok, newpc] = isAsyncSafePoint(gp, ip(gocpp::recv(c)), sp(gocpp::recv(c)), lr(gocpp::recv(c))); ok)
+            if(auto [ok, newpc] = isAsyncSafePoint(gp, rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c))); ok)
             {
                 auto targetPC = abi::FuncPCABI0(asyncPreempt);
                 //Go switch emulation
@@ -1250,26 +1262,26 @@ namespace golang::runtime
                             break;
                         case 0:
                         case 1:
-                            auto sp = sp(gocpp::recv(c));
+                            auto sp = rec::sp(gocpp::recv(c));
                             sp -= goarch::PtrSize;
                             *(uintptr_t*)(unsafe::Pointer(sp)) = newpc;
-                            set_sp(gocpp::recv(c), sp);
-                            set_ip(gocpp::recv(c), targetPC);
+                            rec::set_sp(gocpp::recv(c), sp);
+                            rec::set_ip(gocpp::recv(c), targetPC);
                             break;
                         case 2:
-                            auto sp = sp(gocpp::recv(c));
+                            auto sp = rec::sp(gocpp::recv(c));
                             sp -= goarch::PtrSize;
-                            set_sp(gocpp::recv(c), sp);
-                            *(uint32_t*)(unsafe::Pointer(sp)) = uint32_t(lr(gocpp::recv(c)));
-                            set_lr(gocpp::recv(c), newpc - 1);
-                            set_ip(gocpp::recv(c), targetPC);
+                            rec::set_sp(gocpp::recv(c), sp);
+                            *(uint32_t*)(unsafe::Pointer(sp)) = uint32_t(rec::lr(gocpp::recv(c)));
+                            rec::set_lr(gocpp::recv(c), newpc - 1);
+                            rec::set_ip(gocpp::recv(c), targetPC);
                             break;
                         case 3:
-                            auto sp = sp(gocpp::recv(c)) - 16;
-                            set_sp(gocpp::recv(c), sp);
-                            *(uint64_t*)(unsafe::Pointer(sp)) = uint64_t(lr(gocpp::recv(c)));
-                            set_lr(gocpp::recv(c), newpc);
-                            set_ip(gocpp::recv(c), targetPC);
+                            auto sp = rec::sp(gocpp::recv(c)) - 16;
+                            rec::set_sp(gocpp::recv(c), sp);
+                            *(uint64_t*)(unsafe::Pointer(sp)) = uint64_t(rec::lr(gocpp::recv(c)));
+                            rec::set_lr(gocpp::recv(c), newpc);
+                            rec::set_ip(gocpp::recv(c), targetPC);
                             break;
                     }
                 }
@@ -1277,7 +1289,7 @@ namespace golang::runtime
             }
         }
         atomic::Store(& mp->preemptExtLock, 0);
-        Add(gocpp::recv(mp->preemptGen), 1);
+        rec::Add(gocpp::recv(mp->preemptGen), 1);
         stdcall1(_ResumeThread, thread);
         stdcall1(_CloseHandle, thread);
     }

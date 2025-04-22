@@ -14,5 +14,9 @@ namespace golang::runtime
 {
     int64_t nanotime();
     int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
+
+    namespace rec
+    {
+    }
 }
 

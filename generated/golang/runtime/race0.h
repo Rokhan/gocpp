@@ -59,5 +59,9 @@ namespace golang::runtime
     uintptr_t racegostart(uintptr_t pc);
     void racegoend();
     void racectxend(uintptr_t racectx);
+
+    namespace rec
+    {
+    }
 }
 

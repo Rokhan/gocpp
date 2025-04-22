@@ -18,6 +18,13 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bytealg::rec;
+        using namespace syscall::rec;
+    }
+
     gocpp::slice<unsigned char> StringByteSlice(std::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
@@ -55,26 +62,26 @@ namespace golang::syscall
     }
 
     uintptr_t _zero;
-    std::tuple<int64_t, int64_t> Unix(struct Timespec* ts)
+    std::tuple<int64_t, int64_t> rec::Unix(struct Timespec* ts)
     {
         int64_t sec;
         int64_t nsec;
         return {int64_t(ts->Sec), int64_t(ts->Nsec)};
     }
 
-    std::tuple<int64_t, int64_t> Unix(struct Timeval* tv)
+    std::tuple<int64_t, int64_t> rec::Unix(struct Timeval* tv)
     {
         int64_t sec;
         int64_t nsec;
         return {int64_t(tv->Sec), int64_t(tv->Usec) * 1000};
     }
 
-    int64_t Nano(struct Timespec* ts)
+    int64_t rec::Nano(struct Timespec* ts)
     {
         return int64_t(ts->Sec) * 1e9 + int64_t(ts->Nsec);
     }
 
-    int64_t Nano(struct Timeval* tv)
+    int64_t rec::Nano(struct Timeval* tv)
     {
         return int64_t(tv->Sec) * 1e9 + int64_t(tv->Usec) * 1000;
     }

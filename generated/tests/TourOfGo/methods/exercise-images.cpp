@@ -18,6 +18,14 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace color::rec;
+        using namespace image::rec;
+        using namespace pic::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Image::operator T()
@@ -44,17 +52,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    struct color::Model ColorModel(Image)
+    struct color::Model rec::ColorModel(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    struct image::Rectangle Bounds(Image)
+    struct image::Rectangle rec::Bounds(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    struct color::Color At(Image, int x, int y)
+    struct color::Color rec::At(Image, int x, int y)
     {
         gocpp::panic("not implemented");
     }

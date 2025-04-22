@@ -33,8 +33,6 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NumError& value);
-    std::string Error(struct NumError* e);
-    struct gocpp::error Unwrap(struct NumError* e);
     std::string cloneString(std::string x);
     struct NumError* syntaxError(std::string fn, std::string str);
     struct NumError* rangeError(std::string fn, std::string str);
@@ -44,5 +42,11 @@ namespace golang::strconv
     std::tuple<int64_t, struct gocpp::error> ParseInt(std::string s, int base, int bitSize);
     std::tuple<int, struct gocpp::error> Atoi(std::string s);
     bool underscoreOK(std::string s);
+
+    namespace rec
+    {
+        std::string Error(struct NumError* e);
+        struct gocpp::error Unwrap(struct NumError* e);
+    }
 }
 

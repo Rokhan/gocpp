@@ -15,6 +15,11 @@
 
 namespace golang::slices
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void insertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         for(auto i = a + 1; i < b; i++)
@@ -270,7 +275,7 @@ namespace golang::slices
             auto modulus = nextPowerOfTwo(length);
             for(auto idx = a + (length / 4) * 2 - 1; idx <= a + (length / 4) * 2 + 1; idx++)
             {
-                auto other = int((unsigned int)(Next(gocpp::recv(random))) & (modulus - 1));
+                auto other = int((unsigned int)(rec::Next(gocpp::recv(random))) & (modulus - 1));
                 if(other >= length)
                 {
                     other -= length;
@@ -280,10 +285,10 @@ namespace golang::slices
         }
     }
 
-    std::tuple<int, sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
+    std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         int pivot;
-        sortedHint hint;
+        slices::sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
         auto l = b - a;
@@ -294,11 +299,11 @@ namespace golang::slices
         if(l >= 8)
         {
             int pivot;
-            sortedHint hint;
+            slices::sortedHint hint;
             if(l >= shortestNinther)
             {
                 int pivot;
-                sortedHint hint;
+                slices::sortedHint hint;
                 i = medianAdjacentCmpFunc(data, i, & swaps, cmp);
                 j = medianAdjacentCmpFunc(data, j, & swaps, cmp);
                 k = medianAdjacentCmpFunc(data, k, & swaps, cmp);
@@ -314,7 +319,7 @@ namespace golang::slices
             switch(conditionId)
             {
                 int pivot;
-                sortedHint hint;
+                slices::sortedHint hint;
                 case 0:
                     return {j, increasingHint};
                     break;

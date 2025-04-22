@@ -54,6 +54,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     int GOMAXPROCS(int n)
     {
         if(GOARCH == "wasm" && n > 1)
@@ -90,11 +101,11 @@ namespace golang::runtime
 
     int64_t totalMutexWaitTimeNanos()
     {
-        auto total = Load(gocpp::recv(sched.totalMutexWaitTime));
-        total += Load(gocpp::recv(sched.totalRuntimeLockWaitTime));
+        auto total = rec::Load(gocpp::recv(sched.totalMutexWaitTime));
+        total += rec::Load(gocpp::recv(sched.totalRuntimeLockWaitTime));
         for(auto mp = (m*)(atomic::Loadp(unsafe::Pointer(& allm))); mp != nullptr; mp = mp->alllink)
         {
-            total += Load(gocpp::recv(mp->mLockProfile.waitTime));
+            total += rec::Load(gocpp::recv(mp->mLockProfile.waitTime));
         }
         return total;
     }

@@ -15,6 +15,11 @@
 
 namespace golang::bytealg
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void init()
     {
         if(cpu::X86.HasAVX2)

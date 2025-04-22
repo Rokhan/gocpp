@@ -13,6 +13,11 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int countrunes(std::string s)
     {
         auto n = 0;

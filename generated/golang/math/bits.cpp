@@ -17,6 +17,12 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     double Inf(int sign)
     {
         uint64_t v = {};

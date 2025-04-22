@@ -64,11 +64,14 @@ namespace golang::rand
         std::shared_ptr<ISource> value;
     };
 
-    int64_t Int63(const gocpp::PtrRecv<Source, false>& self);
-    int64_t Int63(const gocpp::ObjRecv<Source>& self);
+    namespace rec
+    {
+        int64_t Int63(const gocpp::PtrRecv<Source, false>& self);
+        int64_t Int63(const gocpp::ObjRecv<Source>& self);
 
-    void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed);
-    void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed);
+        void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed);
+        void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value);
     struct Source64 : gocpp::Interface
@@ -113,8 +116,11 @@ namespace golang::rand
         std::shared_ptr<ISource64> value;
     };
 
-    uint64_t Uint64(const gocpp::PtrRecv<Source64, false>& self);
-    uint64_t Uint64(const gocpp::ObjRecv<Source64>& self);
+    namespace rec
+    {
+        uint64_t Uint64(const gocpp::PtrRecv<Source64, false>& self);
+        uint64_t Uint64(const gocpp::ObjRecv<Source64>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value);
     struct Source NewSource(int64_t seed);
@@ -139,21 +145,6 @@ namespace golang::rand
 
     std::ostream& operator<<(std::ostream& os, const struct Rand& value);
     struct Rand* New(struct Source src);
-    void Seed(struct Rand* r, int64_t seed);
-    int64_t Int63(struct Rand* r);
-    uint32_t Uint32(struct Rand* r);
-    uint64_t Uint64(struct Rand* r);
-    int32_t Int31(struct Rand* r);
-    int Int(struct Rand* r);
-    int64_t Int63n(struct Rand* r, int64_t n);
-    int32_t Int31n(struct Rand* r, int32_t n);
-    int32_t int31n(struct Rand* r, int32_t n);
-    int Intn(struct Rand* r, int n);
-    double Float64(struct Rand* r);
-    double Float32(struct Rand* r);
-    gocpp::slice<int> Perm(struct Rand* r, int n);
-    void Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, struct gocpp::error> Read(struct Rand* r, gocpp::slice<unsigned char> p);
     std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
     extern godebug::Setting* randautoseed;
     struct Rand* globalRand();
@@ -174,10 +165,6 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSource& value);
-    int64_t Int63(runtimeSource*);
-    void Seed(runtimeSource*, int64_t);
-    uint64_t Uint64(runtimeSource*);
-    std::tuple<int, struct gocpp::error> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
     void Seed(int64_t seed);
     int64_t Int63();
     uint32_t Uint32();
@@ -211,11 +198,34 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
-    int64_t Int63(struct lockedSource* r);
-    uint64_t Uint64(struct lockedSource* r);
-    void Seed(struct lockedSource* r, int64_t seed);
-    void seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos);
-    void seed(struct lockedSource* r, int64_t seed);
-    std::tuple<int, struct gocpp::error> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+
+    namespace rec
+    {
+        void Seed(struct Rand* r, int64_t seed);
+        int64_t Int63(struct Rand* r);
+        uint32_t Uint32(struct Rand* r);
+        uint64_t Uint64(struct Rand* r);
+        int32_t Int31(struct Rand* r);
+        int Int(struct Rand* r);
+        int64_t Int63n(struct Rand* r, int64_t n);
+        int32_t Int31n(struct Rand* r, int32_t n);
+        int32_t int31n(struct Rand* r, int32_t n);
+        int Intn(struct Rand* r, int n);
+        double Float64(struct Rand* r);
+        double Float32(struct Rand* r);
+        gocpp::slice<int> Perm(struct Rand* r, int n);
+        void Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap);
+        std::tuple<int, struct gocpp::error> Read(struct Rand* r, gocpp::slice<unsigned char> p);
+        int64_t Int63(runtimeSource*);
+        void Seed(runtimeSource*, int64_t);
+        uint64_t Uint64(runtimeSource*);
+        std::tuple<int, struct gocpp::error> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+        int64_t Int63(struct lockedSource* r);
+        uint64_t Uint64(struct lockedSource* r);
+        void Seed(struct lockedSource* r, int64_t seed);
+        void seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos);
+        void seed(struct lockedSource* r, int64_t seed);
+        std::tuple<int, struct gocpp::error> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+    }
 }
 

@@ -56,6 +56,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Frames::operator T()
@@ -148,7 +160,7 @@ namespace golang::runtime
         return f;
     }
 
-    std::tuple<struct Frame, bool> Next(struct Frames* ci)
+    std::tuple<struct Frame, bool> rec::Next(struct Frames* ci)
     {
         struct Frame frame;
         bool more;
@@ -165,7 +177,7 @@ namespace golang::runtime
             auto pc = ci->callers[0];
             ci->callers = ci->callers.make_slice(1);
             auto funcInfo = findfunc(pc);
-            if(! valid(gocpp::recv(funcInfo)))
+            if(! rec::valid(gocpp::recv(funcInfo)))
             {
                 struct Frame frame;
                 bool more;
@@ -177,8 +189,8 @@ namespace golang::runtime
                 }
                 continue;
             }
-            auto f = _Func(gocpp::recv(funcInfo));
-            auto entry = Entry(gocpp::recv(f));
+            auto f = rec::_Func(gocpp::recv(funcInfo));
+            auto entry = rec::Entry(gocpp::recv(f));
             if(pc > entry)
             {
                 struct Frame frame;
@@ -186,14 +198,14 @@ namespace golang::runtime
                 pc--;
             }
             auto [u, uf] = newInlineUnwinder(funcInfo, pc);
-            auto sf = srcFunc(gocpp::recv(u), uf);
-            if(isInlined(gocpp::recv(u), uf))
+            auto sf = rec::srcFunc(gocpp::recv(u), uf);
+            if(rec::isInlined(gocpp::recv(u), uf))
             {
                 struct Frame frame;
                 bool more;
                 f = nullptr;
             }
-            ci->frames = append(ci->frames, gocpp::Init<Frame>([](Frame& x) { x.PC = pc; x.Func = f; x.Function = funcNameForPrint(name(gocpp::recv(sf))); x.Entry = entry; x.startLine = int(sf.startLine); x.funcInfo = funcInfo; }));
+            ci->frames = append(ci->frames, gocpp::Init<Frame>([](Frame& x) { x.PC = pc; x.Func = f; x.Function = funcNameForPrint(rec::name(gocpp::recv(sf))); x.Entry = entry; x.startLine = int(sf.startLine); x.funcInfo = funcInfo; }));
         }
         //Go switch emulation
         {
@@ -225,7 +237,7 @@ namespace golang::runtime
             }
         }
         more = len(ci->frames) > 0;
-        if(valid(gocpp::recv(frame.funcInfo)))
+        if(rec::valid(gocpp::recv(frame.funcInfo)))
         {
             struct Frame frame;
             bool more;
@@ -242,13 +254,13 @@ namespace golang::runtime
 
     std::string runtime_FrameSymbolName(struct Frame* f)
     {
-        if(! valid(gocpp::recv(f->funcInfo)))
+        if(! rec::valid(gocpp::recv(f->funcInfo)))
         {
             return f->Function;
         }
         auto [u, uf] = newInlineUnwinder(f->funcInfo, f->PC);
-        auto sf = srcFunc(gocpp::recv(u), uf);
-        return name(gocpp::recv(sf));
+        auto sf = rec::srcFunc(gocpp::recv(u), uf);
+        return rec::name(gocpp::recv(sf));
     }
 
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk)
@@ -260,20 +272,20 @@ namespace golang::runtime
         auto pc = stk[len(stk) - 1];
         auto tracepc = pc - 1;
         auto f = findfunc(tracepc);
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return stk;
         }
         auto [u, uf] = newInlineUnwinder(f, tracepc);
-        if(! isInlined(gocpp::recv(u), uf))
+        if(! rec::isInlined(gocpp::recv(u), uf))
         {
             return stk;
         }
         auto calleeID = abi::FuncIDNormal;
         stk = stk.make_slice(0, len(stk) - 1);
-        for(; valid(gocpp::recv(uf)); uf = next(gocpp::recv(u), uf))
+        for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
         {
-            auto funcID = srcFunc(gocpp::recv(u), uf).funcID;
+            auto funcID = rec::srcFunc(gocpp::recv(u), uf).funcID;
             if(funcID == abi::FuncIDWrapper && elideWrapperCalling(calleeID))
             {
             }
@@ -338,17 +350,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct _func* raw(struct Func* f)
+    struct _func* rec::raw(struct Func* f)
     {
         return (_func*)(unsafe::Pointer(f));
     }
 
-    struct funcInfo funcInfo(struct Func* f)
+    struct funcInfo rec::funcInfo(struct Func* f)
     {
-        return funcInfo(gocpp::recv(raw(gocpp::recv(f))));
+        return rec::funcInfo(gocpp::recv(rec::raw(gocpp::recv(f))));
     }
 
-    struct funcInfo funcInfo(struct _func* f)
+    struct funcInfo rec::funcInfo(struct _func* f)
     {
         auto ptr = uintptr_t(unsafe::Pointer(f));
         moduledata* mod = {};
@@ -626,7 +638,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::slice<gocpp::map<typeOff, _type*>> pinnedTypemaps;
+    gocpp::slice<gocpp::map<abi::typeOff, _type*>> pinnedTypemaps;
     moduledata firstmoduledata;
     moduledata* lastmoduledatap;
     gocpp::slice<moduledata*>* modulesSlice;
@@ -656,7 +668,7 @@ namespace golang::runtime
                 md->gcdatamask = progToPointerMask((unsigned char*)(unsafe::Pointer(md->gcdata)), scanDataSize);
                 auto scanBSSSize = md->ebss - md->bss;
                 md->gcbssmask = progToPointerMask((unsigned char*)(unsafe::Pointer(md->gcbss)), scanBSSSize);
-                addGlobals(gocpp::recv(gcController), int64_t(scanDataSize + scanBSSSize));
+                rec::addGlobals(gocpp::recv(gcController), int64_t(scanDataSize + scanBSSSize));
             }
         }
         for(auto [i, md] : *modules)
@@ -810,8 +822,8 @@ namespace golang::runtime
                 go_throw("invalid runtime symbol table");
             }
         }
-        auto min = textAddr(gocpp::recv(datap), datap->ftab[0].entryoff);
-        auto max = textAddr(gocpp::recv(datap), datap->ftab[nftab].entryoff);
+        auto min = rec::textAddr(gocpp::recv(datap), datap->ftab[0].entryoff);
+        auto max = rec::textAddr(gocpp::recv(datap), datap->ftab[nftab].entryoff);
         if(datap->minpc != min || datap->maxpc != max)
         {
             println("minpc=", hex(datap->minpc), "min=", hex(min), "maxpc=", hex(datap->maxpc), "max=", hex(max));
@@ -827,7 +839,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t textAddr(struct moduledata* md, uint32_t off32)
+    uintptr_t rec::textAddr(struct moduledata* md, uint32_t off32)
     {
         auto off = uintptr_t(off32);
         auto res = md->text + off;
@@ -850,7 +862,7 @@ namespace golang::runtime
         return res;
     }
 
-    std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc)
+    std::tuple<uint32_t, bool> rec::textOff(struct moduledata* md, uintptr_t pc)
     {
         auto res = uint32_t(pc - md->text);
         if(len(md->textsectmap) > 1)
@@ -876,7 +888,7 @@ namespace golang::runtime
         return {res, true};
     }
 
-    std::string funcName(struct moduledata* md, int32_t nameOff)
+    std::string rec::funcName(struct moduledata* md, int32_t nameOff)
     {
         if(nameOff == 0)
         {
@@ -888,72 +900,72 @@ namespace golang::runtime
     struct Func* FuncForPC(uintptr_t pc)
     {
         auto f = findfunc(pc);
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return nullptr;
         }
         auto [u, uf] = newInlineUnwinder(f, pc);
-        if(! isInlined(gocpp::recv(u), uf))
+        if(! rec::isInlined(gocpp::recv(u), uf))
         {
-            return _Func(gocpp::recv(f));
+            return rec::_Func(gocpp::recv(f));
         }
-        auto sf = srcFunc(gocpp::recv(u), uf);
-        auto [file, line] = fileLine(gocpp::recv(u), uf);
-        auto fi = gocpp::InitPtr<funcinl>([](funcinl& x) { x.ones = ~ uint32_t(0); x.entry = entry(gocpp::recv(f)); x.name = name(gocpp::recv(sf)); x.file = file; x.line = int32_t(line); x.startLine = sf.startLine; });
+        auto sf = rec::srcFunc(gocpp::recv(u), uf);
+        auto [file, line] = rec::fileLine(gocpp::recv(u), uf);
+        auto fi = gocpp::InitPtr<funcinl>([](funcinl& x) { x.ones = ~ uint32_t(0); x.entry = rec::entry(gocpp::recv(f)); x.name = rec::name(gocpp::recv(sf)); x.file = file; x.line = int32_t(line); x.startLine = sf.startLine; });
         return (Func*)(unsafe::Pointer(fi));
     }
 
-    std::string Name(struct Func* f)
+    std::string rec::Name(struct Func* f)
     {
         if(f == nullptr)
         {
             return "";
         }
-        auto fn = raw(gocpp::recv(f));
-        if(isInlined(gocpp::recv(fn)))
+        auto fn = rec::raw(gocpp::recv(f));
+        if(rec::isInlined(gocpp::recv(fn)))
         {
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return funcNameForPrint(fi->name);
         }
-        return funcNameForPrint(funcname(funcInfo(gocpp::recv(f))));
+        return funcNameForPrint(funcname(rec::funcInfo(gocpp::recv(f))));
     }
 
-    uintptr_t Entry(struct Func* f)
+    uintptr_t rec::Entry(struct Func* f)
     {
-        auto fn = raw(gocpp::recv(f));
-        if(isInlined(gocpp::recv(fn)))
+        auto fn = rec::raw(gocpp::recv(f));
+        if(rec::isInlined(gocpp::recv(fn)))
         {
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return fi->entry;
         }
-        return entry(gocpp::recv(funcInfo(gocpp::recv(fn))));
+        return rec::entry(gocpp::recv(rec::funcInfo(gocpp::recv(fn))));
     }
 
-    std::tuple<std::string, int> FileLine(struct Func* f, uintptr_t pc)
+    std::tuple<std::string, int> rec::FileLine(struct Func* f, uintptr_t pc)
     {
         std::string file;
         int line;
-        auto fn = raw(gocpp::recv(f));
-        if(isInlined(gocpp::recv(fn)))
+        auto fn = rec::raw(gocpp::recv(f));
+        if(rec::isInlined(gocpp::recv(fn)))
         {
             std::string file;
             int line;
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return {fi->file, int(fi->line)};
         }
-        auto [file, line32] = funcline1(funcInfo(gocpp::recv(f)), pc, false);
+        auto [file, line32] = funcline1(rec::funcInfo(gocpp::recv(f)), pc, false);
         return {file, int(line32)};
     }
 
-    int32_t startLine(struct Func* f)
+    int32_t rec::startLine(struct Func* f)
     {
-        auto fn = raw(gocpp::recv(f));
-        if(isInlined(gocpp::recv(fn)))
+        auto fn = rec::raw(gocpp::recv(f));
+        if(rec::isInlined(gocpp::recv(fn)))
         {
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return fi->startLine;
         }
-        return funcInfo(gocpp::recv(fn)).startLine;
+        return rec::funcInfo(gocpp::recv(fn)).startLine;
     }
 
     struct moduledata* findmoduledatap(uintptr_t pc)
@@ -997,24 +1009,24 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool valid(struct funcInfo f)
+    bool rec::valid(struct funcInfo f)
     {
         return f._func != nullptr;
     }
 
-    struct Func* _Func(struct funcInfo f)
+    struct Func* rec::_Func(struct funcInfo f)
     {
         return (Func*)(unsafe::Pointer(f._func));
     }
 
-    bool isInlined(struct _func* f)
+    bool rec::isInlined(struct _func* f)
     {
         return f->entryOff == ~ uint32_t(0);
     }
 
-    uintptr_t entry(struct funcInfo f)
+    uintptr_t rec::entry(struct funcInfo f)
     {
-        return textAddr(gocpp::recv(f.datap), f.entryOff);
+        return rec::textAddr(gocpp::recv(f.datap), f.entryOff);
     }
 
     struct funcInfo findfunc(uintptr_t pc)
@@ -1025,7 +1037,7 @@ namespace golang::runtime
             return funcInfo {};
         }
         auto nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
-        auto [pcOff, ok] = textOff(gocpp::recv(datap), pc);
+        auto [pcOff, ok] = rec::textOff(gocpp::recv(datap), pc);
         if(! ok)
         {
             return funcInfo {};
@@ -1081,22 +1093,22 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct srcFunc srcFunc(struct funcInfo f)
+    struct srcFunc rec::srcFunc(struct funcInfo f)
     {
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return srcFunc {};
         }
         return srcFunc {f.datap, f.nameOff, f.startLine, f.funcID};
     }
 
-    std::string name(struct srcFunc s)
+    std::string rec::name(struct srcFunc s)
     {
         if(s.datap == nullptr)
         {
             return "";
         }
-        return funcName(gocpp::recv(s.datap), s.nameOff);
+        return rec::funcName(gocpp::recv(s.datap), s.nameOff);
     }
 
     
@@ -1218,24 +1230,24 @@ namespace golang::runtime
             cache->inUse--;
             releasem(mp);
         }
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
-            if(strict && Load(gocpp::recv(panicking)) == 0)
+            if(strict && rec::Load(gocpp::recv(panicking)) == 0)
             {
-                println("runtime: no module data for", hex(entry(gocpp::recv(f))));
+                println("runtime: no module data for", hex(rec::entry(gocpp::recv(f))));
                 go_throw("no module data");
             }
             return {- 1, 0};
         }
         auto datap = f.datap;
         auto p = datap->pctab.make_slice(off);
-        auto pc = entry(gocpp::recv(f));
+        auto pc = rec::entry(gocpp::recv(f));
         auto prevpc = pc;
         auto val = int32_t(- 1);
         for(; ; )
         {
             bool ok = {};
-            std::tie(p, ok) = step(p, & pc, & val, pc == entry(gocpp::recv(f)));
+            std::tie(p, ok) = step(p, & pc, & val, pc == rec::entry(gocpp::recv(f)));
             if(! ok)
             {
                 break;
@@ -1269,18 +1281,18 @@ namespace golang::runtime
             }
             prevpc = pc;
         }
-        if(Load(gocpp::recv(panicking)) != 0 || ! strict)
+        if(rec::Load(gocpp::recv(panicking)) != 0 || ! strict)
         {
             return {- 1, 0};
         }
         print("runtime: invalid pc-encoded table f=", funcname(f), " pc=", hex(pc), " targetpc=", hex(targetpc), " tab=", p, "\n");
         p = datap->pctab.make_slice(off);
-        pc = entry(gocpp::recv(f));
+        pc = rec::entry(gocpp::recv(f));
         val = - 1;
         for(; ; )
         {
             bool ok = {};
-            std::tie(p, ok) = step(p, & pc, & val, pc == entry(gocpp::recv(f)));
+            std::tie(p, ok) = step(p, & pc, & val, pc == rec::entry(gocpp::recv(f)));
             if(! ok)
             {
                 break;
@@ -1293,11 +1305,11 @@ namespace golang::runtime
 
     std::string funcname(struct funcInfo f)
     {
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return "";
         }
-        return funcName(gocpp::recv(f.datap), f.nameOff);
+        return rec::funcName(gocpp::recv(f.datap), f.nameOff);
     }
 
     std::string funcpkgpath(struct funcInfo f)
@@ -1324,7 +1336,7 @@ namespace golang::runtime
     std::string funcfile(struct funcInfo f, int32_t fileno)
     {
         auto datap = f.datap;
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return "?";
         }
@@ -1340,7 +1352,7 @@ namespace golang::runtime
         std::string file;
         int32_t line;
         auto datap = f.datap;
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             std::string file;
             int32_t line;
@@ -1370,7 +1382,7 @@ namespace golang::runtime
         auto [x, gocpp_id_5] = pcvalue(f, f.pcsp, targetpc, true);
         if(debugPcln && x & (goarch::PtrSize - 1) != 0)
         {
-            print("invalid spdelta ", funcname(f), " ", hex(entry(gocpp::recv(f))), " ", hex(targetpc), " ", hex(f.pcsp), " ", x, "\n");
+            print("invalid spdelta ", funcname(f), " ", hex(rec::entry(gocpp::recv(f))), " ", hex(targetpc), " ", hex(f.pcsp), " ", x, "\n");
             go_throw("bad spdelta");
         }
         return x;
@@ -1380,13 +1392,13 @@ namespace golang::runtime
     {
         auto datap = f.datap;
         auto p = datap->pctab.make_slice(f.pcsp);
-        auto pc = entry(gocpp::recv(f));
+        auto pc = rec::entry(gocpp::recv(f));
         auto val = int32_t(- 1);
         auto most = int32_t(0);
         for(; ; )
         {
             bool ok = {};
-            std::tie(p, ok) = step(p, & pc, & val, pc == entry(gocpp::recv(f)));
+            std::tie(p, ok) = step(p, & pc, & val, pc == rec::entry(gocpp::recv(f)));
             if(! ok)
             {
                 return most;

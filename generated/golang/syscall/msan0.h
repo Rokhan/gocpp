@@ -14,5 +14,9 @@ namespace golang::syscall
 {
     void msanRead(unsafe::Pointer addr, int len);
     void msanWrite(unsafe::Pointer addr, int len);
+
+    namespace rec
+    {
+    }
 }
 

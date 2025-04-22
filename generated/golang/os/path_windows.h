@@ -18,5 +18,9 @@ namespace golang::os
     std::string fromSlash(std::string path);
     std::string dirname(std::string path);
     std::string fixLongPath(std::string path);
+
+    namespace rec
+    {
+    }
 }
 

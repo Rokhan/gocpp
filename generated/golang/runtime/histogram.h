@@ -32,10 +32,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timeHistogram& value);
-    void record(struct timeHistogram* h, int64_t duration);
-    void write(struct timeHistogram* h, struct metricValue* out);
     double float64Inf();
     double float64NegInf();
     gocpp::slice<double> timeHistogramMetricsBuckets();
+
+    namespace rec
+    {
+        void record(struct timeHistogram* h, int64_t duration);
+        void write(struct timeHistogram* h, struct metricValue* out);
+    }
 }
 

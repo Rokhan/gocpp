@@ -18,9 +18,16 @@
 
 namespace golang::time
 {
-    gocpp::slice<unsigned char> appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos)
+    namespace rec
     {
-        auto [gocpp_id_1, offset, abs] = locabs(gocpp::recv(t));
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace time::rec;
+    }
+
+    gocpp::slice<unsigned char> rec::appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos)
+    {
+        auto [gocpp_id_1, offset, abs] = rec::locabs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_3] = absDate(abs, true);
         b = appendInt(b, year, 4);
         b = append(b, '-');
@@ -37,7 +44,7 @@ namespace golang::time
         if(nanos)
         {
             auto std = stdFracSecond(stdFracSecond9, 9, '.');
-            b = appendNano(b, Nanosecond(gocpp::recv(t)), std);
+            b = appendNano(b, rec::Nanosecond(gocpp::recv(t)), std);
         }
         if(offset == 0)
         {
@@ -59,10 +66,10 @@ namespace golang::time
         return b;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
     {
         auto n0 = len(b);
-        b = appendFormatRFC3339(gocpp::recv(t), b, true);
+        b = rec::appendFormatRFC3339(gocpp::recv(t), b, true);
         auto num2 = [=](gocpp::slice<unsigned char> b) mutable -> unsigned char
         {
             return 10 * (b[0] - '0') + (b[1] - '0');
@@ -159,14 +166,14 @@ namespace golang::time
             {
                 zoneOffset *= - 1;
             }
-            addSec(gocpp::recv(t), - int64_t(zoneOffset));
-            if(auto [gocpp_id_10, offset, gocpp_id_11, gocpp_id_12, gocpp_id_13] = lookup(gocpp::recv(local), unixSec(gocpp::recv(t))); offset == zoneOffset)
+            rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+            if(auto [gocpp_id_10, offset, gocpp_id_11, gocpp_id_12, gocpp_id_13] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
             {
-                setLoc(gocpp::recv(t), local);
+                rec::setLoc(gocpp::recv(t), local);
             }
             else
             {
-                setLoc(gocpp::recv(t), FixedZone("", zoneOffset));
+                rec::setLoc(gocpp::recv(t), FixedZone("", zoneOffset));
             }
         }
         return {t, true};

@@ -14,5 +14,9 @@ namespace golang::math
 {
     std::tuple<double, int> Frexp(double f);
     std::tuple<double, int> frexp(double f);
+
+    namespace rec
+    {
+    }
 }
 

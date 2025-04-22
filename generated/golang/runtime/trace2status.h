@@ -45,10 +45,7 @@
 
 namespace golang::runtime
 {
-    struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist);
-    struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW);
-    struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep);
-    traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr);
+    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, runtime::waitReason wr);
     struct traceSchedResourceState
     {
         gocpp::array<atomic::Uint32, 3> statusTraced;
@@ -66,10 +63,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceSchedResourceState& value);
-    bool acquireStatus(struct traceSchedResourceState* r, uintptr_t gen);
-    void readyNextGen(struct traceSchedResourceState* r, uintptr_t gen);
-    bool statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen);
-    void setStatusTraced(struct traceSchedResourceState* r, uintptr_t gen);
-    traceArg nextSeq(struct traceSchedResourceState* r, uintptr_t gen);
+
+    namespace rec
+    {
+        struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, runtime::traceGoStatus status, bool markAssist);
+        struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW);
+        struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, runtime::traceProcStatus status, bool inSweep);
+        bool acquireStatus(struct traceSchedResourceState* r, uintptr_t gen);
+        void readyNextGen(struct traceSchedResourceState* r, uintptr_t gen);
+        bool statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen);
+        void setStatusTraced(struct traceSchedResourceState* r, uintptr_t gen);
+        runtime::traceArg nextSeq(struct traceSchedResourceState* r, uintptr_t gen);
+    }
 }
 

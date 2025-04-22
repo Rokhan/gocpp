@@ -76,5 +76,9 @@ namespace golang::runtime
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off);
     int32_t reflect_addReflectOff(unsafe::Pointer ptr);
+
+    namespace rec
+    {
+    }
 }
 

@@ -21,8 +21,8 @@ namespace golang::windows
     const long LG_INCLUDE_INDIRECT = 0x1;
     const long MAX_PREFERRED_LENGTH = 0xFFFFFFFF;
     struct LocalGroupUserInfo0;
-    const TokenType TokenPrimary = 1;
-    const TokenType TokenImpersonation = 2;
+    const windows::TokenType TokenPrimary = 1;
+    const windows::TokenType TokenImpersonation = 2;
 }
 #include "golang/syscall/security_windows.fwd.h"
 

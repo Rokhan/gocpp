@@ -13,5 +13,9 @@
 namespace golang::cmplx
 {
     struct gocpp::complex128 Sqrt(struct gocpp::complex128 x);
+
+    namespace rec
+    {
+    }
 }
 

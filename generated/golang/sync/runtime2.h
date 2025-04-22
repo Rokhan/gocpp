@@ -32,5 +32,9 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
+
+    namespace rec
+    {
+    }
 }
 

@@ -69,6 +69,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Pinner::operator T()
@@ -95,12 +106,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void Pin(struct Pinner* p, go_any pointer)
+    void rec::Pin(struct Pinner* p, go_any pointer)
     {
         if(p->pinner == nullptr)
         {
             auto mp = acquirem();
-            if(auto pp = ptr(gocpp::recv(mp->p)); pp != nullptr)
+            if(auto pp = rec::ptr(gocpp::recv(mp->p)); pp != nullptr)
             {
                 p->pinner = pp->pinnerCache;
                 pp->pinnerCache = nullptr;
@@ -114,7 +125,7 @@ namespace golang::runtime
                 {
                     if(len(i->refs) != 0)
                     {
-                        unpin(gocpp::recv(i));
+                        rec::unpin(gocpp::recv(i));
                         pinnerLeakPanic();
                     }
                 });
@@ -127,11 +138,11 @@ namespace golang::runtime
         }
     }
 
-    void Unpin(struct Pinner* p)
+    void rec::Unpin(struct Pinner* p)
     {
-        unpin(gocpp::recv(p->pinner));
+        rec::unpin(gocpp::recv(p->pinner));
         auto mp = acquirem();
-        if(auto pp = ptr(gocpp::recv(mp->p)); pp != nullptr && pp->pinnerCache == nullptr)
+        if(auto pp = rec::ptr(gocpp::recv(mp->p)); pp != nullptr && pp->pinnerCache == nullptr)
         {
             pp->pinnerCache = p->pinner;
             p->pinner = nullptr;
@@ -171,7 +182,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void unpin(struct pinner* p)
+    void rec::unpin(struct pinner* p)
     {
         if(p == nullptr || p->refs == nullptr)
         {
@@ -195,7 +206,7 @@ namespace golang::runtime
         }
         if(auto kind = etyp->Kind_ & kindMask; kind != kindPtr && kind != kindUnsafePointer)
         {
-            gocpp::panic(errorString("runtime.Pinner: argument is not a pointer: " + string(gocpp::recv(toRType(etyp)))));
+            gocpp::panic(errorString("runtime.Pinner: argument is not a pointer: " + rec::string(gocpp::recv(toRType(etyp)))));
         }
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
@@ -211,15 +222,15 @@ namespace golang::runtime
         {
             return true;
         }
-        auto pinnerBits = getPinnerBits(gocpp::recv(span));
+        auto pinnerBits = rec::getPinnerBits(gocpp::recv(span));
         if(pinnerBits == nullptr)
         {
             return false;
         }
-        auto objIndex = objIndex(gocpp::recv(span), uintptr_t(ptr));
-        auto pinState = ofObject(gocpp::recv(pinnerBits), objIndex);
+        auto objIndex = rec::objIndex(gocpp::recv(span), uintptr_t(ptr));
+        auto pinState = rec::ofObject(gocpp::recv(pinnerBits), objIndex);
         KeepAlive(ptr);
-        return isPinned(gocpp::recv(pinState));
+        return rec::isPinned(gocpp::recv(pinState));
     }
 
     bool setPinned(unsafe::Pointer ptr, bool pin)
@@ -234,53 +245,53 @@ namespace golang::runtime
             return false;
         }
         auto mp = acquirem();
-        ensureSwept(gocpp::recv(span));
+        rec::ensureSwept(gocpp::recv(span));
         KeepAlive(ptr);
-        auto objIndex = objIndex(gocpp::recv(span), uintptr_t(ptr));
+        auto objIndex = rec::objIndex(gocpp::recv(span), uintptr_t(ptr));
         lock(& span->speciallock);
-        auto pinnerBits = getPinnerBits(gocpp::recv(span));
+        auto pinnerBits = rec::getPinnerBits(gocpp::recv(span));
         if(pinnerBits == nullptr)
         {
-            pinnerBits = newPinnerBits(gocpp::recv(span));
-            setPinnerBits(gocpp::recv(span), pinnerBits);
+            pinnerBits = rec::newPinnerBits(gocpp::recv(span));
+            rec::setPinnerBits(gocpp::recv(span), pinnerBits);
         }
-        auto pinState = ofObject(gocpp::recv(pinnerBits), objIndex);
+        auto pinState = rec::ofObject(gocpp::recv(pinnerBits), objIndex);
         if(pin)
         {
-            if(isPinned(gocpp::recv(pinState)))
+            if(rec::isPinned(gocpp::recv(pinState)))
             {
-                setMultiPinned(gocpp::recv(pinState), true);
+                rec::setMultiPinned(gocpp::recv(pinState), true);
                 systemstack([=]() mutable -> void
                 {
                     auto offset = objIndex * span->elemsize;
-                    incPinCounter(gocpp::recv(span), offset);
+                    rec::incPinCounter(gocpp::recv(span), offset);
                 });
             }
             else
             {
-                setPinned(gocpp::recv(pinState), true);
+                rec::setPinned(gocpp::recv(pinState), true);
             }
         }
         else
         {
-            if(isPinned(gocpp::recv(pinState)))
+            if(rec::isPinned(gocpp::recv(pinState)))
             {
-                if(isMultiPinned(gocpp::recv(pinState)))
+                if(rec::isMultiPinned(gocpp::recv(pinState)))
                 {
                     bool exists = {};
                     systemstack([=]() mutable -> void
                     {
                         auto offset = objIndex * span->elemsize;
-                        exists = decPinCounter(gocpp::recv(span), offset);
+                        exists = rec::decPinCounter(gocpp::recv(span), offset);
                     });
                     if(! exists)
                     {
-                        setMultiPinned(gocpp::recv(pinState), false);
+                        rec::setMultiPinned(gocpp::recv(pinState), false);
                     }
                 }
                 else
                 {
-                    setPinned(gocpp::recv(pinState), false);
+                    rec::setPinned(gocpp::recv(pinState), false);
                 }
             }
             else
@@ -328,27 +339,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool isPinned(struct pinState* v)
+    bool rec::isPinned(struct pinState* v)
     {
         return (v->byteVal & v->mask) != 0;
     }
 
-    bool isMultiPinned(struct pinState* v)
+    bool rec::isMultiPinned(struct pinState* v)
     {
         return (v->byteVal & (v->mask << 1)) != 0;
     }
 
-    void setPinned(struct pinState* v, bool val)
+    void rec::setPinned(struct pinState* v, bool val)
     {
-        set(gocpp::recv(v), val, false);
+        rec::set(gocpp::recv(v), val, false);
     }
 
-    void setMultiPinned(struct pinState* v, bool val)
+    void rec::setMultiPinned(struct pinState* v, bool val)
     {
-        set(gocpp::recv(v), val, true);
+        rec::set(gocpp::recv(v), val, true);
     }
 
-    void set(struct pinState* v, bool val, bool multipin)
+    void rec::set(struct pinState* v, bool val, bool multipin)
     {
         auto mask = v->mask;
         if(multipin)
@@ -365,42 +376,42 @@ namespace golang::runtime
         }
     }
 
-    struct pinState ofObject(struct pinnerBits* p, uintptr_t n)
+    struct pinState rec::ofObject(struct pinnerBits* p, uintptr_t n)
     {
-        auto [bytep, mask] = bitp(gocpp::recv((gcBits*)(p)), n * 2);
+        auto [bytep, mask] = rec::bitp(gocpp::recv((gcBits*)(p)), n * 2);
         auto byteVal = atomic::Load8(bytep);
         return pinState {bytep, byteVal, mask};
     }
 
-    uintptr_t pinnerBitSize(struct mspan* s)
+    uintptr_t rec::pinnerBitSize(struct mspan* s)
     {
         return divRoundUp(uintptr_t(s->nelems) * 2, 8);
     }
 
-    struct pinnerBits* newPinnerBits(struct mspan* s)
+    struct pinnerBits* rec::newPinnerBits(struct mspan* s)
     {
         return (pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
 
-    struct pinnerBits* getPinnerBits(struct mspan* s)
+    struct pinnerBits* rec::getPinnerBits(struct mspan* s)
     {
         return (pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
     }
 
-    void setPinnerBits(struct mspan* s, struct pinnerBits* p)
+    void rec::setPinnerBits(struct mspan* s, struct pinnerBits* p)
     {
         atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
     }
 
-    void refreshPinnerBits(struct mspan* s)
+    void rec::refreshPinnerBits(struct mspan* s)
     {
-        auto p = getPinnerBits(gocpp::recv(s));
+        auto p = rec::getPinnerBits(gocpp::recv(s));
         if(p == nullptr)
         {
             return;
         }
         auto hasPins = false;
-        auto bytes = alignUp(pinnerBitSize(gocpp::recv(s)), 8);
+        auto bytes = alignUp(rec::pinnerBitSize(gocpp::recv(s)), 8);
         for(auto [gocpp_ignored, x] : unsafe::Slice((uint64_t*)(unsafe::Pointer(& p->x)), bytes / 8))
         {
             if(x != 0)
@@ -411,24 +422,24 @@ namespace golang::runtime
         }
         if(hasPins)
         {
-            auto newPinnerBits = newPinnerBits(gocpp::recv(s));
+            auto newPinnerBits = rec::newPinnerBits(gocpp::recv(s));
             memmove(unsafe::Pointer(& newPinnerBits->x), unsafe::Pointer(& p->x), bytes);
-            setPinnerBits(gocpp::recv(s), newPinnerBits);
+            rec::setPinnerBits(gocpp::recv(s), newPinnerBits);
         }
         else
         {
-            setPinnerBits(gocpp::recv(s), nullptr);
+            rec::setPinnerBits(gocpp::recv(s), nullptr);
         }
     }
 
-    void incPinCounter(struct mspan* span, uintptr_t offset)
+    void rec::incPinCounter(struct mspan* span, uintptr_t offset)
     {
         specialPinCounter* rec = {};
-        auto [ref, exists] = specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
+        auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
             lock(& mheap_.speciallock);
-            rec = (specialPinCounter*)(alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
+            rec = (specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
             unlock(& mheap_.speciallock);
             rec->special.offset = uint16_t(offset);
             rec->special.kind = _KindSpecialPinCounter;
@@ -443,9 +454,9 @@ namespace golang::runtime
         rec->counter++;
     }
 
-    bool decPinCounter(struct mspan* span, uintptr_t offset)
+    bool rec::decPinCounter(struct mspan* span, uintptr_t offset)
     {
-        auto [ref, exists] = specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
+        auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
             go_throw("runtime.Pinner: decreased non-existing pin counter");
@@ -460,7 +471,7 @@ namespace golang::runtime
                 spanHasNoSpecials(span);
             }
             lock(& mheap_.speciallock);
-            free(gocpp::recv(mheap_.specialPinCounterAlloc), unsafe::Pointer(counter));
+            rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), unsafe::Pointer(counter));
             unlock(& mheap_.speciallock);
             return false;
         }
@@ -471,7 +482,7 @@ namespace golang::runtime
     {
         auto [gocpp_id_1, span, objIndex] = findObject(uintptr_t(addr), 0, 0);
         auto offset = objIndex * span->elemsize;
-        auto [t, exists] = specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
+        auto [t, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
             return nullptr;

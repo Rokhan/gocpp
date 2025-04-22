@@ -41,6 +41,22 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace errors::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace unsafe::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     file::operator T()
@@ -79,7 +95,7 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    uintptr_t Fd(struct File* file)
+    uintptr_t rec::Fd(struct File* file)
     {
         if(file == nullptr)
         {
@@ -104,7 +120,7 @@ namespace golang::os
         }
         auto f = new File {gocpp::InitPtr<file>([](file& x) { x.pfd = gocpp::Init<poll::FD>([](poll::FD& x) { x.Sysfd = h; x.IsStream = true; x.ZeroReadIsEOF = true; }); x.name = name; })};
         runtime::SetFinalizer(f->file, (*file)->close);
-        Init(gocpp::recv(f->pfd), kind, false);
+        rec::Init(gocpp::recv(f->pfd), kind, false);
         return f;
     }
 
@@ -128,7 +144,7 @@ namespace golang::os
     }
 
     std::string DevNull = "NUL";
-    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, FileMode perm)
+    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, fs::FileMode perm)
     {
         if(name == "")
         {
@@ -162,7 +178,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    struct gocpp::error close(struct file* file)
+    struct gocpp::error rec::close(struct file* file)
     {
         if(file == nullptr)
         {
@@ -170,11 +186,11 @@ namespace golang::os
         }
         if(file->dirinfo != nullptr)
         {
-            close(gocpp::recv(file->dirinfo));
+            rec::close(gocpp::recv(file->dirinfo));
             file->dirinfo = nullptr;
         }
         gocpp::error err = {};
-        if(auto e = Close(gocpp::recv(file->pfd)); e != nullptr)
+        if(auto e = rec::Close(gocpp::recv(file->pfd)); e != nullptr)
         {
             if(e == poll::ErrFileClosing)
             {
@@ -186,7 +202,7 @@ namespace golang::os
         return err;
     }
 
-    std::tuple<int64_t, struct gocpp::error> seek(struct File* f, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::seek(struct File* f, int64_t offset, int whence)
     {
         int64_t ret;
         struct gocpp::error err;
@@ -194,10 +210,10 @@ namespace golang::os
         {
             int64_t ret;
             struct gocpp::error err;
-            close(gocpp::recv(f->dirinfo));
+            rec::close(gocpp::recv(f->dirinfo));
             f->dirinfo = nullptr;
         }
-        std::tie(ret, err) = Seek(gocpp::recv(f->pfd), offset, whence);
+        std::tie(ret, err) = rec::Seek(gocpp::recv(f->pfd), offset, whence);
         runtime::KeepAlive(f);
         return {ret, err};
     }
@@ -212,8 +228,8 @@ namespace golang::os
             {
                 return e;
             }
-            defer.push_back([=]{ Close(gocpp::recv(f)); });
-            auto e1 = Truncate(gocpp::recv(f), size);
+            defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
+            auto e1 = rec::Truncate(gocpp::recv(f), size);
             if(e1 != nullptr)
             {
                 return e1;
@@ -303,7 +319,7 @@ namespace golang::os
     bool useGetTempPath2;
     std::string tempDir()
     {
-        Do(gocpp::recv(useGetTempPath2Once), [=]() mutable -> void
+        rec::Do(gocpp::recv(useGetTempPath2Once), [=]() mutable -> void
         {
             useGetTempPath2 = (windows::ErrorLoadingGetTempPath2() == nullptr);
         });
@@ -373,7 +389,7 @@ namespace golang::os
             }
         }
         auto [fi, err] = Stat(destpath);
-        auto isdir = err == nullptr && IsDir(gocpp::recv(fi));
+        auto isdir = err == nullptr && rec::IsDir(gocpp::recv(fi));
         uint16_t* n;
         std::tie(n, err) = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
@@ -514,7 +530,7 @@ namespace golang::os
                 {
                     case 0:
                         auto rb = (windows::SymbolicLinkReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME));
-                        auto s = Path(gocpp::recv(rb));
+                        auto s = rec::Path(gocpp::recv(rb));
                         if(rb->Flags & windows::SYMLINK_FLAG_RELATIVE != 0)
                         {
                             return {s, nullptr};
@@ -522,7 +538,7 @@ namespace golang::os
                         return normaliseLinkPath(s);
                         break;
                     case 1:
-                        return normaliseLinkPath(Path(gocpp::recv((windows::MountPointReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME)))));
+                        return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME)))));
                         break;
                     default:
                         return {"", syscall::ENOENT};

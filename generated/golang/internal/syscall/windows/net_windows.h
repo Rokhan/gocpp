@@ -35,5 +35,9 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct TCP_INITIAL_RTO_PARAMETERS& value);
     extern std::function<bool (void)> Support_TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS;
     void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber);
+
+    namespace rec
+    {
+    }
 }
 

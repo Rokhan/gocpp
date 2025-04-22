@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Person::operator T()
@@ -47,7 +53,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::string String(struct Person p)
+    std::string rec::String(struct Person p)
     {
         return mocklib::Sprintf("%v (%v years)", p.Name, p.Age);
     }

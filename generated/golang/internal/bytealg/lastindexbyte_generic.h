@@ -13,5 +13,9 @@ namespace golang::bytealg
 {
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c);
     int LastIndexByteString(std::string s, unsigned char c);
+
+    namespace rec
+    {
+    }
 }
 

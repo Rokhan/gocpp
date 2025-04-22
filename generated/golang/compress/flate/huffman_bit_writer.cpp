@@ -19,6 +19,13 @@
 
 namespace golang::flate
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace flate::rec;
+        using namespace io::rec;
+    }
+
     gocpp::slice<int8_t> lengthExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
     gocpp::slice<uint32_t> lengthBase = gocpp::slice<uint32_t> {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 255};
     gocpp::slice<int8_t> offsetExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
@@ -94,13 +101,13 @@ namespace golang::flate
         return gocpp::InitPtr<huffmanBitWriter>([](huffmanBitWriter& x) { x.writer = w; x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit); x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount); x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1); x.literalEncoding = newHuffmanEncoder(maxNumLit); x.codegenEncoding = newHuffmanEncoder(codegenCodeCount); x.offsetEncoding = newHuffmanEncoder(offsetCodeCount); });
     }
 
-    void reset(struct huffmanBitWriter* w, struct io::Writer writer)
+    void rec::reset(struct huffmanBitWriter* w, struct io::Writer writer)
     {
         w->writer = writer;
         std::tie(w->bits, w->nbits, w->nbytes, w->err) = std::tuple{0, 0, 0, nullptr};
     }
 
-    void flush(struct huffmanBitWriter* w)
+    void rec::flush(struct huffmanBitWriter* w)
     {
         if(w->err != nullptr)
         {
@@ -123,20 +130,20 @@ namespace golang::flate
             n++;
         }
         w->bits = 0;
-        write(gocpp::recv(w), w->bytes.make_slice(0, n));
+        rec::write(gocpp::recv(w), w->bytes.make_slice(0, n));
         w->nbytes = 0;
     }
 
-    void write(struct huffmanBitWriter* w, gocpp::slice<unsigned char> b)
+    void rec::write(struct huffmanBitWriter* w, gocpp::slice<unsigned char> b)
     {
         if(w->err != nullptr)
         {
             return;
         }
-        std::tie(gocpp_id_0, w->err) = Write(gocpp::recv(w->writer), b);
+        std::tie(gocpp_id_0, w->err) = rec::Write(gocpp::recv(w->writer), b);
     }
 
-    void writeBits(struct huffmanBitWriter* w, int32_t b, unsigned int nb)
+    void rec::writeBits(struct huffmanBitWriter* w, int32_t b, unsigned int nb)
     {
         if(w->err != nullptr)
         {
@@ -160,14 +167,14 @@ namespace golang::flate
             n += 6;
             if(n >= bufferFlushSize)
             {
-                write(gocpp::recv(w), w->bytes.make_slice(0, n));
+                rec::write(gocpp::recv(w), w->bytes.make_slice(0, n));
                 n = 0;
             }
             w->nbytes = n;
         }
     }
 
-    void writeBytes(struct huffmanBitWriter* w, gocpp::slice<unsigned char> bytes)
+    void rec::writeBytes(struct huffmanBitWriter* w, gocpp::slice<unsigned char> bytes)
     {
         if(w->err != nullptr)
         {
@@ -188,13 +195,13 @@ namespace golang::flate
         }
         if(n != 0)
         {
-            write(gocpp::recv(w), w->bytes.make_slice(0, n));
+            rec::write(gocpp::recv(w), w->bytes.make_slice(0, n));
         }
         w->nbytes = 0;
-        write(gocpp::recv(w), bytes);
+        rec::write(gocpp::recv(w), bytes);
     }
 
-    void generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc)
+    void rec::generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc)
     {
         for(auto [i, gocpp_ignored] : w->codegenFreq)
         {
@@ -283,7 +290,7 @@ namespace golang::flate
         codegen[outIndex] = badCode;
     }
 
-    std::tuple<int, int> dynamicSize(struct huffmanBitWriter* w, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc, int extraBits)
+    std::tuple<int, int> rec::dynamicSize(struct huffmanBitWriter* w, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc, int extraBits)
     {
         int size;
         int numCodegens;
@@ -294,17 +301,17 @@ namespace golang::flate
             int numCodegens;
             numCodegens--;
         }
-        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, )) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
-        size = header + bitLength(gocpp::recv(litEnc), w->literalFreq) + bitLength(gocpp::recv(offEnc), w->offsetFreq) + extraBits;
+        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, )) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
+        size = header + rec::bitLength(gocpp::recv(litEnc), w->literalFreq) + rec::bitLength(gocpp::recv(offEnc), w->offsetFreq) + extraBits;
         return {size, numCodegens};
     }
 
-    int fixedSize(struct huffmanBitWriter* w, int extraBits)
+    int rec::fixedSize(struct huffmanBitWriter* w, int extraBits)
     {
-        return 3 + bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) + bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) + extraBits;
+        return 3 + rec::bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) + rec::bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) + extraBits;
     }
 
-    std::tuple<int, bool> storedSize(struct huffmanBitWriter* w, gocpp::slice<unsigned char> in)
+    std::tuple<int, bool> rec::storedSize(struct huffmanBitWriter* w, gocpp::slice<unsigned char> in)
     {
         if(in == nullptr)
         {
@@ -317,7 +324,7 @@ namespace golang::flate
         return {0, false};
     }
 
-    void writeCode(struct huffmanBitWriter* w, struct hcode c)
+    void rec::writeCode(struct huffmanBitWriter* w, struct hcode c)
     {
         if(w->err != nullptr)
         {
@@ -341,14 +348,14 @@ namespace golang::flate
             n += 6;
             if(n >= bufferFlushSize)
             {
-                write(gocpp::recv(w), w->bytes.make_slice(0, n));
+                rec::write(gocpp::recv(w), w->bytes.make_slice(0, n));
                 n = 0;
             }
             w->nbytes = n;
         }
     }
 
-    void writeDynamicHeader(struct huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
+    void rec::writeDynamicHeader(struct huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -359,14 +366,14 @@ namespace golang::flate
         {
             firstBits = 5;
         }
-        writeBits(gocpp::recv(w), firstBits, 3);
-        writeBits(gocpp::recv(w), int32_t(numLiterals - 257), 5);
-        writeBits(gocpp::recv(w), int32_t(numOffsets - 1), 5);
-        writeBits(gocpp::recv(w), int32_t(numCodegens - 4), 4);
+        rec::writeBits(gocpp::recv(w), firstBits, 3);
+        rec::writeBits(gocpp::recv(w), int32_t(numLiterals - 257), 5);
+        rec::writeBits(gocpp::recv(w), int32_t(numOffsets - 1), 5);
+        rec::writeBits(gocpp::recv(w), int32_t(numCodegens - 4), 4);
         for(auto i = 0; i < numCodegens; i++)
         {
             auto value = (unsigned int)(w->codegenEncoding->codes[codegenOrder[i]].len);
-            writeBits(gocpp::recv(w), int32_t(value), 3);
+            rec::writeBits(gocpp::recv(w), int32_t(value), 3);
         }
         auto i = 0;
         for(; ; )
@@ -377,7 +384,7 @@ namespace golang::flate
             {
                 break;
             }
-            writeCode(gocpp::recv(w), w->codegenEncoding->codes[uint32_t(codeWord)]);
+            rec::writeCode(gocpp::recv(w), w->codegenEncoding->codes[uint32_t(codeWord)]);
             //Go switch emulation
             {
                 auto condition = codeWord;
@@ -388,15 +395,15 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     case 0:
-                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 2);
+                        rec::writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 2);
                         i++;
                         break;
                     case 1:
-                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 3);
+                        rec::writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 3);
                         i++;
                         break;
                     case 2:
-                        writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 7);
+                        rec::writeBits(gocpp::recv(w), int32_t(w->codegen[i]), 7);
                         i++;
                         break;
                 }
@@ -404,7 +411,7 @@ namespace golang::flate
         }
     }
 
-    void writeStoredHeader(struct huffmanBitWriter* w, int length, bool isEof)
+    void rec::writeStoredHeader(struct huffmanBitWriter* w, int length, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -415,13 +422,13 @@ namespace golang::flate
         {
             flag = 1;
         }
-        writeBits(gocpp::recv(w), flag, 3);
-        flush(gocpp::recv(w));
-        writeBits(gocpp::recv(w), int32_t(length), 16);
-        writeBits(gocpp::recv(w), int32_t(~ uint16_t(length)), 16);
+        rec::writeBits(gocpp::recv(w), flag, 3);
+        rec::flush(gocpp::recv(w));
+        rec::writeBits(gocpp::recv(w), int32_t(length), 16);
+        rec::writeBits(gocpp::recv(w), int32_t(~ uint16_t(length)), 16);
     }
 
-    void writeFixedHeader(struct huffmanBitWriter* w, bool isEof)
+    void rec::writeFixedHeader(struct huffmanBitWriter* w, bool isEof)
     {
         if(w->err != nullptr)
         {
@@ -432,19 +439,19 @@ namespace golang::flate
         {
             value = 3;
         }
-        writeBits(gocpp::recv(w), value, 3);
+        rec::writeBits(gocpp::recv(w), value, 3);
     }
 
-    void writeBlock(struct huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlock(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
             return;
         }
         tokens = append(tokens, endBlockMarker);
-        auto [numLiterals, numOffsets] = indexTokens(gocpp::recv(w), tokens);
+        auto [numLiterals, numOffsets] = rec::indexTokens(gocpp::recv(w), tokens);
         int extraBits = {};
-        auto [storedSize, storable] = storedSize(gocpp::recv(w), input);
+        auto [storedSize, storable] = rec::storedSize(gocpp::recv(w), input);
         if(storable)
         {
             for(auto lengthCode = lengthCodesStart + 8; lengthCode < numLiterals; lengthCode++)
@@ -458,11 +465,11 @@ namespace golang::flate
         }
         auto literalEncoding = fixedLiteralEncoding;
         auto offsetEncoding = fixedOffsetEncoding;
-        auto size = fixedSize(gocpp::recv(w), extraBits);
+        auto size = rec::fixedSize(gocpp::recv(w), extraBits);
         int numCodegens = {};
-        generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
-        generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
-        auto [dynamicSize, numCodegens] = dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
+        rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        auto [dynamicSize, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
         if(dynamicSize < size)
         {
             size = dynamicSize;
@@ -471,43 +478,43 @@ namespace golang::flate
         }
         if(storable && storedSize < size)
         {
-            writeStoredHeader(gocpp::recv(w), len(input), eof);
-            writeBytes(gocpp::recv(w), input);
+            rec::writeStoredHeader(gocpp::recv(w), len(input), eof);
+            rec::writeBytes(gocpp::recv(w), input);
             return;
         }
         if(literalEncoding == fixedLiteralEncoding)
         {
-            writeFixedHeader(gocpp::recv(w), eof);
+            rec::writeFixedHeader(gocpp::recv(w), eof);
         }
         else
         {
-            writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
+            rec::writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
         }
-        writeTokens(gocpp::recv(w), tokens, literalEncoding->codes, offsetEncoding->codes);
+        rec::writeTokens(gocpp::recv(w), tokens, literalEncoding->codes, offsetEncoding->codes);
     }
 
-    void writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
             return;
         }
         tokens = append(tokens, endBlockMarker);
-        auto [numLiterals, numOffsets] = indexTokens(gocpp::recv(w), tokens);
-        generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
-        generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
-        auto [size, numCodegens] = dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, 0);
-        if(auto [ssize, storable] = storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
+        auto [numLiterals, numOffsets] = rec::indexTokens(gocpp::recv(w), tokens);
+        rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        auto [size, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, 0);
+        if(auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
         {
-            writeStoredHeader(gocpp::recv(w), len(input), eof);
-            writeBytes(gocpp::recv(w), input);
+            rec::writeStoredHeader(gocpp::recv(w), len(input), eof);
+            rec::writeBytes(gocpp::recv(w), input);
             return;
         }
-        writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
-        writeTokens(gocpp::recv(w), tokens, w->literalEncoding->codes, w->offsetEncoding->codes);
+        rec::writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
+        rec::writeTokens(gocpp::recv(w), tokens, w->literalEncoding->codes, w->offsetEncoding->codes);
     }
 
-    std::tuple<int, int> indexTokens(struct huffmanBitWriter* w, gocpp::slice<token> tokens)
+    std::tuple<int, int> rec::indexTokens(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens)
     {
         int numLiterals;
         int numOffsets;
@@ -531,11 +538,11 @@ namespace golang::flate
             {
                 int numLiterals;
                 int numOffsets;
-                w->literalFreq[literal(gocpp::recv(t))]++;
+                w->literalFreq[rec::literal(gocpp::recv(t))]++;
                 continue;
             }
-            auto length = length(gocpp::recv(t));
-            auto offset = offset(gocpp::recv(t));
+            auto length = rec::length(gocpp::recv(t));
+            auto offset = rec::offset(gocpp::recv(t));
             w->literalFreq[lengthCodesStart + lengthCode(length)]++;
             w->offsetFreq[offsetCode(offset)]++;
         }
@@ -560,12 +567,12 @@ namespace golang::flate
             w->offsetFreq[0] = 1;
             numOffsets = 1;
         }
-        generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
-        generate(gocpp::recv(w->offsetEncoding), w->offsetFreq, 15);
+        rec::generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
+        rec::generate(gocpp::recv(w->offsetEncoding), w->offsetFreq, 15);
         return {numLiterals, numOffsets};
     }
 
-    void writeTokens(struct huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
+    void rec::writeTokens(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
     {
         if(w->err != nullptr)
         {
@@ -575,26 +582,26 @@ namespace golang::flate
         {
             if(t < matchType)
             {
-                writeCode(gocpp::recv(w), leCodes[literal(gocpp::recv(t))]);
+                rec::writeCode(gocpp::recv(w), leCodes[rec::literal(gocpp::recv(t))]);
                 continue;
             }
-            auto length = length(gocpp::recv(t));
+            auto length = rec::length(gocpp::recv(t));
             auto lengthCode = lengthCode(length);
-            writeCode(gocpp::recv(w), leCodes[lengthCode + lengthCodesStart]);
+            rec::writeCode(gocpp::recv(w), leCodes[lengthCode + lengthCodesStart]);
             auto extraLengthBits = (unsigned int)(lengthExtraBits[lengthCode]);
             if(extraLengthBits > 0)
             {
                 auto extraLength = int32_t(length - lengthBase[lengthCode]);
-                writeBits(gocpp::recv(w), extraLength, extraLengthBits);
+                rec::writeBits(gocpp::recv(w), extraLength, extraLengthBits);
             }
-            auto offset = offset(gocpp::recv(t));
+            auto offset = rec::offset(gocpp::recv(t));
             auto offsetCode = offsetCode(offset);
-            writeCode(gocpp::recv(w), oeCodes[offsetCode]);
+            rec::writeCode(gocpp::recv(w), oeCodes[offsetCode]);
             auto extraOffsetBits = (unsigned int)(offsetExtraBits[offsetCode]);
             if(extraOffsetBits > 0)
             {
                 auto extraOffset = int32_t(offset - offsetBase[offsetCode]);
-                writeBits(gocpp::recv(w), extraOffset, extraOffsetBits);
+                rec::writeBits(gocpp::recv(w), extraOffset, extraOffsetBits);
             }
         }
     }
@@ -605,10 +612,10 @@ namespace golang::flate
         auto offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount);
         offsetFreq[0] = 1;
         huffOffset = newHuffmanEncoder(offsetCodeCount);
-        generate(gocpp::recv(huffOffset), offsetFreq, 15);
+        rec::generate(gocpp::recv(huffOffset), offsetFreq, 15);
     }
 
-    void writeBlockHuff(struct huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlockHuff(struct huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -623,18 +630,18 @@ namespace golang::flate
         auto numLiterals = endBlockMarker + 1;
         w->offsetFreq[0] = 1;
         auto numOffsets = 1;
-        generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
+        rec::generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
         int numCodegens = {};
-        generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, huffOffset);
-        generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
-        auto [size, numCodegens] = dynamicSize(gocpp::recv(w), w->literalEncoding, huffOffset, 0);
-        if(auto [ssize, storable] = storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
+        rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, huffOffset);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        auto [size, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, huffOffset, 0);
+        if(auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
         {
-            writeStoredHeader(gocpp::recv(w), len(input), eof);
-            writeBytes(gocpp::recv(w), input);
+            rec::writeStoredHeader(gocpp::recv(w), len(input), eof);
+            rec::writeBytes(gocpp::recv(w), input);
             return;
         }
-        writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
+        rec::writeDynamicHeader(gocpp::recv(w), numLiterals, numOffsets, numCodegens, eof);
         auto encoding = w->literalEncoding->codes.make_slice(0, 257);
         auto n = w->nbytes;
         for(auto [gocpp_ignored, t] : input)
@@ -661,7 +668,7 @@ namespace golang::flate
             {
                 continue;
             }
-            write(gocpp::recv(w), w->bytes.make_slice(0, n));
+            rec::write(gocpp::recv(w), w->bytes.make_slice(0, n));
             if(w->err != nullptr)
             {
                 return;
@@ -669,7 +676,7 @@ namespace golang::flate
             n = 0;
         }
         w->nbytes = n;
-        writeCode(gocpp::recv(w), encoding[endBlockMarker]);
+        rec::writeCode(gocpp::recv(w), encoding[endBlockMarker]);
     }
 
     void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h)

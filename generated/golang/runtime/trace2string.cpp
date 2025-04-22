@@ -44,6 +44,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     traceStringTable::operator T()
@@ -79,31 +89,31 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uint64_t put(struct traceStringTable* t, uintptr_t gen, std::string s)
+    uint64_t rec::put(struct traceStringTable* t, uintptr_t gen, std::string s)
     {
         auto ss = stringStructOf(& s);
-        auto [id, added] = put(gocpp::recv(t->tab), ss->str, uintptr_t(ss->len));
+        auto [id, added] = rec::put(gocpp::recv(t->tab), ss->str, uintptr_t(ss->len));
         if(added)
         {
             systemstack([=]() mutable -> void
             {
-                writeString(gocpp::recv(t), gen, id, s);
+                rec::writeString(gocpp::recv(t), gen, id, s);
             });
         }
         return id;
     }
 
-    uint64_t emit(struct traceStringTable* t, uintptr_t gen, std::string s)
+    uint64_t rec::emit(struct traceStringTable* t, uintptr_t gen, std::string s)
     {
-        auto id = stealID(gocpp::recv(t->tab));
+        auto id = rec::stealID(gocpp::recv(t->tab));
         systemstack([=]() mutable -> void
         {
-            writeString(gocpp::recv(t), gen, id, s);
+            rec::writeString(gocpp::recv(t), gen, id, s);
         });
         return id;
     }
 
-    void writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, std::string s)
+    void rec::writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, std::string s)
     {
         if(len(s) > maxTraceStringLen)
         {
@@ -112,20 +122,20 @@ namespace golang::runtime
         lock(& t->lock);
         auto w = unsafeTraceWriter(gen, t->buf);
         bool flushed = {};
-        std::tie(w, flushed) = ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
+        std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
         if(flushed)
         {
-            unsigned char(gocpp::recv(w), unsigned char(traceEvStrings));
+            rec::unsigned char(gocpp::recv(w), unsigned char(traceEvStrings));
         }
-        unsigned char(gocpp::recv(w), unsigned char(traceEvString));
-        varint(gocpp::recv(w), id);
-        varint(gocpp::recv(w), uint64_t(len(s)));
-        stringData(gocpp::recv(w), s);
+        rec::unsigned char(gocpp::recv(w), unsigned char(traceEvString));
+        rec::varint(gocpp::recv(w), id);
+        rec::varint(gocpp::recv(w), uint64_t(len(s)));
+        rec::stringData(gocpp::recv(w), s);
         t->buf = w.traceBuf;
         unlock(& t->lock);
     }
 
-    void reset(struct traceStringTable* t, uintptr_t gen)
+    void rec::reset(struct traceStringTable* t, uintptr_t gen)
     {
         if(t->buf != nullptr)
         {
@@ -135,7 +145,7 @@ namespace golang::runtime
             t->buf = nullptr;
         }
         lock(& t->tab.lock);
-        reset(gocpp::recv(t->tab));
+        rec::reset(gocpp::recv(t->tab));
         unlock(& t->tab.lock);
     }
 

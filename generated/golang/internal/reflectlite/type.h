@@ -39,7 +39,7 @@ namespace golang::reflectlite
             virtual std::string vName() = 0;
             virtual std::string vPkgPath() = 0;
             virtual uintptr_t vSize() = 0;
-            virtual Kind vKind() = 0;
+            virtual abi::Kind vKind() = 0;
             virtual bool vImplements(struct Type u) = 0;
             virtual bool vAssignableTo(struct Type u) = 0;
             virtual bool vComparable() = 0;
@@ -63,7 +63,7 @@ namespace golang::reflectlite
 
             uintptr_t vSize() override;
 
-            Kind vKind() override;
+            abi::Kind vKind() override;
 
             bool vImplements(struct Type u) override;
 
@@ -85,38 +85,41 @@ namespace golang::reflectlite
         std::shared_ptr<IType> value;
     };
 
-    std::string Name(const gocpp::PtrRecv<Type, false>& self);
-    std::string Name(const gocpp::ObjRecv<Type>& self);
+    namespace rec
+    {
+        std::string Name(const gocpp::PtrRecv<Type, false>& self);
+        std::string Name(const gocpp::ObjRecv<Type>& self);
 
-    std::string PkgPath(const gocpp::PtrRecv<Type, false>& self);
-    std::string PkgPath(const gocpp::ObjRecv<Type>& self);
+        std::string PkgPath(const gocpp::PtrRecv<Type, false>& self);
+        std::string PkgPath(const gocpp::ObjRecv<Type>& self);
 
-    uintptr_t Size(const gocpp::PtrRecv<Type, false>& self);
-    uintptr_t Size(const gocpp::ObjRecv<Type>& self);
+        uintptr_t Size(const gocpp::PtrRecv<Type, false>& self);
+        uintptr_t Size(const gocpp::ObjRecv<Type>& self);
 
-    Kind Kind(const gocpp::PtrRecv<Type, false>& self);
-    Kind Kind(const gocpp::ObjRecv<Type>& self);
+        abi::Kind Kind(const gocpp::PtrRecv<Type, false>& self);
+        abi::Kind Kind(const gocpp::ObjRecv<Type>& self);
 
-    bool Implements(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-    bool Implements(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool Implements(const gocpp::PtrRecv<Type, false>& self, struct Type u);
+        bool Implements(const gocpp::ObjRecv<Type>& self, struct Type u);
 
-    bool AssignableTo(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-    bool AssignableTo(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool AssignableTo(const gocpp::PtrRecv<Type, false>& self, struct Type u);
+        bool AssignableTo(const gocpp::ObjRecv<Type>& self, struct Type u);
 
-    bool Comparable(const gocpp::PtrRecv<Type, false>& self);
-    bool Comparable(const gocpp::ObjRecv<Type>& self);
+        bool Comparable(const gocpp::PtrRecv<Type, false>& self);
+        bool Comparable(const gocpp::ObjRecv<Type>& self);
 
-    std::string String(const gocpp::PtrRecv<Type, false>& self);
-    std::string String(const gocpp::ObjRecv<Type>& self);
+        std::string String(const gocpp::PtrRecv<Type, false>& self);
+        std::string String(const gocpp::ObjRecv<Type>& self);
 
-    struct Type Elem(const gocpp::PtrRecv<Type, false>& self);
-    struct Type Elem(const gocpp::ObjRecv<Type>& self);
+        struct Type Elem(const gocpp::PtrRecv<Type, false>& self);
+        struct Type Elem(const gocpp::ObjRecv<Type>& self);
 
-    struct abi::Type* common(const gocpp::PtrRecv<Type, false>& self);
-    struct abi::Type* common(const gocpp::ObjRecv<Type>& self);
+        struct abi::Type* common(const gocpp::PtrRecv<Type, false>& self);
+        struct abi::Type* common(const gocpp::ObjRecv<Type>& self);
 
-    struct uncommonType* uncommon(const gocpp::PtrRecv<Type, false>& self);
-    struct uncommonType* uncommon(const gocpp::ObjRecv<Type>& self);
+        struct uncommonType* uncommon(const gocpp::PtrRecv<Type, false>& self);
+        struct uncommonType* uncommon(const gocpp::ObjRecv<Type>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
     struct rtype
@@ -173,45 +176,49 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct name& value);
-    unsigned char* data(struct name n, int off, std::string whySafe);
-    bool isExported(struct name n);
-    bool hasTag(struct name n);
-    bool embedded(struct name n);
-    std::tuple<int, int> readVarint(struct name n, int off);
-    std::string name(struct name n);
-    std::string tag(struct name n);
     std::string pkgPath(struct abi::Name n);
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    struct abi::Name nameOff(struct rtype t, nameOff off);
-    struct abi::Type* typeOff(struct rtype t, typeOff off);
-    struct uncommonType* uncommon(struct rtype t);
-    std::string String(struct rtype t);
-    struct abi::Type* common(struct rtype t);
-    gocpp::slice<abi::Method> exportedMethods(struct rtype t);
-    int NumMethod(struct rtype t);
-    std::string PkgPath(struct rtype t);
-    std::string Name(struct rtype t);
     struct rtype toRType(struct abi::Type* t);
     struct abi::Type* elem(struct abi::Type* t);
-    struct Type Elem(struct rtype t);
-    struct Type In(struct rtype t, int i);
-    struct Type Key(struct rtype t);
-    int Len(struct rtype t);
-    int NumField(struct rtype t);
-    int NumIn(struct rtype t);
-    int NumOut(struct rtype t);
-    struct Type Out(struct rtype t, int i);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Type TypeOf(go_any i);
-    bool Implements(struct rtype t, struct Type u);
-    bool AssignableTo(struct rtype t, struct Type u);
-    bool Comparable(struct rtype t);
     bool implements(struct abi::Type* T, struct abi::Type* V);
     bool directlyAssignable(struct abi::Type* T, struct abi::Type* V);
     bool haveIdenticalType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
     bool haveIdenticalUnderlyingType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
     struct Type toType(struct abi::Type* t);
     bool ifaceIndir(struct abi::Type* t);
+
+    namespace rec
+    {
+        unsigned char* data(struct name n, int off, std::string whySafe);
+        bool isExported(struct name n);
+        bool hasTag(struct name n);
+        bool embedded(struct name n);
+        std::tuple<int, int> readVarint(struct name n, int off);
+        std::string name(struct name n);
+        std::string tag(struct name n);
+        struct abi::Name nameOff(struct rtype t, abi::nameOff off);
+        struct abi::Type* typeOff(struct rtype t, abi::typeOff off);
+        struct uncommonType* uncommon(struct rtype t);
+        std::string String(struct rtype t);
+        struct abi::Type* common(struct rtype t);
+        gocpp::slice<abi::Method> exportedMethods(struct rtype t);
+        int NumMethod(struct rtype t);
+        std::string PkgPath(struct rtype t);
+        std::string Name(struct rtype t);
+        struct Type Elem(struct rtype t);
+        struct Type In(struct rtype t, int i);
+        struct Type Key(struct rtype t);
+        int Len(struct rtype t);
+        int NumField(struct rtype t);
+        int NumIn(struct rtype t);
+        int NumOut(struct rtype t);
+        struct Type Out(struct rtype t, int i);
+        bool Implements(struct rtype t, struct Type u);
+        bool AssignableTo(struct rtype t, struct Type u);
+        bool Comparable(struct rtype t);
+    }
 }
 

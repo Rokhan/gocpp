@@ -13,6 +13,11 @@
 
 namespace golang::sys
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     nih::operator T()

@@ -25,6 +25,15 @@
 
 namespace golang::strings
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bytealg::rec;
+        using namespace strings::rec;
+        using namespace unicode::rec;
+        using namespace utf8::rec;
+    }
+
     gocpp::slice<std::string> explode(std::string s, int n)
     {
         auto l = utf8::RuneCountInString(s);
@@ -202,7 +211,7 @@ namespace golang::strings
             {
                 for(auto i = 0; i < len(s); i++)
                 {
-                    if(contains(gocpp::recv(as), s[i]))
+                    if(rec::contains(gocpp::recv(as), s[i]))
                     {
                         return i;
                     }
@@ -245,7 +254,7 @@ namespace golang::strings
             {
                 for(auto i = len(s) - 1; i >= 0; i--)
                 {
-                    if(contains(gocpp::recv(as), s[i]))
+                    if(rec::contains(gocpp::recv(as), s[i]))
                     {
                         return i;
                     }
@@ -496,14 +505,14 @@ namespace golang::strings
             n += len(elem);
         }
         Builder b = {};
-        Grow(gocpp::recv(b), n);
-        WriteString(gocpp::recv(b), elems[0]);
+        rec::Grow(gocpp::recv(b), n);
+        rec::WriteString(gocpp::recv(b), elems[0]);
         for(auto [gocpp_ignored, s] : elems.make_slice(1))
         {
-            WriteString(gocpp::recv(b), sep);
-            WriteString(gocpp::recv(b), s);
+            rec::WriteString(gocpp::recv(b), sep);
+            rec::WriteString(gocpp::recv(b), s);
         }
-        return String(gocpp::recv(b));
+        return rec::String(gocpp::recv(b));
     }
 
     bool HasPrefix(std::string s, std::string prefix)
@@ -539,16 +548,16 @@ namespace golang::strings
             {
                 width = utf8::RuneLen(c);
             }
-            Grow(gocpp::recv(b), len(s) + utf8::UTFMax);
-            WriteString(gocpp::recv(b), s.make_slice(0, i));
+            rec::Grow(gocpp::recv(b), len(s) + utf8::UTFMax);
+            rec::WriteString(gocpp::recv(b), s.make_slice(0, i));
             if(r >= 0)
             {
-                WriteRune(gocpp::recv(b), r);
+                rec::WriteRune(gocpp::recv(b), r);
             }
             s = s.make_slice(i + width);
             break;
         }
-        if(Cap(gocpp::recv(b)) == 0)
+        if(rec::Cap(gocpp::recv(b)) == 0)
         {
             return s;
         }
@@ -559,15 +568,15 @@ namespace golang::strings
             {
                 if(r < utf8::RuneSelf)
                 {
-                    WriteByte(gocpp::recv(b), unsigned char(r));
+                    rec::WriteByte(gocpp::recv(b), unsigned char(r));
                 }
                 else
                 {
-                    WriteRune(gocpp::recv(b), r);
+                    rec::WriteRune(gocpp::recv(b), r);
                 }
             }
         }
-        return String(gocpp::recv(b));
+        return rec::String(gocpp::recv(b));
     }
 
     std::string Repeat(std::string s, int count)
@@ -612,22 +621,22 @@ namespace golang::strings
             }
         }
         Builder b = {};
-        Grow(gocpp::recv(b), n);
-        WriteString(gocpp::recv(b), s);
-        for(; Len(gocpp::recv(b)) < n; )
+        rec::Grow(gocpp::recv(b), n);
+        rec::WriteString(gocpp::recv(b), s);
+        for(; rec::Len(gocpp::recv(b)) < n; )
         {
-            auto chunk = n - Len(gocpp::recv(b));
-            if(chunk > Len(gocpp::recv(b)))
+            auto chunk = n - rec::Len(gocpp::recv(b));
+            if(chunk > rec::Len(gocpp::recv(b)))
             {
-                chunk = Len(gocpp::recv(b));
+                chunk = rec::Len(gocpp::recv(b));
             }
             if(chunk > chunkMax)
             {
                 chunk = chunkMax;
             }
-            WriteString(gocpp::recv(b), String(gocpp::recv(b)).make_slice(0, chunk));
+            rec::WriteString(gocpp::recv(b), rec::String(gocpp::recv(b)).make_slice(0, chunk));
         }
-        return String(gocpp::recv(b));
+        return rec::String(gocpp::recv(b));
     }
 
     std::string ToUpper(std::string s)
@@ -651,7 +660,7 @@ namespace golang::strings
             }
             Builder b = {};
             int pos = {};
-            Grow(gocpp::recv(b), len(s));
+            rec::Grow(gocpp::recv(b), len(s));
             for(auto i = 0; i < len(s); i++)
             {
                 auto c = s[i];
@@ -660,17 +669,17 @@ namespace golang::strings
                     c -= 'a' - 'A';
                     if(pos < i)
                     {
-                        WriteString(gocpp::recv(b), s.make_slice(pos, i));
+                        rec::WriteString(gocpp::recv(b), s.make_slice(pos, i));
                     }
-                    WriteByte(gocpp::recv(b), c);
+                    rec::WriteByte(gocpp::recv(b), c);
                     pos = i + 1;
                 }
             }
             if(pos < len(s))
             {
-                WriteString(gocpp::recv(b), s.make_slice(pos));
+                rec::WriteString(gocpp::recv(b), s.make_slice(pos));
             }
-            return String(gocpp::recv(b));
+            return rec::String(gocpp::recv(b));
         }
         return Map(unicode::ToUpper, s);
     }
@@ -696,7 +705,7 @@ namespace golang::strings
             }
             Builder b = {};
             int pos = {};
-            Grow(gocpp::recv(b), len(s));
+            rec::Grow(gocpp::recv(b), len(s));
             for(auto i = 0; i < len(s); i++)
             {
                 auto c = s[i];
@@ -705,17 +714,17 @@ namespace golang::strings
                     c += 'a' - 'A';
                     if(pos < i)
                     {
-                        WriteString(gocpp::recv(b), s.make_slice(pos, i));
+                        rec::WriteString(gocpp::recv(b), s.make_slice(pos, i));
                     }
-                    WriteByte(gocpp::recv(b), c);
+                    rec::WriteByte(gocpp::recv(b), c);
                     pos = i + 1;
                 }
             }
             if(pos < len(s))
             {
-                WriteString(gocpp::recv(b), s.make_slice(pos));
+                rec::WriteString(gocpp::recv(b), s.make_slice(pos));
             }
-            return String(gocpp::recv(b));
+            return rec::String(gocpp::recv(b));
         }
         return Map(unicode::ToLower, s);
     }
@@ -752,13 +761,13 @@ namespace golang::strings
             auto [gocpp_id_3, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             if(wid == 1)
             {
-                Grow(gocpp::recv(b), len(s) + len(replacement));
-                WriteString(gocpp::recv(b), s.make_slice(0, i));
+                rec::Grow(gocpp::recv(b), len(s) + len(replacement));
+                rec::WriteString(gocpp::recv(b), s.make_slice(0, i));
                 s = s.make_slice(i);
                 break;
             }
         }
-        if(Cap(gocpp::recv(b)) == 0)
+        if(rec::Cap(gocpp::recv(b)) == 0)
         {
             return s;
         }
@@ -770,7 +779,7 @@ namespace golang::strings
             {
                 i++;
                 invalid = false;
-                WriteByte(gocpp::recv(b), c);
+                rec::WriteByte(gocpp::recv(b), c);
                 continue;
             }
             auto [gocpp_id_5, wid] = utf8::DecodeRuneInString(s.make_slice(i));
@@ -780,15 +789,15 @@ namespace golang::strings
                 if(! invalid)
                 {
                     invalid = true;
-                    WriteString(gocpp::recv(b), replacement);
+                    rec::WriteString(gocpp::recv(b), replacement);
                 }
                 continue;
             }
             invalid = false;
-            WriteString(gocpp::recv(b), s.make_slice(i, i + wid));
+            rec::WriteString(gocpp::recv(b), s.make_slice(i, i + wid));
             i += wid;
         }
-        return String(gocpp::recv(b));
+        return rec::String(gocpp::recv(b));
     }
 
     bool isSeparator(gocpp::rune r)
@@ -928,7 +937,7 @@ namespace golang::strings
         return {as, true};
     }
 
-    bool contains(asciiSet* as, unsigned char c)
+    bool rec::contains(asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -980,7 +989,7 @@ namespace golang::strings
     {
         for(; len(s) > 0; )
         {
-            if(! contains(gocpp::recv(as), s[0]))
+            if(! rec::contains(gocpp::recv(as), s[0]))
             {
                 break;
             }
@@ -1037,7 +1046,7 @@ namespace golang::strings
     {
         for(; len(s) > 0; )
         {
-            if(! contains(gocpp::recv(as), s[len(s) - 1]))
+            if(! rec::contains(gocpp::recv(as), s[len(s) - 1]))
             {
                 break;
             }
@@ -1129,7 +1138,7 @@ namespace golang::strings
             n = m;
         }
         Builder b = {};
-        Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
+        rec::Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
         auto start = 0;
         for(auto i = 0; i < n; i++)
         {
@@ -1146,12 +1155,12 @@ namespace golang::strings
             {
                 j += Index(s.make_slice(start), old);
             }
-            WriteString(gocpp::recv(b), s.make_slice(start, j));
-            WriteString(gocpp::recv(b), go_new);
+            rec::WriteString(gocpp::recv(b), s.make_slice(start, j));
+            rec::WriteString(gocpp::recv(b), go_new);
             start = j + len(old);
         }
-        WriteString(gocpp::recv(b), s.make_slice(start));
-        return String(gocpp::recv(b));
+        rec::WriteString(gocpp::recv(b), s.make_slice(start));
+        return rec::String(gocpp::recv(b));
     }
 
     std::string ReplaceAll(std::string s, std::string old, std::string go_new)

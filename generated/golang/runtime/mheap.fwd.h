@@ -23,10 +23,10 @@ namespace golang::runtime
     const uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
     struct gcBitsHeader;
     struct gocpp_id_7;
-    const mSpanState mSpanDead = 0;
+    const runtime::mSpanState mSpanDead = 0;
     const mSpanState mSpanInUse = 1;
     const mSpanState mSpanManual = 2;
-    const spanAllocType spanAllocHeap = 0;
+    const runtime::spanAllocType spanAllocHeap = 0;
     const spanAllocType spanAllocStack = 1;
     const spanAllocType spanAllocPtrScalarBits = 2;
     const spanAllocType spanAllocWorkBuf = 3;

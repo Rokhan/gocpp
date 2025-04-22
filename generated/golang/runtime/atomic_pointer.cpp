@@ -53,10 +53,22 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void atomicwb(unsafe::Pointer* ptr, unsafe::Pointer go_new)
     {
         auto slot = (uintptr_t*)(unsafe::Pointer(ptr));
-        auto buf = get2(gocpp::recv(ptr(gocpp::recv(getg()->m->p))->wbBuf));
+        auto buf = rec::get2(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->wbBuf));
         buf[0] = *slot;
         buf[1] = uintptr_t(go_new);
     }

@@ -15,5 +15,9 @@ namespace golang::main
     int needInt(int x);
     double needFloat(double x);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

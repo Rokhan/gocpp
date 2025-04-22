@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     bool inVDSOPage(uintptr_t pc);
+
+    namespace rec
+    {
+    }
 }
 

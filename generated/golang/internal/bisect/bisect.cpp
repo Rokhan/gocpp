@@ -26,6 +26,16 @@
 
 namespace golang::bisect
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern)
     {
         if(pattern == "")
@@ -272,12 +282,12 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    struct dedup* Load(struct atomicPointerDedup* p)
+    struct dedup* rec::Load(struct atomicPointerDedup* p)
     {
         return (dedup*)(atomic::LoadPointer(& p->p));
     }
 
-    bool CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
+    bool rec::CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
     {
         return atomic::CompareAndSwapPointer(& p->p, unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
@@ -317,30 +327,30 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    bool MarkerOnly(struct Matcher* m)
+    bool rec::MarkerOnly(struct Matcher* m)
     {
         return ! m->verbose;
     }
 
-    bool ShouldEnable(struct Matcher* m, uint64_t id)
+    bool rec::ShouldEnable(struct Matcher* m, uint64_t id)
     {
         if(m == nullptr)
         {
             return true;
         }
-        return matchResult(gocpp::recv(m), id) == m->enable;
+        return rec::matchResult(gocpp::recv(m), id) == m->enable;
     }
 
-    bool ShouldPrint(struct Matcher* m, uint64_t id)
+    bool rec::ShouldPrint(struct Matcher* m, uint64_t id)
     {
         if(m == nullptr || m->quiet)
         {
             return false;
         }
-        return matchResult(gocpp::recv(m), id);
+        return rec::matchResult(gocpp::recv(m), id);
     }
 
-    bool matchResult(struct Matcher* m, uint64_t id)
+    bool rec::matchResult(struct Matcher* m, uint64_t id)
     {
         for(auto i = len(m->list) - 1; i >= 0; i--)
         {
@@ -353,21 +363,21 @@ namespace golang::bisect
         return false;
     }
 
-    bool FileLine(struct Matcher* m, struct Writer w, std::string file, int line)
+    bool rec::FileLine(struct Matcher* m, struct Writer w, std::string file, int line)
     {
         if(m == nullptr)
         {
             return true;
         }
-        return fileLine(gocpp::recv(m), w, file, line);
+        return rec::fileLine(gocpp::recv(m), w, file, line);
     }
 
-    bool fileLine(struct Matcher* m, struct Writer w, std::string file, int line)
+    bool rec::fileLine(struct Matcher* m, struct Writer w, std::string file, int line)
     {
         auto h = Hash(file, line);
-        if(ShouldPrint(gocpp::recv(m), h))
+        if(rec::ShouldPrint(gocpp::recv(m), h))
         {
-            if(MarkerOnly(gocpp::recv(m)))
+            if(rec::MarkerOnly(gocpp::recv(m)))
             {
                 PrintMarker(w, h);
             }
@@ -376,7 +386,7 @@ namespace golang::bisect
                 printFileLine(w, h, file, line);
             }
         }
-        return ShouldEnable(gocpp::recv(m), h);
+        return rec::ShouldEnable(gocpp::recv(m), h);
     }
 
     struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line)
@@ -386,7 +396,7 @@ namespace golang::bisect
         b = AppendMarker(b, h);
         b = appendFileLine(b, file, line);
         b = append(b, '\n');
-        auto [gocpp_id_1, err] = Write(gocpp::recv(w), b);
+        auto [gocpp_id_1, err] = rec::Write(gocpp::recv(w), b);
         return err;
     }
 
@@ -412,16 +422,16 @@ namespace golang::bisect
         return dst;
     }
 
-    bool Stack(struct Matcher* m, struct Writer w)
+    bool rec::Stack(struct Matcher* m, struct Writer w)
     {
         if(m == nullptr)
         {
             return true;
         }
-        return stack(gocpp::recv(m), w);
+        return rec::stack(gocpp::recv(m), w);
     }
 
-    bool stack(struct Matcher* m, struct Writer w)
+    bool rec::stack(struct Matcher* m, struct Writer w)
     {
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
@@ -436,32 +446,32 @@ namespace golang::bisect
             stk[i] -= base;
         }
         auto h = Hash(stk.make_slice(0, n));
-        if(ShouldPrint(gocpp::recv(m), h))
+        if(rec::ShouldPrint(gocpp::recv(m), h))
         {
             dedup* d = {};
             for(; ; )
             {
-                d = Load(gocpp::recv(m->dedup));
+                d = rec::Load(gocpp::recv(m->dedup));
                 if(d != nullptr)
                 {
                     break;
                 }
                 d = go_new(dedup);
-                if(CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
+                if(rec::CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
                 {
                     break;
                 }
             }
-            if(MarkerOnly(gocpp::recv(m)))
+            if(rec::MarkerOnly(gocpp::recv(m)))
             {
-                if(! seenLossy(gocpp::recv(d), h))
+                if(! rec::seenLossy(gocpp::recv(d), h))
                 {
                     PrintMarker(w, h);
                 }
             }
             else
             {
-                if(! seen(gocpp::recv(d), h))
+                if(! rec::seen(gocpp::recv(d), h))
                 {
                     for(auto [i, gocpp_ignored] : stk.make_slice(0, n))
                     {
@@ -471,7 +481,7 @@ namespace golang::bisect
                 }
             }
         }
-        return ShouldEnable(gocpp::recv(m), h);
+        return rec::ShouldEnable(gocpp::recv(m), h);
     }
 
     
@@ -501,17 +511,20 @@ namespace golang::bisect
     template<typename T, typename StoreT>
     std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
     {
-        return Write(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Write(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
+    namespace rec
     {
-        return self.ptr->value->vWrite();
-    }
+        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>)
+        {
+            return self.ptr->value->vWrite();
+        }
 
-    std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
-    {
-        return self.obj.value->vWrite();
+        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>)
+        {
+            return self.obj.value->vWrite();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value)
@@ -524,7 +537,7 @@ namespace golang::bisect
         gocpp::array<unsigned char, 50> buf = {};
         auto b = AppendMarker(buf.make_slice(0, 0), h);
         b = append(b, '\n');
-        auto [gocpp_id_3, err] = Write(gocpp::recv(w), b);
+        auto [gocpp_id_3, err] = rec::Write(gocpp::recv(w), b);
         return err;
     }
 
@@ -536,9 +549,9 @@ namespace golang::bisect
         auto frames = runtime::CallersFrames(stk);
         for(; ; )
         {
-            auto [f, more] = Next(gocpp::recv(frames));
+            auto [f, more] = rec::Next(gocpp::recv(frames));
             buf = append(buf, prefix);
-            buf = append(buf, Name(gocpp::recv(f.Func)));
+            buf = append(buf, rec::Name(gocpp::recv(f.Func)));
             buf = append(buf, "()\n");
             buf = append(buf, prefix);
             buf = append(buf, '\t');
@@ -551,7 +564,7 @@ namespace golang::bisect
         }
         buf = append(buf, prefix);
         buf = append(buf, '\n');
-        auto [gocpp_id_5, err] = Write(gocpp::recv(w), buf);
+        auto [gocpp_id_5, err] = rec::Write(gocpp::recv(w), buf);
         return err;
     }
 
@@ -926,7 +939,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    std::string Error(struct parseError* e)
+    std::string rec::Error(struct parseError* e)
     {
         return e->text;
     }
@@ -1005,20 +1018,20 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    bool seen(struct dedup* d, uint64_t h)
+    bool rec::seen(struct dedup* d, uint64_t h)
     {
-        Lock(gocpp::recv(d->mu));
+        rec::Lock(gocpp::recv(d->mu));
         if(d->m == nullptr)
         {
             d->m = gocpp::make(gocpp::Tag<gocpp::map<uint64_t, bool>>());
         }
         auto seen = d->m[h];
         d->m[h] = true;
-        Unlock(gocpp::recv(d->mu));
+        rec::Unlock(gocpp::recv(d->mu));
         return seen;
     }
 
-    bool seenLossy(struct dedup* d, uint64_t h)
+    bool rec::seenLossy(struct dedup* d, uint64_t h)
     {
         auto cache = & d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))];
         for(auto i = 0; i < len(cache); i++)

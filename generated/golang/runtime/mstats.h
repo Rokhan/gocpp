@@ -18,12 +18,12 @@ namespace golang::runtime
     struct mstats
     {
         /* consistentHeapStats heapStats; [Known incomplete type] */
-        sysMemStat stacks_sys;
-        sysMemStat mspan_sys;
-        sysMemStat mcache_sys;
-        sysMemStat buckhash_sys;
-        sysMemStat gcMiscSys;
-        sysMemStat other_sys;
+        runtime::sysMemStat stacks_sys;
+        runtime::sysMemStat mspan_sys;
+        runtime::sysMemStat mcache_sys;
+        runtime::sysMemStat buckhash_sys;
+        runtime::sysMemStat gcMiscSys;
+        runtime::sysMemStat other_sys;
         uint64_t last_gc_unix;
         uint64_t pause_total_ns;
         gocpp::array<uint64_t, 256> pause_ns;
@@ -102,8 +102,6 @@ namespace golang::runtime
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
     void flushmcache(int i);
     void flushallmcaches();
-    uint64_t load(sysMemStat* s);
-    void add(sysMemStat* s, int64_t n);
     struct heapStatsDelta
     {
         int64_t committed;
@@ -132,7 +130,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
-    void merge(struct heapStatsDelta* a, struct heapStatsDelta* b);
     struct consistentHeapStats
     {
         gocpp::array<heapStatsDelta, 3> stats;
@@ -151,11 +148,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
-    struct heapStatsDelta* acquire(struct consistentHeapStats* m);
-    void release(struct consistentHeapStats* m);
-    void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out);
-    void unsafeClear(struct consistentHeapStats* m);
-    void read(struct consistentHeapStats* m, struct heapStatsDelta* out);
     struct cpuStats
     {
         int64_t gcAssistTime;
@@ -182,6 +174,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStats& value);
-    void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase);
+
+    namespace rec
+    {
+        uint64_t load(runtime::sysMemStat* s);
+        void add(runtime::sysMemStat* s, int64_t n);
+        void merge(struct heapStatsDelta* a, struct heapStatsDelta* b);
+        struct heapStatsDelta* acquire(struct consistentHeapStats* m);
+        void release(struct consistentHeapStats* m);
+        void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out);
+        void unsafeClear(struct consistentHeapStats* m);
+        void read(struct consistentHeapStats* m, struct heapStatsDelta* out);
+        void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase);
+    }
 }
 

@@ -23,9 +23,13 @@ namespace golang::runtime
     extern gocpp::array<unsigned int, summaryLevels> levelBits;
     extern gocpp::array<unsigned int, summaryLevels> levelShift;
     extern gocpp::array<unsigned int, summaryLevels> levelLogPages;
-    void sysInit(struct pageAlloc* p, bool test);
-    void sysGrow(struct pageAlloc* p, uintptr_t base, uintptr_t limit);
-    uintptr_t sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
-    uintptr_t sysInit(struct scavengeIndex* s, bool test, sysMemStat* sysStat);
+
+    namespace rec
+    {
+        void sysInit(struct pageAlloc* p, bool test);
+        void sysGrow(struct pageAlloc* p, uintptr_t base, uintptr_t limit);
+        uintptr_t sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, runtime::sysMemStat* sysStat);
+        uintptr_t sysInit(struct scavengeIndex* s, bool test, runtime::sysMemStat* sysStat);
+    }
 }
 

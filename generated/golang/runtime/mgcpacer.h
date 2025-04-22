@@ -80,9 +80,9 @@ namespace golang::runtime
         atomic::Float64 assistWorkPerByte;
         atomic::Float64 assistBytesPerWork;
         double fractionalUtilizationGoal;
-        sysMemStat heapInUse;
-        sysMemStat heapReleased;
-        sysMemStat heapFree;
+        runtime::sysMemStat heapInUse;
+        runtime::sysMemStat heapReleased;
+        runtime::sysMemStat heapFree;
         atomic::Uint64 totalAlloc;
         atomic::Uint64 totalFree;
         atomic::Uint64 mappedReady;
@@ -101,32 +101,36 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcControllerState& value);
-    void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
-    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger);
-    void revise(struct gcControllerState* c);
-    void endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced);
-    void enlistWorker(struct gcControllerState* c);
-    std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now);
-    void resetLive(struct gcControllerState* c, uint64_t bytesMarked);
-    void markWorkerStop(struct gcControllerState* c, gcMarkWorkerMode mode, int64_t duration);
-    void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
-    void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount);
-    void addGlobals(struct gcControllerState* c, int64_t amount);
-    uint64_t heapGoal(struct gcControllerState* c);
-    std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c);
-    uint64_t memoryLimitHeapGoal(struct gcControllerState* c);
-    std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c);
-    void commit(struct gcControllerState* c, bool isSweepDone);
-    int32_t setGCPercent(struct gcControllerState* c, int32_t in);
     int32_t setGCPercent(int32_t in);
     int32_t readGOGC();
-    int64_t setMemoryLimit(struct gcControllerState* c, int64_t in);
     int64_t setMemoryLimit(int64_t in);
     int64_t readGOMEMLIMIT();
-    bool addIdleMarkWorker(struct gcControllerState* c);
-    bool needIdleMarkWorker(struct gcControllerState* c);
-    void removeIdleMarkWorker(struct gcControllerState* c);
-    void setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max);
     void gcControllerCommit();
+
+    namespace rec
+    {
+        void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
+        void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger);
+        void revise(struct gcControllerState* c);
+        void endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced);
+        void enlistWorker(struct gcControllerState* c);
+        std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now);
+        void resetLive(struct gcControllerState* c, uint64_t bytesMarked);
+        void markWorkerStop(struct gcControllerState* c, runtime::gcMarkWorkerMode mode, int64_t duration);
+        void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
+        void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount);
+        void addGlobals(struct gcControllerState* c, int64_t amount);
+        uint64_t heapGoal(struct gcControllerState* c);
+        std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c);
+        uint64_t memoryLimitHeapGoal(struct gcControllerState* c);
+        std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c);
+        void commit(struct gcControllerState* c, bool isSweepDone);
+        int32_t setGCPercent(struct gcControllerState* c, int32_t in);
+        int64_t setMemoryLimit(struct gcControllerState* c, int64_t in);
+        bool addIdleMarkWorker(struct gcControllerState* c);
+        bool needIdleMarkWorker(struct gcControllerState* c);
+        void removeIdleMarkWorker(struct gcControllerState* c);
+        void setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max);
+    }
 }
 

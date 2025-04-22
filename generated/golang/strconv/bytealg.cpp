@@ -15,6 +15,12 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bytealg::rec;
+    }
+
     int index(std::string s, unsigned char c)
     {
         return bytealg::IndexByteString(s, c);

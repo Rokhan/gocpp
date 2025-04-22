@@ -8,7 +8,7 @@ namespace golang::goarch
 {
     using ArchFamilyType = int;
     const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
-    const ArchFamilyType AMD64 = 0;
+    const goarch::ArchFamilyType AMD64 = 0;
     const ArchFamilyType ARM = 1;
     const ArchFamilyType ARM64 = 2;
     const ArchFamilyType I386 = 3;
@@ -26,7 +26,7 @@ namespace golang::goarch
 
 namespace golang::goarch
 {
-    const ArchFamilyType ArchFamily = _ArchFamily;
+    const goarch::ArchFamilyType ArchFamily = _ArchFamily;
     const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
     const int DefaultPhysPageSize = _DefaultPhysPageSize;
     const int PCQuantum = _PCQuantum;

@@ -14,5 +14,9 @@ namespace golang::main
 {
     std::tuple<std::string, std::string> swap(std::string x, std::string y);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

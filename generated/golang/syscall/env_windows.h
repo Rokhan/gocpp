@@ -17,5 +17,9 @@ namespace golang::syscall
     struct gocpp::error Unsetenv(std::string key);
     void Clearenv();
     gocpp::slice<std::string> Environ();
+
+    namespace rec
+    {
+    }
 }
 

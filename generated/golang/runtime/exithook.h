@@ -31,5 +31,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct exitHook& value);
     void runExitHooks(int exitCode);
+
+    namespace rec
+    {
+    }
 }
 

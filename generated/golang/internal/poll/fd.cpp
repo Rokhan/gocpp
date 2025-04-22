@@ -15,6 +15,12 @@
 
 namespace golang::poll
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     errNetClosing::operator T()
@@ -41,17 +47,17 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    std::string Error(struct errNetClosing e)
+    std::string rec::Error(struct errNetClosing e)
     {
         return "use of closed network connection";
     }
 
-    bool Timeout(struct errNetClosing e)
+    bool rec::Timeout(struct errNetClosing e)
     {
         return false;
     }
 
-    bool Temporary(struct errNetClosing e)
+    bool rec::Temporary(struct errNetClosing e)
     {
         return false;
     }
@@ -95,17 +101,17 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    std::string Error(struct DeadlineExceededError* e)
+    std::string rec::Error(struct DeadlineExceededError* e)
     {
         return "i/o timeout";
     }
 
-    bool Timeout(struct DeadlineExceededError* e)
+    bool rec::Timeout(struct DeadlineExceededError* e)
     {
         return true;
     }
 
-    bool Temporary(struct DeadlineExceededError* e)
+    bool rec::Temporary(struct DeadlineExceededError* e)
     {
         return true;
     }

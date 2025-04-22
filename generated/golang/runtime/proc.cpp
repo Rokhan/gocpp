@@ -106,6 +106,20 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace goos::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     std::string modinfo;
     m m0;
     g g0;
@@ -222,18 +236,18 @@ namespace golang::runtime
                 runExitHooks(0);
                 racefini();
             }
-            if(Load(gocpp::recv(runningPanicDefers)) != 0)
+            if(rec::Load(gocpp::recv(runningPanicDefers)) != 0)
             {
                 for(auto c = 0; c < 1000; c++)
                 {
-                    if(Load(gocpp::recv(runningPanicDefers)) == 0)
+                    if(rec::Load(gocpp::recv(runningPanicDefers)) == 0)
                     {
                         break;
                     }
                     Gosched();
                 }
             }
-            if(Load(gocpp::recv(panicking)) != 0)
+            if(rec::Load(gocpp::recv(panicking)) != 0)
             {
                 gopark(nullptr, nullptr, waitReasonPanicWait, traceBlockForever, 1);
             }
@@ -272,11 +286,11 @@ namespace golang::runtime
         for(; ; )
         {
             lock(& forcegc.lock);
-            if(Load(gocpp::recv(forcegc.idle)))
+            if(rec::Load(gocpp::recv(forcegc.idle)))
             {
                 go_throw("forcegc: phase error");
             }
-            Store(gocpp::recv(forcegc.idle), true);
+            rec::Store(gocpp::recv(forcegc.idle), true);
             goparkunlock(& forcegc.lock, waitReasonForceGCIdle, traceBlockSystemGoroutine, 1);
             if(debug.gctrace > 0)
             {
@@ -300,14 +314,14 @@ namespace golang::runtime
     void goschedIfBusy()
     {
         auto gp = getg();
-        if(! gp->preempt && Load(gocpp::recv(sched.npidle)) > 0)
+        if(! gp->preempt && rec::Load(gocpp::recv(sched.npidle)) > 0)
         {
             return;
         }
         mcall(gosched_m);
     }
 
-    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, waitReason reason, traceBlockReason traceReason, int traceskip)
+    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip)
     {
         if(reason != waitReasonSleep)
         {
@@ -329,7 +343,7 @@ namespace golang::runtime
         mcall(park_m);
     }
 
-    void goparkunlock(struct mutex* lock, waitReason reason, traceBlockReason traceReason, int traceskip)
+    void goparkunlock(struct mutex* lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip)
     {
         gopark(parkunlock_c, unsafe::Pointer(lock), reason, traceReason, traceskip);
     }
@@ -345,7 +359,7 @@ namespace golang::runtime
     struct sudog* acquireSudog()
     {
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->sudogcache) == 0)
         {
             lock(& sched.sudoglock);
@@ -406,7 +420,7 @@ namespace golang::runtime
             go_throw("runtime: releaseSudog with non-nil gp.param");
         }
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->sudogcache) == cap(pp->sudogcache))
         {
             sudog* first = {};
@@ -484,12 +498,12 @@ namespace golang::runtime
     void switchToCrashStack(std::function<void ()> fn)
     {
         auto me = getg();
-        if(CompareAndSwapNoWB(gocpp::recv(crashingG), nullptr, me))
+        if(rec::CompareAndSwapNoWB(gocpp::recv(crashingG), nullptr, me))
         {
             switchToCrashStack0(fn);
             abort();
         }
-        if(Load(gocpp::recv(crashingG)) == me)
+        if(rec::Load(gocpp::recv(crashingG)) == me)
         {
             writeErrStr("fatal: recursive switchToCrashStack\n");
             abort();
@@ -691,8 +705,8 @@ namespace golang::runtime
         lockInit(& reflectOffs.lock, lockRankReflectOffs);
         lockInit(& finlock, lockRankFin);
         lockInit(& cpuprof.lock, lockRankCpuprof);
-        init(gocpp::recv(allocmLock), lockRankAllocmR, lockRankAllocmRInternal, lockRankAllocmW);
-        init(gocpp::recv(execLock), lockRankExecR, lockRankExecRInternal, lockRankExecW);
+        rec::init(gocpp::recv(allocmLock), lockRankAllocmR, lockRankAllocmRInternal, lockRankAllocmW);
+        rec::init(gocpp::recv(execLock), lockRankExecR, lockRankExecRInternal, lockRankExecW);
         traceLockInit();
         lockInit(& memstats.heapStats.noPLock, lockRankLeafRank);
         auto gp = getg();
@@ -702,7 +716,7 @@ namespace golang::runtime
         }
         sched.maxmcount = 10000;
         worldStopped();
-        init(gocpp::recv(ticks));
+        rec::init(gocpp::recv(ticks));
         moduledataverify();
         stackinit();
         mallocinit();
@@ -732,7 +746,7 @@ namespace golang::runtime
             MemProfileRate = 0;
         }
         lock(& sched.lock);
-        Store(gocpp::recv(sched.lastpoll), nanotime());
+        rec::Store(gocpp::recv(sched.lastpoll), nanotime());
         auto procs = ncpu;
         if(auto [n, ok] = atoi32(gogetenv("GOMAXPROCS")); ok && n > 0)
         {
@@ -764,7 +778,7 @@ namespace golang::runtime
     void checkmcount()
     {
         assertLockHeld(& sched.lock);
-        auto count = mcount() - int32_t(Load(gocpp::recv(extraMInUse))) - int32_t(Load(gocpp::recv(extraMLength)));
+        auto count = mcount() - int32_t(rec::Load(gocpp::recv(extraMInUse))) - int32_t(rec::Load(gocpp::recv(extraMLength)));
         if(count > sched.maxmcount)
         {
             print("runtime: program exceeds ", sched.maxmcount, "-thread limit\n");
@@ -816,14 +830,14 @@ namespace golang::runtime
         }
     }
 
-    void becomeSpinning(struct m* mp)
+    void rec::becomeSpinning(struct m* mp)
     {
         mp->spinning = true;
-        Add(gocpp::recv(sched.nmspinning), 1);
-        Store(gocpp::recv(sched.needspinning), 0);
+        rec::Add(gocpp::recv(sched.nmspinning), 1);
+        rec::Store(gocpp::recv(sched.needspinning), 0);
     }
 
-    bool hasCgoOnStack(struct m* mp)
+    bool rec::hasCgoOnStack(struct m* mp)
     {
         return mp->ncgo > 0 || mp->isextra;
     }
@@ -840,12 +854,12 @@ namespace golang::runtime
         }
         auto trace = traceAcquire();
         casgstatus(gp, _Gwaiting, _Grunnable);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoUnpark(gocpp::recv(trace), gp, traceskip);
+            rec::GoUnpark(gocpp::recv(trace), gp, traceskip);
             traceRelease(trace);
         }
-        runqput(ptr(gocpp::recv(mp->p)), gp, next);
+        runqput(rec::ptr(gocpp::recv(mp->p)), gp, next);
         wakep();
         releasem(mp);
     }
@@ -853,7 +867,7 @@ namespace golang::runtime
     atomic::Bool freezing;
     void freezetheworld()
     {
-        Store(gocpp::recv(freezing), true);
+        rec::Store(gocpp::recv(freezing), true);
         if(debug.dontfreezetheworld > 0)
         {
             usleep(1000);
@@ -862,7 +876,7 @@ namespace golang::runtime
         for(auto i = 0; i < 5; i++)
         {
             sched.stopwait = freezeStopWait;
-            Store(gocpp::recv(sched.gcwaiting), true);
+            rec::Store(gocpp::recv(sched.gcwaiting), true);
             if(! preemptall())
             {
                 break;
@@ -876,7 +890,7 @@ namespace golang::runtime
 
     uint32_t readgstatus(struct g* gp)
     {
-        return Load(gocpp::recv(gp->atomicstatus));
+        return rec::Load(gocpp::recv(gp->atomicstatus));
     }
 
     void casfrom_Gscanstatus(struct g* gp, uint32_t oldval, uint32_t newval)
@@ -905,7 +919,7 @@ namespace golang::runtime
                 case 4:
                     if(newval == oldval &^ _Gscan)
                     {
-                        success = CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
+                        success = rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
                     }
                     break;
             }
@@ -937,7 +951,7 @@ namespace golang::runtime
                 case 3:
                     if(newval == oldval | _Gscan)
                     {
-                        auto r = CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
+                        auto r = rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval);
                         if(r)
                         {
                             acquireLockRank(lockRankGscan);
@@ -967,9 +981,9 @@ namespace golang::runtime
         releaseLockRank(lockRankGscan);
         auto yieldDelay = 5 * 1000;
         int64_t nextYield = {};
-        for(auto i = 0; ! CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval); i++)
+        for(auto i = 0; ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldval, newval); i++)
         {
-            if(oldval == _Gwaiting && Load(gocpp::recv(gp->atomicstatus)) == _Grunnable)
+            if(oldval == _Gwaiting && rec::Load(gocpp::recv(gp->atomicstatus)) == _Grunnable)
             {
                 go_throw("casgstatus: waiting for Gwaiting but is Grunnable");
             }
@@ -979,7 +993,7 @@ namespace golang::runtime
             }
             if(nanotime() < nextYield)
             {
-                for(auto x = 0; x < 10 && Load(gocpp::recv(gp->atomicstatus)) != oldval; x++)
+                for(auto x = 0; x < 10 && rec::Load(gocpp::recv(gp->atomicstatus)) != oldval; x++)
                 {
                     procyield(1);
                 }
@@ -1016,12 +1030,12 @@ namespace golang::runtime
                     gp->trackingStamp = 0;
                     break;
                 case 1:
-                    if(! isMutexWait(gocpp::recv(gp->waitreason)))
+                    if(! rec::isMutexWait(gocpp::recv(gp->waitreason)))
                     {
                         break;
                     }
                     auto now = nanotime();
-                    Add(gocpp::recv(sched.totalMutexWaitTime), (now - gp->trackingStamp) * gTrackingPeriod);
+                    rec::Add(gocpp::recv(sched.totalMutexWaitTime), (now - gp->trackingStamp) * gTrackingPeriod);
                     gp->trackingStamp = 0;
                     break;
             }
@@ -1036,7 +1050,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    if(! isMutexWait(gocpp::recv(gp->waitreason)))
+                    if(! rec::isMutexWait(gocpp::recv(gp->waitreason)))
                     {
                         break;
                     }
@@ -1049,14 +1063,14 @@ namespace golang::runtime
                     break;
                 case 2:
                     gp->tracking = false;
-                    record(gocpp::recv(sched.timeToRun), gp->runnableTime);
+                    rec::record(gocpp::recv(sched.timeToRun), gp->runnableTime);
                     gp->runnableTime = 0;
                     break;
             }
         }
     }
 
-    void casGToWaiting(struct g* gp, uint32_t old, waitReason reason)
+    void casGToWaiting(struct g* gp, uint32_t old, runtime::waitReason reason)
     {
         gp->waitreason = reason;
         casgstatus(gp, old, _Gwaiting);
@@ -1071,7 +1085,7 @@ namespace golang::runtime
             {
                 go_throw("copystack: bad status, not Gwaiting or Grunnable");
             }
-            if(CompareAndSwap(gocpp::recv(gp->atomicstatus), oldstatus, _Gcopystack))
+            if(rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), oldstatus, _Gcopystack))
             {
                 return oldstatus;
             }
@@ -1085,7 +1099,7 @@ namespace golang::runtime
             go_throw("bad g transition");
         }
         acquireLockRank(lockRankGscan);
-        for(; ! CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gscan | _Gpreempted); )
+        for(; ! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gscan | _Gpreempted); )
         {
         }
     }
@@ -1097,15 +1111,15 @@ namespace golang::runtime
             go_throw("bad g transition");
         }
         gp->waitreason = waitReasonPreempted;
-        return CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gpreempted, _Gwaiting);
+        return rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gpreempted, _Gwaiting);
     }
 
-    std::string String(stwReason r)
+    std::string rec::String(runtime::stwReason r)
     {
         return stwReasonStrings[r];
     }
 
-    bool isGC(stwReason r)
+    bool rec::isGC(runtime::stwReason r)
     {
         return r == stwGCMarkTerm || r == stwGCSweepTerm;
     }
@@ -1144,11 +1158,11 @@ namespace golang::runtime
     }
 
     worldStop stopTheWorldContext;
-    struct worldStop stopTheWorld(stwReason reason)
+    struct worldStop stopTheWorld(runtime::stwReason reason)
     {
         semacquire(& worldsema);
         auto gp = getg();
-        gp->m->preemptoff = String(gocpp::recv(reason));
+        gp->m->preemptoff = rec::String(gocpp::recv(reason));
         systemstack([=]() mutable -> void
         {
             casGToWaiting(gp, _Grunning, waitReasonStoppingTheWorld);
@@ -1170,7 +1184,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    struct worldStop stopTheWorldGC(stwReason reason)
+    struct worldStop stopTheWorldGC(runtime::stwReason reason)
     {
         semacquire(& gcsema);
         return stopTheWorld(reason);
@@ -1184,12 +1198,12 @@ namespace golang::runtime
 
     uint32_t worldsema = 1;
     uint32_t gcsema = 1;
-    struct worldStop stopTheWorldWithSema(stwReason reason)
+    struct worldStop stopTheWorldWithSema(runtime::stwReason reason)
     {
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            STWStart(gocpp::recv(trace), reason);
+            rec::STWStart(gocpp::recv(trace), reason);
             traceRelease(trace);
         }
         auto gp = getg();
@@ -1200,9 +1214,9 @@ namespace golang::runtime
         lock(& sched.lock);
         auto start = nanotime();
         sched.stopwait = gomaxprocs;
-        Store(gocpp::recv(sched.gcwaiting), true);
+        rec::Store(gocpp::recv(sched.gcwaiting), true);
         preemptall();
-        ptr(gocpp::recv(gp->m->p))->status = _Pgcstop;
+        rec::ptr(gocpp::recv(gp->m->p))->status = _Pgcstop;
         sched.stopwait--;
         trace = traceAcquire();
         for(auto [gocpp_ignored, pp] : allp)
@@ -1210,16 +1224,16 @@ namespace golang::runtime
             auto s = pp->status;
             if(s == _Psyscall && atomic::Cas(& pp->status, s, _Pgcstop))
             {
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
-                    GoSysBlock(gocpp::recv(trace), pp);
-                    ProcSteal(gocpp::recv(trace), pp, false);
+                    rec::GoSysBlock(gocpp::recv(trace), pp);
+                    rec::ProcSteal(gocpp::recv(trace), pp, false);
                 }
                 pp->syscalltick++;
                 sched.stopwait--;
             }
         }
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             traceRelease(trace);
         }
@@ -1249,13 +1263,13 @@ namespace golang::runtime
             }
         }
         auto startTime = nanotime() - start;
-        if(isGC(gocpp::recv(reason)))
+        if(rec::isGC(gocpp::recv(reason)))
         {
-            record(gocpp::recv(sched.stwStoppingTimeGC), startTime);
+            rec::record(gocpp::recv(sched.stwStoppingTimeGC), startTime);
         }
         else
         {
-            record(gocpp::recv(sched.stwStoppingTimeOther), startTime);
+            rec::record(gocpp::recv(sched.stwStoppingTimeOther), startTime);
         }
         auto bad = "";
         if(sched.stopwait != 0)
@@ -1272,7 +1286,7 @@ namespace golang::runtime
                 }
             }
         }
-        if(Load(gocpp::recv(freezing)))
+        if(rec::Load(gocpp::recv(freezing)))
         {
             lock(& deadlock);
             lock(& deadlock);
@@ -1303,10 +1317,10 @@ namespace golang::runtime
             newprocs = 0;
         }
         auto p1 = procresize(procs);
-        Store(gocpp::recv(sched.gcwaiting), false);
-        if(Load(gocpp::recv(sched.sysmonwait)))
+        rec::Store(gocpp::recv(sched.gcwaiting), false);
+        if(rec::Load(gocpp::recv(sched.sysmonwait)))
         {
-            Store(gocpp::recv(sched.sysmonwait), false);
+            rec::Store(gocpp::recv(sched.sysmonwait), false);
             notewakeup(& sched.sysmonnote);
         }
         unlock(& sched.lock);
@@ -1314,16 +1328,16 @@ namespace golang::runtime
         for(; p1 != nullptr; )
         {
             auto p = p1;
-            p1 = ptr(gocpp::recv(p1->link));
+            p1 = rec::ptr(gocpp::recv(p1->link));
             if(p->m != 0)
             {
-                auto mp = ptr(gocpp::recv(p->m));
+                auto mp = rec::ptr(gocpp::recv(p->m));
                 p->m = 0;
                 if(mp->nextp != 0)
                 {
                     go_throw("startTheWorld: inconsistent mp->nextp");
                 }
-                set(gocpp::recv(mp->nextp), p);
+                rec::set(gocpp::recv(mp->nextp), p);
                 notewakeup(& mp->park);
             }
             else
@@ -1336,18 +1350,18 @@ namespace golang::runtime
             now = nanotime();
         }
         auto totalTime = now - w.start;
-        if(isGC(gocpp::recv(w.reason)))
+        if(rec::isGC(gocpp::recv(w.reason)))
         {
-            record(gocpp::recv(sched.stwTotalTimeGC), totalTime);
+            rec::record(gocpp::recv(sched.stwTotalTimeGC), totalTime);
         }
         else
         {
-            record(gocpp::recv(sched.stwTotalTimeOther), totalTime);
+            rec::record(gocpp::recv(sched.stwTotalTimeOther), totalTime);
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            STWDone(gocpp::recv(trace));
+            rec::STWDone(gocpp::recv(trace));
             traceRelease(trace);
         }
         wakep();
@@ -1468,7 +1482,7 @@ namespace golang::runtime
         }
         if(gp->m != & m0)
         {
-            acquirep(ptr(gocpp::recv(gp->m->nextp)));
+            acquirep(rec::ptr(gocpp::recv(gp->m->nextp)));
             gp->m->nextp = 0;
         }
         schedule();
@@ -1522,12 +1536,12 @@ namespace golang::runtime
         }
         go_throw("m not found in allm");
         found:
-        Store(gocpp::recv(mp->freeWait), freeMWait);
+        rec::Store(gocpp::recv(mp->freeWait), freeMWait);
         mp->freelink = sched.freem;
         sched.freem = mp;
         unlock(& sched.lock);
         atomic::Xadd64(& ncgocall, int64_t(mp->ncgocall));
-        Add(gocpp::recv(sched.totalRuntimeLockWaitTime), Load(gocpp::recv(mp->mLockProfile.waitTime)));
+        rec::Add(gocpp::recv(sched.totalRuntimeLockWaitTime), rec::Load(gocpp::recv(mp->mLockProfile.waitTime)));
         handoffp(releasep());
         lock(& sched.lock);
         sched.nmfreed++;
@@ -1535,21 +1549,21 @@ namespace golang::runtime
         unlock(& sched.lock);
         if(GOOS == "darwin" || GOOS == "ios")
         {
-            if(Load(gocpp::recv(mp->signalPending)) != 0)
+            if(rec::Load(gocpp::recv(mp->signalPending)) != 0)
             {
-                Add(gocpp::recv(pendingPreemptSignals), - 1);
+                rec::Add(gocpp::recv(pendingPreemptSignals), - 1);
             }
         }
         mdestroy(mp);
         if(osStack)
         {
-            Store(gocpp::recv(mp->freeWait), freeMRef);
+            rec::Store(gocpp::recv(mp->freeWait), freeMRef);
             return;
         }
         exitThread(& mp->freeWait);
     }
 
-    void forEachP(waitReason reason, std::function<void (p*)> fn)
+    void forEachP(runtime::waitReason reason, std::function<void (p*)> fn)
     {
         systemstack([=]() mutable -> void
         {
@@ -1563,7 +1577,7 @@ namespace golang::runtime
     void forEachPInternal(std::function<void (p*)> fn)
     {
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(getg()->m->p));
+        auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         lock(& sched.lock);
         if(sched.safePointWait != 0)
         {
@@ -1579,7 +1593,7 @@ namespace golang::runtime
             }
         }
         preemptall();
-        for(auto p = ptr(gocpp::recv(sched.pidle)); p != nullptr; p = ptr(gocpp::recv(p->link)))
+        for(auto p = rec::ptr(gocpp::recv(sched.pidle)); p != nullptr; p = rec::ptr(gocpp::recv(p->link)))
         {
             if(atomic::Cas(& p->runSafePointFn, 1, 0))
             {
@@ -1596,17 +1610,17 @@ namespace golang::runtime
             auto trace = traceAcquire();
             if(s == _Psyscall && p2->runSafePointFn == 1 && atomic::Cas(& p2->status, s, _Pidle))
             {
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
-                    GoSysBlock(gocpp::recv(trace), p2);
-                    ProcSteal(gocpp::recv(trace), p2, false);
+                    rec::GoSysBlock(gocpp::recv(trace), p2);
+                    rec::ProcSteal(gocpp::recv(trace), p2, false);
                     traceRelease(trace);
                 }
                 p2->syscalltick++;
                 handoffp(p2);
             }
             else
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 traceRelease(trace);
             }
@@ -1642,12 +1656,12 @@ namespace golang::runtime
 
     void runSafePointFn()
     {
-        auto p = ptr(gocpp::recv(getg()->m->p));
+        auto p = rec::ptr(gocpp::recv(getg()->m->p));
         if(! atomic::Cas(& p->runSafePointFn, 1, 0))
         {
             return;
         }
-        safePointFn(gocpp::recv(sched), p);
+        rec::safePointFn(gocpp::recv(sched), p);
         lock(& sched.lock);
         sched.safePointWait--;
         if(sched.safePointWait == 0)
@@ -1695,7 +1709,7 @@ namespace golang::runtime
 
     struct m* allocm(struct p* pp, std::function<void ()> fn, int64_t id)
     {
-        rlock(gocpp::recv(allocmLock));
+        rec::rlock(gocpp::recv(allocmLock));
         acquirem();
         auto gp = getg();
         if(gp->m->p == 0)
@@ -1708,7 +1722,7 @@ namespace golang::runtime
             m* newList = {};
             for(auto freem = sched.freem; freem != nullptr; )
             {
-                auto wait = Load(gocpp::recv(freem->freeWait));
+                auto wait = rec::Load(gocpp::recv(freem->freeWait));
                 if(wait == freeMWait)
                 {
                     auto next = freem->freelink;
@@ -1745,12 +1759,12 @@ namespace golang::runtime
             mp->g0 = malg(16384 * sys::StackGuardMultiplier);
         }
         mp->g0->m = mp;
-        if(pp == ptr(gocpp::recv(gp->m->p)))
+        if(pp == rec::ptr(gocpp::recv(gp->m->p)))
         {
             releasep();
         }
         releasem(gp->m);
-        runlock(gocpp::recv(allocmLock));
+        rec::runlock(gocpp::recv(allocmLock));
         return mp;
     }
 
@@ -1780,12 +1794,12 @@ namespace golang::runtime
             trace = traceAcquire();
         }
         casgstatus(mp->curg, _Gdead, _Gsyscall);
-        Add(gocpp::recv(sched.ngsys), - 1);
+        rec::Add(gocpp::recv(sched.ngsys), - 1);
         if(goexperiment::ExecTracer2 && ! signal)
         {
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GoCreateSyscall(gocpp::recv(trace), mp->curg);
+                rec::GoCreateSyscall(gocpp::recv(trace), mp->curg);
                 traceRelease(trace);
             }
         }
@@ -1803,7 +1817,7 @@ namespace golang::runtime
 
     void newextram()
     {
-        auto c = Swap(gocpp::recv(extraMWaiters), 0);
+        auto c = rec::Swap(gocpp::recv(extraMWaiters), 0);
         if(c > 0)
         {
             for(auto i = uint32_t(0); i < c; i++)
@@ -1812,7 +1826,7 @@ namespace golang::runtime
             }
         }
         else
-        if(Load(gocpp::recv(extraMLength)) == 0)
+        if(rec::Load(gocpp::recv(extraMLength)) == 0)
         {
             oneNewExtraM();
         }
@@ -1836,21 +1850,21 @@ namespace golang::runtime
         mp->isextra = true;
         mp->isExtraInC = true;
         mp->lockedInt++;
-        set(gocpp::recv(mp->lockedg), gp);
-        set(gocpp::recv(gp->lockedm), mp);
-        gp->goid = Add(gocpp::recv(sched.goidgen), 1);
+        rec::set(gocpp::recv(mp->lockedg), gp);
+        rec::set(gocpp::recv(gp->lockedm), mp);
+        gp->goid = rec::Add(gocpp::recv(sched.goidgen), 1);
         if(raceenabled)
         {
             gp->racectx = racegostart(abi::FuncPCABIInternal(newextram) + sys::PCQuantum);
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            OneNewExtraM(gocpp::recv(trace), gp);
+            rec::OneNewExtraM(gocpp::recv(trace), gp);
             traceRelease(trace);
         }
         allgadd(gp);
-        Add(gocpp::recv(sched.ngsys), 1);
+        rec::Add(gocpp::recv(sched.ngsys), 1);
         addExtraM(mp);
     }
 
@@ -1864,12 +1878,12 @@ namespace golang::runtime
         }
         casgstatus(mp->curg, _Gsyscall, _Gdead);
         mp->curg->preemptStop = false;
-        Add(gocpp::recv(sched.ngsys), 1);
+        rec::Add(gocpp::recv(sched.ngsys), 1);
         if(goexperiment::ExecTracer2 && ! mp->isExtraInSig)
         {
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GoDestroySyscall(gocpp::recv(trace));
+                rec::GoDestroySyscall(gocpp::recv(trace));
                 traceRelease(trace);
             }
         }
@@ -1877,7 +1891,7 @@ namespace golang::runtime
         {
             mp->syscalltick--;
         }
-        reset(gocpp::recv(mp->curg->trace));
+        rec::reset(gocpp::recv(mp->curg->trace));
         if(goexperiment::ExecTracer2 && (traceEnabled() || traceShuttingDown()))
         {
             lock(& sched.lock);
@@ -1930,7 +1944,7 @@ namespace golang::runtime
         auto incr = false;
         for(; ; )
         {
-            auto old = Load(gocpp::recv(extraM));
+            auto old = rec::Load(gocpp::recv(extraM));
             if(old == locked)
             {
                 osyield_no_g();
@@ -1940,13 +1954,13 @@ namespace golang::runtime
             {
                 if(! incr)
                 {
-                    Add(gocpp::recv(extraMWaiters), 1);
+                    rec::Add(gocpp::recv(extraMWaiters), 1);
                     incr = true;
                 }
                 usleep_no_g(1);
                 continue;
             }
-            if(CompareAndSwap(gocpp::recv(extraM), old, locked))
+            if(rec::CompareAndSwap(gocpp::recv(extraM), old, locked))
             {
                 return (m*)(unsafe::Pointer(old));
             }
@@ -1957,8 +1971,8 @@ namespace golang::runtime
 
     void unlockextra(struct m* mp, int32_t delta)
     {
-        Add(gocpp::recv(extraMLength), delta);
-        Store(gocpp::recv(extraM), uintptr_t(unsafe::Pointer(mp)));
+        rec::Add(gocpp::recv(extraMLength), delta);
+        rec::Store(gocpp::recv(extraM), uintptr_t(unsafe::Pointer(mp)));
     }
 
     std::tuple<struct m*, bool> getExtraM()
@@ -1966,21 +1980,21 @@ namespace golang::runtime
         struct m* mp;
         bool last;
         mp = lockextra(false);
-        Add(gocpp::recv(extraMInUse), 1);
-        unlockextra(ptr(gocpp::recv(mp->schedlink)), - 1);
-        return {mp, ptr(gocpp::recv(mp->schedlink)) == nullptr};
+        rec::Add(gocpp::recv(extraMInUse), 1);
+        unlockextra(rec::ptr(gocpp::recv(mp->schedlink)), - 1);
+        return {mp, rec::ptr(gocpp::recv(mp->schedlink)) == nullptr};
     }
 
     void putExtraM(struct m* mp)
     {
-        Add(gocpp::recv(extraMInUse), - 1);
+        rec::Add(gocpp::recv(extraMInUse), - 1);
         addExtraM(mp);
     }
 
     void addExtraM(struct m* mp)
     {
         auto mnext = lockextra(true);
-        set(gocpp::recv(mp->schedlink), mnext);
+        rec::set(gocpp::recv(mp->schedlink), mnext);
         unlockextra(mp, 1);
     }
 
@@ -1991,7 +2005,7 @@ namespace golang::runtime
     struct gocpp_id_2
     {
         mutex lock;
-        muintptr newm;
+        runtime::muintptr newm;
         bool waiting;
         note wake;
         uint32_t haveTemplateThread;
@@ -2045,7 +2059,7 @@ namespace golang::runtime
     {
         acquirem();
         auto mp = allocm(pp, fn, id);
-        set(gocpp::recv(mp->nextp), pp);
+        rec::set(gocpp::recv(mp->nextp), pp);
         mp->sigmask = initSigmask;
         if(auto gp = getg(); gp != nullptr && gp->m != nullptr && (gp->m->lockedExt != 0 || gp->m->incgo) && GOOS != "plan9")
         {
@@ -2055,7 +2069,7 @@ namespace golang::runtime
                 go_throw("on a locked thread with no template thread");
             }
             mp->schedlink = newmHandoff.newm;
-            set(gocpp::recv(newmHandoff.newm), mp);
+            rec::set(gocpp::recv(newmHandoff.newm), mp);
             if(newmHandoff.waiting)
             {
                 newmHandoff.waiting = false;
@@ -2078,7 +2092,7 @@ namespace golang::runtime
             {
                 go_throw("_cgo_thread_start missing");
             }
-            set(gocpp::recv(ts.g), mp->g0);
+            rec::set(gocpp::recv(ts.g), mp->g0);
             ts.tls = (uint64_t*)(unsafe::Pointer(& mp->tls[0]));
             ts.fn = unsafe::Pointer(abi::FuncPCABI0(mstart));
             if(msanenabled)
@@ -2089,14 +2103,14 @@ namespace golang::runtime
             {
                 asanwrite(unsafe::Pointer(& ts), gocpp::Sizeof<cgothreadstart>());
             }
-            rlock(gocpp::recv(execLock));
+            rec::rlock(gocpp::recv(execLock));
             asmcgocall(_cgo_thread_start, unsafe::Pointer(& ts));
-            runlock(gocpp::recv(execLock));
+            rec::runlock(gocpp::recv(execLock));
             return;
         }
-        rlock(gocpp::recv(execLock));
+        rec::rlock(gocpp::recv(execLock));
         newosproc(mp);
-        runlock(gocpp::recv(execLock));
+        rec::runlock(gocpp::recv(execLock));
     }
 
     void startTemplateThread()
@@ -2126,12 +2140,12 @@ namespace golang::runtime
             lock(& newmHandoff.lock);
             for(; newmHandoff.newm != 0; )
             {
-                auto newm = ptr(gocpp::recv(newmHandoff.newm));
+                auto newm = rec::ptr(gocpp::recv(newmHandoff.newm));
                 newmHandoff.newm = 0;
                 unlock(& newmHandoff.lock);
                 for(; newm != nullptr; )
                 {
-                    auto next = ptr(gocpp::recv(newm->schedlink));
+                    auto next = rec::ptr(gocpp::recv(newm->schedlink));
                     newm->schedlink = 0;
                     newm1(newm);
                     newm = next;
@@ -2164,7 +2178,7 @@ namespace golang::runtime
         mput(gp->m);
         unlock(& sched.lock);
         mPark();
-        acquirep(ptr(gocpp::recv(gp->m->nextp)));
+        acquirep(rec::ptr(gocpp::recv(gp->m->nextp)));
         gp->m->nextp = 0;
     }
 
@@ -2232,7 +2246,7 @@ namespace golang::runtime
             go_throw("startm: p has runnable gs");
         }
         nmp->spinning = spinning;
-        set(gocpp::recv(nmp->nextp), pp);
+        rec::set(gocpp::recv(nmp->nextp), pp);
         notewakeup(& nmp->park);
         releasem(mp);
     }
@@ -2254,14 +2268,14 @@ namespace golang::runtime
             startm(pp, false, false);
             return;
         }
-        if(Load(gocpp::recv(sched.nmspinning)) + Load(gocpp::recv(sched.npidle)) == 0 && CompareAndSwap(gocpp::recv(sched.nmspinning), 0, 1))
+        if(rec::Load(gocpp::recv(sched.nmspinning)) + rec::Load(gocpp::recv(sched.npidle)) == 0 && rec::CompareAndSwap(gocpp::recv(sched.nmspinning), 0, 1))
         {
-            Store(gocpp::recv(sched.needspinning), 0);
+            rec::Store(gocpp::recv(sched.needspinning), 0);
             startm(pp, true, false);
             return;
         }
         lock(& sched.lock);
-        if(Load(gocpp::recv(sched.gcwaiting)))
+        if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
             pp->status = _Pgcstop;
             sched.stopwait--;
@@ -2274,7 +2288,7 @@ namespace golang::runtime
         }
         if(pp->runSafePointFn != 0 && atomic::Cas(& pp->runSafePointFn, 1, 0))
         {
-            safePointFn(gocpp::recv(sched), pp);
+            rec::safePointFn(gocpp::recv(sched), pp);
             sched.safePointWait--;
             if(sched.safePointWait == 0)
             {
@@ -2287,7 +2301,7 @@ namespace golang::runtime
             startm(pp, false, false);
             return;
         }
-        if(Load(gocpp::recv(sched.npidle)) == gomaxprocs - 1 && Load(gocpp::recv(sched.lastpoll)) != 0)
+        if(rec::Load(gocpp::recv(sched.npidle)) == gomaxprocs - 1 && rec::Load(gocpp::recv(sched.lastpoll)) != 0)
         {
             unlock(& sched.lock);
             startm(pp, false, false);
@@ -2304,7 +2318,7 @@ namespace golang::runtime
 
     void wakep()
     {
-        if(Load(gocpp::recv(sched.nmspinning)) != 0 || ! CompareAndSwap(gocpp::recv(sched.nmspinning), 0, 1))
+        if(rec::Load(gocpp::recv(sched.nmspinning)) != 0 || ! rec::CompareAndSwap(gocpp::recv(sched.nmspinning), 0, 1))
         {
             return;
         }
@@ -2314,7 +2328,7 @@ namespace golang::runtime
         std::tie(pp, gocpp_id_4) = pidlegetSpinning(0);
         if(pp == nullptr)
         {
-            if(Add(gocpp::recv(sched.nmspinning), - 1) < 0)
+            if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
             {
                 go_throw("wakep: negative nmspinning");
             }
@@ -2330,7 +2344,7 @@ namespace golang::runtime
     void stoplockedm()
     {
         auto gp = getg();
-        if(gp->m->lockedg == 0 || ptr(gocpp::recv(ptr(gocpp::recv(gp->m->lockedg))->lockedm)) != gp->m)
+        if(gp->m->lockedg == 0 || rec::ptr(gocpp::recv(rec::ptr(gocpp::recv(gp->m->lockedg))->lockedm)) != gp->m)
         {
             go_throw("stoplockedm: inconsistent locking");
         }
@@ -2341,20 +2355,20 @@ namespace golang::runtime
         }
         incidlelocked(1);
         mPark();
-        auto status = readgstatus(ptr(gocpp::recv(gp->m->lockedg)));
+        auto status = readgstatus(rec::ptr(gocpp::recv(gp->m->lockedg)));
         if(status &^ _Gscan != _Grunnable)
         {
             print("runtime:stoplockedm: lockedg (atomicstatus=", status, ") is not Grunnable or Gscanrunnable\n");
-            dumpgstatus(ptr(gocpp::recv(gp->m->lockedg)));
+            dumpgstatus(rec::ptr(gocpp::recv(gp->m->lockedg)));
             go_throw("stoplockedm: not runnable");
         }
-        acquirep(ptr(gocpp::recv(gp->m->nextp)));
+        acquirep(rec::ptr(gocpp::recv(gp->m->nextp)));
         gp->m->nextp = 0;
     }
 
     void startlockedm(struct g* gp)
     {
-        auto mp = ptr(gocpp::recv(gp->lockedm));
+        auto mp = rec::ptr(gocpp::recv(gp->lockedm));
         if(mp == getg()->m)
         {
             go_throw("startlockedm: locked to me");
@@ -2365,7 +2379,7 @@ namespace golang::runtime
         }
         incidlelocked(- 1);
         auto pp = releasep();
-        set(gocpp::recv(mp->nextp), pp);
+        rec::set(gocpp::recv(mp->nextp), pp);
         notewakeup(& mp->park);
         stopm();
     }
@@ -2373,14 +2387,14 @@ namespace golang::runtime
     void gcstopm()
     {
         auto gp = getg();
-        if(! Load(gocpp::recv(sched.gcwaiting)))
+        if(! rec::Load(gocpp::recv(sched.gcwaiting)))
         {
             go_throw("gcstopm: not waiting for gc");
         }
         if(gp->m->spinning)
         {
             gp->m->spinning = false;
-            if(Add(gocpp::recv(sched.nmspinning), - 1) < 0)
+            if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
             {
                 go_throw("gcstopm: negative nmspinning");
             }
@@ -2412,7 +2426,7 @@ namespace golang::runtime
         gp->stackguard0 = gp->stack.lo + stackGuard;
         if(! inheritTime)
         {
-            ptr(gocpp::recv(mp->p))->schedtick++;
+            rec::ptr(gocpp::recv(mp->p))->schedtick++;
         }
         auto hz = sched.profilehz;
         if(mp->profilehz != hz)
@@ -2420,13 +2434,13 @@ namespace golang::runtime
             setThreadCPUProfiler(hz);
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             if(! goexperiment::ExecTracer2 && gp->syscallsp != 0)
             {
-                GoSysExit(gocpp::recv(trace), true);
+                rec::GoSysExit(gocpp::recv(trace), true);
             }
-            GoStart(gocpp::recv(trace));
+            rec::GoStart(gocpp::recv(trace));
             traceRelease(trace);
         }
         gogo(& gp->sched);
@@ -2439,8 +2453,8 @@ namespace golang::runtime
         bool tryWakeP;
         auto mp = getg()->m;
         top:
-        auto pp = ptr(gocpp::recv(mp->p));
-        if(Load(gocpp::recv(sched.gcwaiting)))
+        auto pp = rec::ptr(gocpp::recv(mp->p));
+        if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
             struct g* gp;
             bool inheritTime;
@@ -2469,12 +2483,12 @@ namespace golang::runtime
                 bool tryWakeP;
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    GoUnpark(gocpp::recv(trace), gp, 0);
+                    rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
                 return {gp, false, true};
@@ -2485,7 +2499,7 @@ namespace golang::runtime
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            auto [gp, tnow] = findRunnableGCWorker(gocpp::recv(gcController), pp, now);
+            auto [gp, tnow] = rec::findRunnableGCWorker(gocpp::recv(gcController), pp, now);
             if(gp != nullptr)
             {
                 struct g* gp;
@@ -2511,7 +2525,7 @@ namespace golang::runtime
                 return {gp, false, false};
             }
         }
-        if(Load(gocpp::recv(fingStatus)) & (fingWait | fingWake) == fingWait | fingWake)
+        if(rec::Load(gocpp::recv(fingStatus)) & (fingWait | fingWake) == fingWait | fingWake)
         {
             struct g* gp;
             bool inheritTime;
@@ -2554,33 +2568,33 @@ namespace golang::runtime
                 return {gp, false, false};
             }
         }
-        if(netpollinited() && netpollAnyWaiters() && Load(gocpp::recv(sched.lastpoll)) != 0)
+        if(netpollinited() && netpollAnyWaiters() && rec::Load(gocpp::recv(sched.lastpoll)) != 0)
         {
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            if(auto [list, delta] = netpoll(0); ! empty(gocpp::recv(list)))
+            if(auto [list, delta] = netpoll(0); ! rec::empty(gocpp::recv(list)))
             {
                 struct g* gp;
                 bool inheritTime;
                 bool tryWakeP;
-                auto gp = pop(gocpp::recv(list));
+                auto gp = rec::pop(gocpp::recv(list));
                 injectglist(& list);
                 netpollAdjustWaiters(delta);
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    GoUnpark(gocpp::recv(trace), gp, 0);
+                    rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
                 return {gp, false, false};
             }
         }
-        if(mp->spinning || 2 * Load(gocpp::recv(sched.nmspinning)) < gomaxprocs - Load(gocpp::recv(sched.npidle)))
+        if(mp->spinning || 2 * rec::Load(gocpp::recv(sched.nmspinning)) < gomaxprocs - rec::Load(gocpp::recv(sched.npidle)))
         {
             struct g* gp;
             bool inheritTime;
@@ -2590,7 +2604,7 @@ namespace golang::runtime
                 struct g* gp;
                 bool inheritTime;
                 bool tryWakeP;
-                becomeSpinning(gocpp::recv(mp));
+                rec::becomeSpinning(gocpp::recv(mp));
             }
             auto [gp, inheritTime, tnow, w, newWork] = stealWork(now);
             if(gp != nullptr)
@@ -2616,32 +2630,32 @@ namespace golang::runtime
                 pollUntil = w;
             }
         }
-        if(gcBlackenEnabled != 0 && gcMarkWorkAvailable(pp) && addIdleMarkWorker(gocpp::recv(gcController)))
+        if(gcBlackenEnabled != 0 && gcMarkWorkAvailable(pp) && rec::addIdleMarkWorker(gocpp::recv(gcController)))
         {
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            auto node = (gcBgMarkWorkerNode*)(pop(gocpp::recv(gcBgMarkWorkerPool)));
+            auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
             if(node != nullptr)
             {
                 struct g* gp;
                 bool inheritTime;
                 bool tryWakeP;
                 pp->gcMarkWorkerMode = gcMarkWorkerIdleMode;
-                auto gp = ptr(gocpp::recv(node->gp));
+                auto gp = rec::ptr(gocpp::recv(node->gp));
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    GoUnpark(gocpp::recv(trace), gp, 0);
+                    rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
                 return {gp, false, false};
             }
-            removeIdleMarkWorker(gocpp::recv(gcController));
+            rec::removeIdleMarkWorker(gocpp::recv(gcController));
         }
         auto [gp, otherReady] = beforeIdle(now, pollUntil);
         if(gp != nullptr)
@@ -2651,12 +2665,12 @@ namespace golang::runtime
             bool tryWakeP;
             auto trace = traceAcquire();
             casgstatus(gp, _Gwaiting, _Grunnable);
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 struct g* gp;
                 bool inheritTime;
                 bool tryWakeP;
-                GoUnpark(gocpp::recv(trace), gp, 0);
+                rec::GoUnpark(gocpp::recv(trace), gp, 0);
                 traceRelease(trace);
             }
             return {gp, false, false};
@@ -2672,7 +2686,7 @@ namespace golang::runtime
         auto idlepMaskSnapshot = idlepMask;
         auto timerpMaskSnapshot = timerpMask;
         lock(& sched.lock);
-        if(Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)
+        if(rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)
         {
             struct g* gp;
             bool inheritTime;
@@ -2689,12 +2703,12 @@ namespace golang::runtime
             unlock(& sched.lock);
             return {gp, false, false};
         }
-        if(! mp->spinning && Load(gocpp::recv(sched.needspinning)) == 1)
+        if(! mp->spinning && rec::Load(gocpp::recv(sched.needspinning)) == 1)
         {
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            becomeSpinning(gocpp::recv(mp));
+            rec::becomeSpinning(gocpp::recv(mp));
             unlock(& sched.lock);
             goto top;
         }
@@ -2714,7 +2728,7 @@ namespace golang::runtime
             bool inheritTime;
             bool tryWakeP;
             mp->spinning = false;
-            if(Add(gocpp::recv(sched.nmspinning), - 1) < 0)
+            if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
             {
                 struct g* gp;
                 bool inheritTime;
@@ -2743,7 +2757,7 @@ namespace golang::runtime
                     }
                     unlock(& sched.lock);
                     acquirep(pp);
-                    becomeSpinning(gocpp::recv(mp));
+                    rec::becomeSpinning(gocpp::recv(mp));
                     return {gp, false, false};
                 }
             }
@@ -2755,7 +2769,7 @@ namespace golang::runtime
                 bool inheritTime;
                 bool tryWakeP;
                 acquirep(pp);
-                becomeSpinning(gocpp::recv(mp));
+                rec::becomeSpinning(gocpp::recv(mp));
                 goto top;
             }
             g* gp;
@@ -2766,28 +2780,28 @@ namespace golang::runtime
                 bool inheritTime;
                 bool tryWakeP;
                 acquirep(pp);
-                becomeSpinning(gocpp::recv(mp));
+                rec::becomeSpinning(gocpp::recv(mp));
                 pp->gcMarkWorkerMode = gcMarkWorkerIdleMode;
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    GoUnpark(gocpp::recv(trace), gp, 0);
+                    rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
                 return {gp, false, false};
             }
             pollUntil = checkTimersNoP(allpSnapshot, timerpMaskSnapshot, pollUntil);
         }
-        if(netpollinited() && (netpollAnyWaiters() || pollUntil != 0) && Swap(gocpp::recv(sched.lastpoll), 0) != 0)
+        if(netpollinited() && (netpollAnyWaiters() || pollUntil != 0) && rec::Swap(gocpp::recv(sched.lastpoll), 0) != 0)
         {
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            Store(gocpp::recv(sched.pollUntil), pollUntil);
+            rec::Store(gocpp::recv(sched.pollUntil), pollUntil);
             if(mp->p != 0)
             {
                 struct g* gp;
@@ -2833,9 +2847,9 @@ namespace golang::runtime
             }
             auto [list, delta] = netpoll(delay);
             now = nanotime();
-            Store(gocpp::recv(sched.pollUntil), 0);
-            Store(gocpp::recv(sched.lastpoll), now);
-            if(faketime != 0 && empty(gocpp::recv(list)))
+            rec::Store(gocpp::recv(sched.pollUntil), 0);
+            rec::Store(gocpp::recv(sched.lastpoll), now);
+            if(faketime != 0 && rec::empty(gocpp::recv(list)))
             {
                 struct g* gp;
                 bool inheritTime;
@@ -2860,22 +2874,22 @@ namespace golang::runtime
                 bool inheritTime;
                 bool tryWakeP;
                 acquirep(pp);
-                if(! empty(gocpp::recv(list)))
+                if(! rec::empty(gocpp::recv(list)))
                 {
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    auto gp = pop(gocpp::recv(list));
+                    auto gp = rec::pop(gocpp::recv(list));
                     injectglist(& list);
                     netpollAdjustWaiters(delta);
                     auto trace = traceAcquire();
                     casgstatus(gp, _Gwaiting, _Grunnable);
-                    if(ok(gocpp::recv(trace)))
+                    if(rec::ok(gocpp::recv(trace)))
                     {
                         struct g* gp;
                         bool inheritTime;
                         bool tryWakeP;
-                        GoUnpark(gocpp::recv(trace), gp, 0);
+                        rec::GoUnpark(gocpp::recv(trace), gp, 0);
                         traceRelease(trace);
                     }
                     return {gp, false, false};
@@ -2885,7 +2899,7 @@ namespace golang::runtime
                     struct g* gp;
                     bool inheritTime;
                     bool tryWakeP;
-                    becomeSpinning(gocpp::recv(mp));
+                    rec::becomeSpinning(gocpp::recv(mp));
                 }
                 goto top;
             }
@@ -2896,7 +2910,7 @@ namespace golang::runtime
             struct g* gp;
             bool inheritTime;
             bool tryWakeP;
-            auto pollerPollUntil = Load(gocpp::recv(sched.pollUntil));
+            auto pollerPollUntil = rec::Load(gocpp::recv(sched.pollUntil));
             if(pollerPollUntil == 0 || pollerPollUntil > pollUntil)
             {
                 struct g* gp;
@@ -2915,14 +2929,14 @@ namespace golang::runtime
         {
             return true;
         }
-        auto p = ptr(gocpp::recv(getg()->m->p));
+        auto p = rec::ptr(gocpp::recv(getg()->m->p));
         if(! runqempty(p))
         {
             return true;
         }
-        if(netpollinited() && netpollAnyWaiters() && Load(gocpp::recv(sched.lastpoll)) != 0)
+        if(netpollinited() && netpollAnyWaiters() && rec::Load(gocpp::recv(sched.lastpoll)) != 0)
         {
-            if(auto [list, delta] = netpoll(0); ! empty(gocpp::recv(list)))
+            if(auto [list, delta] = netpoll(0); ! rec::empty(gocpp::recv(list)))
             {
                 injectglist(& list);
                 netpollAdjustWaiters(delta);
@@ -2939,7 +2953,7 @@ namespace golang::runtime
         int64_t rnow;
         int64_t pollUntil;
         bool newWork;
-        auto pp = ptr(gocpp::recv(getg()->m->p));
+        auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         auto ranTimer = false;
         auto stealTries = 4;
         for(auto i = 0; i < stealTries; i++)
@@ -2950,14 +2964,14 @@ namespace golang::runtime
             int64_t pollUntil;
             bool newWork;
             auto stealTimersOrRunNextG = i == stealTries - 1;
-            for(auto go_enum = start(gocpp::recv(stealOrder), cheaprand()); ! done(gocpp::recv(go_enum)); next(gocpp::recv(go_enum)))
+            for(auto go_enum = rec::start(gocpp::recv(stealOrder), cheaprand()); ! rec::done(gocpp::recv(go_enum)); rec::next(gocpp::recv(go_enum)))
             {
                 struct g* gp;
                 bool inheritTime;
                 int64_t rnow;
                 int64_t pollUntil;
                 bool newWork;
-                if(Load(gocpp::recv(sched.gcwaiting)))
+                if(rec::Load(gocpp::recv(sched.gcwaiting)))
                 {
                     struct g* gp;
                     bool inheritTime;
@@ -2966,7 +2980,7 @@ namespace golang::runtime
                     bool newWork;
                     return {nullptr, false, now, pollUntil, true};
                 }
-                auto p2 = allp[position(gocpp::recv(go_enum))];
+                auto p2 = allp[rec::position(gocpp::recv(go_enum))];
                 if(pp == p2)
                 {
                     struct g* gp;
@@ -2976,7 +2990,7 @@ namespace golang::runtime
                     bool newWork;
                     continue;
                 }
-                if(stealTimersOrRunNextG && read(gocpp::recv(timerpMask), position(gocpp::recv(go_enum))))
+                if(stealTimersOrRunNextG && rec::read(gocpp::recv(timerpMask), rec::position(gocpp::recv(go_enum))))
                 {
                     struct g* gp;
                     bool inheritTime;
@@ -3013,7 +3027,7 @@ namespace golang::runtime
                         ranTimer = true;
                     }
                 }
-                if(! read(gocpp::recv(idlepMask), position(gocpp::recv(go_enum))))
+                if(! rec::read(gocpp::recv(idlepMask), rec::position(gocpp::recv(go_enum))))
                 {
                     struct g* gp;
                     bool inheritTime;
@@ -3039,7 +3053,7 @@ namespace golang::runtime
     {
         for(auto [id, p2] : allpSnapshot)
         {
-            if(! read(gocpp::recv(idlepMaskSnapshot), uint32_t(id)) && ! runqempty(p2))
+            if(! rec::read(gocpp::recv(idlepMaskSnapshot), uint32_t(id)) && ! runqempty(p2))
             {
                 lock(& sched.lock);
                 auto [pp, gocpp_id_12] = pidlegetSpinning(0);
@@ -3059,7 +3073,7 @@ namespace golang::runtime
     {
         for(auto [id, p2] : allpSnapshot)
         {
-            if(read(gocpp::recv(timerpMaskSnapshot), uint32_t(id)))
+            if(rec::read(gocpp::recv(timerpMaskSnapshot), uint32_t(id)))
             {
                 auto w = nobarrierWakeTime(p2);
                 if(w != 0 && (pollUntil == 0 || w < pollUntil))
@@ -3073,7 +3087,7 @@ namespace golang::runtime
 
     std::tuple<struct p*, struct g*> checkIdleGCNoP()
     {
-        if(atomic::Load(& gcBlackenEnabled) == 0 || ! needIdleMarkWorker(gocpp::recv(gcController)))
+        if(atomic::Load(& gcBlackenEnabled) == 0 || ! rec::needIdleMarkWorker(gocpp::recv(gcController)))
         {
             return {nullptr, nullptr};
         }
@@ -3088,29 +3102,29 @@ namespace golang::runtime
             unlock(& sched.lock);
             return {nullptr, nullptr};
         }
-        if(gcBlackenEnabled == 0 || ! addIdleMarkWorker(gocpp::recv(gcController)))
+        if(gcBlackenEnabled == 0 || ! rec::addIdleMarkWorker(gocpp::recv(gcController)))
         {
             pidleput(pp, now);
             unlock(& sched.lock);
             return {nullptr, nullptr};
         }
-        auto node = (gcBgMarkWorkerNode*)(pop(gocpp::recv(gcBgMarkWorkerPool)));
+        auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
         {
             pidleput(pp, now);
             unlock(& sched.lock);
-            removeIdleMarkWorker(gocpp::recv(gcController));
+            rec::removeIdleMarkWorker(gocpp::recv(gcController));
             return {nullptr, nullptr};
         }
         unlock(& sched.lock);
-        return {pp, ptr(gocpp::recv(node->gp))};
+        return {pp, rec::ptr(gocpp::recv(node->gp))};
     }
 
     void wakeNetPoller(int64_t when)
     {
-        if(Load(gocpp::recv(sched.lastpoll)) == 0)
+        if(rec::Load(gocpp::recv(sched.lastpoll)) == 0)
         {
-            auto pollerPollUntil = Load(gocpp::recv(sched.pollUntil));
+            auto pollerPollUntil = rec::Load(gocpp::recv(sched.pollUntil));
             if(pollerPollUntil == 0 || pollerPollUntil > when)
             {
                 netpollBreak();
@@ -3133,7 +3147,7 @@ namespace golang::runtime
             go_throw("resetspinning: not a spinning m");
         }
         gp->m->spinning = false;
-        auto nmspinning = Add(gocpp::recv(sched.nmspinning), - 1);
+        auto nmspinning = rec::Add(gocpp::recv(sched.nmspinning), - 1);
         if(nmspinning < 0)
         {
             go_throw("findrunnable: negative nmspinning");
@@ -3143,31 +3157,31 @@ namespace golang::runtime
 
     void injectglist(struct gList* glist)
     {
-        if(empty(gocpp::recv(glist)))
+        if(rec::empty(gocpp::recv(glist)))
         {
             return;
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            for(auto gp = ptr(gocpp::recv(glist->head)); gp != nullptr; gp = ptr(gocpp::recv(gp->schedlink)))
+            for(auto gp = rec::ptr(gocpp::recv(glist->head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
             {
-                GoUnpark(gocpp::recv(trace), gp, 0);
+                rec::GoUnpark(gocpp::recv(trace), gp, 0);
             }
             traceRelease(trace);
         }
-        auto head = ptr(gocpp::recv(glist->head));
+        auto head = rec::ptr(gocpp::recv(glist->head));
         g* tail = {};
         auto qsize = 0;
-        for(auto gp = head; gp != nullptr; gp = ptr(gocpp::recv(gp->schedlink)))
+        for(auto gp = head; gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
         {
             tail = gp;
             qsize++;
             casgstatus(gp, _Gwaiting, _Grunnable);
         }
         gQueue q = {};
-        set(gocpp::recv(q.head), head);
-        set(gocpp::recv(q.tail), tail);
+        rec::set(gocpp::recv(q.head), head);
+        rec::set(gocpp::recv(q.tail), tail);
         *glist = gList {};
         auto startIdle = [=](int n) mutable -> void
         {
@@ -3187,7 +3201,7 @@ namespace golang::runtime
                 releasem(mp);
             }
         };
-        auto pp = ptr(gocpp::recv(getg()->m->p));
+        auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         if(pp == nullptr)
         {
             lock(& sched.lock);
@@ -3196,13 +3210,13 @@ namespace golang::runtime
             startIdle(qsize);
             return;
         }
-        auto npidle = int(Load(gocpp::recv(sched.npidle)));
+        auto npidle = int(rec::Load(gocpp::recv(sched.npidle)));
         gQueue globq = {};
         int n = {};
-        for(n = 0; n < npidle && ! empty(gocpp::recv(q)); n++)
+        for(n = 0; n < npidle && ! rec::empty(gocpp::recv(q)); n++)
         {
-            auto g = pop(gocpp::recv(q));
-            pushBack(gocpp::recv(globq), g);
+            auto g = rec::pop(gocpp::recv(q));
+            rec::pushBack(gocpp::recv(globq), g);
         }
         if(n > 0)
         {
@@ -3212,7 +3226,7 @@ namespace golang::runtime
             startIdle(n);
             qsize -= n;
         }
-        if(! empty(gocpp::recv(q)))
+        if(! rec::empty(gocpp::recv(q)))
         {
             runqputbatch(pp, & q, qsize);
         }
@@ -3228,21 +3242,21 @@ namespace golang::runtime
         if(mp->lockedg != 0)
         {
             stoplockedm();
-            execute(ptr(gocpp::recv(mp->lockedg)), false);
+            execute(rec::ptr(gocpp::recv(mp->lockedg)), false);
         }
         if(mp->incgo)
         {
             go_throw("schedule: in cgo");
         }
         top:
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         pp->preempt = false;
         if(mp->spinning && (pp->runnext != 0 || pp->runqhead != pp->runqtail))
         {
             go_throw("schedule: spinning with local work");
         }
         auto [gp, inheritTime, tryWakeP] = findRunnable();
-        if(debug.dontfreezetheworld > 0 && Load(gocpp::recv(freezing)))
+        if(debug.dontfreezetheworld > 0 && rec::Load(gocpp::recv(freezing)))
         {
             lock(& deadlock);
             lock(& deadlock);
@@ -3260,7 +3274,7 @@ namespace golang::runtime
             }
             else
             {
-                pushBack(gocpp::recv(sched.disable.runnable), gp);
+                rec::pushBack(gocpp::recv(sched.disable.runnable), gp);
                 sched.disable.n++;
                 unlock(& sched.lock);
                 goto top;
@@ -3290,8 +3304,8 @@ namespace golang::runtime
         int64_t rnow;
         int64_t pollUntil;
         bool ran;
-        auto next = Load(gocpp::recv(pp->timer0When));
-        auto nextAdj = Load(gocpp::recv(pp->timerModifiedEarliest));
+        auto next = rec::Load(gocpp::recv(pp->timer0When));
+        auto nextAdj = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
         if(next == 0 || (nextAdj != 0 && nextAdj < next))
         {
             int64_t rnow;
@@ -3318,7 +3332,7 @@ namespace golang::runtime
             int64_t rnow;
             int64_t pollUntil;
             bool ran;
-            if(pp != ptr(gocpp::recv(getg()->m->p)) || int(Load(gocpp::recv(pp->deletedTimers))) <= int(Load(gocpp::recv(pp->numTimers)) / 4))
+            if(pp != rec::ptr(gocpp::recv(getg()->m->p)) || int(rec::Load(gocpp::recv(pp->deletedTimers))) <= int(rec::Load(gocpp::recv(pp->numTimers)) / 4))
             {
                 int64_t rnow;
                 int64_t pollUntil;
@@ -3355,7 +3369,7 @@ namespace golang::runtime
                 ran = true;
             }
         }
-        if(pp == ptr(gocpp::recv(getg()->m->p)) && int(Load(gocpp::recv(pp->deletedTimers))) > len(pp->timers) / 4)
+        if(pp == rec::ptr(gocpp::recv(getg()->m->p)) && int(rec::Load(gocpp::recv(pp->deletedTimers))) > len(pp->timers) / 4)
         {
             int64_t rnow;
             int64_t pollUntil;
@@ -3377,9 +3391,9 @@ namespace golang::runtime
         auto mp = getg()->m;
         auto trace = traceAcquire();
         casgstatus(gp, _Grunning, _Gwaiting);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoPark(gocpp::recv(trace), mp->waitTraceBlockReason, mp->waitTraceSkip);
+            rec::GoPark(gocpp::recv(trace), mp->waitTraceBlockReason, mp->waitTraceSkip);
             traceRelease(trace);
         }
         dropg();
@@ -3392,9 +3406,9 @@ namespace golang::runtime
             {
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
-                    GoUnpark(gocpp::recv(trace), gp, 2);
+                    rec::GoUnpark(gocpp::recv(trace), gp, 2);
                     traceRelease(trace);
                 }
                 execute(gp, true);
@@ -3413,15 +3427,15 @@ namespace golang::runtime
             go_throw("bad g status");
         }
         casgstatus(gp, _Grunning, _Grunnable);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             if(preempted)
             {
-                GoPreempt(gocpp::recv(trace));
+                rec::GoPreempt(gocpp::recv(trace));
             }
             else
             {
-                GoSched(gocpp::recv(trace));
+                rec::GoSched(gocpp::recv(trace));
             }
             traceRelease(trace);
         }
@@ -3466,7 +3480,7 @@ namespace golang::runtime
         if(gp->asyncSafePoint)
         {
             auto f = findfunc(gp->sched.pc);
-            if(! valid(gocpp::recv(f)))
+            if(! rec::valid(gocpp::recv(f)))
             {
                 go_throw("preempt at unknown pc");
             }
@@ -3479,12 +3493,12 @@ namespace golang::runtime
         casGToPreemptScan(gp, _Grunning, _Gscan | _Gpreempted);
         dropg();
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoPark(gocpp::recv(trace), traceBlockPreempted, 0);
+            rec::GoPark(gocpp::recv(trace), traceBlockPreempted, 0);
         }
         casfrom_Gscanstatus(gp, _Gscan | _Gpreempted, _Gpreempted);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             traceRelease(trace);
         }
@@ -3500,11 +3514,11 @@ namespace golang::runtime
     void goyield_m(struct g* gp)
     {
         auto trace = traceAcquire();
-        auto pp = ptr(gocpp::recv(gp->m->p));
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
         casgstatus(gp, _Grunning, _Grunnable);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoPreempt(gocpp::recv(trace));
+            rec::GoPreempt(gocpp::recv(trace));
             traceRelease(trace);
         }
         dropg();
@@ -3519,9 +3533,9 @@ namespace golang::runtime
             racegoend();
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoEnd(gocpp::recv(trace));
+            rec::GoEnd(gocpp::recv(trace));
             traceRelease(trace);
         }
         mcall(goexit0);
@@ -3536,12 +3550,12 @@ namespace golang::runtime
     void gdestroy(struct g* gp)
     {
         auto mp = getg()->m;
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         casgstatus(gp, _Grunning, _Gdead);
-        addScannableStack(gocpp::recv(gcController), pp, - int64_t(gp->stack.hi - gp->stack.lo));
+        rec::addScannableStack(gocpp::recv(gcController), pp, - int64_t(gp->stack.hi - gp->stack.lo));
         if(isSystemGoroutine(gp, false))
         {
-            Add(gocpp::recv(sched.ngsys), - 1);
+            rec::Add(gocpp::recv(sched.ngsys), - 1);
         }
         gp->m = nullptr;
         auto locked = gp->lockedm != 0;
@@ -3558,9 +3572,9 @@ namespace golang::runtime
         gp->timer = nullptr;
         if(gcBlackenEnabled != 0 && gp->gcAssistBytes > 0)
         {
-            auto assistWorkPerByte = Load(gocpp::recv(gcController.assistWorkPerByte));
+            auto assistWorkPerByte = rec::Load(gocpp::recv(gcController.assistWorkPerByte));
             auto scanCredit = int64_t(assistWorkPerByte * double(gp->gcAssistBytes));
-            Add(gocpp::recv(gcController.bgScanCredit), scanCredit);
+            rec::Add(gocpp::recv(gcController.bgScanCredit), scanCredit);
             gp->gcAssistBytes = 0;
         }
         dropg();
@@ -3628,32 +3642,32 @@ namespace golang::runtime
                 go_throw("entersyscall");
             });
         }
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             systemstack([=]() mutable -> void
             {
-                GoSysCall(gocpp::recv(trace));
+                rec::GoSysCall(gocpp::recv(trace));
                 traceRelease(trace);
             });
             save(pc, sp);
         }
-        if(Load(gocpp::recv(sched.sysmonwait)))
+        if(rec::Load(gocpp::recv(sched.sysmonwait)))
         {
             systemstack(entersyscall_sysmon);
             save(pc, sp);
         }
-        if(ptr(gocpp::recv(gp->m->p))->runSafePointFn != 0)
+        if(rec::ptr(gocpp::recv(gp->m->p))->runSafePointFn != 0)
         {
             systemstack(runSafePointFn);
             save(pc, sp);
         }
-        gp->m->syscalltick = ptr(gocpp::recv(gp->m->p))->syscalltick;
-        auto pp = ptr(gocpp::recv(gp->m->p));
+        gp->m->syscalltick = rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
         pp->m = 0;
-        set(gocpp::recv(gp->m->oldp), pp);
+        rec::set(gocpp::recv(gp->m->oldp), pp);
         gp->m->p = 0;
         atomic::Store(& pp->status, _Psyscall);
-        if(Load(gocpp::recv(sched.gcwaiting)))
+        if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
             systemstack(entersyscall_gcwait);
             save(pc, sp);
@@ -3669,9 +3683,9 @@ namespace golang::runtime
     void entersyscall_sysmon()
     {
         lock(& sched.lock);
-        if(Load(gocpp::recv(sched.sysmonwait)))
+        if(rec::Load(gocpp::recv(sched.sysmonwait)))
         {
-            Store(gocpp::recv(sched.sysmonwait), false);
+            rec::Store(gocpp::recv(sched.sysmonwait), false);
             notewakeup(& sched.sysmonnote);
         }
         unlock(& sched.lock);
@@ -3680,21 +3694,21 @@ namespace golang::runtime
     void entersyscall_gcwait()
     {
         auto gp = getg();
-        auto pp = ptr(gocpp::recv(gp->m->oldp));
+        auto pp = rec::ptr(gocpp::recv(gp->m->oldp));
         lock(& sched.lock);
         auto trace = traceAcquire();
         if(sched.stopwait > 0 && atomic::Cas(& pp->status, _Psyscall, _Pgcstop))
         {
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 if(goexperiment::ExecTracer2)
                 {
-                    ProcSteal(gocpp::recv(trace), pp, true);
+                    rec::ProcSteal(gocpp::recv(trace), pp, true);
                 }
                 else
                 {
-                    GoSysBlock(gocpp::recv(trace), pp);
-                    ProcStop(gocpp::recv(trace), pp);
+                    rec::GoSysBlock(gocpp::recv(trace), pp);
+                    rec::ProcStop(gocpp::recv(trace), pp);
                 }
                 traceRelease(trace);
             }
@@ -3705,7 +3719,7 @@ namespace golang::runtime
             }
         }
         else
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             traceRelease(trace);
         }
@@ -3718,8 +3732,8 @@ namespace golang::runtime
         gp->m->locks++;
         gp->throwsplit = true;
         gp->stackguard0 = stackPreempt;
-        gp->m->syscalltick = ptr(gocpp::recv(gp->m->p))->syscalltick;
-        ptr(gocpp::recv(gp->m->p))->syscalltick++;
+        gp->m->syscalltick = rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
+        rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
         auto pc = getcallerpc();
         auto sp = getcallersp();
         save(pc, sp);
@@ -3753,10 +3767,10 @@ namespace golang::runtime
     void entersyscallblock_handoff()
     {
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoSysCall(gocpp::recv(trace));
-            GoSysBlock(gocpp::recv(trace), ptr(gocpp::recv(getg()->m->p)));
+            rec::GoSysCall(gocpp::recv(trace));
+            rec::GoSysBlock(gocpp::recv(trace), rec::ptr(gocpp::recv(getg()->m->p)));
             traceRelease(trace);
         }
         handoffp(releasep());
@@ -3771,7 +3785,7 @@ namespace golang::runtime
             go_throw("exitsyscall: syscall frame is no longer valid");
         }
         gp->waitsince = 0;
-        auto oldp = ptr(gocpp::recv(gp->m->oldp));
+        auto oldp = rec::ptr(gocpp::recv(gp->m->oldp));
         gp->m->oldp = 0;
         if(exitsyscallfast(oldp))
         {
@@ -3783,24 +3797,24 @@ namespace golang::runtime
                 });
             }
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                auto lostP = oldp != ptr(gocpp::recv(gp->m->p)) || gp->m->syscalltick != ptr(gocpp::recv(gp->m->p))->syscalltick;
+                auto lostP = oldp != rec::ptr(gocpp::recv(gp->m->p)) || gp->m->syscalltick != rec::ptr(gocpp::recv(gp->m->p))->syscalltick;
                 systemstack([=]() mutable -> void
                 {
                     if(goexperiment::ExecTracer2)
                     {
-                        GoSysExit(gocpp::recv(trace), lostP);
+                        rec::GoSysExit(gocpp::recv(trace), lostP);
                     }
                     if(lostP)
                     {
-                        GoStart(gocpp::recv(trace));
+                        rec::GoStart(gocpp::recv(trace));
                     }
                 });
             }
-            ptr(gocpp::recv(gp->m->p))->syscalltick++;
+            rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
             casgstatus(gp, _Gsyscall, _Grunning);
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 traceRelease(trace);
             }
@@ -3824,16 +3838,16 @@ namespace golang::runtime
         if(! goexperiment::ExecTracer2)
         {
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                RecordSyscallExitedTime(gocpp::recv(trace), gp, oldp);
+                rec::RecordSyscallExitedTime(gocpp::recv(trace), gp, oldp);
                 traceRelease(trace);
             }
         }
         gp->m->locks--;
         mcall(exitsyscall0);
         gp->syscallsp = 0;
-        ptr(gocpp::recv(gp->m->p))->syscalltick++;
+        rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
         gp->throwsplit = false;
     }
 
@@ -3849,13 +3863,13 @@ namespace golang::runtime
         {
             wirep(oldp);
             exitsyscallfast_reacquired(trace);
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 traceRelease(trace);
             }
             return true;
         }
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
             traceRelease(trace);
         }
@@ -3868,7 +3882,7 @@ namespace golang::runtime
                 if(ok && ! goexperiment::ExecTracer2)
                 {
                     auto trace = traceAcquire();
-                    if(ok(gocpp::recv(trace)))
+                    if(rec::ok(gocpp::recv(trace)))
                     {
                         if(oldp != nullptr)
                         {
@@ -3877,7 +3891,7 @@ namespace golang::runtime
                                 osyield();
                             }
                         }
-                        GoSysExit(gocpp::recv(trace), true);
+                        rec::GoSysExit(gocpp::recv(trace), true);
                         traceRelease(trace);
                     }
                 }
@@ -3893,25 +3907,25 @@ namespace golang::runtime
     void exitsyscallfast_reacquired(struct traceLocker trace)
     {
         auto gp = getg();
-        if(gp->m->syscalltick != ptr(gocpp::recv(gp->m->p))->syscalltick)
+        if(gp->m->syscalltick != rec::ptr(gocpp::recv(gp->m->p))->syscalltick)
         {
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 systemstack([=]() mutable -> void
                 {
                     if(goexperiment::ExecTracer2)
                     {
-                        ProcSteal(gocpp::recv(trace), ptr(gocpp::recv(gp->m->p)), true);
-                        ProcStart(gocpp::recv(trace));
+                        rec::ProcSteal(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)), true);
+                        rec::ProcStart(gocpp::recv(trace));
                     }
                     else
                     {
-                        GoSysBlock(gocpp::recv(trace), ptr(gocpp::recv(gp->m->p)));
-                        GoSysExit(gocpp::recv(trace), true);
+                        rec::GoSysBlock(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)));
+                        rec::GoSysExit(gocpp::recv(trace), true);
                     }
                 });
             }
-            ptr(gocpp::recv(gp->m->p))->syscalltick++;
+            rec::ptr(gocpp::recv(gp->m->p))->syscalltick++;
         }
     }
 
@@ -3919,9 +3933,9 @@ namespace golang::runtime
     {
         lock(& sched.lock);
         auto [pp, gocpp_id_16] = pidleget(0);
-        if(pp != nullptr && Load(gocpp::recv(sched.sysmonwait)))
+        if(pp != nullptr && rec::Load(gocpp::recv(sched.sysmonwait)))
         {
-            Store(gocpp::recv(sched.sysmonwait), false);
+            rec::Store(gocpp::recv(sched.sysmonwait), false);
             notewakeup(& sched.sysmonnote);
         }
         unlock(& sched.lock);
@@ -3945,9 +3959,9 @@ namespace golang::runtime
         if(goexperiment::ExecTracer2)
         {
             traceExitedSyscall();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GoSysExit(gocpp::recv(trace), true);
+                rec::GoSysExit(gocpp::recv(trace), true);
                 traceRelease(trace);
             }
         }
@@ -3965,9 +3979,9 @@ namespace golang::runtime
             locked = gp->lockedm != 0;
         }
         else
-        if(Load(gocpp::recv(sched.sysmonwait)))
+        if(rec::Load(gocpp::recv(sched.sysmonwait)))
         {
-            Store(gocpp::recv(sched.sysmonwait), false);
+            rec::Store(gocpp::recv(sched.sysmonwait), false);
             notewakeup(& sched.sysmonnote);
         }
         unlock(& sched.lock);
@@ -4014,10 +4028,10 @@ namespace golang::runtime
     atomic::Int32 pendingPreemptSignals;
     void syscall_runtime_BeforeExec()
     {
-        lock(gocpp::recv(execLock));
+        rec::lock(gocpp::recv(execLock));
         if(GOOS == "darwin" || GOOS == "ios")
         {
-            for(; Load(gocpp::recv(pendingPreemptSignals)) > 0; )
+            for(; rec::Load(gocpp::recv(pendingPreemptSignals)) > 0; )
             {
                 osyield();
             }
@@ -4026,7 +4040,7 @@ namespace golang::runtime
 
     void syscall_runtime_AfterExec()
     {
-        unlock(gocpp::recv(execLock));
+        rec::unlock(gocpp::recv(execLock));
     }
 
     struct g* malg(int32_t stacksize)
@@ -4053,7 +4067,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto newg = newproc1(fn, gp, pc);
-            auto pp = ptr(gocpp::recv(getg()->m->p));
+            auto pp = rec::ptr(gocpp::recv(getg()->m->p));
             runqput(pp, newg, true);
             if(mainStarted)
             {
@@ -4069,7 +4083,7 @@ namespace golang::runtime
             fatal("go of nil func value");
         }
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         auto newg = gfget(pp);
         if(newg == nullptr)
         {
@@ -4109,7 +4123,7 @@ namespace golang::runtime
         newg->startpc = fn->fn;
         if(isSystemGoroutine(newg, false))
         {
-            Add(gocpp::recv(sched.ngsys), 1);
+            rec::Add(gocpp::recv(sched.ngsys), 1);
         }
         else
         {
@@ -4119,7 +4133,7 @@ namespace golang::runtime
             }
             if(goroutineProfile.active)
             {
-                Store(gocpp::recv(newg->goroutineProfiled), goroutineProfileSatisfied);
+                rec::Store(gocpp::recv(newg->goroutineProfiled), goroutineProfileSatisfied);
             }
         }
         newg->trackingSeq = uint8_t(cheaprand());
@@ -4127,21 +4141,21 @@ namespace golang::runtime
         {
             newg->tracking = true;
         }
-        addScannableStack(gocpp::recv(gcController), pp, int64_t(newg->stack.hi - newg->stack.lo));
+        rec::addScannableStack(gocpp::recv(gcController), pp, int64_t(newg->stack.hi - newg->stack.lo));
         auto trace = traceAcquire();
         casgstatus(newg, _Gdead, _Grunnable);
         if(pp->goidcache == pp->goidcacheend)
         {
-            pp->goidcache = Add(gocpp::recv(sched.goidgen), _GoidCacheBatch);
+            pp->goidcache = rec::Add(gocpp::recv(sched.goidgen), _GoidCacheBatch);
             pp->goidcache -= _GoidCacheBatch - 1;
             pp->goidcacheend = pp->goidcache + _GoidCacheBatch;
         }
         newg->goid = pp->goidcache;
         pp->goidcache++;
-        reset(gocpp::recv(newg->trace));
-        if(ok(gocpp::recv(trace)))
+        rec::reset(gocpp::recv(newg->trace));
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoCreate(gocpp::recv(trace), newg, newg->startpc);
+            rec::GoCreate(gocpp::recv(trace), newg, newg->startpc);
             traceRelease(trace);
         }
         if(raceenabled)
@@ -4199,7 +4213,7 @@ namespace golang::runtime
             gp->stack.hi = 0;
             gp->stackguard0 = 0;
         }
-        push(gocpp::recv(pp->gFree), gp);
+        rec::push(gocpp::recv(pp->gFree), gp);
         pp->gFree.n++;
         if(pp->gFree.n >= 64)
         {
@@ -4208,21 +4222,21 @@ namespace golang::runtime
             gQueue noStackQ = {};
             for(; pp->gFree.n >= 32; )
             {
-                auto gp = pop(gocpp::recv(pp->gFree));
+                auto gp = rec::pop(gocpp::recv(pp->gFree));
                 pp->gFree.n--;
                 if(gp->stack.lo == 0)
                 {
-                    push(gocpp::recv(noStackQ), gp);
+                    rec::push(gocpp::recv(noStackQ), gp);
                 }
                 else
                 {
-                    push(gocpp::recv(stackQ), gp);
+                    rec::push(gocpp::recv(stackQ), gp);
                 }
                 inc++;
             }
             lock(& sched.gFree.lock);
-            pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
-            pushAll(gocpp::recv(sched.gFree.stack), stackQ);
+            rec::pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
+            rec::pushAll(gocpp::recv(sched.gFree.stack), stackQ);
             sched.gFree.n += inc;
             unlock(& sched.gFree.lock);
         }
@@ -4231,28 +4245,28 @@ namespace golang::runtime
     struct g* gfget(struct p* pp)
     {
         retry:
-        if(empty(gocpp::recv(pp->gFree)) && (! empty(gocpp::recv(sched.gFree.stack)) || ! empty(gocpp::recv(sched.gFree.noStack))))
+        if(rec::empty(gocpp::recv(pp->gFree)) && (! rec::empty(gocpp::recv(sched.gFree.stack)) || ! rec::empty(gocpp::recv(sched.gFree.noStack))))
         {
             lock(& sched.gFree.lock);
             for(; pp->gFree.n < 32; )
             {
-                auto gp = pop(gocpp::recv(sched.gFree.stack));
+                auto gp = rec::pop(gocpp::recv(sched.gFree.stack));
                 if(gp == nullptr)
                 {
-                    gp = pop(gocpp::recv(sched.gFree.noStack));
+                    gp = rec::pop(gocpp::recv(sched.gFree.noStack));
                     if(gp == nullptr)
                     {
                         break;
                     }
                 }
                 sched.gFree.n--;
-                push(gocpp::recv(pp->gFree), gp);
+                rec::push(gocpp::recv(pp->gFree), gp);
                 pp->gFree.n++;
             }
             unlock(& sched.gFree.lock);
             goto retry;
         }
-        auto gp = pop(gocpp::recv(pp->gFree));
+        auto gp = rec::pop(gocpp::recv(pp->gFree));
         if(gp == nullptr)
         {
             return nullptr;
@@ -4299,23 +4313,23 @@ namespace golang::runtime
         int32_t inc = {};
         gQueue stackQ = {};
         gQueue noStackQ = {};
-        for(; ! empty(gocpp::recv(pp->gFree)); )
+        for(; ! rec::empty(gocpp::recv(pp->gFree)); )
         {
-            auto gp = pop(gocpp::recv(pp->gFree));
+            auto gp = rec::pop(gocpp::recv(pp->gFree));
             pp->gFree.n--;
             if(gp->stack.lo == 0)
             {
-                push(gocpp::recv(noStackQ), gp);
+                rec::push(gocpp::recv(noStackQ), gp);
             }
             else
             {
-                push(gocpp::recv(stackQ), gp);
+                rec::push(gocpp::recv(stackQ), gp);
             }
             inc++;
         }
         lock(& sched.gFree.lock);
-        pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
-        pushAll(gocpp::recv(sched.gFree.stack), stackQ);
+        rec::pushAll(gocpp::recv(sched.gFree.noStack), noStackQ);
+        rec::pushAll(gocpp::recv(sched.gFree.stack), stackQ);
         sched.gFree.n += inc;
         unlock(& sched.gFree.lock);
     }
@@ -4332,8 +4346,8 @@ namespace golang::runtime
             return;
         }
         auto gp = getg();
-        set(gocpp::recv(gp->m->lockedg), gp);
-        set(gocpp::recv(gp->lockedm), gp->m);
+        rec::set(gocpp::recv(gp->m->lockedg), gp);
+        rec::set(gocpp::recv(gp->lockedm), gp->m);
     }
 
     void LockOSThread()
@@ -4402,7 +4416,7 @@ namespace golang::runtime
 
     int32_t gcount()
     {
-        auto n = int32_t(atomic::Loaduintptr(& allglen)) - sched.gFree.n - Load(gocpp::recv(sched.ngsys));
+        auto n = int32_t(atomic::Loaduintptr(& allglen)) - sched.gFree.n - rec::Load(gocpp::recv(sched.ngsys));
         for(auto [gocpp_ignored, pp] : allp)
         {
             n -= pp->gFree.n;
@@ -4497,7 +4511,7 @@ namespace golang::runtime
 
     void sigprof(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, struct m* mp)
     {
-        if(Load(gocpp::recv(prof.hz)) == 0)
+        if(rec::Load(gocpp::recv(prof.hz)) == 0)
         {
             return;
         }
@@ -4507,7 +4521,7 @@ namespace golang::runtime
         }
         if(GOARCH == "mips" || GOARCH == "mipsle" || GOARCH == "arm")
         {
-            if(auto f = findfunc(pc); valid(gocpp::recv(f)))
+            if(auto f = findfunc(pc); rec::valid(gocpp::recv(f)))
             {
                 if(hasPrefix(funcname(f), "runtime/internal/atomic"))
                 {
@@ -4528,7 +4542,7 @@ namespace golang::runtime
         if(mp->ncgo > 0 && mp->curg != nullptr && mp->curg->syscallpc != 0 && mp->curg->syscallsp != 0)
         {
             auto cgoOff = 0;
-            if(Load(gocpp::recv(mp->cgoCallersUse)) == 0 && mp->cgoCallers != nullptr && mp->cgoCallers[0] != 0)
+            if(rec::Load(gocpp::recv(mp->cgoCallersUse)) == 0 && mp->cgoCallers != nullptr && mp->cgoCallers[0] != 0)
             {
                 for(; cgoOff < len(mp->cgoCallers) && mp->cgoCallers[cgoOff] != 0; )
                 {
@@ -4537,21 +4551,21 @@ namespace golang::runtime
                 n += copy(stk.make_slice(0, ), mp->cgoCallers.make_slice(0, cgoOff));
                 mp->cgoCallers[0] = 0;
             }
-            initAt(gocpp::recv(u), mp->curg->syscallpc, mp->curg->syscallsp, 0, mp->curg, unwindSilentErrors);
+            rec::initAt(gocpp::recv(u), mp->curg->syscallpc, mp->curg->syscallsp, 0, mp->curg, unwindSilentErrors);
         }
         else
         if(usesLibcall() && mp->libcallg != 0 && mp->libcallpc != 0 && mp->libcallsp != 0)
         {
-            initAt(gocpp::recv(u), mp->libcallpc, mp->libcallsp, 0, ptr(gocpp::recv(mp->libcallg)), unwindSilentErrors);
+            rec::initAt(gocpp::recv(u), mp->libcallpc, mp->libcallsp, 0, rec::ptr(gocpp::recv(mp->libcallg)), unwindSilentErrors);
         }
         else
         if(mp != nullptr && mp->vdsoSP != 0)
         {
-            initAt(gocpp::recv(u), mp->vdsoPC, mp->vdsoSP, 0, gp, unwindSilentErrors | unwindJumpStack);
+            rec::initAt(gocpp::recv(u), mp->vdsoPC, mp->vdsoSP, 0, gp, unwindSilentErrors | unwindJumpStack);
         }
         else
         {
-            initAt(gocpp::recv(u), pc, sp, lr, gp, unwindSilentErrors | unwindTrap | unwindJumpStack);
+            rec::initAt(gocpp::recv(u), pc, sp, lr, gp, unwindSilentErrors | unwindTrap | unwindJumpStack);
         }
         n += tracebackPCs(& u, 0, stk.make_slice(n));
         if(n <= 0)
@@ -4576,14 +4590,14 @@ namespace golang::runtime
                 stk[1] = abi::FuncPCABIInternal(_System) + sys::PCQuantum;
             }
         }
-        if(Load(gocpp::recv(prof.hz)) != 0)
+        if(rec::Load(gocpp::recv(prof.hz)) != 0)
         {
             unsafe::Pointer* tagPtr = {};
             if(gp != nullptr && gp->m != nullptr && gp->m->curg != nullptr)
             {
                 tagPtr = & gp->m->curg->labels;
             }
-            add(gocpp::recv(cpuprof), tagPtr, stk.make_slice(0, n));
+            rec::add(gocpp::recv(cpuprof), tagPtr, stk.make_slice(0, n));
             auto gprof = gp;
             m* mp = {};
             p* pp = {};
@@ -4594,7 +4608,7 @@ namespace golang::runtime
                     gprof = gp->m->curg;
                 }
                 mp = gp->m;
-                pp = ptr(gocpp::recv(gp->m->p));
+                pp = rec::ptr(gocpp::recv(gp->m->p));
             }
             traceCPUSample(gprof, mp, pp, stk.make_slice(0, n));
         }
@@ -4610,16 +4624,16 @@ namespace golang::runtime
         auto gp = getg();
         gp->m->locks++;
         setThreadCPUProfiler(0);
-        for(; ! CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
+        for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
             osyield();
         }
-        if(Load(gocpp::recv(prof.hz)) != hz)
+        if(rec::Load(gocpp::recv(prof.hz)) != hz)
         {
             setProcessCPUProfiler(hz);
-            Store(gocpp::recv(prof.hz), hz);
+            rec::Store(gocpp::recv(prof.hz), hz);
         }
-        Store(gocpp::recv(prof.signalLock), 0);
+        rec::Store(gocpp::recv(prof.signalLock), 0);
         lock(& sched.lock);
         sched.profilehz = hz;
         unlock(& sched.lock);
@@ -4630,13 +4644,13 @@ namespace golang::runtime
         gp->m->locks--;
     }
 
-    void init(struct p* pp, int32_t id)
+    void rec::init(struct p* pp, int32_t id)
     {
         pp->id = id;
         pp->status = _Pgcstop;
         pp->sudogcache = pp->sudogbuf.make_slice(0, 0);
         pp->deferpool = pp->deferpoolbuf.make_slice(0, 0);
-        reset(gocpp::recv(pp->wbBuf));
+        rec::reset(gocpp::recv(pp->wbBuf));
         if(pp->mcache == nullptr)
         {
             if(id == 0)
@@ -4665,42 +4679,42 @@ namespace golang::runtime
             }
         }
         lockInit(& pp->timersLock, lockRankTimers);
-        set(gocpp::recv(timerpMask), id);
-        clear(gocpp::recv(idlepMask), id);
+        rec::set(gocpp::recv(timerpMask), id);
+        rec::clear(gocpp::recv(idlepMask), id);
     }
 
-    void destroy(struct p* pp)
+    void rec::destroy(struct p* pp)
     {
         assertLockHeld(& sched.lock);
         assertWorldStopped();
         for(; pp->runqhead != pp->runqtail; )
         {
             pp->runqtail--;
-            auto gp = ptr(gocpp::recv(pp->runq[pp->runqtail % uint32_t(len(pp->runq))]));
+            auto gp = rec::ptr(gocpp::recv(pp->runq[pp->runqtail % uint32_t(len(pp->runq))]));
             globrunqputhead(gp);
         }
         if(pp->runnext != 0)
         {
-            globrunqputhead(ptr(gocpp::recv(pp->runnext)));
+            globrunqputhead(rec::ptr(gocpp::recv(pp->runnext)));
             pp->runnext = 0;
         }
         if(len(pp->timers) > 0)
         {
-            auto plocal = ptr(gocpp::recv(getg()->m->p));
+            auto plocal = rec::ptr(gocpp::recv(getg()->m->p));
             lock(& plocal->timersLock);
             lock(& pp->timersLock);
             moveTimers(plocal, pp->timers);
             pp->timers = nullptr;
-            Store(gocpp::recv(pp->numTimers), 0);
-            Store(gocpp::recv(pp->deletedTimers), 0);
-            Store(gocpp::recv(pp->timer0When), 0);
+            rec::Store(gocpp::recv(pp->numTimers), 0);
+            rec::Store(gocpp::recv(pp->deletedTimers), 0);
+            rec::Store(gocpp::recv(pp->timer0When), 0);
             unlock(& pp->timersLock);
             unlock(& plocal->timersLock);
         }
         if(gcphase != _GCoff)
         {
             wbBufFlush1(pp);
-            dispose(gocpp::recv(pp->gcw));
+            rec::dispose(gocpp::recv(pp->gcw));
         }
         for(auto [i, gocpp_ignored] : pp->sudogbuf)
         {
@@ -4717,11 +4731,11 @@ namespace golang::runtime
         {
             for(auto i = 0; i < pp->mspancache.len; i++)
             {
-                free(gocpp::recv(mheap_.spanalloc), unsafe::Pointer(pp->mspancache.buf[i]));
+                rec::free(gocpp::recv(mheap_.spanalloc), unsafe::Pointer(pp->mspancache.buf[i]));
             }
             pp->mspancache.len = 0;
             lock(& mheap_.lock);
-            flush(gocpp::recv(pp->pcache), & mheap_.pages);
+            rec::flush(gocpp::recv(pp->pcache), & mheap_.pages);
             unlock(& mheap_.lock);
         });
         freemcache(pp->mcache);
@@ -4733,11 +4747,11 @@ namespace golang::runtime
             if(pp->timerRaceCtx != 0)
             {
                 auto mp = getg()->m;
-                auto phold = ptr(gocpp::recv(mp->p));
-                set(gocpp::recv(mp->p), pp);
+                auto phold = rec::ptr(gocpp::recv(mp->p));
+                rec::set(gocpp::recv(mp->p), pp);
                 racectxend(pp->timerRaceCtx);
                 pp->timerRaceCtx = 0;
-                set(gocpp::recv(mp->p), phold);
+                rec::set(gocpp::recv(mp->p), phold);
             }
             raceprocdestroy(pp->raceprocctx);
             pp->raceprocctx = 0;
@@ -4756,9 +4770,9 @@ namespace golang::runtime
             go_throw("procresize: invalid arg");
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            Gomaxprocs(gocpp::recv(trace), nprocs);
+            rec::Gomaxprocs(gocpp::recv(trace), nprocs);
             traceRelease(trace);
         }
         auto now = nanotime();
@@ -4804,27 +4818,27 @@ namespace golang::runtime
             {
                 pp = go_new(p);
             }
-            init(gocpp::recv(pp), i);
+            rec::init(gocpp::recv(pp), i);
             atomicstorep(unsafe::Pointer(& allp[i]), unsafe::Pointer(pp));
         }
         auto gp = getg();
-        if(gp->m->p != 0 && ptr(gocpp::recv(gp->m->p))->id < nprocs)
+        if(gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->id < nprocs)
         {
-            ptr(gocpp::recv(gp->m->p))->status = _Prunning;
-            prepareForSweep(gocpp::recv(ptr(gocpp::recv(gp->m->p))->mcache));
+            rec::ptr(gocpp::recv(gp->m->p))->status = _Prunning;
+            rec::prepareForSweep(gocpp::recv(rec::ptr(gocpp::recv(gp->m->p))->mcache));
         }
         else
         {
             if(gp->m->p != 0)
             {
                 auto trace = traceAcquire();
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
-                    GoSched(gocpp::recv(trace));
-                    ProcStop(gocpp::recv(trace), ptr(gocpp::recv(gp->m->p)));
+                    rec::GoSched(gocpp::recv(trace));
+                    rec::ProcStop(gocpp::recv(trace), rec::ptr(gocpp::recv(gp->m->p)));
                     traceRelease(trace);
                 }
-                ptr(gocpp::recv(gp->m->p))->m = 0;
+                rec::ptr(gocpp::recv(gp->m->p))->m = 0;
             }
             gp->m->p = 0;
             auto pp = allp[0];
@@ -4832,9 +4846,9 @@ namespace golang::runtime
             pp->status = _Pidle;
             acquirep(pp);
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GoStart(gocpp::recv(trace));
+                rec::GoStart(gocpp::recv(trace));
                 traceRelease(trace);
             }
         }
@@ -4842,7 +4856,7 @@ namespace golang::runtime
         for(auto i = nprocs; i < old; i++)
         {
             auto pp = allp[i];
-            destroy(gocpp::recv(pp));
+            rec::destroy(gocpp::recv(pp));
         }
         if(int32_t(len(allp)) != nprocs)
         {
@@ -4856,7 +4870,7 @@ namespace golang::runtime
         for(auto i = nprocs - 1; i >= 0; i--)
         {
             auto pp = allp[i];
-            if(ptr(gocpp::recv(gp->m->p)) == pp)
+            if(rec::ptr(gocpp::recv(gp->m->p)) == pp)
             {
                 continue;
             }
@@ -4867,17 +4881,17 @@ namespace golang::runtime
             }
             else
             {
-                set(gocpp::recv(pp->m), mget());
-                set(gocpp::recv(pp->link), runnablePs);
+                rec::set(gocpp::recv(pp->m), mget());
+                rec::set(gocpp::recv(pp->link), runnablePs);
                 runnablePs = pp;
             }
         }
-        reset(gocpp::recv(stealOrder), uint32_t(nprocs));
+        rec::reset(gocpp::recv(stealOrder), uint32_t(nprocs));
         int32_t* int32p = & gomaxprocs;
         atomic::Store((uint32_t*)(unsafe::Pointer(int32p)), uint32_t(nprocs));
         if(old != nprocs)
         {
-            resetCapacity(gocpp::recv(gcCPULimiter), now, nprocs);
+            rec::resetCapacity(gocpp::recv(gcCPULimiter), now, nprocs);
         }
         return runnablePs;
     }
@@ -4885,11 +4899,11 @@ namespace golang::runtime
     void acquirep(struct p* pp)
     {
         wirep(pp);
-        prepareForSweep(gocpp::recv(pp->mcache));
+        rec::prepareForSweep(gocpp::recv(pp->mcache));
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            ProcStart(gocpp::recv(trace));
+            rec::ProcStart(gocpp::recv(trace));
             traceRelease(trace);
         }
     }
@@ -4911,23 +4925,23 @@ namespace golang::runtime
                 auto id = int64_t(0);
                 if(pp->m != 0)
                 {
-                    id = ptr(gocpp::recv(pp->m))->id;
+                    id = rec::ptr(gocpp::recv(pp->m))->id;
                 }
                 print("wirep: p->m=", pp->m, "(", id, ") p->status=", pp->status, "\n");
                 go_throw("wirep: invalid p state");
             });
         }
-        set(gocpp::recv(gp->m->p), pp);
-        set(gocpp::recv(pp->m), gp->m);
+        rec::set(gocpp::recv(gp->m->p), pp);
+        rec::set(gocpp::recv(pp->m), gp->m);
         pp->status = _Prunning;
     }
 
     struct p* releasep()
     {
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            ProcStop(gocpp::recv(trace), ptr(gocpp::recv(getg()->m->p)));
+            rec::ProcStop(gocpp::recv(trace), rec::ptr(gocpp::recv(getg()->m->p)));
             traceRelease(trace);
         }
         return releasepNoTrace();
@@ -4940,10 +4954,10 @@ namespace golang::runtime
         {
             go_throw("releasep: invalid arg");
         }
-        auto pp = ptr(gocpp::recv(gp->m->p));
-        if(ptr(gocpp::recv(pp->m)) != gp->m || pp->status != _Prunning)
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
+        if(rec::ptr(gocpp::recv(pp->m)) != gp->m || pp->status != _Prunning)
         {
-            print("releasep: m=", gp->m, " m->p=", ptr(gocpp::recv(gp->m->p)), " p->m=", hex(pp->m), " p->status=", pp->status, "\n");
+            print("releasep: m=", gp->m, " m->p=", rec::ptr(gocpp::recv(gp->m->p)), " p->m=", hex(pp->m), " p->status=", pp->status, "\n");
             go_throw("releasep: invalid p state");
         }
         gp->m->p = 0;
@@ -4970,12 +4984,12 @@ namespace golang::runtime
         {
             return;
         }
-        if(Load(gocpp::recv(panicking)) > 0)
+        if(rec::Load(gocpp::recv(panicking)) > 0)
         {
             return;
         }
         int32_t run0 = {};
-        if(! iscgo && cgoHasExtraM && Load(gocpp::recv(extraMLength)) > 0)
+        if(! iscgo && cgoHasExtraM && rec::Load(gocpp::recv(extraMLength)) > 0)
         {
             run0 = 1;
         }
@@ -5045,9 +5059,9 @@ namespace golang::runtime
                     unlock(& sched.lock);
                     go_throw("checkdead: no m for timer");
                 }
-                Add(gocpp::recv(sched.nmspinning), 1);
+                rec::Add(gocpp::recv(sched.nmspinning), 1);
                 mp->spinning = true;
-                set(gocpp::recv(mp->nextp), pp);
+                rec::set(gocpp::recv(mp->nextp), pp);
                 notewakeup(& mp->park);
                 return;
             }
@@ -5091,16 +5105,16 @@ namespace golang::runtime
             }
             usleep(delay);
             auto now = nanotime();
-            if(debug.schedtrace <= 0 && (Load(gocpp::recv(sched.gcwaiting)) || Load(gocpp::recv(sched.npidle)) == gomaxprocs))
+            if(debug.schedtrace <= 0 && (rec::Load(gocpp::recv(sched.gcwaiting)) || rec::Load(gocpp::recv(sched.npidle)) == gomaxprocs))
             {
                 lock(& sched.lock);
-                if(Load(gocpp::recv(sched.gcwaiting)) || Load(gocpp::recv(sched.npidle)) == gomaxprocs)
+                if(rec::Load(gocpp::recv(sched.gcwaiting)) || rec::Load(gocpp::recv(sched.npidle)) == gomaxprocs)
                 {
                     auto syscallWake = false;
                     auto next = timeSleepUntil();
                     if(next > now)
                     {
-                        Store(gocpp::recv(sched.sysmonwait), true);
+                        rec::Store(gocpp::recv(sched.sysmonwait), true);
                         unlock(& sched.lock);
                         auto sleep = forcegcperiod / 2;
                         if(next - now < sleep)
@@ -5118,7 +5132,7 @@ namespace golang::runtime
                             osRelax(false);
                         }
                         lock(& sched.lock);
-                        Store(gocpp::recv(sched.sysmonwait), false);
+                        rec::Store(gocpp::recv(sched.sysmonwait), false);
                         noteclear(& sched.sysmonnote);
                     }
                     if(syscallWake)
@@ -5135,12 +5149,12 @@ namespace golang::runtime
             {
                 asmcgocall(*cgo_yield, nullptr);
             }
-            auto lastpoll = Load(gocpp::recv(sched.lastpoll));
+            auto lastpoll = rec::Load(gocpp::recv(sched.lastpoll));
             if(netpollinited() && lastpoll != 0 && lastpoll + 10 * 1000 * 1000 < now)
             {
-                CompareAndSwap(gocpp::recv(sched.lastpoll), lastpoll, now);
+                rec::CompareAndSwap(gocpp::recv(sched.lastpoll), lastpoll, now);
                 auto [list, delta] = netpoll(0);
-                if(! empty(gocpp::recv(list)))
+                if(! rec::empty(gocpp::recv(list)))
                 {
                     incidlelocked(- 1);
                     injectglist(& list);
@@ -5155,9 +5169,9 @@ namespace golang::runtime
                     startm(nullptr, false, false);
                 }
             }
-            if(Load(gocpp::recv(scavenger.sysmonWake)) != 0)
+            if(rec::Load(gocpp::recv(scavenger.sysmonWake)) != 0)
             {
-                wake(gocpp::recv(scavenger));
+                rec::wake(gocpp::recv(scavenger));
             }
             if(retake(now) != 0)
             {
@@ -5167,12 +5181,12 @@ namespace golang::runtime
             {
                 idle++;
             }
-            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerTime; x.now = now; })); test(gocpp::recv(t)) && Load(gocpp::recv(forcegc.idle)))
+            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerTime; x.now = now; })); rec::test(gocpp::recv(t)) && rec::Load(gocpp::recv(forcegc.idle)))
             {
                 lock(& forcegc.lock);
-                Store(gocpp::recv(forcegc.idle), false);
+                rec::Store(gocpp::recv(forcegc.idle), false);
                 gList list = {};
-                push(gocpp::recv(list), forcegc.g);
+                rec::push(gocpp::recv(list), forcegc.g);
                 injectglist(& list);
                 unlock(& forcegc.lock);
             }
@@ -5261,7 +5275,7 @@ namespace golang::runtime
                     pd->syscallwhen = now;
                     continue;
                 }
-                if(runqempty(pp) && Load(gocpp::recv(sched.nmspinning)) + Load(gocpp::recv(sched.npidle)) > 0 && pd->syscallwhen + 10 * 1000 * 1000 > now)
+                if(runqempty(pp) && rec::Load(gocpp::recv(sched.nmspinning)) + rec::Load(gocpp::recv(sched.npidle)) > 0 && pd->syscallwhen + 10 * 1000 * 1000 > now)
                 {
                     continue;
                 }
@@ -5270,10 +5284,10 @@ namespace golang::runtime
                 auto trace = traceAcquire();
                 if(atomic::Cas(& pp->status, s, _Pidle))
                 {
-                    if(ok(gocpp::recv(trace)))
+                    if(rec::ok(gocpp::recv(trace)))
                     {
-                        GoSysBlock(gocpp::recv(trace), pp);
-                        ProcSteal(gocpp::recv(trace), pp, false);
+                        rec::GoSysBlock(gocpp::recv(trace), pp);
+                        rec::ProcSteal(gocpp::recv(trace), pp, false);
                         traceRelease(trace);
                     }
                     n++;
@@ -5281,7 +5295,7 @@ namespace golang::runtime
                     handoffp(pp);
                 }
                 else
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
                     traceRelease(trace);
                 }
@@ -5312,7 +5326,7 @@ namespace golang::runtime
 
     bool preemptone(struct p* pp)
     {
-        auto mp = ptr(gocpp::recv(pp->m));
+        auto mp = rec::ptr(gocpp::recv(pp->m));
         if(mp == nullptr || mp == getg()->m)
         {
             return false;
@@ -5341,14 +5355,14 @@ namespace golang::runtime
             starttime = now;
         }
         lock(& sched.lock);
-        print("SCHED ", (now - starttime) / 1e6, "ms: gomaxprocs=", gomaxprocs, " idleprocs=", Load(gocpp::recv(sched.npidle)), " threads=", mcount(), " spinningthreads=", Load(gocpp::recv(sched.nmspinning)), " needspinning=", Load(gocpp::recv(sched.needspinning)), " idlethreads=", sched.nmidle, " runqueue=", sched.runqsize);
+        print("SCHED ", (now - starttime) / 1e6, "ms: gomaxprocs=", gomaxprocs, " idleprocs=", rec::Load(gocpp::recv(sched.npidle)), " threads=", mcount(), " spinningthreads=", rec::Load(gocpp::recv(sched.nmspinning)), " needspinning=", rec::Load(gocpp::recv(sched.needspinning)), " idlethreads=", sched.nmidle, " runqueue=", sched.runqsize);
         if(detailed)
         {
-            print(" gcwaiting=", Load(gocpp::recv(sched.gcwaiting)), " nmidlelocked=", sched.nmidlelocked, " stopwait=", sched.stopwait, " sysmonwait=", Load(gocpp::recv(sched.sysmonwait)), "\n");
+            print(" gcwaiting=", rec::Load(gocpp::recv(sched.gcwaiting)), " nmidlelocked=", sched.nmidlelocked, " stopwait=", sched.stopwait, " sysmonwait=", rec::Load(gocpp::recv(sched.sysmonwait)), "\n");
         }
         for(auto [i, pp] : allp)
         {
-            auto mp = ptr(gocpp::recv(pp->m));
+            auto mp = rec::ptr(gocpp::recv(pp->m));
             auto h = atomic::Load(& pp->runqhead);
             auto t = atomic::Load(& pp->runqtail);
             if(detailed)
@@ -5385,7 +5399,7 @@ namespace golang::runtime
         }
         for(auto mp = allm; mp != nullptr; mp = mp->alllink)
         {
-            auto pp = ptr(gocpp::recv(mp->p));
+            auto pp = rec::ptr(gocpp::recv(mp->p));
             print("  M", mp->id, ": p=");
             if(pp != nullptr)
             {
@@ -5405,7 +5419,7 @@ namespace golang::runtime
                 print("nil");
             }
             print(" mallocing=", mp->mallocing, " throwing=", mp->throwing, " preemptoff=", mp->preemptoff, " locks=", mp->locks, " dying=", mp->dying, " spinning=", mp->spinning, " blocked=", mp->blocked, " lockedg=");
-            if(auto lockedg = ptr(gocpp::recv(mp->lockedg)); lockedg != nullptr)
+            if(auto lockedg = rec::ptr(gocpp::recv(mp->lockedg)); lockedg != nullptr)
             {
                 print(lockedg->goid);
             }
@@ -5417,7 +5431,7 @@ namespace golang::runtime
         }
         forEachG([=](struct g* gp) mutable -> void
         {
-            print("  G", gp->goid, ": status=", readgstatus(gp), "(", String(gocpp::recv(gp->waitreason)), ") m=");
+            print("  G", gp->goid, ": status=", readgstatus(gp), "(", rec::String(gocpp::recv(gp->waitreason)), ") m=");
             if(gp->m != nullptr)
             {
                 print(gp->m->id);
@@ -5427,7 +5441,7 @@ namespace golang::runtime
                 print("nil");
             }
             print(" lockedm=");
-            if(auto lockedm = ptr(gocpp::recv(gp->lockedm)); lockedm != nullptr)
+            if(auto lockedm = rec::ptr(gocpp::recv(gp->lockedm)); lockedm != nullptr)
             {
                 print(lockedm->id);
             }
@@ -5455,7 +5469,7 @@ namespace golang::runtime
             sched.disable.n = 0;
             globrunqputbatch(& sched.disable.runnable, n);
             unlock(& sched.lock);
-            for(; n != 0 && Load(gocpp::recv(sched.npidle)) != 0; n--)
+            for(; n != 0 && rec::Load(gocpp::recv(sched.npidle)) != 0; n--)
             {
                 startm(nullptr, false, false);
             }
@@ -5480,7 +5494,7 @@ namespace golang::runtime
     {
         assertLockHeld(& sched.lock);
         mp->schedlink = sched.midle;
-        set(gocpp::recv(sched.midle), mp);
+        rec::set(gocpp::recv(sched.midle), mp);
         sched.nmidle++;
         checkdead();
     }
@@ -5488,7 +5502,7 @@ namespace golang::runtime
     struct m* mget()
     {
         assertLockHeld(& sched.lock);
-        auto mp = ptr(gocpp::recv(sched.midle));
+        auto mp = rec::ptr(gocpp::recv(sched.midle));
         if(mp != nullptr)
         {
             sched.midle = mp->schedlink;
@@ -5500,21 +5514,21 @@ namespace golang::runtime
     void globrunqput(struct g* gp)
     {
         assertLockHeld(& sched.lock);
-        pushBack(gocpp::recv(sched.runq), gp);
+        rec::pushBack(gocpp::recv(sched.runq), gp);
         sched.runqsize++;
     }
 
     void globrunqputhead(struct g* gp)
     {
         assertLockHeld(& sched.lock);
-        push(gocpp::recv(sched.runq), gp);
+        rec::push(gocpp::recv(sched.runq), gp);
         sched.runqsize++;
     }
 
     void globrunqputbatch(struct gQueue* batch, int32_t n)
     {
         assertLockHeld(& sched.lock);
-        pushBackAll(gocpp::recv(sched.runq), *batch);
+        rec::pushBackAll(gocpp::recv(sched.runq), *batch);
         sched.runqsize += n;
         *batch = gQueue {};
     }
@@ -5540,31 +5554,31 @@ namespace golang::runtime
             n = int32_t(len(pp->runq)) / 2;
         }
         sched.runqsize -= n;
-        auto gp = pop(gocpp::recv(sched.runq));
+        auto gp = rec::pop(gocpp::recv(sched.runq));
         n--;
         for(; n > 0; n--)
         {
-            auto gp1 = pop(gocpp::recv(sched.runq));
+            auto gp1 = rec::pop(gocpp::recv(sched.runq));
             runqput(pp, gp1, false);
         }
         return gp;
     }
 
-    bool read(pMask p, uint32_t id)
+    bool rec::read(pMask p, uint32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
         return (atomic::Load(& p[word]) & mask) != 0;
     }
 
-    void set(pMask p, int32_t id)
+    void rec::set(pMask p, int32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
         atomic::Or(& p[word], mask);
     }
 
-    void clear(pMask p, int32_t id)
+    void rec::clear(pMask p, int32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
@@ -5573,14 +5587,14 @@ namespace golang::runtime
 
     void updateTimerPMask(struct p* pp)
     {
-        if(Load(gocpp::recv(pp->numTimers)) > 0)
+        if(rec::Load(gocpp::recv(pp->numTimers)) > 0)
         {
             return;
         }
         lock(& pp->timersLock);
-        if(Load(gocpp::recv(pp->numTimers)) == 0)
+        if(rec::Load(gocpp::recv(pp->numTimers)) == 0)
         {
-            clear(gocpp::recv(timerpMask), pp->id);
+            rec::clear(gocpp::recv(timerpMask), pp->id);
         }
         unlock(& pp->timersLock);
     }
@@ -5597,11 +5611,11 @@ namespace golang::runtime
             now = nanotime();
         }
         updateTimerPMask(pp);
-        set(gocpp::recv(idlepMask), pp->id);
+        rec::set(gocpp::recv(idlepMask), pp->id);
         pp->link = sched.pidle;
-        set(gocpp::recv(sched.pidle), pp);
-        Add(gocpp::recv(sched.npidle), 1);
-        if(! start(gocpp::recv(pp->limiterEvent), limiterEventIdle, now))
+        rec::set(gocpp::recv(sched.pidle), pp);
+        rec::Add(gocpp::recv(sched.npidle), 1);
+        if(! rec::start(gocpp::recv(pp->limiterEvent), limiterEventIdle, now))
         {
             go_throw("must be able to track idle limiter event");
         }
@@ -5611,18 +5625,18 @@ namespace golang::runtime
     std::tuple<struct p*, int64_t> pidleget(int64_t now)
     {
         assertLockHeld(& sched.lock);
-        auto pp = ptr(gocpp::recv(sched.pidle));
+        auto pp = rec::ptr(gocpp::recv(sched.pidle));
         if(pp != nullptr)
         {
             if(now == 0)
             {
                 now = nanotime();
             }
-            set(gocpp::recv(timerpMask), pp->id);
-            clear(gocpp::recv(idlepMask), pp->id);
+            rec::set(gocpp::recv(timerpMask), pp->id);
+            rec::clear(gocpp::recv(idlepMask), pp->id);
             sched.pidle = pp->link;
-            Add(gocpp::recv(sched.npidle), - 1);
-            stop(gocpp::recv(pp->limiterEvent), limiterEventIdle, now);
+            rec::Add(gocpp::recv(sched.npidle), - 1);
+            rec::stop(gocpp::recv(pp->limiterEvent), limiterEventIdle, now);
         }
         return {pp, now};
     }
@@ -5633,7 +5647,7 @@ namespace golang::runtime
         auto [pp, now] = pidleget(now);
         if(pp == nullptr)
         {
-            Store(gocpp::recv(sched.needspinning), 1);
+            rec::Store(gocpp::recv(sched.needspinning), 1);
             return {nullptr, now};
         }
         return {pp, now};
@@ -5663,7 +5677,7 @@ namespace golang::runtime
         {
             retryNext:
             auto oldnext = pp->runnext;
-            if(! cas(gocpp::recv(pp->runnext), oldnext, guintptr(unsafe::Pointer(gp))))
+            if(! rec::cas(gocpp::recv(pp->runnext), oldnext, guintptr(unsafe::Pointer(gp))))
             {
                 goto retryNext;
             }
@@ -5671,14 +5685,14 @@ namespace golang::runtime
             {
                 return;
             }
-            gp = ptr(gocpp::recv(oldnext));
+            gp = rec::ptr(gocpp::recv(oldnext));
         }
         retry:
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
         if(t - h < uint32_t(len(pp->runq)))
         {
-            set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
+            rec::set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
             atomic::StoreRel(& pp->runqtail, t + 1);
             return;
         }
@@ -5700,7 +5714,7 @@ namespace golang::runtime
         }
         for(auto i = uint32_t(0); i < n; i++)
         {
-            batch[i] = ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
+            batch[i] = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
         }
         if(! atomic::CasRel(& pp->runqhead, h, h + n))
         {
@@ -5717,11 +5731,11 @@ namespace golang::runtime
         }
         for(auto i = uint32_t(0); i < n; i++)
         {
-            set(gocpp::recv(batch[i]->schedlink), batch[i + 1]);
+            rec::set(gocpp::recv(batch[i]->schedlink), batch[i + 1]);
         }
         gQueue q = {};
-        set(gocpp::recv(q.head), batch[0]);
-        set(gocpp::recv(q.tail), batch[n]);
+        rec::set(gocpp::recv(q.head), batch[0]);
+        rec::set(gocpp::recv(q.tail), batch[n]);
         lock(& sched.lock);
         globrunqputbatch(& q, int32_t(n + 1));
         unlock(& sched.lock);
@@ -5733,10 +5747,10 @@ namespace golang::runtime
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
         auto n = uint32_t(0);
-        for(; ! empty(gocpp::recv(q)) && t - h < uint32_t(len(pp->runq)); )
+        for(; ! rec::empty(gocpp::recv(q)) && t - h < uint32_t(len(pp->runq)); )
         {
-            auto gp = pop(gocpp::recv(q));
-            set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
+            auto gp = rec::pop(gocpp::recv(q));
+            rec::set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
             t++;
             n++;
         }
@@ -5754,7 +5768,7 @@ namespace golang::runtime
             }
         }
         atomic::StoreRel(& pp->runqtail, t);
-        if(! empty(gocpp::recv(q)))
+        if(! rec::empty(gocpp::recv(q)))
         {
             lock(& sched.lock);
             globrunqputbatch(q, int32_t(qsize));
@@ -5767,11 +5781,11 @@ namespace golang::runtime
         struct g* gp;
         bool inheritTime;
         auto next = pp->runnext;
-        if(next != 0 && cas(gocpp::recv(pp->runnext), next, 0))
+        if(next != 0 && rec::cas(gocpp::recv(pp->runnext), next, 0))
         {
             struct g* gp;
             bool inheritTime;
-            return {ptr(gocpp::recv(next)), true};
+            return {rec::ptr(gocpp::recv(next)), true};
         }
         for(; ; )
         {
@@ -5785,7 +5799,7 @@ namespace golang::runtime
                 bool inheritTime;
                 return {nullptr, false};
             }
-            auto gp = ptr(gocpp::recv(pp->runq[h % uint32_t(len(pp->runq))]));
+            auto gp = rec::ptr(gocpp::recv(pp->runq[h % uint32_t(len(pp->runq))]));
             if(atomic::CasRel(& pp->runqhead, h, h + 1))
             {
                 struct g* gp;
@@ -5800,11 +5814,11 @@ namespace golang::runtime
         struct gQueue drainQ;
         uint32_t n;
         auto oldNext = pp->runnext;
-        if(oldNext != 0 && cas(gocpp::recv(pp->runnext), oldNext, 0))
+        if(oldNext != 0 && rec::cas(gocpp::recv(pp->runnext), oldNext, 0))
         {
             struct gQueue drainQ;
             uint32_t n;
-            pushBack(gocpp::recv(drainQ), ptr(gocpp::recv(oldNext)));
+            rec::pushBack(gocpp::recv(drainQ), rec::ptr(gocpp::recv(oldNext)));
             n++;
         }
         retry:
@@ -5833,14 +5847,14 @@ namespace golang::runtime
         {
             struct gQueue drainQ;
             uint32_t n;
-            auto gp = ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
-            pushBack(gocpp::recv(drainQ), gp);
+            auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
+            rec::pushBack(gocpp::recv(drainQ), gp);
             n++;
         }
         return {drainQ, n};
     }
 
-    uint32_t runqgrab(struct p* pp, gocpp::array<guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
+    uint32_t runqgrab(struct p* pp, gocpp::array<runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
     {
         for(; ; )
         {
@@ -5865,7 +5879,7 @@ namespace golang::runtime
                                 osyield();
                             }
                         }
-                        if(! cas(gocpp::recv(pp->runnext), next, 0))
+                        if(! rec::cas(gocpp::recv(pp->runnext), next, 0))
                         {
                             continue;
                         }
@@ -5900,7 +5914,7 @@ namespace golang::runtime
             return nullptr;
         }
         n--;
-        auto gp = ptr(gocpp::recv(pp->runq[(t + n) % uint32_t(len(pp->runq))]));
+        auto gp = rec::ptr(gocpp::recv(pp->runq[(t + n) % uint32_t(len(pp->runq))]));
         if(n == 0)
         {
             return gp;
@@ -5946,45 +5960,45 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool empty(struct gQueue* q)
+    bool rec::empty(struct gQueue* q)
     {
         return q->head == 0;
     }
 
-    void push(struct gQueue* q, struct g* gp)
+    void rec::push(struct gQueue* q, struct g* gp)
     {
         gp->schedlink = q->head;
-        set(gocpp::recv(q->head), gp);
+        rec::set(gocpp::recv(q->head), gp);
         if(q->tail == 0)
         {
-            set(gocpp::recv(q->tail), gp);
+            rec::set(gocpp::recv(q->tail), gp);
         }
     }
 
-    void pushBack(struct gQueue* q, struct g* gp)
+    void rec::pushBack(struct gQueue* q, struct g* gp)
     {
         gp->schedlink = 0;
         if(q->tail != 0)
         {
-            set(gocpp::recv(ptr(gocpp::recv(q->tail))->schedlink), gp);
+            rec::set(gocpp::recv(rec::ptr(gocpp::recv(q->tail))->schedlink), gp);
         }
         else
         {
-            set(gocpp::recv(q->head), gp);
+            rec::set(gocpp::recv(q->head), gp);
         }
-        set(gocpp::recv(q->tail), gp);
+        rec::set(gocpp::recv(q->tail), gp);
     }
 
-    void pushBackAll(struct gQueue* q, struct gQueue q2)
+    void rec::pushBackAll(struct gQueue* q, struct gQueue q2)
     {
         if(q2.tail == 0)
         {
             return;
         }
-        ptr(gocpp::recv(q2.tail))->schedlink = 0;
+        rec::ptr(gocpp::recv(q2.tail))->schedlink = 0;
         if(q->tail != 0)
         {
-            ptr(gocpp::recv(q->tail))->schedlink = q2.head;
+            rec::ptr(gocpp::recv(q->tail))->schedlink = q2.head;
         }
         else
         {
@@ -5993,9 +6007,9 @@ namespace golang::runtime
         q->tail = q2.tail;
     }
 
-    struct g* pop(struct gQueue* q)
+    struct g* rec::pop(struct gQueue* q)
     {
-        auto gp = ptr(gocpp::recv(q->head));
+        auto gp = rec::ptr(gocpp::recv(q->head));
         if(gp != nullptr)
         {
             q->head = gp->schedlink;
@@ -6007,7 +6021,7 @@ namespace golang::runtime
         return gp;
     }
 
-    struct gList popList(struct gQueue* q)
+    struct gList rec::popList(struct gQueue* q)
     {
         auto stack = gList {q->head};
         *q = gQueue {};
@@ -6043,29 +6057,29 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool empty(struct gList* l)
+    bool rec::empty(struct gList* l)
     {
         return l->head == 0;
     }
 
-    void push(struct gList* l, struct g* gp)
+    void rec::push(struct gList* l, struct g* gp)
     {
         gp->schedlink = l->head;
-        set(gocpp::recv(l->head), gp);
+        rec::set(gocpp::recv(l->head), gp);
     }
 
-    void pushAll(struct gList* l, struct gQueue q)
+    void rec::pushAll(struct gList* l, struct gQueue q)
     {
-        if(! empty(gocpp::recv(q)))
+        if(! rec::empty(gocpp::recv(q)))
         {
-            ptr(gocpp::recv(q.tail))->schedlink = l->head;
+            rec::ptr(gocpp::recv(q.tail))->schedlink = l->head;
             l->head = q.head;
         }
     }
 
-    struct g* pop(struct gList* l)
+    struct g* rec::pop(struct gList* l)
     {
-        auto gp = ptr(gocpp::recv(l->head));
+        auto gp = rec::ptr(gocpp::recv(l->head));
         if(gp != nullptr)
         {
             l->head = gp->schedlink;
@@ -6098,7 +6112,7 @@ namespace golang::runtime
         auto gp = getg();
         auto mp = gp->m;
         mp->locks++;
-        return int(ptr(gocpp::recv(mp->p))->id);
+        return int(rec::ptr(gocpp::recv(mp->p))->id);
     }
 
     void procUnpin()
@@ -6129,11 +6143,11 @@ namespace golang::runtime
 
     bool sync_runtime_canSpin(int i)
     {
-        if(i >= active_spin || ncpu <= 1 || gomaxprocs <= Load(gocpp::recv(sched.npidle)) + Load(gocpp::recv(sched.nmspinning)) + 1)
+        if(i >= active_spin || ncpu <= 1 || gomaxprocs <= rec::Load(gocpp::recv(sched.npidle)) + rec::Load(gocpp::recv(sched.nmspinning)) + 1)
         {
             return false;
         }
-        if(auto p = ptr(gocpp::recv(getg()->m->p)); ! runqempty(p))
+        if(auto p = rec::ptr(gocpp::recv(getg()->m->p)); ! runqempty(p))
         {
             return false;
         }
@@ -6216,7 +6230,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void reset(struct randomOrder* ord, uint32_t count)
+    void rec::reset(struct randomOrder* ord, uint32_t count)
     {
         ord->count = count;
         ord->coprimes = ord->coprimes.make_slice(0, 0);
@@ -6229,23 +6243,23 @@ namespace golang::runtime
         }
     }
 
-    struct randomEnum start(struct randomOrder* ord, uint32_t i)
+    struct randomEnum rec::start(struct randomOrder* ord, uint32_t i)
     {
         return gocpp::Init<randomEnum>([](randomEnum& x) { x.count = ord->count; x.pos = i % ord->count; x.inc = ord->coprimes[i / ord->count % uint32_t(len(ord->coprimes))]; });
     }
 
-    bool done(struct randomEnum* go_enum)
+    bool rec::done(struct randomEnum* go_enum)
     {
         return go_enum->i == go_enum->count;
     }
 
-    void next(struct randomEnum* go_enum)
+    void rec::next(struct randomEnum* go_enum)
     {
         go_enum->i++;
         go_enum->pos = (go_enum->pos + go_enum->inc) % go_enum->count;
     }
 
-    uint32_t position(struct randomEnum* go_enum)
+    uint32_t rec::position(struct randomEnum* go_enum)
     {
         return go_enum->pos;
     }

@@ -13,5 +13,9 @@
 namespace golang::runtime
 {
     void writeErr(gocpp::slice<unsigned char> b);
+
+    namespace rec
+    {
+    }
 }
 

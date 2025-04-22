@@ -15,5 +15,9 @@ namespace golang::sync
     std::function<void ()> OnceFunc(std::function<void ()> f);
     std::function<T ()> OnceValue(std::function<T ()> f);
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f);
+
+    namespace rec
+    {
+    }
 }
 

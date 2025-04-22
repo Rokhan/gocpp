@@ -16,6 +16,12 @@
 
 namespace golang::atomic
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Bool::operator T()
@@ -48,23 +54,23 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    bool Load(struct Bool* x)
+    bool rec::Load(struct Bool* x)
     {
         return LoadUint32(& x->v) != 0;
     }
 
-    void Store(struct Bool* x, bool val)
+    void rec::Store(struct Bool* x, bool val)
     {
         StoreUint32(& x->v, b32(val));
     }
 
-    bool Swap(struct Bool* x, bool go_new)
+    bool rec::Swap(struct Bool* x, bool go_new)
     {
         bool old;
         return SwapUint32(& x->v, b32(go_new)) != 0;
     }
 
-    bool CompareAndSwap(struct Bool* x, bool old, bool go_new)
+    bool rec::CompareAndSwap(struct Bool* x, bool old, bool go_new)
     {
         bool swapped;
         return CompareAndSwapUint32(& x->v, b32(old), b32(go_new));
@@ -121,21 +127,21 @@ namespace golang::atomic
 
 
     template<typename T>
-    T* Load(Pointer<T>* x)
+    T* rec::Load(Pointer<T>* x)
     {
         return (T*)(LoadPointer(& x->v));
     }
 
 
     template<typename T>
-    void Store(Pointer<T>* x, T* val)
+    void rec::Store(Pointer<T>* x, T* val)
     {
         StorePointer(& x->v, unsafe::Pointer(val));
     }
 
 
     template<typename T>
-    T* Swap(Pointer<T>* x, T* go_new)
+    T* rec::Swap(Pointer<T>* x, T* go_new)
     {
         T* old;
         return (T*)(SwapPointer(& x->v, unsafe::Pointer(go_new)));
@@ -143,7 +149,7 @@ namespace golang::atomic
 
 
     template<typename T>
-    bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new)
+    bool rec::CompareAndSwap(Pointer<T>* x, T* old, T* go_new)
     {
         bool swapped;
         return CompareAndSwapPointer(& x->v, unsafe::Pointer(old), unsafe::Pointer(go_new));
@@ -181,29 +187,29 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    int32_t Load(struct Int32* x)
+    int32_t rec::Load(struct Int32* x)
     {
         return LoadInt32(& x->v);
     }
 
-    void Store(struct Int32* x, int32_t val)
+    void rec::Store(struct Int32* x, int32_t val)
     {
         StoreInt32(& x->v, val);
     }
 
-    int32_t Swap(struct Int32* x, int32_t go_new)
+    int32_t rec::Swap(struct Int32* x, int32_t go_new)
     {
         int32_t old;
         return SwapInt32(& x->v, go_new);
     }
 
-    bool CompareAndSwap(struct Int32* x, int32_t old, int32_t go_new)
+    bool rec::CompareAndSwap(struct Int32* x, int32_t old, int32_t go_new)
     {
         bool swapped;
         return CompareAndSwapInt32(& x->v, old, go_new);
     }
 
-    int32_t Add(struct Int32* x, int32_t delta)
+    int32_t rec::Add(struct Int32* x, int32_t delta)
     {
         int32_t go_new;
         return AddInt32(& x->v, delta);
@@ -244,29 +250,29 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    int64_t Load(struct Int64* x)
+    int64_t rec::Load(struct Int64* x)
     {
         return LoadInt64(& x->v);
     }
 
-    void Store(struct Int64* x, int64_t val)
+    void rec::Store(struct Int64* x, int64_t val)
     {
         StoreInt64(& x->v, val);
     }
 
-    int64_t Swap(struct Int64* x, int64_t go_new)
+    int64_t rec::Swap(struct Int64* x, int64_t go_new)
     {
         int64_t old;
         return SwapInt64(& x->v, go_new);
     }
 
-    bool CompareAndSwap(struct Int64* x, int64_t old, int64_t go_new)
+    bool rec::CompareAndSwap(struct Int64* x, int64_t old, int64_t go_new)
     {
         bool swapped;
         return CompareAndSwapInt64(& x->v, old, go_new);
     }
 
-    int64_t Add(struct Int64* x, int64_t delta)
+    int64_t rec::Add(struct Int64* x, int64_t delta)
     {
         int64_t go_new;
         return AddInt64(& x->v, delta);
@@ -304,29 +310,29 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    uint32_t Load(struct Uint32* x)
+    uint32_t rec::Load(struct Uint32* x)
     {
         return LoadUint32(& x->v);
     }
 
-    void Store(struct Uint32* x, uint32_t val)
+    void rec::Store(struct Uint32* x, uint32_t val)
     {
         StoreUint32(& x->v, val);
     }
 
-    uint32_t Swap(struct Uint32* x, uint32_t go_new)
+    uint32_t rec::Swap(struct Uint32* x, uint32_t go_new)
     {
         uint32_t old;
         return SwapUint32(& x->v, go_new);
     }
 
-    bool CompareAndSwap(struct Uint32* x, uint32_t old, uint32_t go_new)
+    bool rec::CompareAndSwap(struct Uint32* x, uint32_t old, uint32_t go_new)
     {
         bool swapped;
         return CompareAndSwapUint32(& x->v, old, go_new);
     }
 
-    uint32_t Add(struct Uint32* x, uint32_t delta)
+    uint32_t rec::Add(struct Uint32* x, uint32_t delta)
     {
         uint32_t go_new;
         return AddUint32(& x->v, delta);
@@ -367,29 +373,29 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    uint64_t Load(struct Uint64* x)
+    uint64_t rec::Load(struct Uint64* x)
     {
         return LoadUint64(& x->v);
     }
 
-    void Store(struct Uint64* x, uint64_t val)
+    void rec::Store(struct Uint64* x, uint64_t val)
     {
         StoreUint64(& x->v, val);
     }
 
-    uint64_t Swap(struct Uint64* x, uint64_t go_new)
+    uint64_t rec::Swap(struct Uint64* x, uint64_t go_new)
     {
         uint64_t old;
         return SwapUint64(& x->v, go_new);
     }
 
-    bool CompareAndSwap(struct Uint64* x, uint64_t old, uint64_t go_new)
+    bool rec::CompareAndSwap(struct Uint64* x, uint64_t old, uint64_t go_new)
     {
         bool swapped;
         return CompareAndSwapUint64(& x->v, old, go_new);
     }
 
-    uint64_t Add(struct Uint64* x, uint64_t delta)
+    uint64_t rec::Add(struct Uint64* x, uint64_t delta)
     {
         uint64_t go_new;
         return AddUint64(& x->v, delta);
@@ -427,29 +433,29 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    uintptr_t Load(struct Uintptr* x)
+    uintptr_t rec::Load(struct Uintptr* x)
     {
         return LoadUintptr(& x->v);
     }
 
-    void Store(struct Uintptr* x, uintptr_t val)
+    void rec::Store(struct Uintptr* x, uintptr_t val)
     {
         StoreUintptr(& x->v, val);
     }
 
-    uintptr_t Swap(struct Uintptr* x, uintptr_t go_new)
+    uintptr_t rec::Swap(struct Uintptr* x, uintptr_t go_new)
     {
         uintptr_t old;
         return SwapUintptr(& x->v, go_new);
     }
 
-    bool CompareAndSwap(struct Uintptr* x, uintptr_t old, uintptr_t go_new)
+    bool rec::CompareAndSwap(struct Uintptr* x, uintptr_t old, uintptr_t go_new)
     {
         bool swapped;
         return CompareAndSwapUintptr(& x->v, old, go_new);
     }
 
-    uintptr_t Add(struct Uintptr* x, uintptr_t delta)
+    uintptr_t rec::Add(struct Uintptr* x, uintptr_t delta)
     {
         uintptr_t go_new;
         return AddUintptr(& x->v, delta);
@@ -481,11 +487,11 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
-    void Lock(noCopy*)
+    void rec::Lock(noCopy*)
     {
     }
 
-    void Unlock(noCopy*)
+    void rec::Unlock(noCopy*)
     {
     }
 

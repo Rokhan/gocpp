@@ -21,5 +21,9 @@ namespace golang::runtime
     void cgoCheckTypedBlock(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
     void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
     void cgoCheckUsingType(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
+
+    namespace rec
+    {
+    }
 }
 

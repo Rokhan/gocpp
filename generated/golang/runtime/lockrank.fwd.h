@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     using lockRank = int;
-    const lockRank lockRankUnknown = 0;
+    const runtime::lockRank lockRankUnknown = 0;
     const lockRank lockRankSysmon = 1;
     const lockRank lockRankScavenge = 2;
     const lockRank lockRankForcegc = 3;
@@ -62,5 +62,5 @@ namespace golang::runtime
     const lockRank lockRankAllocmRInternal = 52;
     const lockRank lockRankExecRInternal = 53;
     const lockRank lockRankTestRInternal = 54;
-    const lockRank lockRankLeafRank = 1000;
+    const runtime::lockRank lockRankLeafRank = 1000;
 }

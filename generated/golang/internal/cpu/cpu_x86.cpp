@@ -15,6 +15,11 @@
 
 namespace golang::cpu
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg)
     /* convertBlockStmt, nil block */;
 

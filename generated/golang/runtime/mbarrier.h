@@ -28,5 +28,9 @@ namespace golang::runtime
     void reflect_typedmemclrpartial(struct _type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size);
     void reflect_typedarrayclear(struct _type* typ, unsafe::Pointer ptr, int len);
     void memclrHasPointers(unsafe::Pointer ptr, uintptr_t n);
+
+    namespace rec
+    {
+    }
 }
 

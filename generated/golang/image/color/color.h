@@ -53,8 +53,11 @@ namespace golang::color
         std::shared_ptr<IColor> value;
     };
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<Color, false>& self);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<Color>& self);
+    namespace rec
+    {
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<Color, false>& self);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<Color>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Color& value);
     struct RGBA
@@ -76,7 +79,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA c);
     struct RGBA64
     {
         uint16_t R;
@@ -96,7 +98,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA64 c);
     struct NRGBA
     {
         uint8_t R;
@@ -116,7 +117,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA c);
     struct NRGBA64
     {
         uint16_t R;
@@ -136,7 +136,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA64 c);
     struct Alpha
     {
         uint8_t A;
@@ -153,7 +152,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha c);
     struct Alpha16
     {
         uint16_t A;
@@ -170,7 +168,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha16 c);
     struct Gray
     {
         uint8_t Y;
@@ -187,7 +184,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray c);
     struct Gray16
     {
         uint16_t Y;
@@ -204,7 +200,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray16 c);
     struct Model : gocpp::Interface
     {
         Model(){}
@@ -247,8 +242,11 @@ namespace golang::color
         std::shared_ptr<IModel> value;
     };
 
-    struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c);
-    struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c);
+    namespace rec
+    {
+        struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c);
+        struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
     struct Model ModelFunc(std::function<struct Color (Color)> f);
@@ -268,7 +266,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
-    struct Color Convert(struct modelFunc* m, struct Color c);
     extern Model RGBAModel;
     extern Model RGBA64Model;
     extern Model NRGBAModel;
@@ -285,12 +282,25 @@ namespace golang::color
     struct Color alpha16Model(struct Color c);
     struct Color grayModel(struct Color c);
     struct Color gray16Model(struct Color c);
-    struct Color Convert(Palette p, struct Color c);
-    int Index(Palette p, struct Color c);
     uint32_t sqDiff(uint32_t x, uint32_t y);
     extern Gray16 Black;
     extern Gray16 White;
     extern Alpha16 Transparent;
     extern Alpha16 Opaque;
+
+    namespace rec
+    {
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha16 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray16 c);
+        struct Color Convert(struct modelFunc* m, struct Color c);
+        struct Color Convert(Palette p, struct Color c);
+        int Index(Palette p, struct Color c);
+    }
 }
 

@@ -17,13 +17,17 @@ namespace golang::main
     extern gocpp::complex128 z;
     void DummyPrintList(std::string format, gocpp::slice<std::any> elts);
     void DummyPrintf(std::string format, gocpp::slice<std::any> a);
-
-    template<typename... Args>
+    
+template<typename... Args>
     void DummyPrintf(std::string format, Args... a)
     {
         return DummyPrintf(format, gocpp::ToSlice<std::any>(a...));
     }
 
     void main();
+
+    namespace rec
+    {
+    }
 }
 

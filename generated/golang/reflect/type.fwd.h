@@ -22,7 +22,7 @@ namespace golang::reflect
     struct gocpp_id_24;
     const long maxPtrmaskBytes = 2048;
     struct bitVector;
-    const Kind Invalid = 0;
+    const reflect::Kind Invalid = 0;
     const Kind Bool = 1;
     const Kind Int = 2;
     const Kind Int8 = 3;
@@ -49,7 +49,7 @@ namespace golang::reflect
     const Kind String = 24;
     const Kind Struct = 25;
     const Kind UnsafePointer = 26;
-    const ChanDir RecvDir = 1 << 0;
+    const reflect::ChanDir RecvDir = 1 << 0;
     const ChanDir SendDir = 1 << 1;
 }
 #include "golang/internal/abi/map.fwd.h"

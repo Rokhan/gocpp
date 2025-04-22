@@ -54,6 +54,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     mutex::operator T()
@@ -210,54 +222,54 @@ namespace golang::runtime
         return (eface*)(unsafe::Pointer(ep));
     }
 
-    struct g* ptr(guintptr gp)
+    struct g* rec::ptr(runtime::guintptr gp)
     {
         return (g*)(unsafe::Pointer(gp));
     }
 
-    void set(guintptr* gp, struct g* g)
+    void rec::set(runtime::guintptr* gp, struct g* g)
     {
         *gp = guintptr(unsafe::Pointer(g));
     }
 
-    bool cas(guintptr* gp, guintptr old, guintptr go_new)
+    bool rec::cas(runtime::guintptr* gp, runtime::guintptr old, runtime::guintptr go_new)
     {
         return atomic::Casuintptr((uintptr_t*)(unsafe::Pointer(gp)), uintptr_t(old), uintptr_t(go_new));
     }
 
-    guintptr guintptr(struct g* gp)
+    runtime::guintptr rec::guintptr(struct g* gp)
     {
         return guintptr(unsafe::Pointer(gp));
     }
 
     void setGNoWB(struct g** gp, struct g* go_new)
     {
-        set(gocpp::recv((guintptr*)(unsafe::Pointer(gp))), go_new);
+        rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
     }
 
-    struct p* ptr(puintptr pp)
+    struct p* rec::ptr(runtime::puintptr pp)
     {
         return (p*)(unsafe::Pointer(pp));
     }
 
-    void set(puintptr* pp, struct p* p)
+    void rec::set(runtime::puintptr* pp, struct p* p)
     {
         *pp = puintptr(unsafe::Pointer(p));
     }
 
-    struct m* ptr(muintptr mp)
+    struct m* rec::ptr(runtime::muintptr mp)
     {
         return (m*)(unsafe::Pointer(mp));
     }
 
-    void set(muintptr* mp, struct m* m)
+    void rec::set(runtime::muintptr* mp, struct m* m)
     {
         *mp = muintptr(unsafe::Pointer(m));
     }
 
     void setMNoWB(struct m** mp, struct m* go_new)
     {
-        set(gocpp::recv((muintptr*)(unsafe::Pointer(mp))), go_new);
+        rec::set(gocpp::recv((runtime::muintptr*)(unsafe::Pointer(mp))), go_new);
     }
 
     
@@ -1629,7 +1641,7 @@ namespace golang::runtime
     }
 
     gocpp::array_base<std::string> waitReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.waitReasonZero = ""; x.waitReasonGCAssistMarking = "GC assist marking"; x.waitReasonIOWait = "IO wait"; x.waitReasonChanReceiveNilChan = "chan receive (nil chan)"; x.waitReasonChanSendNilChan = "chan send (nil chan)"; x.waitReasonDumpingHeap = "dumping heap"; x.waitReasonGarbageCollection = "garbage collection"; x.waitReasonGarbageCollectionScan = "garbage collection scan"; x.waitReasonPanicWait = "panicwait"; x.waitReasonSelect = "select"; x.waitReasonSelectNoCases = "select (no cases)"; x.waitReasonGCAssistWait = "GC assist wait"; x.waitReasonGCSweepWait = "GC sweep wait"; x.waitReasonGCScavengeWait = "GC scavenge wait"; x.waitReasonChanReceive = "chan receive"; x.waitReasonChanSend = "chan send"; x.waitReasonFinalizerWait = "finalizer wait"; x.waitReasonForceGCIdle = "force gc (idle)"; x.waitReasonSemacquire = "semacquire"; x.waitReasonSleep = "sleep"; x.waitReasonSyncCondWait = "sync.Cond.Wait"; x.waitReasonSyncMutexLock = "sync.Mutex.Lock"; x.waitReasonSyncRWMutexRLock = "sync.RWMutex.RLock"; x.waitReasonSyncRWMutexLock = "sync.RWMutex.Lock"; x.waitReasonTraceReaderBlocked = "trace reader (blocked)"; x.waitReasonWaitForGCCycle = "wait for GC cycle"; x.waitReasonGCWorkerIdle = "GC worker (idle)"; x.waitReasonGCWorkerActive = "GC worker (active)"; x.waitReasonPreempted = "preempted"; x.waitReasonDebugCall = "debug call"; x.waitReasonGCMarkTermination = "GC mark termination"; x.waitReasonStoppingTheWorld = "stopping the world"; x.waitReasonFlushProcCaches = "flushing proc caches"; x.waitReasonTraceGoroutineStatus = "trace goroutine status"; x.waitReasonTraceProcStatus = "trace proc status"; x.waitReasonPageTraceFlush = "page trace flush"; x.waitReasonCoroutine = "coroutine"; });
-    std::string String(waitReason w)
+    std::string rec::String(runtime::waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))
         {
@@ -1638,7 +1650,7 @@ namespace golang::runtime
         return waitReasonStrings[w];
     }
 
-    bool isMutexWait(waitReason w)
+    bool rec::isMutexWait(runtime::waitReason w)
     {
         return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
     }
@@ -1653,7 +1665,7 @@ namespace golang::runtime
     gocpp::slice<p*> allp;
     pMask idlepMask;
     pMask timerpMask;
-    lfstack gcBgMarkWorkerPool;
+    runtime::lfstack gcBgMarkWorkerPool;
     int32_t gcBgMarkWorkerCount;
     uint32_t processorVersionInfo;
     bool isIntel;

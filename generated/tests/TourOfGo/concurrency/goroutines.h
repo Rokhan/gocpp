@@ -14,5 +14,9 @@ namespace golang::main
 {
     void say(std::string s);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

@@ -28,5 +28,9 @@ namespace golang::atomic
     int64_t Xaddint64(int64_t* ptr, int64_t delta);
     int32_t Xchgint32(int32_t* ptr, int32_t go_new);
     int64_t Xchgint64(int64_t* ptr, int64_t go_new);
+
+    namespace rec
+    {
+    }
 }
 

@@ -15,13 +15,19 @@
 
 namespace golang::sort
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace sort::rec;
+    }
+
     void insertionSort(struct Interface data, int a, int b)
     {
         for(auto i = a + 1; i < b; i++)
         {
-            for(auto j = i; j > a && Less(gocpp::recv(data), j, j - 1); j--)
+            for(auto j = i; j > a && rec::Less(gocpp::recv(data), j, j - 1); j--)
             {
-                Swap(gocpp::recv(data), j, j - 1);
+                rec::Swap(gocpp::recv(data), j, j - 1);
             }
         }
     }
@@ -36,15 +42,15 @@ namespace golang::sort
             {
                 break;
             }
-            if(child + 1 < hi && Less(gocpp::recv(data), first + child, first + child + 1))
+            if(child + 1 < hi && rec::Less(gocpp::recv(data), first + child, first + child + 1))
             {
                 child++;
             }
-            if(! Less(gocpp::recv(data), first + root, first + child))
+            if(! rec::Less(gocpp::recv(data), first + root, first + child))
             {
                 return;
             }
-            Swap(gocpp::recv(data), first + root, first + child);
+            rec::Swap(gocpp::recv(data), first + root, first + child);
             root = child;
         }
     }
@@ -60,7 +66,7 @@ namespace golang::sort
         }
         for(auto i = hi - 1; i >= 0; i--)
         {
-            Swap(gocpp::recv(data), first, first + i);
+            rec::Swap(gocpp::recv(data), first, first + i);
             siftDown(data, lo, i, first);
         }
     }
@@ -102,7 +108,7 @@ namespace golang::sort
                     return;
                 }
             }
-            if(a > 0 && ! Less(gocpp::recv(data), a - 1, pivot))
+            if(a > 0 && ! rec::Less(gocpp::recv(data), a - 1, pivot))
             {
                 auto mid = partitionEqual(data, a, b, pivot);
                 a = mid;
@@ -131,15 +137,15 @@ namespace golang::sort
     {
         int newpivot;
         bool alreadyPartitioned;
-        Swap(gocpp::recv(data), a, pivot);
+        rec::Swap(gocpp::recv(data), a, pivot);
         auto [i, j] = std::tuple{a + 1, b - 1};
-        for(; i <= j && Less(gocpp::recv(data), i, a); )
+        for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
         {
             int newpivot;
             bool alreadyPartitioned;
             i++;
         }
-        for(; i <= j && ! Less(gocpp::recv(data), j, a); )
+        for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
         {
             int newpivot;
             bool alreadyPartitioned;
@@ -149,23 +155,23 @@ namespace golang::sort
         {
             int newpivot;
             bool alreadyPartitioned;
-            Swap(gocpp::recv(data), j, a);
+            rec::Swap(gocpp::recv(data), j, a);
             return {j, true};
         }
-        Swap(gocpp::recv(data), i, j);
+        rec::Swap(gocpp::recv(data), i, j);
         i++;
         j--;
         for(; ; )
         {
             int newpivot;
             bool alreadyPartitioned;
-            for(; i <= j && Less(gocpp::recv(data), i, a); )
+            for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
             {
                 int newpivot;
                 bool alreadyPartitioned;
                 i++;
             }
-            for(; i <= j && ! Less(gocpp::recv(data), j, a); )
+            for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
             {
                 int newpivot;
                 bool alreadyPartitioned;
@@ -177,28 +183,28 @@ namespace golang::sort
                 bool alreadyPartitioned;
                 break;
             }
-            Swap(gocpp::recv(data), i, j);
+            rec::Swap(gocpp::recv(data), i, j);
             i++;
             j--;
         }
-        Swap(gocpp::recv(data), j, a);
+        rec::Swap(gocpp::recv(data), j, a);
         return {j, false};
     }
 
     int partitionEqual(struct Interface data, int a, int b, int pivot)
     {
         int newpivot;
-        Swap(gocpp::recv(data), a, pivot);
+        rec::Swap(gocpp::recv(data), a, pivot);
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
             int newpivot;
-            for(; i <= j && ! Less(gocpp::recv(data), a, i); )
+            for(; i <= j && ! rec::Less(gocpp::recv(data), a, i); )
             {
                 int newpivot;
                 i++;
             }
-            for(; i <= j && Less(gocpp::recv(data), a, j); )
+            for(; i <= j && rec::Less(gocpp::recv(data), a, j); )
             {
                 int newpivot;
                 j--;
@@ -208,7 +214,7 @@ namespace golang::sort
                 int newpivot;
                 break;
             }
-            Swap(gocpp::recv(data), i, j);
+            rec::Swap(gocpp::recv(data), i, j);
             i++;
             j--;
         }
@@ -222,7 +228,7 @@ namespace golang::sort
         auto i = a + 1;
         for(auto j = 0; j < maxSteps; j++)
         {
-            for(; i < b && ! Less(gocpp::recv(data), i, i - 1); )
+            for(; i < b && ! rec::Less(gocpp::recv(data), i, i - 1); )
             {
                 i++;
             }
@@ -234,27 +240,27 @@ namespace golang::sort
             {
                 return false;
             }
-            Swap(gocpp::recv(data), i, i - 1);
+            rec::Swap(gocpp::recv(data), i, i - 1);
             if(i - a >= 2)
             {
                 for(auto j = i - 1; j >= 1; j--)
                 {
-                    if(! Less(gocpp::recv(data), j, j - 1))
+                    if(! rec::Less(gocpp::recv(data), j, j - 1))
                     {
                         break;
                     }
-                    Swap(gocpp::recv(data), j, j - 1);
+                    rec::Swap(gocpp::recv(data), j, j - 1);
                 }
             }
             if(b - i >= 2)
             {
                 for(auto j = i + 1; j < b; j++)
                 {
-                    if(! Less(gocpp::recv(data), j, j - 1))
+                    if(! rec::Less(gocpp::recv(data), j, j - 1))
                     {
                         break;
                     }
-                    Swap(gocpp::recv(data), j, j - 1);
+                    rec::Swap(gocpp::recv(data), j, j - 1);
                 }
             }
         }
@@ -270,20 +276,20 @@ namespace golang::sort
             auto modulus = nextPowerOfTwo(length);
             for(auto idx = a + (length / 4) * 2 - 1; idx <= a + (length / 4) * 2 + 1; idx++)
             {
-                auto other = int((unsigned int)(Next(gocpp::recv(random))) & (modulus - 1));
+                auto other = int((unsigned int)(rec::Next(gocpp::recv(random))) & (modulus - 1));
                 if(other >= length)
                 {
                     other -= length;
                 }
-                Swap(gocpp::recv(data), idx, a + other);
+                rec::Swap(gocpp::recv(data), idx, a + other);
             }
         }
     }
 
-    std::tuple<int, sortedHint> choosePivot(struct Interface data, int a, int b)
+    std::tuple<int, sort::sortedHint> choosePivot(struct Interface data, int a, int b)
     {
         int pivot;
-        sortedHint hint;
+        sort::sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
         auto l = b - a;
@@ -294,11 +300,11 @@ namespace golang::sort
         if(l >= 8)
         {
             int pivot;
-            sortedHint hint;
+            sort::sortedHint hint;
             if(l >= shortestNinther)
             {
                 int pivot;
-                sortedHint hint;
+                sort::sortedHint hint;
                 i = medianAdjacent(data, i, & swaps);
                 j = medianAdjacent(data, j, & swaps);
                 k = medianAdjacent(data, k, & swaps);
@@ -314,7 +320,7 @@ namespace golang::sort
             switch(conditionId)
             {
                 int pivot;
-                sortedHint hint;
+                sort::sortedHint hint;
                 case 0:
                     return {j, increasingHint};
                     break;
@@ -330,7 +336,7 @@ namespace golang::sort
 
     std::tuple<int, int> order2(struct Interface data, int a, int b, int* swaps)
     {
-        if(Less(gocpp::recv(data), b, a))
+        if(rec::Less(gocpp::recv(data), b, a))
         {
             *swaps++;
             return {b, a};
@@ -357,7 +363,7 @@ namespace golang::sort
         auto j = b - 1;
         for(; i < j; )
         {
-            Swap(gocpp::recv(data), i, j);
+            rec::Swap(gocpp::recv(data), i, j);
             i++;
             j--;
         }
@@ -367,7 +373,7 @@ namespace golang::sort
     {
         for(auto i = 0; i < n; i++)
         {
-            Swap(gocpp::recv(data), a + i, b + i);
+            rec::Swap(gocpp::recv(data), a + i, b + i);
         }
     }
 
@@ -408,7 +414,7 @@ namespace golang::sort
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(Less(gocpp::recv(data), h, a))
+                if(rec::Less(gocpp::recv(data), h, a))
                 {
                     i = h + 1;
                 }
@@ -419,7 +425,7 @@ namespace golang::sort
             }
             for(auto k = a; k < i - 1; k++)
             {
-                Swap(gocpp::recv(data), k, k + 1);
+                rec::Swap(gocpp::recv(data), k, k + 1);
             }
             return;
         }
@@ -430,7 +436,7 @@ namespace golang::sort
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(! Less(gocpp::recv(data), m, h))
+                if(! rec::Less(gocpp::recv(data), m, h))
                 {
                     i = h + 1;
                 }
@@ -441,7 +447,7 @@ namespace golang::sort
             }
             for(auto k = m; k > i; k--)
             {
-                Swap(gocpp::recv(data), k, k - 1);
+                rec::Swap(gocpp::recv(data), k, k - 1);
             }
             return;
         }
@@ -463,7 +469,7 @@ namespace golang::sort
         for(; start < r; )
         {
             auto c = int((unsigned int)(start + r) >> 1);
-            if(! Less(gocpp::recv(data), p - c, c))
+            if(! rec::Less(gocpp::recv(data), p - c, c))
             {
                 start = c + 1;
             }

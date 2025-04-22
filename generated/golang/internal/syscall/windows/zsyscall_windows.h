@@ -74,7 +74,7 @@ namespace golang::windows
     extern syscall::LazyProc* procGetProfilesDirectoryW;
     extern syscall::LazyProc* procWSASocketW;
     std::tuple<uint32_t, struct gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
-    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, struct syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, TokenType tokenType, syscall::Token* phNewToken);
+    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, struct syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, windows::TokenType tokenType, syscall::Token* phNewToken);
     struct gocpp::error ImpersonateSelf(uint32_t impersonationlevel);
     struct gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, struct LUID* luid);
     std::tuple<syscall::Handle, struct gocpp::error> OpenSCManager(uint16_t* machineName, uint16_t* databaseName, uint32_t access);
@@ -114,5 +114,9 @@ namespace golang::windows
     struct gocpp::error DestroyEnvironmentBlock(uint16_t* block);
     struct gocpp::error GetProfilesDirectory(uint16_t* dir, uint32_t* dirLen);
     std::tuple<syscall::Handle, struct gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, struct syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags);
+
+    namespace rec
+    {
+    }
 }
 

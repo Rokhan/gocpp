@@ -143,7 +143,7 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
-    const Errno ENOENT = ERROR_FILE_NOT_FOUND;
-    const Errno ENOTDIR = ERROR_PATH_NOT_FOUND;
-    const Errno E2BIG = APPLICATION_ERROR + 0;
+    const syscall::Errno ENOENT = ERROR_FILE_NOT_FOUND;
+    const syscall::Errno ENOTDIR = ERROR_PATH_NOT_FOUND;
+    const syscall::Errno E2BIG = APPLICATION_ERROR + 0;
 }

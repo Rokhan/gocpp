@@ -52,6 +52,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     mcentral::operator T()
@@ -90,7 +100,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct mcentral* c, spanClass spc)
+    void rec::init(struct mcentral* c, runtime::spanClass spc)
     {
         c->spanclass = spc;
         lockInit(& c->partial[0].spineLock, lockRankSpanSetSpine);
@@ -99,92 +109,92 @@ namespace golang::runtime
         lockInit(& c->full[1].spineLock, lockRankSpanSetSpine);
     }
 
-    struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* rec::partialUnswept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[1 - sweepgen / 2 % 2];
     }
 
-    struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* rec::partialSwept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[sweepgen / 2 % 2];
     }
 
-    struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* rec::fullUnswept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->full[1 - sweepgen / 2 % 2];
     }
 
-    struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen)
+    struct spanSet* rec::fullSwept(struct mcentral* c, uint32_t sweepgen)
     {
         return & c->full[sweepgen / 2 % 2];
     }
 
-    struct mspan* cacheSpan(struct mcentral* c)
+    struct mspan* rec::cacheSpan(struct mcentral* c)
     {
-        auto spanBytes = uintptr_t(class_to_allocnpages[sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
+        auto spanBytes = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
         deductSweepCredit(spanBytes, 0);
         auto traceDone = false;
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GCSweepStart(gocpp::recv(trace));
+            rec::GCSweepStart(gocpp::recv(trace));
             traceRelease(trace);
         }
         auto spanBudget = 100;
         mspan* s = {};
         sweepLocker sl = {};
         auto sg = mheap_.sweepgen;
-        if(s = pop(gocpp::recv(partialSwept(gocpp::recv(c), sg))); s != nullptr)
+        if(s = rec::pop(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg))); s != nullptr)
         {
             goto havespan;
         }
-        sl = begin(gocpp::recv(sweep.active));
+        sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
         {
             for(; spanBudget >= 0; spanBudget--)
             {
-                s = pop(gocpp::recv(partialUnswept(gocpp::recv(c), sg)));
+                s = rec::pop(gocpp::recv(rec::partialUnswept(gocpp::recv(c), sg)));
                 if(s == nullptr)
                 {
                     break;
                 }
-                if(auto [s, ok] = tryAcquire(gocpp::recv(sl), s); ok)
+                if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
                 {
-                    sweep(gocpp::recv(s), true);
-                    end(gocpp::recv(sweep.active), sl);
+                    rec::sweep(gocpp::recv(s), true);
+                    rec::end(gocpp::recv(sweep.active), sl);
                     goto havespan;
                 }
             }
             for(; spanBudget >= 0; spanBudget--)
             {
-                s = pop(gocpp::recv(fullUnswept(gocpp::recv(c), sg)));
+                s = rec::pop(gocpp::recv(rec::fullUnswept(gocpp::recv(c), sg)));
                 if(s == nullptr)
                 {
                     break;
                 }
-                if(auto [s, ok] = tryAcquire(gocpp::recv(sl), s); ok)
+                if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
                 {
-                    sweep(gocpp::recv(s), true);
-                    auto freeIndex = nextFreeIndex(gocpp::recv(s));
+                    rec::sweep(gocpp::recv(s), true);
+                    auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
                     if(freeIndex != s.nelems)
                     {
                         s.freeindex = freeIndex;
-                        end(gocpp::recv(sweep.active), sl);
+                        rec::end(gocpp::recv(sweep.active), sl);
                         goto havespan;
                     }
-                    push(gocpp::recv(fullSwept(gocpp::recv(c), sg)), s.mspan);
+                    rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s.mspan);
                 }
             }
-            end(gocpp::recv(sweep.active), sl);
+            rec::end(gocpp::recv(sweep.active), sl);
         }
         trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GCSweepDone(gocpp::recv(trace));
+            rec::GCSweepDone(gocpp::recv(trace));
             traceDone = true;
             traceRelease(trace);
         }
-        s = grow(gocpp::recv(c));
+        s = rec::grow(gocpp::recv(c));
         if(s == nullptr)
         {
             return nullptr;
@@ -193,9 +203,9 @@ namespace golang::runtime
         if(! traceDone)
         {
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GCSweepDone(gocpp::recv(trace));
+                rec::GCSweepDone(gocpp::recv(trace));
                 traceRelease(trace);
             }
         }
@@ -206,12 +216,12 @@ namespace golang::runtime
         }
         auto freeByteBase = s->freeindex &^ (64 - 1);
         auto whichByte = freeByteBase / 8;
-        refillAllocCache(gocpp::recv(s), whichByte);
+        rec::refillAllocCache(gocpp::recv(s), whichByte);
         s->allocCache >>= s->freeindex % 64;
         return s;
     }
 
-    void uncacheSpan(struct mcentral* c, struct mspan* s)
+    void rec::uncacheSpan(struct mcentral* c, struct mspan* s)
     {
         if(s->allocCount == 0)
         {
@@ -230,33 +240,33 @@ namespace golang::runtime
         if(stale)
         {
             auto ss = sweepLocked {s};
-            sweep(gocpp::recv(ss), false);
+            rec::sweep(gocpp::recv(ss), false);
         }
         else
         {
             if(int(s->nelems) - int(s->allocCount) > 0)
             {
-                push(gocpp::recv(partialSwept(gocpp::recv(c), sg)), s);
+                rec::push(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg)), s);
             }
             else
             {
-                push(gocpp::recv(fullSwept(gocpp::recv(c), sg)), s);
+                rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s);
             }
         }
     }
 
-    struct mspan* grow(struct mcentral* c)
+    struct mspan* rec::grow(struct mcentral* c)
     {
-        auto npages = uintptr_t(class_to_allocnpages[sizeclass(gocpp::recv(c->spanclass))]);
-        auto size = uintptr_t(class_to_size[sizeclass(gocpp::recv(c->spanclass))]);
-        auto s = alloc(gocpp::recv(mheap_), npages, c->spanclass);
+        auto npages = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]);
+        auto size = uintptr_t(class_to_size[rec::sizeclass(gocpp::recv(c->spanclass))]);
+        auto s = rec::alloc(gocpp::recv(mheap_), npages, c->spanclass);
         if(s == nullptr)
         {
             return nullptr;
         }
-        auto n = divideByElemSize(gocpp::recv(s), npages << _PageShift);
-        s->limit = base(gocpp::recv(s)) + size * n;
-        initHeapBits(gocpp::recv(s), false);
+        auto n = rec::divideByElemSize(gocpp::recv(s), npages << _PageShift);
+        s->limit = rec::base(gocpp::recv(s)) + size * n;
+        rec::initHeapBits(gocpp::recv(s), false);
         return s;
     }
 

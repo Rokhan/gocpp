@@ -15,6 +15,12 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     WSAData::operator T()

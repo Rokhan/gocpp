@@ -14,5 +14,9 @@ namespace golang::main
 {
     double pow(double x, double n, double lim);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

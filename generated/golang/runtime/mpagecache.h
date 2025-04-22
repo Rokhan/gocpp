@@ -38,10 +38,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageCache& value);
-    bool empty(struct pageCache* c);
-    std::tuple<uintptr_t, uintptr_t> alloc(struct pageCache* c, uintptr_t npages);
-    std::tuple<uintptr_t, uintptr_t> allocN(struct pageCache* c, uintptr_t npages);
-    void flush(struct pageCache* c, struct pageAlloc* p);
-    struct pageCache allocToCache(struct pageAlloc* p);
+
+    namespace rec
+    {
+        bool empty(struct pageCache* c);
+        std::tuple<uintptr_t, uintptr_t> alloc(struct pageCache* c, uintptr_t npages);
+        std::tuple<uintptr_t, uintptr_t> allocN(struct pageCache* c, uintptr_t npages);
+        void flush(struct pageCache* c, struct pageAlloc* p);
+        struct pageCache allocToCache(struct pageAlloc* p);
+    }
 }
 

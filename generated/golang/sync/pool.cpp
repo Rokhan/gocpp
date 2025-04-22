@@ -22,6 +22,15 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Pool::operator T()
@@ -138,7 +147,7 @@ namespace golang::sync
         return unsafe::Pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
-    void Put(struct Pool* p, go_any x)
+    void rec::Put(struct Pool* p, go_any x)
     {
         if(x == nullptr)
         {
@@ -153,14 +162,14 @@ namespace golang::sync
             race::ReleaseMerge(poolRaceAddr(x));
             race::Disable();
         }
-        auto [l, gocpp_id_1] = pin(gocpp::recv(p));
+        auto [l, gocpp_id_1] = rec::pin(gocpp::recv(p));
         if(l->go_private == nullptr)
         {
             l->go_private = x;
         }
         else
         {
-            pushHead(gocpp::recv(l->shared), x);
+            rec::pushHead(gocpp::recv(l->shared), x);
         }
         runtime_procUnpin();
         if(race::Enabled)
@@ -169,21 +178,21 @@ namespace golang::sync
         }
     }
 
-    go_any Get(struct Pool* p)
+    go_any rec::Get(struct Pool* p)
     {
         if(race::Enabled)
         {
             race::Disable();
         }
-        auto [l, pid] = pin(gocpp::recv(p));
+        auto [l, pid] = rec::pin(gocpp::recv(p));
         auto x = l->go_private;
         l->go_private = nullptr;
         if(x == nullptr)
         {
-            std::tie(x, gocpp_id_2) = popHead(gocpp::recv(l->shared));
+            std::tie(x, gocpp_id_2) = rec::popHead(gocpp::recv(l->shared));
             if(x == nullptr)
             {
-                x = getSlow(gocpp::recv(p), pid);
+                x = rec::getSlow(gocpp::recv(p), pid);
             }
         }
         runtime_procUnpin();
@@ -197,19 +206,19 @@ namespace golang::sync
         }
         if(x == nullptr && p->New != nullptr)
         {
-            x = New(gocpp::recv(p));
+            x = rec::New(gocpp::recv(p));
         }
         return x;
     }
 
-    go_any getSlow(struct Pool* p, int pid)
+    go_any rec::getSlow(struct Pool* p, int pid)
     {
         auto size = runtime_LoadAcquintptr(& p->localSize);
         auto locals = p->local;
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i + 1) % int(size));
-            if(auto [x, gocpp_id_4] = popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_4] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
             {
                 return x;
             }
@@ -229,7 +238,7 @@ namespace golang::sync
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i) % int(size));
-            if(auto [x, gocpp_id_6] = popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_6] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
             {
                 return x;
             }
@@ -238,7 +247,7 @@ namespace golang::sync
         return nullptr;
     }
 
-    std::tuple<struct poolLocal*, int> pin(struct Pool* p)
+    std::tuple<struct poolLocal*, int> rec::pin(struct Pool* p)
     {
         if(p == nullptr)
         {
@@ -251,17 +260,17 @@ namespace golang::sync
         {
             return {indexLocal(l, pid), pid};
         }
-        return pinSlow(gocpp::recv(p));
+        return rec::pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p)
+    std::tuple<struct poolLocal*, int> rec::pinSlow(struct Pool* p)
     {
         gocpp::Defer defer;
         try
         {
             runtime_procUnpin();
-            Lock(gocpp::recv(allPoolsMu));
-            defer.push_back([=]{ Unlock(gocpp::recv(allPoolsMu)); });
+            rec::Lock(gocpp::recv(allPoolsMu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(allPoolsMu)); });
             auto pid = runtime_procPin();
             auto s = p->localSize;
             auto l = p->local;

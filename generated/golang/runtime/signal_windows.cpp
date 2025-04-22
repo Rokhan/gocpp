@@ -49,6 +49,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void preventErrorDialogs()
     {
         auto errormode = stdcall0(_GetErrorMode);
@@ -98,7 +109,7 @@ namespace golang::runtime
 
     bool isAbort(struct context* r)
     {
-        auto pc = ip(gocpp::recv(r));
+        auto pc = rec::ip(gocpp::recv(r));
         if(GOARCH == "386" || GOARCH == "amd64" || GOARCH == "arm")
         {
             pc--;
@@ -108,7 +119,7 @@ namespace golang::runtime
 
     bool isgoexception(struct exceptionrecord* info, struct context* r)
     {
-        if(ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < ip(gocpp::recv(r)))
+        if(rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r)))
         {
             return false;
         }
@@ -218,13 +229,13 @@ namespace golang::runtime
         {
             return ret;
         }
-        if(ip(gocpp::recv(ep->context)) == abi::FuncPCABI0(sigresume))
+        if(rec::ip(gocpp::recv(ep->context)) == abi::FuncPCABI0(sigresume))
         {
             return ret;
         }
         prepareContextForSigResume(ep->context);
-        set_sp(gocpp::recv(ep->context), gp->m->g0->sched.sp);
-        set_ip(gocpp::recv(ep->context), abi::FuncPCABI0(sigresume));
+        rec::set_sp(gocpp::recv(ep->context), gp->m->g0->sched.sp);
+        rec::set_ip(gocpp::recv(ep->context), abi::FuncPCABI0(sigresume));
         return ret;
     }
 
@@ -241,24 +252,24 @@ namespace golang::runtime
         gp->sig = info->exceptioncode;
         gp->sigcode0 = info->exceptioninformation[0];
         gp->sigcode1 = info->exceptioninformation[1];
-        gp->sigpc = ip(gocpp::recv(r));
-        if(ip(gocpp::recv(r)) != 0 && ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
+        gp->sigpc = rec::ip(gocpp::recv(r));
+        if(rec::ip(gocpp::recv(r)) != 0 && rec::ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
         {
-            auto sp = unsafe::Pointer(sp(gocpp::recv(r)));
+            auto sp = unsafe::Pointer(rec::sp(gocpp::recv(r)));
             auto delta = uintptr_t(sys::StackAlign);
             sp = add(sp, - delta);
-            set_sp(gocpp::recv(r), uintptr_t(sp));
+            rec::set_sp(gocpp::recv(r), uintptr_t(sp));
             if(usesLR)
             {
-                *((uintptr_t*)(sp)) = lr(gocpp::recv(r));
-                set_lr(gocpp::recv(r), ip(gocpp::recv(r)));
+                *((uintptr_t*)(sp)) = rec::lr(gocpp::recv(r));
+                rec::set_lr(gocpp::recv(r), rec::ip(gocpp::recv(r)));
             }
             else
             {
-                *((uintptr_t*)(sp)) = ip(gocpp::recv(r));
+                *((uintptr_t*)(sp)) = rec::ip(gocpp::recv(r));
             }
         }
-        set_ip(gocpp::recv(r), abi::FuncPCABI0(sigpanic0));
+        rec::set_ip(gocpp::recv(r), abi::FuncPCABI0(sigpanic0));
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
@@ -270,17 +281,17 @@ namespace golang::runtime
             return _EXCEPTION_CONTINUE_SEARCH_SEH;
         }
         auto gp = g0->m->curg;
-        auto ctxt = ctx(gocpp::recv(dctxt));
+        auto ctxt = rec::ctx(gocpp::recv(dctxt));
         uintptr_t base = {};
         uintptr_t sp = {};
         for(; ; )
         {
-            auto entry = stdcall3(_RtlLookupFunctionEntry, ip(gocpp::recv(ctxt)), uintptr_t(unsafe::Pointer(& base)), 0);
+            auto entry = stdcall3(_RtlLookupFunctionEntry, rec::ip(gocpp::recv(ctxt)), uintptr_t(unsafe::Pointer(& base)), 0);
             if(entry == 0)
             {
                 break;
             }
-            stdcall8(_RtlVirtualUnwind, 0, base, ip(gocpp::recv(ctxt)), entry, uintptr_t(unsafe::Pointer(ctxt)), 0, uintptr_t(unsafe::Pointer(& sp)), 0);
+            stdcall8(_RtlVirtualUnwind, 0, base, rec::ip(gocpp::recv(ctxt)), entry, uintptr_t(unsafe::Pointer(ctxt)), 0, uintptr_t(unsafe::Pointer(& sp)), 0);
             if(sp < gp->stack.lo || gp->stack.hi <= sp)
             {
                 break;
@@ -304,7 +315,7 @@ namespace golang::runtime
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
-        if(GOARCH == "arm64" && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < ip(gocpp::recv(r))))
+        if(GOARCH == "arm64" && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
@@ -315,16 +326,16 @@ namespace golang::runtime
     void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         auto g0 = getg();
-        if(Load(gocpp::recv(panicking)) != 0)
+        if(rec::Load(gocpp::recv(panicking)) != 0)
         {
             exit(2);
         }
-        Store(gocpp::recv(panicking), 1);
+        rec::Store(gocpp::recv(panicking), 1);
         g0->stack.lo = 0;
         g0->stackguard0 = g0->stack.lo + stackGuard;
         g0->stackguard1 = g0->stackguard0;
-        print("Exception ", hex(info->exceptioncode), " ", hex(info->exceptioninformation[0]), " ", hex(info->exceptioninformation[1]), " ", hex(ip(gocpp::recv(r))), "\n");
-        print("PC=", hex(ip(gocpp::recv(r))), "\n");
+        print("Exception ", hex(info->exceptioncode), " ", hex(info->exceptioninformation[0]), " ", hex(info->exceptioninformation[1]), " ", hex(rec::ip(gocpp::recv(r))), "\n");
+        print("PC=", hex(rec::ip(gocpp::recv(r))), "\n");
         if(g0->m->incgo && gp == g0->m->g0 && g0->m->curg != nullptr)
         {
             if(iscgo)
@@ -335,11 +346,11 @@ namespace golang::runtime
         }
         print("\n");
         g0->m->throwing = throwTypeRuntime;
-        set(gocpp::recv(g0->m->caughtsig), gp);
+        rec::set(gocpp::recv(g0->m->caughtsig), gp);
         auto [level, gocpp_id_1, docrash] = gotraceback();
         if(level > 0)
         {
-            tracebacktrap(ip(gocpp::recv(r)), sp(gocpp::recv(r)), lr(gocpp::recv(r)), gp);
+            tracebacktrap(rec::ip(gocpp::recv(r)), rec::sp(gocpp::recv(r)), rec::lr(gocpp::recv(r)), gp);
             tracebackothers(gp);
             dumpregs(r);
         }

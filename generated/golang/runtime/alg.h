@@ -96,8 +96,11 @@ namespace golang::runtime
         std::shared_ptr<Igocpp_id_0> value;
     };
 
-    void F(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-    void F(const gocpp::ObjRecv<gocpp_id_0>& self);
+    namespace rec
+    {
+        void F(const gocpp::PtrRecv<gocpp_id_0, false>& self);
+        void F(const gocpp::ObjRecv<gocpp_id_0>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed);
@@ -105,5 +108,9 @@ namespace golang::runtime
     void initAlgAES();
     uint32_t readUnaligned32(unsafe::Pointer p);
     uint64_t readUnaligned64(unsafe::Pointer p);
+
+    namespace rec
+    {
+    }
 }
 

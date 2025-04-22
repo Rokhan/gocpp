@@ -15,6 +15,12 @@
 
 namespace golang::abi
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     InterfaceSwitch::operator T()

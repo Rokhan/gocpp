@@ -41,5 +41,9 @@ namespace golang::runtime
     void spillArgs();
     void unspillArgs();
     uintptr_t getfp();
+
+    namespace rec
+    {
+    }
 }
 

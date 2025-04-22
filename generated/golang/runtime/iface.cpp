@@ -58,6 +58,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     mutex itabLock;
     itabTableType* itabTable = & itabTableInit;
     itabTableType itabTableInit = gocpp::Init<itabTableType>([](itabTableType& x) { x.size = itabInitSize; });
@@ -113,17 +125,17 @@ namespace golang::runtime
             {
                 return nullptr;
             }
-            auto name = nameOff(gocpp::recv(toRType(& inter->Type)), inter->Methods[0].Name);
-            gocpp::panic(new TypeAssertionError {nullptr, typ, & inter->Type, Name(gocpp::recv(name))});
+            auto name = rec::nameOff(gocpp::recv(toRType(& inter->Type)), inter->Methods[0].Name);
+            gocpp::panic(new TypeAssertionError {nullptr, typ, & inter->Type, rec::Name(gocpp::recv(name))});
         }
         itab* m = {};
         auto t = (itabTableType*)(atomic::Loadp(unsafe::Pointer(& itabTable)));
-        if(m = find(gocpp::recv(t), inter, typ); m != nullptr)
+        if(m = rec::find(gocpp::recv(t), inter, typ); m != nullptr)
         {
             goto finish;
         }
         lock(& itabLock);
-        if(m = find(gocpp::recv(itabTable), inter, typ); m != nullptr)
+        if(m = rec::find(gocpp::recv(itabTable), inter, typ); m != nullptr)
         {
             unlock(& itabLock);
             goto finish;
@@ -132,7 +144,7 @@ namespace golang::runtime
         m->inter = inter;
         m->_type = typ;
         m->hash = 0;
-        init(gocpp::recv(m));
+        rec::init(gocpp::recv(m));
         itabAdd(m);
         unlock(& itabLock);
         finish:
@@ -144,10 +156,10 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        gocpp::panic(gocpp::InitPtr<TypeAssertionError>([](TypeAssertionError& x) { x.concrete = typ; x.asserted = & inter->Type; x.missingMethod = init(gocpp::recv(m)); }));
+        gocpp::panic(gocpp::InitPtr<TypeAssertionError>([](TypeAssertionError& x) { x.concrete = typ; x.asserted = & inter->Type; x.missingMethod = rec::init(gocpp::recv(m)); }));
     }
 
-    struct itab* find(struct itabTableType* t, struct interfacetype* inter, struct _type* typ)
+    struct itab* rec::find(struct itabTableType* t, struct interfacetype* inter, struct _type* typ)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(inter, typ) & mask;
@@ -187,10 +199,10 @@ namespace golang::runtime
             atomicstorep(unsafe::Pointer(& itabTable), unsafe::Pointer(t2));
             t = itabTable;
         }
-        add(gocpp::recv(t), m);
+        rec::add(gocpp::recv(t), m);
     }
 
-    void add(struct itabTableType* t, struct itab* m)
+    void rec::add(struct itabTableType* t, struct itab* m)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(m->inter, m->_type) & mask;
@@ -213,11 +225,11 @@ namespace golang::runtime
         }
     }
 
-    std::string init(struct itab* m)
+    std::string rec::init(struct itab* m)
     {
         auto inter = m->inter;
         auto typ = m->_type;
-        auto x = Uncommon(gocpp::recv(typ));
+        auto x = rec::Uncommon(gocpp::recv(typ));
         auto ni = len(inter->Methods);
         auto nt = int(x->Mcount);
         auto xmhdr = (gocpp::array<abi::Method, 1 << 16>*)(add(unsafe::Pointer(x), uintptr_t(x->Moff))).make_slice(, nt, nt);
@@ -228,29 +240,29 @@ namespace golang::runtime
         for(auto k = 0; k < ni; k++)
         {
             auto i = & inter->Methods[k];
-            auto itype = typeOff(gocpp::recv(toRType(& inter->Type)), i->Typ);
-            auto name = nameOff(gocpp::recv(toRType(& inter->Type)), i->Name);
-            auto iname = Name(gocpp::recv(name));
+            auto itype = rec::typeOff(gocpp::recv(toRType(& inter->Type)), i->Typ);
+            auto name = rec::nameOff(gocpp::recv(toRType(& inter->Type)), i->Name);
+            auto iname = rec::Name(gocpp::recv(name));
             auto ipkg = pkgPath(name);
             if(ipkg == "")
             {
-                ipkg = Name(gocpp::recv(inter->PkgPath));
+                ipkg = rec::Name(gocpp::recv(inter->PkgPath));
             }
             for(; j < nt; j++)
             {
                 auto t = & xmhdr[j];
                 auto rtyp = toRType(typ);
-                auto tname = nameOff(gocpp::recv(rtyp), t->Name);
-                if(typeOff(gocpp::recv(rtyp), t->Mtyp) == itype && Name(gocpp::recv(tname)) == iname)
+                auto tname = rec::nameOff(gocpp::recv(rtyp), t->Name);
+                if(rec::typeOff(gocpp::recv(rtyp), t->Mtyp) == itype && rec::Name(gocpp::recv(tname)) == iname)
                 {
                     auto pkgPath = pkgPath(tname);
                     if(pkgPath == "")
                     {
-                        pkgPath = Name(gocpp::recv(nameOff(gocpp::recv(rtyp), x->PkgPath)));
+                        pkgPath = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rtyp), x->PkgPath)));
                     }
-                    if(IsExported(gocpp::recv(tname)) || pkgPath == ipkg)
+                    if(rec::IsExported(gocpp::recv(tname)) || pkgPath == ipkg)
                     {
-                        auto ifn = textOff(gocpp::recv(rtyp), t->Ifn);
+                        auto ifn = rec::textOff(gocpp::recv(rtyp), t->Ifn);
                         if(k == 0)
                         {
                             fun0 = ifn;

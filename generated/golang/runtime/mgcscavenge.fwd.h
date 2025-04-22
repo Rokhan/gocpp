@@ -17,7 +17,7 @@ namespace golang::runtime
     const long scavChunkMaxFlags = 6;
     using scavChunkFlags = uint8_t;
     struct piController;
-    const scavChunkFlags scavChunkHasFree = 1 << 0;
+    const runtime::scavChunkFlags scavChunkHasFree = 1 << 0;
     const int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"

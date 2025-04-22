@@ -80,6 +80,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     void gcMarkRootPrepare()
     {
         assertWorldStopped();
@@ -228,7 +241,7 @@ namespace golang::runtime
         }
         if(workCounter != nullptr && workDone != 0)
         {
-            Add(gocpp::recv(workCounter), workDone);
+            rec::Add(gocpp::recv(workCounter), workDone);
             if(flushBgCredit)
             {
                 gcFlushBgCredit(workDone);
@@ -265,20 +278,20 @@ namespace golang::runtime
         auto list = sched.gFree.stack;
         sched.gFree.stack = gList {};
         unlock(& sched.gFree.lock);
-        if(empty(gocpp::recv(list)))
+        if(rec::empty(gocpp::recv(list)))
         {
             return;
         }
         auto q = gQueue {list.head, list.head};
-        for(auto gp = ptr(gocpp::recv(list.head)); gp != nullptr; gp = ptr(gocpp::recv(gp->schedlink)))
+        for(auto gp = rec::ptr(gocpp::recv(list.head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
         {
             stackfree(gp->stack);
             gp->stack.lo = 0;
             gp->stack.hi = 0;
-            set(gocpp::recv(q.tail), gp);
+            rec::set(gocpp::recv(q.tail), gp);
         }
         lock(& sched.gFree.lock);
-        pushAll(gocpp::recv(sched.gFree.noStack), q);
+        rec::pushAll(gocpp::recv(sched.gFree.noStack), q);
         unlock(& sched.gFree.lock);
     }
 
@@ -286,7 +299,7 @@ namespace golang::runtime
     {
         auto sg = mheap_.sweepgen;
         auto ai = mheap_.markArenas[shard / (pagesPerArena / pagesPerSpanRoot)];
-        auto ha = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
+        auto ha = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         auto arenaPage = (unsigned int)(uintptr_t(shard) * pagesPerSpanRoot % pagesPerArena);
         auto specialsbits = ha->pageSpecials.make_slice(arenaPage / 8);
         specialsbits = specialsbits.make_slice(0, pagesPerSpanRoot / 8);
@@ -304,7 +317,7 @@ namespace golang::runtime
                     continue;
                 }
                 auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
-                if(auto state = get(gocpp::recv(s->state)); state != mSpanInUse)
+                if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse)
                 {
                     print("s.state = ", state, "\n");
                     go_throw("non in-use span found with specials bit set");
@@ -322,8 +335,8 @@ namespace golang::runtime
                         continue;
                     }
                     auto spf = (specialfinalizer*)(unsafe::Pointer(sp));
-                    auto p = base(gocpp::recv(s)) + uintptr_t(spf->special.offset) / s->elemsize * s->elemsize;
-                    if(! noscan(gocpp::recv(s->spanclass)))
+                    auto p = rec::base(gocpp::recv(s)) + uintptr_t(spf->special.offset) / s->elemsize * s->elemsize;
+                    if(! rec::noscan(gocpp::recv(s->spanclass)))
                     {
                         scanobject(p, gcw);
                     }
@@ -346,14 +359,14 @@ namespace golang::runtime
         }
         auto enteredMarkAssistForTracing = false;
         retry:
-        if(limiting(gocpp::recv(gcCPULimiter)))
+        if(rec::limiting(gocpp::recv(gcCPULimiter)))
         {
             if(enteredMarkAssistForTracing)
             {
                 auto trace = traceAcquire();
-                if(ok(gocpp::recv(trace)))
+                if(rec::ok(gocpp::recv(trace)))
                 {
-                    GCMarkAssistDone(gocpp::recv(trace));
+                    rec::GCMarkAssistDone(gocpp::recv(trace));
                     gp->inMarkAssist = false;
                     traceRelease(trace);
                 }
@@ -364,8 +377,8 @@ namespace golang::runtime
             }
             return;
         }
-        auto assistWorkPerByte = Load(gocpp::recv(gcController.assistWorkPerByte));
-        auto assistBytesPerWork = Load(gocpp::recv(gcController.assistBytesPerWork));
+        auto assistWorkPerByte = rec::Load(gocpp::recv(gcController.assistWorkPerByte));
+        auto assistBytesPerWork = rec::Load(gocpp::recv(gcController.assistBytesPerWork));
         auto debtBytes = - gp->gcAssistBytes;
         auto scanWork = int64_t(assistWorkPerByte * double(debtBytes));
         if(scanWork < gcOverAssistWork)
@@ -373,7 +386,7 @@ namespace golang::runtime
             scanWork = gcOverAssistWork;
             debtBytes = int64_t(assistBytesPerWork * double(scanWork));
         }
-        auto bgScanCredit = Load(gocpp::recv(gcController.bgScanCredit));
+        auto bgScanCredit = rec::Load(gocpp::recv(gcController.bgScanCredit));
         auto stolen = int64_t(0);
         if(bgScanCredit > 0)
         {
@@ -387,16 +400,16 @@ namespace golang::runtime
                 stolen = scanWork;
                 gp->gcAssistBytes += debtBytes;
             }
-            Add(gocpp::recv(gcController.bgScanCredit), - stolen);
+            rec::Add(gocpp::recv(gcController.bgScanCredit), - stolen);
             scanWork -= stolen;
             if(scanWork == 0)
             {
                 if(enteredMarkAssistForTracing)
                 {
                     auto trace = traceAcquire();
-                    if(ok(gocpp::recv(trace)))
+                    if(rec::ok(gocpp::recv(trace)))
                     {
-                        GCMarkAssistDone(gocpp::recv(trace));
+                        rec::GCMarkAssistDone(gocpp::recv(trace));
                         gp->inMarkAssist = false;
                         traceRelease(trace);
                     }
@@ -411,13 +424,13 @@ namespace golang::runtime
         if(! enteredMarkAssistForTracing)
         {
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
                 if(! goexperiment::ExecTracer2)
                 {
                     enteredMarkAssistForTracing = true;
                 }
-                GCMarkAssistStart(gocpp::recv(trace));
+                rec::GCMarkAssistStart(gocpp::recv(trace));
                 gp->inMarkAssist = true;
                 traceRelease(trace);
             }
@@ -455,9 +468,9 @@ namespace golang::runtime
         if(enteredMarkAssistForTracing)
         {
             auto trace = traceAcquire();
-            if(ok(gocpp::recv(trace)))
+            if(rec::ok(gocpp::recv(trace)))
             {
-                GCMarkAssistDone(gocpp::recv(trace));
+                rec::GCMarkAssistDone(gocpp::recv(trace));
                 gp->inMarkAssist = false;
                 traceRelease(trace);
             }
@@ -477,7 +490,7 @@ namespace golang::runtime
             return;
         }
         auto startTime = nanotime();
-        auto trackLimiterEvent = start(gocpp::recv(ptr(gocpp::recv(gp->m->p))->limiterEvent), limiterEventMarkAssist, startTime);
+        auto trackLimiterEvent = rec::start(gocpp::recv(rec::ptr(gocpp::recv(gp->m->p))->limiterEvent), limiterEventMarkAssist, startTime);
         auto decnwait = atomic::Xadd(& work.nwait, - 1);
         if(decnwait == work.nproc)
         {
@@ -485,10 +498,10 @@ namespace golang::runtime
             go_throw("nwait > work.nprocs");
         }
         casGToWaiting(gp, _Grunning, waitReasonGCAssistMarking);
-        auto gcw = & ptr(gocpp::recv(getg()->m->p))->gcw;
+        auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
         auto workDone = gcDrainN(gcw, scanWork);
         casgstatus(gp, _Gwaiting, _Grunning);
-        auto assistBytesPerWork = Load(gocpp::recv(gcController.assistBytesPerWork));
+        auto assistBytesPerWork = rec::Load(gocpp::recv(gcController.assistBytesPerWork));
         gp->gcAssistBytes += 1 + int64_t(assistBytesPerWork * double(workDone));
         auto incnwait = atomic::Xadd(& work.nwait, + 1);
         if(incnwait > work.nproc)
@@ -502,16 +515,16 @@ namespace golang::runtime
         }
         auto now = nanotime();
         auto duration = now - startTime;
-        auto pp = ptr(gocpp::recv(gp->m->p));
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
         pp->gcAssistTime += duration;
         if(trackLimiterEvent)
         {
-            stop(gocpp::recv(pp->limiterEvent), limiterEventMarkAssist, now);
+            rec::stop(gocpp::recv(pp->limiterEvent), limiterEventMarkAssist, now);
         }
         if(pp->gcAssistTime > gcAssistTimeSlack)
         {
-            Add(gocpp::recv(gcController.assistTime), pp->gcAssistTime);
-            update(gocpp::recv(gcCPULimiter), now);
+            rec::Add(gocpp::recv(gcController.assistTime), pp->gcAssistTime);
+            rec::update(gocpp::recv(gcCPULimiter), now);
             pp->gcAssistTime = 0;
         }
     }
@@ -519,7 +532,7 @@ namespace golang::runtime
     void gcWakeAllAssists()
     {
         lock(& work.assistQueue.lock);
-        auto list = popList(gocpp::recv(work.assistQueue.q));
+        auto list = rec::popList(gocpp::recv(work.assistQueue.q));
         injectglist(& list);
         unlock(& work.assistQueue.lock);
     }
@@ -534,13 +547,13 @@ namespace golang::runtime
         }
         auto gp = getg();
         auto oldList = work.assistQueue.q;
-        pushBack(gocpp::recv(work.assistQueue.q), gp);
-        if(Load(gocpp::recv(gcController.bgScanCredit)) > 0)
+        rec::pushBack(gocpp::recv(work.assistQueue.q), gp);
+        if(rec::Load(gocpp::recv(gcController.bgScanCredit)) > 0)
         {
             work.assistQueue.q = oldList;
             if(oldList.tail != 0)
             {
-                set(gocpp::recv(ptr(gocpp::recv(oldList.tail))->schedlink), nullptr);
+                rec::set(gocpp::recv(rec::ptr(gocpp::recv(oldList.tail))->schedlink), nullptr);
             }
             unlock(& work.assistQueue.lock);
             return false;
@@ -551,17 +564,17 @@ namespace golang::runtime
 
     void gcFlushBgCredit(int64_t scanWork)
     {
-        if(empty(gocpp::recv(work.assistQueue.q)))
+        if(rec::empty(gocpp::recv(work.assistQueue.q)))
         {
-            Add(gocpp::recv(gcController.bgScanCredit), scanWork);
+            rec::Add(gocpp::recv(gcController.bgScanCredit), scanWork);
             return;
         }
-        auto assistBytesPerWork = Load(gocpp::recv(gcController.assistBytesPerWork));
+        auto assistBytesPerWork = rec::Load(gocpp::recv(gcController.assistBytesPerWork));
         auto scanBytes = int64_t(double(scanWork) * assistBytesPerWork);
         lock(& work.assistQueue.lock);
-        for(; ! empty(gocpp::recv(work.assistQueue.q)) && scanBytes > 0; )
+        for(; ! rec::empty(gocpp::recv(work.assistQueue.q)) && scanBytes > 0; )
         {
-            auto gp = pop(gocpp::recv(work.assistQueue.q));
+            auto gp = rec::pop(gocpp::recv(work.assistQueue.q));
             if(scanBytes + gp->gcAssistBytes >= 0)
             {
                 scanBytes += gp->gcAssistBytes;
@@ -572,15 +585,15 @@ namespace golang::runtime
             {
                 gp->gcAssistBytes += scanBytes;
                 scanBytes = 0;
-                pushBack(gocpp::recv(work.assistQueue.q), gp);
+                rec::pushBack(gocpp::recv(work.assistQueue.q), gp);
                 break;
             }
         }
         if(scanBytes > 0)
         {
-            auto assistWorkPerByte = Load(gocpp::recv(gcController.assistWorkPerByte));
+            auto assistWorkPerByte = rec::Load(gocpp::recv(gcController.assistWorkPerByte));
             scanWork = int64_t(double(scanBytes) * assistWorkPerByte);
-            Add(gocpp::recv(gcController.bgScanCredit), scanWork);
+            rec::Add(gocpp::recv(gcController.bgScanCredit), scanWork);
         }
         unlock(& work.assistQueue.lock);
     }
@@ -634,7 +647,7 @@ namespace golang::runtime
             sp = gp->sched.sp;
         }
         auto scannedSize = gp->stack.hi - sp;
-        auto p = ptr(gocpp::recv(getg()->m->p));
+        auto p = rec::ptr(gocpp::recv(getg()->m->p));
         p->scannedStackSize += uint64_t(scannedSize);
         p->scannedStacks++;
         if(isShrinkStackSafe(gp))
@@ -660,7 +673,7 @@ namespace golang::runtime
             scanblock(uintptr_t(unsafe::Pointer(& gp->sched.ctxt)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
         }
         unwinder u = {};
-        for(init(gocpp::recv(u), gp, 0); valid(gocpp::recv(u)); next(gocpp::recv(u)))
+        for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             scanframeworker(& u.frame, & state, gcw);
         }
@@ -681,17 +694,17 @@ namespace golang::runtime
         }
         if(gp->_panic != nullptr)
         {
-            putPtr(gocpp::recv(state), uintptr_t(unsafe::Pointer(gp->_panic)), false);
+            rec::putPtr(gocpp::recv(state), uintptr_t(unsafe::Pointer(gp->_panic)), false);
         }
-        buildIndex(gocpp::recv(state));
+        rec::buildIndex(gocpp::recv(state));
         for(; ; )
         {
-            auto [p, conservative] = getPtr(gocpp::recv(state));
+            auto [p, conservative] = rec::getPtr(gocpp::recv(state));
             if(p == 0)
             {
                 break;
             }
-            auto obj = findObject(gocpp::recv(state), p);
+            auto obj = rec::findObject(gocpp::recv(state), p);
             if(obj == nullptr)
             {
                 continue;
@@ -701,7 +714,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            setRecord(gocpp::recv(obj), nullptr);
+            rec::setRecord(gocpp::recv(obj), nullptr);
             if(stackTraceDebug)
             {
                 printlock();
@@ -713,21 +726,21 @@ namespace golang::runtime
                 println();
                 printunlock();
             }
-            auto gcdata = gcdata(gocpp::recv(r));
+            auto gcdata = rec::gcdata(gocpp::recv(r));
             mspan* s = {};
-            if(useGCProg(gocpp::recv(r)))
+            if(rec::useGCProg(gocpp::recv(r)))
             {
-                s = materializeGCProg(ptrdata(gocpp::recv(r)), gcdata);
+                s = materializeGCProg(rec::ptrdata(gocpp::recv(r)), gcdata);
                 gcdata = (unsigned char*)(unsafe::Pointer(s->startAddr));
             }
             auto b = state.stack.lo + uintptr_t(obj->off);
             if(conservative)
             {
-                scanConservative(b, ptrdata(gocpp::recv(r)), gcdata, gcw, & state);
+                scanConservative(b, rec::ptrdata(gocpp::recv(r)), gcdata, gcw, & state);
             }
             else
             {
-                scanblock(b, ptrdata(gocpp::recv(r)), gcdata, gcw, & state);
+                scanblock(b, rec::ptrdata(gocpp::recv(r)), gcdata, gcw, & state);
             }
             if(s != nullptr)
             {
@@ -766,8 +779,8 @@ namespace golang::runtime
         {
             print("scanframe ", funcname(frame->fn), "\n");
         }
-        auto isAsyncPreempt = valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_asyncPreempt;
-        auto isDebugCall = valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_debugCallV2;
+        auto isAsyncPreempt = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_asyncPreempt;
+        auto isDebugCall = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_debugCallV2;
         if(state->conservative || isAsyncPreempt || isDebugCall)
         {
             if(debugScanConservative)
@@ -782,7 +795,7 @@ namespace golang::runtime
                     scanConservative(frame->sp, size, nullptr, gcw, state);
                 }
             }
-            if(auto n = argBytes(gocpp::recv(frame)); n != 0)
+            if(auto n = rec::argBytes(gocpp::recv(frame)); n != 0)
             {
                 scanConservative(frame->argp, n, nullptr, gcw, state);
             }
@@ -796,7 +809,7 @@ namespace golang::runtime
             }
             return;
         }
-        auto [locals, args, objs] = getStackMap(gocpp::recv(frame), false);
+        auto [locals, args, objs] = rec::getStackMap(gocpp::recv(frame), false);
         if(locals.n > 0)
         {
             auto size = uintptr_t(locals.n) * goarch::PtrSize;
@@ -826,7 +839,7 @@ namespace golang::runtime
                 {
                     println("stkobj at", hex(ptr), "of size", obj->size);
                 }
-                addObject(gocpp::recv(state), ptr, obj);
+                rec::addObject(gocpp::recv(state), ptr, obj);
             }
         }
     }
@@ -851,14 +864,14 @@ namespace golang::runtime
         gcDrain(gcw, gcDrainFractional | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
-    void gcDrain(struct gcWork* gcw, gcDrainFlags flags)
+    void gcDrain(struct gcWork* gcw, runtime::gcDrainFlags flags)
     {
         if(! writeBarrier.enabled)
         {
             go_throw("gcDrain phase incorrect");
         }
         auto gp = getg()->m->curg;
-        auto pp = ptr(gocpp::recv(gp->m->p));
+        auto pp = rec::ptr(gocpp::recv(gp->m->p));
         auto preemptible = flags & gcDrainUntilPreempt != 0;
         auto flushBgCredit = flags & gcDrainFlushBgCredit != 0;
         auto idle = flags & gcDrainIdle != 0;
@@ -880,7 +893,7 @@ namespace golang::runtime
         }
         if(work.markrootNext < work.markrootJobs)
         {
-            for(; ! (gp->preempt && (preemptible || Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
+            for(; ! (gp->preempt && (preemptible || rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
             {
                 auto job = atomic::Xadd(& work.markrootNext, + 1) - 1;
                 if(job >= work.markrootJobs)
@@ -894,20 +907,20 @@ namespace golang::runtime
                 }
             }
         }
-        for(; ! (gp->preempt && (preemptible || Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
+        for(; ! (gp->preempt && (preemptible || rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
         {
             if(work.full == 0)
             {
-                balance(gocpp::recv(gcw));
+                rec::balance(gocpp::recv(gcw));
             }
-            auto b = tryGetFast(gocpp::recv(gcw));
+            auto b = rec::tryGetFast(gocpp::recv(gcw));
             if(b == 0)
             {
-                b = tryGet(gocpp::recv(gcw));
+                b = rec::tryGet(gocpp::recv(gcw));
                 if(b == 0)
                 {
                     wbBufFlush();
-                    b = tryGet(gocpp::recv(gcw));
+                    b = rec::tryGet(gocpp::recv(gcw));
                 }
             }
             if(b == 0)
@@ -917,7 +930,7 @@ namespace golang::runtime
             scanobject(b, gcw);
             if(gcw->heapScanWork >= gcCreditSlack)
             {
-                Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
+                rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
                 if(flushBgCredit)
                 {
                     gcFlushBgCredit(gcw->heapScanWork - initScanWork);
@@ -938,7 +951,7 @@ namespace golang::runtime
         done:
         if(gcw->heapScanWork > 0)
         {
-            Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
+            rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
             if(flushBgCredit)
             {
                 gcFlushBgCredit(gcw->heapScanWork - initScanWork);
@@ -955,20 +968,20 @@ namespace golang::runtime
         }
         auto workFlushed = - gcw->heapScanWork;
         auto gp = getg()->m->curg;
-        for(; ! gp->preempt && ! limiting(gocpp::recv(gcCPULimiter)) && workFlushed + gcw->heapScanWork < scanWork; )
+        for(; ! gp->preempt && ! rec::limiting(gocpp::recv(gcCPULimiter)) && workFlushed + gcw->heapScanWork < scanWork; )
         {
             if(work.full == 0)
             {
-                balance(gocpp::recv(gcw));
+                rec::balance(gocpp::recv(gcw));
             }
-            auto b = tryGetFast(gocpp::recv(gcw));
+            auto b = rec::tryGetFast(gocpp::recv(gcw));
             if(b == 0)
             {
-                b = tryGet(gocpp::recv(gcw));
+                b = rec::tryGet(gocpp::recv(gcw));
                 if(b == 0)
                 {
                     wbBufFlush();
-                    b = tryGet(gocpp::recv(gcw));
+                    b = rec::tryGet(gocpp::recv(gcw));
                 }
             }
             if(b == 0)
@@ -987,7 +1000,7 @@ namespace golang::runtime
             scanobject(b, gcw);
             if(gcw->heapScanWork >= gcCreditSlack)
             {
-                Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
+                rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
                 workFlushed += gcw->heapScanWork;
                 gcw->heapScanWork = 0;
             }
@@ -1021,7 +1034,7 @@ namespace golang::runtime
                         else
                         if(stk != nullptr && p >= stk->stack.lo && p < stk->stack.hi)
                         {
-                            putPtr(gocpp::recv(stk), p, false);
+                            rec::putPtr(gocpp::recv(stk), p, false);
                         }
                     }
                 }
@@ -1040,36 +1053,36 @@ namespace golang::runtime
         {
             go_throw("scanobject n == 0");
         }
-        if(noscan(gocpp::recv(s->spanclass)))
+        if(rec::noscan(gocpp::recv(s->spanclass)))
         {
             go_throw("scanobject of a noscan object");
         }
         typePointers tp = {};
         if(n > maxObletBytes)
         {
-            if(b == base(gocpp::recv(s)))
+            if(b == rec::base(gocpp::recv(s)))
             {
-                for(auto oblet = b + maxObletBytes; oblet < base(gocpp::recv(s)) + s->elemsize; oblet += maxObletBytes)
+                for(auto oblet = b + maxObletBytes; oblet < rec::base(gocpp::recv(s)) + s->elemsize; oblet += maxObletBytes)
                 {
-                    if(! putFast(gocpp::recv(gcw), oblet))
+                    if(! rec::putFast(gocpp::recv(gcw), oblet))
                     {
-                        put(gocpp::recv(gcw), oblet);
+                        rec::put(gocpp::recv(gcw), oblet);
                     }
                 }
             }
-            n = base(gocpp::recv(s)) + s->elemsize - b;
+            n = rec::base(gocpp::recv(s)) + s->elemsize - b;
             n = min(n, maxObletBytes);
             if(goexperiment::AllocHeaders)
             {
-                tp = typePointersOfUnchecked(gocpp::recv(s), base(gocpp::recv(s)));
-                tp = fastForward(gocpp::recv(tp), b - tp.addr, b + n);
+                tp = rec::typePointersOfUnchecked(gocpp::recv(s), rec::base(gocpp::recv(s)));
+                tp = rec::fastForward(gocpp::recv(tp), b - tp.addr, b + n);
             }
         }
         else
         {
             if(goexperiment::AllocHeaders)
             {
-                tp = typePointersOfUnchecked(gocpp::recv(s), b);
+                tp = rec::typePointersOfUnchecked(gocpp::recv(s), b);
             }
         }
         heapBits hbits = {};
@@ -1083,9 +1096,9 @@ namespace golang::runtime
             uintptr_t addr = {};
             if(goexperiment::AllocHeaders)
             {
-                if(std::tie(tp, addr) = nextFast(gocpp::recv(tp)); addr == 0)
+                if(std::tie(tp, addr) = rec::nextFast(gocpp::recv(tp)); addr == 0)
                 {
-                    if(std::tie(tp, addr) = next(gocpp::recv(tp), b + n); addr == 0)
+                    if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), b + n); addr == 0)
                     {
                         break;
                     }
@@ -1093,9 +1106,9 @@ namespace golang::runtime
             }
             else
             {
-                if(std::tie(hbits, addr) = nextFast(gocpp::recv(hbits)); addr == 0)
+                if(std::tie(hbits, addr) = rec::nextFast(gocpp::recv(hbits)); addr == 0)
                 {
-                    if(std::tie(hbits, addr) = next(gocpp::recv(hbits)); addr == 0)
+                    if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
                     {
                         break;
                     }
@@ -1142,8 +1155,8 @@ namespace golang::runtime
                 {
                     return ' ';
                 }
-                auto idx = objIndex(gocpp::recv(span), val);
-                if(isFree(gocpp::recv(span), idx))
+                auto idx = rec::objIndex(gocpp::recv(span), val);
+                if(rec::isFree(gocpp::recv(span), idx))
                 {
                     return ' ';
                 }
@@ -1174,7 +1187,7 @@ namespace golang::runtime
             auto val = *(uintptr_t*)(unsafe::Pointer(b + i));
             if(state != nullptr && state->stack.lo <= val && val < state->stack.hi)
             {
-                putPtr(gocpp::recv(state), val, true);
+                rec::putPtr(gocpp::recv(state), val, true);
                 continue;
             }
             auto span = spanOfHeap(val);
@@ -1182,12 +1195,12 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto idx = objIndex(gocpp::recv(span), val);
-            if(isFree(gocpp::recv(span), idx))
+            auto idx = rec::objIndex(gocpp::recv(span), val);
+            if(rec::isFree(gocpp::recv(span), idx))
             {
                 continue;
             }
-            auto obj = base(gocpp::recv(span)) + idx * span->elemsize;
+            auto obj = rec::base(gocpp::recv(span)) + idx * span->elemsize;
             greyobject(obj, b, i, span, gcw, idx);
         }
     }
@@ -1196,7 +1209,7 @@ namespace golang::runtime
     {
         if(auto [obj, span, objIndex] = findObject(b, 0, 0); obj != 0)
         {
-            auto gcw = & ptr(gocpp::recv(getg()->m->p))->gcw;
+            auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
             greyobject(obj, 0, 0, span, gcw, objIndex);
         }
     }
@@ -1207,7 +1220,7 @@ namespace golang::runtime
         {
             go_throw("greyobject: obj not pointer-aligned");
         }
-        auto mbits = markBitsForIndex(gocpp::recv(span), objIndex);
+        auto mbits = rec::markBitsForIndex(gocpp::recv(span), objIndex);
         if(useCheckmark)
         {
             if(setCheckmark(obj, base, off, mbits))
@@ -1217,7 +1230,7 @@ namespace golang::runtime
         }
         else
         {
-            if(debug.gccheckmark > 0 && isFree(gocpp::recv(span), objIndex))
+            if(debug.gccheckmark > 0 && rec::isFree(gocpp::recv(span), objIndex))
             {
                 print("runtime: marking free object ", hex(obj), " found at *(", hex(base), "+", hex(off), ")\n");
                 gcDumpObject("base", base, off);
@@ -1225,26 +1238,26 @@ namespace golang::runtime
                 getg()->m->traceback = 2;
                 go_throw("marking free object");
             }
-            if(isMarked(gocpp::recv(mbits)))
+            if(rec::isMarked(gocpp::recv(mbits)))
             {
                 return;
             }
-            setMarked(gocpp::recv(mbits));
-            auto [arena, pageIdx, pageMask] = pageIndexOf(base(gocpp::recv(span)));
+            rec::setMarked(gocpp::recv(mbits));
+            auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
                 atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
             }
-            if(noscan(gocpp::recv(span->spanclass)))
+            if(rec::noscan(gocpp::recv(span->spanclass)))
             {
                 gcw->bytesMarked += uint64_t(span->elemsize);
                 return;
             }
         }
         sys::Prefetch(obj);
-        if(! putFast(gocpp::recv(gcw), obj))
+        if(! rec::putFast(gocpp::recv(gcw), obj))
         {
-            put(gocpp::recv(gcw), obj);
+            rec::put(gocpp::recv(gcw), obj);
         }
     }
 
@@ -1257,8 +1270,8 @@ namespace golang::runtime
             print(" s=nil\n");
             return;
         }
-        print(" s.base()=", hex(base(gocpp::recv(s))), " s.limit=", hex(s->limit), " s.spanclass=", s->spanclass, " s.elemsize=", s->elemsize, " s.state=");
-        if(auto state = get(gocpp::recv(s->state)); 0 <= state && int(state) < len(mSpanStateNames))
+        print(" s.base()=", hex(rec::base(gocpp::recv(s))), " s.limit=", hex(s->limit), " s.spanclass=", s->spanclass, " s.elemsize=", s->elemsize, " s.state=");
+        if(auto state = rec::get(gocpp::recv(s->state)); 0 <= state && int(state) < len(mSpanStateNames))
         {
             print(mSpanStateNames[state], "\n");
         }
@@ -1268,7 +1281,7 @@ namespace golang::runtime
         }
         auto skipped = false;
         auto size = s->elemsize;
-        if(get(gocpp::recv(s->state)) == mSpanManual && size == 0)
+        if(rec::get(gocpp::recv(s->state)) == mSpanManual && size == 0)
         {
             size = off + goarch::PtrSize;
         }
@@ -1303,14 +1316,14 @@ namespace golang::runtime
         {
             go_throw("gcmarknewobject called while doing checkmark");
         }
-        auto objIndex = objIndex(gocpp::recv(span), obj);
-        setMarked(gocpp::recv(markBitsForIndex(gocpp::recv(span), objIndex)));
-        auto [arena, pageIdx, pageMask] = pageIndexOf(base(gocpp::recv(span)));
+        auto objIndex = rec::objIndex(gocpp::recv(span), obj);
+        rec::setMarked(gocpp::recv(rec::markBitsForIndex(gocpp::recv(span), objIndex)));
+        auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
         if(arena->pageMarks[pageIdx] & pageMask == 0)
         {
             atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
         }
-        auto gcw = & ptr(gocpp::recv(getg()->m->p))->gcw;
+        auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
         gcw->bytesMarked += uint64_t(span->elemsize);
     }
 

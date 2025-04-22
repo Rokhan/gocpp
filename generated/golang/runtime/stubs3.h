@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     int64_t nanotime1();
+
+    namespace rec
+    {
+    }
 }
 

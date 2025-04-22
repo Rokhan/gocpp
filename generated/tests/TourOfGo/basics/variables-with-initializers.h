@@ -16,5 +16,9 @@ namespace golang::main
     extern int j;
     std::tuple<std::string, int, uint64_t> locabs();
     void main();
+
+    namespace rec
+    {
+    }
 }
 

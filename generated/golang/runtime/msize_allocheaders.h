@@ -13,5 +13,9 @@
 namespace golang::runtime
 {
     uintptr_t roundupsize(uintptr_t size, bool noscan);
+
+    namespace rec
+    {
+    }
 }
 

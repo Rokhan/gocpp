@@ -19,8 +19,8 @@ namespace golang::unicode
     bool IsPrint(gocpp::rune r);
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r);
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges);
-
-    template<typename... Args>
+    
+template<typename... Args>
     bool In(gocpp::rune r, Args... ranges)
     {
         return In(r, gocpp::ToSlice<RangeTable*>(ranges...));
@@ -33,5 +33,9 @@ namespace golang::unicode
     bool IsPunct(gocpp::rune r);
     bool IsSpace(gocpp::rune r);
     bool IsSymbol(gocpp::rune r);
+
+    namespace rec
+    {
+    }
 }
 

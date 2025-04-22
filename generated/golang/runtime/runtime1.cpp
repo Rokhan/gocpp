@@ -50,6 +50,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace bytealg::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     uint32_t traceback_cache = 2 << tracebackShift;
     uint32_t traceback_env;
     std::tuple<int32_t, bool, bool> gotraceback()
@@ -606,7 +619,7 @@ namespace golang::runtime
         auto godebug = gogetenv("GODEBUG");
         auto p = go_new(string);
         *p = godebug;
-        Store(gocpp::recv(godebugEnv), p);
+        rec::Store(gocpp::recv(godebugEnv), p);
         for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->def != 0)
@@ -618,7 +631,7 @@ namespace golang::runtime
                 else
                 if(v->atomic != nullptr)
                 {
-                    Store(gocpp::recv(v->atomic), v->def);
+                    rec::Store(gocpp::recv(v->atomic), v->def);
                 }
             }
         }
@@ -638,7 +651,7 @@ namespace golang::runtime
         {
             if(v->atomic != nullptr && ! seen[v->name])
             {
-                Store(gocpp::recv(v->atomic), 0);
+                rec::Store(gocpp::recv(v->atomic), 0);
             }
         }
     }
@@ -712,7 +725,7 @@ namespace golang::runtime
                             else
                             if(v->atomic != nullptr)
                             {
-                                Store(gocpp::recv(v->atomic), n);
+                                rec::Store(gocpp::recv(v->atomic), n);
                             }
                         }
                     }
@@ -844,12 +857,12 @@ namespace golang::runtime
 
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
     {
-        return textOff(gocpp::recv(toRType((_type*)(rtype))), textOff(off));
+        return rec::textOff(gocpp::recv(toRType((_type*)(rtype))), textOff(off));
     }
 
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
@@ -859,7 +872,7 @@ namespace golang::runtime
 
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
     }
 
     int32_t reflect_addReflectOff(unsafe::Pointer ptr)

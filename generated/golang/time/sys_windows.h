@@ -17,5 +17,9 @@ namespace golang::time
     std::tuple<int, struct gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf);
     void closefd(uintptr_t fd);
     struct gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int off);
+
+    namespace rec
+    {
+    }
 }
 

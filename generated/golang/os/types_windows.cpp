@@ -30,6 +30,18 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace unsafe::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     fileStat::operator T()
@@ -152,42 +164,42 @@ namespace golang::os
         return fs;
     }
 
-    bool isReparseTagNameSurrogate(struct fileStat* fs)
+    bool rec::isReparseTagNameSurrogate(struct fileStat* fs)
     {
         return fs->ReparseTag & 0x20000000 != 0;
     }
 
-    bool isSymlink(struct fileStat* fs)
+    bool rec::isSymlink(struct fileStat* fs)
     {
         return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK || fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
     }
 
-    int64_t Size(struct fileStat* fs)
+    int64_t rec::Size(struct fileStat* fs)
     {
         return (int64_t(fs->FileSizeHigh) << 32) + int64_t(fs->FileSizeLow);
     }
 
-    FileMode Mode(struct fileStat* fs)
+    fs::FileMode rec::Mode(struct fileStat* fs)
     {
-        FileMode m;
+        fs::FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
         {
-            FileMode m;
+            fs::FileMode m;
             m |= 0444;
         }
         else
         {
-            FileMode m;
+            fs::FileMode m;
             m |= 0666;
         }
-        if(isSymlink(gocpp::recv(fs)))
+        if(rec::isSymlink(gocpp::recv(fs)))
         {
-            FileMode m;
+            fs::FileMode m;
             return m | ModeSymlink;
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
         {
-            FileMode m;
+            fs::FileMode m;
             m |= ModeDir | 0111;
         }
         //Go switch emulation
@@ -198,7 +210,7 @@ namespace golang::os
             else if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
             switch(conditionId)
             {
-                FileMode m;
+                fs::FileMode m;
                 case 0:
                     m |= ModeNamedPipe;
                     break;
@@ -209,37 +221,37 @@ namespace golang::os
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0 && m & ModeType == 0)
         {
-            FileMode m;
+            fs::FileMode m;
             if(fs->ReparseTag == windows::IO_REPARSE_TAG_DEDUP)
             {
-                FileMode m;
+                fs::FileMode m;
             }
             else
             {
-                FileMode m;
+                fs::FileMode m;
                 m |= ModeIrregular;
             }
         }
         return m;
     }
 
-    struct mocklib::Date ModTime(struct fileStat* fs)
+    struct mocklib::Date rec::ModTime(struct fileStat* fs)
     {
-        return time::Unix(0, Nanoseconds(gocpp::recv(fs->LastWriteTime)));
+        return time::Unix(0, rec::Nanoseconds(gocpp::recv(fs->LastWriteTime)));
     }
 
-    go_any Sys(struct fileStat* fs)
+    go_any rec::Sys(struct fileStat* fs)
     {
         return gocpp::InitPtr<syscall::Win32FileAttributeData>([](syscall::Win32FileAttributeData& x) { x.FileAttributes = fs->FileAttributes; x.CreationTime = fs->CreationTime; x.LastAccessTime = fs->LastAccessTime; x.LastWriteTime = fs->LastWriteTime; x.FileSizeHigh = fs->FileSizeHigh; x.FileSizeLow = fs->FileSizeLow; });
     }
 
-    struct gocpp::error loadFileId(struct fileStat* fs)
+    struct gocpp::error rec::loadFileId(struct fileStat* fs)
     {
         gocpp::Defer defer;
         try
         {
-            Lock(gocpp::recv(fs));
-            defer.push_back([=]{ Unlock(gocpp::recv(fs)); });
+            rec::Lock(gocpp::recv(fs));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(fs)); });
             if(fs->path == "")
             {
                 return nullptr;
@@ -284,7 +296,7 @@ namespace golang::os
         }
     }
 
-    struct gocpp::error saveInfoFromPath(struct fileStat* fs, std::string path)
+    struct gocpp::error rec::saveInfoFromPath(struct fileStat* fs, std::string path)
     {
         fs->path = path;
         if(! isAbs(fs->path))
@@ -302,12 +314,12 @@ namespace golang::os
 
     bool sameFile(struct fileStat* fs1, struct fileStat* fs2)
     {
-        auto e = loadFileId(gocpp::recv(fs1));
+        auto e = rec::loadFileId(gocpp::recv(fs1));
         if(e != nullptr)
         {
             return false;
         }
-        e = loadFileId(gocpp::recv(fs2));
+        e = rec::loadFileId(gocpp::recv(fs2));
         if(e != nullptr)
         {
             return false;
@@ -317,7 +329,7 @@ namespace golang::os
 
     struct mocklib::Date atime(struct FileInfo fi)
     {
-        return time::Unix(0, Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(Sys(gocpp::recv(fi)))->LastAccessTime)));
+        return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));
     }
 
 }

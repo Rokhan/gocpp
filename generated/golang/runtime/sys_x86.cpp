@@ -17,6 +17,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     void gostartcall(struct gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt)
     {
         auto sp = buf->sp;

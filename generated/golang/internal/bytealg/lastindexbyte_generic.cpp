@@ -13,6 +13,11 @@
 
 namespace golang::bytealg
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c)
     {
         for(auto i = len(s) - 1; i >= 0; i--)

@@ -25,6 +25,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     traceMap::operator T()
@@ -104,24 +113,24 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct traceMapNode* next(struct traceMapNode* n)
+    struct traceMapNode* rec::next(struct traceMapNode* n)
     {
-        return (traceMapNode*)(Load(gocpp::recv(n->link)));
+        return (traceMapNode*)(rec::Load(gocpp::recv(n->link)));
     }
 
-    uint64_t stealID(struct traceMap* tab)
+    uint64_t rec::stealID(struct traceMap* tab)
     {
-        return Add(gocpp::recv(tab->seq), 1);
+        return rec::Add(gocpp::recv(tab->seq), 1);
     }
 
-    std::tuple<uint64_t, bool> put(struct traceMap* tab, unsafe::Pointer data, uintptr_t size)
+    std::tuple<uint64_t, bool> rec::put(struct traceMap* tab, unsafe::Pointer data, uintptr_t size)
     {
         if(size == 0)
         {
             return {0, false};
         }
         auto hash = memhash(data, 0, size);
-        if(auto id = find(gocpp::recv(tab), data, size, hash); id != 0)
+        if(auto id = rec::find(gocpp::recv(tab), data, size, hash); id != 0)
         {
             return {id, false};
         }
@@ -130,26 +139,26 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             lock(& tab->lock);
-            if(id = find(gocpp::recv(tab), data, size, hash); id != 0)
+            if(id = rec::find(gocpp::recv(tab), data, size, hash); id != 0)
             {
                 unlock(& tab->lock);
                 return;
             }
-            id = Add(gocpp::recv(tab->seq), 1);
-            auto vd = newTraceMapNode(gocpp::recv(tab), data, size, hash, id);
+            id = rec::Add(gocpp::recv(tab->seq), 1);
+            auto vd = rec::newTraceMapNode(gocpp::recv(tab), data, size, hash, id);
             auto part = int(hash % uintptr_t(len(tab->tab)));
-            StoreNoWB(gocpp::recv(vd->link), Load(gocpp::recv(tab->tab[part])));
-            StoreNoWB(gocpp::recv(tab->tab[part]), unsafe::Pointer(vd));
+            rec::StoreNoWB(gocpp::recv(vd->link), rec::Load(gocpp::recv(tab->tab[part])));
+            rec::StoreNoWB(gocpp::recv(tab->tab[part]), unsafe::Pointer(vd));
             unlock(& tab->lock);
             added = true;
         });
         return {id, added};
     }
 
-    uint64_t find(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash)
+    uint64_t rec::find(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash)
     {
         auto part = int(hash % uintptr_t(len(tab->tab)));
-        for(auto vd = bucket(gocpp::recv(tab), part); vd != nullptr; vd = next(gocpp::recv(vd)))
+        for(auto vd = rec::bucket(gocpp::recv(tab), part); vd != nullptr; vd = rec::next(gocpp::recv(vd)))
         {
             if(vd->hash == hash && uintptr_t(len(vd->data)) == size)
             {
@@ -162,27 +171,27 @@ namespace golang::runtime
         return 0;
     }
 
-    struct traceMapNode* bucket(struct traceMap* tab, int part)
+    struct traceMapNode* rec::bucket(struct traceMap* tab, int part)
     {
-        return (traceMapNode*)(Load(gocpp::recv(tab->tab[part])));
+        return (traceMapNode*)(rec::Load(gocpp::recv(tab->tab[part])));
     }
 
-    struct traceMapNode* newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
+    struct traceMapNode* rec::newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
-        auto sl = gocpp::Init<notInHeapSlice>([](notInHeapSlice& x) { x.array = alloc(gocpp::recv(tab->mem), size); x.len = int(size); x.cap = int(size); });
+        auto sl = gocpp::Init<notInHeapSlice>([](notInHeapSlice& x) { x.array = rec::alloc(gocpp::recv(tab->mem), size); x.len = int(size); x.cap = int(size); });
         memmove(unsafe::Pointer(sl.array), data, size);
-        auto meta = (traceMapNode*)(unsafe::Pointer(alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
+        auto meta = (traceMapNode*)(unsafe::Pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
         *(notInHeapSlice*)(unsafe::Pointer(& meta->data)) = sl;
         meta->id = id;
         meta->hash = hash;
         return meta;
     }
 
-    void reset(struct traceMap* tab)
+    void rec::reset(struct traceMap* tab)
     {
         assertLockHeld(& tab->lock);
-        drop(gocpp::recv(tab->mem));
-        Store(gocpp::recv(tab->seq), 0);
+        rec::drop(gocpp::recv(tab->mem));
+        rec::Store(gocpp::recv(tab->seq), 0);
         memclrNoHeapPointers(unsafe::Pointer(& tab->tab), gocpp::Sizeof<atomic::UnsafePointer, 8192>>());
     }
 

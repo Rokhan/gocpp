@@ -30,13 +30,26 @@
 
 namespace golang::os
 {
-    std::tuple<gocpp::slice<FileInfo>, struct gocpp::error> Readdir(struct File* f, int n)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace sort::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace windows::rec;
+    }
+
+    std::tuple<gocpp::slice<FileInfo>, struct gocpp::error> rec::Readdir(struct File* f, int n)
     {
         if(f == nullptr)
         {
             return {nullptr, ErrInvalid};
         }
-        auto [gocpp_id_2, gocpp_id_3, infos, err] = readdir(gocpp::recv(f), n, readdirFileInfo);
+        auto [gocpp_id_2, gocpp_id_3, infos, err] = rec::readdir(gocpp::recv(f), n, readdirFileInfo);
         if(infos == nullptr)
         {
             infos = gocpp::slice<FileInfo> {};
@@ -44,7 +57,7 @@ namespace golang::os
         return {infos, err};
     }
 
-    std::tuple<gocpp::slice<std::string>, struct gocpp::error> Readdirnames(struct File* f, int n)
+    std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::Readdirnames(struct File* f, int n)
     {
         gocpp::slice<std::string> names;
         struct gocpp::error err;
@@ -54,7 +67,7 @@ namespace golang::os
             struct gocpp::error err;
             return {nullptr, ErrInvalid};
         }
-        std::tie(names, gocpp_id_4, gocpp_id_5, err) = readdir(gocpp::recv(f), n, readdirName);
+        std::tie(names, gocpp_id_4, gocpp_id_5, err) = rec::readdir(gocpp::recv(f), n, readdirName);
         if(names == nullptr)
         {
             gocpp::slice<std::string> names;
@@ -64,13 +77,13 @@ namespace golang::os
         return {names, err};
     }
 
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(struct File* f, int n)
+    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> rec::ReadDir(struct File* f, int n)
     {
         if(f == nullptr)
         {
             return {nullptr, ErrInvalid};
         }
-        auto [gocpp_id_8, dirents, gocpp_id_9, err] = readdir(gocpp::recv(f), n, readdirDirEntry);
+        auto [gocpp_id_8, dirents, gocpp_id_9, err] = rec::readdir(gocpp::recv(f), n, readdirDirEntry);
         if(dirents == nullptr)
         {
             dirents = gocpp::slice<DirEntry> {};
@@ -89,12 +102,12 @@ namespace golang::os
             {
                 return {nullptr, err};
             }
-            defer.push_back([=]{ Close(gocpp::recv(f)); });
+            defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
             fs::DirEntry> dirs;
-            std::tie(dirs, err) = ReadDir(gocpp::recv(f), - 1);
+            std::tie(dirs, err) = rec::ReadDir(gocpp::recv(f), - 1);
             sort::Slice(dirs, [=](int i, int j) mutable -> bool
             {
-                return Name(gocpp::recv(dirs[i])) < Name(gocpp::recv(dirs[j]));
+                return rec::Name(gocpp::recv(dirs[i])) < rec::Name(gocpp::recv(dirs[j]));
             });
             return {dirs, err};
         }

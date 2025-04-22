@@ -12,7 +12,7 @@ namespace golang::runtime
     struct cgoTracebackArg;
     struct cgoContextArg;
     struct cgoSymbolizerArg;
-    const unwindFlags unwindPrintErrors = 1 << 0;
+    const runtime::unwindFlags unwindPrintErrors = 1 << 0;
     const unwindFlags unwindSilentErrors = 1 << 1;
     const unwindFlags unwindTrap = 1 << 2;
     const unwindFlags unwindJumpStack = 1 << 3;

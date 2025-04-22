@@ -23,8 +23,8 @@ namespace golang::runtime
     bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
     struct ptabEntry
     {
-        nameOff name;
-        typeOff typ;
+        abi::nameOff name;
+        abi::typeOff typ;
 
         using isGoStruct = void;
 
@@ -38,5 +38,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ptabEntry& value);
+
+    namespace rec
+    {
+    }
 }
 

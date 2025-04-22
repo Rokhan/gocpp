@@ -21,6 +21,18 @@
 
 namespace golang::zlib
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace adler32::rec;
+        using namespace binary::rec;
+        using namespace bufio::rec;
+        using namespace errors::rec;
+        using namespace flate::rec;
+        using namespace hash::rec;
+        using namespace io::rec;
+    }
+
     gocpp::error ErrChecksum = errors::New("zlib: invalid checksum");
     gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary");
     gocpp::error ErrHeader = errors::New("zlib: invalid header");
@@ -92,17 +104,20 @@ namespace golang::zlib
     template<typename T, typename StoreT>
     struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        return Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
+        return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
-    struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+    namespace rec
     {
-        return self.ptr->value->vReset(r, dict);
-    }
+        struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        {
+            return self.ptr->value->vReset(r, dict);
+        }
 
-    struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
-    {
-        return self.obj.value->vReset(r, dict);
+        struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        {
+            return self.obj.value->vReset(r, dict);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value)
@@ -118,7 +133,7 @@ namespace golang::zlib
     std::tuple<struct io::ReadCloser, struct gocpp::error> NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         auto z = go_new(reader);
-        auto err = Reset(gocpp::recv(z), r, dict);
+        auto err = rec::Reset(gocpp::recv(z), r, dict);
         if(err != nullptr)
         {
             return {nullptr, err};
@@ -126,15 +141,15 @@ namespace golang::zlib
         return {z, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct reader* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(struct reader* z, gocpp::slice<unsigned char> p)
     {
         if(z->err != nullptr)
         {
             return {0, z->err};
         }
         int n = {};
-        std::tie(n, z->err) = Read(gocpp::recv(z->decompressor), p);
-        Write(gocpp::recv(z->digest), p.make_slice(0, n));
+        std::tie(n, z->err) = rec::Read(gocpp::recv(z->decompressor), p);
+        rec::Write(gocpp::recv(z->digest), p.make_slice(0, n));
         if(z->err != io::go_EOF)
         {
             return {n, z->err};
@@ -148,8 +163,8 @@ namespace golang::zlib
             z->err = err;
             return {n, z->err};
         }
-        auto checksum = Uint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 4));
-        if(checksum != Sum32(gocpp::recv(z->digest)))
+        auto checksum = rec::Uint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 4));
+        if(checksum != rec::Sum32(gocpp::recv(z->digest)))
         {
             z->err = ErrChecksum;
             return {n, z->err};
@@ -157,17 +172,17 @@ namespace golang::zlib
         return {n, io::go_EOF};
     }
 
-    struct gocpp::error Close(struct reader* z)
+    struct gocpp::error rec::Close(struct reader* z)
     {
         if(z->err != nullptr && z->err != io::go_EOF)
         {
             return z->err;
         }
-        z->err = Close(gocpp::recv(z->decompressor));
+        z->err = rec::Close(gocpp::recv(z->decompressor));
         return z->err;
     }
 
-    struct gocpp::error Reset(struct reader* z, struct io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error rec::Reset(struct reader* z, struct io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
         if(auto [fr, ok] = gocpp::getValue<flate::Reader>(r); ok)
@@ -187,7 +202,7 @@ namespace golang::zlib
             }
             return z->err;
         }
-        auto h = Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2));
+        auto h = rec::Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2));
         if((z->scratch[0] & 0x0f != zlibDeflate) || ((z->scratch[0] >> 4) > zlibMaxWindow) || (h % 31 != 0))
         {
             z->err = ErrHeader;
@@ -205,7 +220,7 @@ namespace golang::zlib
                 }
                 return z->err;
             }
-            auto checksum = Uint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 4));
+            auto checksum = rec::Uint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 4));
             if(checksum != adler32::Checksum(dict))
             {
                 z->err = ErrDictionary;
@@ -225,7 +240,7 @@ namespace golang::zlib
         }
         else
         {
-            Reset(gocpp::recv(gocpp::getValue<flate::Resetter>(z->decompressor)), z->r, dict);
+            rec::Reset(gocpp::recv(gocpp::getValue<flate::Resetter>(z->decompressor)), z->r, dict);
         }
         z->digest = adler32::New();
         return nullptr;

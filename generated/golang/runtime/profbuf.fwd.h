@@ -9,9 +9,9 @@ namespace golang::runtime
     using profAtomic = uint64_t;
     using profIndex = uint64_t;
     using profBufReadMode = int;
-    const profIndex profReaderSleeping = 1 << 32;
-    const profIndex profWriteExtra = 1 << 33;
-    const profBufReadMode profBufBlocking = 0;
+    const runtime::profIndex profReaderSleeping = 1 << 32;
+    const runtime::profIndex profWriteExtra = 1 << 33;
+    const runtime::profBufReadMode profBufBlocking = 0;
     const profBufReadMode profBufNonBlocking = 1;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"

@@ -46,5 +46,9 @@ namespace golang::runtime
     bool notetsleepg(struct note* n, int64_t ns);
     std::tuple<struct g*, bool> beforeIdle(int64_t, int64_t);
     void checkTimeouts();
+
+    namespace rec
+    {
+    }
 }
 

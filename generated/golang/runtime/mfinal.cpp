@@ -60,6 +60,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     finblock::operator T()
@@ -197,7 +210,7 @@ namespace golang::runtime
         f->ot = ot;
         f->arg = p;
         unlock(& finlock);
-        Or(gocpp::recv(fingStatus), fingWake);
+        rec::Or(gocpp::recv(fingStatus), fingWake);
     }
 
     void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, _type*, ptrtype*)> callback)
@@ -214,7 +227,7 @@ namespace golang::runtime
 
     struct g* wakefing()
     {
-        if(auto ok = CompareAndSwap(gocpp::recv(fingStatus), fingCreated | fingWait | fingWake, fingCreated); ok)
+        if(auto ok = rec::CompareAndSwap(gocpp::recv(fingStatus), fingCreated | fingWait | fingWake, fingCreated); ok)
         {
             return fing;
         }
@@ -223,7 +236,7 @@ namespace golang::runtime
 
     void createfing()
     {
-        if(Load(gocpp::recv(fingStatus)) == fingUninitialized && CompareAndSwap(gocpp::recv(fingStatus), fingUninitialized, fingCreated))
+        if(rec::Load(gocpp::recv(fingStatus)) == fingUninitialized && rec::CompareAndSwap(gocpp::recv(fingStatus), fingUninitialized, fingCreated))
         {
             gocpp::go([&]{ runfinq(); });
         }
@@ -232,7 +245,7 @@ namespace golang::runtime
     bool finalizercommit(struct g* gp, unsafe::Pointer lock)
     {
         unlock((mutex*)(lock));
-        Or(gocpp::recv(fingStatus), fingWait);
+        rec::Or(gocpp::recv(fingStatus), fingWait);
         return true;
     }
 
@@ -311,9 +324,9 @@ namespace golang::runtime
                                 break;
                         }
                     }
-                    Or(gocpp::recv(fingStatus), fingRunningFinalizer);
+                    rec::Or(gocpp::recv(fingStatus), fingRunningFinalizer);
                     reflectcall(nullptr, unsafe::Pointer(f->fn), frame, uint32_t(framesz), uint32_t(framesz), uint32_t(framesz), & regs);
-                    And(gocpp::recv(fingStatus), ~ fingRunningFinalizer);
+                    rec::And(gocpp::recv(fingStatus), ~ fingRunningFinalizer);
                     f->fn = nullptr;
                     f->arg = nullptr;
                     f->ot = nullptr;
@@ -377,7 +390,7 @@ namespace golang::runtime
         }
         if(etyp->Kind_ & kindMask != kindPtr)
         {
-            go_throw("runtime.SetFinalizer: first argument is " + string(gocpp::recv(toRType(etyp))) + ", not pointer");
+            go_throw("runtime.SetFinalizer: first argument is " + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer");
         }
         auto ot = (ptrtype*)(unsafe::Pointer(etyp));
         if(ot->Elem == nullptr)
@@ -397,7 +410,7 @@ namespace golang::runtime
             }
             go_throw("runtime.SetFinalizer: pointer not in allocated block");
         }
-        if(goexperiment::AllocHeaders && ! noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && sizeclass(gocpp::recv(span->spanclass)) != 0)
+        if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
         {
             base += mallocHeaderSize;
         }
@@ -420,18 +433,18 @@ namespace golang::runtime
         }
         if(ftyp->Kind_ & kindMask != kindFunc)
         {
-            go_throw("runtime.SetFinalizer: second argument is " + string(gocpp::recv(toRType(ftyp))) + ", not a function");
+            go_throw("runtime.SetFinalizer: second argument is " + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function");
         }
         auto ft = (functype*)(unsafe::Pointer(ftyp));
-        if(IsVariadic(gocpp::recv(ft)))
+        if(rec::IsVariadic(gocpp::recv(ft)))
         {
-            go_throw("runtime.SetFinalizer: cannot pass " + string(gocpp::recv(toRType(etyp))) + " to finalizer " + string(gocpp::recv(toRType(ftyp))) + " because dotdotdot");
+            go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot");
         }
         if(ft->InCount != 1)
         {
-            go_throw("runtime.SetFinalizer: cannot pass " + string(gocpp::recv(toRType(etyp))) + " to finalizer " + string(gocpp::recv(toRType(ftyp))));
+            go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))));
         }
-        auto fint = InSlice(gocpp::recv(ft))[0];
+        auto fint = rec::InSlice(gocpp::recv(ft))[0];
         //Go switch emulation
         {
             int conditionId = -1;
@@ -444,7 +457,7 @@ namespace golang::runtime
                     goto okarg;
                     break;
                 case 1:
-                    if((Uncommon(gocpp::recv(fint)) == nullptr || Uncommon(gocpp::recv(etyp)) == nullptr) && (ptrtype*)(unsafe::Pointer(fint))->Elem == ot->Elem)
+                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (ptrtype*)(unsafe::Pointer(fint))->Elem == ot->Elem)
                     {
                         goto okarg;
                     }
@@ -462,10 +475,10 @@ namespace golang::runtime
                     break;
             }
         }
-        go_throw("runtime.SetFinalizer: cannot pass " + string(gocpp::recv(toRType(etyp))) + " to finalizer " + string(gocpp::recv(toRType(ftyp))));
+        go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))));
         okarg:
         auto nret = uintptr_t(0);
-        for(auto [gocpp_ignored, t] : OutSlice(gocpp::recv(ft)))
+        for(auto [gocpp_ignored, t] : rec::OutSlice(gocpp::recv(ft)))
         {
             nret = alignUp(nret, uintptr_t(t->Align_)) + t->Size_;
         }

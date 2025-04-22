@@ -52,6 +52,19 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     std::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory";
     void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src)
     {
@@ -166,7 +179,7 @@ namespace golang::runtime
             }
         }
         auto s = spanOfUnchecked(uintptr_t(src));
-        if(get(gocpp::recv(s->state)) == mSpanManual)
+        if(rec::get(gocpp::recv(s->state)) == mSpanManual)
         {
             systemstack([=]() mutable -> void
             {
@@ -176,11 +189,11 @@ namespace golang::runtime
         }
         if(goexperiment::AllocHeaders)
         {
-            auto tp = typePointersOf(gocpp::recv(s), uintptr_t(src), size);
+            auto tp = rec::typePointersOf(gocpp::recv(s), uintptr_t(src), size);
             for(; ; )
             {
                 uintptr_t addr = {};
-                if(std::tie(tp, addr) = next(gocpp::recv(tp), uintptr_t(src) + size); addr == 0)
+                if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), uintptr_t(src) + size); addr == 0)
                 {
                     break;
                 }
@@ -197,7 +210,7 @@ namespace golang::runtime
             for(; ; )
             {
                 uintptr_t addr = {};
-                if(std::tie(hbits, addr) = next(gocpp::recv(hbits)); addr == 0)
+                if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
                 {
                     break;
                 }

@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace cmplx::rec;
+        using namespace fmt::rec;
+    }
+
     bool ToBe = false;
     uint64_t MaxInt = (1 << 64) - 1;
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));

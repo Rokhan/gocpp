@@ -14,5 +14,9 @@
 namespace golang::runtime
 {
     void gostartcall(struct gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt);
+
+    namespace rec
+    {
+    }
 }
 

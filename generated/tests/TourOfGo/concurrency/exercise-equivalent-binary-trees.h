@@ -16,5 +16,9 @@ namespace golang::main
     void Walk(struct tree::Tree* t, gocpp::channel<int> ch);
     bool Same(struct tree::Tree* t1, struct tree::Tree* t2);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

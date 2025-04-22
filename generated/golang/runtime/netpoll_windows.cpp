@@ -40,6 +40,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     net_op::operator T()
@@ -157,7 +168,7 @@ namespace golang::runtime
 
     void netpollBreak()
     {
-        if(! CompareAndSwap(gocpp::recv(netpollWakeSig), 0, 1))
+        if(! rec::CompareAndSwap(gocpp::recv(netpollWakeSig), 0, 1))
         {
             return;
         }
@@ -244,7 +255,7 @@ namespace golang::runtime
             }
             else
             {
-                Store(gocpp::recv(netpollWakeSig), 0);
+                rec::Store(gocpp::recv(netpollWakeSig), 0);
                 if(delay == 0)
                 {
                     netpollBreak();

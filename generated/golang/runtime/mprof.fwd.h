@@ -18,11 +18,11 @@ namespace golang::runtime
     struct gocpp_id_0;
     struct gocpp_id_0;
     using goroutineProfileState = uint32_t;
-    const bucketType memProfile = 1 + 0;
+    const runtime::bucketType memProfile = 1 + 0;
     const bucketType blockProfile = 1 + 1;
     const bucketType mutexProfile = 1 + 2;
     /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
-    const goroutineProfileState goroutineProfileAbsent = 0;
+    const runtime::goroutineProfileState goroutineProfileAbsent = 0;
     const goroutineProfileState goroutineProfileInProgress = 1;
     const goroutineProfileState goroutineProfileSatisfied = 2;
 }

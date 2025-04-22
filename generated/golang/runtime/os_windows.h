@@ -79,7 +79,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
     void asmstdcall(unsafe::Pointer fn);
-    stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
+    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
     void initSysDirectory();
     std::string windows_GetSystemDirectory();
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
@@ -118,17 +118,17 @@ namespace golang::runtime
     void unminit();
     void mdestroy(struct m* mp);
     void asmstdcall_trampoline(unsafe::Pointer args);
-    uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args);
-    uintptr_t stdcall(stdFunction fn);
-    uintptr_t stdcall0(stdFunction fn);
-    uintptr_t stdcall1(stdFunction fn, uintptr_t a0);
-    uintptr_t stdcall2(stdFunction fn, uintptr_t a0, uintptr_t a1);
-    uintptr_t stdcall3(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
-    uintptr_t stdcall4(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    uintptr_t stdcall5(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
-    uintptr_t stdcall6(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
-    uintptr_t stdcall7(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    uintptr_t stdcall8(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
+    uintptr_t stdcall_no_g(runtime::stdFunction fn, int n, uintptr_t args);
+    uintptr_t stdcall(runtime::stdFunction fn);
+    uintptr_t stdcall0(runtime::stdFunction fn);
+    uintptr_t stdcall1(runtime::stdFunction fn, uintptr_t a0);
+    uintptr_t stdcall2(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1);
+    uintptr_t stdcall3(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
+    uintptr_t stdcall4(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+    uintptr_t stdcall5(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
+    uintptr_t stdcall6(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
+    uintptr_t stdcall7(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
+    uintptr_t stdcall8(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
     void osyield_no_g();
     void osyield();
     void usleep_no_g(uint32_t us);
@@ -143,5 +143,9 @@ namespace golang::runtime
     void preemptM(struct m* mp);
     void osPreemptExtEnter(struct m* mp);
     void osPreemptExtExit(struct m* mp);
+
+    namespace rec
+    {
+    }
 }
 

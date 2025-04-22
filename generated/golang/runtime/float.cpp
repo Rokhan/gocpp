@@ -15,6 +15,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     double inf = float64frombits(0x7FF0000000000000);
     bool isNaN(double f)
     {

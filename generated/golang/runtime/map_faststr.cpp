@@ -28,6 +28,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     unsafe::Pointer mapaccess1_faststr(struct maptype* t, struct hmap* h, std::string ky)
     {
         if(raceenabled && h != nullptr)
@@ -49,7 +58,7 @@ namespace golang::runtime
             auto b = (bmap*)(h->buckets);
             if(key->len < 32)
             {
-                for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+                for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
                 {
                     auto k = (stringStruct*)(kptr);
                     if(k->len != key->len || isEmpty(b->tophash[i]))
@@ -68,7 +77,7 @@ namespace golang::runtime
                 return unsafe::Pointer(& zeroVal[0]);
             }
             auto keymaybe = uintptr_t(bucketCnt);
-            for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+            for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
                 if(k->len != key->len || isEmpty(b->tophash[i]))
@@ -108,12 +117,12 @@ namespace golang::runtime
             return unsafe::Pointer(& zeroVal[0]);
         }
         dohash:
-        auto hash = Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
         {
-            if(! sameSizeGrow(gocpp::recv(h)))
+            if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 m >>= 1;
             }
@@ -124,9 +133,9 @@ namespace golang::runtime
             }
         }
         auto top = tophash(hash);
-        for(; b != nullptr; b = overflow(gocpp::recv(b), t))
+        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
-            for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+            for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
                 if(k->len != key->len || b->tophash[i] != top)
@@ -163,7 +172,7 @@ namespace golang::runtime
             auto b = (bmap*)(h->buckets);
             if(key->len < 32)
             {
-                for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+                for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
                 {
                     auto k = (stringStruct*)(kptr);
                     if(k->len != key->len || isEmpty(b->tophash[i]))
@@ -182,7 +191,7 @@ namespace golang::runtime
                 return {unsafe::Pointer(& zeroVal[0]), false};
             }
             auto keymaybe = uintptr_t(bucketCnt);
-            for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+            for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
                 if(k->len != key->len || isEmpty(b->tophash[i]))
@@ -222,12 +231,12 @@ namespace golang::runtime
             return {unsafe::Pointer(& zeroVal[0]), false};
         }
         dohash:
-        auto hash = Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
         {
-            if(! sameSizeGrow(gocpp::recv(h)))
+            if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 m >>= 1;
             }
@@ -238,9 +247,9 @@ namespace golang::runtime
             }
         }
         auto top = tophash(hash);
-        for(; b != nullptr; b = overflow(gocpp::recv(b), t))
+        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
-            for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+            for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
                 if(k->len != key->len || b->tophash[i] != top)
@@ -272,7 +281,7 @@ namespace golang::runtime
             fatal("concurrent map writes");
         }
         auto key = stringStructOf(& s);
-        auto hash = Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
+        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         if(h->buckets == nullptr)
         {
@@ -280,7 +289,7 @@ namespace golang::runtime
         }
         again:
         auto bucket = hash & bucketMask(h->B);
-        if(growing(gocpp::recv(h)))
+        if(rec::growing(gocpp::recv(h)))
         {
             growWork_faststr(t, h, bucket);
         }
@@ -321,7 +330,7 @@ namespace golang::runtime
                 k->str = key->str;
                 goto done;
             }
-            auto ovf = overflow(gocpp::recv(b), t);
+            auto ovf = rec::overflow(gocpp::recv(b), t);
             if(ovf == nullptr)
             {
                 break;
@@ -334,14 +343,14 @@ namespace golang::runtime
                 break;
             }
         }
-        if(! growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
+        if(! rec::growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
         {
             hashGrow(t, h);
             goto again;
         }
         if(insertb == nullptr)
         {
-            insertb = newoverflow(gocpp::recv(h), t, b);
+            insertb = rec::newoverflow(gocpp::recv(h), t, b);
             inserti = 0;
         }
         insertb->tophash[inserti & (bucketCnt - 1)] = top;
@@ -374,10 +383,10 @@ namespace golang::runtime
             fatal("concurrent map writes");
         }
         auto key = stringStructOf(& ky);
-        auto hash = Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         auto bucket = hash & bucketMask(h->B);
-        if(growing(gocpp::recv(h)))
+        if(rec::growing(gocpp::recv(h)))
         {
             growWork_faststr(t, h, bucket);
         }
@@ -385,9 +394,9 @@ namespace golang::runtime
         auto bOrig = b;
         auto top = tophash(hash);
         search:
-        for(; b != nullptr; b = overflow(gocpp::recv(b), t))
+        for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
-            for(auto [i, kptr] = std::tuple{uintptr_t(0), keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
+            for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
                 if(k->len != key->len || b->tophash[i] != top)
@@ -411,7 +420,7 @@ namespace golang::runtime
                 b->tophash[i] = emptyOne;
                 if(i == bucketCnt - 1)
                 {
-                    if(overflow(gocpp::recv(b), t) != nullptr && overflow(gocpp::recv(b), t)->tophash[0] != emptyRest)
+                    if(rec::overflow(gocpp::recv(b), t) != nullptr && rec::overflow(gocpp::recv(b), t)->tophash[0] != emptyRest)
                     {
                         goto notLast;
                     }
@@ -433,7 +442,7 @@ namespace golang::runtime
                             break;
                         }
                         auto c = b;
-                        for(b = bOrig; overflow(gocpp::recv(b), t) != c; b = overflow(gocpp::recv(b), t))
+                        for(b = bOrig; rec::overflow(gocpp::recv(b), t) != c; b = rec::overflow(gocpp::recv(b), t))
                         {
                         }
                         i = bucketCnt - 1;
@@ -471,8 +480,8 @@ namespace golang::runtime
 
     void growWork_faststr(struct maptype* t, struct hmap* h, uintptr_t bucket)
     {
-        evacuate_faststr(t, h, bucket & oldbucketmask(gocpp::recv(h)));
-        if(growing(gocpp::recv(h)))
+        evacuate_faststr(t, h, bucket & rec::oldbucketmask(gocpp::recv(h)));
+        if(rec::growing(gocpp::recv(h)))
         {
             evacuate_faststr(t, h, h->nevacuate);
         }
@@ -481,7 +490,7 @@ namespace golang::runtime
     void evacuate_faststr(struct maptype* t, struct hmap* h, uintptr_t oldbucket)
     {
         auto b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
-        auto newbit = noldbuckets(gocpp::recv(h));
+        auto newbit = rec::noldbuckets(gocpp::recv(h));
         if(! evacuated(b))
         {
             gocpp::array<evacDst, 2> xy = {};
@@ -489,14 +498,14 @@ namespace golang::runtime
             x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
             x->k = add(unsafe::Pointer(x->b), dataOffset);
             x->e = add(x->k, bucketCnt * 2 * goarch::PtrSize);
-            if(! sameSizeGrow(gocpp::recv(h)))
+            if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 auto y = & xy[1];
                 y->b = (bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
                 y->k = add(unsafe::Pointer(y->b), dataOffset);
                 y->e = add(y->k, bucketCnt * 2 * goarch::PtrSize);
             }
-            for(; b != nullptr; b = overflow(gocpp::recv(b), t))
+            for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
             {
                 auto k = add(unsafe::Pointer(b), dataOffset);
                 auto e = add(k, bucketCnt * 2 * goarch::PtrSize);
@@ -513,9 +522,9 @@ namespace golang::runtime
                         go_throw("bad map state");
                     }
                     uint8_t useY = {};
-                    if(! sameSizeGrow(gocpp::recv(h)))
+                    if(! rec::sameSizeGrow(gocpp::recv(h)))
                     {
-                        auto hash = Hasher(gocpp::recv(t), k, uintptr_t(h->hash0));
+                        auto hash = rec::Hasher(gocpp::recv(t), k, uintptr_t(h->hash0));
                         if(hash & newbit != 0)
                         {
                             useY = 1;
@@ -525,7 +534,7 @@ namespace golang::runtime
                     auto dst = & xy[useY];
                     if(dst->i == bucketCnt)
                     {
-                        dst->b = newoverflow(gocpp::recv(h), t, dst->b);
+                        dst->b = rec::newoverflow(gocpp::recv(h), t, dst->b);
                         dst->i = 0;
                         dst->k = add(unsafe::Pointer(dst->b), dataOffset);
                         dst->e = add(dst->k, bucketCnt * 2 * goarch::PtrSize);

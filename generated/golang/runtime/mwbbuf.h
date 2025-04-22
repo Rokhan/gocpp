@@ -62,12 +62,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wbBuf& value);
-    void reset(struct wbBuf* b);
-    void discard(struct wbBuf* b);
-    bool empty(struct wbBuf* b);
-    gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b);
-    gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b);
     void wbBufFlush();
     void wbBufFlush1(struct p* pp);
+
+    namespace rec
+    {
+        void reset(struct wbBuf* b);
+        void discard(struct wbBuf* b);
+        bool empty(struct wbBuf* b);
+        gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b);
+        gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b);
+    }
 }
 

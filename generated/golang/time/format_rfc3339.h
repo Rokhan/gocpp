@@ -14,11 +14,15 @@
 
 namespace golang::time
 {
-    gocpp::slice<unsigned char> appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b);
-
-    template<typename bytes>
+    
+template<typename bytes>
     std::tuple<struct Time, bool> parseRFC3339(bytes s, struct Location* local);
     std::tuple<struct Time, struct gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);
+
+    namespace rec
+    {
+        gocpp::slice<unsigned char> appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b);
+    }
 }
 

@@ -55,9 +55,9 @@ namespace golang::runtime
     bool pollFractionalWorkerExit();
     struct workType
     {
-        lfstack full;
+        runtime::lfstack full;
         cpu::CacheLinePad _;
-        lfstack empty;
+        runtime::lfstack empty;
         cpu::CacheLinePad _;
         gocpp_id_1 wbufSpans;
         uint32_t _;
@@ -81,7 +81,7 @@ namespace golang::runtime
         uint32_t markDoneSema;
         note bgMarkReady;
         uint32_t bgMarkDone;
-        gcMode mode;
+        runtime::gcMode mode;
         bool userForced;
         uint64_t initialHeapLive;
         gocpp_id_2 assistQueue;
@@ -114,7 +114,7 @@ namespace golang::runtime
     void gcWaitOnMark(uint32_t n);
     struct gcTrigger
     {
-        gcTriggerKind kind;
+        runtime::gcTriggerKind kind;
         int64_t now;
         uint32_t n;
 
@@ -130,7 +130,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
-    bool test(struct gcTrigger t);
     void gcStart(struct gcTrigger trigger);
     void gcMarkDone();
     void gcMarkTermination(struct worldStop stw);
@@ -139,8 +138,8 @@ namespace golang::runtime
     struct gcBgMarkWorkerNode
     {
         lfnode node;
-        guintptr gp;
-        muintptr m;
+        runtime::guintptr gp;
+        runtime::muintptr m;
 
         using isGoStruct = void;
 
@@ -157,7 +156,7 @@ namespace golang::runtime
     void gcBgMarkWorker();
     bool gcMarkWorkAvailable(struct p* p);
     void gcMark(int64_t startTime);
-    bool gcSweep(gcMode mode);
+    bool gcSweep(runtime::gcMode mode);
     void gcResetMarkState();
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
     void boring_registerCache(unsafe::Pointer p);
@@ -166,13 +165,18 @@ namespace golang::runtime
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
     void gcTestMoveStackOnNextCall();
     uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs);
-
-    template<typename... Args>
+    
+template<typename... Args>
     uint64_t gcTestIsReachable(Args... ptrs)
     {
         return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(ptrs...));
     }
 
     std::string gcTestPointerClass(unsafe::Pointer p);
+
+    namespace rec
+    {
+        bool test(struct gcTrigger t);
+    }
 }
 

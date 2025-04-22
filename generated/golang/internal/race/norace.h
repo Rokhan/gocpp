@@ -22,5 +22,9 @@ namespace golang::race
     void ReadRange(unsafe::Pointer addr, int len);
     void WriteRange(unsafe::Pointer addr, int len);
     int Errors();
+
+    namespace rec
+    {
+    }
 }
 

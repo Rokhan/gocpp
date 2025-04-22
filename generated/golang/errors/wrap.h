@@ -58,8 +58,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_0> value;
     };
 
-    struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-    struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_0>& self);
+    namespace rec
+    {
+        struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_0, false>& self);
+        struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_0>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     bool Is(struct gocpp::error err, struct gocpp::error target);
@@ -106,8 +109,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_1> value;
     };
 
-    bool Is(const gocpp::PtrRecv<gocpp_id_1, false>& self, gocpp::error);
-    bool Is(const gocpp::ObjRecv<gocpp_id_1>& self, gocpp::error);
+    namespace rec
+    {
+        bool Is(const gocpp::PtrRecv<gocpp_id_1, false>& self, gocpp::error);
+        bool Is(const gocpp::ObjRecv<gocpp_id_1>& self, gocpp::error);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct gocpp_id_3 : gocpp::Interface
@@ -152,8 +158,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_3> value;
     };
 
-    struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_3, false>& self);
-    struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_3>& self);
+    namespace rec
+    {
+        struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_3, false>& self);
+        struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_3>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     struct gocpp_id_4 : gocpp::Interface
@@ -198,8 +207,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_4> value;
     };
 
-    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_4, false>& self);
-    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_4>& self);
+    namespace rec
+    {
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_4, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_4>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     bool As(struct gocpp::error err, go_any target);
@@ -246,8 +258,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_5> value;
     };
 
-    bool As(const gocpp::PtrRecv<gocpp_id_5, false>& self, go_any);
-    bool As(const gocpp::ObjRecv<gocpp_id_5>& self, go_any);
+    namespace rec
+    {
+        bool As(const gocpp::PtrRecv<gocpp_id_5, false>& self, go_any);
+        bool As(const gocpp::ObjRecv<gocpp_id_5>& self, go_any);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
     struct gocpp_id_7 : gocpp::Interface
@@ -292,8 +307,11 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_7> value;
     };
 
-    struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_7, false>& self);
-    struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_7>& self);
+    namespace rec
+    {
+        struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_7, false>& self);
+        struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_7>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
     struct gocpp_id_8 : gocpp::Interface
@@ -338,10 +356,17 @@ namespace golang::errors
         std::shared_ptr<Igocpp_id_8> value;
     };
 
-    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_8, false>& self);
-    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_8>& self);
+    namespace rec
+    {
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_8, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_8>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
     extern reflectlite::Type errorType;
+
+    namespace rec
+    {
+    }
 }
 

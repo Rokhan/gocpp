@@ -17,5 +17,9 @@ namespace golang::runtime
     void asanunpoison(unsafe::Pointer addr, uintptr_t sz);
     void asanpoison(unsafe::Pointer addr, uintptr_t sz);
     void asanregisterglobals(unsafe::Pointer addr, uintptr_t sz);
+
+    namespace rec
+    {
+    }
 }
 

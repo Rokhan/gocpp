@@ -16,6 +16,13 @@
 
 namespace golang::tree
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace rand::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Tree::operator T()
@@ -78,7 +85,7 @@ namespace golang::tree
         return t;
     }
 
-    std::string String(struct Tree* t)
+    std::string rec::String(struct Tree* t)
     {
         if(t == nullptr)
         {
@@ -87,12 +94,12 @@ namespace golang::tree
         auto s = "";
         if(t->Left != nullptr)
         {
-            s += String(gocpp::recv(t->Left)) + " ";
+            s += rec::String(gocpp::recv(t->Left)) + " ";
         }
         s += mocklib::Sprint(t->Value);
         if(t->Right != nullptr)
         {
-            s += " " + String(gocpp::recv(t->Right));
+            s += " " + rec::String(gocpp::recv(t->Right));
         }
         return "(" + s + ")";
     }

@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     uintptr_t sbrk0();
+
+    namespace rec
+    {
+    }
 }
 

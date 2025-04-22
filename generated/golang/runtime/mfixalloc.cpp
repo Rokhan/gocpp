@@ -20,6 +20,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     fixalloc::operator T()
@@ -108,7 +116,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat)
+    void rec::init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, runtime::sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {
@@ -127,7 +135,7 @@ namespace golang::runtime
         f->zero = true;
     }
 
-    unsafe::Pointer alloc(struct fixalloc* f)
+    unsafe::Pointer rec::alloc(struct fixalloc* f)
     {
         if(f->size == 0)
         {
@@ -153,7 +161,7 @@ namespace golang::runtime
         auto v = unsafe::Pointer(f->chunk);
         if(f->first != nullptr)
         {
-            first(gocpp::recv(f), f->arg, v);
+            rec::first(gocpp::recv(f), f->arg, v);
         }
         f->chunk = f->chunk + f->size;
         f->nchunk -= uint32_t(f->size);
@@ -161,7 +169,7 @@ namespace golang::runtime
         return v;
     }
 
-    void free(struct fixalloc* f, unsafe::Pointer p)
+    void rec::free(struct fixalloc* f, unsafe::Pointer p)
     {
         f->inuse -= f->size;
         auto v = (mlink*)(p);

@@ -19,6 +19,12 @@
 
 namespace golang::cmplx
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     struct gocpp::complex128 Sqrt(struct gocpp::complex128 x)
     {
         if(imag(x) == 0)

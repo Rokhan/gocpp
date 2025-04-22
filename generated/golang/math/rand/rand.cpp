@@ -23,6 +23,17 @@
 
 namespace golang::rand
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace bisect::rec;
+        using namespace godebug::rec;
+        using namespace godebugs::rec;
+        using namespace rand::rec;
+        using namespace sync::rec;
+    }
+
     
     template<typename T>
     Source::Source(T& ref)
@@ -50,32 +61,35 @@ namespace golang::rand
     template<typename T, typename StoreT>
     int64_t Source::SourceImpl<T, StoreT>::vInt63()
     {
-        return Int63(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Int63(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     void Source::SourceImpl<T, StoreT>::vSeed(int64_t seed)
     {
-        return Seed(gocpp::PtrRecv<T, false>(value.get()), seed);
+        return rec::Seed(gocpp::PtrRecv<T, false>(value.get()), seed);
     }
 
-    int64_t Int63(const gocpp::PtrRecv<Source, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vInt63();
-    }
+        int64_t Int63(const gocpp::PtrRecv<Source, false>& self)
+        {
+            return self.ptr->value->vInt63();
+        }
 
-    int64_t Int63(const gocpp::ObjRecv<Source>& self)
-    {
-        return self.obj.value->vInt63();
-    }
+        int64_t Int63(const gocpp::ObjRecv<Source>& self)
+        {
+            return self.obj.value->vInt63();
+        }
 
-    void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed)
-    {
-        return self.ptr->value->vSeed(seed);
-    }
+        void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed)
+        {
+            return self.ptr->value->vSeed(seed);
+        }
 
-    void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed)
-    {
-        return self.obj.value->vSeed(seed);
+        void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed)
+        {
+            return self.obj.value->vSeed(seed);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value)
@@ -110,17 +124,20 @@ namespace golang::rand
     template<typename T, typename StoreT>
     uint64_t Source64::Source64Impl<T, StoreT>::vUint64()
     {
-        return Uint64(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    uint64_t Uint64(const gocpp::PtrRecv<Source64, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vUint64();
-    }
+        uint64_t Uint64(const gocpp::PtrRecv<Source64, false>& self)
+        {
+            return self.ptr->value->vUint64();
+        }
 
-    uint64_t Uint64(const gocpp::ObjRecv<Source64>& self)
-    {
-        return self.obj.value->vUint64();
+        uint64_t Uint64(const gocpp::ObjRecv<Source64>& self)
+        {
+            return self.obj.value->vUint64();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value)
@@ -136,7 +153,7 @@ namespace golang::rand
     struct rngSource* newSource(int64_t seed)
     {
         rngSource rng = {};
-        Seed(gocpp::recv(rng), seed);
+        rec::Seed(gocpp::recv(rng), seed);
         return & rng;
     }
 
@@ -184,48 +201,48 @@ namespace golang::rand
         return gocpp::InitPtr<Rand>([](Rand& x) { x.src = src; x.s64 = s64; });
     }
 
-    void Seed(struct Rand* r, int64_t seed)
+    void rec::Seed(struct Rand* r, int64_t seed)
     {
         if(auto [lk, ok] = gocpp::getValue<lockedSource*>(r->src); ok)
         {
-            seedPos(gocpp::recv(lk), seed, & r->readPos);
+            rec::seedPos(gocpp::recv(lk), seed, & r->readPos);
             return;
         }
-        Seed(gocpp::recv(r->src), seed);
+        rec::Seed(gocpp::recv(r->src), seed);
         r->readPos = 0;
     }
 
-    int64_t Int63(struct Rand* r)
+    int64_t rec::Int63(struct Rand* r)
     {
-        return Int63(gocpp::recv(r->src));
+        return rec::Int63(gocpp::recv(r->src));
     }
 
-    uint32_t Uint32(struct Rand* r)
+    uint32_t rec::Uint32(struct Rand* r)
     {
-        return uint32_t(Int63(gocpp::recv(r)) >> 31);
+        return uint32_t(rec::Int63(gocpp::recv(r)) >> 31);
     }
 
-    uint64_t Uint64(struct Rand* r)
+    uint64_t rec::Uint64(struct Rand* r)
     {
         if(r->s64 != nullptr)
         {
-            return Uint64(gocpp::recv(r->s64));
+            return rec::Uint64(gocpp::recv(r->s64));
         }
-        return (uint64_t(Int63(gocpp::recv(r))) >> 31) | (uint64_t(Int63(gocpp::recv(r))) << 32);
+        return (uint64_t(rec::Int63(gocpp::recv(r))) >> 31) | (uint64_t(rec::Int63(gocpp::recv(r))) << 32);
     }
 
-    int32_t Int31(struct Rand* r)
+    int32_t rec::Int31(struct Rand* r)
     {
-        return int32_t(Int63(gocpp::recv(r)) >> 32);
+        return int32_t(rec::Int63(gocpp::recv(r)) >> 32);
     }
 
-    int Int(struct Rand* r)
+    int rec::Int(struct Rand* r)
     {
-        auto u = (unsigned int)(Int63(gocpp::recv(r)));
+        auto u = (unsigned int)(rec::Int63(gocpp::recv(r)));
         return int((u << 1) >> 1);
     }
 
-    int64_t Int63n(struct Rand* r, int64_t n)
+    int64_t rec::Int63n(struct Rand* r, int64_t n)
     {
         if(n <= 0)
         {
@@ -233,18 +250,18 @@ namespace golang::rand
         }
         if(n & (n - 1) == 0)
         {
-            return Int63(gocpp::recv(r)) & (n - 1);
+            return rec::Int63(gocpp::recv(r)) & (n - 1);
         }
         auto max = int64_t((1 << 63) - 1 - (1 << 63) % uint64_t(n));
-        auto v = Int63(gocpp::recv(r));
+        auto v = rec::Int63(gocpp::recv(r));
         for(; v > max; )
         {
-            v = Int63(gocpp::recv(r));
+            v = rec::Int63(gocpp::recv(r));
         }
         return v % n;
     }
 
-    int32_t Int31n(struct Rand* r, int32_t n)
+    int32_t rec::Int31n(struct Rand* r, int32_t n)
     {
         if(n <= 0)
         {
@@ -252,20 +269,20 @@ namespace golang::rand
         }
         if(n & (n - 1) == 0)
         {
-            return Int31(gocpp::recv(r)) & (n - 1);
+            return rec::Int31(gocpp::recv(r)) & (n - 1);
         }
         auto max = int32_t((1 << 31) - 1 - (1 << 31) % uint32_t(n));
-        auto v = Int31(gocpp::recv(r));
+        auto v = rec::Int31(gocpp::recv(r));
         for(; v > max; )
         {
-            v = Int31(gocpp::recv(r));
+            v = rec::Int31(gocpp::recv(r));
         }
         return v % n;
     }
 
-    int32_t int31n(struct Rand* r, int32_t n)
+    int32_t rec::int31n(struct Rand* r, int32_t n)
     {
-        auto v = Uint32(gocpp::recv(r));
+        auto v = rec::Uint32(gocpp::recv(r));
         auto prod = uint64_t(v) * uint64_t(n);
         auto low = uint32_t(prod);
         if(low < uint32_t(n))
@@ -273,7 +290,7 @@ namespace golang::rand
             auto thresh = uint32_t(- n) % uint32_t(n);
             for(; low < thresh; )
             {
-                v = Uint32(gocpp::recv(r));
+                v = rec::Uint32(gocpp::recv(r));
                 prod = uint64_t(v) * uint64_t(n);
                 low = uint32_t(prod);
             }
@@ -281,7 +298,7 @@ namespace golang::rand
         return int32_t(prod >> 32);
     }
 
-    int Intn(struct Rand* r, int n)
+    int rec::Intn(struct Rand* r, int n)
     {
         if(n <= 0)
         {
@@ -289,15 +306,15 @@ namespace golang::rand
         }
         if(n <= (1 << 31) - 1)
         {
-            return int(Int31n(gocpp::recv(r), int32_t(n)));
+            return int(rec::Int31n(gocpp::recv(r), int32_t(n)));
         }
-        return int(Int63n(gocpp::recv(r), int64_t(n)));
+        return int(rec::Int63n(gocpp::recv(r), int64_t(n)));
     }
 
-    double Float64(struct Rand* r)
+    double rec::Float64(struct Rand* r)
     {
         again:
-        auto f = double(Int63(gocpp::recv(r))) / (1 << 63);
+        auto f = double(rec::Int63(gocpp::recv(r))) / (1 << 63);
         if(f == 1)
         {
             goto again;
@@ -305,10 +322,10 @@ namespace golang::rand
         return f;
     }
 
-    double Float32(struct Rand* r)
+    double rec::Float32(struct Rand* r)
     {
         again:
-        auto f = float(Float64(gocpp::recv(r)));
+        auto f = float(rec::Float64(gocpp::recv(r)));
         if(f == 1)
         {
             goto again;
@@ -316,19 +333,19 @@ namespace golang::rand
         return f;
     }
 
-    gocpp::slice<int> Perm(struct Rand* r, int n)
+    gocpp::slice<int> rec::Perm(struct Rand* r, int n)
     {
         auto m = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), n);
         for(auto i = 0; i < n; i++)
         {
-            auto j = Intn(gocpp::recv(r), i + 1);
+            auto j = rec::Intn(gocpp::recv(r), i + 1);
             m[i] = m[j];
             m[j] = i;
         }
         return m;
     }
 
-    void Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap)
+    void rec::Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap)
     {
         if(n < 0)
         {
@@ -337,17 +354,17 @@ namespace golang::rand
         auto i = n - 1;
         for(; i > (1 << 31) - 1 - 1; i--)
         {
-            auto j = int(Int63n(gocpp::recv(r), int64_t(i + 1)));
+            auto j = int(rec::Int63n(gocpp::recv(r), int64_t(i + 1)));
             swap(i, j);
         }
         for(; i > 0; i--)
         {
-            auto j = int(int31n(gocpp::recv(r), int32_t(i + 1)));
+            auto j = int(rec::int31n(gocpp::recv(r), int32_t(i + 1)));
             swap(i, j);
         }
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct Rand* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(struct Rand* r, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -364,13 +381,13 @@ namespace golang::rand
                 case 0:
                 {
                     lockedSource* src = gocpp::any_cast<lockedSource*>(r->src);
-                    return read(gocpp::recv(src), p, & r->readVal, & r->readPos);
+                    return rec::read(gocpp::recv(src), p, & r->readVal, & r->readPos);
                     break;
                 }
                 case 1:
                 {
                     runtimeSource* src = gocpp::any_cast<runtimeSource*>(r->src);
-                    return read(gocpp::recv(src), p, & r->readVal, & r->readPos);
+                    return rec::read(gocpp::recv(src), p, & r->readVal, & r->readPos);
                     break;
                 }
             }
@@ -397,13 +414,13 @@ namespace golang::rand
                 {
                     int n;
                     struct gocpp::error err;
-                    val = Int63(gocpp::recv(rng));
+                    val = rec::Int63(gocpp::recv(rng));
                 }
                 else
                 {
                     int n;
                     struct gocpp::error err;
-                    val = Int63(gocpp::recv(src));
+                    val = rec::Int63(gocpp::recv(src));
                 }
                 pos = 7;
             }
@@ -420,24 +437,24 @@ namespace golang::rand
     godebug::Setting* randautoseed = godebug::New("randautoseed");
     struct Rand* globalRand()
     {
-        if(auto r = Load(gocpp::recv(globalRandGenerator)); r != nullptr)
+        if(auto r = rec::Load(gocpp::recv(globalRandGenerator)); r != nullptr)
         {
             return r;
         }
         Rand* r = {};
-        if(Value(gocpp::recv(randautoseed)) == "0")
+        if(rec::Value(gocpp::recv(randautoseed)) == "0")
         {
-            IncNonDefault(gocpp::recv(randautoseed));
+            rec::IncNonDefault(gocpp::recv(randautoseed));
             r = New(go_new(lockedSource));
-            Seed(gocpp::recv(r), 1);
+            rec::Seed(gocpp::recv(r), 1);
         }
         else
         {
             r = gocpp::InitPtr<Rand>([](Rand& x) { x.src = new runtimeSource {}; x.s64 = new runtimeSource {}; });
         }
-        if(! CompareAndSwap(gocpp::recv(globalRandGenerator), nullptr, r))
+        if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), nullptr, r))
         {
-            return Load(gocpp::recv(globalRandGenerator));
+            return rec::Load(gocpp::recv(globalRandGenerator));
         }
         return r;
     }
@@ -474,45 +491,45 @@ namespace golang::rand
         return value.PrintTo(os);
     }
 
-    int64_t Int63(runtimeSource*)
+    int64_t rec::Int63(runtimeSource*)
     {
         return int64_t(runtime_rand() & rngMask);
     }
 
-    void Seed(runtimeSource*, int64_t)
+    void rec::Seed(runtimeSource*, int64_t)
     {
         gocpp::panic("internal error: call to runtimeSource.Seed");
     }
 
-    uint64_t Uint64(runtimeSource*)
+    uint64_t rec::Uint64(runtimeSource*)
     {
         return runtime_rand();
     }
 
-    std::tuple<int, struct gocpp::error> read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, struct gocpp::error> rec::read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
         struct gocpp::error err;
-        Lock(gocpp::recv(fs->mu));
+        rec::Lock(gocpp::recv(fs->mu));
         std::tie(n, err) = read(p, fs, readVal, readPos);
-        Unlock(gocpp::recv(fs->mu));
+        rec::Unlock(gocpp::recv(fs->mu));
         return {n, err};
     }
 
     void Seed(int64_t seed)
     {
-        auto orig = Load(gocpp::recv(globalRandGenerator));
+        auto orig = rec::Load(gocpp::recv(globalRandGenerator));
         if(orig != nullptr)
         {
             if(auto [gocpp_id_6, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
             {
-                Seed(gocpp::recv(orig), seed);
+                rec::Seed(gocpp::recv(orig), seed);
                 return;
             }
         }
         auto r = New(go_new(lockedSource));
-        Seed(gocpp::recv(r), seed);
-        if(! CompareAndSwap(gocpp::recv(globalRandGenerator), orig, r))
+        rec::Seed(gocpp::recv(r), seed);
+        if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), orig, r))
         {
             Seed(seed);
         }
@@ -520,79 +537,79 @@ namespace golang::rand
 
     int64_t Int63()
     {
-        return Int63(gocpp::recv(globalRand()));
+        return rec::Int63(gocpp::recv(globalRand()));
     }
 
     uint32_t Uint32()
     {
-        return Uint32(gocpp::recv(globalRand()));
+        return rec::Uint32(gocpp::recv(globalRand()));
     }
 
     uint64_t Uint64()
     {
-        return Uint64(gocpp::recv(globalRand()));
+        return rec::Uint64(gocpp::recv(globalRand()));
     }
 
     int32_t Int31()
     {
-        return Int31(gocpp::recv(globalRand()));
+        return rec::Int31(gocpp::recv(globalRand()));
     }
 
     int Int()
     {
-        return Int(gocpp::recv(globalRand()));
+        return rec::Int(gocpp::recv(globalRand()));
     }
 
     int64_t Int63n(int64_t n)
     {
-        return Int63n(gocpp::recv(globalRand()), n);
+        return rec::Int63n(gocpp::recv(globalRand()), n);
     }
 
     int32_t Int31n(int32_t n)
     {
-        return Int31n(gocpp::recv(globalRand()), n);
+        return rec::Int31n(gocpp::recv(globalRand()), n);
     }
 
     int Intn(int n)
     {
-        return Intn(gocpp::recv(globalRand()), n);
+        return rec::Intn(gocpp::recv(globalRand()), n);
     }
 
     double Float64()
     {
-        return Float64(gocpp::recv(globalRand()));
+        return rec::Float64(gocpp::recv(globalRand()));
     }
 
     double Float32()
     {
-        return Float32(gocpp::recv(globalRand()));
+        return rec::Float32(gocpp::recv(globalRand()));
     }
 
     gocpp::slice<int> Perm(int n)
     {
-        return Perm(gocpp::recv(globalRand()), n);
+        return rec::Perm(gocpp::recv(globalRand()), n);
     }
 
     void Shuffle(int n, std::function<void (int i, int j)> swap)
     {
-        Shuffle(gocpp::recv(globalRand()), n, swap);
+        rec::Shuffle(gocpp::recv(globalRand()), n, swap);
     }
 
     std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
-        return Read(gocpp::recv(globalRand()), p);
+        return rec::Read(gocpp::recv(globalRand()), p);
     }
 
     double NormFloat64()
     {
-        return NormFloat64(gocpp::recv(globalRand()));
+        return rec::NormFloat64(gocpp::recv(globalRand()));
     }
 
     double ExpFloat64()
     {
-        return ExpFloat64(gocpp::recv(globalRand()));
+        return rec::ExpFloat64(gocpp::recv(globalRand()));
     }
 
     
@@ -627,40 +644,40 @@ namespace golang::rand
         return value.PrintTo(os);
     }
 
-    int64_t Int63(struct lockedSource* r)
+    int64_t rec::Int63(struct lockedSource* r)
     {
         int64_t n;
-        Lock(gocpp::recv(r->lk));
-        n = Int63(gocpp::recv(r->s));
-        Unlock(gocpp::recv(r->lk));
+        rec::Lock(gocpp::recv(r->lk));
+        n = rec::Int63(gocpp::recv(r->s));
+        rec::Unlock(gocpp::recv(r->lk));
         return n;
     }
 
-    uint64_t Uint64(struct lockedSource* r)
+    uint64_t rec::Uint64(struct lockedSource* r)
     {
         uint64_t n;
-        Lock(gocpp::recv(r->lk));
-        n = Uint64(gocpp::recv(r->s));
-        Unlock(gocpp::recv(r->lk));
+        rec::Lock(gocpp::recv(r->lk));
+        n = rec::Uint64(gocpp::recv(r->s));
+        rec::Unlock(gocpp::recv(r->lk));
         return n;
     }
 
-    void Seed(struct lockedSource* r, int64_t seed)
+    void rec::Seed(struct lockedSource* r, int64_t seed)
     {
-        Lock(gocpp::recv(r->lk));
-        seed(gocpp::recv(r), seed);
-        Unlock(gocpp::recv(r->lk));
+        rec::Lock(gocpp::recv(r->lk));
+        rec::seed(gocpp::recv(r), seed);
+        rec::Unlock(gocpp::recv(r->lk));
     }
 
-    void seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos)
+    void rec::seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos)
     {
-        Lock(gocpp::recv(r->lk));
-        seed(gocpp::recv(r), seed);
+        rec::Lock(gocpp::recv(r->lk));
+        rec::seed(gocpp::recv(r), seed);
         *readPos = 0;
-        Unlock(gocpp::recv(r->lk));
+        rec::Unlock(gocpp::recv(r->lk));
     }
 
-    void seed(struct lockedSource* r, int64_t seed)
+    void rec::seed(struct lockedSource* r, int64_t seed)
     {
         if(r->s == nullptr)
         {
@@ -668,17 +685,17 @@ namespace golang::rand
         }
         else
         {
-            Seed(gocpp::recv(r->s), seed);
+            rec::Seed(gocpp::recv(r->s), seed);
         }
     }
 
-    std::tuple<int, struct gocpp::error> read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, struct gocpp::error> rec::read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
         struct gocpp::error err;
-        Lock(gocpp::recv(r->lk));
+        rec::Lock(gocpp::recv(r->lk));
         std::tie(n, err) = read(p, r->s, readVal, readPos);
-        Unlock(gocpp::recv(r->lk));
+        rec::Unlock(gocpp::recv(r->lk));
         return {n, err};
     }
 

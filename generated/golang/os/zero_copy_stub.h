@@ -23,7 +23,11 @@
 
 namespace golang::os
 {
-    std::tuple<int64_t, bool, struct gocpp::error> writeTo(struct File* f, struct io::Writer w);
-    std::tuple<int64_t, bool, struct gocpp::error> readFrom(struct File* f, struct io::Reader r);
+
+    namespace rec
+    {
+        std::tuple<int64_t, bool, struct gocpp::error> writeTo(struct File* f, struct io::Writer w);
+        std::tuple<int64_t, bool, struct gocpp::error> readFrom(struct File* f, struct io::Reader r);
+    }
 }
 

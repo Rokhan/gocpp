@@ -59,7 +59,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gTraceState& value);
-    void reset(struct gTraceState* s);
     struct mTraceState
     {
         atomic::Uintptr seqlock;
@@ -123,46 +122,51 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
     struct traceLocker traceAcquire();
     struct traceLocker traceAcquireEnabled();
-    bool ok(struct traceLocker tl);
     void traceRelease(struct traceLocker tl);
     void traceExitingSyscall();
     void traceExitedSyscall();
-    void Gomaxprocs(struct traceLocker tl, int32_t procs);
-    void ProcStart(struct traceLocker tl);
-    void ProcStop(struct traceLocker tl, struct p* pp);
-    void GCActive(struct traceLocker tl);
-    void GCStart(struct traceLocker tl);
-    void GCDone(struct traceLocker tl);
-    void STWStart(struct traceLocker tl, stwReason reason);
-    void STWDone(struct traceLocker tl);
-    void GCSweepStart(struct traceLocker tl);
-    void GCSweepSpan(struct traceLocker tl, uintptr_t bytesSwept);
-    void GCSweepDone(struct traceLocker tl);
-    void GCMarkAssistStart(struct traceLocker tl);
-    void GCMarkAssistDone(struct traceLocker tl);
-    void GoCreate(struct traceLocker tl, struct g* newg, uintptr_t pc);
-    void GoStart(struct traceLocker tl);
-    void GoEnd(struct traceLocker tl);
-    void GoSched(struct traceLocker tl);
-    void GoPreempt(struct traceLocker tl);
-    void GoStop(struct traceLocker tl, traceGoStopReason reason);
-    void GoPark(struct traceLocker tl, traceBlockReason reason, int skip);
-    void GoUnpark(struct traceLocker tl, struct g* gp, int skip);
-    void GoSysCall(struct traceLocker tl);
-    void GoSysExit(struct traceLocker tl, bool lostP);
-    void ProcSteal(struct traceLocker tl, struct p* pp, bool inSyscall);
-    void GoSysBlock(struct traceLocker tl, struct p* pp);
-    void HeapAlloc(struct traceLocker tl, uint64_t live);
-    void HeapGoal(struct traceLocker tl);
-    void OneNewExtraM(struct traceLocker tl, struct g* _);
-    void GoCreateSyscall(struct traceLocker tl, struct g* gp);
-    void GoDestroySyscall(struct traceLocker tl);
     void trace_userTaskCreate(uint64_t id, uint64_t parentID, std::string taskType);
     void trace_userTaskEnd(uint64_t id);
     void trace_userRegion(uint64_t id, uint64_t mode, std::string name);
     void trace_userLog(uint64_t id, std::string category, std::string message);
     void traceProcFree(struct p* _);
     void traceThreadDestroy(struct m* mp);
-    void RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _);
+
+    namespace rec
+    {
+        void reset(struct gTraceState* s);
+        bool ok(struct traceLocker tl);
+        void Gomaxprocs(struct traceLocker tl, int32_t procs);
+        void ProcStart(struct traceLocker tl);
+        void ProcStop(struct traceLocker tl, struct p* pp);
+        void GCActive(struct traceLocker tl);
+        void GCStart(struct traceLocker tl);
+        void GCDone(struct traceLocker tl);
+        void STWStart(struct traceLocker tl, runtime::stwReason reason);
+        void STWDone(struct traceLocker tl);
+        void GCSweepStart(struct traceLocker tl);
+        void GCSweepSpan(struct traceLocker tl, uintptr_t bytesSwept);
+        void GCSweepDone(struct traceLocker tl);
+        void GCMarkAssistStart(struct traceLocker tl);
+        void GCMarkAssistDone(struct traceLocker tl);
+        void GoCreate(struct traceLocker tl, struct g* newg, uintptr_t pc);
+        void GoStart(struct traceLocker tl);
+        void GoEnd(struct traceLocker tl);
+        void GoSched(struct traceLocker tl);
+        void GoPreempt(struct traceLocker tl);
+        void GoStop(struct traceLocker tl, runtime::traceGoStopReason reason);
+        void GoPark(struct traceLocker tl, runtime::traceBlockReason reason, int skip);
+        void GoUnpark(struct traceLocker tl, struct g* gp, int skip);
+        void GoSysCall(struct traceLocker tl);
+        void GoSysExit(struct traceLocker tl, bool lostP);
+        void ProcSteal(struct traceLocker tl, struct p* pp, bool inSyscall);
+        void GoSysBlock(struct traceLocker tl, struct p* pp);
+        void HeapAlloc(struct traceLocker tl, uint64_t live);
+        void HeapGoal(struct traceLocker tl);
+        void OneNewExtraM(struct traceLocker tl, struct g* _);
+        void GoCreateSyscall(struct traceLocker tl, struct g* gp);
+        void GoDestroySyscall(struct traceLocker tl);
+        void RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _);
+    }
 }
 

@@ -28,6 +28,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace bytealg::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T>
     Error::Error(T& ref)
@@ -55,17 +64,20 @@ namespace golang::runtime
     template<typename T, typename StoreT>
     void Error::ErrorImpl<T, StoreT>::vRuntimeError()
     {
-        return RuntimeError(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::RuntimeError(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    void RuntimeError(const gocpp::PtrRecv<Error, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vRuntimeError();
-    }
+        void RuntimeError(const gocpp::PtrRecv<Error, false>& self)
+        {
+            return self.ptr->value->vRuntimeError();
+        }
 
-    void RuntimeError(const gocpp::ObjRecv<Error>& self)
-    {
-        return self.obj.value->vRuntimeError();
+        void RuntimeError(const gocpp::ObjRecv<Error>& self)
+        {
+            return self.obj.value->vRuntimeError();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value)
@@ -111,29 +123,29 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void RuntimeError(TypeAssertionError*)
+    void rec::RuntimeError(TypeAssertionError*)
     {
     }
 
-    std::string Error(struct TypeAssertionError* e)
+    std::string rec::Error(struct TypeAssertionError* e)
     {
         auto inter = "interface";
         if(e->_interface != nullptr)
         {
-            inter = string(gocpp::recv(toRType(e->_interface)));
+            inter = rec::string(gocpp::recv(toRType(e->_interface)));
         }
-        auto as = string(gocpp::recv(toRType(e->asserted)));
+        auto as = rec::string(gocpp::recv(toRType(e->asserted)));
         if(e->concrete == nullptr)
         {
             return "interface conversion: " + inter + " is nil, not " + as;
         }
-        auto cs = string(gocpp::recv(toRType(e->concrete)));
+        auto cs = rec::string(gocpp::recv(toRType(e->concrete)));
         if(e->missingMethod == "")
         {
             auto msg = "interface conversion: " + inter + " is " + cs + ", not " + as;
             if(cs == as)
             {
-                if(pkgpath(gocpp::recv(toRType(e->concrete))) != pkgpath(gocpp::recv(toRType(e->asserted))))
+                if(rec::pkgpath(gocpp::recv(toRType(e->concrete))) != rec::pkgpath(gocpp::recv(toRType(e->asserted))))
                 {
                     msg += " (types from different packages)";
                 }
@@ -160,11 +172,11 @@ namespace golang::runtime
         return buf.make_slice(i);
     }
 
-    void RuntimeError(errorString e)
+    void rec::RuntimeError(runtime::errorString e)
     {
     }
 
-    std::string Error(errorString e)
+    std::string rec::Error(runtime::errorString e)
     {
         return "runtime error: " + string(e);
     }
@@ -201,25 +213,25 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void RuntimeError(struct errorAddressString e)
+    void rec::RuntimeError(struct errorAddressString e)
     {
     }
 
-    std::string Error(struct errorAddressString e)
+    std::string rec::Error(struct errorAddressString e)
     {
         return "runtime error: " + e.msg;
     }
 
-    uintptr_t Addr(struct errorAddressString e)
+    uintptr_t rec::Addr(struct errorAddressString e)
     {
         return e.addr;
     }
 
-    void RuntimeError(plainError e)
+    void rec::RuntimeError(runtime::plainError e)
     {
     }
 
-    std::string Error(plainError e)
+    std::string rec::Error(runtime::plainError e)
     {
         return string(e);
     }
@@ -264,7 +276,7 @@ namespace golang::runtime
 
     gocpp::array_base<std::string> boundsErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x] with length %y"; x.boundsSliceAlen = "slice bounds out of range [:%x] with length %y"; x.boundsSliceAcap = "slice bounds out of range [:%x] with capacity %y"; x.boundsSliceB = "slice bounds out of range [%x:%y]"; x.boundsSlice3Alen = "slice bounds out of range [::%x] with length %y"; x.boundsSlice3Acap = "slice bounds out of range [::%x] with capacity %y"; x.boundsSlice3B = "slice bounds out of range [:%x:%y]"; x.boundsSlice3C = "slice bounds out of range [%x:%y:]"; x.boundsConvert = "cannot convert slice with length %y to array or pointer to array with length %x"; });
     gocpp::array_base<std::string> boundsNegErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x]"; x.boundsSliceAlen = "slice bounds out of range [:%x]"; x.boundsSliceAcap = "slice bounds out of range [:%x]"; x.boundsSliceB = "slice bounds out of range [%x:]"; x.boundsSlice3Alen = "slice bounds out of range [::%x]"; x.boundsSlice3Acap = "slice bounds out of range [::%x]"; x.boundsSlice3B = "slice bounds out of range [:%x:]"; x.boundsSlice3C = "slice bounds out of range [%x::]"; });
-    void RuntimeError(struct boundsError e)
+    void rec::RuntimeError(struct boundsError e)
     {
     }
 
@@ -280,7 +292,7 @@ namespace golang::runtime
         return b;
     }
 
-    std::string Error(struct boundsError e)
+    std::string rec::Error(struct boundsError e)
     {
         auto fmt = boundsErrorFmts[e.code];
         if(e.go_signed && e.x < 0)
@@ -345,17 +357,20 @@ namespace golang::runtime
     template<typename T, typename StoreT>
     std::string stringer::stringerImpl<T, StoreT>::vString()
     {
-        return String(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::string String(const gocpp::PtrRecv<stringer, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vString();
-    }
+        std::string String(const gocpp::PtrRecv<stringer, false>& self)
+        {
+            return self.ptr->value->vString();
+        }
 
-    std::string String(const gocpp::ObjRecv<stringer>& self)
-    {
-        return self.obj.value->vString();
+        std::string String(const gocpp::ObjRecv<stringer>& self)
+        {
+            return self.obj.value->vString();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value)
@@ -510,7 +525,7 @@ namespace golang::runtime
     void printanycustomtype(go_any i)
     {
         auto eface = efaceOf(& i);
-        auto typestring = string(gocpp::recv(toRType(eface->_type)));
+        auto typestring = rec::string(gocpp::recv(toRType(eface->_type)));
         //Go switch emulation
         {
             auto condition = eface->_type->Kind_;

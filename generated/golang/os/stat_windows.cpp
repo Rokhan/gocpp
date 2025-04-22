@@ -32,7 +32,20 @@
 
 namespace golang::os
 {
-    std::tuple<struct FileInfo, struct gocpp::error> Stat(struct File* file)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace unsafe::rec;
+        using namespace windows::rec;
+    }
+
+    std::tuple<struct FileInfo, struct gocpp::error> rec::Stat(struct File* file)
     {
         if(file == nullptr)
         {
@@ -69,7 +82,7 @@ namespace golang::os
                 if(fd.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
                 {
                     auto fs = newFileStatFromWin32finddata(& fd);
-                    if(auto err = saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
+                    if(auto err = rec::saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
                     {
                         return {nullptr, err};
                     }
@@ -79,7 +92,7 @@ namespace golang::os
             if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
             {
                 auto fs = gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = fa.FileAttributes; x.CreationTime = fa.CreationTime; x.LastAccessTime = fa.LastAccessTime; x.LastWriteTime = fa.LastWriteTime; x.FileSizeHigh = fa.FileSizeHigh; x.FileSizeLow = fa.FileSizeLow; });
-                if(auto err = saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
+                if(auto err = rec::saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
                 {
                     return {nullptr, err};
                 }
@@ -94,7 +107,7 @@ namespace golang::os
             fs::FileInfo fi;
             std::tie(fi, err) = statHandle(name, h);
             syscall::CloseHandle(h);
-            if(err == nullptr && followSurrogates && isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
+            if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
             {
                 std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS, 0);
                 if(err != nullptr)

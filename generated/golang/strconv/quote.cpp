@@ -16,6 +16,13 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace strconv::rec;
+        using namespace utf8::rec;
+    }
+
     std::string lowerhex = "0123456789abcdef";
     std::string upperhex = "0123456789ABCDEF";
     bool contains(std::string s, unsigned char c)

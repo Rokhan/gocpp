@@ -15,6 +15,12 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     bool Signbit(double x)
     {
         return Float64bits(x) & (1 << 63) != 0;

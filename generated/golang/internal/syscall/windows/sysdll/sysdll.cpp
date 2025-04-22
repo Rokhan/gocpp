@@ -13,6 +13,11 @@
 
 namespace golang::sysdll
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     gocpp::map<std::string, bool> IsSystemDLL = gocpp::map<std::string, bool> {};
     std::string Add(std::string dll)
     {

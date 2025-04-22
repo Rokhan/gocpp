@@ -20,7 +20,7 @@ namespace golang::time
     const int daysPer4Years = 365 * 4 + 1;
     const unsigned char timeBinaryVersionV1 = 0 + 1;
     const unsigned char timeBinaryVersionV2 = 1 + 1;
-    const Month January = 1 + 0;
+    const time::Month January = 1 + 0;
     const Month February = 1 + 1;
     const Month March = 1 + 2;
     const Month April = 1 + 3;
@@ -32,16 +32,16 @@ namespace golang::time
     const Month October = 1 + 9;
     const Month November = 1 + 10;
     const Month December = 1 + 11;
-    const Weekday Sunday = 0;
+    const time::Weekday Sunday = 0;
     const Weekday Monday = 1;
     const Weekday Tuesday = 2;
     const Weekday Wednesday = 3;
     const Weekday Thursday = 4;
     const Weekday Friday = 5;
     const Weekday Saturday = 6;
-    const Duration minDuration = - 1 << 63;
-    const Duration maxDuration = (1 << 63) - 1;
-    const Duration Nanosecond = 1;
+    const time::Duration minDuration = - 1 << 63;
+    const time::Duration maxDuration = (1 << 63) - 1;
+    const time::Duration Nanosecond = 1;
     const int secondsPerHour = 60 * secondsPerMinute;
 }
 #include "golang/time/zoneinfo.fwd.h"

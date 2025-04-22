@@ -23,6 +23,15 @@
 
 namespace golang::reflect
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace reflect::rec;
+        using namespace sync::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     makeFuncImpl::operator T()
@@ -57,11 +66,11 @@ namespace golang::reflect
 
     struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn)
     {
-        if(Kind(gocpp::recv(typ)) != Func)
+        if(rec::Kind(gocpp::recv(typ)) != Func)
         {
             gocpp::panic("reflect: call of MakeFunc with non-Func type");
         }
-        auto t = common(gocpp::recv(typ));
+        auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
@@ -111,14 +120,14 @@ namespace golang::reflect
             gocpp::panic("reflect: internal error: invalid use of makeMethodValue");
         }
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
-        fl |= flag(Kind(gocpp::recv(typ(gocpp::recv(v)))));
-        auto rcvr = Value {typ(gocpp::recv(v)), v.ptr, fl};
-        auto ftyp = (funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(Type(gocpp::recv(v)))));
+        fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));
+        auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
+        auto ftyp = (funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
         auto [gocpp_id_6, gocpp_id_7, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([](methodValue& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.method = int(v.flag) >> flagMethodShift; x.rcvr = rcvr; });
         methodReceiver(op, fv->rcvr, fv->method);
-        return Value {Common(gocpp::recv(ftyp)), unsafe::Pointer(fv), v.flag & flagRO | flag(Func)};
+        return Value {rec::Common(gocpp::recv(ftyp)), unsafe::Pointer(fv), v.flag & flagRO | flag(Func)};
     }
 
     uintptr_t methodValueCallCodePtr()
@@ -171,7 +180,7 @@ namespace golang::reflect
     {
         for(auto [i, arg] : args->Ints)
         {
-            if(Get(gocpp::recv(ctxt->regPtrs), i))
+            if(rec::Get(gocpp::recv(ctxt->regPtrs), i))
             {
                 *(uintptr_t*)(unsafe::Pointer(& args->Ptrs[i])) = arg;
             }

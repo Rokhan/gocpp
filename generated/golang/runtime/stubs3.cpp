@@ -13,6 +13,11 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int64_t nanotime1()
     /* convertBlockStmt, nil block */;
 

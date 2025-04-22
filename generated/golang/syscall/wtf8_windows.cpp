@@ -16,6 +16,13 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace utf16::rec;
+        using namespace utf8::rec;
+    }
+
     gocpp::slice<uint16_t> encodeWTF16(std::string s, gocpp::slice<uint16_t> buf)
     {
         for(auto i = 0; i < len(s); )

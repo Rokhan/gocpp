@@ -38,10 +38,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct itabTableType& value);
     uintptr_t itabHashFunc(struct interfacetype* inter, struct _type* typ);
     struct itab* getitab(struct interfacetype* inter, struct _type* typ, bool canfail);
-    struct itab* find(struct itabTableType* t, struct interfacetype* inter, struct _type* typ);
     void itabAdd(struct itab* m);
-    void add(struct itabTableType* t, struct itab* m);
-    std::string init(struct itab* m);
     void itabsinit();
     void panicdottypeE(struct _type* have, struct _type* want, struct _type* iface);
     void panicdottypeI(struct itab* have, struct _type* want, struct _type* iface);
@@ -76,5 +73,12 @@ namespace golang::runtime
     void iterate_itabs(std::function<void (itab*)> fn);
     extern gocpp::array_base<uint64_t> staticuint64s;
     void unreachableMethod();
+
+    namespace rec
+    {
+        struct itab* find(struct itabTableType* t, struct interfacetype* inter, struct _type* typ);
+        void add(struct itabTableType* t, struct itab* m);
+        std::string init(struct itab* m);
+    }
 }
 

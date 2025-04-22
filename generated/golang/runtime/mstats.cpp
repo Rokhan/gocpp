@@ -71,6 +71,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     mstats::operator T()
@@ -346,7 +356,7 @@ namespace golang::runtime
         assertWorldStopped();
         systemstack(flushallmcaches);
         heapStatsDelta consStats = {};
-        unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
+        rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
         auto totalAlloc = consStats.largeAlloc;
         auto nMalloc = consStats.largeAllocCount;
         auto totalFree = consStats.largeFree;
@@ -369,25 +379,25 @@ namespace golang::runtime
         auto stackInUse = uint64_t(consStats.inStacks);
         auto gcWorkBufInUse = uint64_t(consStats.inWorkBufs);
         auto gcProgPtrScalarBitsInUse = uint64_t(consStats.inPtrScalarBits);
-        auto totalMapped = load(gocpp::recv(gcController.heapInUse)) + load(gocpp::recv(gcController.heapFree)) + load(gocpp::recv(gcController.heapReleased)) + load(gocpp::recv(memstats.stacks_sys)) + load(gocpp::recv(memstats.mspan_sys)) + load(gocpp::recv(memstats.mcache_sys)) + load(gocpp::recv(memstats.buckhash_sys)) + load(gocpp::recv(memstats.gcMiscSys)) + load(gocpp::recv(memstats.other_sys)) + stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
-        auto heapGoal = heapGoal(gocpp::recv(gcController));
+        auto totalMapped = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) + rec::load(gocpp::recv(memstats.stacks_sys)) + rec::load(gocpp::recv(memstats.mspan_sys)) + rec::load(gocpp::recv(memstats.mcache_sys)) + rec::load(gocpp::recv(memstats.buckhash_sys)) + rec::load(gocpp::recv(memstats.gcMiscSys)) + rec::load(gocpp::recv(memstats.other_sys)) + stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+        auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
         if(doubleCheckReadMemStats)
         {
             lock(& sched.sysmonlock);
             lock(& trace.lock);
-            if(load(gocpp::recv(gcController.heapInUse)) != uint64_t(consStats.inHeap))
+            if(rec::load(gocpp::recv(gcController.heapInUse)) != uint64_t(consStats.inHeap))
             {
-                print("runtime: heapInUse=", load(gocpp::recv(gcController.heapInUse)), "\n");
+                print("runtime: heapInUse=", rec::load(gocpp::recv(gcController.heapInUse)), "\n");
                 print("runtime: consistent value=", consStats.inHeap, "\n");
                 go_throw("heapInUse and consistent stats are not equal");
             }
-            if(load(gocpp::recv(gcController.heapReleased)) != uint64_t(consStats.released))
+            if(rec::load(gocpp::recv(gcController.heapReleased)) != uint64_t(consStats.released))
             {
-                print("runtime: heapReleased=", load(gocpp::recv(gcController.heapReleased)), "\n");
+                print("runtime: heapReleased=", rec::load(gocpp::recv(gcController.heapReleased)), "\n");
                 print("runtime: consistent value=", consStats.released, "\n");
                 go_throw("heapReleased and consistent stats are not equal");
             }
-            auto heapRetained = load(gocpp::recv(gcController.heapInUse)) + load(gocpp::recv(gcController.heapFree));
+            auto heapRetained = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree));
             auto consRetained = uint64_t(consStats.committed - consStats.inStacks - consStats.inWorkBufs - consStats.inPtrScalarBits);
             if(heapRetained != consRetained)
             {
@@ -395,21 +405,21 @@ namespace golang::runtime
                 print("runtime: consistent value=", consRetained, "\n");
                 go_throw("measures of the retained heap are not equal");
             }
-            if(Load(gocpp::recv(gcController.totalAlloc)) != totalAlloc)
+            if(rec::Load(gocpp::recv(gcController.totalAlloc)) != totalAlloc)
             {
-                print("runtime: totalAlloc=", Load(gocpp::recv(gcController.totalAlloc)), "\n");
+                print("runtime: totalAlloc=", rec::Load(gocpp::recv(gcController.totalAlloc)), "\n");
                 print("runtime: consistent value=", totalAlloc, "\n");
                 go_throw("totalAlloc and consistent stats are not equal");
             }
-            if(Load(gocpp::recv(gcController.totalFree)) != totalFree)
+            if(rec::Load(gocpp::recv(gcController.totalFree)) != totalFree)
             {
-                print("runtime: totalFree=", Load(gocpp::recv(gcController.totalFree)), "\n");
+                print("runtime: totalFree=", rec::Load(gocpp::recv(gcController.totalFree)), "\n");
                 print("runtime: consistent value=", totalFree, "\n");
                 go_throw("totalFree and consistent stats are not equal");
             }
-            if(Load(gocpp::recv(gcController.mappedReady)) != totalMapped - uint64_t(consStats.released))
+            if(rec::Load(gocpp::recv(gcController.mappedReady)) != totalMapped - uint64_t(consStats.released))
             {
-                print("runtime: mappedReady=", Load(gocpp::recv(gcController.mappedReady)), "\n");
+                print("runtime: mappedReady=", rec::Load(gocpp::recv(gcController.mappedReady)), "\n");
                 print("runtime: totalMapped=", totalMapped, "\n");
                 print("runtime: released=", uint64_t(consStats.released), "\n");
                 print("runtime: totalMapped-released=", totalMapped - uint64_t(consStats.released), "\n");
@@ -424,20 +434,20 @@ namespace golang::runtime
         stats->Mallocs = nMalloc;
         stats->Frees = nFree;
         stats->HeapAlloc = totalAlloc - totalFree;
-        stats->HeapSys = load(gocpp::recv(gcController.heapInUse)) + load(gocpp::recv(gcController.heapFree)) + load(gocpp::recv(gcController.heapReleased));
-        stats->HeapIdle = load(gocpp::recv(gcController.heapFree)) + load(gocpp::recv(gcController.heapReleased));
-        stats->HeapInuse = load(gocpp::recv(gcController.heapInUse));
-        stats->HeapReleased = load(gocpp::recv(gcController.heapReleased));
+        stats->HeapSys = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased));
+        stats->HeapIdle = rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased));
+        stats->HeapInuse = rec::load(gocpp::recv(gcController.heapInUse));
+        stats->HeapReleased = rec::load(gocpp::recv(gcController.heapReleased));
         stats->HeapObjects = nMalloc - nFree;
         stats->StackInuse = stackInUse;
-        stats->StackSys = stackInUse + load(gocpp::recv(memstats.stacks_sys));
+        stats->StackSys = stackInUse + rec::load(gocpp::recv(memstats.stacks_sys));
         stats->MSpanInuse = uint64_t(mheap_.spanalloc.inuse);
-        stats->MSpanSys = load(gocpp::recv(memstats.mspan_sys));
+        stats->MSpanSys = rec::load(gocpp::recv(memstats.mspan_sys));
         stats->MCacheInuse = uint64_t(mheap_.cachealloc.inuse);
-        stats->MCacheSys = load(gocpp::recv(memstats.mcache_sys));
-        stats->BuckHashSys = load(gocpp::recv(memstats.buckhash_sys));
-        stats->GCSys = load(gocpp::recv(memstats.gcMiscSys)) + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
-        stats->OtherSys = load(gocpp::recv(memstats.other_sys));
+        stats->MCacheSys = rec::load(gocpp::recv(memstats.mcache_sys));
+        stats->BuckHashSys = rec::load(gocpp::recv(memstats.buckhash_sys));
+        stats->GCSys = rec::load(gocpp::recv(memstats.gcMiscSys)) + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+        stats->OtherSys = rec::load(gocpp::recv(memstats.other_sys));
         stats->NextGC = heapGoal;
         stats->LastGC = memstats.last_gc_unix;
         stats->PauseTotalNs = memstats.pause_total_ns;
@@ -494,7 +504,7 @@ namespace golang::runtime
         {
             return;
         }
-        releaseAll(gocpp::recv(c));
+        rec::releaseAll(gocpp::recv(c));
         stackcache_clear(c);
     }
 
@@ -507,12 +517,12 @@ namespace golang::runtime
         }
     }
 
-    uint64_t load(sysMemStat* s)
+    uint64_t rec::load(runtime::sysMemStat* s)
     {
         return atomic::Load64((uint64_t*)(s));
     }
 
-    void add(sysMemStat* s, int64_t n)
+    void rec::add(runtime::sysMemStat* s, int64_t n)
     {
         auto val = atomic::Xadd64((uint64_t*)(s), n);
         if((n > 0 && int64_t(val) < n) || (n < 0 && int64_t(val) + n < n))
@@ -587,7 +597,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void merge(struct heapStatsDelta* a, struct heapStatsDelta* b)
+    void rec::merge(struct heapStatsDelta* a, struct heapStatsDelta* b)
     {
         a->committed += b->committed;
         a->released += b->released;
@@ -645,11 +655,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct heapStatsDelta* acquire(struct consistentHeapStats* m)
+    struct heapStatsDelta* rec::acquire(struct consistentHeapStats* m)
     {
-        if(auto pp = ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
+        if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
-            auto seq = Add(gocpp::recv(pp->statsSeq), 1);
+            auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 == 0)
             {
                 print("runtime: seq=", seq, "\n");
@@ -660,15 +670,15 @@ namespace golang::runtime
         {
             lock(& m->noPLock);
         }
-        auto gen = Load(gocpp::recv(m->gen)) % 3;
+        auto gen = rec::Load(gocpp::recv(m->gen)) % 3;
         return & m->stats[gen];
     }
 
-    void release(struct consistentHeapStats* m)
+    void rec::release(struct consistentHeapStats* m)
     {
-        if(auto pp = ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
+        if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
-            auto seq = Add(gocpp::recv(pp->statsSeq), 1);
+            auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 != 0)
             {
                 print("runtime: seq=", seq, "\n");
@@ -681,16 +691,16 @@ namespace golang::runtime
         }
     }
 
-    void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
         {
-            merge(gocpp::recv(out), & m->stats[i]);
+            rec::merge(gocpp::recv(out), & m->stats[i]);
         }
     }
 
-    void unsafeClear(struct consistentHeapStats* m)
+    void rec::unsafeClear(struct consistentHeapStats* m)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -699,25 +709,25 @@ namespace golang::runtime
         }
     }
 
-    void read(struct consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::read(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         auto mp = acquirem();
-        auto currGen = Load(gocpp::recv(m->gen));
+        auto currGen = rec::Load(gocpp::recv(m->gen));
         auto prevGen = currGen - 1;
         if(currGen == 0)
         {
             prevGen = 2;
         }
         lock(& m->noPLock);
-        Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
+        rec::Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
         unlock(& m->noPLock);
         for(auto [gocpp_ignored, p] : allp)
         {
-            for(; Load(gocpp::recv(p->statsSeq)) % 2 != 0; )
+            for(; rec::Load(gocpp::recv(p->statsSeq)) % 2 != 0; )
             {
             }
         }
-        merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
+        rec::merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
         m->stats[prevGen] = heapStatsDelta {};
         *out = m->stats[currGen];
         releasem(mp);
@@ -782,7 +792,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase)
+    void rec::accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase)
     {
         int64_t markAssistCpu = {};
         int64_t markDedicatedCpu = {};
@@ -790,13 +800,13 @@ namespace golang::runtime
         int64_t markIdleCpu = {};
         if(gcMarkPhase)
         {
-            markAssistCpu = Load(gocpp::recv(gcController.assistTime));
-            markDedicatedCpu = Load(gocpp::recv(gcController.dedicatedMarkTime));
-            markFractionalCpu = Load(gocpp::recv(gcController.fractionalMarkTime));
-            markIdleCpu = Load(gocpp::recv(gcController.idleMarkTime));
+            markAssistCpu = rec::Load(gocpp::recv(gcController.assistTime));
+            markDedicatedCpu = rec::Load(gocpp::recv(gcController.dedicatedMarkTime));
+            markFractionalCpu = rec::Load(gocpp::recv(gcController.fractionalMarkTime));
+            markIdleCpu = rec::Load(gocpp::recv(gcController.idleMarkTime));
         }
-        auto scavAssistCpu = Load(gocpp::recv(scavenge.assistTime));
-        auto scavBgCpu = Load(gocpp::recv(scavenge.backgroundTime));
+        auto scavAssistCpu = rec::Load(gocpp::recv(scavenge.assistTime));
+        auto scavBgCpu = rec::Load(gocpp::recv(scavenge.backgroundTime));
         s->gcAssistTime += markAssistCpu;
         s->gcDedicatedTime += markDedicatedCpu + markFractionalCpu;
         s->gcIdleTime += markIdleCpu;
@@ -805,7 +815,7 @@ namespace golang::runtime
         s->scavengeBgTime += scavBgCpu;
         s->scavengeTotalTime += scavAssistCpu + scavBgCpu;
         s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
-        s->idleTime += Load(gocpp::recv(sched.idleTime));
+        s->idleTime += rec::Load(gocpp::recv(sched.idleTime));
         s->userTime = s->totalTime - (s->gcTotalTime + s->scavengeTotalTime + s->idleTime);
     }
 

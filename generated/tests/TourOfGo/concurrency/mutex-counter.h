@@ -30,8 +30,12 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SafeCounter& value);
-    void Inc(struct SafeCounter* c, std::string key);
-    int Value(struct SafeCounter* c, std::string key);
     void main();
+
+    namespace rec
+    {
+        void Inc(struct SafeCounter* c, std::string key);
+        int Value(struct SafeCounter* c, std::string key);
+    }
 }
 

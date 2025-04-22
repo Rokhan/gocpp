@@ -26,6 +26,15 @@
 
 namespace golang::bytes
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bytealg::rec;
+        using namespace bytes::rec;
+        using namespace unicode::rec;
+        using namespace utf8::rec;
+    }
+
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
         return string(a) == string(b);
@@ -237,7 +246,7 @@ namespace golang::bytes
             {
                 for(auto [i, c] : s)
                 {
-                    if(contains(gocpp::recv(as), c))
+                    if(rec::contains(gocpp::recv(as), c))
                     {
                         return i;
                     }
@@ -301,7 +310,7 @@ namespace golang::bytes
             {
                 for(auto i = len(s) - 1; i >= 0; i--)
                 {
-                    if(contains(gocpp::recv(as), s[i]))
+                    if(rec::contains(gocpp::recv(as), s[i]))
                     {
                         return i;
                     }
@@ -969,7 +978,7 @@ namespace golang::bytes
         return {as, true};
     }
 
-    bool contains(asciiSet* as, unsigned char c)
+    bool rec::contains(asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -1045,7 +1054,7 @@ namespace golang::bytes
     {
         for(; len(s) > 0; )
         {
-            if(! contains(gocpp::recv(as), s[0]))
+            if(! rec::contains(gocpp::recv(as), s[0]))
             {
                 break;
             }
@@ -1110,7 +1119,7 @@ namespace golang::bytes
     {
         for(; len(s) > 0; )
         {
-            if(! contains(gocpp::recv(as), s[len(s) - 1]))
+            if(! rec::contains(gocpp::recv(as), s[len(s) - 1]))
             {
                 break;
             }

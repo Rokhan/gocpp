@@ -24,7 +24,7 @@ namespace golang::runtime
     struct mcentral
     {
         sys::NotInHeap _;
-        spanClass spanclass;
+        runtime::spanClass spanclass;
         /* gocpp::array<spanSet, 2> partial; [Known incomplete type] */
         /* gocpp::array<spanSet, 2> full; [Known incomplete type] */
 
@@ -40,13 +40,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcentral& value);
-    void init(struct mcentral* c, spanClass spc);
-    /* struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    /* struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-    struct mspan* cacheSpan(struct mcentral* c);
-    void uncacheSpan(struct mcentral* c, struct mspan* s);
-    struct mspan* grow(struct mcentral* c);
+
+    namespace rec
+    {
+        void init(struct mcentral* c, runtime::spanClass spc);
+        /* struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+        /* struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+        /* struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+        /* struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+        struct mspan* cacheSpan(struct mcentral* c);
+        void uncacheSpan(struct mcentral* c, struct mspan* s);
+        struct mspan* grow(struct mcentral* c);
+    }
 }
 

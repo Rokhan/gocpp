@@ -15,6 +15,12 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     double Abs(double x)
     {
         return Float64frombits(Float64bits(x) &^ (1 << 63));

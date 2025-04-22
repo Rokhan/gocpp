@@ -19,13 +19,13 @@ namespace golang::runtime
     struct rwmutex
     {
         mutex rLock;
-        muintptr readers;
+        runtime::muintptr readers;
         uint32_t readerPass;
         mutex wLock;
-        muintptr writer;
+        runtime::muintptr writer;
         atomic::Int32 readerCount;
         atomic::Int32 readerWait;
-        lockRank readRank;
+        runtime::lockRank readRank;
 
         using isGoStruct = void;
 
@@ -39,10 +39,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rwmutex& value);
-    void init(struct rwmutex* rw, lockRank readRank, lockRank readRankInternal, lockRank writeRank);
-    void rlock(struct rwmutex* rw);
-    void runlock(struct rwmutex* rw);
-    void lock(struct rwmutex* rw);
-    void unlock(struct rwmutex* rw);
+
+    namespace rec
+    {
+        void init(struct rwmutex* rw, runtime::lockRank readRank, runtime::lockRank readRankInternal, runtime::lockRank writeRank);
+        void rlock(struct rwmutex* rw);
+        void runlock(struct rwmutex* rw);
+        void lock(struct rwmutex* rw);
+        void unlock(struct rwmutex* rw);
+    }
 }
 

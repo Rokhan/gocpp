@@ -73,6 +73,20 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace math::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     unsafe::Pointer arena_newArena()
     {
         return unsafe::Pointer(newUserArena());
@@ -86,7 +100,7 @@ namespace golang::runtime
             go_throw("arena_New: non-pointer type");
         }
         auto te = (ptrtype*)(unsafe::Pointer(t))->Elem;
-        auto x = go_new(gocpp::recv(((userArena*)(arena))), te);
+        auto x = rec::go_new(gocpp::recv(((userArena*)(arena))), te);
         go_any result = {};
         auto e = efaceOf(& result);
         e->_type = t;
@@ -96,12 +110,12 @@ namespace golang::runtime
 
     void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap)
     {
-        slice(gocpp::recv(((userArena*)(arena))), slice, cap);
+        rec::slice(gocpp::recv(((userArena*)(arena))), slice, cap);
     }
 
     void arena_arena_Free(unsafe::Pointer arena)
     {
-        free(gocpp::recv(((userArena*)(arena))));
+        rec::free(gocpp::recv(((userArena*)(arena))));
     }
 
     go_any arena_heapify(go_any s)
@@ -254,18 +268,18 @@ namespace golang::runtime
         auto a = go_new(userArena);
         SetFinalizer(a, [=](struct userArena* a) mutable -> void
         {
-            free(gocpp::recv(a));
+            rec::free(gocpp::recv(a));
         });
-        refill(gocpp::recv(a));
+        rec::refill(gocpp::recv(a));
         return a;
     }
 
-    unsafe::Pointer go_new(struct userArena* a, struct _type* typ)
+    unsafe::Pointer rec::go_new(struct userArena* a, struct _type* typ)
     {
-        return alloc(gocpp::recv(a), typ, - 1);
+        return rec::alloc(gocpp::recv(a), typ, - 1);
     }
 
-    void slice(struct userArena* a, go_any sl, int cap)
+    void rec::slice(struct userArena* a, go_any sl, int cap)
     {
         if(cap < 0)
         {
@@ -283,16 +297,16 @@ namespace golang::runtime
             gocpp::panic("slice of non-ptr-to-slice type");
         }
         typ = (slicetype*)(unsafe::Pointer(typ))->Elem;
-        *((slice*)(i->data)) = slice {alloc(gocpp::recv(a), typ, cap), cap, cap};
+        *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
-    void free(struct userArena* a)
+    void rec::free(struct userArena* a)
     {
-        if(Load(gocpp::recv(a->defunct)))
+        if(rec::Load(gocpp::recv(a->defunct)))
         {
             gocpp::panic("arena double free");
         }
-        Store(gocpp::recv(a->defunct), true);
+        rec::Store(gocpp::recv(a->defunct), true);
         SetFinalizer(a, nullptr);
         auto s = a->fullList;
         auto i = len(a->refs) - 2;
@@ -326,28 +340,28 @@ namespace golang::runtime
         a->refs = nullptr;
     }
 
-    unsafe::Pointer alloc(struct userArena* a, struct _type* typ, int cap)
+    unsafe::Pointer rec::alloc(struct userArena* a, struct _type* typ, int cap)
     {
         auto s = a->active;
         unsafe::Pointer x = {};
         for(; ; )
         {
-            x = userArenaNextFree(gocpp::recv(s), typ, cap);
+            x = rec::userArenaNextFree(gocpp::recv(s), typ, cap);
             if(x != nullptr)
             {
                 break;
             }
-            s = refill(gocpp::recv(a));
+            s = rec::refill(gocpp::recv(a));
         }
         return x;
     }
 
-    struct mspan* refill(struct userArena* a)
+    struct mspan* rec::refill(struct userArena* a)
     {
         auto s = a->active;
         if(s != nullptr)
         {
-            if(size(gocpp::recv(s->userArenaChunkFree)) > userArenaChunkMaxAllocBytes)
+            if(rec::size(gocpp::recv(s->userArenaChunkFree)) > userArenaChunkMaxAllocBytes)
             {
                 go_throw("wasted too much memory in an arena chunk");
             }
@@ -455,7 +469,7 @@ namespace golang::runtime
 
 
     gocpp_id_0 userArenaState;
-    unsafe::Pointer userArenaNextFree(struct mspan* s, struct _type* typ, int cap)
+    unsafe::Pointer rec::userArenaNextFree(struct mspan* s, struct _type* typ, int cap)
     {
         auto size = typ->Size_;
         if(cap > 0)
@@ -491,7 +505,7 @@ namespace golang::runtime
         unsafe::Pointer ptr = {};
         if(typ->PtrBytes == 0)
         {
-            auto [v, ok] = takeFromBack(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
+            auto [v, ok] = rec::takeFromBack(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
             if(ok)
             {
                 ptr = unsafe::Pointer(v);
@@ -499,7 +513,7 @@ namespace golang::runtime
         }
         else
         {
-            auto [v, ok] = takeFromFront(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
+            auto [v, ok] = rec::takeFromFront(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
             if(ok)
             {
                 ptr = unsafe::Pointer(v);
@@ -578,24 +592,24 @@ namespace golang::runtime
         mspan* span = {};
         systemstack([=]() mutable -> void
         {
-            span = allocUserArenaChunk(gocpp::recv(mheap_));
+            span = rec::allocUserArenaChunk(gocpp::recv(mheap_));
         });
         if(span == nullptr)
         {
             go_throw("out of memory");
         }
-        auto x = unsafe::Pointer(base(gocpp::recv(span)));
+        auto x = unsafe::Pointer(rec::base(gocpp::recv(span)));
         if(gcphase != _GCoff)
         {
-            gcmarknewobject(span, base(gocpp::recv(span)));
+            gcmarknewobject(span, rec::base(gocpp::recv(span)));
         }
         if(raceenabled)
         {
-            racemalloc(unsafe::Pointer(base(gocpp::recv(span))), span->elemsize);
+            racemalloc(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(msanenabled)
         {
-            msanmalloc(unsafe::Pointer(base(gocpp::recv(span))), span->elemsize);
+            msanmalloc(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(asanenabled)
         {
@@ -605,10 +619,10 @@ namespace golang::runtime
             {
                 span->largeType->Size_ = span->elemsize;
             }
-            auto rzStart = base(gocpp::recv(span)) + span->elemsize;
-            span->userArenaChunkFree = makeAddrRange(base(gocpp::recv(span)), rzStart);
+            auto rzStart = rec::base(gocpp::recv(span)) + span->elemsize;
+            span->userArenaChunkFree = makeAddrRange(rec::base(gocpp::recv(span)), rzStart);
             asanpoison(unsafe::Pointer(rzStart), span->limit - rzStart);
-            asanunpoison(unsafe::Pointer(base(gocpp::recv(span))), span->elemsize);
+            asanunpoison(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(auto rate = MemProfileRate; rate > 0)
         {
@@ -623,12 +637,12 @@ namespace golang::runtime
             }
             else
             {
-                profilealloc(mp, unsafe::Pointer(base(gocpp::recv(span))), userArenaChunkBytes);
+                profilealloc(mp, unsafe::Pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes);
             }
         }
         mp->mallocing = 0;
         releasem(mp);
-        if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerHeap; })); test(gocpp::recv(t)))
+        if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerHeap; })); rec::test(gocpp::recv(t)))
         {
             gcStart(t);
         }
@@ -636,7 +650,7 @@ namespace golang::runtime
         {
             if(debug.allocfreetrace != 0)
             {
-                tracealloc(unsafe::Pointer(base(gocpp::recv(span))), userArenaChunkBytes, nullptr);
+                tracealloc(unsafe::Pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes, nullptr);
             }
             if(inittrace.active && inittrace.id == getg()->goid)
             {
@@ -650,12 +664,12 @@ namespace golang::runtime
         return {x, span};
     }
 
-    bool isUnusedUserArenaChunk(struct mspan* s)
+    bool rec::isUnusedUserArenaChunk(struct mspan* s)
     {
         return s->isUserArenaChunk && s->spanclass == makeSpanClass(0, true);
     }
 
-    void setUserArenaChunkToFault(struct mspan* s)
+    void rec::setUserArenaChunkToFault(struct mspan* s)
     {
         if(! s->isUserArenaChunk)
         {
@@ -666,24 +680,24 @@ namespace golang::runtime
             go_throw("span on userArena.faultList has invalid size");
         }
         s->spanclass = makeSpanClass(0, true);
-        sysFault(unsafe::Pointer(base(gocpp::recv(s))), s->npages * pageSize);
-        add(gocpp::recv(gcController.heapInUse), - int64_t(s->npages * pageSize));
-        Add(gocpp::recv(gcController.totalFree), int64_t(s->elemsize));
-        auto stats = acquire(gocpp::recv(memstats.heapStats));
+        sysFault(unsafe::Pointer(rec::base(gocpp::recv(s))), s->npages * pageSize);
+        rec::add(gocpp::recv(gcController.heapInUse), - int64_t(s->npages * pageSize));
+        rec::Add(gocpp::recv(gcController.totalFree), int64_t(s->elemsize));
+        auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->committed, - int64_t(s->npages * pageSize));
         atomic::Xaddint64(& stats->inHeap, - int64_t(s->npages * pageSize));
         atomic::Xadd64(& stats->largeFreeCount, 1);
         atomic::Xadd64(& stats->largeFree, int64_t(s->elemsize));
-        release(gocpp::recv(memstats.heapStats));
-        update(gocpp::recv(gcController), - int64_t(s->elemsize), 0);
+        rec::release(gocpp::recv(memstats.heapStats));
+        rec::update(gocpp::recv(gcController), - int64_t(s->elemsize), 0);
         if(raceenabled)
         {
-            racefree(unsafe::Pointer(base(gocpp::recv(s))), s->elemsize);
+            racefree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            insert(gocpp::recv(mheap_.userArena.quarantineList), s);
+            rec::insert(gocpp::recv(mheap_.userArena.quarantineList), s);
             unlock(& mheap_.lock);
         });
     }
@@ -710,15 +724,15 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racefree(unsafe::Pointer(base(gocpp::recv(s))), s->elemsize);
+            racefree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         if(msanenabled)
         {
-            msanfree(unsafe::Pointer(base(gocpp::recv(s))), s->elemsize);
+            msanfree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         if(asanenabled)
         {
-            asanpoison(unsafe::Pointer(base(gocpp::recv(s))), s->elemsize);
+            asanpoison(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         auto mp = acquirem();
         if(gcphase == _GCoff)
@@ -727,10 +741,10 @@ namespace golang::runtime
             auto faultList = userArenaState.fault;
             userArenaState.fault = nullptr;
             unlock(& userArenaState.lock);
-            setUserArenaChunkToFault(gocpp::recv(s));
+            rec::setUserArenaChunkToFault(gocpp::recv(s));
             for(auto [gocpp_ignored, lc] : faultList)
             {
-                setUserArenaChunkToFault(gocpp::recv(lc.mspan));
+                rec::setUserArenaChunkToFault(gocpp::recv(lc.mspan));
             }
             KeepAlive(x);
             KeepAlive(faultList);
@@ -744,16 +758,16 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    struct mspan* allocUserArenaChunk(struct mheap* h)
+    struct mspan* rec::allocUserArenaChunk(struct mheap* h)
     {
         mspan* s = {};
         uintptr_t base = {};
         lock(& h->lock);
-        if(! isEmpty(gocpp::recv(h->userArena.readyList)))
+        if(! rec::isEmpty(gocpp::recv(h->userArena.readyList)))
         {
             s = h->userArena.readyList.first;
-            remove(gocpp::recv(h->userArena.readyList), s);
-            base = base(gocpp::recv(s));
+            rec::remove(gocpp::recv(h->userArena.readyList), s);
+            base = rec::base(gocpp::recv(s));
         }
         else
         {
@@ -762,7 +776,7 @@ namespace golang::runtime
             {
                 hintList = & h->arenaHints;
             }
-            auto [v, size] = sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, false);
+            auto [v, size] = rec::sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, false);
             if(size % userArenaChunkBytes != 0)
             {
                 go_throw("sysAlloc size is not divisible by userArenaChunkBytes");
@@ -771,9 +785,9 @@ namespace golang::runtime
             {
                 for(auto i = userArenaChunkBytes; i < size; i += userArenaChunkBytes)
                 {
-                    auto s = allocMSpanLocked(gocpp::recv(h));
-                    init(gocpp::recv(s), uintptr_t(v) + i, userArenaChunkPages);
-                    insertBack(gocpp::recv(h->userArena.readyList), s);
+                    auto s = rec::allocMSpanLocked(gocpp::recv(h));
+                    rec::init(gocpp::recv(s), uintptr_t(v) + i, userArenaChunkPages);
+                    rec::insertBack(gocpp::recv(h->userArena.readyList), s);
                 }
                 size = userArenaChunkBytes;
             }
@@ -783,34 +797,34 @@ namespace golang::runtime
                 unlock(& h->lock);
                 return nullptr;
             }
-            s = allocMSpanLocked(gocpp::recv(h));
+            s = rec::allocMSpanLocked(gocpp::recv(h));
         }
         unlock(& h->lock);
         sysMap(unsafe::Pointer(base), userArenaChunkBytes, & gcController.heapReleased);
         sysUsed(unsafe::Pointer(base), userArenaChunkBytes, userArenaChunkBytes);
         auto spc = makeSpanClass(0, false);
-        initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages);
+        rec::initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages);
         s->isUserArenaChunk = true;
         s->elemsize -= userArenaChunkReserveBytes();
-        s->limit = base(gocpp::recv(s)) + s->elemsize;
+        s->limit = rec::base(gocpp::recv(s)) + s->elemsize;
         s->freeindex = 1;
         s->allocCount = 1;
-        add(gocpp::recv(gcController.heapInUse), int64_t(userArenaChunkBytes));
-        add(gocpp::recv(gcController.heapReleased), - int64_t(userArenaChunkBytes));
-        auto stats = acquire(gocpp::recv(memstats.heapStats));
+        rec::add(gocpp::recv(gcController.heapInUse), int64_t(userArenaChunkBytes));
+        rec::add(gocpp::recv(gcController.heapReleased), - int64_t(userArenaChunkBytes));
+        auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->inHeap, int64_t(userArenaChunkBytes));
         atomic::Xaddint64(& stats->committed, int64_t(userArenaChunkBytes));
         atomic::Xadd64(& stats->largeAlloc, int64_t(s->elemsize));
         atomic::Xadd64(& stats->largeAllocCount, 1);
-        release(gocpp::recv(memstats.heapStats));
-        Add(gocpp::recv(gcController.totalAlloc), int64_t(s->elemsize));
-        update(gocpp::recv(gcController), int64_t(s->elemsize), 0);
-        initHeapBits(gocpp::recv(s), true);
-        memclrNoHeapPointers(unsafe::Pointer(base(gocpp::recv(s))), s->elemsize);
+        rec::release(gocpp::recv(memstats.heapStats));
+        rec::Add(gocpp::recv(gcController.totalAlloc), int64_t(s->elemsize));
+        rec::update(gocpp::recv(gcController), int64_t(s->elemsize), 0);
+        rec::initHeapBits(gocpp::recv(s), true);
+        memclrNoHeapPointers(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
         s->needzero = 0;
         s->freeIndexForScan = 1;
         s->userArenaChunkFree = makeAddrRange(base, base + s->elemsize);
-        push(gocpp::recv(fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
+        rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
         if(goexperiment::AllocHeaders)
         {
             *(uintptr_t*)(unsafe::Pointer(& s->largeType)) = uintptr_t(unsafe::Pointer(s->limit));

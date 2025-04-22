@@ -31,8 +31,12 @@ namespace golang::rand
 
     std::ostream& operator<<(std::ostream& os, const struct rngSource& value);
     int32_t seedrand(int32_t x);
-    void Seed(struct rngSource* rng, int64_t seed);
-    int64_t Int63(struct rngSource* rng);
-    uint64_t Uint64(struct rngSource* rng);
+
+    namespace rec
+    {
+        void Seed(struct rngSource* rng, int64_t seed);
+        int64_t Int63(struct rngSource* rng);
+        uint64_t Uint64(struct rngSource* rng);
+    }
 }
 

@@ -16,13 +16,13 @@ namespace golang::reflect
     using SelectDir = int;
     struct SelectCase;
     struct gocpp_id_11;
-    const flag flagKindMask = (1 << flagKindWidth) - 1;
-    const flag flagStickyRO = 1 << 5;
-    const flag flagEmbedRO = 1 << 6;
-    const flag flagIndir = 1 << 7;
-    const flag flagAddr = 1 << 8;
-    const flag flagMethod = 1 << 9;
-    const SelectDir _ = 0;
+    const reflect::flag flagKindMask = (1 << flagKindWidth) - 1;
+    const reflect::flag flagStickyRO = 1 << 5;
+    const reflect::flag flagEmbedRO = 1 << 6;
+    const reflect::flag flagIndir = 1 << 7;
+    const reflect::flag flagAddr = 1 << 8;
+    const reflect::flag flagMethod = 1 << 9;
+    const reflect::SelectDir _ = 0;
     const SelectDir SelectSend = 1;
     const SelectDir SelectRecv = 2;
     const SelectDir SelectDefault = 3;
@@ -39,5 +39,5 @@ namespace golang::reflect
     struct nonEmptyInterface;
     struct hiter;
     struct runtimeSelect;
-    const flag flagRO = flagStickyRO | flagEmbedRO;
+    const reflect::flag flagRO = flagStickyRO | flagEmbedRO;
 }

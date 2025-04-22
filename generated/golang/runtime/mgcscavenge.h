@@ -68,19 +68,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
-    void init(struct scavengerState* s);
-    void park(struct scavengerState* s);
-    void ready(struct scavengerState* s);
-    void wake(struct scavengerState* s);
-    void sleep(struct scavengerState* s, double worked);
-    void controllerFailed(struct scavengerState* s);
-    std::tuple<uintptr_t, double> run(struct scavengerState* s);
     void bgscavenge(gocpp::channel<int> c);
-    uintptr_t scavenge(struct pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force);
     void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
-    uintptr_t scavengeOne(struct pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max);
     uint64_t fillAligned(uint64_t x, unsigned int m);
-    std::tuple<unsigned int, unsigned int> findScavengeCandidate(struct pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
     struct scavengeIndex
     {
         gocpp::slice<atomicScavChunkData> chunks;
@@ -105,13 +95,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
-    uintptr_t init(struct scavengeIndex* s, bool test, sysMemStat* sysStat);
-    uintptr_t grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
-    std::tuple<chunkIdx, unsigned int> find(struct scavengeIndex* s, bool force);
-    void alloc(struct scavengeIndex* s, chunkIdx ci, unsigned int npages);
-    void free(struct scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages);
-    void nextGen(struct scavengeIndex* s);
-    void setEmpty(struct scavengeIndex* s, chunkIdx ci);
     struct atomicScavChunkData
     {
         atomic::Uint64 value;
@@ -128,8 +111,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
-    struct scavChunkData load(struct atomicScavChunkData* sc);
-    void store(struct atomicScavChunkData* sc, struct scavChunkData ssc);
     struct scavChunkData
     {
         uint16_t inUse;
@@ -149,13 +130,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     struct scavChunkData unpackScavChunkData(uint64_t sc);
-    uint64_t pack(struct scavChunkData sc);
-    bool isEmpty(scavChunkFlags* sc);
-    void setEmpty(scavChunkFlags* sc);
-    void setNonEmpty(scavChunkFlags* sc);
-    bool shouldScavenge(struct scavChunkData sc, uint32_t currGen, bool force);
-    void alloc(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
-    void free(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
     struct piController
     {
         double kp;
@@ -179,7 +153,37 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
-    std::tuple<double, bool> next(struct piController* c, double input, double setpoint, double period);
-    void reset(struct piController* c);
+
+    namespace rec
+    {
+        void init(struct scavengerState* s);
+        void park(struct scavengerState* s);
+        void ready(struct scavengerState* s);
+        void wake(struct scavengerState* s);
+        void sleep(struct scavengerState* s, double worked);
+        void controllerFailed(struct scavengerState* s);
+        std::tuple<uintptr_t, double> run(struct scavengerState* s);
+        uintptr_t scavenge(struct pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force);
+        uintptr_t scavengeOne(struct pageAlloc* p, runtime::chunkIdx ci, unsigned int searchIdx, uintptr_t max);
+        std::tuple<unsigned int, unsigned int> findScavengeCandidate(struct pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
+        uintptr_t init(struct scavengeIndex* s, bool test, runtime::sysMemStat* sysStat);
+        uintptr_t grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, runtime::sysMemStat* sysStat);
+        std::tuple<runtime::chunkIdx, unsigned int> find(struct scavengeIndex* s, bool force);
+        void alloc(struct scavengeIndex* s, runtime::chunkIdx ci, unsigned int npages);
+        void free(struct scavengeIndex* s, runtime::chunkIdx ci, unsigned int page, unsigned int npages);
+        void nextGen(struct scavengeIndex* s);
+        void setEmpty(struct scavengeIndex* s, runtime::chunkIdx ci);
+        struct scavChunkData load(struct atomicScavChunkData* sc);
+        void store(struct atomicScavChunkData* sc, struct scavChunkData ssc);
+        uint64_t pack(struct scavChunkData sc);
+        bool isEmpty(runtime::scavChunkFlags* sc);
+        void setEmpty(runtime::scavChunkFlags* sc);
+        void setNonEmpty(runtime::scavChunkFlags* sc);
+        bool shouldScavenge(struct scavChunkData sc, uint32_t currGen, bool force);
+        void alloc(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
+        void free(struct scavChunkData* sc, unsigned int npages, uint32_t newGen);
+        std::tuple<double, bool> next(struct piController* c, double input, double setpoint, double period);
+        void reset(struct piController* c);
+    }
 }
 

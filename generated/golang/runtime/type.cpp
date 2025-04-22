@@ -30,6 +30,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     rtype::operator T()
@@ -56,9 +65,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    std::string string(struct rtype t)
+    std::string rec::string(struct rtype t)
     {
-        auto s = Name(gocpp::recv(nameOff(gocpp::recv(t), t.Str)));
+        auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Str)));
         if(t.TFlag & abi::TFlagExtraStar != 0)
         {
             return s.make_slice(1);
@@ -66,18 +75,18 @@ namespace golang::runtime
         return s;
     }
 
-    struct uncommontype* uncommon(struct rtype t)
+    struct uncommontype* rec::uncommon(struct rtype t)
     {
-        return Uncommon(gocpp::recv(t));
+        return rec::Uncommon(gocpp::recv(t));
     }
 
-    std::string name(struct rtype t)
+    std::string rec::name(struct rtype t)
     {
         if(t.TFlag & abi::TFlagNamed == 0)
         {
             return "";
         }
-        auto s = string(gocpp::recv(t));
+        auto s = rec::string(gocpp::recv(t));
         auto i = len(s) - 1;
         auto sqBrackets = 0;
         for(; i >= 0 && (s[i] != '.' || sqBrackets != 0); )
@@ -103,11 +112,11 @@ namespace golang::runtime
         return s.make_slice(i + 1);
     }
 
-    std::string pkgpath(struct rtype t)
+    std::string rec::pkgpath(struct rtype t)
     {
-        if(auto u = uncommon(gocpp::recv(t)); u != nullptr)
+        if(auto u = rec::uncommon(gocpp::recv(t)); u != nullptr)
         {
-            return Name(gocpp::recv(nameOff(gocpp::recv(t), u->PkgPath)));
+            return rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), u->PkgPath)));
         }
         //Go switch emulation
         {
@@ -119,11 +128,11 @@ namespace golang::runtime
             {
                 case 0:
                     auto st = (structtype*)(unsafe::Pointer(t.Type));
-                    return Name(gocpp::recv(st->PkgPath));
+                    return rec::Name(gocpp::recv(st->PkgPath));
                     break;
                 case 1:
                     auto it = (interfacetype*)(unsafe::Pointer(t.Type));
-                    return Name(gocpp::recv(it->PkgPath));
+                    return rec::Name(gocpp::recv(it->PkgPath));
                     break;
             }
         }
@@ -197,7 +206,7 @@ namespace golang::runtime
         unlock(& reflectOffs.lock);
     }
 
-    struct name resolveNameOff(unsafe::Pointer ptrInModule, nameOff off)
+    struct name resolveNameOff(unsafe::Pointer ptrInModule, abi::nameOff off)
     {
         if(off == 0)
         {
@@ -232,12 +241,12 @@ namespace golang::runtime
         return gocpp::Init<name>([](name& x) { x.Bytes = (unsigned char*)(res); });
     }
 
-    struct name nameOff(struct rtype t, nameOff off)
+    struct name rec::nameOff(struct rtype t, abi::nameOff off)
     {
         return resolveNameOff(unsafe::Pointer(t.Type), off);
     }
 
-    struct _type* resolveTypeOff(unsafe::Pointer ptrInModule, typeOff off)
+    struct _type* resolveTypeOff(unsafe::Pointer ptrInModule, abi::typeOff off)
     {
         if(off == 0 || off == - 1)
         {
@@ -282,12 +291,12 @@ namespace golang::runtime
         return (_type*)(unsafe::Pointer(res));
     }
 
-    struct _type* typeOff(struct rtype t, typeOff off)
+    struct _type* rec::typeOff(struct rtype t, abi::typeOff off)
     {
         return resolveTypeOff(unsafe::Pointer(t.Type), off);
     }
 
-    unsafe::Pointer textOff(struct rtype t, textOff off)
+    unsafe::Pointer rec::textOff(struct rtype t, abi::textOff off)
     {
         if(off == - 1)
         {
@@ -319,27 +328,27 @@ namespace golang::runtime
             }
             return res;
         }
-        auto res = textAddr(gocpp::recv(md), uint32_t(off));
+        auto res = rec::textAddr(gocpp::recv(md), uint32_t(off));
         return unsafe::Pointer(res);
     }
 
     std::string pkgPath(struct name n)
     {
-        if(n.Bytes == nullptr || *Data(gocpp::recv(n), 0) & (1 << 2) == 0)
+        if(n.Bytes == nullptr || *rec::Data(gocpp::recv(n), 0) & (1 << 2) == 0)
         {
             return "";
         }
-        auto [i, l] = ReadVarint(gocpp::recv(n), 1);
+        auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto off = 1 + i + l;
-        if(*Data(gocpp::recv(n), 0) & (1 << 1) != 0)
+        if(*rec::Data(gocpp::recv(n), 0) & (1 << 1) != 0)
         {
-            auto [i2, l2] = ReadVarint(gocpp::recv(n), off);
+            auto [i2, l2] = rec::ReadVarint(gocpp::recv(n), off);
             off += i2 + l2;
         }
-        nameOff nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0, ), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(Data(gocpp::recv(n), off))).make_slice(0, ));
+        abi::nameOff nameOff = {};
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0, ), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::Data(gocpp::recv(n), off))).make_slice(0, ));
         auto pkgPathName = resolveNameOff(unsafe::Pointer(n.Bytes), nameOff);
-        return Name(gocpp::recv(pkgPathName));
+        return rec::Name(gocpp::recv(pkgPathName));
     }
 
     struct gocpp_id_1
@@ -415,7 +424,7 @@ namespace golang::runtime
             }
             if(md->typemap == nullptr)
             {
-                auto tm = gocpp::make(gocpp::Tag<gocpp::map<typeOff, _type*>>(), len(md->typelinks));
+                auto tm = gocpp::make(gocpp::Tag<gocpp::map<abi::typeOff, _type*>>(), len(md->typelinks));
                 pinnedTypemaps = append(pinnedTypemaps, tm);
                 md->typemap = tm;
                 for(auto [gocpp_ignored, tl] : md->typelinks)
@@ -556,20 +565,20 @@ namespace golang::runtime
             return false;
         }
         auto [rt, rv] = std::tuple{toRType(t), toRType(v)};
-        if(string(gocpp::recv(rt)) != string(gocpp::recv(rv)))
+        if(rec::string(gocpp::recv(rt)) != rec::string(gocpp::recv(rv)))
         {
             return false;
         }
-        auto ut = Uncommon(gocpp::recv(t));
-        auto uv = Uncommon(gocpp::recv(v));
+        auto ut = rec::Uncommon(gocpp::recv(t));
+        auto uv = rec::Uncommon(gocpp::recv(v));
         if(ut != nullptr || uv != nullptr)
         {
             if(ut == nullptr || uv == nullptr)
             {
                 return false;
             }
-            auto pkgpatht = Name(gocpp::recv(nameOff(gocpp::recv(rt), ut->PkgPath)));
-            auto pkgpathv = Name(gocpp::recv(nameOff(gocpp::recv(rv), uv->PkgPath)));
+            auto pkgpatht = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rt), ut->PkgPath)));
+            auto pkgpathv = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rv), uv->PkgPath)));
             if(pkgpatht != pkgpathv)
             {
                 return false;
@@ -616,7 +625,7 @@ namespace golang::runtime
                     {
                         return false;
                     }
-                    auto [tin, vin] = std::tuple{InSlice(gocpp::recv(ft)), InSlice(gocpp::recv(fv))};
+                    auto [tin, vin] = std::tuple{rec::InSlice(gocpp::recv(ft)), rec::InSlice(gocpp::recv(fv))};
                     for(auto i = 0; i < len(tin); i++)
                     {
                         if(! typesEqual(tin[i], vin[i], seen))
@@ -624,7 +633,7 @@ namespace golang::runtime
                             return false;
                         }
                     }
-                    auto [tout, vout] = std::tuple{OutSlice(gocpp::recv(ft)), OutSlice(gocpp::recv(fv))};
+                    auto [tout, vout] = std::tuple{rec::OutSlice(gocpp::recv(ft)), rec::OutSlice(gocpp::recv(fv))};
                     for(auto i = 0; i < len(tout); i++)
                     {
                         if(! typesEqual(tout[i], vout[i], seen))
@@ -637,7 +646,7 @@ namespace golang::runtime
                 case 5:
                     auto it = (interfacetype*)(unsafe::Pointer(t));
                     auto iv = (interfacetype*)(unsafe::Pointer(v));
-                    if(Name(gocpp::recv(it->PkgPath)) != Name(gocpp::recv(iv->PkgPath)))
+                    if(rec::Name(gocpp::recv(it->PkgPath)) != rec::Name(gocpp::recv(iv->PkgPath)))
                     {
                         return false;
                     }
@@ -651,7 +660,7 @@ namespace golang::runtime
                         auto vm = & iv->Methods[i];
                         auto tname = resolveNameOff(unsafe::Pointer(tm), tm->Name);
                         auto vname = resolveNameOff(unsafe::Pointer(vm), vm->Name);
-                        if(Name(gocpp::recv(tname)) != Name(gocpp::recv(vname)))
+                        if(rec::Name(gocpp::recv(tname)) != rec::Name(gocpp::recv(vname)))
                         {
                             return false;
                         }
@@ -690,7 +699,7 @@ namespace golang::runtime
                     {
                         return false;
                     }
-                    if(Name(gocpp::recv(st->PkgPath)) != Name(gocpp::recv(sv->PkgPath)))
+                    if(rec::Name(gocpp::recv(st->PkgPath)) != rec::Name(gocpp::recv(sv->PkgPath)))
                     {
                         return false;
                     }
@@ -698,7 +707,7 @@ namespace golang::runtime
                     {
                         auto tf = & st->Fields[i];
                         auto vf = & sv->Fields[i];
-                        if(Name(gocpp::recv(tf->Name)) != Name(gocpp::recv(vf->Name)))
+                        if(rec::Name(gocpp::recv(tf->Name)) != rec::Name(gocpp::recv(vf->Name)))
                         {
                             return false;
                         }
@@ -706,7 +715,7 @@ namespace golang::runtime
                         {
                             return false;
                         }
-                        if(Tag(gocpp::recv(tf->Name)) != Tag(gocpp::recv(vf->Name)))
+                        if(rec::Tag(gocpp::recv(tf->Name)) != rec::Tag(gocpp::recv(vf->Name)))
                         {
                             return false;
                         }
@@ -714,7 +723,7 @@ namespace golang::runtime
                         {
                             return false;
                         }
-                        if(IsEmbedded(gocpp::recv(tf->Name)) != IsEmbedded(gocpp::recv(vf->Name)))
+                        if(rec::IsEmbedded(gocpp::recv(tf->Name)) != rec::IsEmbedded(gocpp::recv(vf->Name)))
                         {
                             return false;
                         }

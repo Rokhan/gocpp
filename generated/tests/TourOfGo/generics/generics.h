@@ -12,8 +12,8 @@
 
 namespace golang::main
 {
-
-    template<typename T>
+    
+template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep);
     template<typename T> 
     struct Wrapper
@@ -33,9 +33,13 @@ namespace golang::main
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value);
-
-    template<typename T>
-    T Get(Wrapper<T>* p);
     void main();
+
+    namespace rec
+    {
+        
+template<typename T>
+        T Get(Wrapper<T>* p);
+    }
 }
 

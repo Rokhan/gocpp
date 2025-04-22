@@ -18,13 +18,17 @@ namespace golang::syscall
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s);
     unsigned char* StringBytePtr(std::string s);
     std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s);
-    std::tuple<int64_t, int64_t> Unix(struct Timespec* ts);
-    std::tuple<int64_t, int64_t> Unix(struct Timeval* tv);
-    int64_t Nano(struct Timespec* ts);
-    int64_t Nano(struct Timeval* tv);
     int Getpagesize();
     void Exit(int code);
     void runtimeSetenv(std::string k, std::string v);
     void runtimeUnsetenv(std::string k);
+
+    namespace rec
+    {
+        std::tuple<int64_t, int64_t> Unix(struct Timespec* ts);
+        std::tuple<int64_t, int64_t> Unix(struct Timeval* tv);
+        int64_t Nano(struct Timespec* ts);
+        int64_t Nano(struct Timeval* tv);
+    }
 }
 

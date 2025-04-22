@@ -14,5 +14,9 @@ namespace golang::main
 {
     void sum(gocpp::slice<int> s, gocpp::channel<int> c);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

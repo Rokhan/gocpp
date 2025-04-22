@@ -18,6 +18,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     timeHistogram::operator T()
@@ -53,11 +61,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void record(struct timeHistogram* h, int64_t duration)
+    void rec::record(struct timeHistogram* h, int64_t duration)
     {
         if(duration < 0)
         {
-            Add(gocpp::recv(h->underflow), 1);
+            rec::Add(gocpp::recv(h->underflow), 1);
             return;
         }
         unsigned int bucketBit = {};
@@ -74,22 +82,22 @@ namespace golang::runtime
         }
         if(bucket >= timeHistNumBuckets)
         {
-            Add(gocpp::recv(h->overflow), 1);
+            rec::Add(gocpp::recv(h->overflow), 1);
             return;
         }
         auto subBucket = (unsigned int)(duration >> (bucketBit - 1 - timeHistSubBucketBits)) % timeHistNumSubBuckets;
-        Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
+        rec::Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
     }
 
-    void write(struct timeHistogram* h, struct metricValue* out)
+    void rec::write(struct timeHistogram* h, struct metricValue* out)
     {
-        auto hist = float64HistOrInit(gocpp::recv(out), timeHistBuckets);
-        hist->counts[0] = Load(gocpp::recv(h->underflow));
+        auto hist = rec::float64HistOrInit(gocpp::recv(out), timeHistBuckets);
+        hist->counts[0] = rec::Load(gocpp::recv(h->underflow));
         for(auto [i, gocpp_ignored] : h->counts)
         {
-            hist->counts[i + 1] = Load(gocpp::recv(h->counts[i]));
+            hist->counts[i + 1] = rec::Load(gocpp::recv(h->counts[i]));
         }
-        hist->counts[len(hist->counts) - 1] = Load(gocpp::recv(h->overflow));
+        hist->counts[len(hist->counts) - 1] = rec::Load(gocpp::recv(h->overflow));
     }
 
     double float64Inf()

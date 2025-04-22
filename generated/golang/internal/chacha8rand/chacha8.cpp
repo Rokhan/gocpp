@@ -13,6 +13,11 @@
 
 namespace golang::chacha8rand
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter)
     /* convertBlockStmt, nil block */;
 
@@ -57,7 +62,7 @@ namespace golang::chacha8rand
         return value.PrintTo(os);
     }
 
-    std::tuple<uint64_t, bool> Next(struct State* s)
+    std::tuple<uint64_t, bool> rec::Next(struct State* s)
     {
         auto i = s->i;
         if(i >= s->n)
@@ -68,12 +73,12 @@ namespace golang::chacha8rand
         return {s->buf[i & 31], true};
     }
 
-    void Init(struct State* s, gocpp::array<unsigned char, 32> seed)
+    void rec::Init(struct State* s, gocpp::array<unsigned char, 32> seed)
     {
-        Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
+        rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
     }
 
-    void Init64(struct State* s, gocpp::array<uint64_t, 4> seed)
+    void rec::Init64(struct State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
         block(& s->seed, & s->buf, 0);
@@ -82,7 +87,7 @@ namespace golang::chacha8rand
         s->n = chunk;
     }
 
-    void Refill(struct State* s)
+    void rec::Refill(struct State* s)
     {
         s->c += ctrInc;
         if(s->c == ctrMax)
@@ -102,23 +107,23 @@ namespace golang::chacha8rand
         }
     }
 
-    void Reseed(struct State* s)
+    void rec::Reseed(struct State* s)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)
         {
             for(; ; )
             {
-                auto [x, ok] = Next(gocpp::recv(s));
+                auto [x, ok] = rec::Next(gocpp::recv(s));
                 if(ok)
                 {
                     seed[i] = x;
                     break;
                 }
-                Refill(gocpp::recv(s));
+                rec::Refill(gocpp::recv(s));
             }
         }
-        Init64(gocpp::recv(s), seed);
+        rec::Init64(gocpp::recv(s), seed);
     }
 
     gocpp::slice<unsigned char> Marshal(struct State* s)
@@ -160,7 +165,7 @@ namespace golang::chacha8rand
         return value.PrintTo(os);
     }
 
-    std::string Error(errUnmarshalChaCha8*)
+    std::string rec::Error(errUnmarshalChaCha8*)
     {
         return "invalid ChaCha8 encoding";
     }

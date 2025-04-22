@@ -14,5 +14,9 @@ namespace golang::main
 {
     void main();
     void describe(std::any i);
+
+    namespace rec
+    {
+    }
 }
 

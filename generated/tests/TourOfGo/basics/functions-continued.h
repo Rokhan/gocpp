@@ -14,5 +14,9 @@ namespace golang::main
 {
     int add(int x, int y);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

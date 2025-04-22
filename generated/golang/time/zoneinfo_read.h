@@ -14,7 +14,6 @@
 namespace golang::time
 {
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f);
-    std::string Error(fileSizeError f);
     struct dataIO
     {
         gocpp::slice<unsigned char> p;
@@ -32,11 +31,6 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dataIO& value);
-    gocpp::slice<unsigned char> read(struct dataIO* d, int n);
-    std::tuple<uint32_t, bool> big4(struct dataIO* d);
-    std::tuple<uint64_t, bool> big8(struct dataIO* d);
-    std::tuple<unsigned char, bool> byte(struct dataIO* d);
-    gocpp::slice<unsigned char> rest(struct dataIO* d);
     std::string byteString(gocpp::slice<unsigned char> p);
     extern gocpp::error errBadData;
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data);
@@ -48,5 +42,15 @@ namespace golang::time
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source);
     std::tuple<struct Location*, struct gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name);
+
+    namespace rec
+    {
+        std::string Error(time::fileSizeError f);
+        gocpp::slice<unsigned char> read(struct dataIO* d, int n);
+        std::tuple<uint32_t, bool> big4(struct dataIO* d);
+        std::tuple<uint64_t, bool> big8(struct dataIO* d);
+        std::tuple<unsigned char, bool> byte(struct dataIO* d);
+        gocpp::slice<unsigned char> rest(struct dataIO* d);
+    }
 }
 

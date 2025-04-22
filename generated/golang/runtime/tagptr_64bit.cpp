@@ -20,7 +20,16 @@
 
 namespace golang::runtime
 {
-    taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace goarch::rec;
+        using namespace goos::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
+    runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
     {
         if(GOOS == "aix")
         {
@@ -37,7 +46,7 @@ namespace golang::runtime
         return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
     }
 
-    unsafe::Pointer pointer(taggedPointer tp)
+    unsafe::Pointer rec::pointer(runtime::taggedPointer tp)
     {
         if(GOARCH == "amd64")
         {
@@ -54,7 +63,7 @@ namespace golang::runtime
         return unsafe::Pointer(uintptr_t((tp >> tagBits) << 3));
     }
 
-    uintptr_t tag(taggedPointer tp)
+    uintptr_t rec::tag(runtime::taggedPointer tp)
     {
         return uintptr_t(tp & ((1 << taggedPointerBits) - 1));
     }

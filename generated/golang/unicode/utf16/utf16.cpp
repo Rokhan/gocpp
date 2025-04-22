@@ -13,6 +13,11 @@
 
 namespace golang::utf16
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     bool IsSurrogate(gocpp::rune r)
     {
         return surr1 <= r && r < surr3;

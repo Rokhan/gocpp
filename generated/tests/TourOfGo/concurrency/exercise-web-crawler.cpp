@@ -16,6 +16,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     
     template<typename T>
     Fetcher::Fetcher(T& ref)
@@ -43,17 +49,20 @@ namespace golang::main
     template<typename T, typename StoreT>
     std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
     {
-        return Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
+        return rec::Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+    namespace rec
     {
-        return self.ptr->value->vFetch(url);
-    }
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+        {
+            return self.ptr->value->vFetch(url);
+        }
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
-    {
-        return self.obj.value->vFetch(url);
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
+        {
+            return self.obj.value->vFetch(url);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value)
@@ -67,7 +76,7 @@ namespace golang::main
         {
             return;
         }
-        auto [body, urls, err] = Fetch(gocpp::recv(fetcher), url);
+        auto [body, urls, err] = rec::Fetch(gocpp::recv(fetcher), url);
         if(err != nullptr)
         {
             mocklib::Println(err);
@@ -118,7 +127,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(fakeFetcher f, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> rec::Fetch(fakeFetcher f, std::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {

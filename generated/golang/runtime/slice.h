@@ -62,5 +62,9 @@ namespace golang::runtime
     bool isPowerOfTwo(uintptr_t x);
     int slicecopy(unsafe::Pointer toPtr, int toLen, unsafe::Pointer fromPtr, int fromLen, uintptr_t width);
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
+
+    namespace rec
+    {
+    }
 }
 

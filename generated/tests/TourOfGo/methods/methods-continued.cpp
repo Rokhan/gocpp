@@ -16,7 +16,14 @@
 
 namespace golang::main
 {
-    double Abs(MyFloat f)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
+    double rec::Abs(main::MyFloat f)
     {
         if(f < 0)
         {
@@ -28,7 +35,7 @@ namespace golang::main
     void main()
     {
         auto f = MyFloat(- mocklib::Sqrt2);
-        mocklib::Println(Abs(gocpp::recv(f)));
+        mocklib::Println(rec::Abs(gocpp::recv(f)));
     }
 
 }

@@ -54,6 +54,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     traceEventWriter::operator T()
@@ -83,40 +93,40 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
+    struct traceEventWriter rec::eventWriter(struct traceLocker tl, runtime::traceGoStatus goStatus, runtime::traceProcStatus procStatus)
     {
-        auto w = writer(gocpp::recv(tl));
-        if(auto pp = ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! statusWasTraced(gocpp::recv(pp->trace), tl.gen) && acquireStatus(gocpp::recv(pp->trace), tl.gen))
+        auto w = rec::writer(gocpp::recv(tl));
+        if(auto pp = rec::ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(pp->trace), tl.gen))
         {
-            w = writeProcStatus(gocpp::recv(w), uint64_t(pp->id), procStatus, pp->trace.inSweep);
+            w = rec::writeProcStatus(gocpp::recv(w), uint64_t(pp->id), procStatus, pp->trace.inSweep);
         }
-        if(auto gp = tl.mp->curg; gp != nullptr && ! statusWasTraced(gocpp::recv(gp->trace), tl.gen) && acquireStatus(gocpp::recv(gp->trace), tl.gen))
+        if(auto gp = tl.mp->curg; gp != nullptr && ! rec::statusWasTraced(gocpp::recv(gp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(gp->trace), tl.gen))
         {
-            w = writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64_t(tl.mp->procid), goStatus, gp->inMarkAssist);
+            w = rec::writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64_t(tl.mp->procid), goStatus, gp->inMarkAssist);
         }
         return traceEventWriter {w};
     }
 
-    void commit(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
+    void rec::commit(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
     {
-        e = write(gocpp::recv(e), ev, args);
-        end(gocpp::recv(e));
+        e = rec::write(gocpp::recv(e), ev, args);
+        rec::end(gocpp::recv(e));
     }
 
-    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
+    struct traceEventWriter rec::write(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
     {
-        e.w = event(gocpp::recv(e.w), ev, args);
+        e.w = rec::event(gocpp::recv(e.w), ev, args);
         return e;
     }
 
-    void end(struct traceEventWriter e)
+    void rec::end(struct traceEventWriter e)
     {
-        end(gocpp::recv(e.w));
+        rec::end(gocpp::recv(e.w));
     }
 
-    struct traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
+    struct traceWriter rec::event(struct traceWriter w, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
     {
-        std::tie(w, gocpp_id_0) = ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
+        std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->lastTime)
         {
@@ -124,33 +134,33 @@ namespace golang::runtime
         }
         auto tsDiff = uint64_t(ts - w.traceBuf->lastTime);
         w.traceBuf->lastTime = ts;
-        unsigned char(gocpp::recv(w), unsigned char(ev));
-        varint(gocpp::recv(w), tsDiff);
+        rec::unsigned char(gocpp::recv(w), unsigned char(ev));
+        rec::varint(gocpp::recv(w), tsDiff);
         for(auto [gocpp_ignored, arg] : args)
         {
-            varint(gocpp::recv(w), uint64_t(arg));
+            rec::varint(gocpp::recv(w), uint64_t(arg));
         }
         return w;
     }
 
-    traceArg stack(struct traceLocker tl, int skip)
+    runtime::traceArg rec::stack(struct traceLocker tl, int skip)
     {
         return traceArg(traceStack(skip, tl.mp, tl.gen));
     }
 
-    traceArg startPC(struct traceLocker tl, uintptr_t pc)
+    runtime::traceArg rec::startPC(struct traceLocker tl, uintptr_t pc)
     {
-        return traceArg(put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
+        return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
     }
 
-    traceArg string(struct traceLocker tl, std::string s)
+    runtime::traceArg rec::string(struct traceLocker tl, std::string s)
     {
-        return traceArg(put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
+        return traceArg(rec::put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
 
-    traceArg uniqueString(struct traceLocker tl, std::string s)
+    runtime::traceArg rec::uniqueString(struct traceLocker tl, std::string s)
     {
-        return traceArg(emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
+        return traceArg(rec::emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
 
 }

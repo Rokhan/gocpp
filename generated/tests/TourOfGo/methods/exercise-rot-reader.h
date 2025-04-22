@@ -29,7 +29,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rot13Reader& value);
-    std::tuple<int, struct gocpp::error> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf);
     void main();
+
+    namespace rec
+    {
+        std::tuple<int, struct gocpp::error> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf);
+    }
 }
 

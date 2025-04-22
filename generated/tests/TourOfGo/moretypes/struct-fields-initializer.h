@@ -53,5 +53,9 @@ namespace golang::main
     extern Vertex v4;
     extern Segment s1;
     void main();
+
+    namespace rec
+    {
+    }
 }
 

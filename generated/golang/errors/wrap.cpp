@@ -17,6 +17,13 @@
 
 namespace golang::errors
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace reflectlite::rec;
+    }
+
     
         template<typename T>
         gocpp_id_0::gocpp_id_0(T& ref)
@@ -44,17 +51,20 @@ namespace golang::errors
         template<typename T, typename StoreT>
         struct gocpp::error gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vUnwrap()
         {
-            return Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+            return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        namespace rec
         {
-            return self.ptr->value->vUnwrap();
-        }
+            struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+            {
+                return self.ptr->value->vUnwrap();
+            }
 
-        struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_0>& self)
-        {
-            return self.obj.value->vUnwrap();
+            struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_0>& self)
+            {
+                return self.obj.value->vUnwrap();
+            }
         }
 
         std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
@@ -70,7 +80,7 @@ namespace golang::errors
         {
             return nullptr;
         }
-        return Unwrap(gocpp::recv(u));
+        return rec::Unwrap(gocpp::recv(u));
     }
 
     bool Is(struct gocpp::error err, struct gocpp::error target)
@@ -79,7 +89,7 @@ namespace golang::errors
         {
             return err == target;
         }
-        auto isComparable = Comparable(gocpp::recv(reflectlite::TypeOf(target)));
+        auto isComparable = rec::Comparable(gocpp::recv(reflectlite::TypeOf(target)));
         return is(err, target, isComparable);
     }
 
@@ -110,17 +120,20 @@ namespace golang::errors
             template<typename T, typename StoreT>
             bool gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vIs(gocpp::error)
             {
-                return Is(gocpp::PtrRecv<T, false>(value.get()));
+                return rec::Is(gocpp::PtrRecv<T, false>(value.get()));
             }
 
-            bool Is(const gocpp::PtrRecv<gocpp_id_1, false>& self, gocpp::error)
+            namespace rec
             {
-                return self.ptr->value->vIs();
-            }
+                bool Is(const gocpp::PtrRecv<gocpp_id_1, false>& self, gocpp::error)
+                {
+                    return self.ptr->value->vIs();
+                }
 
-            bool Is(const gocpp::ObjRecv<gocpp_id_1>& self, gocpp::error)
-            {
-                return self.obj.value->vIs();
+                bool Is(const gocpp::ObjRecv<gocpp_id_1>& self, gocpp::error)
+                {
+                    return self.obj.value->vIs();
+                }
             }
 
             std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
@@ -156,17 +169,20 @@ namespace golang::errors
                 template<typename T, typename StoreT>
                 struct gocpp::error gocpp_id_3::gocpp_id_3Impl<T, StoreT>::vUnwrap()
                 {
-                    return Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_3, false>& self)
+                namespace rec
                 {
-                    return self.ptr->value->vUnwrap();
-                }
+                    struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_3, false>& self)
+                    {
+                        return self.ptr->value->vUnwrap();
+                    }
 
-                struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_3>& self)
-                {
-                    return self.obj.value->vUnwrap();
+                    struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_3>& self)
+                    {
+                        return self.obj.value->vUnwrap();
+                    }
                 }
 
                 std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
@@ -202,17 +218,20 @@ namespace golang::errors
                 template<typename T, typename StoreT>
                 gocpp::slice<gocpp::error> gocpp_id_4::gocpp_id_4Impl<T, StoreT>::vUnwrap()
                 {
-                    return Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_4, false>& self)
+                namespace rec
                 {
-                    return self.ptr->value->vUnwrap();
-                }
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_4, false>& self)
+                    {
+                        return self.ptr->value->vUnwrap();
+                    }
 
-                gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_4>& self)
-                {
-                    return self.obj.value->vUnwrap();
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_4>& self)
+                    {
+                        return self.obj.value->vUnwrap();
+                    }
                 }
 
                 std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
@@ -229,7 +248,7 @@ namespace golang::errors
             {
                 return true;
             }
-            if(auto [x, ok] = gocpp::getValue<gocpp_id_1>(err); ok && Is(gocpp::recv(x), target))
+            if(auto [x, ok] = gocpp::getValue<gocpp_id_1>(err); ok && rec::Is(gocpp::recv(x), target))
             {
                 return true;
             }
@@ -244,7 +263,7 @@ namespace golang::errors
                     case 0:
                     {
                         gocpp_id_3 x = gocpp::any_cast<gocpp_id_3>(err);
-                        err = Unwrap(gocpp::recv(x));
+                        err = rec::Unwrap(gocpp::recv(x));
                         if(err == nullptr)
                         {
                             return false;
@@ -254,7 +273,7 @@ namespace golang::errors
                     case 1:
                     {
                         gocpp_id_4 x = gocpp::any_cast<gocpp_id_4>(err);
-                        for(auto [gocpp_ignored, err] : Unwrap(gocpp::recv(x)))
+                        for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
                         {
                             if(is(err, target, targetComparable))
                             {
@@ -286,13 +305,13 @@ namespace golang::errors
             gocpp::panic("errors: target cannot be nil");
         }
         auto val = reflectlite::ValueOf(target);
-        auto typ = Type(gocpp::recv(val));
-        if(Kind(gocpp::recv(typ)) != reflectlite::Ptr || IsNil(gocpp::recv(val)))
+        auto typ = rec::Type(gocpp::recv(val));
+        if(rec::Kind(gocpp::recv(typ)) != reflectlite::Ptr || rec::IsNil(gocpp::recv(val)))
         {
             gocpp::panic("errors: target must be a non-nil pointer");
         }
-        auto targetType = Elem(gocpp::recv(typ));
-        if(Kind(gocpp::recv(targetType)) != reflectlite::Interface && ! Implements(gocpp::recv(targetType), errorType))
+        auto targetType = rec::Elem(gocpp::recv(typ));
+        if(rec::Kind(gocpp::recv(targetType)) != reflectlite::Interface && ! rec::Implements(gocpp::recv(targetType), errorType))
         {
             gocpp::panic("errors: *target must be interface or implement error");
         }
@@ -326,17 +345,20 @@ namespace golang::errors
             template<typename T, typename StoreT>
             bool gocpp_id_5::gocpp_id_5Impl<T, StoreT>::vAs(go_any)
             {
-                return As(gocpp::PtrRecv<T, false>(value.get()));
+                return rec::As(gocpp::PtrRecv<T, false>(value.get()));
             }
 
-            bool As(const gocpp::PtrRecv<gocpp_id_5, false>& self, go_any)
+            namespace rec
             {
-                return self.ptr->value->vAs();
-            }
+                bool As(const gocpp::PtrRecv<gocpp_id_5, false>& self, go_any)
+                {
+                    return self.ptr->value->vAs();
+                }
 
-            bool As(const gocpp::ObjRecv<gocpp_id_5>& self, go_any)
-            {
-                return self.obj.value->vAs();
+                bool As(const gocpp::ObjRecv<gocpp_id_5>& self, go_any)
+                {
+                    return self.obj.value->vAs();
+                }
             }
 
             std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
@@ -372,17 +394,20 @@ namespace golang::errors
                 template<typename T, typename StoreT>
                 struct gocpp::error gocpp_id_7::gocpp_id_7Impl<T, StoreT>::vUnwrap()
                 {
-                    return Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_7, false>& self)
+                namespace rec
                 {
-                    return self.ptr->value->vUnwrap();
-                }
+                    struct gocpp::error Unwrap(const gocpp::PtrRecv<gocpp_id_7, false>& self)
+                    {
+                        return self.ptr->value->vUnwrap();
+                    }
 
-                struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_7>& self)
-                {
-                    return self.obj.value->vUnwrap();
+                    struct gocpp::error Unwrap(const gocpp::ObjRecv<gocpp_id_7>& self)
+                    {
+                        return self.obj.value->vUnwrap();
+                    }
                 }
 
                 std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
@@ -418,17 +443,20 @@ namespace golang::errors
                 template<typename T, typename StoreT>
                 gocpp::slice<gocpp::error> gocpp_id_8::gocpp_id_8Impl<T, StoreT>::vUnwrap()
                 {
-                    return Unwrap(gocpp::PtrRecv<T, false>(value.get()));
+                    return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_8, false>& self)
+                namespace rec
                 {
-                    return self.ptr->value->vUnwrap();
-                }
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<gocpp_id_8, false>& self)
+                    {
+                        return self.ptr->value->vUnwrap();
+                    }
 
-                gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_8>& self)
-                {
-                    return self.obj.value->vUnwrap();
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<gocpp_id_8>& self)
+                    {
+                        return self.obj.value->vUnwrap();
+                    }
                 }
 
                 std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
@@ -441,12 +469,12 @@ namespace golang::errors
     {
         for(; ; )
         {
-            if(AssignableTo(gocpp::recv(reflectlite::TypeOf(err)), targetType))
+            if(rec::AssignableTo(gocpp::recv(reflectlite::TypeOf(err)), targetType))
             {
-                Set(gocpp::recv(Elem(gocpp::recv(targetVal))), reflectlite::ValueOf(err));
+                rec::Set(gocpp::recv(rec::Elem(gocpp::recv(targetVal))), reflectlite::ValueOf(err));
                 return true;
             }
-            if(auto [x, ok] = gocpp::getValue<gocpp_id_5>(err); ok && As(gocpp::recv(x), target))
+            if(auto [x, ok] = gocpp::getValue<gocpp_id_5>(err); ok && rec::As(gocpp::recv(x), target))
             {
                 return true;
             }
@@ -461,7 +489,7 @@ namespace golang::errors
                     case 0:
                     {
                         gocpp_id_7 x = gocpp::any_cast<gocpp_id_7>(err);
-                        err = Unwrap(gocpp::recv(x));
+                        err = rec::Unwrap(gocpp::recv(x));
                         if(err == nullptr)
                         {
                             return false;
@@ -471,7 +499,7 @@ namespace golang::errors
                     case 1:
                     {
                         gocpp_id_8 x = gocpp::any_cast<gocpp_id_8>(err);
-                        for(auto [gocpp_ignored, err] : Unwrap(gocpp::recv(x)))
+                        for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
                         {
                             if(err == nullptr)
                             {
@@ -496,6 +524,6 @@ namespace golang::errors
         }
     }
 
-    reflectlite::Type errorType = Elem(gocpp::recv(reflectlite::TypeOf((gocpp::error*)(nullptr))));
+    reflectlite::Type errorType = rec::Elem(gocpp::recv(reflectlite::TypeOf((gocpp::error*)(nullptr))));
 }
 

@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     void main()
     {
         auto names = gocpp::array<std::string, 4> {"John", "Paul", "George", "Ringo"};

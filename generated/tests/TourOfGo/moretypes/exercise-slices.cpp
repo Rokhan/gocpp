@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace pic::rec;
+    }
+
     gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)
     {
         auto result = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint8_t>>>(), dx);

@@ -13,5 +13,9 @@ namespace golang::bytealg
 {
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     int abigen_runtime_cmpstring(std::string a, std::string b);
+
+    namespace rec
+    {
+    }
 }
 

@@ -13,6 +13,11 @@
 
 namespace golang::bytealg
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int Count(gocpp::slice<unsigned char> b, unsigned char c)
     /* convertBlockStmt, nil block */;
 

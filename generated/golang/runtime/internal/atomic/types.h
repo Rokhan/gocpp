@@ -29,11 +29,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
-    int32_t Load(struct Int32* i);
-    void Store(struct Int32* i, int32_t value);
-    bool CompareAndSwap(struct Int32* i, int32_t old, int32_t go_new);
-    int32_t Swap(struct Int32* i, int32_t go_new);
-    int32_t Add(struct Int32* i, int32_t delta);
     struct Int64
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -52,11 +47,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
-    int64_t Load(struct Int64* i);
-    void Store(struct Int64* i, int64_t value);
-    bool CompareAndSwap(struct Int64* i, int64_t old, int64_t go_new);
-    int64_t Swap(struct Int64* i, int64_t go_new);
-    int64_t Add(struct Int64* i, int64_t delta);
     struct Uint8
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -74,10 +64,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint8& value);
-    uint8_t Load(struct Uint8* u);
-    void Store(struct Uint8* u, uint8_t value);
-    void And(struct Uint8* u, uint8_t value);
-    void Or(struct Uint8* u, uint8_t value);
     struct Bool
     {
         Uint8 u;
@@ -94,8 +80,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Bool& value);
-    bool Load(struct Bool* b);
-    void Store(struct Bool* b, bool value);
     struct Uint32
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -113,16 +97,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
-    uint32_t Load(struct Uint32* u);
-    uint32_t LoadAcquire(struct Uint32* u);
-    void Store(struct Uint32* u, uint32_t value);
-    void StoreRelease(struct Uint32* u, uint32_t value);
-    bool CompareAndSwap(struct Uint32* u, uint32_t old, uint32_t go_new);
-    bool CompareAndSwapRelease(struct Uint32* u, uint32_t old, uint32_t go_new);
-    uint32_t Swap(struct Uint32* u, uint32_t value);
-    void And(struct Uint32* u, uint32_t value);
-    void Or(struct Uint32* u, uint32_t value);
-    uint32_t Add(struct Uint32* u, int32_t delta);
     struct Uint64
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -141,11 +115,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
-    uint64_t Load(struct Uint64* u);
-    void Store(struct Uint64* u, uint64_t value);
-    bool CompareAndSwap(struct Uint64* u, uint64_t old, uint64_t go_new);
-    uint64_t Swap(struct Uint64* u, uint64_t value);
-    uint64_t Add(struct Uint64* u, int64_t delta);
     struct Uintptr
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -163,13 +132,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
-    uintptr_t Load(struct Uintptr* u);
-    uintptr_t LoadAcquire(struct Uintptr* u);
-    void Store(struct Uintptr* u, uintptr_t value);
-    void StoreRelease(struct Uintptr* u, uintptr_t value);
-    bool CompareAndSwap(struct Uintptr* u, uintptr_t old, uintptr_t go_new);
-    uintptr_t Swap(struct Uintptr* u, uintptr_t value);
-    uintptr_t Add(struct Uintptr* u, uintptr_t delta);
     struct Float64
     {
         Uint64 u;
@@ -186,8 +148,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Float64& value);
-    double Load(struct Float64* f);
-    void Store(struct Float64* f, double value);
     struct UnsafePointer
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -205,12 +165,7 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UnsafePointer& value);
-    unsafe::Pointer Load(struct UnsafePointer* u);
-    void StoreNoWB(struct UnsafePointer* u, unsafe::Pointer value);
-    void Store(struct UnsafePointer* u, unsafe::Pointer value);
     void storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new);
-    bool CompareAndSwapNoWB(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
-    bool CompareAndSwap(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
     bool casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new);
     template<typename T> 
     struct Pointer
@@ -230,21 +185,6 @@ namespace golang::atomic
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
-
-    template<typename T>
-    T* Load(Pointer<T>* p);
-
-    template<typename T>
-    void StoreNoWB(Pointer<T>* p, T* value);
-
-    template<typename T>
-    void Store(Pointer<T>* p, T* value);
-
-    template<typename T>
-    bool CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new);
-
-    template<typename T>
-    bool CompareAndSwap(Pointer<T>* p, T* old, T* go_new);
     struct noCopy
     {
 
@@ -260,8 +200,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
-    void Lock(noCopy*);
-    void Unlock(noCopy*);
     struct align64
     {
 
@@ -277,5 +215,71 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
+
+    namespace rec
+    {
+        int32_t Load(struct Int32* i);
+        void Store(struct Int32* i, int32_t value);
+        bool CompareAndSwap(struct Int32* i, int32_t old, int32_t go_new);
+        int32_t Swap(struct Int32* i, int32_t go_new);
+        int32_t Add(struct Int32* i, int32_t delta);
+        int64_t Load(struct Int64* i);
+        void Store(struct Int64* i, int64_t value);
+        bool CompareAndSwap(struct Int64* i, int64_t old, int64_t go_new);
+        int64_t Swap(struct Int64* i, int64_t go_new);
+        int64_t Add(struct Int64* i, int64_t delta);
+        uint8_t Load(struct Uint8* u);
+        void Store(struct Uint8* u, uint8_t value);
+        void And(struct Uint8* u, uint8_t value);
+        void Or(struct Uint8* u, uint8_t value);
+        bool Load(struct Bool* b);
+        void Store(struct Bool* b, bool value);
+        uint32_t Load(struct Uint32* u);
+        uint32_t LoadAcquire(struct Uint32* u);
+        void Store(struct Uint32* u, uint32_t value);
+        void StoreRelease(struct Uint32* u, uint32_t value);
+        bool CompareAndSwap(struct Uint32* u, uint32_t old, uint32_t go_new);
+        bool CompareAndSwapRelease(struct Uint32* u, uint32_t old, uint32_t go_new);
+        uint32_t Swap(struct Uint32* u, uint32_t value);
+        void And(struct Uint32* u, uint32_t value);
+        void Or(struct Uint32* u, uint32_t value);
+        uint32_t Add(struct Uint32* u, int32_t delta);
+        uint64_t Load(struct Uint64* u);
+        void Store(struct Uint64* u, uint64_t value);
+        bool CompareAndSwap(struct Uint64* u, uint64_t old, uint64_t go_new);
+        uint64_t Swap(struct Uint64* u, uint64_t value);
+        uint64_t Add(struct Uint64* u, int64_t delta);
+        uintptr_t Load(struct Uintptr* u);
+        uintptr_t LoadAcquire(struct Uintptr* u);
+        void Store(struct Uintptr* u, uintptr_t value);
+        void StoreRelease(struct Uintptr* u, uintptr_t value);
+        bool CompareAndSwap(struct Uintptr* u, uintptr_t old, uintptr_t go_new);
+        uintptr_t Swap(struct Uintptr* u, uintptr_t value);
+        uintptr_t Add(struct Uintptr* u, uintptr_t delta);
+        double Load(struct Float64* f);
+        void Store(struct Float64* f, double value);
+        unsafe::Pointer Load(struct UnsafePointer* u);
+        void StoreNoWB(struct UnsafePointer* u, unsafe::Pointer value);
+        void Store(struct UnsafePointer* u, unsafe::Pointer value);
+        bool CompareAndSwapNoWB(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
+        bool CompareAndSwap(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
+        
+template<typename T>
+        T* Load(Pointer<T>* p);
+        
+template<typename T>
+        void StoreNoWB(Pointer<T>* p, T* value);
+        
+template<typename T>
+        void Store(Pointer<T>* p, T* value);
+        
+template<typename T>
+        bool CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new);
+        
+template<typename T>
+        bool CompareAndSwap(Pointer<T>* p, T* old, T* go_new);
+        void Lock(noCopy*);
+        void Unlock(noCopy*);
+    }
 }
 

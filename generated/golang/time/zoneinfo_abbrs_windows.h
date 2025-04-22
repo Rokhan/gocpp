@@ -29,5 +29,9 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct abbr& value);
     extern gocpp::map<std::string, abbr> abbrs;
+
+    namespace rec
+    {
+    }
 }
 

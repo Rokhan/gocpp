@@ -96,9 +96,6 @@ namespace golang::unicode
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::rune ToLower(gocpp::rune r);
     gocpp::rune ToTitle(gocpp::rune r);
-    gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
-    gocpp::rune ToTitle(SpecialCase special, gocpp::rune r);
-    gocpp::rune ToLower(SpecialCase special, gocpp::rune r);
     struct foldPair
     {
         uint16_t From;
@@ -117,5 +114,12 @@ namespace golang::unicode
 
     std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
     gocpp::rune SimpleFold(gocpp::rune r);
+
+    namespace rec
+    {
+        gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
+        gocpp::rune ToTitle(SpecialCase special, gocpp::rune r);
+        gocpp::rune ToLower(SpecialCase special, gocpp::rune r);
+    }
 }
 

@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     void sysargs(int32_t argc, unsigned char** argv);
+
+    namespace rec
+    {
+    }
 }
 

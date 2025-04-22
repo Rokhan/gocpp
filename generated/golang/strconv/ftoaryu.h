@@ -27,5 +27,9 @@ namespace golang::strconv
     std::tuple<uint64_t, int, bool> mult128bitPow10(uint64_t m, int e2, int q);
     bool divisibleByPower5(uint64_t m, int k);
     std::tuple<uint32_t, uint32_t> divmod1e9(uint64_t x);
+
+    namespace rec
+    {
+    }
 }
 

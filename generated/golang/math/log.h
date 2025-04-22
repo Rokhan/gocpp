@@ -14,5 +14,9 @@ namespace golang::math
 {
     double Log(double x);
     double log(double x);
+
+    namespace rec
+    {
+    }
 }
 

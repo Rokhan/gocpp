@@ -45,11 +45,15 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct efaceWords& value);
-    go_any Load(struct Value* v);
-    void Store(struct Value* v, go_any val);
-    go_any Swap(struct Value* v, go_any go_new);
-    bool CompareAndSwap(struct Value* v, go_any old, go_any go_new);
     int runtime_procPin();
     void runtime_procUnpin();
+
+    namespace rec
+    {
+        go_any Load(struct Value* v);
+        void Store(struct Value* v, go_any val);
+        go_any Swap(struct Value* v, go_any go_new);
+        bool CompareAndSwap(struct Value* v, go_any old, go_any go_new);
+    }
 }
 

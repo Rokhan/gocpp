@@ -8,7 +8,7 @@ namespace golang::runtime
 {
     using traceEv = uint8_t;
     using traceArg = uint64_t;
-    const traceEv traceEvNone = 0;
+    const runtime::traceEv traceEvNone = 0;
     const traceEv traceEvEventBatch = 1;
     const traceEv traceEvStacks = 2;
     const traceEv traceEvStack = 3;

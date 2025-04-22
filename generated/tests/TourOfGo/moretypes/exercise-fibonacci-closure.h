@@ -14,5 +14,9 @@ namespace golang::main
 {
     std::function<int ()> fibonacci();
     void main();
+
+    namespace rec
+    {
+    }
 }
 

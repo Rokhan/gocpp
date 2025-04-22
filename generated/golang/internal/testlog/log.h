@@ -64,17 +64,20 @@ namespace golang::testlog
         std::shared_ptr<IInterface> value;
     };
 
-    void Getenv(const gocpp::PtrRecv<Interface, false>& self, std::string key);
-    void Getenv(const gocpp::ObjRecv<Interface>& self, std::string key);
+    namespace rec
+    {
+        void Getenv(const gocpp::PtrRecv<Interface, false>& self, std::string key);
+        void Getenv(const gocpp::ObjRecv<Interface>& self, std::string key);
 
-    void Stat(const gocpp::PtrRecv<Interface, false>& self, std::string file);
-    void Stat(const gocpp::ObjRecv<Interface>& self, std::string file);
+        void Stat(const gocpp::PtrRecv<Interface, false>& self, std::string file);
+        void Stat(const gocpp::ObjRecv<Interface>& self, std::string file);
 
-    void Open(const gocpp::PtrRecv<Interface, false>& self, std::string file);
-    void Open(const gocpp::ObjRecv<Interface>& self, std::string file);
+        void Open(const gocpp::PtrRecv<Interface, false>& self, std::string file);
+        void Open(const gocpp::ObjRecv<Interface>& self, std::string file);
 
-    void Chdir(const gocpp::PtrRecv<Interface, false>& self, std::string dir);
-    void Chdir(const gocpp::ObjRecv<Interface>& self, std::string dir);
+        void Chdir(const gocpp::PtrRecv<Interface, false>& self, std::string dir);
+        void Chdir(const gocpp::ObjRecv<Interface>& self, std::string dir);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void SetLogger(struct Interface impl);
@@ -82,5 +85,9 @@ namespace golang::testlog
     void Getenv(std::string name);
     void Open(std::string name);
     void Stat(std::string name);
+
+    namespace rec
+    {
+    }
 }
 

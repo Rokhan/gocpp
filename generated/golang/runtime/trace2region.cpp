@@ -25,6 +25,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     traceRegionAlloc::operator T()
@@ -92,7 +102,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct notInHeap* alloc(struct traceRegionAlloc* a, uintptr_t n)
+    struct notInHeap* rec::alloc(struct traceRegionAlloc* a, uintptr_t n)
     {
         n = alignUp(n, goarch::PtrSize);
         if(a->head == nullptr || a->off + n > uintptr_t(len(a->head->data)))
@@ -115,7 +125,7 @@ namespace golang::runtime
         return (notInHeap*)(unsafe::Pointer(p));
     }
 
-    void drop(struct traceRegionAlloc* a)
+    void rec::drop(struct traceRegionAlloc* a)
     {
         for(; a->head != nullptr; )
         {

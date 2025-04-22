@@ -39,17 +39,27 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     struct offAddr maxSearchAddr()
     {
         return maxOffAddr;
     }
 
-    chunkIdx chunkIndex(uintptr_t p)
+    runtime::chunkIdx chunkIndex(uintptr_t p)
     {
         return chunkIdx((p - arenaBaseOffset) / pallocChunkBytes);
     }
 
-    uintptr_t chunkBase(chunkIdx ci)
+    uintptr_t chunkBase(runtime::chunkIdx ci)
     {
         return uintptr_t(ci) * pallocChunkBytes + arenaBaseOffset;
     }
@@ -59,7 +69,7 @@ namespace golang::runtime
         return (unsigned int)(p % pallocChunkBytes / pageSize);
     }
 
-    unsigned int l1(chunkIdx i)
+    unsigned int rec::l1(runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -71,7 +81,7 @@ namespace golang::runtime
         }
     }
 
-    unsigned int l2(chunkIdx i)
+    unsigned int rec::l2(runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -170,7 +180,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct pageAlloc* p, struct mutex* mheapLock, sysMemStat* sysStat, bool test)
+    void rec::init(struct pageAlloc* p, struct mutex* mheapLock, runtime::sysMemStat* sysStat, bool test)
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
@@ -179,36 +189,36 @@ namespace golang::runtime
             go_throw("root level max pages doesn't fit in summary");
         }
         p->sysStat = sysStat;
-        init(gocpp::recv(p->inUse), sysStat);
-        sysInit(gocpp::recv(p), test);
+        rec::init(gocpp::recv(p->inUse), sysStat);
+        rec::sysInit(gocpp::recv(p), test);
         p->searchAddr = maxSearchAddr();
         p->mheapLock = mheapLock;
-        p->summaryMappedReady += init(gocpp::recv(p->scav.index), test, sysStat);
+        p->summaryMappedReady += rec::init(gocpp::recv(p->scav.index), test, sysStat);
         p->test = test;
     }
 
-    struct pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci)
+    struct pallocData* rec::tryChunkOf(struct pageAlloc* p, runtime::chunkIdx ci)
     {
-        auto l2 = p->chunks[l1(gocpp::recv(ci))];
+        auto l2 = p->chunks[rec::l1(gocpp::recv(ci))];
         if(l2 == nullptr)
         {
             return nullptr;
         }
-        return & l2[l2(gocpp::recv(ci))];
+        return & l2[rec::l2(gocpp::recv(ci))];
     }
 
-    struct pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci)
+    struct pallocData* rec::chunkOf(struct pageAlloc* p, runtime::chunkIdx ci)
     {
-        return & p->chunks[l1(gocpp::recv(ci))][l2(gocpp::recv(ci))];
+        return & p->chunks[rec::l1(gocpp::recv(ci))][rec::l2(gocpp::recv(ci))];
     }
 
-    void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size)
+    void rec::grow(struct pageAlloc* p, uintptr_t base, uintptr_t size)
     {
         assertLockHeld(p->mheapLock);
         auto limit = alignUp(base + size, pallocChunkBytes);
         base = alignDown(base, pallocChunkBytes);
-        sysGrow(gocpp::recv(p), base, limit);
-        p->summaryMappedReady += grow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
+        rec::sysGrow(gocpp::recv(p), base, limit);
+        p->summaryMappedReady += rec::grow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
         auto firstGrowth = p->start == 0;
         auto [start, end] = std::tuple{chunkIndex(base), chunkIndex(limit)};
         if(firstGrowth || start < p->start)
@@ -219,14 +229,14 @@ namespace golang::runtime
         {
             p->end = end;
         }
-        add(gocpp::recv(p->inUse), makeAddrRange(base, limit));
-        if(auto b = (offAddr {base}); lessThan(gocpp::recv(b), p->searchAddr))
+        rec::add(gocpp::recv(p->inUse), makeAddrRange(base, limit));
+        if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
         for(auto c = chunkIndex(base); c < chunkIndex(limit); c++)
         {
-            if(p->chunks[l1(gocpp::recv(c))] == nullptr)
+            if(p->chunks[rec::l1(gocpp::recv(c))] == nullptr)
             {
                 auto l2Size = gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>();
                 auto r = sysAlloc(l2Size, p->sysStat);
@@ -245,14 +255,14 @@ namespace golang::runtime
                         sysNoHugePage(r, l2Size);
                     }
                 }
-                *(uintptr_t*)(unsafe::Pointer(& p->chunks[l1(gocpp::recv(c))])) = uintptr_t(r);
+                *(uintptr_t*)(unsafe::Pointer(& p->chunks[rec::l1(gocpp::recv(c))])) = uintptr_t(r);
             }
-            setRange(gocpp::recv(chunkOf(gocpp::recv(p), c)->scavenged), 0, pallocChunkPages);
+            rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)->scavenged), 0, pallocChunkPages);
         }
-        update(gocpp::recv(p), base, size / pageSize, true, false);
+        rec::update(gocpp::recv(p), base, size / pageSize, true, false);
     }
 
-    void enableChunkHugePages(struct pageAlloc* p)
+    void rec::enableChunkHugePages(struct pageAlloc* p)
     {
         lock(& mheap_.lock);
         if(p->chunkHugePages)
@@ -263,18 +273,18 @@ namespace golang::runtime
         p->chunkHugePages = true;
         addrRanges inUse = {};
         inUse.sysStat = p->sysStat;
-        cloneInto(gocpp::recv(p->inUse), & inUse);
+        rec::cloneInto(gocpp::recv(p->inUse), & inUse);
         unlock(& mheap_.lock);
         for(auto [gocpp_ignored, r] : p->inUse.ranges)
         {
-            for(auto i = l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.base))))); i < l1(gocpp::recv(chunkIndex(addr(gocpp::recv(r.limit)) - 1))); i++)
+            for(auto i = rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.base))))); i < rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.limit)) - 1))); i++)
             {
                 sysHugePage(unsafe::Pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>());
             }
         }
     }
 
-    void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
+    void rec::update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
     {
         assertLockHeld(p->mheapLock);
         auto limit = base + npages * pageSize - 1;
@@ -282,7 +292,7 @@ namespace golang::runtime
         if(sc == ec)
         {
             auto x = p->summary[len(p->summary) - 1][sc];
-            auto y = summarize(gocpp::recv(chunkOf(gocpp::recv(p), sc)));
+            auto y = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)));
             if(x == y)
             {
                 return;
@@ -293,7 +303,7 @@ namespace golang::runtime
         if(contig)
         {
             auto summary = p->summary[len(p->summary) - 1];
-            summary[sc] = summarize(gocpp::recv(chunkOf(gocpp::recv(p), sc)));
+            summary[sc] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)));
             auto whole = p->summary[len(p->summary) - 1].make_slice(sc + 1, ec);
             if(alloc)
             {
@@ -309,14 +319,14 @@ namespace golang::runtime
                     whole[i] = freeChunkSum;
                 }
             }
-            summary[ec] = summarize(gocpp::recv(chunkOf(gocpp::recv(p), ec)));
+            summary[ec] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), ec)));
         }
         else
         {
             auto summary = p->summary[len(p->summary) - 1];
             for(auto c = sc; c <= ec; c++)
             {
-                summary[c] = summarize(gocpp::recv(chunkOf(gocpp::recv(p), c)));
+                summary[c] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)));
             }
         }
         auto changed = true;
@@ -340,7 +350,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
+    uintptr_t rec::allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto limit = base + npages * pageSize - 1;
@@ -349,40 +359,40 @@ namespace golang::runtime
         auto scav = (unsigned int)(0);
         if(sc == ec)
         {
-            auto chunk = chunkOf(gocpp::recv(p), sc);
-            scav += popcntRange(gocpp::recv(chunk->scavenged), si, ei + 1 - si);
-            allocRange(gocpp::recv(chunk), si, ei + 1 - si);
-            alloc(gocpp::recv(p->scav.index), sc, ei + 1 - si);
+            auto chunk = rec::chunkOf(gocpp::recv(p), sc);
+            scav += rec::popcntRange(gocpp::recv(chunk->scavenged), si, ei + 1 - si);
+            rec::allocRange(gocpp::recv(chunk), si, ei + 1 - si);
+            rec::alloc(gocpp::recv(p->scav.index), sc, ei + 1 - si);
         }
         else
         {
-            auto chunk = chunkOf(gocpp::recv(p), sc);
-            scav += popcntRange(gocpp::recv(chunk->scavenged), si, pallocChunkPages - si);
-            allocRange(gocpp::recv(chunk), si, pallocChunkPages - si);
-            alloc(gocpp::recv(p->scav.index), sc, pallocChunkPages - si);
+            auto chunk = rec::chunkOf(gocpp::recv(p), sc);
+            scav += rec::popcntRange(gocpp::recv(chunk->scavenged), si, pallocChunkPages - si);
+            rec::allocRange(gocpp::recv(chunk), si, pallocChunkPages - si);
+            rec::alloc(gocpp::recv(p->scav.index), sc, pallocChunkPages - si);
             for(auto c = sc + 1; c < ec; c++)
             {
-                auto chunk = chunkOf(gocpp::recv(p), c);
-                scav += popcntRange(gocpp::recv(chunk->scavenged), 0, pallocChunkPages);
-                allocAll(gocpp::recv(chunk));
-                alloc(gocpp::recv(p->scav.index), c, pallocChunkPages);
+                auto chunk = rec::chunkOf(gocpp::recv(p), c);
+                scav += rec::popcntRange(gocpp::recv(chunk->scavenged), 0, pallocChunkPages);
+                rec::allocAll(gocpp::recv(chunk));
+                rec::alloc(gocpp::recv(p->scav.index), c, pallocChunkPages);
             }
-            chunk = chunkOf(gocpp::recv(p), ec);
-            scav += popcntRange(gocpp::recv(chunk->scavenged), 0, ei + 1);
-            allocRange(gocpp::recv(chunk), 0, ei + 1);
-            alloc(gocpp::recv(p->scav.index), ec, ei + 1);
+            chunk = rec::chunkOf(gocpp::recv(p), ec);
+            scav += rec::popcntRange(gocpp::recv(chunk->scavenged), 0, ei + 1);
+            rec::allocRange(gocpp::recv(chunk), 0, ei + 1);
+            rec::alloc(gocpp::recv(p->scav.index), ec, ei + 1);
         }
-        update(gocpp::recv(p), base, npages, true, true);
+        rec::update(gocpp::recv(p), base, npages, true, true);
         return uintptr_t(scav) * pageSize;
     }
 
-    struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr)
+    struct offAddr rec::findMappedAddr(struct pageAlloc* p, struct offAddr addr)
     {
         assertLockHeld(p->mheapLock);
-        auto ai = arenaIndex(addr(gocpp::recv(addr)));
-        if(p->test || mheap_.arenas[l1(gocpp::recv(ai))] == nullptr || mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))] == nullptr)
+        auto ai = arenaIndex(rec::addr(gocpp::recv(addr)));
+        if(p->test || mheap_.arenas[rec::l1(gocpp::recv(ai))] == nullptr || mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))] == nullptr)
         {
-            auto [vAddr, ok] = findAddrGreaterEqual(gocpp::recv(p->inUse), addr(gocpp::recv(addr)));
+            auto [vAddr, ok] = rec::findAddrGreaterEqual(gocpp::recv(p->inUse), rec::addr(gocpp::recv(addr)));
             if(ok)
             {
                 return offAddr {vAddr};
@@ -475,23 +485,23 @@ namespace golang::runtime
         }
 
 
-    std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, struct offAddr> rec::find(struct pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto i = 0;
         auto firstFree = gocpp::Init<gocpp_id_1>([](gocpp_id_1& x) { x.base = minOffAddr; x.bound = maxOffAddr; });
         auto foundFree = [=](struct offAddr addr, uintptr_t size) mutable -> void
         {
-            if(lessEqual(gocpp::recv(firstFree.base), addr) && lessEqual(gocpp::recv(add(gocpp::recv(addr), size - 1)), firstFree.bound))
+            if(rec::lessEqual(gocpp::recv(firstFree.base), addr) && rec::lessEqual(gocpp::recv(rec::add(gocpp::recv(addr), size - 1)), firstFree.bound))
             {
                 firstFree.base = addr;
-                firstFree.bound = add(gocpp::recv(addr), size - 1);
+                firstFree.bound = rec::add(gocpp::recv(addr), size - 1);
             }
             else
-            if(! (lessThan(gocpp::recv(add(gocpp::recv(addr), size - 1)), firstFree.base) || lessThan(gocpp::recv(firstFree.bound), addr)))
+            if(! (rec::lessThan(gocpp::recv(rec::add(gocpp::recv(addr), size - 1)), firstFree.base) || rec::lessThan(gocpp::recv(firstFree.bound), addr)))
             {
-                print("runtime: addr = ", hex(addr(gocpp::recv(addr))), ", size = ", size, "\n");
-                print("runtime: base = ", hex(addr(gocpp::recv(firstFree.base))), ", bound = ", hex(addr(gocpp::recv(firstFree.bound))), "\n");
+                print("runtime: addr = ", hex(rec::addr(gocpp::recv(addr))), ", size = ", size, "\n");
+                print("runtime: base = ", hex(rec::addr(gocpp::recv(firstFree.base))), ", bound = ", hex(rec::addr(gocpp::recv(firstFree.bound))), "\n");
                 go_throw("range partially overlaps");
             }
         };
@@ -520,7 +530,7 @@ namespace golang::runtime
                     continue;
                 }
                 foundFree(levelIndexToOffAddr(l, i + j), (uintptr_t(1) << logMaxPages) * pageSize);
-                auto s = start(gocpp::recv(sum));
+                auto s = rec::start(gocpp::recv(sum));
                 if(size + s >= (unsigned int)(npages))
                 {
                     if(size == 0)
@@ -530,7 +540,7 @@ namespace golang::runtime
                     size += s;
                     break;
                 }
-                if(max(gocpp::recv(sum)) >= (unsigned int)(npages))
+                if(rec::max(gocpp::recv(sum)) >= (unsigned int)(npages))
                 {
                     i += j;
                     lastSumIdx = i;
@@ -539,7 +549,7 @@ namespace golang::runtime
                 }
                 if(size == 0 || s < (1 << logMaxPages))
                 {
-                    size = end(gocpp::recv(sum));
+                    size = rec::end(gocpp::recv(sum));
                     base = ((unsigned int)(j + 1) << logMaxPages) - size;
                     continue;
                 }
@@ -547,21 +557,21 @@ namespace golang::runtime
             }
             if(size >= (unsigned int)(npages))
             {
-                auto addr = addr(gocpp::recv(add(gocpp::recv(levelIndexToOffAddr(l, i)), uintptr_t(base) * pageSize)));
-                return {addr, findMappedAddr(gocpp::recv(p), firstFree.base)};
+                auto addr = rec::addr(gocpp::recv(rec::add(gocpp::recv(levelIndexToOffAddr(l, i)), uintptr_t(base) * pageSize)));
+                return {addr, rec::findMappedAddr(gocpp::recv(p), firstFree.base)};
             }
             if(l == 0)
             {
                 return {0, maxSearchAddr()};
             }
-            print("runtime: summary[", l - 1, "][", lastSumIdx, "] = ", start(gocpp::recv(lastSum)), ", ", max(gocpp::recv(lastSum)), ", ", end(gocpp::recv(lastSum)), "\n");
+            print("runtime: summary[", l - 1, "][", lastSumIdx, "] = ", rec::start(gocpp::recv(lastSum)), ", ", rec::max(gocpp::recv(lastSum)), ", ", rec::end(gocpp::recv(lastSum)), "\n");
             print("runtime: level = ", l, ", npages = ", npages, ", j0 = ", j0, "\n");
-            print("runtime: p.searchAddr = ", hex(addr(gocpp::recv(p->searchAddr))), ", i = ", i, "\n");
+            print("runtime: p.searchAddr = ", hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = ", i, "\n");
             print("runtime: levelShift[level] = ", levelShift[l], ", levelBits[level] = ", levelBits[l], "\n");
             for(auto j = 0; j < len(entries); j++)
             {
                 auto sum = entries[j];
-                print("runtime: summary[", l, "][", i + j, "] = (", start(gocpp::recv(sum)), ", ", max(gocpp::recv(sum)), ", ", end(gocpp::recv(sum)), ")\n");
+                print("runtime: summary[", l, "][", i + j, "] = (", rec::start(gocpp::recv(sum)), ", ", rec::max(gocpp::recv(sum)), ", ", rec::end(gocpp::recv(sum)), ")\n");
             }
             go_throw("bad summary data");
             if(false) {
@@ -572,48 +582,48 @@ namespace golang::runtime
             }
         }
         auto ci = chunkIdx(i);
-        auto [j, searchIdx] = find(gocpp::recv(chunkOf(gocpp::recv(p), ci)), npages, 0);
+        auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), npages, 0);
         if(j == ~ (unsigned int)(0))
         {
             auto sum = p->summary[len(p->summary) - 1][i];
-            print("runtime: summary[", len(p->summary) - 1, "][", i, "] = (", start(gocpp::recv(sum)), ", ", max(gocpp::recv(sum)), ", ", end(gocpp::recv(sum)), ")\n");
+            print("runtime: summary[", len(p->summary) - 1, "][", i, "] = (", rec::start(gocpp::recv(sum)), ", ", rec::max(gocpp::recv(sum)), ", ", rec::end(gocpp::recv(sum)), ")\n");
             print("runtime: npages = ", npages, "\n");
             go_throw("bad summary data");
         }
         auto addr = chunkBase(ci) + uintptr_t(j) * pageSize;
         auto searchAddr = chunkBase(ci) + uintptr_t(searchIdx) * pageSize;
         foundFree(offAddr {searchAddr}, chunkBase(ci + 1) - searchAddr);
-        return {addr, findMappedAddr(gocpp::recv(p), firstFree.base)};
+        return {addr, rec::findMappedAddr(gocpp::recv(p), firstFree.base)};
     }
 
-    std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageAlloc* p, uintptr_t npages)
     {
         uintptr_t addr;
         uintptr_t scav;
         assertLockHeld(p->mheapLock);
-        if(chunkIndex(addr(gocpp::recv(p->searchAddr))) >= p->end)
+        if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
             uintptr_t addr;
             uintptr_t scav;
             return {0, 0};
         }
         auto searchAddr = minOffAddr;
-        if(pallocChunkPages - chunkPageIndex(addr(gocpp::recv(p->searchAddr))) >= (unsigned int)(npages))
+        if(pallocChunkPages - chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))) >= (unsigned int)(npages))
         {
             uintptr_t addr;
             uintptr_t scav;
-            auto i = chunkIndex(addr(gocpp::recv(p->searchAddr)));
-            if(auto max = max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (unsigned int)(npages))
+            auto i = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
+            if(auto max = rec::max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (unsigned int)(npages))
             {
                 uintptr_t addr;
                 uintptr_t scav;
-                auto [j, searchIdx] = find(gocpp::recv(chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(addr(gocpp::recv(p->searchAddr))));
+                auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
                 if(j == ~ (unsigned int)(0))
                 {
                     uintptr_t addr;
                     uintptr_t scav;
                     print("runtime: max = ", max, ", npages = ", npages, "\n");
-                    print("runtime: searchIdx = ", chunkPageIndex(addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = ", hex(addr(gocpp::recv(p->searchAddr))), "\n");
+                    print("runtime: searchIdx = ", chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = ", hex(rec::addr(gocpp::recv(p->searchAddr))), "\n");
                     go_throw("bad summary data");
                 }
                 addr = chunkBase(i) + uintptr_t(j) * pageSize;
@@ -621,7 +631,7 @@ namespace golang::runtime
                 goto Found;
             }
         }
-        std::tie(addr, searchAddr) = find(gocpp::recv(p), npages);
+        std::tie(addr, searchAddr) = rec::find(gocpp::recv(p), npages);
         if(addr == 0)
         {
             uintptr_t addr;
@@ -635,8 +645,8 @@ namespace golang::runtime
             return {0, 0};
         }
         Found:
-        scav = allocRange(gocpp::recv(p), addr, npages);
-        if(lessThan(gocpp::recv(p->searchAddr), searchAddr))
+        scav = rec::allocRange(gocpp::recv(p), addr, npages);
+        if(rec::lessThan(gocpp::recv(p->searchAddr), searchAddr))
         {
             uintptr_t addr;
             uintptr_t scav;
@@ -645,10 +655,10 @@ namespace golang::runtime
         return {addr, scav};
     }
 
-    void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
+    void rec::free(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
-        if(auto b = (offAddr {base}); lessThan(gocpp::recv(b), p->searchAddr))
+        if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
@@ -657,8 +667,8 @@ namespace golang::runtime
         {
             auto i = chunkIndex(base);
             auto pi = chunkPageIndex(base);
-            free1(gocpp::recv(chunkOf(gocpp::recv(p), i)), pi);
-            free(gocpp::recv(p->scav.index), i, pi, 1);
+            rec::free1(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), pi);
+            rec::free(gocpp::recv(p->scav.index), i, pi, 1);
         }
         else
         {
@@ -666,26 +676,26 @@ namespace golang::runtime
             auto [si, ei] = std::tuple{chunkPageIndex(base), chunkPageIndex(limit)};
             if(sc == ec)
             {
-                free(gocpp::recv(chunkOf(gocpp::recv(p), sc)), si, ei + 1 - si);
-                free(gocpp::recv(p->scav.index), sc, si, ei + 1 - si);
+                rec::free(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)), si, ei + 1 - si);
+                rec::free(gocpp::recv(p->scav.index), sc, si, ei + 1 - si);
             }
             else
             {
-                free(gocpp::recv(chunkOf(gocpp::recv(p), sc)), si, pallocChunkPages - si);
-                free(gocpp::recv(p->scav.index), sc, si, pallocChunkPages - si);
+                rec::free(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)), si, pallocChunkPages - si);
+                rec::free(gocpp::recv(p->scav.index), sc, si, pallocChunkPages - si);
                 for(auto c = sc + 1; c < ec; c++)
                 {
-                    freeAll(gocpp::recv(chunkOf(gocpp::recv(p), c)));
-                    free(gocpp::recv(p->scav.index), c, 0, pallocChunkPages);
+                    rec::freeAll(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)));
+                    rec::free(gocpp::recv(p->scav.index), c, 0, pallocChunkPages);
                 }
-                free(gocpp::recv(chunkOf(gocpp::recv(p), ec)), 0, ei + 1);
-                free(gocpp::recv(p->scav.index), ec, 0, ei + 1);
+                rec::free(gocpp::recv(rec::chunkOf(gocpp::recv(p), ec)), 0, ei + 1);
+                rec::free(gocpp::recv(p->scav.index), ec, 0, ei + 1);
             }
         }
-        update(gocpp::recv(p), base, npages, true, false);
+        rec::update(gocpp::recv(p), base, npages, true, false);
     }
 
-    pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
+    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
     {
         if(max == maxPackedValue)
         {
@@ -694,7 +704,7 @@ namespace golang::runtime
         return pallocSum((uint64_t(start) & (maxPackedValue - 1)) | ((uint64_t(max) & (maxPackedValue - 1)) << logMaxPackedValue) | ((uint64_t(end) & (maxPackedValue - 1)) << (2 * logMaxPackedValue)));
     }
 
-    unsigned int start(pallocSum p)
+    unsigned int rec::start(runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -703,7 +713,7 @@ namespace golang::runtime
         return (unsigned int)(uint64_t(p) & (maxPackedValue - 1));
     }
 
-    unsigned int max(pallocSum p)
+    unsigned int rec::max(runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -712,7 +722,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1));
     }
 
-    unsigned int end(pallocSum p)
+    unsigned int rec::end(runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -721,7 +731,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1));
     }
 
-    std::tuple<unsigned int, unsigned int, unsigned int> unpack(pallocSum p)
+    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -730,12 +740,12 @@ namespace golang::runtime
         return {(unsigned int)(uint64_t(p) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1))};
     }
 
-    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum)
+    runtime::pallocSum mergeSummaries(gocpp::slice<runtime::pallocSum> sums, unsigned int logMaxPagesPerSum)
     {
-        auto [start, most, end] = unpack(gocpp::recv(sums[0]));
+        auto [start, most, end] = rec::unpack(gocpp::recv(sums[0]));
         for(auto i = 1; i < len(sums); i++)
         {
-            auto [si, mi, ei] = unpack(gocpp::recv(sums[i]));
+            auto [si, mi, ei] = rec::unpack(gocpp::recv(sums[i]));
             if(start == ((unsigned int)(i) << logMaxPagesPerSum))
             {
                 start += si;

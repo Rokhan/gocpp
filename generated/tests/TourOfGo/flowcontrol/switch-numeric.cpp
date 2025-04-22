@@ -17,10 +17,17 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace time::rec;
+    }
+
     void main()
     {
         mocklib::Print("Roman Time");
-        auto hour = 1 + (Hour(gocpp::recv(mocklib::Date::Now())) % 12);
+        auto hour = 1 + (rec::Hour(gocpp::recv(mocklib::Date::Now())) % 12);
         //Go switch emulation
         {
             auto condition = hour;

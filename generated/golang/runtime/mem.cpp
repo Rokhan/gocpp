@@ -20,22 +20,30 @@
 
 namespace golang::runtime
 {
-    unsafe::Pointer sysAlloc(uintptr_t n, sysMemStat* sysStat)
+    namespace rec
     {
-        add(gocpp::recv(sysStat), int64_t(n));
-        Add(gocpp::recv(gcController.mappedReady), int64_t(n));
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
+    unsafe::Pointer sysAlloc(uintptr_t n, runtime::sysMemStat* sysStat)
+    {
+        rec::add(gocpp::recv(sysStat), int64_t(n));
+        rec::Add(gocpp::recv(gcController.mappedReady), int64_t(n));
         return sysAllocOS(n);
     }
 
     void sysUnused(unsafe::Pointer v, uintptr_t n)
     {
-        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
+        rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysUnusedOS(v, n);
     }
 
     void sysUsed(unsafe::Pointer v, uintptr_t n, uintptr_t prepared)
     {
-        Add(gocpp::recv(gcController.mappedReady), int64_t(prepared));
+        rec::Add(gocpp::recv(gcController.mappedReady), int64_t(prepared));
         sysUsedOS(v, n);
     }
 
@@ -54,16 +62,16 @@ namespace golang::runtime
         sysHugePageCollapseOS(v, n);
     }
 
-    void sysFree(unsafe::Pointer v, uintptr_t n, sysMemStat* sysStat)
+    void sysFree(unsafe::Pointer v, uintptr_t n, runtime::sysMemStat* sysStat)
     {
-        add(gocpp::recv(sysStat), - int64_t(n));
-        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
+        rec::add(gocpp::recv(sysStat), - int64_t(n));
+        rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFreeOS(v, n);
     }
 
     void sysFault(unsafe::Pointer v, uintptr_t n)
     {
-        Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
+        rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFaultOS(v, n);
     }
 
@@ -72,9 +80,9 @@ namespace golang::runtime
         return sysReserveOS(v, n);
     }
 
-    void sysMap(unsafe::Pointer v, uintptr_t n, sysMemStat* sysStat)
+    void sysMap(unsafe::Pointer v, uintptr_t n, runtime::sysMemStat* sysStat)
     {
-        add(gocpp::recv(sysStat), int64_t(n));
+        rec::add(gocpp::recv(sysStat), int64_t(n));
         sysMapOS(v, n);
     }
 

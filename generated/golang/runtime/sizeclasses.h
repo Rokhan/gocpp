@@ -16,5 +16,9 @@ namespace golang::runtime
     extern gocpp::array<uint32_t, _NumSizeClasses> class_to_divmagic;
     extern gocpp::array<uint8_t, smallSizeMax / smallSizeDiv + 1> size_to_class8;
     extern gocpp::array<uint8_t, (_MaxSmallSize - smallSizeMax) / largeSizeDiv + 1> size_to_class128;
+
+    namespace rec
+    {
+    }
 }
 

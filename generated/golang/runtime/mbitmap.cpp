@@ -69,6 +69,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     unsigned char* addb(unsigned char* p, uintptr_t n)
     {
         return (unsigned char*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + n));
@@ -124,15 +136,15 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
+    struct markBits rec::allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
     {
-        auto [bytep, mask] = bitp(gocpp::recv(s->allocBits), allocBitIndex);
+        auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), allocBitIndex);
         return markBits {bytep, mask, allocBitIndex};
     }
 
-    void refillAllocCache(struct mspan* s, uint16_t whichByte)
+    void rec::refillAllocCache(struct mspan* s, uint16_t whichByte)
     {
-        auto bytes = (gocpp::array<uint8_t, 8>*)(unsafe::Pointer(bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
+        auto bytes = (gocpp::array<uint8_t, 8>*)(unsafe::Pointer(rec::bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
         auto aCache = uint64_t(0);
         aCache |= uint64_t(bytes[0]);
         aCache |= uint64_t(bytes[1]) << (1 * 8);
@@ -145,7 +157,7 @@ namespace golang::runtime
         s->allocCache = ~ aCache;
     }
 
-    uint16_t nextFreeIndex(struct mspan* s)
+    uint16_t rec::nextFreeIndex(struct mspan* s)
     {
         auto sfreeindex = s->freeindex;
         auto snelems = s->nelems;
@@ -168,7 +180,7 @@ namespace golang::runtime
                 return snelems;
             }
             auto whichByte = sfreeindex / 8;
-            refillAllocCache(gocpp::recv(s), whichByte);
+            rec::refillAllocCache(gocpp::recv(s), whichByte);
             aCache = s->allocCache;
             bitIndex = sys::TrailingZeros64(aCache);
         }
@@ -183,23 +195,23 @@ namespace golang::runtime
         if(sfreeindex % 64 == 0 && sfreeindex != snelems)
         {
             auto whichByte = sfreeindex / 8;
-            refillAllocCache(gocpp::recv(s), whichByte);
+            rec::refillAllocCache(gocpp::recv(s), whichByte);
         }
         s->freeindex = sfreeindex;
         return result;
     }
 
-    bool isFree(struct mspan* s, uintptr_t index)
+    bool rec::isFree(struct mspan* s, uintptr_t index)
     {
         if(index < uintptr_t(s->freeIndexForScan))
         {
             return false;
         }
-        auto [bytep, mask] = bitp(gocpp::recv(s->allocBits), index);
+        auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), index);
         return *bytep & mask == 0;
     }
 
-    uintptr_t divideByElemSize(struct mspan* s, uintptr_t n)
+    uintptr_t rec::divideByElemSize(struct mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
         auto q = uintptr_t((uint64_t(n) * uint64_t(s->divMul)) >> 32);
@@ -211,45 +223,45 @@ namespace golang::runtime
         return q;
     }
 
-    uintptr_t objIndex(struct mspan* s, uintptr_t p)
+    uintptr_t rec::objIndex(struct mspan* s, uintptr_t p)
     {
-        return divideByElemSize(gocpp::recv(s), p - base(gocpp::recv(s)));
+        return rec::divideByElemSize(gocpp::recv(s), p - rec::base(gocpp::recv(s)));
     }
 
     struct markBits markBitsForAddr(uintptr_t p)
     {
         auto s = spanOf(p);
-        auto objIndex = objIndex(gocpp::recv(s), p);
-        return markBitsForIndex(gocpp::recv(s), objIndex);
+        auto objIndex = rec::objIndex(gocpp::recv(s), p);
+        return rec::markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    struct markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex)
+    struct markBits rec::markBitsForIndex(struct mspan* s, uintptr_t objIndex)
     {
-        auto [bytep, mask] = bitp(gocpp::recv(s->gcmarkBits), objIndex);
+        auto [bytep, mask] = rec::bitp(gocpp::recv(s->gcmarkBits), objIndex);
         return markBits {bytep, mask, objIndex};
     }
 
-    struct markBits markBitsForBase(struct mspan* s)
+    struct markBits rec::markBitsForBase(struct mspan* s)
     {
         return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
-    bool isMarked(struct markBits m)
+    bool rec::isMarked(struct markBits m)
     {
         return *m.bytep & m.mask != 0;
     }
 
-    void setMarked(struct markBits m)
+    void rec::setMarked(struct markBits m)
     {
         atomic::Or8(m.bytep, m.mask);
     }
 
-    void setMarkedNonAtomic(struct markBits m)
+    void rec::setMarkedNonAtomic(struct markBits m)
     {
         *m.bytep |= m.mask;
     }
 
-    void clearMarked(struct markBits m)
+    void rec::clearMarked(struct markBits m)
     {
         atomic::And8(m.bytep, ~ m.mask);
     }
@@ -266,7 +278,7 @@ namespace golang::runtime
         return mbits;
     }
 
-    void advance(struct markBits* m)
+    void rec::advance(struct markBits* m)
     {
         if(m->mask == (1 << 7))
         {
@@ -286,7 +298,7 @@ namespace golang::runtime
         print("runtime: pointer ", hex(p));
         if(s != nullptr)
         {
-            auto state = get(gocpp::recv(s->state));
+            auto state = rec::get(gocpp::recv(s->state));
             if(state != mSpanInUse)
             {
                 print(" to unallocated span");
@@ -295,7 +307,7 @@ namespace golang::runtime
             {
                 print(" to unused region of span");
             }
-            print(" span.base()=", hex(base(gocpp::recv(s))), " span.limit=", hex(s->limit), " span.state=", state);
+            print(" span.base()=", hex(rec::base(gocpp::recv(s))), " span.limit=", hex(s->limit), " span.state=", state);
         }
         print("\n");
         if(refBase != 0)
@@ -327,7 +339,7 @@ namespace golang::runtime
             }
             return {base, s, objIndex};
         }
-        if(auto state = get(gocpp::recv(s->state)); state != mSpanInUse || p < base(gocpp::recv(s)) || p >= s->limit)
+        if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse || p < rec::base(gocpp::recv(s)) || p >= s->limit)
         {
             uintptr_t base;
             struct mspan* s;
@@ -348,8 +360,8 @@ namespace golang::runtime
             }
             return {base, s, objIndex};
         }
-        objIndex = objIndex(gocpp::recv(s), p);
-        base = base(gocpp::recv(s)) + objIndex * s->elemsize;
+        objIndex = rec::objIndex(gocpp::recv(s), p);
+        base = rec::base(gocpp::recv(s)) + objIndex * s->elemsize;
         return {base, s, objIndex};
     }
 
@@ -363,7 +375,7 @@ namespace golang::runtime
         auto word = maskOffset / goarch::PtrSize;
         bits = addb(bits, word / 8);
         auto mask = uint8_t(1) << (word % 8);
-        auto buf = & ptr(gocpp::recv(getg()->m->p))->wbBuf;
+        auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
             if(mask == 0)
@@ -381,13 +393,13 @@ namespace golang::runtime
                 auto dstx = (uintptr_t*)(unsafe::Pointer(dst + i));
                 if(src == 0)
                 {
-                    auto p = get1(gocpp::recv(buf));
+                    auto p = rec::get1(gocpp::recv(buf));
                     p[0] = *dstx;
                 }
                 else
                 {
                     auto srcx = (uintptr_t*)(unsafe::Pointer(src + i));
-                    auto p = get2(gocpp::recv(buf));
+                    auto p = rec::get2(gocpp::recv(buf));
                     p[0] = *dstx;
                     p[1] = *srcx;
                 }
@@ -404,12 +416,12 @@ namespace golang::runtime
         }
         if(typ->Size_ != size)
         {
-            println("runtime: typeBitsBulkBarrier with type ", string(gocpp::recv(toRType(typ))), " of size ", typ->Size_, " but memory size", size);
+            println("runtime: typeBitsBulkBarrier with type ", rec::string(gocpp::recv(toRType(typ))), " of size ", typ->Size_, " but memory size", size);
             go_throw("runtime: invalid typeBitsBulkBarrier");
         }
         if(typ->Kind_ & kindGCProg != 0)
         {
-            println("runtime: typeBitsBulkBarrier with type ", string(gocpp::recv(toRType(typ))), " with GC prog");
+            println("runtime: typeBitsBulkBarrier with type ", rec::string(gocpp::recv(toRType(typ))), " with GC prog");
             go_throw("runtime: invalid typeBitsBulkBarrier");
         }
         if(! writeBarrier.enabled)
@@ -417,7 +429,7 @@ namespace golang::runtime
             return;
         }
         auto ptrmask = typ->GCData;
-        auto buf = & ptr(gocpp::recv(getg()->m->p))->wbBuf;
+        auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         uint32_t bits = {};
         for(auto i = uintptr_t(0); i < typ->PtrBytes; i += goarch::PtrSize)
         {
@@ -434,20 +446,20 @@ namespace golang::runtime
             {
                 auto dstx = (uintptr_t*)(unsafe::Pointer(dst + i));
                 auto srcx = (uintptr_t*)(unsafe::Pointer(src + i));
-                auto p = get2(gocpp::recv(buf));
+                auto p = rec::get2(gocpp::recv(buf));
                 p[0] = *dstx;
                 p[1] = *srcx;
             }
         }
     }
 
-    int countAlloc(struct mspan* s)
+    int rec::countAlloc(struct mspan* s)
     {
         auto count = 0;
         auto bytes = divRoundUp(uintptr_t(s->nelems), 8);
         for(auto i = uintptr_t(0); i < bytes; i += 8)
         {
-            auto mrkBits = *(uint64_t*)(unsafe::Pointer(bytep(gocpp::recv(s->gcmarkBits), i)));
+            auto mrkBits = *(uint64_t*)(unsafe::Pointer(rec::bytep(gocpp::recv(s->gcmarkBits), i)));
             count += sys::OnesCount64(mrkBits);
         }
         return count;
@@ -699,14 +711,14 @@ namespace golang::runtime
     {
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch::PtrSize);
         auto pages = divRoundUp(bitmapBytes, pageSize);
-        auto s = allocManual(gocpp::recv(mheap_), pages, spanAllocPtrScalarBits);
+        auto s = rec::allocManual(gocpp::recv(mheap_), pages, spanAllocPtrScalarBits);
         runGCProg(addb(prog, 4), (unsigned char*)(unsafe::Pointer(s->startAddr)));
         return s;
     }
 
     void dematerializeGCProg(struct mspan* s)
     {
-        freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
+        rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
     }
 
     void dumpGCProg(unsigned char* p)

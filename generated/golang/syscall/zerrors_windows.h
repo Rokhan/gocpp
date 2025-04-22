@@ -14,5 +14,9 @@
 namespace golang::syscall
 {
     extern gocpp::array_base<std::string> errors;
+
+    namespace rec
+    {
+    }
 }
 

@@ -14,7 +14,7 @@
 
 namespace golang::time
 {
-    void Sleep(Duration d);
+    void Sleep(time::Duration d);
     struct runtimeTimer
     {
         uintptr_t pp;
@@ -38,7 +38,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeTimer& value);
-    int64_t when(Duration d);
+    int64_t when(time::Duration d);
     void startTimer(runtimeTimer*);
     bool stopTimer(runtimeTimer*);
     bool resetTimer(runtimeTimer*, int64_t);
@@ -60,12 +60,16 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
-    bool Stop(struct Timer* t);
-    struct Timer* NewTimer(Duration d);
-    bool Reset(struct Timer* t, Duration d);
+    struct Timer* NewTimer(time::Duration d);
     void sendTime(go_any c, uintptr_t seq);
-    gocpp::channel<Time> After(Duration d);
-    struct Timer* AfterFunc(Duration d, std::function<void ()> f);
+    gocpp::channel<Time> After(time::Duration d);
+    struct Timer* AfterFunc(time::Duration d, std::function<void ()> f);
     void goFunc(go_any arg, uintptr_t seq);
+
+    namespace rec
+    {
+        bool Stop(struct Timer* t);
+        bool Reset(struct Timer* t, time::Duration d);
+    }
 }
 

@@ -22,6 +22,18 @@
 
 namespace golang::image
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace bufio::rec;
+        using namespace color::rec;
+        using namespace errors::rec;
+        using namespace image::rec;
+        using namespace io::rec;
+        using namespace sync::rec;
+    }
+
     gocpp::error ErrFormat = errors::New("image: unknown format");
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -65,10 +77,10 @@ namespace golang::image
     atomic::Value atomicFormats;
     void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig)
     {
-        Lock(gocpp::recv(formatsMu));
-        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
-        Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
-        Unlock(gocpp::recv(formatsMu));
+        rec::Lock(gocpp::recv(formatsMu));
+        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<image::format>>(rec::Load(gocpp::recv(atomicFormats)));
+        rec::Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
+        rec::Unlock(gocpp::recv(formatsMu));
     }
 
     
@@ -98,17 +110,20 @@ namespace golang::image
     template<typename T, typename StoreT>
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> reader::readerImpl<T, StoreT>::vPeek(int)
     {
-        return Peek(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Peek(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
+    namespace rec
     {
-        return self.ptr->value->vPeek();
-    }
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
+        {
+            return self.ptr->value->vPeek();
+        }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
-    {
-        return self.obj.value->vPeek();
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
+        {
+            return self.obj.value->vPeek();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value)
@@ -143,10 +158,10 @@ namespace golang::image
 
     struct format sniff(struct reader r)
     {
-        auto [formats, gocpp_id_3] = gocpp::getValue<gocpp::slice<image::format>>(Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_3] = gocpp::getValue<gocpp::slice<image::format>>(rec::Load(gocpp::recv(atomicFormats)));
         for(auto [gocpp_ignored, f] : formats)
         {
-            auto [b, err] = Peek(gocpp::recv(r), len(f.magic));
+            auto [b, err] = rec::Peek(gocpp::recv(r), len(f.magic));
             if(err == nullptr && match(f.magic, b))
             {
                 return f;
@@ -163,7 +178,7 @@ namespace golang::image
         {
             return {nullptr, "", ErrFormat};
         }
-        auto [m, err] = decode(gocpp::recv(f), rr);
+        auto [m, err] = rec::decode(gocpp::recv(f), rr);
         return {m, f.name, err};
     }
 
@@ -175,7 +190,7 @@ namespace golang::image
         {
             return {Config {}, "", ErrFormat};
         }
-        auto [c, err] = decodeConfig(gocpp::recv(f), rr);
+        auto [c, err] = rec::decodeConfig(gocpp::recv(f), rr);
         return {c, f.name, err};
     }
 

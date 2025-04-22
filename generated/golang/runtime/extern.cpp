@@ -26,6 +26,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace goos::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     std::tuple<uintptr_t, std::string, int, bool> Caller(int skip)
     {
         uintptr_t pc;
@@ -42,7 +52,7 @@ namespace golang::runtime
             bool ok;
             return {pc, file, line, ok};
         }
-        auto [frame, gocpp_id_1] = Next(gocpp::recv(CallersFrames(rpc)));
+        auto [frame, gocpp_id_1] = rec::Next(gocpp::recv(CallersFrames(rpc)));
         return {frame.PC, frame.File, frame.Line, frame.PC != 0};
     }
 

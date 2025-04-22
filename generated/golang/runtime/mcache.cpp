@@ -64,6 +64,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     mcache::operator T()
@@ -146,7 +157,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gclink* ptr(gclinkptr p)
+    struct gclink* rec::ptr(runtime::gclinkptr p)
     {
         return (gclink*)(unsafe::Pointer(p));
     }
@@ -190,8 +201,8 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            c = (mcache*)(alloc(gocpp::recv(mheap_.cachealloc)));
-            Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
+            c = (mcache*)(rec::alloc(gocpp::recv(mheap_.cachealloc)));
+            rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
             unlock(& mheap_.lock);
         });
         for(auto [i, gocpp_ignored] : c->alloc)
@@ -206,17 +217,17 @@ namespace golang::runtime
     {
         systemstack([=]() mutable -> void
         {
-            releaseAll(gocpp::recv(c));
+            rec::releaseAll(gocpp::recv(c));
             stackcache_clear(c);
             lock(& mheap_.lock);
-            free(gocpp::recv(mheap_.cachealloc), unsafe::Pointer(c));
+            rec::free(gocpp::recv(mheap_.cachealloc), unsafe::Pointer(c));
             unlock(& mheap_.lock);
         });
     }
 
     struct mcache* getMCache(struct m* mp)
     {
-        auto pp = ptr(gocpp::recv(mp->p));
+        auto pp = rec::ptr(gocpp::recv(mp->p));
         mcache* c = {};
         if(pp == nullptr)
         {
@@ -229,7 +240,7 @@ namespace golang::runtime
         return c;
     }
 
-    void refill(struct mcache* c, spanClass spc)
+    void rec::refill(struct mcache* c, runtime::spanClass spc)
     {
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)
@@ -242,21 +253,21 @@ namespace golang::runtime
             {
                 go_throw("bad sweepgen in refill");
             }
-            uncacheSpan(gocpp::recv(mheap_.central[spc].mcentral), s);
-            auto stats = acquire(gocpp::recv(memstats.heapStats));
+            rec::uncacheSpan(gocpp::recv(mheap_.central[spc].mcentral), s);
+            auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
             auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
-            atomic::Xadd64(& stats->smallAllocCount[sizeclass(gocpp::recv(spc))], slotsUsed);
+            atomic::Xadd64(& stats->smallAllocCount[rec::sizeclass(gocpp::recv(spc))], slotsUsed);
             if(spc == tinySpanClass)
             {
                 atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
                 c->tinyAllocs = 0;
             }
-            release(gocpp::recv(memstats.heapStats));
+            rec::release(gocpp::recv(memstats.heapStats));
             auto bytesAllocated = slotsUsed * int64_t(s->elemsize);
-            Add(gocpp::recv(gcController.totalAlloc), bytesAllocated);
+            rec::Add(gocpp::recv(gcController.totalAlloc), bytesAllocated);
             s->allocCountBeforeCache = 0;
         }
-        s = cacheSpan(gocpp::recv(mheap_.central[spc].mcentral));
+        s = rec::cacheSpan(gocpp::recv(mheap_.central[spc].mcentral));
         if(s == nullptr)
         {
             go_throw("out of memory");
@@ -268,12 +279,12 @@ namespace golang::runtime
         s->sweepgen = mheap_.sweepgen + 3;
         s->allocCountBeforeCache = s->allocCount;
         auto usedBytes = uintptr_t(s->allocCount) * s->elemsize;
-        update(gocpp::recv(gcController), int64_t(s->npages * pageSize) - int64_t(usedBytes), int64_t(c->scanAlloc));
+        rec::update(gocpp::recv(gcController), int64_t(s->npages * pageSize) - int64_t(usedBytes), int64_t(c->scanAlloc));
         c->scanAlloc = 0;
         c->alloc[spc] = s;
     }
 
-    struct mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan)
+    struct mspan* rec::allocLarge(struct mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {
@@ -286,24 +297,24 @@ namespace golang::runtime
         }
         deductSweepCredit(npages * _PageSize, npages);
         auto spc = makeSpanClass(0, noscan);
-        auto s = alloc(gocpp::recv(mheap_), npages, spc);
+        auto s = rec::alloc(gocpp::recv(mheap_), npages, spc);
         if(s == nullptr)
         {
             go_throw("out of memory");
         }
-        auto stats = acquire(gocpp::recv(memstats.heapStats));
+        auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xadd64(& stats->largeAlloc, int64_t(npages * pageSize));
         atomic::Xadd64(& stats->largeAllocCount, 1);
-        release(gocpp::recv(memstats.heapStats));
-        Add(gocpp::recv(gcController.totalAlloc), int64_t(npages * pageSize));
-        update(gocpp::recv(gcController), int64_t(s->npages * pageSize), 0);
-        push(gocpp::recv(fullSwept(gocpp::recv(mheap_.central[spc].mcentral), mheap_.sweepgen)), s);
-        s->limit = base(gocpp::recv(s)) + size;
-        initHeapBits(gocpp::recv(s), false);
+        rec::release(gocpp::recv(memstats.heapStats));
+        rec::Add(gocpp::recv(gcController.totalAlloc), int64_t(npages * pageSize));
+        rec::update(gocpp::recv(gcController), int64_t(s->npages * pageSize), 0);
+        rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), mheap_.sweepgen)), s);
+        s->limit = rec::base(gocpp::recv(s)) + size;
+        rec::initHeapBits(gocpp::recv(s), false);
         return s;
     }
 
-    void releaseAll(struct mcache* c)
+    void rec::releaseAll(struct mcache* c)
     {
         auto scanAlloc = int64_t(c->scanAlloc);
         c->scanAlloc = 0;
@@ -316,31 +327,31 @@ namespace golang::runtime
             {
                 auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
                 s->allocCountBeforeCache = 0;
-                auto stats = acquire(gocpp::recv(memstats.heapStats));
-                atomic::Xadd64(& stats->smallAllocCount[sizeclass(gocpp::recv(spanClass(i)))], slotsUsed);
-                release(gocpp::recv(memstats.heapStats));
-                Add(gocpp::recv(gcController.totalAlloc), slotsUsed * int64_t(s->elemsize));
+                auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
+                atomic::Xadd64(& stats->smallAllocCount[rec::sizeclass(gocpp::recv(spanClass(i)))], slotsUsed);
+                rec::release(gocpp::recv(memstats.heapStats));
+                rec::Add(gocpp::recv(gcController.totalAlloc), slotsUsed * int64_t(s->elemsize));
                 if(s->sweepgen != sg + 1)
                 {
                     dHeapLive -= int64_t(s->nelems - s->allocCount) * int64_t(s->elemsize);
                 }
-                uncacheSpan(gocpp::recv(mheap_.central[i].mcentral), s);
+                rec::uncacheSpan(gocpp::recv(mheap_.central[i].mcentral), s);
                 c->alloc[i] = & emptymspan;
             }
         }
         c->tiny = 0;
         c->tinyoffset = 0;
-        auto stats = acquire(gocpp::recv(memstats.heapStats));
+        auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
         c->tinyAllocs = 0;
-        release(gocpp::recv(memstats.heapStats));
-        update(gocpp::recv(gcController), dHeapLive, scanAlloc);
+        rec::release(gocpp::recv(memstats.heapStats));
+        rec::update(gocpp::recv(gcController), dHeapLive, scanAlloc);
     }
 
-    void prepareForSweep(struct mcache* c)
+    void rec::prepareForSweep(struct mcache* c)
     {
         auto sg = mheap_.sweepgen;
-        auto flushGen = Load(gocpp::recv(c->flushGen));
+        auto flushGen = rec::Load(gocpp::recv(c->flushGen));
         if(flushGen == sg)
         {
             return;
@@ -351,9 +362,9 @@ namespace golang::runtime
             println("bad flushGen", flushGen, "in prepareForSweep; sweepgen", sg);
             go_throw("bad flushGen");
         }
-        releaseAll(gocpp::recv(c));
+        rec::releaseAll(gocpp::recv(c));
         stackcache_clear(c);
-        Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
+        rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
     }
 
 }

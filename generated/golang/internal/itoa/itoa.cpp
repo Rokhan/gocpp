@@ -13,6 +13,11 @@
 
 namespace golang::itoa
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     std::string Itoa(int val)
     {
         if(val < 0)

@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     int i = 1;
     int j = 2;
     std::tuple<std::string, int, uint64_t> locabs()

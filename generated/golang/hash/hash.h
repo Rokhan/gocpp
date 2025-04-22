@@ -64,17 +64,20 @@ namespace golang::hash
         std::shared_ptr<IHash> value;
     };
 
-    gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<Hash, false>& self, gocpp::slice<unsigned char> b);
-    gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<Hash>& self, gocpp::slice<unsigned char> b);
+    namespace rec
+    {
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<Hash, false>& self, gocpp::slice<unsigned char> b);
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<Hash>& self, gocpp::slice<unsigned char> b);
 
-    void Reset(const gocpp::PtrRecv<Hash, false>& self);
-    void Reset(const gocpp::ObjRecv<Hash>& self);
+        void Reset(const gocpp::PtrRecv<Hash, false>& self);
+        void Reset(const gocpp::ObjRecv<Hash>& self);
 
-    int Size(const gocpp::PtrRecv<Hash, false>& self);
-    int Size(const gocpp::ObjRecv<Hash>& self);
+        int Size(const gocpp::PtrRecv<Hash, false>& self);
+        int Size(const gocpp::ObjRecv<Hash>& self);
 
-    int BlockSize(const gocpp::PtrRecv<Hash, false>& self);
-    int BlockSize(const gocpp::ObjRecv<Hash>& self);
+        int BlockSize(const gocpp::PtrRecv<Hash, false>& self);
+        int BlockSize(const gocpp::ObjRecv<Hash>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
     struct Hash32 : gocpp::Interface
@@ -119,8 +122,11 @@ namespace golang::hash
         std::shared_ptr<IHash32> value;
     };
 
-    uint32_t Sum32(const gocpp::PtrRecv<Hash32, false>& self);
-    uint32_t Sum32(const gocpp::ObjRecv<Hash32>& self);
+    namespace rec
+    {
+        uint32_t Sum32(const gocpp::PtrRecv<Hash32, false>& self);
+        uint32_t Sum32(const gocpp::ObjRecv<Hash32>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash32& value);
     struct Hash64 : gocpp::Interface
@@ -165,9 +171,16 @@ namespace golang::hash
         std::shared_ptr<IHash64> value;
     };
 
-    uint64_t Sum64(const gocpp::PtrRecv<Hash64, false>& self);
-    uint64_t Sum64(const gocpp::ObjRecv<Hash64>& self);
+    namespace rec
+    {
+        uint64_t Sum64(const gocpp::PtrRecv<Hash64, false>& self);
+        uint64_t Sum64(const gocpp::ObjRecv<Hash64>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value);
+
+    namespace rec
+    {
+    }
 }
 

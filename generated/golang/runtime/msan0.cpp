@@ -16,6 +16,13 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     void msanread(unsafe::Pointer addr, uintptr_t sz)
     {
         go_throw("msan");

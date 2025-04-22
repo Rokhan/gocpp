@@ -54,6 +54,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     wbBuf::operator T()
@@ -89,7 +101,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void reset(struct wbBuf* b)
+    void rec::reset(struct wbBuf* b)
     {
         auto start = uintptr_t(unsafe::Pointer(& b->buf[0]));
         b->next = start;
@@ -107,17 +119,17 @@ namespace golang::runtime
         }
     }
 
-    void discard(struct wbBuf* b)
+    void rec::discard(struct wbBuf* b)
     {
         b->next = uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
-    bool empty(struct wbBuf* b)
+    bool rec::empty(struct wbBuf* b)
     {
         return b->next == uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
-    gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b)
+    gocpp::array<uintptr_t, 1>* rec::get1(struct wbBuf* b)
     {
         if(b->next + goarch::PtrSize > b->end)
         {
@@ -128,7 +140,7 @@ namespace golang::runtime
         return p;
     }
 
-    gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b)
+    gocpp::array<uintptr_t, 2>* rec::get2(struct wbBuf* b)
     {
         if(b->next + 2 * goarch::PtrSize > b->end)
         {
@@ -143,12 +155,12 @@ namespace golang::runtime
     {
         if(getg()->m->dying > 0)
         {
-            discard(gocpp::recv(ptr(gocpp::recv(getg()->m->p))->wbBuf));
+            rec::discard(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->wbBuf));
             return;
         }
         systemstack([=]() mutable -> void
         {
-            wbBufFlush1(ptr(gocpp::recv(getg()->m->p)));
+            wbBufFlush1(rec::ptr(gocpp::recv(getg()->m->p)));
         });
     }
 
@@ -164,7 +176,7 @@ namespace golang::runtime
             {
                 shade(ptr);
             }
-            reset(gocpp::recv(pp->wbBuf));
+            rec::reset(gocpp::recv(pp->wbBuf));
             return;
         }
         auto gcw = & pp->gcw;
@@ -180,18 +192,18 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto mbits = markBitsForIndex(gocpp::recv(span), objIndex);
-            if(isMarked(gocpp::recv(mbits)))
+            auto mbits = rec::markBitsForIndex(gocpp::recv(span), objIndex);
+            if(rec::isMarked(gocpp::recv(mbits)))
             {
                 continue;
             }
-            setMarked(gocpp::recv(mbits));
-            auto [arena, pageIdx, pageMask] = pageIndexOf(base(gocpp::recv(span)));
+            rec::setMarked(gocpp::recv(mbits));
+            auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
                 atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
             }
-            if(noscan(gocpp::recv(span->spanclass)))
+            if(rec::noscan(gocpp::recv(span->spanclass)))
             {
                 gcw->bytesMarked += uint64_t(span->elemsize);
                 continue;
@@ -199,8 +211,8 @@ namespace golang::runtime
             ptrs[pos] = obj;
             pos++;
         }
-        putBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
-        reset(gocpp::recv(pp->wbBuf));
+        rec::putBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
+        rec::reset(gocpp::recv(pp->wbBuf));
     }
 
 }

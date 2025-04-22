@@ -13,6 +13,11 @@
 
 namespace golang::errors
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     struct gocpp::error New(std::string text)
     {
         return new errorString {text};
@@ -47,7 +52,7 @@ namespace golang::errors
         return value.PrintTo(os);
     }
 
-    std::string Error(struct errorString* e)
+    std::string rec::Error(struct errorString* e)
     {
         return e->s;
     }

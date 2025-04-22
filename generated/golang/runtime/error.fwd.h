@@ -13,7 +13,7 @@ namespace golang::runtime
     struct boundsError;
     using boundsErrorCode = uint8_t;
     struct stringer;
-    const boundsErrorCode boundsIndex = 0;
+    const runtime::boundsErrorCode boundsIndex = 0;
     const boundsErrorCode boundsSliceAlen = 1;
     const boundsErrorCode boundsSliceAcap = 2;
     const boundsErrorCode boundsSliceB = 3;

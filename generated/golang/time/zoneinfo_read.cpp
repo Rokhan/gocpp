@@ -22,13 +22,22 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace runtime::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+    }
+
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f)
     {
         loadFromEmbeddedTZData = f;
     }
 
     std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
-    std::string Error(fileSizeError f)
+    std::string rec::Error(time::fileSizeError f)
     {
         return "time: file " + string(f) + " is too large";
     }
@@ -65,7 +74,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    gocpp::slice<unsigned char> read(struct dataIO* d, int n)
+    gocpp::slice<unsigned char> rec::read(struct dataIO* d, int n)
     {
         if(len(d->p) < n)
         {
@@ -78,11 +87,11 @@ namespace golang::time
         return p;
     }
 
-    std::tuple<uint32_t, bool> big4(struct dataIO* d)
+    std::tuple<uint32_t, bool> rec::big4(struct dataIO* d)
     {
         uint32_t n;
         bool ok;
-        auto p = read(gocpp::recv(d), 4);
+        auto p = rec::read(gocpp::recv(d), 4);
         if(len(p) < 4)
         {
             uint32_t n;
@@ -93,12 +102,12 @@ namespace golang::time
         return {uint32_t(p[3]) | (uint32_t(p[2]) << 8) | (uint32_t(p[1]) << 16) | (uint32_t(p[0]) << 24), true};
     }
 
-    std::tuple<uint64_t, bool> big8(struct dataIO* d)
+    std::tuple<uint64_t, bool> rec::big8(struct dataIO* d)
     {
         uint64_t n;
         bool ok;
-        auto [n1, ok1] = big4(gocpp::recv(d));
-        auto [n2, ok2] = big4(gocpp::recv(d));
+        auto [n1, ok1] = rec::big4(gocpp::recv(d));
+        auto [n2, ok2] = rec::big4(gocpp::recv(d));
         if(! ok1 || ! ok2)
         {
             uint64_t n;
@@ -109,11 +118,11 @@ namespace golang::time
         return {(uint64_t(n1) << 32) | uint64_t(n2), true};
     }
 
-    std::tuple<unsigned char, bool> byte(struct dataIO* d)
+    std::tuple<unsigned char, bool> rec::byte(struct dataIO* d)
     {
         unsigned char n;
         bool ok;
-        auto p = read(gocpp::recv(d), 1);
+        auto p = rec::read(gocpp::recv(d), 1);
         if(len(p) < 1)
         {
             unsigned char n;
@@ -124,7 +133,7 @@ namespace golang::time
         return {p[0], true};
     }
 
-    gocpp::slice<unsigned char> rest(struct dataIO* d)
+    gocpp::slice<unsigned char> rec::rest(struct dataIO* d)
     {
         auto r = d->p;
         d->p = nullptr;
@@ -147,13 +156,13 @@ namespace golang::time
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
-        if(auto magic = read(gocpp::recv(d), 4); string(magic) != "TZif")
+        if(auto magic = rec::read(gocpp::recv(d), 4); string(magic) != "TZif")
         {
             return {nullptr, errBadData};
         }
         int version = {};
         gocpp::slice<unsigned char> p = {};
-        if(p = read(gocpp::recv(d), 16); len(p) != 16)
+        if(p = rec::read(gocpp::recv(d), 16); len(p) != 16)
         {
             return {nullptr, errBadData};
         }
@@ -192,7 +201,7 @@ namespace golang::time
         gocpp::array<int, 6> n = {};
         for(auto i = 0; i < 6; i++)
         {
-            auto [nn, ok] = big4(gocpp::recv(d));
+            auto [nn, ok] = rec::big4(gocpp::recv(d));
             if(! ok)
             {
                 return {nullptr, errBadData};
@@ -208,11 +217,11 @@ namespace golang::time
         {
             auto skip = n[NTime] * 4 + n[NTime] + n[NZone] * 6 + n[NChar] + n[NLeap] * 8 + n[NStdWall] + n[NUTCLocal];
             skip += 4 + 16;
-            read(gocpp::recv(d), skip);
+            rec::read(gocpp::recv(d), skip);
             is64 = true;
             for(auto i = 0; i < 6; i++)
             {
-                auto [nn, ok] = big4(gocpp::recv(d));
+                auto [nn, ok] = rec::big4(gocpp::recv(d));
                 if(! ok)
                 {
                     return {nullptr, errBadData};
@@ -229,19 +238,19 @@ namespace golang::time
         {
             size = 8;
         }
-        auto txtimes = dataIO {read(gocpp::recv(d), n[NTime] * size), false};
-        auto txzones = read(gocpp::recv(d), n[NTime]);
-        auto zonedata = dataIO {read(gocpp::recv(d), n[NZone] * 6), false};
-        auto abbrev = read(gocpp::recv(d), n[NChar]);
-        read(gocpp::recv(d), n[NLeap] * (size + 4));
-        auto isstd = read(gocpp::recv(d), n[NStdWall]);
-        auto isutc = read(gocpp::recv(d), n[NUTCLocal]);
+        auto txtimes = dataIO {rec::read(gocpp::recv(d), n[NTime] * size), false};
+        auto txzones = rec::read(gocpp::recv(d), n[NTime]);
+        auto zonedata = dataIO {rec::read(gocpp::recv(d), n[NZone] * 6), false};
+        auto abbrev = rec::read(gocpp::recv(d), n[NChar]);
+        rec::read(gocpp::recv(d), n[NLeap] * (size + 4));
+        auto isstd = rec::read(gocpp::recv(d), n[NStdWall]);
+        auto isutc = rec::read(gocpp::recv(d), n[NUTCLocal]);
         if(d->error)
         {
             return {nullptr, errBadData};
         }
         std::string extend = {};
-        auto rest = rest(gocpp::recv(d));
+        auto rest = rec::rest(gocpp::recv(d));
         if(len(rest) > 2 && rest[0] == '\n' && rest[len(rest) - 1] == '\n')
         {
             extend = string(rest.make_slice(1, len(rest) - 1));
@@ -256,7 +265,7 @@ namespace golang::time
         {
             bool ok = {};
             uint32_t n = {};
-            if(std::tie(n, ok) = big4(gocpp::recv(zonedata)); ! ok)
+            if(std::tie(n, ok) = rec::big4(gocpp::recv(zonedata)); ! ok)
             {
                 return {nullptr, errBadData};
             }
@@ -266,12 +275,12 @@ namespace golang::time
             }
             zones[i].offset = int(int32_t(n));
             unsigned char b = {};
-            if(std::tie(b, ok) = unsigned char(gocpp::recv(zonedata)); ! ok)
+            if(std::tie(b, ok) = rec::unsigned char(gocpp::recv(zonedata)); ! ok)
             {
                 return {nullptr, errBadData};
             }
             zones[i].isDST = b != 0;
-            if(std::tie(b, ok) = unsigned char(gocpp::recv(zonedata)); ! ok || int(b) >= len(abbrev))
+            if(std::tie(b, ok) = rec::unsigned char(gocpp::recv(zonedata)); ! ok || int(b) >= len(abbrev))
             {
                 return {nullptr, errBadData};
             }
@@ -290,7 +299,7 @@ namespace golang::time
             int64_t n = {};
             if(! is64)
             {
-                if(auto [n4, ok] = big4(gocpp::recv(txtimes)); ! ok)
+                if(auto [n4, ok] = rec::big4(gocpp::recv(txtimes)); ! ok)
                 {
                     return {nullptr, errBadData};
                 }
@@ -301,7 +310,7 @@ namespace golang::time
             }
             else
             {
-                if(auto [n8, ok] = big8(gocpp::recv(txtimes)); ! ok)
+                if(auto [n8, ok] = rec::big8(gocpp::recv(txtimes)); ! ok)
                 {
                     return {nullptr, errBadData};
                 }

@@ -16,6 +16,13 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace sync::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Once::operator T()
@@ -48,24 +55,24 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void Do(struct Once* o, std::function<void ()> f)
+    void rec::Do(struct Once* o, std::function<void ()> f)
     {
-        if(Load(gocpp::recv(o->done)) == 0)
+        if(rec::Load(gocpp::recv(o->done)) == 0)
         {
-            doSlow(gocpp::recv(o), f);
+            rec::doSlow(gocpp::recv(o), f);
         }
     }
 
-    void doSlow(struct Once* o, std::function<void ()> f)
+    void rec::doSlow(struct Once* o, std::function<void ()> f)
     {
         gocpp::Defer defer;
         try
         {
-            Lock(gocpp::recv(o->m));
-            defer.push_back([=]{ Unlock(gocpp::recv(o->m)); });
-            if(Load(gocpp::recv(o->done)) == 0)
+            rec::Lock(gocpp::recv(o->m));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(o->m)); });
+            if(rec::Load(gocpp::recv(o->done)) == 0)
             {
-                defer.push_back([=]{ Store(gocpp::recv(o->done), 1); });
+                defer.push_back([=]{ rec::Store(gocpp::recv(o->done), 1); });
                 f();
             }
         }

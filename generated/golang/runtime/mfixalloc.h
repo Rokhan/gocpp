@@ -24,7 +24,7 @@ namespace golang::runtime
         uint32_t nchunk;
         uint32_t nalloc;
         uintptr_t inuse;
-        sysMemStat* stat;
+        runtime::sysMemStat* stat;
         bool zero;
 
         using isGoStruct = void;
@@ -56,8 +56,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mlink& value);
-    void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, sysMemStat* stat);
-    unsafe::Pointer alloc(struct fixalloc* f);
-    void free(struct fixalloc* f, unsafe::Pointer p);
+
+    namespace rec
+    {
+        void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, runtime::sysMemStat* stat);
+        unsafe::Pointer alloc(struct fixalloc* f);
+        void free(struct fixalloc* f, unsafe::Pointer p);
+    }
 }
 

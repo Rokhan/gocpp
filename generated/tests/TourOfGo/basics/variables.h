@@ -25,5 +25,9 @@ namespace golang::main
     void go_while();
     void go_template();
     void go_class();
+
+    namespace rec
+    {
+    }
 }
 

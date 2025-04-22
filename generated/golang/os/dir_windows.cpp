@@ -40,6 +40,20 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace unsafe::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     dirInfo::operator T()
@@ -86,17 +100,17 @@ namespace golang::os
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), dirBufSize);
         return & buf;
     }; });
-    void close(struct dirInfo* d)
+    void rec::close(struct dirInfo* d)
     {
         if(d->buf != nullptr)
         {
-            Put(gocpp::recv(dirBufPool), d->buf);
+            rec::Put(gocpp::recv(dirBufPool), d->buf);
             d->buf = nullptr;
         }
     }
 
     bool allowReadDirFileID = true;
-    std::tuple<gocpp::slice<std::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, struct gocpp::error> readdir(struct File* file, int n, readdirMode mode)
+    std::tuple<gocpp::slice<std::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, struct gocpp::error> rec::readdir(struct File* file, int n, os::readdirMode mode)
     {
         gocpp::slice<std::string> names;
         gocpp::slice<DirEntry> dirents;
@@ -122,7 +136,7 @@ namespace golang::os
                 return {names, dirents, infos, err};
             }
             file->dirinfo = go_new(dirInfo);
-            file->dirinfo->buf = gocpp::getValue<[]byte*>(Get(gocpp::recv(dirBufPool)));
+            file->dirinfo->buf = gocpp::getValue<[]byte*>(rec::Get(gocpp::recv(dirBufPool)));
             file->dirinfo->vol = vol;
             if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)
             {
@@ -205,7 +219,7 @@ namespace golang::os
                         struct gocpp::error err;
                         break;
                     }
-                    if(auto [s, gocpp_id_1] = Stat(gocpp::recv(file)); s != nullptr && ! IsDir(gocpp::recv(s)))
+                    if(auto [s, gocpp_id_1] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
                     {
                         gocpp::slice<std::string> names;
                         gocpp::slice<DirEntry> dirents;
@@ -385,27 +399,27 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string Name(struct dirEntry de)
+    std::string rec::Name(struct dirEntry de)
     {
-        return Name(gocpp::recv(de.fs));
+        return rec::Name(gocpp::recv(de.fs));
     }
 
-    bool IsDir(struct dirEntry de)
+    bool rec::IsDir(struct dirEntry de)
     {
-        return IsDir(gocpp::recv(de.fs));
+        return rec::IsDir(gocpp::recv(de.fs));
     }
 
-    FileMode Type(struct dirEntry de)
+    fs::FileMode rec::Type(struct dirEntry de)
     {
-        return Type(gocpp::recv(Mode(gocpp::recv(de.fs))));
+        return rec::Type(gocpp::recv(rec::Mode(gocpp::recv(de.fs))));
     }
 
-    std::tuple<struct FileInfo, struct gocpp::error> Info(struct dirEntry de)
+    std::tuple<struct FileInfo, struct gocpp::error> rec::Info(struct dirEntry de)
     {
         return {de.fs, nullptr};
     }
 
-    std::string String(struct dirEntry de)
+    std::string rec::String(struct dirEntry de)
     {
         return fs::FormatDirEntry(de);
     }

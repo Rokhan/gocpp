@@ -15,6 +15,11 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void runtime_Semacquire(uint32_t* s)
     /* convertBlockStmt, nil block */;
 

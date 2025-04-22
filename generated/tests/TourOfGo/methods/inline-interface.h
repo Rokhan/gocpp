@@ -12,8 +12,6 @@
 
 namespace golang::main
 {
-    double Abs(MyInt i);
-    double Abs(MyFloat f);
     struct Vertex
     {
         double X;
@@ -31,7 +29,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    double Abs(struct Vertex v);
     void main();
     struct gocpp_id_0 : gocpp::Interface
     {
@@ -75,8 +72,11 @@ namespace golang::main
         std::shared_ptr<Igocpp_id_0> value;
     };
 
-    double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-    double Abs(const gocpp::ObjRecv<gocpp_id_0>& self);
+    namespace rec
+    {
+        double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self);
+        double Abs(const gocpp::ObjRecv<gocpp_id_0>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct gocpp_id_1 : gocpp::Interface
@@ -121,10 +121,20 @@ namespace golang::main
         std::shared_ptr<Igocpp_id_1> value;
     };
 
-    double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self);
-    double Abs(const gocpp::ObjRecv<gocpp_id_1>& self);
+    namespace rec
+    {
+        double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self);
+        double Abs(const gocpp::ObjRecv<gocpp_id_1>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void describe(gocpp_id_1 i);
+
+    namespace rec
+    {
+        double Abs(main::MyInt i);
+        double Abs(main::MyFloat f);
+        double Abs(struct Vertex v);
+    }
 }
 

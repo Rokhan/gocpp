@@ -76,17 +76,24 @@ namespace golang::sync
         std::shared_ptr<ILocker> value;
     };
 
-    void Lock(const gocpp::PtrRecv<Locker, false>& self);
-    void Lock(const gocpp::ObjRecv<Locker>& self);
+    namespace rec
+    {
+        void Lock(const gocpp::PtrRecv<Locker, false>& self);
+        void Lock(const gocpp::ObjRecv<Locker>& self);
 
-    void Unlock(const gocpp::PtrRecv<Locker, false>& self);
-    void Unlock(const gocpp::ObjRecv<Locker>& self);
+        void Unlock(const gocpp::PtrRecv<Locker, false>& self);
+        void Unlock(const gocpp::ObjRecv<Locker>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value);
-    void Lock(struct Mutex* m);
-    bool TryLock(struct Mutex* m);
-    void lockSlow(struct Mutex* m);
-    void Unlock(struct Mutex* m);
-    void unlockSlow(struct Mutex* m, int32_t go_new);
+
+    namespace rec
+    {
+        void Lock(struct Mutex* m);
+        bool TryLock(struct Mutex* m);
+        void lockSlow(struct Mutex* m);
+        void Unlock(struct Mutex* m);
+        void unlockSlow(struct Mutex* m, int32_t go_new);
+    }
 }
 

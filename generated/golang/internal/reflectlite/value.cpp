@@ -21,6 +21,17 @@
 
 namespace golang::reflectlite
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace reflectlite::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+        using namespace unsafeheader::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Value::operator T()
@@ -53,12 +64,12 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    Kind kind(flag f)
+    abi::Kind rec::kind(reflectlite::flag f)
     {
         return Kind(f & flagKindMask);
     }
 
-    flag ro(flag f)
+    reflectlite::flag rec::ro(reflectlite::flag f)
     {
         if(f & flagRO != 0)
         {
@@ -67,14 +78,14 @@ namespace golang::reflectlite
         return 0;
     }
 
-    struct abi::Type* typ(struct Value v)
+    struct abi::Type* rec::typ(struct Value v)
     {
         return (abi::Type*)(noescape(unsafe::Pointer(v.typ_)));
     }
 
-    unsafe::Pointer pointer(struct Value v)
+    unsafe::Pointer rec::pointer(struct Value v)
     {
-        if(Size(gocpp::recv(typ(gocpp::recv(v)))) != goarch::PtrSize || ! Pointers(gocpp::recv(typ(gocpp::recv(v)))))
+        if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
         {
             gocpp::panic("can't call pointer on a non-pointer Value");
         }
@@ -87,7 +98,7 @@ namespace golang::reflectlite
 
     go_any packEface(struct Value v)
     {
-        auto t = typ(gocpp::recv(v));
+        auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
         auto e = (emptyInterface*)(unsafe::Pointer(& i));
         //Go switch emulation
@@ -131,7 +142,7 @@ namespace golang::reflectlite
         {
             return Value {};
         }
-        auto f = flag(Kind(gocpp::recv(t)));
+        auto f = flag(rec::Kind(gocpp::recv(t)));
         if(ifaceIndir(t))
         {
             f |= flagIndir;
@@ -171,13 +182,13 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    std::string Error(struct ValueError* e)
+    std::string rec::Error(struct ValueError* e)
     {
         if(e->Kind == 0)
         {
             return "reflect: call of " + e->Method + " on zero Value";
         }
-        return "reflect: call of " + e->Method + " on " + String(gocpp::recv(e->Kind)) + " Value";
+        return "reflect: call of " + e->Method + " on " + rec::String(gocpp::recv(e->Kind)) + " Value";
     }
 
     std::string methodName()
@@ -188,7 +199,7 @@ namespace golang::reflectlite
         {
             return "unknown method";
         }
-        return Name(gocpp::recv(f));
+        return rec::Name(gocpp::recv(f));
     }
 
     
@@ -223,7 +234,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    void mustBeExported(flag f)
+    void rec::mustBeExported(reflectlite::flag f)
     {
         if(f == 0)
         {
@@ -235,7 +246,7 @@ namespace golang::reflectlite
         }
     }
 
-    void mustBeAssignable(flag f)
+    void rec::mustBeAssignable(reflectlite::flag f)
     {
         if(f == 0)
         {
@@ -251,7 +262,7 @@ namespace golang::reflectlite
         }
     }
 
-    bool CanSet(struct Value v)
+    bool rec::CanSet(struct Value v)
     {
         return v.flag & (flagAddr | flagRO) == flagAddr;
     }
@@ -283,17 +294,20 @@ namespace golang::reflectlite
                         template<typename T, typename StoreT>
                         void gocpp_id_6::gocpp_id_6Impl<T, StoreT>::vM()
                         {
-                            return M(gocpp::PtrRecv<T, false>(value.get()));
+                            return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
 
-                        void M(const gocpp::PtrRecv<gocpp_id_6, false>& self)
+                        namespace rec
                         {
-                            return self.ptr->value->vM();
-                        }
+                            void M(const gocpp::PtrRecv<gocpp_id_6, false>& self)
+                            {
+                                return self.ptr->value->vM();
+                            }
 
-                        void M(const gocpp::ObjRecv<gocpp_id_6>& self)
-                        {
-                            return self.obj.value->vM();
+                            void M(const gocpp::ObjRecv<gocpp_id_6>& self)
+                            {
+                                return self.obj.value->vM();
+                            }
                         }
 
                         std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
@@ -302,9 +316,9 @@ namespace golang::reflectlite
                         }
 
 
-    struct Value Elem(struct Value v)
+    struct Value rec::Elem(struct Value v)
     {
-        auto k = kind(gocpp::recv(v));
+        auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
         {
             auto condition = k;
@@ -315,7 +329,7 @@ namespace golang::reflectlite
             {
                 case 0:
                     go_any eface = {};
-                    if(NumMethod(gocpp::recv(typ(gocpp::recv(v)))) == 0)
+                    if(rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v)))) == 0)
                     {
                         eface = *(go_any*)(v.ptr);
                     }
@@ -326,7 +340,7 @@ namespace golang::reflectlite
                     auto x = unpackEface(eface);
                     if(x.flag != 0)
                     {
-                        x.flag |= ro(gocpp::recv(v.flag));
+                        x.flag |= rec::ro(gocpp::recv(v.flag));
                     }
                     return x;
                     break;
@@ -340,15 +354,15 @@ namespace golang::reflectlite
                     {
                         return Value {};
                     }
-                    auto tt = (ptrType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto tt = (ptrType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
-                    fl |= flag(Kind(gocpp::recv(typ)));
+                    fl |= flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, ptr, fl};
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.Elem", kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflectlite.Value.Elem", rec::kind(gocpp::recv(v))});
     }
 
     
@@ -378,17 +392,20 @@ namespace golang::reflectlite
             template<typename T, typename StoreT>
             void gocpp_id_7::gocpp_id_7Impl<T, StoreT>::vM()
             {
-                return M(gocpp::PtrRecv<T, false>(value.get()));
+                return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }
 
-            void M(const gocpp::PtrRecv<gocpp_id_7, false>& self)
+            namespace rec
             {
-                return self.ptr->value->vM();
-            }
+                void M(const gocpp::PtrRecv<gocpp_id_7, false>& self)
+                {
+                    return self.ptr->value->vM();
+                }
 
-            void M(const gocpp::ObjRecv<gocpp_id_7>& self)
-            {
-                return self.obj.value->vM();
+                void M(const gocpp::ObjRecv<gocpp_id_7>& self)
+                {
+                    return self.obj.value->vM();
+                }
             }
 
             std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
@@ -403,9 +420,9 @@ namespace golang::reflectlite
         {
             gocpp::panic(new ValueError {"reflectlite.Value.Interface", 0});
         }
-        if(kind(gocpp::recv(v)) == abi::Interface)
+        if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
-            if(numMethod(gocpp::recv(v)) == 0)
+            if(rec::numMethod(gocpp::recv(v)) == 0)
             {
                 return *(go_any*)(v.ptr);
             }
@@ -414,9 +431,9 @@ namespace golang::reflectlite
         return packEface(v);
     }
 
-    bool IsNil(struct Value v)
+    bool rec::IsNil(struct Value v)
     {
-        auto k = kind(gocpp::recv(v));
+        auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
         {
             auto condition = k;
@@ -448,17 +465,17 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.IsNil", kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflectlite.Value.IsNil", rec::kind(gocpp::recv(v))});
     }
 
-    bool IsValid(struct Value v)
+    bool rec::IsValid(struct Value v)
     {
         return v.flag != 0;
     }
 
-    Kind Kind(struct Value v)
+    abi::Kind rec::Kind(struct Value v)
     {
-        return kind(gocpp::recv(v));
+        return rec::kind(gocpp::recv(v));
     }
 
     int chanlen(unsafe::Pointer)
@@ -467,9 +484,9 @@ namespace golang::reflectlite
     int maplen(unsafe::Pointer)
     /* convertBlockStmt, nil block */;
 
-    int Len(struct Value v)
+    int rec::Len(struct Value v)
     {
-        auto k = kind(gocpp::recv(v));
+        auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
         {
             auto condition = k;
@@ -482,14 +499,14 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
-                    auto tt = (arrayType*)(unsafe::Pointer(typ(gocpp::recv(v))));
+                    auto tt = (arrayType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
                 case 1:
-                    return chanlen(pointer(gocpp::recv(v)));
+                    return chanlen(rec::pointer(gocpp::recv(v)));
                     break;
                 case 2:
-                    return maplen(pointer(gocpp::recv(v)));
+                    return maplen(rec::pointer(gocpp::recv(v)));
                     break;
                 case 3:
                     return (unsafeheader::Slice*)(v.ptr)->Len;
@@ -499,31 +516,31 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Len", kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflect.Value.Len", rec::kind(gocpp::recv(v))});
     }
 
-    int numMethod(struct Value v)
+    int rec::numMethod(struct Value v)
     {
-        if(typ(gocpp::recv(v)) == nullptr)
+        if(rec::typ(gocpp::recv(v)) == nullptr)
         {
             gocpp::panic(new ValueError {"reflectlite.Value.NumMethod", abi::Invalid});
         }
-        return NumMethod(gocpp::recv(typ(gocpp::recv(v))));
+        return rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v))));
     }
 
-    void Set(struct Value v, struct Value x)
+    void rec::Set(struct Value v, struct Value x)
     {
-        mustBeAssignable(gocpp::recv(v));
-        mustBeExported(gocpp::recv(x));
+        rec::mustBeAssignable(gocpp::recv(v));
+        rec::mustBeExported(gocpp::recv(x));
         unsafe::Pointer target = {};
-        if(kind(gocpp::recv(v)) == abi::Interface)
+        if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
             target = v.ptr;
         }
-        x = assignTo(gocpp::recv(x), "reflectlite.Set", typ(gocpp::recv(v)), target);
+        x = rec::assignTo(gocpp::recv(x), "reflectlite.Set", rec::typ(gocpp::recv(v)), target);
         if(x.flag & flagIndir != 0)
         {
-            typedmemmove(typ(gocpp::recv(v)), v.ptr, x.ptr);
+            typedmemmove(rec::typ(gocpp::recv(v)), v.ptr, x.ptr);
         }
         else
         {
@@ -531,14 +548,14 @@ namespace golang::reflectlite
         }
     }
 
-    struct Type Type(struct Value v)
+    struct Type rec::Type(struct Value v)
     {
         auto f = v.flag;
         if(f == 0)
         {
             gocpp::panic(new ValueError {"reflectlite.Value.Type", abi::Invalid});
         }
-        return toRType(typ(gocpp::recv(v)));
+        return toRType(rec::typ(gocpp::recv(v)));
     }
 
     unsafe::Pointer unsafe_New(abi::Type*)
@@ -553,18 +570,18 @@ namespace golang::reflectlite
         return unpackEface(i);
     }
 
-    struct Value assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target)
+    struct Value rec::assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target)
     {
         //Go switch emulation
         {
             int conditionId = -1;
-            if(directlyAssignable(dst, typ(gocpp::recv(v)))) { conditionId = 0; }
-            else if(implements(dst, typ(gocpp::recv(v)))) { conditionId = 1; }
+            if(directlyAssignable(dst, rec::typ(gocpp::recv(v)))) { conditionId = 0; }
+            else if(implements(dst, rec::typ(gocpp::recv(v)))) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    auto fl = v.flag & (flagAddr | flagIndir) | ro(gocpp::recv(v.flag));
-                    fl |= flag(Kind(gocpp::recv(dst)));
+                    auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
+                    fl |= flag(rec::Kind(gocpp::recv(dst)));
                     return Value {dst, v.ptr, fl};
                     break;
                 case 1:
@@ -572,12 +589,12 @@ namespace golang::reflectlite
                     {
                         target = unsafe_New(dst);
                     }
-                    if(Kind(gocpp::recv(v)) == abi::Interface && IsNil(gocpp::recv(v)))
+                    if(rec::Kind(gocpp::recv(v)) == abi::Interface && rec::IsNil(gocpp::recv(v)))
                     {
                         return Value {dst, nullptr, flag(abi::Interface)};
                     }
                     auto x = valueInterface(v);
-                    if(NumMethod(gocpp::recv(dst)) == 0)
+                    if(rec::NumMethod(gocpp::recv(dst)) == 0)
                     {
                         *(go_any*)(target) = x;
                     }
@@ -589,7 +606,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(context + ": value of type " + String(gocpp::recv(toRType(typ(gocpp::recv(v))))) + " is not assignable to type " + String(gocpp::recv(toRType(dst))));
+        gocpp::panic(context + ": value of type " + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type " + rec::String(gocpp::recv(toRType(dst))));
     }
 
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe)

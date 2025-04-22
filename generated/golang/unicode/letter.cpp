@@ -15,6 +15,12 @@
 
 namespace golang::unicode
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unicode::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     RangeTable::operator T()
@@ -385,7 +391,7 @@ namespace golang::unicode
         return To(TitleCase, r);
     }
 
-    gocpp::rune ToUpper(SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToUpper(SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(UpperCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
         if(r1 == r && ! hadMapping)
@@ -395,7 +401,7 @@ namespace golang::unicode
         return r1;
     }
 
-    gocpp::rune ToTitle(SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToTitle(SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(TitleCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
         if(r1 == r && ! hadMapping)
@@ -405,7 +411,7 @@ namespace golang::unicode
         return r1;
     }
 
-    gocpp::rune ToLower(SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToLower(SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(LowerCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
         if(r1 == r && ! hadMapping)

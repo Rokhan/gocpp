@@ -49,35 +49,39 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceEventWriter& value);
-    struct traceEventWriter eventWriter(struct traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus);
-    void commit(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
 
-    template<typename... Args>
-    void commit(struct traceEventWriter e, traceEv ev, Args... args)
+    namespace rec
     {
-        return commit(e, ev, gocpp::ToSlice<traceArg>(args...));
+        struct traceEventWriter eventWriter(struct traceLocker tl, runtime::traceGoStatus goStatus, runtime::traceProcStatus procStatus);
+        void commit(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args);
+        
+template<typename... Args>
+        void commit(struct traceEventWriter e, runtime::traceEv ev, Args... args)
+        {
+            return commit(e, ev, gocpp::ToSlice<runtime::traceArg>(args...));
+        }
+
+        struct traceEventWriter write(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args);
+        
+template<typename... Args>
+        struct traceEventWriter write(struct traceEventWriter e, runtime::traceEv ev, Args... args)
+        {
+            return write(e, ev, gocpp::ToSlice<runtime::traceArg>(args...));
+        }
+
+        void end(struct traceEventWriter e);
+        struct traceWriter event(struct traceWriter w, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args);
+        
+template<typename... Args>
+        struct traceWriter event(struct traceWriter w, runtime::traceEv ev, Args... args)
+        {
+            return event(w, ev, gocpp::ToSlice<runtime::traceArg>(args...));
+        }
+
+        runtime::traceArg stack(struct traceLocker tl, int skip);
+        runtime::traceArg startPC(struct traceLocker tl, uintptr_t pc);
+        runtime::traceArg string(struct traceLocker tl, std::string s);
+        runtime::traceArg uniqueString(struct traceLocker tl, std::string s);
     }
-
-    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
-
-    template<typename... Args>
-    struct traceEventWriter write(struct traceEventWriter e, traceEv ev, Args... args)
-    {
-        return write(e, ev, gocpp::ToSlice<traceArg>(args...));
-    }
-
-    void end(struct traceEventWriter e);
-    struct traceWriter event(struct traceWriter w, traceEv ev, gocpp::slice<traceArg> args);
-
-    template<typename... Args>
-    struct traceWriter event(struct traceWriter w, traceEv ev, Args... args)
-    {
-        return event(w, ev, gocpp::ToSlice<traceArg>(args...));
-    }
-
-    traceArg stack(struct traceLocker tl, int skip);
-    traceArg startPC(struct traceLocker tl, uintptr_t pc);
-    traceArg string(struct traceLocker tl, std::string s);
-    traceArg uniqueString(struct traceLocker tl, std::string s);
 }
 

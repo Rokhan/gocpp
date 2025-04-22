@@ -53,5 +53,9 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Servent& value);
+
+    namespace rec
+    {
+    }
 }
 

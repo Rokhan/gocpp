@@ -18,6 +18,13 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     unsafe::Pointer sysAllocOS(uintptr_t n)
     {
         return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));

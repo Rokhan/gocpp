@@ -9,7 +9,7 @@ namespace golang::runtime
     using traceBlockReason = uint8_t;
     using traceGoStopReason = uint8_t;
     const bool debugTraceReentrancy = false;
-    const traceBlockReason traceBlockGeneric = 0;
+    const runtime::traceBlockReason traceBlockGeneric = 0;
     const traceBlockReason traceBlockForever = 1;
     const traceBlockReason traceBlockNet = 2;
     const traceBlockReason traceBlockSelect = 3;
@@ -24,7 +24,7 @@ namespace golang::runtime
     const traceBlockReason traceBlockDebugCall = 12;
     const traceBlockReason traceBlockUntilGCEnds = 13;
     const traceBlockReason traceBlockSleep = 14;
-    const traceGoStopReason traceGoStopGeneric = 0;
+    const runtime::traceGoStopReason traceGoStopGeneric = 0;
     const traceGoStopReason traceGoStopGoSched = 1;
     const traceGoStopReason traceGoStopPreempted = 2;
 }

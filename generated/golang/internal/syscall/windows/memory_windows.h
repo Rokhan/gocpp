@@ -34,5 +34,9 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemoryBasicInformation& value);
+
+    namespace rec
+    {
+    }
 }
 

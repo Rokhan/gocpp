@@ -45,6 +45,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace cpu::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     semaRoot::operator T()
@@ -121,7 +133,7 @@ namespace golang::runtime
     }
 
 
-    struct semaRoot* rootFor(semTable* t, uint32_t* addr)
+    struct semaRoot* rec::rootFor(semTable* t, uint32_t* addr)
     {
         return & t[(uintptr_t(unsafe::Pointer(addr)) >> 3) % semTabSize].root;
     }
@@ -175,7 +187,7 @@ namespace golang::runtime
         semacquire1(addr, false, 0, 0, waitReasonSemacquire);
     }
 
-    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason)
+    void semacquire1(uint32_t* addr, bool lifo, runtime::semaProfileFlags profile, int skipframes, runtime::waitReason reason)
     {
         auto gp = getg();
         if(gp != gp->m->curg)
@@ -187,7 +199,7 @@ namespace golang::runtime
             return;
         }
         auto s = acquireSudog();
-        auto root = rootFor(gocpp::recv(semtable), addr);
+        auto root = rec::rootFor(gocpp::recv(semtable), addr);
         auto t0 = int64_t(0);
         s->releasetime = 0;
         s->acquiretime = 0;
@@ -208,14 +220,14 @@ namespace golang::runtime
         for(; ; )
         {
             lockWithRank(& root->lock, lockRankRoot);
-            Add(gocpp::recv(root->nwait), 1);
+            rec::Add(gocpp::recv(root->nwait), 1);
             if(cansemacquire(addr))
             {
-                Add(gocpp::recv(root->nwait), - 1);
+                rec::Add(gocpp::recv(root->nwait), - 1);
                 unlock(& root->lock);
                 break;
             }
-            queue(gocpp::recv(root), addr, s, lifo);
+            rec::queue(gocpp::recv(root), addr, s, lifo);
             goparkunlock(& root->lock, reason, traceBlockSync, 4 + skipframes);
             if(s->ticket != 0 || cansemacquire(addr))
             {
@@ -236,22 +248,22 @@ namespace golang::runtime
 
     void semrelease1(uint32_t* addr, bool handoff, int skipframes)
     {
-        auto root = rootFor(gocpp::recv(semtable), addr);
+        auto root = rec::rootFor(gocpp::recv(semtable), addr);
         atomic::Xadd(addr, 1);
-        if(Load(gocpp::recv(root->nwait)) == 0)
+        if(rec::Load(gocpp::recv(root->nwait)) == 0)
         {
             return;
         }
         lockWithRank(& root->lock, lockRankRoot);
-        if(Load(gocpp::recv(root->nwait)) == 0)
+        if(rec::Load(gocpp::recv(root->nwait)) == 0)
         {
             unlock(& root->lock);
             return;
         }
-        auto [s, t0, tailtime] = dequeue(gocpp::recv(root), addr);
+        auto [s, t0, tailtime] = rec::dequeue(gocpp::recv(root), addr);
         if(s != nullptr)
         {
-            Add(gocpp::recv(root->nwait), - 1);
+            rec::Add(gocpp::recv(root->nwait), - 1);
         }
         unlock(& root->lock);
         if(s != nullptr)
@@ -300,7 +312,7 @@ namespace golang::runtime
         }
     }
 
-    void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
+    void rec::queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
     {
         s->g = getg();
         s->elem = unsafe::Pointer(addr);
@@ -381,7 +393,7 @@ namespace golang::runtime
         {
             if(s->parent->prev == s)
             {
-                rotateRight(gocpp::recv(root), s->parent);
+                rec::rotateRight(gocpp::recv(root), s->parent);
             }
             else
             {
@@ -389,12 +401,12 @@ namespace golang::runtime
                 {
                     gocpp::panic("semaRoot queue");
                 }
-                rotateLeft(gocpp::recv(root), s->parent);
+                rec::rotateLeft(gocpp::recv(root), s->parent);
             }
         }
     }
 
-    std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr)
+    std::tuple<struct sudog*, int64_t, int64_t> rec::dequeue(struct semaRoot* root, uint32_t* addr)
     {
         struct sudog* found;
         int64_t now;
@@ -505,14 +517,14 @@ namespace golang::runtime
                     struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
-                    rotateRight(gocpp::recv(root), s);
+                    rec::rotateRight(gocpp::recv(root), s);
                 }
                 else
                 {
                     struct sudog* found;
                     int64_t now;
                     int64_t tailtime;
-                    rotateLeft(gocpp::recv(root), s);
+                    rec::rotateLeft(gocpp::recv(root), s);
                 }
             }
             if(s->parent != nullptr)
@@ -552,7 +564,7 @@ namespace golang::runtime
         return {s, now, tailtime};
     }
 
-    void rotateLeft(struct semaRoot* root, struct sudog* x)
+    void rec::rotateLeft(struct semaRoot* root, struct sudog* x)
     {
         auto p = x->parent;
         auto y = x->next;
@@ -584,7 +596,7 @@ namespace golang::runtime
         }
     }
 
-    void rotateRight(struct semaRoot* root, struct sudog* y)
+    void rec::rotateRight(struct semaRoot* root, struct sudog* y)
     {
         auto p = y->parent;
         auto x = y->prev;
@@ -664,7 +676,7 @@ namespace golang::runtime
 
     uint32_t notifyListAdd(struct notifyList* l)
     {
-        return Add(gocpp::recv(l->wait), 1) - 1;
+        return rec::Add(gocpp::recv(l->wait), 1) - 1;
     }
 
     void notifyListWait(struct notifyList* l, uint32_t t)
@@ -704,7 +716,7 @@ namespace golang::runtime
 
     void notifyListNotifyAll(struct notifyList* l)
     {
-        if(Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
+        if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {
             return;
         }
@@ -712,7 +724,7 @@ namespace golang::runtime
         auto s = l->head;
         l->head = nullptr;
         l->tail = nullptr;
-        atomic::Store(& l->notify, Load(gocpp::recv(l->wait)));
+        atomic::Store(& l->notify, rec::Load(gocpp::recv(l->wait)));
         unlock(& l->lock);
         for(; s != nullptr; )
         {
@@ -725,13 +737,13 @@ namespace golang::runtime
 
     void notifyListNotifyOne(struct notifyList* l)
     {
-        if(Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
+        if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {
             return;
         }
         lockWithRank(& l->lock, lockRankNotifyList);
         auto t = l->notify;
-        if(t == Load(gocpp::recv(l->wait)))
+        if(t == rec::Load(gocpp::recv(l->wait)))
         {
             unlock(& l->lock);
             return;

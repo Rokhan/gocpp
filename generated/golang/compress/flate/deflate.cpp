@@ -22,6 +22,16 @@
 
 namespace golang::flate
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace flate::rec;
+        using namespace fmt::rec;
+        using namespace io::rec;
+        using namespace math::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     compressionLevel::operator T()
@@ -156,7 +166,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    int fillDeflate(struct compressor* d, gocpp::slice<unsigned char> b)
+    int rec::fillDeflate(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         if(d->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
         {
@@ -206,7 +216,7 @@ namespace golang::flate
         return n;
     }
 
-    struct gocpp::error writeBlock(struct compressor* d, gocpp::slice<token> tokens, int index)
+    struct gocpp::error rec::writeBlock(struct compressor* d, gocpp::slice<flate::token> tokens, int index)
     {
         if(index > 0)
         {
@@ -216,13 +226,13 @@ namespace golang::flate
                 window = d->window.make_slice(d->blockStart, index);
             }
             d->blockStart = index;
-            writeBlock(gocpp::recv(d->w), tokens, false, window);
+            rec::writeBlock(gocpp::recv(d->w), tokens, false, window);
             return d->w->err;
         }
         return nullptr;
     }
 
-    void fillWindow(struct compressor* d, gocpp::slice<unsigned char> b)
+    void rec::fillWindow(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         if(d->compressionLevel.level < 2)
         {
@@ -253,7 +263,7 @@ namespace golang::flate
                 continue;
             }
             auto dst = d->hashMatch.make_slice(0, dstSize);
-            bulkHasher(gocpp::recv(d), toCheck, dst);
+            rec::bulkHasher(gocpp::recv(d), toCheck, dst);
             for(auto [i, val] : dst)
             {
                 auto di = i + index;
@@ -266,7 +276,7 @@ namespace golang::flate
         d->index = n;
     }
 
-    std::tuple<int, int, bool> findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead)
+    std::tuple<int, int, bool> rec::findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead)
     {
         int length;
         int offset;
@@ -348,13 +358,13 @@ namespace golang::flate
         return {length, offset, ok};
     }
 
-    struct gocpp::error writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf)
+    struct gocpp::error rec::writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf)
     {
-        if(writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
+        if(rec::writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
         {
             return d->w->err;
         }
-        writeBytes(gocpp::recv(d->w), buf);
+        rec::writeBytes(gocpp::recv(d->w), buf);
         return d->w->err;
     }
 
@@ -393,7 +403,7 @@ namespace golang::flate
         return max;
     }
 
-    void encSpeed(struct compressor* d)
+    void rec::encSpeed(struct compressor* d)
     {
         if(d->windowEnd < maxStoreBlockSize)
         {
@@ -414,37 +424,37 @@ namespace golang::flate
                             return;
                             break;
                         case 1:
-                            d->err = writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
+                            d->err = rec::writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
                             break;
                         default:
-                            writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
+                            rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
                             d->err = d->w->err;
                             break;
                     }
                 }
                 d->windowEnd = 0;
-                reset(gocpp::recv(d->bestSpeed));
+                rec::reset(gocpp::recv(d->bestSpeed));
                 return;
             }
         }
-        d->tokens = encode(gocpp::recv(d->bestSpeed), d->tokens.make_slice(0, 0), d->window.make_slice(0, d->windowEnd));
+        d->tokens = rec::encode(gocpp::recv(d->bestSpeed), d->tokens.make_slice(0, 0), d->window.make_slice(0, d->windowEnd));
         if(len(d->tokens) > d->windowEnd - (d->windowEnd >> 4))
         {
-            writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
+            rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
         }
         else
         {
-            writeBlockDynamic(gocpp::recv(d->w), d->tokens, false, d->window.make_slice(0, d->windowEnd));
+            rec::writeBlockDynamic(gocpp::recv(d->w), d->tokens, false, d->window.make_slice(0, d->windowEnd));
         }
         d->err = d->w->err;
         d->windowEnd = 0;
     }
 
-    void initDeflate(struct compressor* d)
+    void rec::initDeflate(struct compressor* d)
     {
         d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 2 * windowSize);
         d->hashOffset = 1;
-        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), 0, maxFlateBlockTokens + 1);
+        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<flate::token>>(), 0, maxFlateBlockTokens + 1);
         d->length = minMatchLength - 1;
         d->offset = 0;
         d->byteAvailable = false;
@@ -453,7 +463,7 @@ namespace golang::flate
         d->bulkHasher = bulkHash4;
     }
 
-    void deflate(struct compressor* d)
+    void rec::deflate(struct compressor* d)
     {
         if(d->windowEnd - d->index < minMatchLength + maxMatchLength && ! d->sync)
         {
@@ -487,7 +497,7 @@ namespace golang::flate
                     }
                     if(len(d->tokens) > 0)
                     {
-                        if(d->err = writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
+                        if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
                         {
                             return;
                         }
@@ -515,7 +525,7 @@ namespace golang::flate
             }
             if(d->chainHead - d->hashOffset >= minIndex && (d->fastSkipHashing != skipNever && lookahead > minMatchLength - 1 || d->fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->lazy))
             {
-                if(auto [newLength, newOffset, ok] = findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
+                if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
                 {
                     d->length = newLength;
                     d->offset = newOffset;
@@ -566,7 +576,7 @@ namespace golang::flate
                 }
                 if(len(d->tokens) == maxFlateBlockTokens)
                 {
-                    if(d->err = writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
+                    if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
                     {
                         return;
                     }
@@ -585,7 +595,7 @@ namespace golang::flate
                     d->tokens = append(d->tokens, literalToken(uint32_t(d->window[i])));
                     if(len(d->tokens) == maxFlateBlockTokens)
                     {
-                        if(d->err = writeBlock(gocpp::recv(d), d->tokens, i + 1); d->err != nullptr)
+                        if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, i + 1); d->err != nullptr)
                         {
                             return;
                         }
@@ -607,34 +617,34 @@ namespace golang::flate
         }
     }
 
-    int fillStore(struct compressor* d, gocpp::slice<unsigned char> b)
+    int rec::fillStore(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         auto n = copy(d->window.make_slice(d->windowEnd), b);
         d->windowEnd += n;
         return n;
     }
 
-    void store(struct compressor* d)
+    void rec::store(struct compressor* d)
     {
         if(d->windowEnd > 0 && (d->windowEnd == maxStoreBlockSize || d->sync))
         {
-            d->err = writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
+            d->err = rec::writeStoredBlock(gocpp::recv(d), d->window.make_slice(0, d->windowEnd));
             d->windowEnd = 0;
         }
     }
 
-    void storeHuff(struct compressor* d)
+    void rec::storeHuff(struct compressor* d)
     {
         if(d->windowEnd < len(d->window) && ! d->sync || d->windowEnd == 0)
         {
             return;
         }
-        writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
+        rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
         d->err = d->w->err;
         d->windowEnd = 0;
     }
 
-    std::tuple<int, struct gocpp::error> write(struct compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::write(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -649,8 +659,8 @@ namespace golang::flate
         {
             int n;
             struct gocpp::error err;
-            step(gocpp::recv(d), d);
-            b = b.make_slice(fill(gocpp::recv(d), d, b));
+            rec::step(gocpp::recv(d), d);
+            b = b.make_slice(rec::fill(gocpp::recv(d), d, b));
             if(d->err != nullptr)
             {
                 int n;
@@ -661,25 +671,25 @@ namespace golang::flate
         return {n, nullptr};
     }
 
-    struct gocpp::error syncFlush(struct compressor* d)
+    struct gocpp::error rec::syncFlush(struct compressor* d)
     {
         if(d->err != nullptr)
         {
             return d->err;
         }
         d->sync = true;
-        step(gocpp::recv(d), d);
+        rec::step(gocpp::recv(d), d);
         if(d->err == nullptr)
         {
-            writeStoredHeader(gocpp::recv(d->w), 0, false);
-            flush(gocpp::recv(d->w));
+            rec::writeStoredHeader(gocpp::recv(d->w), 0, false);
+            rec::flush(gocpp::recv(d->w));
             d->err = d->w->err;
         }
         d->sync = false;
         return d->err;
     }
 
-    struct gocpp::error init(struct compressor* d, struct io::Writer w, int level)
+    struct gocpp::error rec::init(struct compressor* d, struct io::Writer w, int level)
     {
         struct gocpp::error err;
         d->w = newHuffmanBitWriter(w);
@@ -710,13 +720,13 @@ namespace golang::flate
                     d->fill = (*compressor)->fillStore;
                     d->step = (*compressor)->encSpeed;
                     d->bestSpeed = newDeflateFast();
-                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), maxStoreBlockSize);
+                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<flate::token>>(), maxStoreBlockSize);
                     break;
                 case 3:
                     level = 6;
                 case 4:
                     d->compressionLevel = levels[level];
-                    initDeflate(gocpp::recv(d));
+                    rec::initDeflate(gocpp::recv(d));
                     d->fill = (*compressor)->fillDeflate;
                     d->step = (*compressor)->deflate;
                     break;
@@ -728,9 +738,9 @@ namespace golang::flate
         return nullptr;
     }
 
-    void reset(struct compressor* d, struct io::Writer w)
+    void rec::reset(struct compressor* d, struct io::Writer w)
     {
-        reset(gocpp::recv(d->w), w);
+        rec::reset(gocpp::recv(d->w), w);
         d->sync = false;
         d->err = nullptr;
         //Go switch emulation
@@ -747,7 +757,7 @@ namespace golang::flate
                 case 1:
                     d->windowEnd = 0;
                     d->tokens = d->tokens.make_slice(0, 0);
-                    reset(gocpp::recv(d->bestSpeed));
+                    rec::reset(gocpp::recv(d->bestSpeed));
                     break;
                 default:
                     d->chainHead = - 1;
@@ -771,7 +781,7 @@ namespace golang::flate
         }
     }
 
-    struct gocpp::error close(struct compressor* d)
+    struct gocpp::error rec::close(struct compressor* d)
     {
         if(d->err == errWriterClosed)
         {
@@ -782,16 +792,16 @@ namespace golang::flate
             return d->err;
         }
         d->sync = true;
-        step(gocpp::recv(d), d);
+        rec::step(gocpp::recv(d), d);
         if(d->err != nullptr)
         {
             return d->err;
         }
-        if(writeStoredHeader(gocpp::recv(d->w), 0, true); d->w->err != nullptr)
+        if(rec::writeStoredHeader(gocpp::recv(d->w), 0, true); d->w->err != nullptr)
         {
             return d->w->err;
         }
-        flush(gocpp::recv(d->w));
+        rec::flush(gocpp::recv(d->w));
         if(d->w->err != nullptr)
         {
             return d->w->err;
@@ -803,7 +813,7 @@ namespace golang::flate
     std::tuple<struct Writer*, struct gocpp::error> NewWriter(struct io::Writer w, int level)
     {
         Writer dw = {};
-        if(auto err = init(gocpp::recv(dw.d), w, level); err != nullptr)
+        if(auto err = rec::init(gocpp::recv(dw.d), w, level); err != nullptr)
         {
             return {nullptr, err};
         }
@@ -818,7 +828,7 @@ namespace golang::flate
         {
             return {nullptr, err};
         }
-        fillWindow(gocpp::recv(zw->d), dict);
+        rec::fillWindow(gocpp::recv(zw->d), dict);
         zw->dict = append(zw->dict, dict);
         return {zw, err};
     }
@@ -852,11 +862,11 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct dictWriter* w, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(struct dictWriter* w, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
-        return Write(gocpp::recv(w->w), b);
+        return rec::Write(gocpp::recv(w->w), b);
     }
 
     gocpp::error errWriterClosed = errors::New("flate: closed writer");
@@ -892,34 +902,34 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct Writer* w, gocpp::slice<unsigned char> data)
+    std::tuple<int, struct gocpp::error> rec::Write(struct Writer* w, gocpp::slice<unsigned char> data)
     {
         int n;
         struct gocpp::error err;
-        return write(gocpp::recv(w->d), data);
+        return rec::write(gocpp::recv(w->d), data);
     }
 
-    struct gocpp::error Flush(struct Writer* w)
+    struct gocpp::error rec::Flush(struct Writer* w)
     {
-        return syncFlush(gocpp::recv(w->d));
+        return rec::syncFlush(gocpp::recv(w->d));
     }
 
-    struct gocpp::error Close(struct Writer* w)
+    struct gocpp::error rec::Close(struct Writer* w)
     {
-        return close(gocpp::recv(w->d));
+        return rec::close(gocpp::recv(w->d));
     }
 
-    void Reset(struct Writer* w, struct io::Writer dst)
+    void rec::Reset(struct Writer* w, struct io::Writer dst)
     {
         if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
         {
             dw->w = dst;
-            reset(gocpp::recv(w->d), dw);
-            fillWindow(gocpp::recv(w->d), w->dict);
+            rec::reset(gocpp::recv(w->d), dw);
+            rec::fillWindow(gocpp::recv(w->d), w->dict);
         }
         else
         {
-            reset(gocpp::recv(w->d), dst);
+            rec::reset(gocpp::recv(w->d), dst);
         }
     }
 

@@ -13,5 +13,10 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
 }
 

@@ -25,6 +25,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     addrRange::operator T()
@@ -67,48 +77,48 @@ namespace golang::runtime
         return r;
     }
 
-    uintptr_t size(struct addrRange a)
+    uintptr_t rec::size(struct addrRange a)
     {
-        if(! lessThan(gocpp::recv(a.base), a.limit))
+        if(! rec::lessThan(gocpp::recv(a.base), a.limit))
         {
             return 0;
         }
-        return diff(gocpp::recv(a.limit), a.base);
+        return rec::diff(gocpp::recv(a.limit), a.base);
     }
 
-    bool contains(struct addrRange a, uintptr_t addr)
+    bool rec::contains(struct addrRange a, uintptr_t addr)
     {
-        return lessEqual(gocpp::recv(a.base), offAddr {addr}) && lessThan(gocpp::recv((offAddr {addr})), a.limit);
+        return rec::lessEqual(gocpp::recv(a.base), offAddr {addr}) && rec::lessThan(gocpp::recv((offAddr {addr})), a.limit);
     }
 
-    struct addrRange subtract(struct addrRange a, struct addrRange b)
+    struct addrRange rec::subtract(struct addrRange a, struct addrRange b)
     {
-        if(lessEqual(gocpp::recv(b.base), a.base) && lessEqual(gocpp::recv(a.limit), b.limit))
+        if(rec::lessEqual(gocpp::recv(b.base), a.base) && rec::lessEqual(gocpp::recv(a.limit), b.limit))
         {
             return addrRange {};
         }
         else
-        if(lessThan(gocpp::recv(a.base), b.base) && lessThan(gocpp::recv(b.limit), a.limit))
+        if(rec::lessThan(gocpp::recv(a.base), b.base) && rec::lessThan(gocpp::recv(b.limit), a.limit))
         {
             go_throw("bad prune");
         }
         else
-        if(lessThan(gocpp::recv(b.limit), a.limit) && lessThan(gocpp::recv(a.base), b.limit))
+        if(rec::lessThan(gocpp::recv(b.limit), a.limit) && rec::lessThan(gocpp::recv(a.base), b.limit))
         {
             a.base = b.limit;
         }
         else
-        if(lessThan(gocpp::recv(a.base), b.base) && lessThan(gocpp::recv(b.base), a.limit))
+        if(rec::lessThan(gocpp::recv(a.base), b.base) && rec::lessThan(gocpp::recv(b.base), a.limit))
         {
             a.limit = b.base;
         }
         return a;
     }
 
-    std::tuple<uintptr_t, bool> takeFromFront(struct addrRange* a, uintptr_t len, uint8_t align)
+    std::tuple<uintptr_t, bool> rec::takeFromFront(struct addrRange* a, uintptr_t len, uint8_t align)
     {
-        auto base = alignUp(addr(gocpp::recv(a->base)), uintptr_t(align)) + len;
-        if(base > addr(gocpp::recv(a->limit)))
+        auto base = alignUp(rec::addr(gocpp::recv(a->base)), uintptr_t(align)) + len;
+        if(base > rec::addr(gocpp::recv(a->limit)))
         {
             return {0, false};
         }
@@ -116,10 +126,10 @@ namespace golang::runtime
         return {base - len, true};
     }
 
-    std::tuple<uintptr_t, bool> takeFromBack(struct addrRange* a, uintptr_t len, uint8_t align)
+    std::tuple<uintptr_t, bool> rec::takeFromBack(struct addrRange* a, uintptr_t len, uint8_t align)
     {
-        auto limit = alignDown(addr(gocpp::recv(a->limit)) - len, uintptr_t(align));
-        if(addr(gocpp::recv(a->base)) > limit)
+        auto limit = alignDown(rec::addr(gocpp::recv(a->limit)) - len, uintptr_t(align));
+        if(rec::addr(gocpp::recv(a->base)) > limit)
         {
             return {0, false};
         }
@@ -127,17 +137,17 @@ namespace golang::runtime
         return {limit, true};
     }
 
-    struct addrRange removeGreaterEqual(struct addrRange a, uintptr_t addr)
+    struct addrRange rec::removeGreaterEqual(struct addrRange a, uintptr_t addr)
     {
-        if(lessEqual(gocpp::recv((offAddr {addr})), a.base))
+        if(rec::lessEqual(gocpp::recv((offAddr {addr})), a.base))
         {
             return addrRange {};
         }
-        if(lessEqual(gocpp::recv(a.limit), offAddr {addr}))
+        if(rec::lessEqual(gocpp::recv(a.limit), offAddr {addr}))
         {
             return a;
         }
-        return makeAddrRange(addr(gocpp::recv(a.base)), addr);
+        return makeAddrRange(rec::addr(gocpp::recv(a.base)), addr);
     }
 
     offAddr minOffAddr = offAddr {arenaBaseOffset};
@@ -171,37 +181,37 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct offAddr add(struct offAddr l, uintptr_t bytes)
+    struct offAddr rec::add(struct offAddr l, uintptr_t bytes)
     {
         return gocpp::Init<offAddr>([](offAddr& x) { x.a = l.a + bytes; });
     }
 
-    struct offAddr sub(struct offAddr l, uintptr_t bytes)
+    struct offAddr rec::sub(struct offAddr l, uintptr_t bytes)
     {
         return gocpp::Init<offAddr>([](offAddr& x) { x.a = l.a - bytes; });
     }
 
-    uintptr_t diff(struct offAddr l1, struct offAddr l2)
+    uintptr_t rec::diff(struct offAddr l1, struct offAddr l2)
     {
         return l1.a - l2.a;
     }
 
-    bool lessThan(struct offAddr l1, struct offAddr l2)
+    bool rec::lessThan(struct offAddr l1, struct offAddr l2)
     {
         return (l1.a - arenaBaseOffset) < (l2.a - arenaBaseOffset);
     }
 
-    bool lessEqual(struct offAddr l1, struct offAddr l2)
+    bool rec::lessEqual(struct offAddr l1, struct offAddr l2)
     {
         return (l1.a - arenaBaseOffset) <= (l2.a - arenaBaseOffset);
     }
 
-    bool equal(struct offAddr l1, struct offAddr l2)
+    bool rec::equal(struct offAddr l1, struct offAddr l2)
     {
         return l1 == l2;
     }
 
-    uintptr_t addr(struct offAddr l)
+    uintptr_t rec::addr(struct offAddr l)
     {
         return l.a;
     }
@@ -235,52 +245,52 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void Clear(struct atomicOffAddr* b)
+    void rec::Clear(struct atomicOffAddr* b)
     {
         for(; ; )
         {
-            auto old = Load(gocpp::recv(b->a));
+            auto old = rec::Load(gocpp::recv(b->a));
             if(old < 0)
             {
                 return;
             }
-            if(CompareAndSwap(gocpp::recv(b->a), old, int64_t(addr(gocpp::recv(minOffAddr)) - arenaBaseOffset)))
+            if(rec::CompareAndSwap(gocpp::recv(b->a), old, int64_t(rec::addr(gocpp::recv(minOffAddr)) - arenaBaseOffset)))
             {
                 return;
             }
         }
     }
 
-    void StoreMin(struct atomicOffAddr* b, uintptr_t addr)
+    void rec::StoreMin(struct atomicOffAddr* b, uintptr_t addr)
     {
         auto go_new = int64_t(addr - arenaBaseOffset);
         for(; ; )
         {
-            auto old = Load(gocpp::recv(b->a));
+            auto old = rec::Load(gocpp::recv(b->a));
             if(old < go_new)
             {
                 return;
             }
-            if(CompareAndSwap(gocpp::recv(b->a), old, go_new))
+            if(rec::CompareAndSwap(gocpp::recv(b->a), old, go_new))
             {
                 return;
             }
         }
     }
 
-    void StoreUnmark(struct atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr)
+    void rec::StoreUnmark(struct atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr)
     {
-        CompareAndSwap(gocpp::recv(b->a), - int64_t(markedAddr - arenaBaseOffset), int64_t(newAddr - arenaBaseOffset));
+        rec::CompareAndSwap(gocpp::recv(b->a), - int64_t(markedAddr - arenaBaseOffset), int64_t(newAddr - arenaBaseOffset));
     }
 
-    void StoreMarked(struct atomicOffAddr* b, uintptr_t addr)
+    void rec::StoreMarked(struct atomicOffAddr* b, uintptr_t addr)
     {
-        Store(gocpp::recv(b->a), - int64_t(addr - arenaBaseOffset));
+        rec::Store(gocpp::recv(b->a), - int64_t(addr - arenaBaseOffset));
     }
 
-    std::tuple<uintptr_t, bool> Load(struct atomicOffAddr* b)
+    std::tuple<uintptr_t, bool> rec::Load(struct atomicOffAddr* b)
     {
-        auto v = Load(gocpp::recv(b->a));
+        auto v = rec::Load(gocpp::recv(b->a));
         auto wasMarked = false;
         if(v < 0)
         {
@@ -325,7 +335,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct addrRanges* a, sysMemStat* sysStat)
+    void rec::init(struct addrRanges* a, runtime::sysMemStat* sysStat)
     {
         auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
         ranges->len = 0;
@@ -335,7 +345,7 @@ namespace golang::runtime
         a->totalBytes = 0;
     }
 
-    int findSucc(struct addrRanges* a, uintptr_t addr)
+    int rec::findSucc(struct addrRanges* a, uintptr_t addr)
     {
         auto base = offAddr {addr};
         auto iterMax = 8;
@@ -343,11 +353,11 @@ namespace golang::runtime
         for(; top - bot > iterMax; )
         {
             auto i = int((unsigned int)(bot + top) >> 1);
-            if(contains(gocpp::recv(a->ranges[i]), addr(gocpp::recv(base))))
+            if(rec::contains(gocpp::recv(a->ranges[i]), rec::addr(gocpp::recv(base))))
             {
                 return i + 1;
             }
-            if(lessThan(gocpp::recv(base), a->ranges[i].base))
+            if(rec::lessThan(gocpp::recv(base), a->ranges[i].base))
             {
                 top = i;
             }
@@ -358,7 +368,7 @@ namespace golang::runtime
         }
         for(auto i = bot; i < top; i++)
         {
-            if(lessThan(gocpp::recv(base), a->ranges[i].base))
+            if(rec::lessThan(gocpp::recv(base), a->ranges[i].base))
             {
                 return i;
             }
@@ -366,44 +376,44 @@ namespace golang::runtime
         return top;
     }
 
-    std::tuple<uintptr_t, bool> findAddrGreaterEqual(struct addrRanges* a, uintptr_t addr)
+    std::tuple<uintptr_t, bool> rec::findAddrGreaterEqual(struct addrRanges* a, uintptr_t addr)
     {
-        auto i = findSucc(gocpp::recv(a), addr);
+        auto i = rec::findSucc(gocpp::recv(a), addr);
         if(i == 0)
         {
-            return {addr(gocpp::recv(a->ranges[0].base)), true};
+            return {rec::addr(gocpp::recv(a->ranges[0].base)), true};
         }
-        if(contains(gocpp::recv(a->ranges[i - 1]), addr))
+        if(rec::contains(gocpp::recv(a->ranges[i - 1]), addr))
         {
             return {addr, true};
         }
         if(i < len(a->ranges))
         {
-            return {addr(gocpp::recv(a->ranges[i].base)), true};
+            return {rec::addr(gocpp::recv(a->ranges[i].base)), true};
         }
         return {0, false};
     }
 
-    bool contains(struct addrRanges* a, uintptr_t addr)
+    bool rec::contains(struct addrRanges* a, uintptr_t addr)
     {
-        auto i = findSucc(gocpp::recv(a), addr);
+        auto i = rec::findSucc(gocpp::recv(a), addr);
         if(i == 0)
         {
             return false;
         }
-        return contains(gocpp::recv(a->ranges[i - 1]), addr);
+        return rec::contains(gocpp::recv(a->ranges[i - 1]), addr);
     }
 
-    void add(struct addrRanges* a, struct addrRange r)
+    void rec::add(struct addrRanges* a, struct addrRange r)
     {
-        if(size(gocpp::recv(r)) == 0)
+        if(rec::size(gocpp::recv(r)) == 0)
         {
-            print("runtime: range = {", hex(addr(gocpp::recv(r.base))), ", ", hex(addr(gocpp::recv(r.limit))), "}\n");
+            print("runtime: range = {", hex(rec::addr(gocpp::recv(r.base))), ", ", hex(rec::addr(gocpp::recv(r.limit))), "}\n");
             go_throw("attempted to add zero-sized address range");
         }
-        auto i = findSucc(gocpp::recv(a), addr(gocpp::recv(r.base)));
-        auto coalescesDown = i > 0 && equal(gocpp::recv(a->ranges[i - 1].limit), r.base);
-        auto coalescesUp = i < len(a->ranges) && equal(gocpp::recv(r.limit), a->ranges[i].base);
+        auto i = rec::findSucc(gocpp::recv(a), rec::addr(gocpp::recv(r.base)));
+        auto coalescesDown = i > 0 && rec::equal(gocpp::recv(a->ranges[i - 1].limit), r.base);
+        auto coalescesUp = i < len(a->ranges) && rec::equal(gocpp::recv(r.limit), a->ranges[i].base);
         if(coalescesUp && coalescesDown)
         {
             a->ranges[i - 1].limit = a->ranges[i].limit;
@@ -439,20 +449,20 @@ namespace golang::runtime
             }
             a->ranges[i] = r;
         }
-        a->totalBytes += size(gocpp::recv(r));
+        a->totalBytes += rec::size(gocpp::recv(r));
     }
 
-    struct addrRange removeLast(struct addrRanges* a, uintptr_t nBytes)
+    struct addrRange rec::removeLast(struct addrRanges* a, uintptr_t nBytes)
     {
         if(len(a->ranges) == 0)
         {
             return addrRange {};
         }
         auto r = a->ranges[len(a->ranges) - 1];
-        auto size = size(gocpp::recv(r));
+        auto size = rec::size(gocpp::recv(r));
         if(size > nBytes)
         {
-            auto newEnd = sub(gocpp::recv(r.limit), nBytes);
+            auto newEnd = rec::sub(gocpp::recv(r.limit), nBytes);
             a->ranges[len(a->ranges) - 1].limit = newEnd;
             a->totalBytes -= nBytes;
             return addrRange {newEnd, r.limit};
@@ -462,9 +472,9 @@ namespace golang::runtime
         return r;
     }
 
-    void removeGreaterEqual(struct addrRanges* a, uintptr_t addr)
+    void rec::removeGreaterEqual(struct addrRanges* a, uintptr_t addr)
     {
-        auto pivot = findSucc(gocpp::recv(a), addr);
+        auto pivot = rec::findSucc(gocpp::recv(a), addr);
         if(pivot == 0)
         {
             a->totalBytes = 0;
@@ -474,19 +484,19 @@ namespace golang::runtime
         auto removed = uintptr_t(0);
         for(auto [gocpp_ignored, r] : a->ranges.make_slice(pivot))
         {
-            removed += size(gocpp::recv(r));
+            removed += rec::size(gocpp::recv(r));
         }
-        if(auto r = a->ranges[pivot - 1]; contains(gocpp::recv(r), addr))
+        if(auto r = a->ranges[pivot - 1]; rec::contains(gocpp::recv(r), addr))
         {
-            removed += size(gocpp::recv(r));
-            r = removeGreaterEqual(gocpp::recv(r), addr);
-            if(size(gocpp::recv(r)) == 0)
+            removed += rec::size(gocpp::recv(r));
+            r = rec::removeGreaterEqual(gocpp::recv(r), addr);
+            if(rec::size(gocpp::recv(r)) == 0)
             {
                 pivot--;
             }
             else
             {
-                removed -= size(gocpp::recv(r));
+                removed -= rec::size(gocpp::recv(r));
                 a->ranges[pivot - 1] = r;
             }
         }
@@ -494,7 +504,7 @@ namespace golang::runtime
         a->totalBytes -= removed;
     }
 
-    void cloneInto(struct addrRanges* a, struct addrRanges* b)
+    void rec::cloneInto(struct addrRanges* a, struct addrRanges* b)
     {
         if(len(a->ranges) > cap(b->ranges))
         {

@@ -15,5 +15,9 @@ namespace golang::bits
     extern std::string pop8tab;
     extern std::string rev8tab;
     extern std::string len8tab;
+
+    namespace rec
+    {
+    }
 }
 

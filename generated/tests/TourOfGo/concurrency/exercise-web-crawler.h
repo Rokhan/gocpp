@@ -54,8 +54,11 @@ namespace golang::main
         std::shared_ptr<IFetcher> value;
     };
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
+    namespace rec
+    {
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
     void Crawl(std::string url, int depth, struct Fetcher fetcher);
@@ -77,7 +80,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(fakeFetcher f, std::string url);
     extern fakeFetcher fetcher;
+
+    namespace rec
+    {
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(fakeFetcher f, std::string url);
+    }
 }
 

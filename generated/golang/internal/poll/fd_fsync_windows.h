@@ -19,6 +19,10 @@
 
 namespace golang::poll
 {
-    struct gocpp::error Fsync(struct FD* fd);
+
+    namespace rec
+    {
+        struct gocpp::error Fsync(struct FD* fd);
+    }
 }
 

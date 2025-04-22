@@ -15,6 +15,12 @@
 
 namespace golang::atomic
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     bool Cas(uint32_t* ptr, uint32_t old, uint32_t go_new)
     /* convertBlockStmt, nil block */;
 

@@ -34,6 +34,20 @@
 
 namespace golang::poll
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace io::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace unsafe::rec;
+        using namespace utf16::rec;
+        using namespace utf8::rec;
+        using namespace windows::rec;
+    }
+
     gocpp::error initErr;
     uint64_t ioSync;
     bool useSetFileCompletionNotificationModes;
@@ -142,7 +156,7 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    void InitBuf(struct operation* o, gocpp::slice<unsigned char> buf)
+    void rec::InitBuf(struct operation* o, gocpp::slice<unsigned char> buf)
     {
         o->buf.Len = uint32_t(len(buf));
         o->buf.Buf = nullptr;
@@ -152,7 +166,7 @@ namespace golang::poll
         }
     }
 
-    void InitBufs(struct operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf)
+    void rec::InitBufs(struct operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf)
     {
         if(o->bufs == nullptr)
         {
@@ -181,7 +195,7 @@ namespace golang::poll
         }
     }
 
-    void ClearBufs(struct operation* o)
+    void rec::ClearBufs(struct operation* o)
     {
         for(auto [i, gocpp_ignored] : o->bufs)
         {
@@ -190,9 +204,9 @@ namespace golang::poll
         o->bufs = o->bufs.make_slice(0, 0);
     }
 
-    void InitMsg(struct operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob)
+    void rec::InitMsg(struct operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob)
     {
-        InitBuf(gocpp::recv(o), p);
+        rec::InitBuf(gocpp::recv(o), p);
         o->msg.Buffers = & o->buf;
         o->msg.BufferCount = 1;
         o->msg.Name = nullptr;
@@ -213,7 +227,7 @@ namespace golang::poll
             return {0, errors::New("internal error: polling on unsupported descriptor type")};
         }
         auto fd = o->fd;
-        auto err = prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
+        auto err = rec::prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
         if(err != nullptr)
         {
             return {0, err};
@@ -241,7 +255,7 @@ namespace golang::poll
                     break;
             }
         }
-        err = wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
+        err = rec::wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
         if(err == nullptr)
         {
             if(o->errno != 0)
@@ -270,7 +284,7 @@ namespace golang::poll
                 case 2:
                     break;
                 default:
-                    gocpp::panic("unexpected runtime.netpoll error: " + Error(gocpp::recv(netpollErr)));
+                    gocpp::panic("unexpected runtime.netpoll error: " + rec::Error(gocpp::recv(netpollErr)));
                     break;
             }
         }
@@ -279,7 +293,7 @@ namespace golang::poll
         {
             gocpp::panic(err);
         }
-        waitCanceled(gocpp::recv(fd->pd), int(o->mode));
+        rec::waitCanceled(gocpp::recv(fd->pd), int(o->mode));
         if(o->errno != 0)
         {
             err = syscall::Errno(o->errno);
@@ -367,7 +381,7 @@ namespace golang::poll
     }
 
     std::function<void (std::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
-    std::tuple<std::string, struct gocpp::error> Init(struct FD* fd, std::string net, bool pollable)
+    std::tuple<std::string, struct gocpp::error> rec::Init(struct FD* fd, std::string net, bool pollable)
     {
         if(initErr != nullptr)
         {
@@ -428,7 +442,7 @@ namespace golang::poll
         gocpp::error err = {};
         if(pollable)
         {
-            err = init(gocpp::recv(fd->pd), fd);
+            err = rec::init(gocpp::recv(fd->pd), fd);
         }
         if(logInitFD != nullptr)
         {
@@ -501,13 +515,13 @@ namespace golang::poll
         return {"", nullptr};
     }
 
-    struct gocpp::error destroy(struct FD* fd)
+    struct gocpp::error rec::destroy(struct FD* fd)
     {
         if(fd->Sysfd == syscall::InvalidHandle)
         {
             return syscall::EINVAL;
         }
-        close(gocpp::recv(fd->pd));
+        rec::close(gocpp::recv(fd->pd));
         gocpp::error err = {};
         //Go switch emulation
         {
@@ -529,9 +543,9 @@ namespace golang::poll
         return err;
     }
 
-    struct gocpp::error Close(struct FD* fd)
+    struct gocpp::error rec::Close(struct FD* fd)
     {
-        if(! increfAndClose(gocpp::recv(fd->fdmu)))
+        if(! rec::increfAndClose(gocpp::recv(fd->fdmu)))
         {
             return errClosing(fd->isFile);
         }
@@ -539,22 +553,22 @@ namespace golang::poll
         {
             syscall::CancelIoEx(fd->Sysfd, nullptr);
         }
-        evict(gocpp::recv(fd->pd));
-        auto err = decref(gocpp::recv(fd));
+        rec::evict(gocpp::recv(fd->pd));
+        auto err = rec::decref(gocpp::recv(fd));
         runtime_Semacquire(& fd->csema);
         return err;
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> rec::Read(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             if(len(buf) > maxRW)
             {
                 buf = buf.make_slice(0, maxRW);
@@ -563,8 +577,8 @@ namespace golang::poll
             gocpp::error err = {};
             if(fd->isFile)
             {
-                Lock(gocpp::recv(fd->l));
-                defer.push_back([=]{ Unlock(gocpp::recv(fd->l)); });
+                rec::Lock(gocpp::recv(fd->l));
+                defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
                 //Go switch emulation
                 {
                     auto condition = fd->kind;
@@ -573,7 +587,7 @@ namespace golang::poll
                     switch(conditionId)
                     {
                         case 0:
-                            std::tie(n, err) = readConsole(gocpp::recv(fd), buf);
+                            std::tie(n, err) = rec::readConsole(gocpp::recv(fd), buf);
                             break;
                         default:
                             std::tie(n, err) = syscall::Read(fd->Sysfd, buf);
@@ -592,7 +606,7 @@ namespace golang::poll
             else
             {
                 auto o = & fd->rop;
-                InitBuf(gocpp::recv(o), buf);
+                rec::InitBuf(gocpp::recv(o), buf);
                 std::tie(n, err) = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return syscall::WSARecv(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, & o->o, nullptr);
@@ -604,7 +618,7 @@ namespace golang::poll
             }
             if(len(buf) != 0)
             {
-                err = eofError(gocpp::recv(fd), n, err);
+                err = rec::eofError(gocpp::recv(fd), n, err);
             }
             return {n, err};
         }
@@ -615,7 +629,7 @@ namespace golang::poll
     }
 
     std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole = syscall::ReadConsole;
-    std::tuple<int, struct gocpp::error> readConsole(struct FD* fd, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::readConsole(struct FD* fd, gocpp::slice<unsigned char> b)
     {
         if(len(b) == 0)
         {
@@ -694,7 +708,7 @@ namespace golang::poll
         return {i, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Pread(struct FD* fd, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::Pread(struct FD* fd, gocpp::slice<unsigned char> b, int64_t off)
     {
         gocpp::Defer defer;
         try
@@ -703,17 +717,17 @@ namespace golang::poll
             {
                 return {0, syscall::ESPIPE};
             }
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             if(len(b) > maxRW)
             {
                 b = b.make_slice(0, maxRW);
             }
-            Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ Unlock(gocpp::recv(fd->l)); });
+            rec::Lock(gocpp::recv(fd->l));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
             if(e != nullptr)
             {
@@ -733,7 +747,7 @@ namespace golang::poll
             }
             if(len(b) != 0)
             {
-                e = eofError(gocpp::recv(fd), int(done), e);
+                e = rec::eofError(gocpp::recv(fd), int(done), e);
             }
             return {int(done), e};
         }
@@ -743,7 +757,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct syscall::Sockaddr, struct gocpp::error> ReadFrom(struct FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct syscall::Sockaddr, struct gocpp::error> rec::ReadFrom(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
@@ -756,13 +770,13 @@ namespace golang::poll
             {
                 buf = buf.make_slice(0, maxRW);
             }
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, nullptr, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             auto o = & fd->rop;
-            InitBuf(gocpp::recv(o), buf);
+            rec::InitBuf(gocpp::recv(o), buf);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {
                 if(o->rsa == nullptr)
@@ -772,12 +786,12 @@ namespace golang::poll
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, nullptr, err};
             }
-            auto [sa, gocpp_id_1] = Sockaddr(gocpp::recv(o->rsa));
+            auto [sa, gocpp_id_1] = rec::Sockaddr(gocpp::recv(o->rsa));
             return {n, sa, nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -786,7 +800,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> ReadFromInet4(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet4* sa4)
+    std::tuple<int, struct gocpp::error> rec::ReadFromInet4(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
@@ -799,13 +813,13 @@ namespace golang::poll
             {
                 buf = buf.make_slice(0, maxRW);
             }
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             auto o = & fd->rop;
-            InitBuf(gocpp::recv(o), buf);
+            rec::InitBuf(gocpp::recv(o), buf);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {
                 if(o->rsa == nullptr)
@@ -815,7 +829,7 @@ namespace golang::poll
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, err};
@@ -829,7 +843,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> ReadFromInet6(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet6* sa6)
+    std::tuple<int, struct gocpp::error> rec::ReadFromInet6(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
@@ -842,13 +856,13 @@ namespace golang::poll
             {
                 buf = buf.make_slice(0, maxRW);
             }
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             auto o = & fd->rop;
-            InitBuf(gocpp::recv(o), buf);
+            rec::InitBuf(gocpp::recv(o), buf);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {
                 if(o->rsa == nullptr)
@@ -858,7 +872,7 @@ namespace golang::poll
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
             {
                 return {n, err};
@@ -872,20 +886,20 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct FD* fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> rec::Write(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(fd->isFile)
             {
-                Lock(gocpp::recv(fd->l));
-                defer.push_back([=]{ Unlock(gocpp::recv(fd->l)); });
+                rec::Lock(gocpp::recv(fd->l));
+                defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             }
             auto ntotal = 0;
             for(; len(buf) > 0; )
@@ -907,7 +921,7 @@ namespace golang::poll
                         switch(conditionId)
                         {
                             case 0:
-                                std::tie(n, err) = writeConsole(gocpp::recv(fd), b);
+                                std::tie(n, err) = rec::writeConsole(gocpp::recv(fd), b);
                                 break;
                             default:
                                 std::tie(n, err) = syscall::Write(fd->Sysfd, b);
@@ -930,7 +944,7 @@ namespace golang::poll
                         race::ReleaseMerge(unsafe::Pointer(& ioSync));
                     }
                     auto o = & fd->wop;
-                    InitBuf(gocpp::recv(o), b);
+                    rec::InitBuf(gocpp::recv(o), b);
                     std::tie(n, err) = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                     {
                         return syscall::WSASend(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, & o->o, nullptr);
@@ -951,7 +965,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> writeConsole(struct FD* fd, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::writeConsole(struct FD* fd, gocpp::slice<unsigned char> b)
     {
         auto n = len(b);
         auto runes = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), 0, 256);
@@ -996,7 +1010,7 @@ namespace golang::poll
         return {n, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Pwrite(struct FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::Pwrite(struct FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
         gocpp::Defer defer;
         try
@@ -1005,13 +1019,13 @@ namespace golang::poll
             {
                 return {0, syscall::ESPIPE};
             }
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
-            Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ Unlock(gocpp::recv(fd->l)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+            rec::Lock(gocpp::recv(fd->l));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
             if(e != nullptr)
             {
@@ -1045,7 +1059,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int64_t, struct gocpp::error> Writev(struct FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf)
+    std::tuple<int64_t, struct gocpp::error> rec::Writev(struct FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf)
     {
         gocpp::Defer defer;
         try
@@ -1054,22 +1068,22 @@ namespace golang::poll
             {
                 return {0, nullptr};
             }
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(race::Enabled)
             {
                 race::ReleaseMerge(unsafe::Pointer(& ioSync));
             }
             auto o = & fd->wop;
-            InitBufs(gocpp::recv(o), buf);
+            rec::InitBufs(gocpp::recv(o), buf);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {
                 return syscall::WSASend(o->fd->Sysfd, & o->bufs[0], uint32_t(len(o->bufs)), & o->qty, 0, & o->o, nullptr);
             });
-            ClearBufs(gocpp::recv(o));
+            rec::ClearBufs(gocpp::recv(o));
             TestHookDidWritev(n);
             consume(buf, int64_t(n));
             return {int64_t(n), err};
@@ -1080,20 +1094,20 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> WriteTo(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::Sockaddr sa)
+    std::tuple<int, struct gocpp::error> rec::WriteTo(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), buf);
+                rec::InitBuf(gocpp::recv(o), buf);
                 o->sa = sa;
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
@@ -1110,7 +1124,7 @@ namespace golang::poll
                     b = b.make_slice(0, maxRW);
                 }
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), b);
+                rec::InitBuf(gocpp::recv(o), b);
                 o->sa = sa;
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
@@ -1131,20 +1145,20 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> WriteToInet4(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet4* sa4)
+    std::tuple<int, struct gocpp::error> rec::WriteToInet4(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), buf);
+                rec::InitBuf(gocpp::recv(o), buf);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return windows::WSASendtoInet4(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa4, & o->o, nullptr);
@@ -1160,7 +1174,7 @@ namespace golang::poll
                     b = b.make_slice(0, maxRW);
                 }
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), b);
+                rec::InitBuf(gocpp::recv(o), b);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return windows::WSASendtoInet4(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa4, & o->o, nullptr);
@@ -1180,20 +1194,20 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, struct gocpp::error> WriteToInet6(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet6* sa6)
+    std::tuple<int, struct gocpp::error> rec::WriteToInet6(struct FD* fd, gocpp::slice<unsigned char> buf, struct syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), buf);
+                rec::InitBuf(gocpp::recv(o), buf);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return windows::WSASendtoInet6(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa6, & o->o, nullptr);
@@ -1209,7 +1223,7 @@ namespace golang::poll
                     b = b.make_slice(0, maxRW);
                 }
                 auto o = & fd->wop;
-                InitBuf(gocpp::recv(o), b);
+                rec::InitBuf(gocpp::recv(o), b);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return windows::WSASendtoInet6(o->fd->Sysfd, & o->buf, 1, & o->qty, 0, sa6, & o->o, nullptr);
@@ -1229,7 +1243,7 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error ConnectEx(struct FD* fd, struct syscall::Sockaddr ra)
+    struct gocpp::error rec::ConnectEx(struct FD* fd, struct syscall::Sockaddr ra)
     {
         auto o = & fd->wop;
         o->sa = ra;
@@ -1240,7 +1254,7 @@ namespace golang::poll
         return err;
     }
 
-    std::tuple<std::string, struct gocpp::error> acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o)
+    std::tuple<std::string, struct gocpp::error> rec::acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o)
     {
         o->handle = s;
         o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1262,16 +1276,16 @@ namespace golang::poll
         return {"", nullptr};
     }
 
-    std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, std::string, struct gocpp::error> Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket)
+    std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, std::string, struct gocpp::error> rec::Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {syscall::InvalidHandle, nullptr, 0, "", err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             auto o = & fd->rop;
             gocpp::array<syscall::RawSockaddrAny, 2> rawsa = {};
             for(; ; )
@@ -1282,7 +1296,7 @@ namespace golang::poll
                     return {syscall::InvalidHandle, nullptr, 0, "", err};
                 }
                 std::string errcall;
-                std::tie(errcall, err) = acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0, ), o);
+                std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0, ), o);
                 if(err == nullptr)
                 {
                     return {s, rawsa.make_slice(0, ), uint32_t(o->rsan), "", nullptr};
@@ -1316,7 +1330,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int64_t, struct gocpp::error> Seek(struct FD* fd, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::Seek(struct FD* fd, int64_t offset, int whence)
     {
         gocpp::Defer defer;
         try
@@ -1325,13 +1339,13 @@ namespace golang::poll
             {
                 return {0, syscall::ESPIPE};
             }
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
-            Lock(gocpp::recv(fd->l));
-            defer.push_back([=]{ Unlock(gocpp::recv(fd->l)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+            rec::Lock(gocpp::recv(fd->l));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             return syscall::Seek(fd->Sysfd, offset, whence);
         }
         catch(gocpp::GoPanic& gp)
@@ -1340,16 +1354,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error Fchmod(struct FD* fd, uint32_t mode)
+    struct gocpp::error rec::Fchmod(struct FD* fd, uint32_t mode)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             syscall::ByHandleFileInformation d = {};
             if(auto err = syscall::GetFileInformationByHandle(fd->Sysfd, & d); err != nullptr)
             {
@@ -1378,16 +1392,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error Fchdir(struct FD* fd)
+    struct gocpp::error rec::Fchdir(struct FD* fd)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return syscall::Fchdir(fd->Sysfd);
         }
         catch(gocpp::GoPanic& gp)
@@ -1396,16 +1410,16 @@ namespace golang::poll
         }
     }
 
-    std::tuple<uint32_t, struct gocpp::error> GetFileType(struct FD* fd)
+    std::tuple<uint32_t, struct gocpp::error> rec::GetFileType(struct FD* fd)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return syscall::GetFileType(fd->Sysfd);
         }
         catch(gocpp::GoPanic& gp)
@@ -1414,16 +1428,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error GetFileInformationByHandle(struct FD* fd, struct syscall::ByHandleFileInformation* data)
+    struct gocpp::error rec::GetFileInformationByHandle(struct FD* fd, struct syscall::ByHandleFileInformation* data)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return syscall::GetFileInformationByHandle(fd->Sysfd, data);
         }
         catch(gocpp::GoPanic& gp)
@@ -1432,16 +1446,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error RawRead(struct FD* fd, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::RawRead(struct FD* fd, std::function<bool (uintptr_t)> f)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             for(; ; )
             {
                 if(f(uintptr_t(fd->Sysfd)))
@@ -1449,7 +1463,7 @@ namespace golang::poll
                     return nullptr;
                 }
                 auto o = & fd->rop;
-                InitBuf(gocpp::recv(o), nullptr);
+                rec::InitBuf(gocpp::recv(o), nullptr);
                 if(! fd->IsStream)
                 {
                     o->flags |= windows::MSG_PEEK;
@@ -1474,16 +1488,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error RawWrite(struct FD* fd, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::RawWrite(struct FD* fd, std::function<bool (uintptr_t)> f)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(f(uintptr_t(fd->Sysfd)))
             {
                 return nullptr;
@@ -1572,22 +1586,22 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, int, struct syscall::Sockaddr, struct gocpp::error> ReadMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags)
+    std::tuple<int, int, int, struct syscall::Sockaddr, struct gocpp::error> rec::ReadMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, 0, nullptr, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
             auto o = & fd->rop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
                 o->rsa = go_new(syscall::RawSockaddrAny);
@@ -1599,11 +1613,11 @@ namespace golang::poll
             {
                 return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             syscall::Sockaddr sa = {};
             if(err == nullptr)
             {
-                std::tie(sa, err) = Sockaddr(gocpp::recv(o->rsa));
+                std::tie(sa, err) = rec::Sockaddr(gocpp::recv(o->rsa));
             }
             return {n, int(o->msg.Control.Len), int(o->msg.Flags), sa, err};
         }
@@ -1613,22 +1627,22 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, int, struct gocpp::error> ReadMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, struct syscall::SockaddrInet4* sa4)
+    std::tuple<int, int, int, struct gocpp::error> rec::ReadMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, struct syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, 0, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
             auto o = & fd->rop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
                 o->rsa = go_new(syscall::RawSockaddrAny);
@@ -1640,7 +1654,7 @@ namespace golang::poll
             {
                 return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             if(err == nullptr)
             {
                 rawToSockaddrInet4(o->rsa, sa4);
@@ -1653,22 +1667,22 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, int, struct gocpp::error> ReadMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, struct syscall::SockaddrInet6* sa6)
+    std::tuple<int, int, int, struct gocpp::error> rec::ReadMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, struct syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = readLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, 0, err};
             }
-            defer.push_back([=]{ readUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
             auto o = & fd->rop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
                 o->rsa = go_new(syscall::RawSockaddrAny);
@@ -1680,7 +1694,7 @@ namespace golang::poll
             {
                 return windows::WSARecvMsg(o->fd->Sysfd, & o->msg, & o->qty, & o->o, nullptr);
             });
-            err = eofError(gocpp::recv(fd), n, err);
+            err = rec::eofError(gocpp::recv(fd), n, err);
             if(err == nullptr)
             {
                 rawToSockaddrInet6(o->rsa, sa6);
@@ -1693,7 +1707,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, struct gocpp::error> WriteMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::Sockaddr sa)
+    std::tuple<int, int, struct gocpp::error> rec::WriteMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
         try
@@ -1702,13 +1716,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)")};
             }
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             auto o = & fd->wop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(sa != nullptr)
             {
                 if(o->rsa == nullptr)
@@ -1735,7 +1749,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, struct gocpp::error> WriteMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::SockaddrInet4* sa)
+    std::tuple<int, int, struct gocpp::error> rec::WriteMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::SockaddrInet4* sa)
     {
         gocpp::Defer defer;
         try
@@ -1744,13 +1758,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)")};
             }
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             auto o = & fd->wop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
                 o->rsa = go_new(syscall::RawSockaddrAny);
@@ -1770,7 +1784,7 @@ namespace golang::poll
         }
     }
 
-    std::tuple<int, int, struct gocpp::error> WriteMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::SockaddrInet6* sa)
+    std::tuple<int, int, struct gocpp::error> rec::WriteMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, struct syscall::SockaddrInet6* sa)
     {
         gocpp::Defer defer;
         try
@@ -1779,13 +1793,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)")};
             }
-            if(auto err = writeLock(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
-            defer.push_back([=]{ writeUnlock(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             auto o = & fd->wop;
-            InitMsg(gocpp::recv(o), p, oob);
+            rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
                 o->rsa = go_new(syscall::RawSockaddrAny);

@@ -13,6 +13,11 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     std::tuple<std::string, bool> gorootZoneSource(std::string goroot)
     {
         if(goroot == "")

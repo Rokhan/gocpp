@@ -12,5 +12,9 @@
 namespace golang::math
 {
     double archHypot(double p, double q);
+
+    namespace rec
+    {
+    }
 }
 

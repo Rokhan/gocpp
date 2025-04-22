@@ -11,5 +11,9 @@
 
 namespace golang::math
 {
+
+    namespace rec
+    {
+    }
 }
 

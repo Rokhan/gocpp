@@ -35,15 +35,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
-    void init(struct gcWork* w);
-    void put(struct gcWork* w, uintptr_t obj);
-    bool putFast(struct gcWork* w, uintptr_t obj);
-    void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj);
-    uintptr_t tryGet(struct gcWork* w);
-    uintptr_t tryGetFast(struct gcWork* w);
-    void dispose(struct gcWork* w);
-    void balance(struct gcWork* w);
-    bool empty(struct gcWork* w);
     struct workbufhdr
     {
         lfnode node;
@@ -78,8 +69,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
-    void checknonempty(struct workbuf* b);
-    void checkempty(struct workbuf* b);
     struct workbuf* getempty();
     void putempty(struct workbuf* b);
     void putfull(struct workbuf* b);
@@ -87,5 +76,20 @@ namespace golang::runtime
     struct workbuf* handoff(struct workbuf* b);
     void prepareFreeWorkbufs();
     bool freeSomeWbufs(bool preemptible);
+
+    namespace rec
+    {
+        void init(struct gcWork* w);
+        void put(struct gcWork* w, uintptr_t obj);
+        bool putFast(struct gcWork* w, uintptr_t obj);
+        void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj);
+        uintptr_t tryGet(struct gcWork* w);
+        uintptr_t tryGetFast(struct gcWork* w);
+        void dispose(struct gcWork* w);
+        void balance(struct gcWork* w);
+        bool empty(struct gcWork* w);
+        void checknonempty(struct workbuf* b);
+        void checkempty(struct workbuf* b);
+    }
 }
 

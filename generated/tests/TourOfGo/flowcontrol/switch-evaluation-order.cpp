@@ -17,10 +17,17 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace time::rec;
+    }
+
     void main()
     {
         mocklib::Println("When's Saturday?");
-        auto today = Weekday(gocpp::recv(mocklib::Date::Now()));
+        auto today = rec::Weekday(gocpp::recv(mocklib::Date::Now()));
         //Go switch emulation
         {
             auto condition = mocklib::Date::Saturday;

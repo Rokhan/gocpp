@@ -12,5 +12,9 @@
 namespace golang::time
 {
     std::tuple<std::string, bool> gorootZoneSource(std::string goroot);
+
+    namespace rec
+    {
+    }
 }
 

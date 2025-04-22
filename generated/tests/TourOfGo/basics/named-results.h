@@ -14,5 +14,9 @@ namespace golang::main
 {
     std::tuple<int, int> split(int sum);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

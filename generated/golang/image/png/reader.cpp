@@ -25,6 +25,20 @@
 
 namespace golang::png
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace binary::rec;
+        using namespace color::rec;
+        using namespace crc32::rec;
+        using namespace fmt::rec;
+        using namespace hash::rec;
+        using namespace image::rec;
+        using namespace io::rec;
+        using namespace png::rec;
+        using namespace zlib::rec;
+    }
+
     bool cbPaletted(int cb)
     {
         return cbP1 <= cb && cb <= cbP8;
@@ -143,18 +157,18 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    std::string Error(FormatError e)
+    std::string rec::Error(png::FormatError e)
     {
         return "png: invalid format: " + string(e);
     }
 
     FormatError chunkOrderError = FormatError("chunk out of order");
-    std::string Error(UnsupportedError e)
+    std::string rec::Error(png::UnsupportedError e)
     {
         return "png: unsupported feature: " + string(e);
     }
 
-    struct gocpp::error parseIHDR(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIHDR(struct decoder* d, uint32_t length)
     {
         if(length != 13)
         {
@@ -164,7 +178,7 @@ namespace golang::png
         {
             return err;
         }
-        Write(gocpp::recv(d->crc), d->tmp.make_slice(0, 13));
+        rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, 13));
         if(d->tmp[10] != 0)
         {
             return UnsupportedError("compression method");
@@ -178,8 +192,8 @@ namespace golang::png
             return FormatError("invalid interlace method");
         }
         d->interlace = int(d->tmp[12]);
-        auto w = int32_t(Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)));
-        auto h = int32_t(Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(4, 8)));
+        auto w = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)));
+        auto h = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(4, 8)));
         if(w <= 0 || h <= 0)
         {
             return FormatError("non-positive dimension");
@@ -324,10 +338,10 @@ namespace golang::png
             return UnsupportedError(mocklib::Sprintf("bit depth %d, color type %d", d->tmp[8], d->tmp[9]));
         }
         std::tie(d->width, d->height) = std::tuple{int(w), int(h)};
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error parsePLTE(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parsePLTE(struct decoder* d, uint32_t length)
     {
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
@@ -339,7 +353,7 @@ namespace golang::png
         {
             return err;
         }
-        Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
+        rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
         //Go switch emulation
         {
             auto condition = d->cb;
@@ -379,10 +393,10 @@ namespace golang::png
                     break;
             }
         }
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error parsetRNS(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parsetRNS(struct decoder* d, uint32_t length)
     {
         //Go switch emulation
         {
@@ -415,7 +429,7 @@ namespace golang::png
                     {
                         return err;
                     }
-                    Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
+                    rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
                     copy(d->transparent.make_slice(0, ), d->tmp.make_slice(0, length));
                     //Go switch emulation
                     {
@@ -450,7 +464,7 @@ namespace golang::png
                     {
                         return err;
                     }
-                    Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
+                    rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
                     copy(d->transparent.make_slice(0, ), d->tmp.make_slice(0, length));
                     d->useTransparent = true;
                     break;
@@ -467,7 +481,7 @@ namespace golang::png
                     {
                         return err;
                     }
-                    Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
+                    rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
                     if(len(d->palette) < n)
                     {
                         d->palette = d->palette.make_slice(0, n);
@@ -483,10 +497,10 @@ namespace golang::png
                     break;
             }
         }
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -494,7 +508,7 @@ namespace golang::png
         }
         for(; d->idatLength == 0; )
         {
-            if(auto err = verifyChecksum(gocpp::recv(d)); err != nullptr)
+            if(auto err = rec::verifyChecksum(gocpp::recv(d)); err != nullptr)
             {
                 return {0, err};
             }
@@ -502,25 +516,25 @@ namespace golang::png
             {
                 return {0, err};
             }
-            d->idatLength = Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
+            d->idatLength = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
             if(string(d->tmp.make_slice(4, 8)) != "IDAT")
             {
                 return {0, FormatError("not enough pixel data")};
             }
-            Reset(gocpp::recv(d->crc));
-            Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
+            rec::Reset(gocpp::recv(d->crc));
+            rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         }
         if(int(d->idatLength) < 0)
         {
             return {0, UnsupportedError("IDAT chunk length overflow")};
         }
-        auto [n, err] = Read(gocpp::recv(d->r), p.make_slice(0, min(len(p), int(d->idatLength))));
-        Write(gocpp::recv(d->crc), p.make_slice(0, n));
+        auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, min(len(p), int(d->idatLength))));
+        rec::Write(gocpp::recv(d->crc), p.make_slice(0, n));
         d->idatLength -= uint32_t(n);
         return {n, err};
     }
 
-    std::tuple<struct image::Image, struct gocpp::error> decode(struct decoder* d)
+    std::tuple<struct image::Image, struct gocpp::error> rec::decode(struct decoder* d)
     {
         gocpp::Defer defer;
         try
@@ -530,11 +544,11 @@ namespace golang::png
             {
                 return {nullptr, err};
             }
-            defer.push_back([=]{ Close(gocpp::recv(r)); });
+            defer.push_back([=]{ rec::Close(gocpp::recv(r)); });
             image::Image img = {};
             if(d->interlace == itNone)
             {
-                std::tie(img, err) = readImagePass(gocpp::recv(d), r, 0, false);
+                std::tie(img, err) = rec::readImagePass(gocpp::recv(d), r, 0, false);
                 if(err != nullptr)
                 {
                     return {nullptr, err};
@@ -543,21 +557,21 @@ namespace golang::png
             else
             if(d->interlace == itAdam7)
             {
-                std::tie(img, err) = readImagePass(gocpp::recv(d), nullptr, 0, true);
+                std::tie(img, err) = rec::readImagePass(gocpp::recv(d), nullptr, 0, true);
                 if(err != nullptr)
                 {
                     return {nullptr, err};
                 }
                 for(auto pass = 0; pass < 7; pass++)
                 {
-                    auto [imagePass, err] = readImagePass(gocpp::recv(d), r, pass, false);
+                    auto [imagePass, err] = rec::readImagePass(gocpp::recv(d), r, pass, false);
                     if(err != nullptr)
                     {
                         return {nullptr, err};
                     }
                     if(imagePass != nullptr)
                     {
-                        mergePassInto(gocpp::recv(d), img, imagePass, pass);
+                        rec::mergePassInto(gocpp::recv(d), img, imagePass, pass);
                     }
                 }
             }
@@ -568,11 +582,11 @@ namespace golang::png
                 {
                     return {nullptr, io::ErrNoProgress};
                 }
-                std::tie(n, err) = Read(gocpp::recv(r), d->tmp.make_slice(0, 1));
+                std::tie(n, err) = rec::Read(gocpp::recv(r), d->tmp.make_slice(0, 1));
             }
             if(err != nullptr && err != io::go_EOF)
             {
-                return {nullptr, FormatError(Error(gocpp::recv(err)))};
+                return {nullptr, FormatError(rec::Error(gocpp::recv(err)))};
             }
             if(n != 0 || d->idatLength != 0)
             {
@@ -586,7 +600,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<struct image::Image, struct gocpp::error> readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly)
+    std::tuple<struct image::Image, struct gocpp::error> rec::readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -819,7 +833,7 @@ namespace golang::png
                                     {
                                         acol = 0x00;
                                     }
-                                    SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
+                                    rec::SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
                                     b <<= 1;
                                 }
                             }
@@ -831,7 +845,7 @@ namespace golang::png
                                 auto b = cdat[x / 8];
                                 for(auto x2 = 0; x2 < 8 && x + x2 < width; x2++)
                                 {
-                                    SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 7) * 0xff});
+                                    rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 7) * 0xff});
                                     b <<= 1;
                                 }
                             }
@@ -852,7 +866,7 @@ namespace golang::png
                                     {
                                         acol = 0x00;
                                     }
-                                    SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
+                                    rec::SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
                                     b <<= 2;
                                 }
                             }
@@ -864,7 +878,7 @@ namespace golang::png
                                 auto b = cdat[x / 4];
                                 for(auto x2 = 0; x2 < 4 && x + x2 < width; x2++)
                                 {
-                                    SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 6) * 0x55});
+                                    rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 6) * 0x55});
                                     b <<= 2;
                                 }
                             }
@@ -885,7 +899,7 @@ namespace golang::png
                                     {
                                         acol = 0x00;
                                     }
-                                    SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
+                                    rec::SetNRGBA(gocpp::recv(nrgba), x + x2, y, color::NRGBA {ycol, ycol, ycol, acol});
                                     b <<= 4;
                                 }
                             }
@@ -897,7 +911,7 @@ namespace golang::png
                                 auto b = cdat[x / 2];
                                 for(auto x2 = 0; x2 < 2 && x + x2 < width; x2++)
                                 {
-                                    SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 4) * 0x11});
+                                    rec::SetGray(gocpp::recv(gray), x + x2, y, color::Gray {(b >> 4) * 0x11});
                                     b <<= 4;
                                 }
                             }
@@ -915,7 +929,7 @@ namespace golang::png
                                 {
                                     acol = 0x00;
                                 }
-                                SetNRGBA(gocpp::recv(nrgba), x, y, color::NRGBA {ycol, ycol, ycol, acol});
+                                rec::SetNRGBA(gocpp::recv(nrgba), x, y, color::NRGBA {ycol, ycol, ycol, acol});
                             }
                         }
                         else
@@ -928,7 +942,7 @@ namespace golang::png
                         for(auto x = 0; x < width; x++)
                         {
                             auto ycol = cdat[2 * x + 0];
-                            SetNRGBA(gocpp::recv(nrgba), x, y, color::NRGBA {ycol, ycol, ycol, cdat[2 * x + 1]});
+                            rec::SetNRGBA(gocpp::recv(nrgba), x, y, color::NRGBA {ycol, ycol, ycol, cdat[2 * x + 1]});
                         }
                         break;
                     case 5:
@@ -981,7 +995,7 @@ namespace golang::png
                                 {
                                     paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
                                 }
-                                SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
+                                rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 1;
                             }
                         }
@@ -997,7 +1011,7 @@ namespace golang::png
                                 {
                                     paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
                                 }
-                                SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
+                                rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 2;
                             }
                         }
@@ -1013,7 +1027,7 @@ namespace golang::png
                                 {
                                     paletted->Palette = paletted->Palette.make_slice(0, int(idx) + 1);
                                 }
-                                SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
+                                rec::SetColorIndex(gocpp::recv(paletted), x + x2, y, idx);
                                 b <<= 4;
                             }
                         }
@@ -1048,7 +1062,7 @@ namespace golang::png
                                 {
                                     acol = 0x0000;
                                 }
-                                SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {ycol, ycol, ycol, acol});
+                                rec::SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {ycol, ycol, ycol, acol});
                             }
                         }
                         else
@@ -1056,7 +1070,7 @@ namespace golang::png
                             for(auto x = 0; x < width; x++)
                             {
                                 auto ycol = (uint16_t(cdat[2 * x + 0]) << 8) | uint16_t(cdat[2 * x + 1]);
-                                SetGray16(gocpp::recv(gray16), x, y, color::Gray16 {ycol});
+                                rec::SetGray16(gocpp::recv(gray16), x, y, color::Gray16 {ycol});
                             }
                         }
                         break;
@@ -1065,7 +1079,7 @@ namespace golang::png
                         {
                             auto ycol = (uint16_t(cdat[4 * x + 0]) << 8) | uint16_t(cdat[4 * x + 1]);
                             auto acol = (uint16_t(cdat[4 * x + 2]) << 8) | uint16_t(cdat[4 * x + 3]);
-                            SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {ycol, ycol, ycol, acol});
+                            rec::SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {ycol, ycol, ycol, acol});
                         }
                         break;
                     case 13:
@@ -1084,7 +1098,7 @@ namespace golang::png
                                 {
                                     acol = 0x0000;
                                 }
-                                SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {rcol, gcol, bcol, acol});
+                                rec::SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {rcol, gcol, bcol, acol});
                             }
                         }
                         else
@@ -1094,7 +1108,7 @@ namespace golang::png
                                 auto rcol = (uint16_t(cdat[6 * x + 0]) << 8) | uint16_t(cdat[6 * x + 1]);
                                 auto gcol = (uint16_t(cdat[6 * x + 2]) << 8) | uint16_t(cdat[6 * x + 3]);
                                 auto bcol = (uint16_t(cdat[6 * x + 4]) << 8) | uint16_t(cdat[6 * x + 5]);
-                                SetRGBA64(gocpp::recv(rgba64), x, y, color::RGBA64 {rcol, gcol, bcol, 0xffff});
+                                rec::SetRGBA64(gocpp::recv(rgba64), x, y, color::RGBA64 {rcol, gcol, bcol, 0xffff});
                             }
                         }
                         break;
@@ -1105,7 +1119,7 @@ namespace golang::png
                             auto gcol = (uint16_t(cdat[8 * x + 2]) << 8) | uint16_t(cdat[8 * x + 3]);
                             auto bcol = (uint16_t(cdat[8 * x + 4]) << 8) | uint16_t(cdat[8 * x + 5]);
                             auto acol = (uint16_t(cdat[8 * x + 6]) << 8) | uint16_t(cdat[8 * x + 7]);
-                            SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {rcol, gcol, bcol, acol});
+                            rec::SetNRGBA64(gocpp::recv(nrgba64), x, y, color::NRGBA64 {rcol, gcol, bcol, acol});
                         }
                         break;
                 }
@@ -1115,7 +1129,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
-    void mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass)
+    void rec::mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
@@ -1217,7 +1231,7 @@ namespace golang::png
                 }
             }
         }
-        auto [s, bounds] = std::tuple{0, Bounds(gocpp::recv(src))};
+        auto [s, bounds] = std::tuple{0, rec::Bounds(gocpp::recv(src))};
         for(auto y = bounds.Min.Y; y < bounds.Max.Y; y++)
         {
             auto dBase = (y * p.yFactor + p.yOffset - rect.Min.Y) * stride + (p.xOffset - rect.Min.X) * bytesPerPixel;
@@ -1230,37 +1244,37 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error parseIDAT(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIDAT(struct decoder* d, uint32_t length)
     {
         struct gocpp::error err;
         d->idatLength = length;
-        std::tie(d->img, err) = decode(gocpp::recv(d));
+        std::tie(d->img, err) = rec::decode(gocpp::recv(d));
         if(err != nullptr)
         {
             struct gocpp::error err;
             return err;
         }
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error parseIEND(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIEND(struct decoder* d, uint32_t length)
     {
         if(length != 0)
         {
             return FormatError("bad IEND length");
         }
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error parseChunk(struct decoder* d, bool configOnly)
+    struct gocpp::error rec::parseChunk(struct decoder* d, bool configOnly)
     {
         if(auto [gocpp_id_8, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
             return err;
         }
-        auto length = Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
-        Reset(gocpp::recv(d->crc));
-        Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
+        auto length = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
+        rec::Reset(gocpp::recv(d->crc));
+        rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         //Go switch emulation
         {
             auto condition = string(d->tmp.make_slice(4, 8));
@@ -1278,7 +1292,7 @@ namespace golang::png
                         return chunkOrderError;
                     }
                     d->stage = dsSeenIHDR;
-                    return parseIHDR(gocpp::recv(d), length);
+                    return rec::parseIHDR(gocpp::recv(d), length);
                     break;
                 case 1:
                     if(d->stage != dsSeenIHDR)
@@ -1286,7 +1300,7 @@ namespace golang::png
                         return chunkOrderError;
                     }
                     d->stage = dsSeenPLTE;
-                    return parsePLTE(gocpp::recv(d), length);
+                    return rec::parsePLTE(gocpp::recv(d), length);
                     break;
                 case 2:
                     if(cbPaletted(d->cb))
@@ -1310,7 +1324,7 @@ namespace golang::png
                         return chunkOrderError;
                     }
                     d->stage = dsSeentRNS;
-                    return parsetRNS(gocpp::recv(d), length);
+                    return rec::parsetRNS(gocpp::recv(d), length);
                     break;
                 case 3:
                     if(d->stage < dsSeenIHDR || d->stage > dsSeenIDAT || (d->stage == dsSeenIHDR && cbPaletted(d->cb)))
@@ -1327,7 +1341,7 @@ namespace golang::png
                     {
                         return nullptr;
                     }
-                    return parseIDAT(gocpp::recv(d), length);
+                    return rec::parseIDAT(gocpp::recv(d), length);
                     break;
                 case 4:
                     if(d->stage != dsSeenIDAT)
@@ -1335,7 +1349,7 @@ namespace golang::png
                         return chunkOrderError;
                     }
                     d->stage = dsSeenIEND;
-                    return parseIEND(gocpp::recv(d), length);
+                    return rec::parseIEND(gocpp::recv(d), length);
                     break;
             }
         }
@@ -1351,26 +1365,26 @@ namespace golang::png
             {
                 return err;
             }
-            Write(gocpp::recv(d->crc), ignored.make_slice(0, n));
+            rec::Write(gocpp::recv(d->crc), ignored.make_slice(0, n));
             length -= uint32_t(n);
         }
-        return verifyChecksum(gocpp::recv(d));
+        return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error verifyChecksum(struct decoder* d)
+    struct gocpp::error rec::verifyChecksum(struct decoder* d)
     {
         if(auto [gocpp_id_10, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
             return err;
         }
-        if(Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)) != Sum32(gocpp::recv(d->crc)))
+        if(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)) != rec::Sum32(gocpp::recv(d->crc)))
         {
             return FormatError("invalid checksum");
         }
         return nullptr;
     }
 
-    struct gocpp::error checkHeader(struct decoder* d)
+    struct gocpp::error rec::checkHeader(struct decoder* d)
     {
         auto [gocpp_id_12, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)
@@ -1387,7 +1401,7 @@ namespace golang::png
     std::tuple<struct image::Image, struct gocpp::error> Decode(struct io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
-        if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)
+        if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)
         {
             if(err == io::go_EOF)
             {
@@ -1397,7 +1411,7 @@ namespace golang::png
         }
         for(; d->stage != dsSeenIEND; )
         {
-            if(auto err = parseChunk(gocpp::recv(d), false); err != nullptr)
+            if(auto err = rec::parseChunk(gocpp::recv(d), false); err != nullptr)
             {
                 if(err == io::go_EOF)
                 {
@@ -1412,7 +1426,7 @@ namespace golang::png
     std::tuple<struct image::Config, struct gocpp::error> DecodeConfig(struct io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
-        if(auto err = checkHeader(gocpp::recv(d)); err != nullptr)
+        if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)
         {
             if(err == io::go_EOF)
             {
@@ -1422,7 +1436,7 @@ namespace golang::png
         }
         for(; ; )
         {
-            if(auto err = parseChunk(gocpp::recv(d), true); err != nullptr)
+            if(auto err = rec::parseChunk(gocpp::recv(d), true); err != nullptr)
             {
                 if(err == io::go_EOF)
                 {

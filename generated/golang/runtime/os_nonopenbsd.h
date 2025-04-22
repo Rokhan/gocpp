@@ -22,5 +22,9 @@ namespace golang::runtime
 {
     void osStackAlloc(struct mspan* s);
     void osStackFree(struct mspan* s);
+
+    namespace rec
+    {
+    }
 }
 

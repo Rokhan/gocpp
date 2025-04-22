@@ -30,6 +30,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     spanSet::operator T()
@@ -103,27 +114,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void push(struct spanSet* b, struct mspan* s)
+    void rec::push(struct spanSet* b, struct mspan* s)
     {
-        auto cursor = uintptr_t(tail(gocpp::recv(incTail(gocpp::recv(b->index)))) - 1);
+        auto cursor = uintptr_t(rec::tail(gocpp::recv(rec::incTail(gocpp::recv(b->index)))) - 1);
         auto [top, bottom] = std::tuple{cursor / spanSetBlockEntries, cursor % spanSetBlockEntries};
-        auto spineLen = Load(gocpp::recv(b->spineLen));
+        auto spineLen = rec::Load(gocpp::recv(b->spineLen));
         spanSetBlock* block = {};
         retry:
         if(top < spineLen)
         {
-            block = Load(gocpp::recv(lookup(gocpp::recv(Load(gocpp::recv(b->spine))), top)));
+            block = rec::Load(gocpp::recv(rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), top)));
         }
         else
         {
             lock(& b->spineLock);
-            spineLen = Load(gocpp::recv(b->spineLen));
+            spineLen = rec::Load(gocpp::recv(b->spineLen));
             if(top < spineLen)
             {
                 unlock(& b->spineLock);
                 goto retry;
             }
-            auto spine = Load(gocpp::recv(b->spine));
+            auto spine = rec::Load(gocpp::recv(b->spine));
             if(spineLen == b->spineCap)
             {
                 auto newCap = b->spineCap * 2;
@@ -137,31 +148,31 @@ namespace golang::runtime
                     memmove(newSpine, spine.p, b->spineCap * goarch::PtrSize);
                 }
                 spine = spanSetSpinePointer {newSpine};
-                StoreNoWB(gocpp::recv(b->spine), spine);
+                rec::StoreNoWB(gocpp::recv(b->spine), spine);
                 b->spineCap = newCap;
             }
-            block = alloc(gocpp::recv(spanSetBlockPool));
-            StoreNoWB(gocpp::recv(lookup(gocpp::recv(spine), top)), block);
-            Store(gocpp::recv(b->spineLen), spineLen + 1);
+            block = rec::alloc(gocpp::recv(spanSetBlockPool));
+            rec::StoreNoWB(gocpp::recv(rec::lookup(gocpp::recv(spine), top)), block);
+            rec::Store(gocpp::recv(b->spineLen), spineLen + 1);
             unlock(& b->spineLock);
         }
-        StoreNoWB(gocpp::recv(block->spans[bottom]), s);
+        rec::StoreNoWB(gocpp::recv(block->spans[bottom]), s);
     }
 
-    struct mspan* pop(struct spanSet* b)
+    struct mspan* rec::pop(struct spanSet* b)
     {
         uint32_t head = {};
         uint32_t tail = {};
         claimLoop:
         for(; ; )
         {
-            auto headtail = load(gocpp::recv(b->index));
-            std::tie(head, tail) = split(gocpp::recv(headtail));
+            auto headtail = rec::load(gocpp::recv(b->index));
+            std::tie(head, tail) = rec::split(gocpp::recv(headtail));
             if(head >= tail)
             {
                 return nullptr;
             }
-            auto spineLen = Load(gocpp::recv(b->spineLen));
+            auto spineLen = rec::Load(gocpp::recv(b->spineLen));
             if(spineLen <= uintptr_t(head) / spanSetBlockEntries)
             {
                 return nullptr;
@@ -169,12 +180,12 @@ namespace golang::runtime
             auto want = head;
             for(; want == head; )
             {
-                if(cas(gocpp::recv(b->index), headtail, makeHeadTailIndex(want + 1, tail)))
+                if(rec::cas(gocpp::recv(b->index), headtail, makeHeadTailIndex(want + 1, tail)))
                 {
                     goto claimLoop_break;
                 }
-                headtail = load(gocpp::recv(b->index));
-                std::tie(head, tail) = split(gocpp::recv(headtail));
+                headtail = rec::load(gocpp::recv(b->index));
+                std::tie(head, tail) = rec::split(gocpp::recv(headtail));
             }
             if(false) {
             claimLoop_continue:
@@ -184,51 +195,51 @@ namespace golang::runtime
             }
         }
         auto [top, bottom] = std::tuple{head / spanSetBlockEntries, head % spanSetBlockEntries};
-        auto blockp = lookup(gocpp::recv(Load(gocpp::recv(b->spine))), uintptr_t(top));
-        auto block = Load(gocpp::recv(blockp));
-        auto s = Load(gocpp::recv(block->spans[bottom]));
+        auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
+        auto block = rec::Load(gocpp::recv(blockp));
+        auto s = rec::Load(gocpp::recv(block->spans[bottom]));
         for(; s == nullptr; )
         {
-            s = Load(gocpp::recv(block->spans[bottom]));
+            s = rec::Load(gocpp::recv(block->spans[bottom]));
         }
-        StoreNoWB(gocpp::recv(block->spans[bottom]), nullptr);
-        if(Add(gocpp::recv(block->popped), 1) == spanSetBlockEntries)
+        rec::StoreNoWB(gocpp::recv(block->spans[bottom]), nullptr);
+        if(rec::Add(gocpp::recv(block->popped), 1) == spanSetBlockEntries)
         {
-            StoreNoWB(gocpp::recv(blockp), nullptr);
-            free(gocpp::recv(spanSetBlockPool), block);
+            rec::StoreNoWB(gocpp::recv(blockp), nullptr);
+            rec::free(gocpp::recv(spanSetBlockPool), block);
         }
         return s;
     }
 
-    void reset(struct spanSet* b)
+    void rec::reset(struct spanSet* b)
     {
-        auto [head, tail] = split(gocpp::recv(load(gocpp::recv(b->index))));
+        auto [head, tail] = rec::split(gocpp::recv(rec::load(gocpp::recv(b->index))));
         if(head < tail)
         {
             print("head = ", head, ", tail = ", tail, "\n");
             go_throw("attempt to clear non-empty span set");
         }
         auto top = head / spanSetBlockEntries;
-        if(uintptr_t(top) < Load(gocpp::recv(b->spineLen)))
+        if(uintptr_t(top) < rec::Load(gocpp::recv(b->spineLen)))
         {
-            auto blockp = lookup(gocpp::recv(Load(gocpp::recv(b->spine))), uintptr_t(top));
-            auto block = Load(gocpp::recv(blockp));
+            auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
+            auto block = rec::Load(gocpp::recv(blockp));
             if(block != nullptr)
             {
-                if(Load(gocpp::recv(block->popped)) == 0)
+                if(rec::Load(gocpp::recv(block->popped)) == 0)
                 {
                     go_throw("span set block with unpopped elements found in reset");
                 }
-                if(Load(gocpp::recv(block->popped)) == spanSetBlockEntries)
+                if(rec::Load(gocpp::recv(block->popped)) == spanSetBlockEntries)
                 {
                     go_throw("fully empty unfreed span set block found in reset");
                 }
-                StoreNoWB(gocpp::recv(blockp), nullptr);
-                free(gocpp::recv(spanSetBlockPool), block);
+                rec::StoreNoWB(gocpp::recv(blockp), nullptr);
+                rec::free(gocpp::recv(spanSetBlockPool), block);
             }
         }
-        reset(gocpp::recv(b->index));
-        Store(gocpp::recv(b->spineLen), 0);
+        rec::reset(gocpp::recv(b->index));
+        rec::Store(gocpp::recv(b->spineLen), 0);
     }
 
     
@@ -260,14 +271,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s)
+    struct spanSetSpinePointer rec::Load(struct atomicSpanSetSpinePointer* s)
     {
-        return spanSetSpinePointer {Load(gocpp::recv(s->a))};
+        return spanSetSpinePointer {rec::Load(gocpp::recv(s->a))};
     }
 
-    void StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p)
+    void rec::StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p)
     {
-        StoreNoWB(gocpp::recv(s->a), p.p);
+        rec::StoreNoWB(gocpp::recv(s->a), p.p);
     }
 
     
@@ -299,7 +310,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    atomic::Pointer<spanSetBlock>* lookup(struct spanSetSpinePointer s, uintptr_t idx)
+    atomic::Pointer<spanSetBlock>* rec::lookup(struct spanSetSpinePointer s, uintptr_t idx)
     {
         return (atomic::Pointer<spanSetBlock>*)(add(s.p, goarch::PtrSize * idx));
     }
@@ -334,41 +345,41 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct spanSetBlock* alloc(struct spanSetBlockAlloc* p)
+    struct spanSetBlock* rec::alloc(struct spanSetBlockAlloc* p)
     {
-        if(auto s = (spanSetBlock*)(pop(gocpp::recv(p->stack))); s != nullptr)
+        if(auto s = (spanSetBlock*)(rec::pop(gocpp::recv(p->stack))); s != nullptr)
         {
             return s;
         }
         return (spanSetBlock*)(persistentalloc(gocpp::Sizeof<spanSetBlock>(), cpu::CacheLineSize, & memstats.gcMiscSys));
     }
 
-    void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block)
+    void rec::free(struct spanSetBlockAlloc* p, struct spanSetBlock* block)
     {
-        Store(gocpp::recv(block->popped), 0);
-        push(gocpp::recv(p->stack), & block->lfnode);
+        rec::Store(gocpp::recv(block->popped), 0);
+        rec::push(gocpp::recv(p->stack), & block->lfnode);
     }
 
-    headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail)
+    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail)
     {
         return headTailIndex((uint64_t(head) << 32) | uint64_t(tail));
     }
 
-    uint32_t head(headTailIndex h)
+    uint32_t rec::head(runtime::headTailIndex h)
     {
         return uint32_t(h >> 32);
     }
 
-    uint32_t tail(headTailIndex h)
+    uint32_t rec::tail(runtime::headTailIndex h)
     {
         return uint32_t(h);
     }
 
-    std::tuple<uint32_t, uint32_t> split(headTailIndex h)
+    std::tuple<uint32_t, uint32_t> rec::split(runtime::headTailIndex h)
     {
         uint32_t head;
         uint32_t tail;
-        return {head(gocpp::recv(h)), tail(gocpp::recv(h))};
+        return {rec::head(gocpp::recv(h)), rec::tail(gocpp::recv(h))};
     }
 
     
@@ -400,40 +411,40 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    headTailIndex load(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::load(struct atomicHeadTailIndex* h)
     {
-        return headTailIndex(Load(gocpp::recv(h->u)));
+        return headTailIndex(rec::Load(gocpp::recv(h->u)));
     }
 
-    bool cas(struct atomicHeadTailIndex* h, headTailIndex old, headTailIndex go_new)
+    bool rec::cas(struct atomicHeadTailIndex* h, runtime::headTailIndex old, runtime::headTailIndex go_new)
     {
-        return CompareAndSwap(gocpp::recv(h->u), uint64_t(old), uint64_t(go_new));
+        return rec::CompareAndSwap(gocpp::recv(h->u), uint64_t(old), uint64_t(go_new));
     }
 
-    headTailIndex incHead(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::incHead(struct atomicHeadTailIndex* h)
     {
-        return headTailIndex(Add(gocpp::recv(h->u), 1 << 32));
+        return headTailIndex(rec::Add(gocpp::recv(h->u), 1 << 32));
     }
 
-    headTailIndex decHead(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::decHead(struct atomicHeadTailIndex* h)
     {
-        return headTailIndex(Add(gocpp::recv(h->u), - (1 << 32)));
+        return headTailIndex(rec::Add(gocpp::recv(h->u), - (1 << 32)));
     }
 
-    headTailIndex incTail(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::incTail(struct atomicHeadTailIndex* h)
     {
-        auto ht = headTailIndex(Add(gocpp::recv(h->u), 1));
-        if(tail(gocpp::recv(ht)) == 0)
+        auto ht = headTailIndex(rec::Add(gocpp::recv(h->u), 1));
+        if(rec::tail(gocpp::recv(ht)) == 0)
         {
-            print("runtime: head = ", head(gocpp::recv(ht)), ", tail = ", tail(gocpp::recv(ht)), "\n");
+            print("runtime: head = ", rec::head(gocpp::recv(ht)), ", tail = ", rec::tail(gocpp::recv(ht)), "\n");
             go_throw("headTailIndex overflow");
         }
         return ht;
     }
 
-    void reset(struct atomicHeadTailIndex* h)
+    void rec::reset(struct atomicHeadTailIndex* h)
     {
-        Store(gocpp::recv(h->u), 0);
+        rec::Store(gocpp::recv(h->u), 0);
     }
 
     
@@ -465,14 +476,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct mspan* Load(struct atomicMSpanPointer* p)
+    struct mspan* rec::Load(struct atomicMSpanPointer* p)
     {
-        return (mspan*)(Load(gocpp::recv(p->p)));
+        return (mspan*)(rec::Load(gocpp::recv(p->p)));
     }
 
-    void StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s)
+    void rec::StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s)
     {
-        StoreNoWB(gocpp::recv(p->p), unsafe::Pointer(s));
+        rec::StoreNoWB(gocpp::recv(p->p), unsafe::Pointer(s));
     }
 
 }

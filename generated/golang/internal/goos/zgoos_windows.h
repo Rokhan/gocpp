@@ -12,5 +12,9 @@
 namespace golang::goos
 {
     extern std::string GOOS;
+
+    namespace rec
+    {
+    }
 }
 

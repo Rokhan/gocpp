@@ -67,8 +67,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceAdvancerState& value);
-    void start(struct traceAdvancerState* s);
-    void stop(struct traceAdvancerState* s);
     struct wakeableSleep
     {
         timer* timer;
@@ -88,8 +86,14 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
     struct wakeableSleep* newWakeableSleep();
-    void sleep(struct wakeableSleep* s, int64_t ns);
-    void wake(struct wakeableSleep* s);
-    void close(struct wakeableSleep* s);
+
+    namespace rec
+    {
+        void start(struct traceAdvancerState* s);
+        void stop(struct traceAdvancerState* s);
+        void sleep(struct wakeableSleep* s, int64_t ns);
+        void wake(struct wakeableSleep* s);
+        void close(struct wakeableSleep* s);
+    }
 }
 

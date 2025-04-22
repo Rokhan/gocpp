@@ -15,5 +15,9 @@ namespace golang::sort
     void Slice(go_any x, std::function<bool (int i, int j)> less);
     void SliceStable(go_any x, std::function<bool (int i, int j)> less);
     bool SliceIsSorted(go_any x, std::function<bool (int i, int j)> less);
+
+    namespace rec
+    {
+    }
 }
 

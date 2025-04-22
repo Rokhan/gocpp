@@ -14,5 +14,9 @@ namespace golang::main
 {
     void main();
     void printSlice(std::string s, gocpp::slice<int> x);
+
+    namespace rec
+    {
+    }
 }
 

@@ -69,5 +69,9 @@ namespace golang::runtime
     void netpollBreak();
     std::tuple<struct gList, int32_t> netpoll(int64_t delay);
     int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty);
+
+    namespace rec
+    {
+    }
 }
 

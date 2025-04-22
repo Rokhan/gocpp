@@ -18,11 +18,19 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace color::rec;
+        using namespace fmt::rec;
+        using namespace image::rec;
+    }
+
     void main()
     {
         auto m = image::NewRGBA(image::Rect(0, 0, 100, 100));
-        mocklib::Println(Bounds(gocpp::recv(m)));
-        mocklib::Println(RGBA(gocpp::recv(At(gocpp::recv(m), 0, 0))));
+        mocklib::Println(rec::Bounds(gocpp::recv(m)));
+        mocklib::Println(rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), 0, 0))));
     }
 
 }

@@ -17,14 +17,14 @@ namespace golang::abi
         uintptr_t Size_;
         uintptr_t PtrBytes;
         uint32_t Hash;
-        TFlag TFlag;
+        abi::TFlag TFlag;
         uint8_t Align_;
         uint8_t FieldAlign_;
         uint8_t Kind_;
         std::function<bool (unsafe::Pointer, unsafe::Pointer)> Equal;
         unsigned char* GCData;
-        NameOff Str;
-        TypeOff PtrToThis;
+        abi::NameOff Str;
+        abi::TypeOff PtrToThis;
 
         using isGoStruct = void;
 
@@ -38,20 +38,13 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    /* std::string String(Kind k); [Ignored, known name conflict] */ 
     extern gocpp::slice<std::string> kindNames;
-    /* Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
-    bool HasName(struct Type* t);
-    bool Pointers(struct Type* t);
-    bool IfaceIndir(struct Type* t);
-    bool IsDirectIface(struct Type* t);
-    gocpp::slice<unsigned char> GcSlice(struct Type* t, uintptr_t begin, uintptr_t end);
     struct Method
     {
-        NameOff Name;
-        TypeOff Mtyp;
-        TextOff Ifn;
-        TextOff Tfn;
+        abi::NameOff Name;
+        abi::TypeOff Mtyp;
+        abi::TextOff Ifn;
+        abi::TextOff Tfn;
 
         using isGoStruct = void;
 
@@ -67,7 +60,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct Method& value);
     struct UncommonType
     {
-        NameOff PkgPath;
+        abi::NameOff PkgPath;
         uint16_t Mcount;
         uint16_t Xcount;
         uint32_t Moff;
@@ -85,13 +78,11 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UncommonType& value);
-    gocpp::slice<Method> Methods(struct UncommonType* t);
-    gocpp::slice<Method> ExportedMethods(struct UncommonType* t);
     unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Imethod
     {
-        NameOff Name;
-        TypeOff Typ;
+        abi::NameOff Name;
+        abi::TypeOff Typ;
 
         using isGoStruct = void;
 
@@ -123,12 +114,10 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
-    int Len(struct Type* t);
-    struct Type* Common(struct Type* t);
     struct ChanType
     {
         Type* Elem;
-        ChanDir Dir;
+        abi::ChanDir Dir;
 
         using isGoStruct = void;
 
@@ -158,17 +147,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
-    /* ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
-    struct UncommonType* Uncommon(struct Type* t);
-    struct Type* Elem(struct Type* t);
-    /* struct StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
-    /* struct MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
-    /* struct ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
-    /* struct FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
-    /* struct InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
-    uintptr_t Size(struct Type* t);
-    int Align(struct Type* t);
-    int FieldAlign(struct Type* t);
     struct InterfaceType
     {
         /* Name PkgPath; [Known incomplete type] */
@@ -186,9 +164,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
-    gocpp::slice<Method> ExportedMethods(struct Type* t);
-    int NumMethod(struct Type* t);
-    int NumMethod(struct InterfaceType* t);
     struct MapType
     {
         Type* Key;
@@ -212,12 +187,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MapType& value);
-    bool IndirectKey(struct MapType* mt);
-    bool IndirectElem(struct MapType* mt);
-    bool ReflexiveKey(struct MapType* mt);
-    bool NeedKeyUpdate(struct MapType* mt);
-    bool HashMightPanic(struct MapType* mt);
-    struct Type* Key(struct Type* t);
     struct SliceType
     {
         Type* Elem;
@@ -251,13 +220,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
-    struct Type* In(struct FuncType* t, int i);
-    int NumIn(struct FuncType* t);
-    int NumOut(struct FuncType* t);
-    struct Type* Out(struct FuncType* t, int i);
-    gocpp::slice<Type*> InSlice(struct FuncType* t);
-    gocpp::slice<Type*> OutSlice(struct FuncType* t);
-    bool IsVariadic(struct FuncType* t);
     struct PtrType
     {
         Type* Elem;
@@ -292,7 +254,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
-    bool Embedded(struct StructField* f);
     struct StructType
     {
         /* Name PkgPath; [Known incomplete type] */
@@ -326,16 +287,59 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Name& value);
-    unsigned char* DataChecked(struct Name n, int off, std::string whySafe);
-    unsigned char* Data(struct Name n, int off);
-    bool IsExported(struct Name n);
-    bool HasTag(struct Name n);
-    bool IsEmbedded(struct Name n);
-    std::tuple<int, int> ReadVarint(struct Name n, int off);
-    bool IsBlank(struct Name n);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
-    /* std::string Name(struct Name n); [Ignored, known name conflict] */ 
-    std::string Tag(struct Name n);
     struct Name NewName(std::string n, std::string tag, bool exported, bool embedded);
+
+    namespace rec
+    {
+        /* std::string String(abi::Kind k); [Ignored, known name conflict] */ 
+        /* abi::Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
+        bool HasName(struct Type* t);
+        bool Pointers(struct Type* t);
+        bool IfaceIndir(struct Type* t);
+        bool IsDirectIface(struct Type* t);
+        gocpp::slice<unsigned char> GcSlice(struct Type* t, uintptr_t begin, uintptr_t end);
+        gocpp::slice<Method> Methods(struct UncommonType* t);
+        gocpp::slice<Method> ExportedMethods(struct UncommonType* t);
+        int Len(struct Type* t);
+        struct Type* Common(struct Type* t);
+        /* abi::ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
+        struct UncommonType* Uncommon(struct Type* t);
+        struct Type* Elem(struct Type* t);
+        /* struct StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
+        /* struct MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
+        /* struct ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
+        /* struct FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
+        /* struct InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
+        uintptr_t Size(struct Type* t);
+        int Align(struct Type* t);
+        int FieldAlign(struct Type* t);
+        gocpp::slice<Method> ExportedMethods(struct Type* t);
+        int NumMethod(struct Type* t);
+        int NumMethod(struct InterfaceType* t);
+        bool IndirectKey(struct MapType* mt);
+        bool IndirectElem(struct MapType* mt);
+        bool ReflexiveKey(struct MapType* mt);
+        bool NeedKeyUpdate(struct MapType* mt);
+        bool HashMightPanic(struct MapType* mt);
+        struct Type* Key(struct Type* t);
+        struct Type* In(struct FuncType* t, int i);
+        int NumIn(struct FuncType* t);
+        int NumOut(struct FuncType* t);
+        struct Type* Out(struct FuncType* t, int i);
+        gocpp::slice<Type*> InSlice(struct FuncType* t);
+        gocpp::slice<Type*> OutSlice(struct FuncType* t);
+        bool IsVariadic(struct FuncType* t);
+        bool Embedded(struct StructField* f);
+        unsigned char* DataChecked(struct Name n, int off, std::string whySafe);
+        unsigned char* Data(struct Name n, int off);
+        bool IsExported(struct Name n);
+        bool HasTag(struct Name n);
+        bool IsEmbedded(struct Name n);
+        std::tuple<int, int> ReadVarint(struct Name n, int off);
+        bool IsBlank(struct Name n);
+        /* std::string Name(struct Name n); [Ignored, known name conflict] */ 
+        std::string Tag(struct Name n);
+    }
 }
 

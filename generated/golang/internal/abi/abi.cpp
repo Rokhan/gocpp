@@ -17,6 +17,14 @@
 
 namespace golang::abi
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     RegArgs::operator T()
@@ -55,7 +63,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    void Dump(struct RegArgs* r)
+    void rec::Dump(struct RegArgs* r)
     {
         print("Ints:");
         for(auto [gocpp_ignored, x] : r->Ints)
@@ -77,7 +85,7 @@ namespace golang::abi
         println();
     }
 
-    unsafe::Pointer IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize)
+    unsafe::Pointer rec::IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize)
     {
         if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {
@@ -91,12 +99,12 @@ namespace golang::abi
         return unsafe::Pointer(uintptr_t(unsafe::Pointer(& r->Ints[reg])) + offset);
     }
 
-    void Set(IntArgRegBitmap* b, int i)
+    void rec::Set(IntArgRegBitmap* b, int i)
     {
         b[i / 8] |= uint8_t(1) << (i % 8);
     }
 
-    bool Get(IntArgRegBitmap* b, int i)
+    bool rec::Get(IntArgRegBitmap* b, int i)
     {
         return b[i / 8] & (uint8_t(1) << (i % 8)) != 0;
     }

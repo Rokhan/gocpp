@@ -20,5 +20,9 @@ namespace golang::runtime
     std::string debug_modinfo();
     void mayMoreStackPreempt();
     void mayMoreStackMove();
+
+    namespace rec
+    {
+    }
 }
 

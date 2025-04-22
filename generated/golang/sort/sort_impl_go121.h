@@ -18,5 +18,9 @@ namespace golang::sort
     bool intsAreSortedImpl(gocpp::slice<int> x);
     bool float64sAreSortedImpl(gocpp::slice<double> x);
     bool stringsAreSortedImpl(gocpp::slice<std::string> x);
+
+    namespace rec
+    {
+    }
 }
 

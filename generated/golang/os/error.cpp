@@ -18,6 +18,14 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace syscall::rec;
+    }
+
     gocpp::error ErrInvalid = fs::ErrInvalid;
     gocpp::error ErrPermission = fs::ErrPermission;
     gocpp::error ErrExist = fs::ErrExist;
@@ -62,17 +70,20 @@ namespace golang::os
     template<typename T, typename StoreT>
     bool timeout::timeoutImpl<T, StoreT>::vTimeout()
     {
-        return Timeout(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    bool Timeout(const gocpp::PtrRecv<timeout, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vTimeout();
-    }
+        bool Timeout(const gocpp::PtrRecv<timeout, false>& self)
+        {
+            return self.ptr->value->vTimeout();
+        }
 
-    bool Timeout(const gocpp::ObjRecv<timeout>& self)
-    {
-        return self.obj.value->vTimeout();
+        bool Timeout(const gocpp::ObjRecv<timeout>& self)
+        {
+            return self.obj.value->vTimeout();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct timeout& value)
@@ -112,20 +123,20 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string Error(struct SyscallError* e)
+    std::string rec::Error(struct SyscallError* e)
     {
-        return e->Syscall + ": " + Error(gocpp::recv(e->Err));
+        return e->Syscall + ": " + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error Unwrap(struct SyscallError* e)
+    struct gocpp::error rec::Unwrap(struct SyscallError* e)
     {
         return e->Err;
     }
 
-    bool Timeout(struct SyscallError* e)
+    bool rec::Timeout(struct SyscallError* e)
     {
         auto [t, ok] = gocpp::getValue<timeout>(e->Err);
-        return ok && Timeout(gocpp::recv(t));
+        return ok && rec::Timeout(gocpp::recv(t));
     }
 
     struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err)
@@ -155,7 +166,7 @@ namespace golang::os
     bool IsTimeout(struct gocpp::error err)
     {
         auto [terr, ok] = gocpp::getValue<timeout>(underlyingError(err));
-        return ok && Timeout(gocpp::recv(terr));
+        return ok && rec::Timeout(gocpp::recv(terr));
     }
 
     bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target)
@@ -166,7 +177,7 @@ namespace golang::os
             return true;
         }
         auto [e, ok] = gocpp::getValue<syscall::Errno>(err);
-        return ok && Is(gocpp::recv(e), target);
+        return ok && rec::Is(gocpp::recv(e), target);
     }
 
     struct gocpp::error underlyingError(struct gocpp::error err)

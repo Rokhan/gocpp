@@ -27,5 +27,9 @@ namespace golang::sync
     bool runtime_canSpin(int i);
     void runtime_doSpin();
     int64_t runtime_nanotime();
+
+    namespace rec
+    {
+    }
 }
 

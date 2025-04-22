@@ -63,5 +63,9 @@ namespace golang::bits
     unsigned int Rem(unsigned int hi, unsigned int lo, unsigned int y);
     uint32_t Rem32(uint32_t hi, uint32_t lo, uint32_t y);
     uint64_t Rem64(uint64_t hi, uint64_t lo, uint64_t y);
+
+    namespace rec
+    {
+    }
 }
 

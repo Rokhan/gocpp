@@ -17,5 +17,9 @@ namespace golang::safefilepath
     bool isReservedBaseName(std::string name);
     bool equalFold(std::string a, std::string b);
     unsigned char toUpper(unsigned char c);
+
+    namespace rec
+    {
+    }
 }
 

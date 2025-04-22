@@ -55,9 +55,16 @@ namespace golang::main
         std::shared_ptr<Igocpp_id_0> value;
     };
 
-    void M(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-    void M(const gocpp::ObjRecv<gocpp_id_0>& self);
+    namespace rec
+    {
+        void M(const gocpp::PtrRecv<gocpp_id_0, false>& self);
+        void M(const gocpp::ObjRecv<gocpp_id_0>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+
+    namespace rec
+    {
+    }
 }
 

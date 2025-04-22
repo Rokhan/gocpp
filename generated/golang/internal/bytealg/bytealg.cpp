@@ -15,6 +15,11 @@
 
 namespace golang::bytealg
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int MaxLen;
 
     template<typename T>

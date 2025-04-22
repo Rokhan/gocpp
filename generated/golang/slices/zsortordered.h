@@ -21,7 +21,7 @@ namespace golang::slices
     int partitionEqualOrdered(gocpp::slice<E> data, int a, int b, int pivot);
     bool partialInsertionSortOrdered(gocpp::slice<E> data, int a, int b);
     void breakPatternsOrdered(gocpp::slice<E> data, int a, int b);
-    std::tuple<int, sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
+    std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps);
     int medianOrdered(gocpp::slice<E> data, int a, int b, int c, int* swaps);
     int medianAdjacentOrdered(gocpp::slice<E> data, int a, int* swaps);
@@ -30,5 +30,9 @@ namespace golang::slices
     void stableOrdered(gocpp::slice<E> data, int n);
     void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b);
     void rotateOrdered(gocpp::slice<E> data, int a, int m, int b);
+
+    namespace rec
+    {
+    }
 }
 

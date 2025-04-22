@@ -18,5 +18,9 @@ namespace golang::runtime
     std::string Version();
     extern std::string GOOS;
     extern std::string GOARCH;
+
+    namespace rec
+    {
+    }
 }
 

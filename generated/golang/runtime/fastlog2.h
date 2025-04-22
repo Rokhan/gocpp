@@ -13,5 +13,9 @@
 namespace golang::runtime
 {
     double fastlog2(double x);
+
+    namespace rec
+    {
+    }
 }
 

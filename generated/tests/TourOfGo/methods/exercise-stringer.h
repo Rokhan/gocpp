@@ -12,7 +12,11 @@
 
 namespace golang::main
 {
-    std::string String(IPAddr ip);
     void main();
+
+    namespace rec
+    {
+        std::string String(IPAddr ip);
+    }
 }
 

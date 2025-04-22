@@ -11,7 +11,7 @@ namespace golang::runtime
     using limiterEventType = uint8_t;
     const long limiterEventBits = 3;
     using limiterEventStamp = uint64_t;
-    const limiterEventType limiterEventNone = 0;
+    const runtime::limiterEventType limiterEventNone = 0;
     const limiterEventType limiterEventIdleMarkWork = 1;
     const limiterEventType limiterEventMarkAssist = 2;
     const limiterEventType limiterEventScavengeAssist = 3;

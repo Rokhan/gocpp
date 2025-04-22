@@ -29,10 +29,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Bool& value);
-    bool Load(struct Bool* x);
-    void Store(struct Bool* x, bool val);
-    bool Swap(struct Bool* x, bool go_new);
-    bool CompareAndSwap(struct Bool* x, bool old, bool go_new);
     uint32_t b32(bool b);
     template<typename T> 
     struct Pointer
@@ -54,18 +50,6 @@ namespace golang::atomic
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
-
-    template<typename T>
-    T* Load(Pointer<T>* x);
-
-    template<typename T>
-    void Store(Pointer<T>* x, T* val);
-
-    template<typename T>
-    T* Swap(Pointer<T>* x, T* go_new);
-
-    template<typename T>
-    bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new);
     struct Int32
     {
         /* noCopy _; [Known incomplete type] */
@@ -83,11 +67,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
-    int32_t Load(struct Int32* x);
-    void Store(struct Int32* x, int32_t val);
-    int32_t Swap(struct Int32* x, int32_t go_new);
-    bool CompareAndSwap(struct Int32* x, int32_t old, int32_t go_new);
-    int32_t Add(struct Int32* x, int32_t delta);
     struct Int64
     {
         /* noCopy _; [Known incomplete type] */
@@ -106,11 +85,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
-    int64_t Load(struct Int64* x);
-    void Store(struct Int64* x, int64_t val);
-    int64_t Swap(struct Int64* x, int64_t go_new);
-    bool CompareAndSwap(struct Int64* x, int64_t old, int64_t go_new);
-    int64_t Add(struct Int64* x, int64_t delta);
     struct Uint32
     {
         /* noCopy _; [Known incomplete type] */
@@ -128,11 +102,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
-    uint32_t Load(struct Uint32* x);
-    void Store(struct Uint32* x, uint32_t val);
-    uint32_t Swap(struct Uint32* x, uint32_t go_new);
-    bool CompareAndSwap(struct Uint32* x, uint32_t old, uint32_t go_new);
-    uint32_t Add(struct Uint32* x, uint32_t delta);
     struct Uint64
     {
         /* noCopy _; [Known incomplete type] */
@@ -151,11 +120,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
-    uint64_t Load(struct Uint64* x);
-    void Store(struct Uint64* x, uint64_t val);
-    uint64_t Swap(struct Uint64* x, uint64_t go_new);
-    bool CompareAndSwap(struct Uint64* x, uint64_t old, uint64_t go_new);
-    uint64_t Add(struct Uint64* x, uint64_t delta);
     struct Uintptr
     {
         /* noCopy _; [Known incomplete type] */
@@ -173,11 +137,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
-    uintptr_t Load(struct Uintptr* x);
-    void Store(struct Uintptr* x, uintptr_t val);
-    uintptr_t Swap(struct Uintptr* x, uintptr_t go_new);
-    bool CompareAndSwap(struct Uintptr* x, uintptr_t old, uintptr_t go_new);
-    uintptr_t Add(struct Uintptr* x, uintptr_t delta);
     struct noCopy
     {
 
@@ -193,8 +152,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
-    void Lock(noCopy*);
-    void Unlock(noCopy*);
     struct align64
     {
 
@@ -210,5 +167,52 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
+
+    namespace rec
+    {
+        bool Load(struct Bool* x);
+        void Store(struct Bool* x, bool val);
+        bool Swap(struct Bool* x, bool go_new);
+        bool CompareAndSwap(struct Bool* x, bool old, bool go_new);
+        
+template<typename T>
+        T* Load(Pointer<T>* x);
+        
+template<typename T>
+        void Store(Pointer<T>* x, T* val);
+        
+template<typename T>
+        T* Swap(Pointer<T>* x, T* go_new);
+        
+template<typename T>
+        bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new);
+        int32_t Load(struct Int32* x);
+        void Store(struct Int32* x, int32_t val);
+        int32_t Swap(struct Int32* x, int32_t go_new);
+        bool CompareAndSwap(struct Int32* x, int32_t old, int32_t go_new);
+        int32_t Add(struct Int32* x, int32_t delta);
+        int64_t Load(struct Int64* x);
+        void Store(struct Int64* x, int64_t val);
+        int64_t Swap(struct Int64* x, int64_t go_new);
+        bool CompareAndSwap(struct Int64* x, int64_t old, int64_t go_new);
+        int64_t Add(struct Int64* x, int64_t delta);
+        uint32_t Load(struct Uint32* x);
+        void Store(struct Uint32* x, uint32_t val);
+        uint32_t Swap(struct Uint32* x, uint32_t go_new);
+        bool CompareAndSwap(struct Uint32* x, uint32_t old, uint32_t go_new);
+        uint32_t Add(struct Uint32* x, uint32_t delta);
+        uint64_t Load(struct Uint64* x);
+        void Store(struct Uint64* x, uint64_t val);
+        uint64_t Swap(struct Uint64* x, uint64_t go_new);
+        bool CompareAndSwap(struct Uint64* x, uint64_t old, uint64_t go_new);
+        uint64_t Add(struct Uint64* x, uint64_t delta);
+        uintptr_t Load(struct Uintptr* x);
+        void Store(struct Uintptr* x, uintptr_t val);
+        uintptr_t Swap(struct Uintptr* x, uintptr_t go_new);
+        bool CompareAndSwap(struct Uintptr* x, uintptr_t old, uintptr_t go_new);
+        uintptr_t Add(struct Uintptr* x, uintptr_t delta);
+        void Lock(noCopy*);
+        void Unlock(noCopy*);
+    }
 }
 

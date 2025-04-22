@@ -24,6 +24,17 @@
 
 namespace golang::zlib
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace adler32::rec;
+        using namespace binary::rec;
+        using namespace flate::rec;
+        using namespace fmt::rec;
+        using namespace hash::rec;
+        using namespace io::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
@@ -94,23 +105,23 @@ namespace golang::zlib
         return {gocpp::InitPtr<Writer>([](Writer& x) { x.w = w; x.level = level; x.dict = dict; }), nullptr};
     }
 
-    void Reset(struct Writer* z, struct io::Writer w)
+    void rec::Reset(struct Writer* z, struct io::Writer w)
     {
         z->w = w;
         if(z->compressor != nullptr)
         {
-            Reset(gocpp::recv(z->compressor), w);
+            rec::Reset(gocpp::recv(z->compressor), w);
         }
         if(z->digest != nullptr)
         {
-            Reset(gocpp::recv(z->digest));
+            rec::Reset(gocpp::recv(z->digest));
         }
         z->err = nullptr;
         z->scratch = gocpp::array<unsigned char, 4> {};
         z->wroteHeader = false;
     }
 
-    struct gocpp::error writeHeader(struct Writer* z)
+    struct gocpp::error rec::writeHeader(struct Writer* z)
     {
         struct gocpp::error err;
         z->wroteHeader = true;
@@ -164,8 +175,8 @@ namespace golang::zlib
             struct gocpp::error err;
             z->scratch[1] |= 1 << 5;
         }
-        z->scratch[1] += uint8_t(31 - Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
-        if(std::tie(gocpp_id_2, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
+        z->scratch[1] += uint8_t(31 - rec::Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
+        if(std::tie(gocpp_id_2, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
         {
             struct gocpp::error err;
             return err;
@@ -173,8 +184,8 @@ namespace golang::zlib
         if(z->dict != nullptr)
         {
             struct gocpp::error err;
-            PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), adler32::Checksum(z->dict));
-            if(std::tie(gocpp_id_3, err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
+            rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), adler32::Checksum(z->dict));
+            if(std::tie(gocpp_id_3, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
                 struct gocpp::error err;
                 return err;
@@ -194,7 +205,7 @@ namespace golang::zlib
         return nullptr;
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(struct Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -202,7 +213,7 @@ namespace golang::zlib
         {
             int n;
             struct gocpp::error err;
-            z->err = writeHeader(gocpp::recv(z));
+            z->err = rec::writeHeader(gocpp::recv(z));
         }
         if(z->err != nullptr)
         {
@@ -216,7 +227,7 @@ namespace golang::zlib
             struct gocpp::error err;
             return {0, nullptr};
         }
-        std::tie(n, err) = Write(gocpp::recv(z->compressor), p);
+        std::tie(n, err) = rec::Write(gocpp::recv(z->compressor), p);
         if(err != nullptr)
         {
             int n;
@@ -224,42 +235,42 @@ namespace golang::zlib
             z->err = err;
             return {n, err};
         }
-        Write(gocpp::recv(z->digest), p);
+        rec::Write(gocpp::recv(z->digest), p);
         return {n, err};
     }
 
-    struct gocpp::error Flush(struct Writer* z)
+    struct gocpp::error rec::Flush(struct Writer* z)
     {
         if(! z->wroteHeader)
         {
-            z->err = writeHeader(gocpp::recv(z));
+            z->err = rec::writeHeader(gocpp::recv(z));
         }
         if(z->err != nullptr)
         {
             return z->err;
         }
-        z->err = Flush(gocpp::recv(z->compressor));
+        z->err = rec::Flush(gocpp::recv(z->compressor));
         return z->err;
     }
 
-    struct gocpp::error Close(struct Writer* z)
+    struct gocpp::error rec::Close(struct Writer* z)
     {
         if(! z->wroteHeader)
         {
-            z->err = writeHeader(gocpp::recv(z));
+            z->err = rec::writeHeader(gocpp::recv(z));
         }
         if(z->err != nullptr)
         {
             return z->err;
         }
-        z->err = Close(gocpp::recv(z->compressor));
+        z->err = rec::Close(gocpp::recv(z->compressor));
         if(z->err != nullptr)
         {
             return z->err;
         }
-        auto checksum = Sum32(gocpp::recv(z->digest));
-        PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), checksum);
-        std::tie(gocpp_id_4, z->err) = Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
+        auto checksum = rec::Sum32(gocpp::recv(z->digest));
+        rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), checksum);
+        std::tie(gocpp_id_4, z->err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
         return z->err;
     }
 

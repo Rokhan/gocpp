@@ -26,6 +26,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     pageCache::operator T()
@@ -61,12 +69,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool empty(struct pageCache* c)
+    bool rec::empty(struct pageCache* c)
     {
         return c->cache == 0;
     }
 
-    std::tuple<uintptr_t, uintptr_t> alloc(struct pageCache* c, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageCache* c, uintptr_t npages)
     {
         if(c->cache == 0)
         {
@@ -80,10 +88,10 @@ namespace golang::runtime
             c->scav &^= 1 << i;
             return {c->base + i * pageSize, uintptr_t(scav) * pageSize};
         }
-        return allocN(gocpp::recv(c), npages);
+        return rec::allocN(gocpp::recv(c), npages);
     }
 
-    std::tuple<uintptr_t, uintptr_t> allocN(struct pageCache* c, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::allocN(struct pageCache* c, uintptr_t npages)
     {
         auto i = findBitRange64(c->cache, (unsigned int)(npages));
         if(i >= 64)
@@ -97,10 +105,10 @@ namespace golang::runtime
         return {c->base + uintptr_t(i * pageSize), uintptr_t(scav) * pageSize};
     }
 
-    void flush(struct pageCache* c, struct pageAlloc* p)
+    void rec::flush(struct pageCache* c, struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
-        if(empty(gocpp::recv(c)))
+        if(rec::empty(gocpp::recv(c)))
         {
             return;
         }
@@ -110,59 +118,59 @@ namespace golang::runtime
         {
             if(c->cache & (1 << i) != 0)
             {
-                free1(gocpp::recv(chunkOf(gocpp::recv(p), ci)), pi + i);
-                free(gocpp::recv(p->scav.index), ci, pi + i, 1);
+                rec::free1(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), pi + i);
+                rec::free(gocpp::recv(p->scav.index), ci, pi + i, 1);
             }
             if(c->scav & (1 << i) != 0)
             {
-                setRange(gocpp::recv(chunkOf(gocpp::recv(p), ci)->scavenged), pi + i, 1);
+                rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)->scavenged), pi + i, 1);
             }
         }
-        if(auto b = (offAddr {c->base}); lessThan(gocpp::recv(b), p->searchAddr))
+        if(auto b = (offAddr {c->base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
-        update(gocpp::recv(p), c->base, pageCachePages, false, false);
+        rec::update(gocpp::recv(p), c->base, pageCachePages, false, false);
         *c = pageCache {};
     }
 
-    struct pageCache allocToCache(struct pageAlloc* p)
+    struct pageCache rec::allocToCache(struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
-        if(chunkIndex(addr(gocpp::recv(p->searchAddr))) >= p->end)
+        if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
             return pageCache {};
         }
         auto c = pageCache {};
-        auto ci = chunkIndex(addr(gocpp::recv(p->searchAddr)));
+        auto ci = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
         pallocData* chunk = {};
         if(p->summary[len(p->summary) - 1][ci] != 0)
         {
-            chunk = chunkOf(gocpp::recv(p), ci);
-            auto [j, gocpp_id_1] = find(gocpp::recv(chunk), 1, chunkPageIndex(addr(gocpp::recv(p->searchAddr))));
+            chunk = rec::chunkOf(gocpp::recv(p), ci);
+            auto [j, gocpp_id_1] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
             if(j == ~ (unsigned int)(0))
             {
                 go_throw("bad summary data");
             }
-            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize; x.cache = ~ pages64(gocpp::recv(chunk), j); x.scav = block64(gocpp::recv(chunk->scavenged), j); });
+            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize; x.cache = ~ rec::pages64(gocpp::recv(chunk), j); x.scav = rec::block64(gocpp::recv(chunk->scavenged), j); });
         }
         else
         {
-            auto [addr, gocpp_id_3] = find(gocpp::recv(p), 1);
+            auto [addr, gocpp_id_3] = rec::find(gocpp::recv(p), 1);
             if(addr == 0)
             {
                 p->searchAddr = maxSearchAddr();
                 return pageCache {};
             }
             ci = chunkIndex(addr);
-            chunk = chunkOf(gocpp::recv(p), ci);
-            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = alignDown(addr, 64 * pageSize); x.cache = ~ pages64(gocpp::recv(chunk), chunkPageIndex(addr)); x.scav = block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr)); });
+            chunk = rec::chunkOf(gocpp::recv(p), ci);
+            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = alignDown(addr, 64 * pageSize); x.cache = ~ rec::pages64(gocpp::recv(chunk), chunkPageIndex(addr)); x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr)); });
         }
         auto cpi = chunkPageIndex(c->base);
-        allocPages64(gocpp::recv(chunk), cpi, c->cache);
-        clearBlock64(gocpp::recv(chunk->scavenged), cpi, c->cache & c->scav);
-        update(gocpp::recv(p), c->base, pageCachePages, false, true);
-        alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c->cache)));
+        rec::allocPages64(gocpp::recv(chunk), cpi, c->cache);
+        rec::clearBlock64(gocpp::recv(chunk->scavenged), cpi, c->cache & c->scav);
+        rec::update(gocpp::recv(p), c->base, pageCachePages, false, true);
+        rec::alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c->cache)));
         p->searchAddr = offAddr {c->base + pageSize * (pageCachePages - 1)};
         return c;
     }

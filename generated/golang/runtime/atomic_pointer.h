@@ -22,5 +22,9 @@ namespace golang::runtime
     unsafe::Pointer sync_atomic_SwapPointer(unsafe::Pointer* ptr, unsafe::Pointer go_new);
     bool sync_atomic_CompareAndSwapUintptr(uintptr_t* ptr, uintptr_t old, uintptr_t go_new);
     bool sync_atomic_CompareAndSwapPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new);
+
+    namespace rec
+    {
+    }
 }
 

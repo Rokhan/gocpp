@@ -12,5 +12,9 @@
 
 namespace golang::goarch
 {
+
+    namespace rec
+    {
+    }
 }
 

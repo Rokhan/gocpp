@@ -56,8 +56,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceStackTable& value);
-    uint64_t put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs);
-    void dump(struct traceStackTable* t, uintptr_t gen);
     gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
     struct traceFrame
     {
@@ -83,5 +81,11 @@ namespace golang::runtime
     int fpTracebackPCs(unsafe::Pointer fp, gocpp::slice<uintptr_t> pcBuf);
     gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);
     uintptr_t startPCForTrace(uintptr_t pc);
+
+    namespace rec
+    {
+        uint64_t put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs);
+        void dump(struct traceStackTable* t, uintptr_t gen);
+    }
 }
 

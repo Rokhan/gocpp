@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
     void toto()
     {
     }
@@ -52,17 +59,20 @@ namespace golang::main
     template<typename T, typename StoreT>
     void III::IIIImpl<T, StoreT>::vM()
     {
-        return M(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::M(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    void M(const gocpp::PtrRecv<III, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vM();
-    }
+        void M(const gocpp::PtrRecv<III, false>& self)
+        {
+            return self.ptr->value->vM();
+        }
 
-    void M(const gocpp::ObjRecv<III>& self)
-    {
-        return self.obj.value->vM();
+        void M(const gocpp::ObjRecv<III>& self)
+        {
+            return self.obj.value->vM();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct III& value)
@@ -96,7 +106,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void M(T*)
+    void rec::M(T*)
     {
     }
 

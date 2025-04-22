@@ -13,5 +13,9 @@
 namespace golang::math
 {
     double Copysign(double f, double sign);
+
+    namespace rec
+    {
+    }
 }
 

@@ -18,6 +18,12 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+    }
+
     double Hypot(double p, double q)
     {
         if(haveArchHypot)

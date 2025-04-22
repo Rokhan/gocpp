@@ -13,7 +13,7 @@ namespace golang::time
     const int omega = (1 << 63) - 1;
     using ruleKind = int;
     struct rule;
-    const ruleKind ruleJulian = 0;
+    const time::ruleKind ruleJulian = 0;
     const ruleKind ruleDOY = 1;
     const ruleKind ruleMonthWeekDay = 2;
 }

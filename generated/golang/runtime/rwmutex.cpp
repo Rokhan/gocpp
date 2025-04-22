@@ -38,6 +38,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     rwmutex::operator T()
@@ -88,19 +98,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct rwmutex* rw, lockRank readRank, lockRank readRankInternal, lockRank writeRank)
+    void rec::init(struct rwmutex* rw, runtime::lockRank readRank, runtime::lockRank readRankInternal, runtime::lockRank writeRank)
     {
         rw->readRank = readRank;
         lockInit(& rw->rLock, readRankInternal);
         lockInit(& rw->wLock, writeRank);
     }
 
-    void rlock(struct rwmutex* rw)
+    void rec::rlock(struct rwmutex* rw)
     {
         acquirem();
         acquireLockRank(rw->readRank);
         lockWithRankMayAcquire(& rw->rLock, getLockRank(& rw->rLock));
-        if(Add(gocpp::recv(rw->readerCount), 1) < 0)
+        if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
         {
             systemstack([=]() mutable -> void
             {
@@ -114,7 +124,7 @@ namespace golang::runtime
                 {
                     auto m = getg()->m;
                     m->schedlink = rw->readers;
-                    set(gocpp::recv(rw->readers), m);
+                    rec::set(gocpp::recv(rw->readers), m);
                     unlock(& rw->rLock);
                     notesleep(& m->park);
                     noteclear(& m->park);
@@ -123,18 +133,18 @@ namespace golang::runtime
         }
     }
 
-    void runlock(struct rwmutex* rw)
+    void rec::runlock(struct rwmutex* rw)
     {
-        if(auto r = Add(gocpp::recv(rw->readerCount), - 1); r < 0)
+        if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
         {
             if(r + 1 == 0 || r + 1 == - rwmutexMaxReaders)
             {
                 go_throw("runlock of unlocked rwmutex");
             }
-            if(Add(gocpp::recv(rw->readerWait), - 1) == 0)
+            if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
             {
                 lock(& rw->rLock);
-                auto w = ptr(gocpp::recv(rw->writer));
+                auto w = rec::ptr(gocpp::recv(rw->writer));
                 if(w != nullptr)
                 {
                     notewakeup(& w->park);
@@ -146,17 +156,17 @@ namespace golang::runtime
         releasem(getg()->m);
     }
 
-    void lock(struct rwmutex* rw)
+    void rec::lock(struct rwmutex* rw)
     {
         lock(& rw->wLock);
         auto m = getg()->m;
-        auto r = Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
+        auto r = rec::Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
         lock(& rw->rLock);
-        if(r != 0 && Add(gocpp::recv(rw->readerWait), r) != 0)
+        if(r != 0 && rec::Add(gocpp::recv(rw->readerWait), r) != 0)
         {
             systemstack([=]() mutable -> void
             {
-                set(gocpp::recv(rw->writer), m);
+                rec::set(gocpp::recv(rw->writer), m);
                 unlock(& rw->rLock);
                 notesleep(& m->park);
                 noteclear(& m->park);
@@ -168,19 +178,19 @@ namespace golang::runtime
         }
     }
 
-    void unlock(struct rwmutex* rw)
+    void rec::unlock(struct rwmutex* rw)
     {
-        auto r = Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
+        auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)
         {
             go_throw("unlock of unlocked rwmutex");
         }
         lock(& rw->rLock);
-        for(; ptr(gocpp::recv(rw->readers)) != nullptr; )
+        for(; rec::ptr(gocpp::recv(rw->readers)) != nullptr; )
         {
-            auto reader = ptr(gocpp::recv(rw->readers));
+            auto reader = rec::ptr(gocpp::recv(rw->readers));
             rw->readers = reader->schedlink;
-            set(gocpp::recv(reader->schedlink), nullptr);
+            rec::set(gocpp::recv(reader->schedlink), nullptr);
             notewakeup(& reader->park);
             r -= 1;
         }

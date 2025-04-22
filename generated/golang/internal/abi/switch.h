@@ -119,5 +119,9 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCacheEntry& value);
+
+    namespace rec
+    {
+    }
 }
 

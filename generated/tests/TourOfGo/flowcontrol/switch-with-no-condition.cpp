@@ -17,14 +17,21 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace time::rec;
+    }
+
     void main()
     {
         auto t = mocklib::Date::Now();
         //Go switch emulation
         {
             int conditionId = -1;
-            if(Hour(gocpp::recv(t)) < 12) { conditionId = 0; }
-            else if(Hour(gocpp::recv(t)) < 17) { conditionId = 1; }
+            if(rec::Hour(gocpp::recv(t)) < 12) { conditionId = 0; }
+            else if(rec::Hour(gocpp::recv(t)) < 17) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

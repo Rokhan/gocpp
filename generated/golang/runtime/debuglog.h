@@ -34,24 +34,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
-    void end(struct dlogger* l);
-    struct dlogger* b(struct dlogger* l, bool x);
-    struct dlogger* i(struct dlogger* l, int x);
-    struct dlogger* i8(struct dlogger* l, int8_t x);
-    struct dlogger* i16(struct dlogger* l, int16_t x);
-    struct dlogger* i32(struct dlogger* l, int32_t x);
-    struct dlogger* i64(struct dlogger* l, int64_t x);
-    struct dlogger* u(struct dlogger* l, unsigned int x);
-    struct dlogger* uptr(struct dlogger* l, uintptr_t x);
-    struct dlogger* u8(struct dlogger* l, uint8_t x);
-    struct dlogger* u16(struct dlogger* l, uint16_t x);
-    struct dlogger* u32(struct dlogger* l, uint32_t x);
-    struct dlogger* u64(struct dlogger* l, uint64_t x);
-    struct dlogger* hex(struct dlogger* l, uint64_t x);
-    struct dlogger* p(struct dlogger* l, go_any x);
-    struct dlogger* s(struct dlogger* l, std::string x);
-    struct dlogger* pc(struct dlogger* l, uintptr_t x);
-    struct dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x);
     struct debugLogWriter
     {
         sys::NotInHeap _;
@@ -91,14 +73,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogBuf& value);
-    void ensure(struct debugLogWriter* l, uint64_t n);
-    bool writeFrameAt(struct debugLogWriter* l, uint64_t pos, uint64_t size);
-    void writeSync(struct debugLogWriter* l, uint64_t tick, uint64_t nano);
-    void writeUint64LE(struct debugLogWriter* l, uint64_t x);
-    void byte(struct debugLogWriter* l, unsigned char x);
-    void bytes(struct debugLogWriter* l, gocpp::slice<unsigned char> x);
-    void varint(struct debugLogWriter* l, int64_t x);
-    void uvarint(struct debugLogWriter* l, uint64_t u);
     struct debugLogReader
     {
         debugLogBuf* data;
@@ -119,15 +93,45 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogReader& value);
-    uint64_t skip(struct debugLogReader* r);
-    uint16_t readUint16LEAt(struct debugLogReader* r, uint64_t pos);
-    uint64_t readUint64LEAt(struct debugLogReader* r, uint64_t pos);
-    uint64_t peek(struct debugLogReader* r);
-    std::tuple<uint64_t, uint64_t, uint64_t, int> header(struct debugLogReader* r);
-    uint64_t uvarint(struct debugLogReader* r);
-    int64_t varint(struct debugLogReader* r);
-    bool printVal(struct debugLogReader* r);
     void printDebugLog();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
+
+    namespace rec
+    {
+        void end(struct dlogger* l);
+        struct dlogger* b(struct dlogger* l, bool x);
+        struct dlogger* i(struct dlogger* l, int x);
+        struct dlogger* i8(struct dlogger* l, int8_t x);
+        struct dlogger* i16(struct dlogger* l, int16_t x);
+        struct dlogger* i32(struct dlogger* l, int32_t x);
+        struct dlogger* i64(struct dlogger* l, int64_t x);
+        struct dlogger* u(struct dlogger* l, unsigned int x);
+        struct dlogger* uptr(struct dlogger* l, uintptr_t x);
+        struct dlogger* u8(struct dlogger* l, uint8_t x);
+        struct dlogger* u16(struct dlogger* l, uint16_t x);
+        struct dlogger* u32(struct dlogger* l, uint32_t x);
+        struct dlogger* u64(struct dlogger* l, uint64_t x);
+        struct dlogger* hex(struct dlogger* l, uint64_t x);
+        struct dlogger* p(struct dlogger* l, go_any x);
+        struct dlogger* s(struct dlogger* l, std::string x);
+        struct dlogger* pc(struct dlogger* l, uintptr_t x);
+        struct dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x);
+        void ensure(struct debugLogWriter* l, uint64_t n);
+        bool writeFrameAt(struct debugLogWriter* l, uint64_t pos, uint64_t size);
+        void writeSync(struct debugLogWriter* l, uint64_t tick, uint64_t nano);
+        void writeUint64LE(struct debugLogWriter* l, uint64_t x);
+        void byte(struct debugLogWriter* l, unsigned char x);
+        void bytes(struct debugLogWriter* l, gocpp::slice<unsigned char> x);
+        void varint(struct debugLogWriter* l, int64_t x);
+        void uvarint(struct debugLogWriter* l, uint64_t u);
+        uint64_t skip(struct debugLogReader* r);
+        uint16_t readUint16LEAt(struct debugLogReader* r, uint64_t pos);
+        uint64_t readUint64LEAt(struct debugLogReader* r, uint64_t pos);
+        uint64_t peek(struct debugLogReader* r);
+        std::tuple<uint64_t, uint64_t, uint64_t, int> header(struct debugLogReader* r);
+        uint64_t uvarint(struct debugLogReader* r);
+        int64_t varint(struct debugLogReader* r);
+        bool printVal(struct debugLogReader* r);
+    }
 }
 

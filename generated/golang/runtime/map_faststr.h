@@ -20,5 +20,9 @@ namespace golang::runtime
     void mapdelete_faststr(struct maptype* t, struct hmap* h, std::string ky);
     void growWork_faststr(struct maptype* t, struct hmap* h, uintptr_t bucket);
     void evacuate_faststr(struct maptype* t, struct hmap* h, uintptr_t oldbucket);
+
+    namespace rec
+    {
+    }
 }
 

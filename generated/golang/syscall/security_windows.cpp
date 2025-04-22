@@ -19,6 +19,13 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+        using namespace unsafe::rec;
+    }
+
     std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)
     {
         auto [u, e] = UTF16PtrFromString(username);
@@ -126,8 +133,8 @@ namespace golang::syscall
             {
                 return {nullptr, e};
             }
-            defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(sid))); });
-            return Copy(gocpp::recv(sid));
+            defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(sid))); });
+            return rec::Copy(gocpp::recv(sid));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -214,7 +221,7 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<std::string, struct gocpp::error> String(struct SID* sid)
+    std::tuple<std::string, struct gocpp::error> rec::String(struct SID* sid)
     {
         gocpp::Defer defer;
         try
@@ -225,7 +232,7 @@ namespace golang::syscall
             {
                 return {"", e};
             }
-            defer.push_back([=]{ LocalFree((Handle)(unsafe::Pointer(s))); });
+            defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(s))); });
             return {utf16PtrToString(s), nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -234,14 +241,14 @@ namespace golang::syscall
         }
     }
 
-    int Len(struct SID* sid)
+    int rec::Len(struct SID* sid)
     {
         return int(GetLengthSid(sid));
     }
 
-    std::tuple<struct SID*, struct gocpp::error> Copy(struct SID* sid)
+    std::tuple<struct SID*, struct gocpp::error> rec::Copy(struct SID* sid)
     {
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), Len(gocpp::recv(sid)));
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(sid)));
         auto sid2 = (SID*)(unsafe::Pointer(& b[0]));
         auto e = CopySid(uint32_t(len(b)), sid2, sid);
         if(e != nullptr)
@@ -251,7 +258,7 @@ namespace golang::syscall
         return {sid2, nullptr};
     }
 
-    std::tuple<std::string, std::string, uint32_t, struct gocpp::error> LookupAccount(struct SID* sid, std::string system)
+    std::tuple<std::string, std::string, uint32_t, struct gocpp::error> rec::LookupAccount(struct SID* sid, std::string system)
     {
         std::string account;
         std::string domain;
@@ -402,14 +409,14 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<Token, struct gocpp::error> OpenCurrentProcessToken()
+    std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken()
     {
         auto [p, e] = GetCurrentProcess();
         if(e != nullptr)
         {
             return {0, e};
         }
-        Token t = {};
+        syscall::Token t = {};
         e = OpenProcessToken(p, TOKEN_QUERY, & t);
         if(e != nullptr)
         {
@@ -418,12 +425,12 @@ namespace golang::syscall
         return {t, nullptr};
     }
 
-    struct gocpp::error Close(Token t)
+    struct gocpp::error rec::Close(syscall::Token t)
     {
         return CloseHandle(Handle(t));
     }
 
-    std::tuple<unsafe::Pointer, struct gocpp::error> getInfo(Token t, uint32_t go_class, int initSize)
+    std::tuple<unsafe::Pointer, struct gocpp::error> rec::getInfo(syscall::Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -445,9 +452,9 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(Token t)
+    std::tuple<struct Tokenuser*, struct gocpp::error> rec::GetTokenUser(syscall::Token t)
     {
-        auto [i, e] = getInfo(gocpp::recv(t), TokenUser, 50);
+        auto [i, e] = rec::getInfo(gocpp::recv(t), TokenUser, 50);
         if(e != nullptr)
         {
             return {nullptr, e};
@@ -455,9 +462,9 @@ namespace golang::syscall
         return {(Tokenuser*)(i), nullptr};
     }
 
-    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(Token t)
+    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(syscall::Token t)
     {
-        auto [i, e] = getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
+        auto [i, e] = rec::getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
         if(e != nullptr)
         {
             return {nullptr, e};
@@ -465,7 +472,7 @@ namespace golang::syscall
         return {(Tokenprimarygroup*)(i), nullptr};
     }
 
-    std::tuple<std::string, struct gocpp::error> GetUserProfileDirectory(Token t)
+    std::tuple<std::string, struct gocpp::error> rec::GetUserProfileDirectory(syscall::Token t)
     {
         auto n = uint32_t(100);
         for(; ; )

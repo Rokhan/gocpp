@@ -31,16 +31,12 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    Kind kind(flag f);
-    flag ro(flag f);
-    struct abi::Type* typ(struct Value v);
-    unsafe::Pointer pointer(struct Value v);
     go_any packEface(struct Value v);
     struct Value unpackEface(go_any i);
     struct ValueError
     {
         std::string Method;
-        Kind Kind;
+        abi::Kind Kind;
 
         using isGoStruct = void;
 
@@ -54,7 +50,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    std::string Error(struct ValueError* e);
     std::string methodName();
     struct emptyInterface
     {
@@ -73,10 +68,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
-    void mustBeExported(flag f);
-    void mustBeAssignable(flag f);
-    bool CanSet(struct Value v);
-    struct Value Elem(struct Value v);
     struct gocpp_id_6 : gocpp::Interface
     {
         gocpp_id_6(){}
@@ -119,8 +110,11 @@ namespace golang::reflectlite
         std::shared_ptr<Igocpp_id_6> value;
     };
 
-    void M(const gocpp::PtrRecv<gocpp_id_6, false>& self);
-    void M(const gocpp::ObjRecv<gocpp_id_6>& self);
+    namespace rec
+    {
+        void M(const gocpp::PtrRecv<gocpp_id_6, false>& self);
+        void M(const gocpp::ObjRecv<gocpp_id_6>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value);
     go_any valueInterface(struct Value v);
@@ -166,26 +160,42 @@ namespace golang::reflectlite
         std::shared_ptr<Igocpp_id_7> value;
     };
 
-    void M(const gocpp::PtrRecv<gocpp_id_7, false>& self);
-    void M(const gocpp::ObjRecv<gocpp_id_7>& self);
+    namespace rec
+    {
+        void M(const gocpp::PtrRecv<gocpp_id_7, false>& self);
+        void M(const gocpp::ObjRecv<gocpp_id_7>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
-    bool IsNil(struct Value v);
-    bool IsValid(struct Value v);
-    Kind Kind(struct Value v);
     int chanlen(unsafe::Pointer);
     int maplen(unsafe::Pointer);
-    int Len(struct Value v);
-    int numMethod(struct Value v);
-    void Set(struct Value v, struct Value x);
-    struct Type Type(struct Value v);
     unsafe::Pointer unsafe_New(abi::Type*);
     struct Value ValueOf(go_any i);
-    struct Value assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target);
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe);
     void ifaceE2I(struct abi::Type* t, go_any src, unsafe::Pointer dst);
     void typedmemmove(struct abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
     void escapes(go_any x);
     unsafe::Pointer noescape(unsafe::Pointer p);
+
+    namespace rec
+    {
+        abi::Kind kind(reflectlite::flag f);
+        reflectlite::flag ro(reflectlite::flag f);
+        struct abi::Type* typ(struct Value v);
+        unsafe::Pointer pointer(struct Value v);
+        std::string Error(struct ValueError* e);
+        void mustBeExported(reflectlite::flag f);
+        void mustBeAssignable(reflectlite::flag f);
+        bool CanSet(struct Value v);
+        struct Value Elem(struct Value v);
+        bool IsNil(struct Value v);
+        bool IsValid(struct Value v);
+        abi::Kind Kind(struct Value v);
+        int Len(struct Value v);
+        int numMethod(struct Value v);
+        void Set(struct Value v, struct Value x);
+        struct Type Type(struct Value v);
+        struct Value assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target);
+    }
 }
 

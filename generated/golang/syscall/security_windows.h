@@ -49,10 +49,6 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
     std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
     std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
-    std::tuple<std::string, struct gocpp::error> String(struct SID* sid);
-    int Len(struct SID* sid);
-    std::tuple<struct SID*, struct gocpp::error> Copy(struct SID* sid);
-    std::tuple<std::string, std::string, uint32_t, struct gocpp::error> LookupAccount(struct SID* sid, std::string system);
     struct SIDAndAttributes
     {
         SID* Sid;
@@ -102,11 +98,19 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
-    std::tuple<Token, struct gocpp::error> OpenCurrentProcessToken();
-    struct gocpp::error Close(Token t);
-    std::tuple<unsafe::Pointer, struct gocpp::error> getInfo(Token t, uint32_t go_class, int initSize);
-    std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(Token t);
-    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(Token t);
-    std::tuple<std::string, struct gocpp::error> GetUserProfileDirectory(Token t);
+    std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
+
+    namespace rec
+    {
+        std::tuple<std::string, struct gocpp::error> String(struct SID* sid);
+        int Len(struct SID* sid);
+        std::tuple<struct SID*, struct gocpp::error> Copy(struct SID* sid);
+        std::tuple<std::string, std::string, uint32_t, struct gocpp::error> LookupAccount(struct SID* sid, std::string system);
+        struct gocpp::error Close(syscall::Token t);
+        std::tuple<unsafe::Pointer, struct gocpp::error> getInfo(syscall::Token t, uint32_t go_class, int initSize);
+        std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(syscall::Token t);
+        std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(syscall::Token t);
+        std::tuple<std::string, struct gocpp::error> GetUserProfileDirectory(syscall::Token t);
+    }
 }
 

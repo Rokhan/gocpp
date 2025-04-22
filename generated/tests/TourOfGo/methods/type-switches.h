@@ -14,5 +14,9 @@ namespace golang::main
 {
     void go_do(std::any i);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

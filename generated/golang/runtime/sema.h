@@ -51,7 +51,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    struct semaRoot* rootFor(semTable* t, uint32_t* addr);
     void sync_runtime_Semacquire(uint32_t* addr);
     void poll_runtime_Semacquire(uint32_t* addr);
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
@@ -61,14 +60,10 @@ namespace golang::runtime
     void poll_runtime_Semrelease(uint32_t* addr);
     void readyWithTime(struct sudog* s, int traceskip);
     void semacquire(uint32_t* addr);
-    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
+    void semacquire1(uint32_t* addr, bool lifo, runtime::semaProfileFlags profile, int skipframes, runtime::waitReason reason);
     void semrelease(uint32_t* addr);
     void semrelease1(uint32_t* addr, bool handoff, int skipframes);
     bool cansemacquire(uint32_t* addr);
-    void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
-    std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr);
-    void rotateLeft(struct semaRoot* root, struct sudog* x);
-    void rotateRight(struct semaRoot* root, struct sudog* y);
     struct notifyList
     {
         atomic::Uint32 wait;
@@ -96,5 +91,14 @@ namespace golang::runtime
     void notifyListNotifyOne(struct notifyList* l);
     void notifyListCheck(uintptr_t sz);
     int64_t sync_nanotime();
+
+    namespace rec
+    {
+        struct semaRoot* rootFor(semTable* t, uint32_t* addr);
+        void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
+        std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr);
+        void rotateLeft(struct semaRoot* root, struct sudog* x);
+        void rotateRight(struct semaRoot* root, struct sudog* y);
+    }
 }
 

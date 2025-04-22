@@ -75,11 +75,15 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value);
     std::tuple<struct inlineUnwinder, struct inlineFrame> newInlineUnwinder(struct funcInfo f, uintptr_t pc);
-    struct inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc);
-    bool valid(struct inlineFrame uf);
-    struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf);
-    bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf);
-    struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf);
-    std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf);
+
+    namespace rec
+    {
+        struct inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc);
+        bool valid(struct inlineFrame uf);
+        struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf);
+        bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf);
+        struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf);
+        std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf);
+    }
 }
 

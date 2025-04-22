@@ -13,5 +13,9 @@
 namespace golang::main
 {
     void main();
+
+    namespace rec
+    {
+    }
 }
 

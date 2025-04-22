@@ -15,6 +15,12 @@
 
 namespace golang::binary
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace binary::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     nativeEndian::operator T()

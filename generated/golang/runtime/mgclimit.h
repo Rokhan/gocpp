@@ -41,21 +41,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
-    bool limiting(struct gcCPULimiterState* l);
-    void startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now);
-    void finishGCTransition(struct gcCPULimiterState* l, int64_t now);
-    bool needUpdate(struct gcCPULimiterState* l, int64_t now);
-    void addAssistTime(struct gcCPULimiterState* l, int64_t t);
-    void addIdleTime(struct gcCPULimiterState* l, int64_t t);
-    void update(struct gcCPULimiterState* l, int64_t now);
-    void updateLocked(struct gcCPULimiterState* l, int64_t now);
-    void accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
-    bool tryLock(struct gcCPULimiterState* l);
-    void unlock(struct gcCPULimiterState* l);
-    void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
-    limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
-    int64_t duration(limiterEventStamp s, int64_t now);
-    limiterEventType typ(limiterEventStamp s);
+    runtime::limiterEventStamp makeLimiterEventStamp(runtime::limiterEventType typ, int64_t now);
     struct limiterEvent
     {
         atomic::Uint64 stamp;
@@ -72,8 +58,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
-    bool start(struct limiterEvent* e, limiterEventType typ, int64_t now);
-    std::tuple<limiterEventType, int64_t> consume(struct limiterEvent* e, int64_t now);
-    void stop(struct limiterEvent* e, limiterEventType typ, int64_t now);
+
+    namespace rec
+    {
+        bool limiting(struct gcCPULimiterState* l);
+        void startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now);
+        void finishGCTransition(struct gcCPULimiterState* l, int64_t now);
+        bool needUpdate(struct gcCPULimiterState* l, int64_t now);
+        void addAssistTime(struct gcCPULimiterState* l, int64_t t);
+        void addIdleTime(struct gcCPULimiterState* l, int64_t t);
+        void update(struct gcCPULimiterState* l, int64_t now);
+        void updateLocked(struct gcCPULimiterState* l, int64_t now);
+        void accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
+        bool tryLock(struct gcCPULimiterState* l);
+        void unlock(struct gcCPULimiterState* l);
+        void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
+        int64_t duration(runtime::limiterEventStamp s, int64_t now);
+        runtime::limiterEventType typ(runtime::limiterEventStamp s);
+        bool start(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now);
+        std::tuple<runtime::limiterEventType, int64_t> consume(struct limiterEvent* e, int64_t now);
+        void stop(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now);
+    }
 }
 

@@ -14,5 +14,9 @@ namespace golang::main
 {
     gocpp::map<std::string, int> WordCount(std::string s);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

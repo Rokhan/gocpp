@@ -18,6 +18,14 @@
 
 namespace golang::fmtsort
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace reflect::rec;
+        using namespace sort::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     SortedMap::operator T()
@@ -50,17 +58,17 @@ namespace golang::fmtsort
         return value.PrintTo(os);
     }
 
-    int Len(struct SortedMap* o)
+    int rec::Len(struct SortedMap* o)
     {
         return len(o->Key);
     }
 
-    bool Less(struct SortedMap* o, int i, int j)
+    bool rec::Less(struct SortedMap* o, int i, int j)
     {
         return compare(o->Key[i], o->Key[j]) < 0;
     }
 
-    void Swap(struct SortedMap* o, int i, int j)
+    void rec::Swap(struct SortedMap* o, int i, int j)
     {
         std::tie(o->Key[i], o->Key[j]) = std::tuple{o->Key[j], o->Key[i]};
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
@@ -68,18 +76,18 @@ namespace golang::fmtsort
 
     struct SortedMap* Sort(struct reflect::Value mapValue)
     {
-        if(Kind(gocpp::recv(Type(gocpp::recv(mapValue)))) != reflect::Map)
+        if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
             return nullptr;
         }
-        auto n = Len(gocpp::recv(mapValue));
+        auto n = rec::Len(gocpp::recv(mapValue));
         auto key = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
         auto value = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
-        auto iter = MapRange(gocpp::recv(mapValue));
-        for(; Next(gocpp::recv(iter)); )
+        auto iter = rec::MapRange(gocpp::recv(mapValue));
+        for(; rec::Next(gocpp::recv(iter)); )
         {
-            key = append(key, Key(gocpp::recv(iter)));
-            value = append(value, Value(gocpp::recv(iter)));
+            key = append(key, rec::Key(gocpp::recv(iter)));
+            value = append(value, rec::Value(gocpp::recv(iter)));
         }
         auto sorted = gocpp::InitPtr<SortedMap>([](SortedMap& x) { x.Key = key; x.Value = value; });
         sort::Stable(sorted);
@@ -88,14 +96,14 @@ namespace golang::fmtsort
 
     int compare(struct reflect::Value aVal, struct reflect::Value bVal)
     {
-        auto [aType, bType] = std::tuple{Type(gocpp::recv(aVal)), Type(gocpp::recv(bVal))};
+        auto [aType, bType] = std::tuple{rec::Type(gocpp::recv(aVal)), rec::Type(gocpp::recv(bVal))};
         if(aType != bType)
         {
             return - 1;
         }
         //Go switch emulation
         {
-            auto condition = Kind(gocpp::recv(aVal));
+            auto condition = rec::Kind(gocpp::recv(aVal));
             int conditionId = -1;
             if(condition == reflect::Int) { conditionId = 0; }
             if(condition == reflect::Int8) { conditionId = 1; }
@@ -127,7 +135,7 @@ namespace golang::fmtsort
                 case 2:
                 case 3:
                 case 4:
-                    auto [a, b] = std::tuple{Int(gocpp::recv(aVal)), Int(gocpp::recv(bVal))};
+                    auto [a, b] = std::tuple{rec::Int(gocpp::recv(aVal)), rec::Int(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -153,7 +161,7 @@ namespace golang::fmtsort
                 case 8:
                 case 9:
                 case 10:
-                    std::tie(a, b) = std::tuple{Uint(gocpp::recv(aVal)), Uint(gocpp::recv(bVal))};
+                    std::tie(a, b) = std::tuple{rec::Uint(gocpp::recv(aVal)), rec::Uint(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -174,7 +182,7 @@ namespace golang::fmtsort
                     }
                     break;
                 case 11:
-                    std::tie(a, b) = std::tuple{String(gocpp::recv(aVal)), String(gocpp::recv(bVal))};
+                    std::tie(a, b) = std::tuple{rec::String(gocpp::recv(aVal)), rec::String(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -196,11 +204,11 @@ namespace golang::fmtsort
                     break;
                 case 12:
                 case 13:
-                    return floatCompare(Float(gocpp::recv(aVal)), Float(gocpp::recv(bVal)));
+                    return floatCompare(rec::Float(gocpp::recv(aVal)), rec::Float(gocpp::recv(bVal)));
                     break;
                 case 14:
                 case 15:
-                    std::tie(a, b) = std::tuple{Complex(gocpp::recv(aVal)), Complex(gocpp::recv(bVal))};
+                    std::tie(a, b) = std::tuple{rec::Complex(gocpp::recv(aVal)), rec::Complex(gocpp::recv(bVal))};
                     if(auto c = floatCompare(real(a), real(b)); c != 0)
                     {
                         return c;
@@ -208,7 +216,7 @@ namespace golang::fmtsort
                     return floatCompare(imag(a), imag(b));
                     break;
                 case 16:
-                    std::tie(a, b) = std::tuple{Bool(gocpp::recv(aVal)), Bool(gocpp::recv(bVal))};
+                    std::tie(a, b) = std::tuple{rec::Bool(gocpp::recv(aVal)), rec::Bool(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -230,7 +238,7 @@ namespace golang::fmtsort
                     break;
                 case 17:
                 case 18:
-                    std::tie(a, b) = std::tuple{Pointer(gocpp::recv(aVal)), Pointer(gocpp::recv(bVal))};
+                    std::tie(a, b) = std::tuple{rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -255,7 +263,7 @@ namespace golang::fmtsort
                     {
                         return c;
                     }
-                    auto [ap, bp] = std::tuple{Pointer(gocpp::recv(aVal)), Pointer(gocpp::recv(bVal))};
+                    auto [ap, bp] = std::tuple{rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -276,9 +284,9 @@ namespace golang::fmtsort
                     }
                     break;
                 case 20:
-                    for(auto i = 0; i < NumField(gocpp::recv(aVal)); i++)
+                    for(auto i = 0; i < rec::NumField(gocpp::recv(aVal)); i++)
                     {
-                        if(auto c = compare(Field(gocpp::recv(aVal), i), Field(gocpp::recv(bVal), i)); c != 0)
+                        if(auto c = compare(rec::Field(gocpp::recv(aVal), i), rec::Field(gocpp::recv(bVal), i)); c != 0)
                         {
                             return c;
                         }
@@ -286,9 +294,9 @@ namespace golang::fmtsort
                     return 0;
                     break;
                 case 21:
-                    for(auto i = 0; i < Len(gocpp::recv(aVal)); i++)
+                    for(auto i = 0; i < rec::Len(gocpp::recv(aVal)); i++)
                     {
-                        if(auto c = compare(Index(gocpp::recv(aVal), i), Index(gocpp::recv(bVal), i)); c != 0)
+                        if(auto c = compare(rec::Index(gocpp::recv(aVal), i), rec::Index(gocpp::recv(bVal), i)); c != 0)
                         {
                             return c;
                         }
@@ -300,15 +308,15 @@ namespace golang::fmtsort
                     {
                         return c;
                     }
-                    auto c = compare(reflect::ValueOf(Type(gocpp::recv(Elem(gocpp::recv(aVal))))), reflect::ValueOf(Type(gocpp::recv(Elem(gocpp::recv(bVal))))));
+                    auto c = compare(reflect::ValueOf(rec::Type(gocpp::recv(rec::Elem(gocpp::recv(aVal))))), reflect::ValueOf(rec::Type(gocpp::recv(rec::Elem(gocpp::recv(bVal))))));
                     if(c != 0)
                     {
                         return c;
                     }
-                    return compare(Elem(gocpp::recv(aVal)), Elem(gocpp::recv(bVal)));
+                    return compare(rec::Elem(gocpp::recv(aVal)), rec::Elem(gocpp::recv(bVal)));
                     break;
                 default:
-                    gocpp::panic("bad type in compare: " + String(gocpp::recv(aType)));
+                    gocpp::panic("bad type in compare: " + rec::String(gocpp::recv(aType)));
                     break;
             }
         }
@@ -316,15 +324,15 @@ namespace golang::fmtsort
 
     std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal)
     {
-        if(IsNil(gocpp::recv(aVal)))
+        if(rec::IsNil(gocpp::recv(aVal)))
         {
-            if(IsNil(gocpp::recv(bVal)))
+            if(rec::IsNil(gocpp::recv(bVal)))
             {
                 return {0, true};
             }
             return {- 1, true};
         }
-        if(IsNil(gocpp::recv(bVal)))
+        if(rec::IsNil(gocpp::recv(bVal)))
         {
             return {1, true};
         }

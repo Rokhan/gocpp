@@ -50,6 +50,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace math::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     hchan::operator T()
@@ -181,7 +193,7 @@ namespace golang::runtime
             {
                 case 0:
                     c = (hchan*)(mallocgc(hchanSize, nullptr, true));
-                    c->buf = raceaddr(gocpp::recv(c));
+                    c->buf = rec::raceaddr(gocpp::recv(c));
                     break;
                 case 1:
                     c = (hchan*)(mallocgc(hchanSize + mem, nullptr, true));
@@ -240,7 +252,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racereadpc(raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(chansend));
+            racereadpc(rec::raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(chansend));
         }
         if(! block && c->closed == 0 && full(c))
         {
@@ -257,7 +269,7 @@ namespace golang::runtime
             unlock(& c->lock);
             gocpp::panic(plainError("send on closed channel"));
         }
-        if(auto sg = dequeue(gocpp::recv(c->recvq)); sg != nullptr)
+        if(auto sg = rec::dequeue(gocpp::recv(c->recvq)); sg != nullptr)
         {
             send(c, sg, ep, [=]() mutable -> void
             {
@@ -301,8 +313,8 @@ namespace golang::runtime
         mysg->c = c;
         gp->waiting = mysg;
         gp->param = nullptr;
-        enqueue(gocpp::recv(c->sendq), mysg);
-        Store(gocpp::recv(gp->parkingOnChan), true);
+        rec::enqueue(gocpp::recv(c->sendq), mysg);
+        rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanSend, traceBlockChanSend, 2);
         KeepAlive(ep);
         if(mysg != gp->waiting)
@@ -395,14 +407,14 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            racewritepc(raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(closechan));
-            racerelease(raceaddr(gocpp::recv(c)));
+            racewritepc(rec::raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(closechan));
+            racerelease(rec::raceaddr(gocpp::recv(c)));
         }
         c->closed = 1;
         gList glist = {};
         for(; ; )
         {
-            auto sg = dequeue(gocpp::recv(c->recvq));
+            auto sg = rec::dequeue(gocpp::recv(c->recvq));
             if(sg == nullptr)
             {
                 break;
@@ -421,13 +433,13 @@ namespace golang::runtime
             sg->success = false;
             if(raceenabled)
             {
-                raceacquireg(gp, raceaddr(gocpp::recv(c)));
+                raceacquireg(gp, rec::raceaddr(gocpp::recv(c)));
             }
-            push(gocpp::recv(glist), gp);
+            rec::push(gocpp::recv(glist), gp);
         }
         for(; ; )
         {
-            auto sg = dequeue(gocpp::recv(c->sendq));
+            auto sg = rec::dequeue(gocpp::recv(c->sendq));
             if(sg == nullptr)
             {
                 break;
@@ -442,14 +454,14 @@ namespace golang::runtime
             sg->success = false;
             if(raceenabled)
             {
-                raceacquireg(gp, raceaddr(gocpp::recv(c)));
+                raceacquireg(gp, rec::raceaddr(gocpp::recv(c)));
             }
-            push(gocpp::recv(glist), gp);
+            rec::push(gocpp::recv(glist), gp);
         }
         unlock(& c->lock);
-        for(; ! empty(gocpp::recv(glist)); )
+        for(; ! rec::empty(gocpp::recv(glist)); )
         {
-            auto gp = pop(gocpp::recv(glist));
+            auto gp = rec::pop(gocpp::recv(glist));
             gp->schedlink = 0;
             goready(gp, 3);
         }
@@ -517,7 +529,7 @@ namespace golang::runtime
                 {
                     bool selected;
                     bool received;
-                    raceacquire(raceaddr(gocpp::recv(c)));
+                    raceacquire(rec::raceaddr(gocpp::recv(c)));
                 }
                 if(ep != nullptr)
                 {
@@ -548,7 +560,7 @@ namespace golang::runtime
                 {
                     bool selected;
                     bool received;
-                    raceacquire(raceaddr(gocpp::recv(c)));
+                    raceacquire(rec::raceaddr(gocpp::recv(c)));
                 }
                 unlock(& c->lock);
                 if(ep != nullptr)
@@ -564,7 +576,7 @@ namespace golang::runtime
         {
             bool selected;
             bool received;
-            if(auto sg = dequeue(gocpp::recv(c->sendq)); sg != nullptr)
+            if(auto sg = rec::dequeue(gocpp::recv(c->sendq)); sg != nullptr)
             {
                 bool selected;
                 bool received;
@@ -627,8 +639,8 @@ namespace golang::runtime
         mysg->isSelect = false;
         mysg->c = c;
         gp->param = nullptr;
-        enqueue(gocpp::recv(c->recvq), mysg);
-        Store(gocpp::recv(gp->parkingOnChan), true);
+        rec::enqueue(gocpp::recv(c->recvq), mysg);
+        rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
         if(mysg != gp->waiting)
         {
@@ -699,7 +711,7 @@ namespace golang::runtime
     bool chanparkcommit(struct g* gp, unsafe::Pointer chanLock)
     {
         gp->activeStackChans = true;
-        Store(gocpp::recv(gp->parkingOnChan), false);
+        rec::Store(gocpp::recv(gp->parkingOnChan), false);
         unlock((mutex*)(chanLock));
         return true;
     }
@@ -762,7 +774,7 @@ namespace golang::runtime
         closechan(c);
     }
 
-    void enqueue(struct waitq* q, struct sudog* sgp)
+    void rec::enqueue(struct waitq* q, struct sudog* sgp)
     {
         sgp->next = nullptr;
         auto x = q->last;
@@ -778,7 +790,7 @@ namespace golang::runtime
         q->last = sgp;
     }
 
-    struct sudog* dequeue(struct waitq* q)
+    struct sudog* rec::dequeue(struct waitq* q)
     {
         for(; ; )
         {
@@ -799,7 +811,7 @@ namespace golang::runtime
                 q->first = y;
                 sgp->next = nullptr;
             }
-            if(sgp->isSelect && ! CompareAndSwap(gocpp::recv(sgp->g->selectDone), 0, 1))
+            if(sgp->isSelect && ! rec::CompareAndSwap(gocpp::recv(sgp->g->selectDone), 0, 1))
             {
                 continue;
             }
@@ -807,7 +819,7 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer raceaddr(struct hchan* c)
+    unsafe::Pointer rec::raceaddr(struct hchan* c)
     {
         return unsafe::Pointer(& c->buf);
     }

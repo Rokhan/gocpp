@@ -16,6 +16,12 @@
 
 namespace golang::slices
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
 
     template<typename S>
     bool Equal(S s1, S s2)

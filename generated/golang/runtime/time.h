@@ -46,7 +46,7 @@ namespace golang::runtime
 {
     struct timer
     {
-        puintptr pp;
+        runtime::puintptr pp;
         int64_t when;
         int64_t period;
         std::function<void (go_any, uintptr_t)> f;
@@ -96,5 +96,9 @@ namespace golang::runtime
     int siftupTimer(gocpp::slice<timer*> t, int i);
     void siftdownTimer(gocpp::slice<timer*> t, int i);
     void badTimer();
+
+    namespace rec
+    {
+    }
 }
 

@@ -12,8 +12,12 @@
 
 namespace golang::runtime
 {
-    traceTime traceClockNow();
+    runtime::traceTime traceClockNow();
     uint64_t traceClockUnitsPerSecond();
     void traceFrequency(uintptr_t gen);
+
+    namespace rec
+    {
+    }
 }
 

@@ -80,14 +80,21 @@ namespace golang::zlib
         std::shared_ptr<IResetter> value;
     };
 
-    struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
-    struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
+    namespace rec
+    {
+        struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
+        struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     std::tuple<struct io::ReadCloser, struct gocpp::error> NewReader(struct io::Reader r);
     std::tuple<struct io::ReadCloser, struct gocpp::error> NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict);
-    std::tuple<int, struct gocpp::error> Read(struct reader* z, gocpp::slice<unsigned char> p);
-    struct gocpp::error Close(struct reader* z);
-    struct gocpp::error Reset(struct reader* z, struct io::Reader r, gocpp::slice<unsigned char> dict);
+
+    namespace rec
+    {
+        std::tuple<int, struct gocpp::error> Read(struct reader* z, gocpp::slice<unsigned char> p);
+        struct gocpp::error Close(struct reader* z);
+        struct gocpp::error Reset(struct reader* z, struct io::Reader r, gocpp::slice<unsigned char> dict);
+    }
 }
 

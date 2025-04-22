@@ -75,5 +75,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value);
+
+    namespace rec
+    {
+    }
 }
 

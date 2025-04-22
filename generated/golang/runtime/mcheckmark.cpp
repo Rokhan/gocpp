@@ -62,6 +62,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     checkmarksMap::operator T()
@@ -100,7 +111,7 @@ namespace golang::runtime
         assertWorldStopped();
         for(auto [gocpp_ignored, ai] : mheap_.allArenas)
         {
-            auto arena = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
+            auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             auto bitmap = arena->checkmarks;
             if(bitmap == nullptr)
             {
@@ -133,7 +144,7 @@ namespace golang::runtime
 
     bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits)
     {
-        if(! isMarked(gocpp::recv(mbits)))
+        if(! rec::isMarked(gocpp::recv(mbits)))
         {
             printlock();
             print("runtime: checkmarks found unexpected unmarked object obj=", hex(obj), "\n");
@@ -144,7 +155,7 @@ namespace golang::runtime
             go_throw("checkmark found unmarked object");
         }
         auto ai = arenaIndex(obj);
-        auto arena = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
+        auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         auto arenaWord = (obj / heapArenaBytes / 8) % uintptr_t(len(arena->checkmarks->b));
         auto mask = unsigned char(1 << ((obj / heapArenaBytes) % 8));
         auto bytep = & arena->checkmarks->b[arenaWord];

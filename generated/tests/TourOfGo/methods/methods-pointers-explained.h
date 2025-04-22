@@ -32,5 +32,9 @@ namespace golang::main
     double Abs(struct Vertex v);
     void Scale(struct Vertex* v, double f);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

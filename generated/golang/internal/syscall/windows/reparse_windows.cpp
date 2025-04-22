@@ -16,6 +16,13 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     REPARSE_DATA_BUFFER::operator T()
@@ -133,7 +140,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    std::string Path(struct SymbolicLinkReparseBuffer* rb)
+    std::string rec::Path(struct SymbolicLinkReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;
@@ -181,7 +188,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    std::string Path(struct MountPointReparseBuffer* rb)
+    std::string rec::Path(struct MountPointReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;

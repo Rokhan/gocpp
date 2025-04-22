@@ -98,7 +98,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
-    uint32_t Size(struct TOKEN_MANDATORY_LABEL* tml);
     struct LocalGroupUserInfo0
     {
         uint16_t* Name;
@@ -160,5 +159,10 @@ namespace golang::windows
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
     std::string GetSystemDirectory();
+
+    namespace rec
+    {
+        uint32_t Size(struct TOKEN_MANDATORY_LABEL* tml);
+    }
 }
 

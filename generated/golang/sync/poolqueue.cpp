@@ -17,6 +17,13 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     poolDequeue::operator T()
@@ -113,7 +120,7 @@ namespace golang::sync
     }
 
 
-    std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs)
+    std::tuple<uint32_t, uint32_t> rec::unpack(struct poolDequeue* d, uint64_t ptrs)
     {
         uint32_t head;
         uint32_t tail;
@@ -123,16 +130,16 @@ namespace golang::sync
         return {head, tail};
     }
 
-    uint64_t pack(struct poolDequeue* d, uint32_t head, uint32_t tail)
+    uint64_t rec::pack(struct poolDequeue* d, uint32_t head, uint32_t tail)
     {
         auto mask = (1 << dequeueBits) - 1;
         return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
     }
 
-    bool pushHead(struct poolDequeue* d, go_any val)
+    bool rec::pushHead(struct poolDequeue* d, go_any val)
     {
-        auto ptrs = Load(gocpp::recv(d->headTail));
-        auto [head, tail] = unpack(gocpp::recv(d), ptrs);
+        auto ptrs = rec::Load(gocpp::recv(d->headTail));
+        auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
         if((tail + uint32_t(len(d->vals))) & ((1 << dequeueBits) - 1) == head)
         {
             return false;
@@ -148,24 +155,24 @@ namespace golang::sync
             val = dequeueNil(nullptr);
         }
         *(go_any*)(unsafe::Pointer(slot)) = val;
-        Add(gocpp::recv(d->headTail), 1 << dequeueBits);
+        rec::Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
 
-    std::tuple<go_any, bool> popHead(struct poolDequeue* d)
+    std::tuple<go_any, bool> rec::popHead(struct poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
         {
-            auto ptrs = Load(gocpp::recv(d->headTail));
-            auto [head, tail] = unpack(gocpp::recv(d), ptrs);
+            auto ptrs = rec::Load(gocpp::recv(d->headTail));
+            auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
             if(tail == head)
             {
                 return {nullptr, false};
             }
             head--;
-            auto ptrs2 = pack(gocpp::recv(d), head, tail);
-            if(CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
+            auto ptrs2 = rec::pack(gocpp::recv(d), head, tail);
+            if(rec::CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
             {
                 slot = & d->vals[head & uint32_t(len(d->vals) - 1)];
                 break;
@@ -180,19 +187,19 @@ namespace golang::sync
         return {val, true};
     }
 
-    std::tuple<go_any, bool> popTail(struct poolDequeue* d)
+    std::tuple<go_any, bool> rec::popTail(struct poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
         {
-            auto ptrs = Load(gocpp::recv(d->headTail));
-            auto [head, tail] = unpack(gocpp::recv(d), ptrs);
+            auto ptrs = rec::Load(gocpp::recv(d->headTail));
+            auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
             if(tail == head)
             {
                 return {nullptr, false};
             }
-            auto ptrs2 = pack(gocpp::recv(d), head, tail + 1);
-            if(CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
+            auto ptrs2 = rec::pack(gocpp::recv(d), head, tail + 1);
+            if(rec::CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
             {
                 slot = & d->vals[tail & uint32_t(len(d->vals) - 1)];
                 break;
@@ -282,7 +289,7 @@ namespace golang::sync
         return (poolChainElt*)(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(pp))));
     }
 
-    void pushHead(struct poolChain* c, go_any val)
+    void rec::pushHead(struct poolChain* c, go_any val)
     {
         auto d = c->head;
         if(d == nullptr)
@@ -293,7 +300,7 @@ namespace golang::sync
             c->head = d;
             storePoolChainElt(& c->tail, d);
         }
-        if(pushHead(gocpp::recv(d), val))
+        if(rec::pushHead(gocpp::recv(d), val))
         {
             return;
         }
@@ -306,15 +313,15 @@ namespace golang::sync
         d2->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
         c->head = d2;
         storePoolChainElt(& d->next, d2);
-        pushHead(gocpp::recv(d2), val);
+        rec::pushHead(gocpp::recv(d2), val);
     }
 
-    std::tuple<go_any, bool> popHead(struct poolChain* c)
+    std::tuple<go_any, bool> rec::popHead(struct poolChain* c)
     {
         auto d = c->head;
         for(; d != nullptr; )
         {
-            if(auto [val, ok] = popHead(gocpp::recv(d)); ok)
+            if(auto [val, ok] = rec::popHead(gocpp::recv(d)); ok)
             {
                 return {val, ok};
             }
@@ -323,7 +330,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
-    std::tuple<go_any, bool> popTail(struct poolChain* c)
+    std::tuple<go_any, bool> rec::popTail(struct poolChain* c)
     {
         auto d = loadPoolChainElt(& c->tail);
         if(d == nullptr)
@@ -333,7 +340,7 @@ namespace golang::sync
         for(; ; )
         {
             auto d2 = loadPoolChainElt(& d->next);
-            if(auto [val, ok] = popTail(gocpp::recv(d)); ok)
+            if(auto [val, ok] = rec::popTail(gocpp::recv(d)); ok)
             {
                 return {val, ok};
             }

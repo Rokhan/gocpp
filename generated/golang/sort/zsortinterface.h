@@ -21,7 +21,7 @@ namespace golang::sort
     int partitionEqual(struct Interface data, int a, int b, int pivot);
     bool partialInsertionSort(struct Interface data, int a, int b);
     void breakPatterns(struct Interface data, int a, int b);
-    std::tuple<int, sortedHint> choosePivot(struct Interface data, int a, int b);
+    std::tuple<int, sort::sortedHint> choosePivot(struct Interface data, int a, int b);
     std::tuple<int, int> order2(struct Interface data, int a, int b, int* swaps);
     int median(struct Interface data, int a, int b, int c, int* swaps);
     int medianAdjacent(struct Interface data, int a, int* swaps);
@@ -30,5 +30,9 @@ namespace golang::sort
     void stable(struct Interface data, int n);
     void symMerge(struct Interface data, int a, int m, int b);
     void rotate(struct Interface data, int a, int m, int b);
+
+    namespace rec
+    {
+    }
 }
 

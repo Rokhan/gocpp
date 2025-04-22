@@ -20,26 +20,24 @@
 namespace golang::runtime
 {
     struct offAddr maxSearchAddr();
-    chunkIdx chunkIndex(uintptr_t p);
-    uintptr_t chunkBase(chunkIdx ci);
+    runtime::chunkIdx chunkIndex(uintptr_t p);
+    uintptr_t chunkBase(runtime::chunkIdx ci);
     unsigned int chunkPageIndex(uintptr_t p);
-    unsigned int l1(chunkIdx i);
-    unsigned int l2(chunkIdx i);
     int offAddrToLevelIndex(int level, struct offAddr addr);
     struct offAddr levelIndexToOffAddr(int level, int idx);
     std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
     struct pageAlloc
     {
-        gocpp::array<gocpp::slice<pallocSum>, summaryLevels> summary;
+        gocpp::array<gocpp::slice<runtime::pallocSum>, summaryLevels> summary;
         gocpp::array<gocpp::array<pallocData, 1 << pallocChunksL2Bits>*, 1 << pallocChunksL1Bits> chunks;
         offAddr searchAddr;
-        chunkIdx start;
-        chunkIdx end;
+        runtime::chunkIdx start;
+        runtime::chunkIdx end;
         addrRanges inUse;
         /* gocpp_id_0 scav; [Known incomplete type] */
         mutex* mheapLock;
-        sysMemStat* sysStat;
+        runtime::sysMemStat* sysStat;
         uintptr_t summaryMappedReady;
         bool chunkHugePages;
         bool test;
@@ -56,22 +54,28 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageAlloc& value);
-    void init(struct pageAlloc* p, struct mutex* mheapLock, sysMemStat* sysStat, bool test);
-    struct pallocData* tryChunkOf(struct pageAlloc* p, chunkIdx ci);
-    struct pallocData* chunkOf(struct pageAlloc* p, chunkIdx ci);
-    void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size);
-    void enableChunkHugePages(struct pageAlloc* p);
-    void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
-    uintptr_t allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
-    struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr);
-    std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages);
-    std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages);
-    void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
-    pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    unsigned int start(pallocSum p);
-    unsigned int max(pallocSum p);
-    unsigned int end(pallocSum p);
-    std::tuple<unsigned int, unsigned int, unsigned int> unpack(pallocSum p);
-    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum);
+    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
+    runtime::pallocSum mergeSummaries(gocpp::slice<runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
+
+    namespace rec
+    {
+        unsigned int l1(runtime::chunkIdx i);
+        unsigned int l2(runtime::chunkIdx i);
+        void init(struct pageAlloc* p, struct mutex* mheapLock, runtime::sysMemStat* sysStat, bool test);
+        struct pallocData* tryChunkOf(struct pageAlloc* p, runtime::chunkIdx ci);
+        struct pallocData* chunkOf(struct pageAlloc* p, runtime::chunkIdx ci);
+        void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size);
+        void enableChunkHugePages(struct pageAlloc* p);
+        void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
+        uintptr_t allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
+        struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr);
+        std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages);
+        std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages);
+        void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
+        unsigned int start(runtime::pallocSum p);
+        unsigned int max(runtime::pallocSum p);
+        unsigned int end(runtime::pallocSum p);
+        std::tuple<unsigned int, unsigned int, unsigned int> unpack(runtime::pallocSum p);
+    }
 }
 

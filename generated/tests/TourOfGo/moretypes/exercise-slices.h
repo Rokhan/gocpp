@@ -14,5 +14,9 @@ namespace golang::main
 {
     gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

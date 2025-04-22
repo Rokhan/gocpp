@@ -13,25 +13,30 @@
 
 namespace golang::unsafe
 {
-    uintptr_t Sizeof(ArbitraryType x)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
+    uintptr_t Sizeof(unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t Offsetof(ArbitraryType x)
+    uintptr_t Offsetof(unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t Alignof(ArbitraryType x)
+    uintptr_t Alignof(unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    Pointer Add(Pointer ptr, IntegerType len)
+    Pointer Add(Pointer ptr, unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
-    gocpp::slice<ArbitraryType> Slice(ArbitraryType* ptr, IntegerType len)
+    gocpp::slice<unsafe::ArbitraryType> Slice(unsafe::ArbitraryType* ptr, unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
-    ArbitraryType* SliceData(gocpp::slice<ArbitraryType> slice)
+    unsafe::ArbitraryType* SliceData(gocpp::slice<unsafe::ArbitraryType> slice)
     /* convertBlockStmt, nil block */;
 
-    std::string String(unsigned char* ptr, IntegerType len)
+    std::string String(unsigned char* ptr, unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
     unsigned char* StringData(std::string str)

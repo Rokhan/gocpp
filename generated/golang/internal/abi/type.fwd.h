@@ -28,7 +28,7 @@ namespace golang::abi
     struct StructField;
     struct StructType;
     struct Name;
-    const Kind Invalid = 0;
+    const abi::Kind Invalid = 0;
     const Kind Bool = 1;
     const Kind Int = 2;
     const Kind Int8 = 3;
@@ -55,14 +55,14 @@ namespace golang::abi
     const Kind String = 24;
     const Kind Struct = 25;
     const Kind UnsafePointer = 26;
-    const TFlag TFlagUncommon = 1 << 0;
-    const TFlag TFlagExtraStar = 1 << 1;
-    const TFlag TFlagNamed = 1 << 2;
-    const TFlag TFlagRegularMemory = 1 << 3;
-    const TFlag TFlagUnrolledBitmap = 1 << 4;
-    const ChanDir RecvDir = 1 << 0;
+    const abi::TFlag TFlagUncommon = 1 << 0;
+    const abi::TFlag TFlagExtraStar = 1 << 1;
+    const abi::TFlag TFlagNamed = 1 << 2;
+    const abi::TFlag TFlagRegularMemory = 1 << 3;
+    const abi::TFlag TFlagUnrolledBitmap = 1 << 4;
+    const abi::ChanDir RecvDir = 1 << 0;
     const ChanDir SendDir = 1 << 1;
-    const ChanDir InvalidDir = 0;
+    const abi::ChanDir InvalidDir = 0;
 }
 #include "golang/unsafe/unsafe.fwd.h"
 

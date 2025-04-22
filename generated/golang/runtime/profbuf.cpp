@@ -21,6 +21,14 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     profBuf::operator T()
@@ -80,27 +88,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    profIndex load(profAtomic* x)
+    runtime::profIndex rec::load(runtime::profAtomic* x)
     {
         return profIndex(atomic::Load64((uint64_t*)(x)));
     }
 
-    void store(profAtomic* x, profIndex go_new)
+    void rec::store(runtime::profAtomic* x, runtime::profIndex go_new)
     {
         atomic::Store64((uint64_t*)(x), uint64_t(go_new));
     }
 
-    bool cas(profAtomic* x, profIndex old, profIndex go_new)
+    bool rec::cas(runtime::profAtomic* x, runtime::profIndex old, runtime::profIndex go_new)
     {
         return atomic::Cas64((uint64_t*)(x), uint64_t(old), uint64_t(go_new));
     }
 
-    uint32_t dataCount(profIndex x)
+    uint32_t rec::dataCount(runtime::profIndex x)
     {
         return uint32_t(x);
     }
 
-    uint32_t tagCount(profIndex x)
+    uint32_t rec::tagCount(runtime::profIndex x)
     {
         return uint32_t(x >> 34);
     }
@@ -110,22 +118,22 @@ namespace golang::runtime
         return int((int32_t(x - y) << 2) >> 2);
     }
 
-    profIndex addCountsAndClearFlags(profIndex x, int data, int tag)
+    runtime::profIndex rec::addCountsAndClearFlags(runtime::profIndex x, int data, int tag)
     {
         return profIndex((((uint64_t(x) >> 34) + uint64_t((uint32_t(tag) << 2) >> 2)) << 34) | uint64_t(uint32_t(x) + uint32_t(data)));
     }
 
-    bool hasOverflow(struct profBuf* b)
+    bool rec::hasOverflow(struct profBuf* b)
     {
-        return uint32_t(Load(gocpp::recv(b->overflow))) > 0;
+        return uint32_t(rec::Load(gocpp::recv(b->overflow))) > 0;
     }
 
-    std::tuple<uint32_t, uint64_t> takeOverflow(struct profBuf* b)
+    std::tuple<uint32_t, uint64_t> rec::takeOverflow(struct profBuf* b)
     {
         uint32_t count;
         uint64_t time;
-        auto overflow = Load(gocpp::recv(b->overflow));
-        time = Load(gocpp::recv(b->overflowTime));
+        auto overflow = rec::Load(gocpp::recv(b->overflow));
+        time = rec::Load(gocpp::recv(b->overflowTime));
         for(; ; )
         {
             uint32_t count;
@@ -138,34 +146,34 @@ namespace golang::runtime
                 time = 0;
                 break;
             }
-            if(CompareAndSwap(gocpp::recv(b->overflow), overflow, ((overflow >> 32) + 1) << 32))
+            if(rec::CompareAndSwap(gocpp::recv(b->overflow), overflow, ((overflow >> 32) + 1) << 32))
             {
                 uint32_t count;
                 uint64_t time;
                 break;
             }
-            overflow = Load(gocpp::recv(b->overflow));
-            time = Load(gocpp::recv(b->overflowTime));
+            overflow = rec::Load(gocpp::recv(b->overflow));
+            time = rec::Load(gocpp::recv(b->overflowTime));
         }
         return {uint32_t(overflow), time};
     }
 
-    void incrementOverflow(struct profBuf* b, int64_t now)
+    void rec::incrementOverflow(struct profBuf* b, int64_t now)
     {
         for(; ; )
         {
-            auto overflow = Load(gocpp::recv(b->overflow));
+            auto overflow = rec::Load(gocpp::recv(b->overflow));
             if(uint32_t(overflow) == 0)
             {
-                Store(gocpp::recv(b->overflowTime), uint64_t(now));
-                Store(gocpp::recv(b->overflow), (((overflow >> 32) + 1) << 32) + 1);
+                rec::Store(gocpp::recv(b->overflowTime), uint64_t(now));
+                rec::Store(gocpp::recv(b->overflow), (((overflow >> 32) + 1) << 32) + 1);
                 break;
             }
             if(int32_t(overflow) == - 1)
             {
                 break;
             }
-            if(CompareAndSwap(gocpp::recv(b->overflow), overflow, overflow + 1))
+            if(rec::CompareAndSwap(gocpp::recv(b->overflow), overflow, overflow + 1))
             {
                 break;
             }
@@ -199,17 +207,17 @@ namespace golang::runtime
         return b;
     }
 
-    bool canWriteRecord(struct profBuf* b, int nstk)
+    bool rec::canWriteRecord(struct profBuf* b, int nstk)
     {
-        auto br = load(gocpp::recv(b->r));
-        auto bw = load(gocpp::recv(b->w));
-        if(countSub(tagCount(gocpp::recv(br)), tagCount(gocpp::recv(bw))) + len(b->tags) < 1)
+        auto br = rec::load(gocpp::recv(b->r));
+        auto bw = rec::load(gocpp::recv(b->w));
+        if(countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(bw))) + len(b->tags) < 1)
         {
             return false;
         }
-        auto nd = countSub(dataCount(gocpp::recv(br)), dataCount(gocpp::recv(bw))) + len(b->data);
+        auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
         auto want = 2 + int(b->hdrsize) + nstk;
-        auto i = int(dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto i = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         if(i + want > len(b->data))
         {
             nd -= len(b->data) - i;
@@ -217,17 +225,17 @@ namespace golang::runtime
         return nd >= want;
     }
 
-    bool canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2)
+    bool rec::canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2)
     {
-        auto br = load(gocpp::recv(b->r));
-        auto bw = load(gocpp::recv(b->w));
-        if(countSub(tagCount(gocpp::recv(br)), tagCount(gocpp::recv(bw))) + len(b->tags) < 2)
+        auto br = rec::load(gocpp::recv(b->r));
+        auto bw = rec::load(gocpp::recv(b->w));
+        if(countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(bw))) + len(b->tags) < 2)
         {
             return false;
         }
-        auto nd = countSub(dataCount(gocpp::recv(br)), dataCount(gocpp::recv(bw))) + len(b->data);
+        auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
         auto want = 2 + int(b->hdrsize) + nstk1;
-        auto i = int(dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto i = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         if(i + want > len(b->data))
         {
             nd -= len(b->data) - i;
@@ -244,7 +252,7 @@ namespace golang::runtime
         return nd >= want;
     }
 
-    void write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
+    void rec::write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
     {
         if(b == nullptr)
         {
@@ -254,32 +262,32 @@ namespace golang::runtime
         {
             go_throw("misuse of profBuf.write");
         }
-        if(auto hasOverflow = hasOverflow(gocpp::recv(b)); hasOverflow && canWriteTwoRecords(gocpp::recv(b), 1, len(stk)))
+        if(auto hasOverflow = rec::hasOverflow(gocpp::recv(b)); hasOverflow && rec::canWriteTwoRecords(gocpp::recv(b), 1, len(stk)))
         {
-            auto [count, time] = takeOverflow(gocpp::recv(b));
+            auto [count, time] = rec::takeOverflow(gocpp::recv(b));
             if(count > 0)
             {
                 gocpp::array<uintptr_t, 1> stk = {};
                 stk[0] = uintptr_t(count);
-                write(gocpp::recv(b), nullptr, int64_t(time), nullptr, stk.make_slice(0, ));
+                rec::write(gocpp::recv(b), nullptr, int64_t(time), nullptr, stk.make_slice(0, ));
             }
         }
         else
-        if(hasOverflow || ! canWriteRecord(gocpp::recv(b), len(stk)))
+        if(hasOverflow || ! rec::canWriteRecord(gocpp::recv(b), len(stk)))
         {
-            incrementOverflow(gocpp::recv(b), now);
-            wakeupExtra(gocpp::recv(b));
+            rec::incrementOverflow(gocpp::recv(b), now);
+            rec::wakeupExtra(gocpp::recv(b));
             return;
         }
-        auto br = load(gocpp::recv(b->r));
-        auto bw = load(gocpp::recv(b->w));
-        auto wt = int(tagCount(gocpp::recv(bw)) % uint32_t(len(b->tags)));
+        auto br = rec::load(gocpp::recv(b->r));
+        auto bw = rec::load(gocpp::recv(b->w));
+        auto wt = int(rec::tagCount(gocpp::recv(bw)) % uint32_t(len(b->tags)));
         if(tagPtr != nullptr)
         {
             *(uintptr_t*)(unsafe::Pointer(& b->tags[wt])) = uintptr_t(*tagPtr);
         }
-        auto wd = int(dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
-        auto nd = countSub(dataCount(gocpp::recv(br)), dataCount(gocpp::recv(bw))) + len(b->data);
+        auto wd = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
+        auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
         auto skip = 0;
         if(wd + 2 + int(b->hdrsize) + len(stk) > len(b->data))
         {
@@ -302,9 +310,9 @@ namespace golang::runtime
         }
         for(; ; )
         {
-            auto old = load(gocpp::recv(b->w));
-            auto go_new = addCountsAndClearFlags(gocpp::recv(old), skip + 2 + len(stk) + int(b->hdrsize), 1);
-            if(! cas(gocpp::recv(b->w), old, go_new))
+            auto old = rec::load(gocpp::recv(b->w));
+            auto go_new = rec::addCountsAndClearFlags(gocpp::recv(old), skip + 2 + len(stk) + int(b->hdrsize), 1);
+            if(! rec::cas(gocpp::recv(b->w), old, go_new))
             {
                 continue;
             }
@@ -316,23 +324,23 @@ namespace golang::runtime
         }
     }
 
-    void close(struct profBuf* b)
+    void rec::close(struct profBuf* b)
     {
-        if(Load(gocpp::recv(b->eof)) > 0)
+        if(rec::Load(gocpp::recv(b->eof)) > 0)
         {
             go_throw("runtime: profBuf already closed");
         }
-        Store(gocpp::recv(b->eof), 1);
-        wakeupExtra(gocpp::recv(b));
+        rec::Store(gocpp::recv(b->eof), 1);
+        rec::wakeupExtra(gocpp::recv(b));
     }
 
-    void wakeupExtra(struct profBuf* b)
+    void rec::wakeupExtra(struct profBuf* b)
     {
         for(; ; )
         {
-            auto old = load(gocpp::recv(b->w));
+            auto old = rec::load(gocpp::recv(b->w));
             auto go_new = old | profWriteExtra;
-            if(! cas(gocpp::recv(b->w), old, go_new))
+            if(! rec::cas(gocpp::recv(b->w), old, go_new))
             {
                 continue;
             }
@@ -345,7 +353,7 @@ namespace golang::runtime
     }
 
     gocpp::array<unsafe::Pointer, 1> overflowTag;
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> read(struct profBuf* b, profBufReadMode mode)
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(struct profBuf* b, runtime::profBufReadMode mode)
     {
         gocpp::slice<uint64_t> data;
         gocpp::slice<unsafe::Pointer> tags;
@@ -358,14 +366,14 @@ namespace golang::runtime
             return {nullptr, nullptr, true};
         }
         auto br = b->rNext;
-        auto rPrev = load(gocpp::recv(b->r));
+        auto rPrev = rec::load(gocpp::recv(b->r));
         if(rPrev != br)
         {
             gocpp::slice<uint64_t> data;
             gocpp::slice<unsafe::Pointer> tags;
             bool eof;
-            auto ntag = countSub(tagCount(gocpp::recv(br)), tagCount(gocpp::recv(rPrev)));
-            auto ti = int(tagCount(gocpp::recv(rPrev)) % uint32_t(len(b->tags)));
+            auto ntag = countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(rPrev)));
+            auto ti = int(rec::tagCount(gocpp::recv(rPrev)) % uint32_t(len(b->tags)));
             for(auto i = 0; i < ntag; i++)
             {
                 gocpp::slice<uint64_t> data;
@@ -380,22 +388,22 @@ namespace golang::runtime
                     ti = 0;
                 }
             }
-            store(gocpp::recv(b->r), br);
+            rec::store(gocpp::recv(b->r), br);
         }
         Read:
-        auto bw = load(gocpp::recv(b->w));
-        auto numData = countSub(dataCount(gocpp::recv(bw)), dataCount(gocpp::recv(br)));
+        auto bw = rec::load(gocpp::recv(b->w));
+        auto numData = countSub(rec::dataCount(gocpp::recv(bw)), rec::dataCount(gocpp::recv(br)));
         if(numData == 0)
         {
             gocpp::slice<uint64_t> data;
             gocpp::slice<unsafe::Pointer> tags;
             bool eof;
-            if(hasOverflow(gocpp::recv(b)))
+            if(rec::hasOverflow(gocpp::recv(b)))
             {
                 gocpp::slice<uint64_t> data;
                 gocpp::slice<unsafe::Pointer> tags;
                 bool eof;
-                auto [count, time] = takeOverflow(gocpp::recv(b));
+                auto [count, time] = rec::takeOverflow(gocpp::recv(b));
                 if(count == 0)
                 {
                     gocpp::slice<uint64_t> data;
@@ -416,7 +424,7 @@ namespace golang::runtime
                 dst[2 + b->hdrsize] = uint64_t(count);
                 return {dst.make_slice(0, 2 + b->hdrsize + 1), overflowTag.make_slice(0, 1), false};
             }
-            if(Load(gocpp::recv(b->eof)) > 0)
+            if(rec::Load(gocpp::recv(b->eof)) > 0)
             {
                 gocpp::slice<uint64_t> data;
                 gocpp::slice<unsafe::Pointer> tags;
@@ -428,7 +436,7 @@ namespace golang::runtime
                 gocpp::slice<uint64_t> data;
                 gocpp::slice<unsafe::Pointer> tags;
                 bool eof;
-                cas(gocpp::recv(b->w), bw, bw &^ profWriteExtra);
+                rec::cas(gocpp::recv(b->w), bw, bw &^ profWriteExtra);
                 goto Read;
             }
             if(mode == profBufNonBlocking)
@@ -438,7 +446,7 @@ namespace golang::runtime
                 bool eof;
                 return {nullptr, nullptr, false};
             }
-            if(! cas(gocpp::recv(b->w), bw, bw | profReaderSleeping))
+            if(! rec::cas(gocpp::recv(b->w), bw, bw | profReaderSleeping))
             {
                 gocpp::slice<uint64_t> data;
                 gocpp::slice<unsafe::Pointer> tags;
@@ -449,7 +457,7 @@ namespace golang::runtime
             noteclear(& b->wait);
             goto Read;
         }
-        data = b->data.make_slice(dataCount(gocpp::recv(br)) % uint32_t(len(b->data)));
+        data = b->data.make_slice(rec::dataCount(gocpp::recv(br)) % uint32_t(len(b->data)));
         if(len(data) > numData)
         {
             gocpp::slice<uint64_t> data;
@@ -480,7 +488,7 @@ namespace golang::runtime
                 data = data.make_slice(0, numData);
             }
         }
-        auto ntag = countSub(tagCount(gocpp::recv(bw)), tagCount(gocpp::recv(br)));
+        auto ntag = countSub(rec::tagCount(gocpp::recv(bw)), rec::tagCount(gocpp::recv(br)));
         if(ntag == 0)
         {
             gocpp::slice<uint64_t> data;
@@ -488,7 +496,7 @@ namespace golang::runtime
             bool eof;
             go_throw("runtime: malformed profBuf buffer - tag and data out of sync");
         }
-        tags = b->tags.make_slice(tagCount(gocpp::recv(br)) % uint32_t(len(b->tags)));
+        tags = b->tags.make_slice(rec::tagCount(gocpp::recv(br)) % uint32_t(len(b->tags)));
         if(len(tags) > ntag)
         {
             gocpp::slice<uint64_t> data;
@@ -513,7 +521,7 @@ namespace golang::runtime
             di += int(data[di]);
             ti++;
         }
-        b->rNext = addCountsAndClearFlags(gocpp::recv(br), skip + di, ti);
+        b->rNext = rec::addCountsAndClearFlags(gocpp::recv(br), skip + di, ti);
         if(raceenabled)
         {
             gocpp::slice<uint64_t> data;

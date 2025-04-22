@@ -36,5 +36,9 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PROCESS_MEMORY_COUNTERS& value);
+
+    namespace rec
+    {
+    }
 }
 

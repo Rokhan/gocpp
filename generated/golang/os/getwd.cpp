@@ -35,6 +35,19 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace runtime::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace windows::rec;
+    }
+
     struct gocpp_id_0
     {
         std::string dir;
@@ -122,9 +135,9 @@ namespace golang::os
             }
             return {s, NewSyscallError("getwd", e)};
         }
-        Lock(gocpp::recv(getwdCache));
+        rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
-        Unlock(gocpp::recv(getwdCache));
+        rec::Unlock(gocpp::recv(getwdCache));
         if(len(dir) > 0)
         {
             std::string dir;
@@ -173,12 +186,12 @@ namespace golang::os
             {
                 std::string dir;
                 struct gocpp::error err;
-                auto [names, err] = Readdirnames(gocpp::recv(fd), 100);
+                auto [names, err] = rec::Readdirnames(gocpp::recv(fd), 100);
                 if(err != nullptr)
                 {
                     std::string dir;
                     struct gocpp::error err;
-                    Close(gocpp::recv(fd));
+                    rec::Close(gocpp::recv(fd));
                     return {"", err};
                 }
                 for(auto [gocpp_ignored, name] : names)
@@ -197,8 +210,8 @@ namespace golang::os
             }
             Found:
             fs::FileInfo pd;
-            std::tie(pd, err) = Stat(gocpp::recv(fd));
-            Close(gocpp::recv(fd));
+            std::tie(pd, err) = rec::Stat(gocpp::recv(fd));
+            rec::Close(gocpp::recv(fd));
             if(err != nullptr)
             {
                 std::string dir;
@@ -213,9 +226,9 @@ namespace golang::os
             }
             dot = pd;
         }
-        Lock(gocpp::recv(getwdCache));
+        rec::Lock(gocpp::recv(getwdCache));
         getwdCache.dir = dir;
-        Unlock(gocpp::recv(getwdCache));
+        rec::Unlock(gocpp::recv(getwdCache));
         return {dir, nullptr};
     }
 

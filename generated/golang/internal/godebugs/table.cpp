@@ -13,6 +13,11 @@
 
 namespace golang::godebugs
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Info::operator T()

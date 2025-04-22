@@ -15,6 +15,12 @@
 
 namespace golang::syscall
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+    }
+
     gocpp::array_base<std::string> signals = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.1 = "hangup"; x.2 = "interrupt"; x.3 = "quit"; x.4 = "illegal instruction"; x.5 = "trace/breakpoint trap"; x.6 = "aborted"; x.7 = "bus error"; x.8 = "floating point exception"; x.9 = "killed"; x.10 = "user defined signal 1"; x.11 = "segmentation fault"; x.12 = "user defined signal 2"; x.13 = "broken pipe"; x.14 = "alarm clock"; x.15 = "terminated"; });
     gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::Tag<gocpp::slice<unsigned char>>()("1.3.6.1.5.5.7.3.1\x00");
     gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::Tag<gocpp::slice<unsigned char>>()("1.3.6.1.4.1.311.10.3.3\x00");
@@ -83,7 +89,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    int64_t Nanoseconds(struct Timeval* tv)
+    int64_t rec::Nanoseconds(struct Timeval* tv)
     {
         return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
     }
@@ -242,7 +248,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    int64_t Nanoseconds(struct Filetime* ft)
+    int64_t rec::Nanoseconds(struct Filetime* ft)
     {
         auto nsec = (int64_t(ft->HighDateTime) << 32) + int64_t(ft->LowDateTime);
         nsec -= 116444736000000000;

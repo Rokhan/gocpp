@@ -13,6 +13,11 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     abbr::operator T()

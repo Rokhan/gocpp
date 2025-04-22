@@ -12,7 +12,11 @@
 
 namespace golang::main
 {
-    double Abs(MyFloat f);
     void main();
+
+    namespace rec
+    {
+        double Abs(main::MyFloat f);
+    }
 }
 

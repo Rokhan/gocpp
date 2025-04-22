@@ -16,6 +16,13 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     void writeErr(gocpp::slice<unsigned char> b)
     {
         write(2, unsafe::Pointer(& b[0]), int32_t(len(b)));

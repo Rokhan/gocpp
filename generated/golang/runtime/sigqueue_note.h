@@ -16,5 +16,9 @@ namespace golang::runtime
     void sigNoteSetup(note*);
     void sigNoteSleep(note*);
     void sigNoteWakeup(note*);
+
+    namespace rec
+    {
+    }
 }
 

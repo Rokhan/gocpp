@@ -48,6 +48,18 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     struct gocpp_id_0
     {
         mutex lock;
@@ -191,7 +203,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool tryMerge(struct abiPart* a, struct abiPart b)
+    bool rec::tryMerge(struct abiPart* a, struct abiPart b)
     {
         if(a->kind != abiPartStack || b.kind != abiPartStack)
         {
@@ -249,7 +261,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void assignArg(struct abiDesc* p, struct _type* t)
+    void rec::assignArg(struct abiDesc* p, struct _type* t)
     {
         if(t->Size_ > goarch::PtrSize)
         {
@@ -265,7 +277,7 @@ namespace golang::runtime
             return;
         }
         auto oldParts = p->parts;
-        if(tryRegAssignArg(gocpp::recv(p), t, 0))
+        if(rec::tryRegAssignArg(gocpp::recv(p), t, 0))
         {
             p->dstSpill = alignUp(p->dstSpill, uintptr_t(t->Align_));
             p->dstSpill += t->Size_;
@@ -275,7 +287,7 @@ namespace golang::runtime
             p->parts = oldParts;
             p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
             auto part = gocpp::Init<abiPart>([](abiPart& x) { x.kind = abiPartStack; x.srcStackOffset = p->srcStackSize; x.dstStackOffset = p->dstStackSize; x.len = t->Size_; });
-            if(len(p->parts) == 0 || ! tryMerge(gocpp::recv(p->parts[len(p->parts) - 1]), part))
+            if(len(p->parts) == 0 || ! rec::tryMerge(gocpp::recv(p->parts[len(p->parts) - 1]), part))
             {
                 p->parts = append(p->parts, part);
             }
@@ -284,7 +296,7 @@ namespace golang::runtime
         p->srcStackSize += goarch::PtrSize;
     }
 
-    bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset)
+    bool rec::tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -321,20 +333,20 @@ namespace golang::runtime
                 case 9:
                 case 10:
                 case 11:
-                    return assignReg(gocpp::recv(p), t->Size_, offset);
+                    return rec::assignReg(gocpp::recv(p), t->Size_, offset);
                     break;
                 case 12:
                 case 13:
                     if(goarch::PtrSize == 8)
                     {
-                        return assignReg(gocpp::recv(p), t->Size_, offset);
+                        return rec::assignReg(gocpp::recv(p), t->Size_, offset);
                     }
                     break;
                 case 14:
                     auto at = (arraytype*)(unsafe::Pointer(t));
                     if(at->Len == 1)
                     {
-                        return tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
+                        return rec::tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
                 case 15:
@@ -342,7 +354,7 @@ namespace golang::runtime
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
-                        if(! tryRegAssignArg(gocpp::recv(p), f->Typ, offset + f->Offset))
+                        if(! rec::tryRegAssignArg(gocpp::recv(p), f->Typ, offset + f->Offset))
                         {
                             return false;
                         }
@@ -351,10 +363,10 @@ namespace golang::runtime
                     break;
             }
         }
-        gocpp::panic("compileCallback: type " + string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks");
+        gocpp::panic("compileCallback: type " + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks");
     }
 
-    bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset)
+    bool rec::assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset)
     {
         if(p->dstRegisters >= intArgRegs)
         {
@@ -444,24 +456,24 @@ namespace golang::runtime
         }
         auto ft = (functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
-        for(auto [gocpp_ignored, t] : InSlice(gocpp::recv(ft)))
+        for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {
             uintptr_t code;
-            assignArg(gocpp::recv(abiMap), t);
+            rec::assignArg(gocpp::recv(abiMap), t);
         }
         abiMap.dstStackSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         abiMap.retOffset = abiMap.dstStackSize;
-        if(len(OutSlice(gocpp::recv(ft))) != 1)
+        if(len(rec::OutSlice(gocpp::recv(ft))) != 1)
         {
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
-        if(OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
+        if(rec::OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
         {
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
-        if(auto k = OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
+        if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
         {
             uintptr_t code;
             gocpp::panic("compileCallback: float results not supported");

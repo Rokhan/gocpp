@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     
     template<typename T>
     I::I(T& ref)
@@ -42,17 +48,20 @@ namespace golang::main
     template<typename T, typename StoreT>
     void I::IImpl<T, StoreT>::vM()
     {
-        return M(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::M(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    void M(const gocpp::PtrRecv<I, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vM();
-    }
+        void M(const gocpp::PtrRecv<I, false>& self)
+        {
+            return self.ptr->value->vM();
+        }
 
-    void M(const gocpp::ObjRecv<I>& self)
-    {
-        return self.obj.value->vM();
+        void M(const gocpp::ObjRecv<I>& self)
+        {
+            return self.obj.value->vM();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct I& value)
@@ -89,7 +98,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void M(struct T t)
+    void rec::M(struct T t)
     {
         mocklib::Println(t.S);
     }
@@ -97,10 +106,10 @@ namespace golang::main
     void main()
     {
         I i = T {"hello"};
-        M(gocpp::recv(i));
+        rec::M(gocpp::recv(i));
         auto t = T {"hello"};
         I j = t;
-        M(gocpp::recv(j));
+        rec::M(gocpp::recv(j));
     }
 
 }

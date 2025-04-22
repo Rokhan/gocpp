@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     extern gocpp::array<double, (1 << fastlogNumBits) + 1> fastlog2Table;
+
+    namespace rec
+    {
+    }
 }
 

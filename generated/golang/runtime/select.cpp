@@ -47,6 +47,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     scase::operator T()
@@ -116,7 +127,7 @@ namespace golang::runtime
     bool selparkcommit(struct g* gp, unsafe::Pointer _)
     {
         gp->activeStackChans = true;
-        Store(gocpp::recv(gp->parkingOnChan), false);
+        rec::Store(gocpp::recv(gp->parkingOnChan), false);
         hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
@@ -189,7 +200,7 @@ namespace golang::runtime
         {
             auto j = i;
             auto c = scases[pollorder[i]].c;
-            for(; j > 0 && sortkey(gocpp::recv(scases[lockorder[(j - 1) / 2]].c)) < sortkey(gocpp::recv(c)); )
+            for(; j > 0 && rec::sortkey(gocpp::recv(scases[lockorder[(j - 1) / 2]].c)) < rec::sortkey(gocpp::recv(c)); )
             {
                 auto k = (j - 1) / 2;
                 lockorder[j] = lockorder[k];
@@ -210,11 +221,11 @@ namespace golang::runtime
                 {
                     break;
                 }
-                if(k + 1 < i && sortkey(gocpp::recv(scases[lockorder[k]].c)) < sortkey(gocpp::recv(scases[lockorder[k + 1]].c)))
+                if(k + 1 < i && rec::sortkey(gocpp::recv(scases[lockorder[k]].c)) < rec::sortkey(gocpp::recv(scases[lockorder[k + 1]].c)))
                 {
                     k++;
                 }
-                if(sortkey(gocpp::recv(c)) < sortkey(gocpp::recv(scases[lockorder[k]].c)))
+                if(rec::sortkey(gocpp::recv(c)) < rec::sortkey(gocpp::recv(scases[lockorder[k]].c)))
                 {
                     lockorder[j] = lockorder[k];
                     j = k;
@@ -228,7 +239,7 @@ namespace golang::runtime
         {
             for(auto i = 0; i + 1 < len(lockorder); i++)
             {
-                if(sortkey(gocpp::recv(scases[lockorder[i]].c)) > sortkey(gocpp::recv(scases[lockorder[i + 1]].c)))
+                if(rec::sortkey(gocpp::recv(scases[lockorder[i]].c)) > rec::sortkey(gocpp::recv(scases[lockorder[i + 1]].c)))
                 {
                     print("i=", i, " x=", lockorder[i], " y=", lockorder[i + 1], "\n");
                     go_throw("select: broken sort");
@@ -256,7 +267,7 @@ namespace golang::runtime
             c = cas->c;
             if(casi >= nsends)
             {
-                sg = dequeue(gocpp::recv(c->sendq));
+                sg = rec::dequeue(gocpp::recv(c->sendq));
                 if(sg != nullptr)
                 {
                     goto recv;
@@ -274,13 +285,13 @@ namespace golang::runtime
             {
                 if(raceenabled)
                 {
-                    racereadpc(raceaddr(gocpp::recv(c)), casePC(casi), chansendpc);
+                    racereadpc(rec::raceaddr(gocpp::recv(c)), casePC(casi), chansendpc);
                 }
                 if(c->closed != 0)
                 {
                     goto sclose;
                 }
-                sg = dequeue(gocpp::recv(c->recvq));
+                sg = rec::dequeue(gocpp::recv(c->recvq));
                 if(sg != nullptr)
                 {
                     goto send;
@@ -322,19 +333,19 @@ namespace golang::runtime
             nextp = & sg->waitlink;
             if(casi < nsends)
             {
-                enqueue(gocpp::recv(c->sendq), sg);
+                rec::enqueue(gocpp::recv(c->sendq), sg);
             }
             else
             {
-                enqueue(gocpp::recv(c->recvq), sg);
+                rec::enqueue(gocpp::recv(c->recvq), sg);
             }
         }
         gp->param = nullptr;
-        Store(gocpp::recv(gp->parkingOnChan), true);
+        rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(selparkcommit, nullptr, waitReasonSelect, traceBlockSelect, 1);
         gp->activeStackChans = false;
         sellock(scases, lockorder);
-        Store(gocpp::recv(gp->selectDone), 0);
+        rec::Store(gocpp::recv(gp->selectDone), 0);
         sg = (sudog*)(gp->param);
         gp->param = nullptr;
         casi = - 1;
@@ -366,11 +377,11 @@ namespace golang::runtime
                 c = k->c;
                 if(int(casei) < nsends)
                 {
-                    dequeueSudoG(gocpp::recv(c->sendq), sglist);
+                    rec::dequeueSudoG(gocpp::recv(c->sendq), sglist);
                 }
                 else
                 {
-                    dequeueSudoG(gocpp::recv(c->recvq), sglist);
+                    rec::dequeueSudoG(gocpp::recv(c->recvq), sglist);
                 }
             }
             sgnext = sglist->waitlink;
@@ -511,7 +522,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            raceacquire(raceaddr(gocpp::recv(c)));
+            raceacquire(rec::raceaddr(gocpp::recv(c)));
         }
         goto retc;
         send:
@@ -547,7 +558,7 @@ namespace golang::runtime
         gocpp::panic(plainError("send on closed channel"));
     }
 
-    uintptr_t sortkey(struct hchan* c)
+    uintptr_t rec::sortkey(struct hchan* c)
     {
         return uintptr_t(unsafe::Pointer(c));
     }
@@ -661,7 +672,7 @@ namespace golang::runtime
         return {chosen, recvOK};
     }
 
-    void dequeueSudoG(struct waitq* q, struct sudog* sgp)
+    void rec::dequeueSudoG(struct waitq* q, struct sudog* sgp)
     {
         auto x = sgp->prev;
         auto y = sgp->next;

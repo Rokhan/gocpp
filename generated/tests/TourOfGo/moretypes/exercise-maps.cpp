@@ -11,11 +11,18 @@
 #include "tests/TourOfGo/moretypes/exercise-maps.h"
 #include "gocpp/support.h"
 
-// #include "golang/golang.org/x/tour/wc/wc.h"  [Ignored, known errors]
+#include "golang/golang.org/x/tour/wc/wc.h"
 #include "golang/strings/strings.h"
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace strings::rec;
+        using namespace wc::rec;
+    }
+
     gocpp::map<std::string, int> WordCount(std::string s)
     {
         auto fields = mocklib::StringsFields(s);

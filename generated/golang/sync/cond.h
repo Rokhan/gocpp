@@ -19,7 +19,7 @@ namespace golang::sync
         noCopy noCopy;
         Locker L;
         notifyList notify;
-        copyChecker checker;
+        sync::copyChecker checker;
 
         using isGoStruct = void;
 
@@ -34,10 +34,6 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct Cond& value);
     struct Cond* NewCond(struct Locker l);
-    void Wait(struct Cond* c);
-    void Signal(struct Cond* c);
-    void Broadcast(struct Cond* c);
-    void check(copyChecker* c);
     struct noCopy
     {
 
@@ -53,7 +49,15 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
-    void Lock(noCopy*);
-    void Unlock(noCopy*);
+
+    namespace rec
+    {
+        void Wait(struct Cond* c);
+        void Signal(struct Cond* c);
+        void Broadcast(struct Cond* c);
+        void check(sync::copyChecker* c);
+        void Lock(noCopy*);
+        void Unlock(noCopy*);
+    }
 }
 

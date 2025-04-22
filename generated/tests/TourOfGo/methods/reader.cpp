@@ -16,13 +16,20 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace strings::rec;
+    }
+
     void main()
     {
         auto r = strings::NewReader("Hello, Reader!");
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
         for(; ; )
         {
-            auto [n, err] = Read(gocpp::recv(r), b);
+            auto [n, err] = rec::Read(gocpp::recv(r), b);
             mocklib::Printf("n = %v err = %v b = %v\n", n, err, b);
             mocklib::Printf("b[:n] = %q\n", b.make_slice(0, n));
             if(err == io::go_EOF)

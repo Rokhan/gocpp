@@ -13,6 +13,11 @@
 
 namespace golang::utf8
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     gocpp::array<uint8_t, 256> first = gocpp::array<uint8_t, 256> {as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx};
     
     template<typename T> requires gocpp::GoStruct<T>

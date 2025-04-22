@@ -13,5 +13,9 @@
 namespace golang::unicode
 {
     bool IsDigit(gocpp::rune r);
+
+    namespace rec
+    {
+    }
 }
 

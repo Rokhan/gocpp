@@ -53,13 +53,25 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     uint64_t traceStack(int skip, struct m* mp, uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
         auto gp = getg();
         auto curgp = gp->m->curg;
         auto nstk = 1;
-        if(tracefpunwindoff() || hasCgoOnStack(gocpp::recv(mp)))
+        if(tracefpunwindoff() || rec::hasCgoOnStack(gocpp::recv(mp)))
         {
             pcBuf[0] = logicalStackSentinel;
             if(curgp == gp)
@@ -94,7 +106,7 @@ namespace golang::runtime
         {
             nstk--;
         }
-        auto id = put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
+        auto id = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
         return id;
     }
 
@@ -127,49 +139,49 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uint64_t put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs)
+    uint64_t rec::put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs)
     {
         if(len(pcs) == 0)
         {
             return 0;
         }
-        auto [id, gocpp_id_1] = put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
+        auto [id, gocpp_id_1] = rec::put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
         return id;
     }
 
-    void dump(struct traceStackTable* t, uintptr_t gen)
+    void rec::dump(struct traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
         for(auto [i, gocpp_ignored] : t->tab.tab)
         {
-            auto stk = bucket(gocpp::recv(t->tab), i);
-            for(; stk != nullptr; stk = next(gocpp::recv(stk)))
+            auto stk = rec::bucket(gocpp::recv(t->tab), i);
+            for(; stk != nullptr; stk = rec::next(gocpp::recv(stk)))
             {
                 auto stack = unsafe::Slice((uintptr_t*)(unsafe::Pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
                 bool flushed = {};
-                std::tie(w, flushed) = ensure(gocpp::recv(w), 1 + maxBytes);
+                std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 1 + maxBytes);
                 if(flushed)
                 {
-                    unsigned char(gocpp::recv(w), unsigned char(traceEvStacks));
+                    rec::unsigned char(gocpp::recv(w), unsigned char(traceEvStacks));
                 }
-                unsigned char(gocpp::recv(w), unsigned char(traceEvStack));
-                varint(gocpp::recv(w), uint64_t(stk->id));
-                varint(gocpp::recv(w), uint64_t(len(frames)));
+                rec::unsigned char(gocpp::recv(w), unsigned char(traceEvStack));
+                rec::varint(gocpp::recv(w), uint64_t(stk->id));
+                rec::varint(gocpp::recv(w), uint64_t(len(frames)));
                 for(auto [gocpp_ignored, frame] : frames)
                 {
-                    varint(gocpp::recv(w), uint64_t(frame.PC));
-                    varint(gocpp::recv(w), frame.funcID);
-                    varint(gocpp::recv(w), frame.fileID);
-                    varint(gocpp::recv(w), frame.line);
+                    rec::varint(gocpp::recv(w), uint64_t(frame.PC));
+                    rec::varint(gocpp::recv(w), frame.funcID);
+                    rec::varint(gocpp::recv(w), frame.fileID);
+                    rec::varint(gocpp::recv(w), frame.line);
                 }
             }
         }
         lock(& t->tab.lock);
-        reset(gocpp::recv(t->tab));
+        rec::reset(gocpp::recv(t->tab));
         unlock(& t->tab.lock);
-        end(gocpp::recv(flush(gocpp::recv(w))));
+        rec::end(gocpp::recv(rec::flush(gocpp::recv(w))));
     }
 
     gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
@@ -178,7 +190,7 @@ namespace golang::runtime
         auto ci = CallersFrames(pcs);
         for(; ; )
         {
-            auto [f, more] = Next(gocpp::recv(ci));
+            auto [f, more] = rec::Next(gocpp::recv(ci));
             frames = append(frames, makeTraceFrame(gen, f));
             if(! more)
             {
@@ -235,14 +247,14 @@ namespace golang::runtime
         {
             fn = fn.make_slice(len(fn) - maxLen);
         }
-        frame.funcID = put(gocpp::recv(trace.stringTab[gen % 2]), gen, fn);
+        frame.funcID = rec::put(gocpp::recv(trace.stringTab[gen % 2]), gen, fn);
         frame.line = uint64_t(f.Line);
         auto file = f.File;
         if(len(file) > maxLen)
         {
             file = file.make_slice(len(file) - maxLen);
         }
-        frame.fileID = put(gocpp::recv(trace.stringTab[gen % 2]), gen, file);
+        frame.fileID = rec::put(gocpp::recv(trace.stringTab[gen % 2]), gen, file);
         return frame;
     }
 
@@ -289,7 +301,7 @@ namespace golang::runtime
         {
             auto callPC = retPC - 1;
             auto fi = findfunc(callPC);
-            if(! valid(gocpp::recv(fi)))
+            if(! rec::valid(gocpp::recv(fi)))
             {
                 if(auto more = skipOrAdd(retPC); ! more)
                 {
@@ -298,9 +310,9 @@ namespace golang::runtime
                 continue;
             }
             auto [u, uf] = newInlineUnwinder(fi, callPC);
-            for(; valid(gocpp::recv(uf)); uf = next(gocpp::recv(u), uf))
+            for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
             {
-                auto sf = srcFunc(gocpp::recv(u), uf);
+                auto sf = rec::srcFunc(gocpp::recv(u), uf);
                 if(sf.funcID == abi::FuncIDWrapper && elideWrapperCalling(lastFuncID))
                 {
                 }
@@ -324,7 +336,7 @@ namespace golang::runtime
     uintptr_t startPCForTrace(uintptr_t pc)
     {
         auto f = findfunc(pc);
-        if(! valid(gocpp::recv(f)))
+        if(! rec::valid(gocpp::recv(f)))
         {
             return pc;
         }
@@ -333,7 +345,7 @@ namespace golang::runtime
         {
             return pc;
         }
-        return textAddr(gocpp::recv(f.datap), *(uint32_t*)(w));
+        return rec::textAddr(gocpp::recv(f.datap), *(uint32_t*)(w));
     }
 
 }

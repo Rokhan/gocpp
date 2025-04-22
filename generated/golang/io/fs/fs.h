@@ -56,8 +56,11 @@ namespace golang::fs
         std::shared_ptr<IFS> value;
     };
 
-    std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<FS, false>& self, std::string name);
-    std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<FS>& self, std::string name);
+    namespace rec
+    {
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<FS, false>& self, std::string name);
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<FS>& self, std::string name);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct FS& value);
     bool ValidPath(std::string name);
@@ -109,14 +112,17 @@ namespace golang::fs
         std::shared_ptr<IFile> value;
     };
 
-    std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<File, false>& self);
-    std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<File>& self);
+    namespace rec
+    {
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<File, false>& self);
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<File>& self);
 
-    std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<File, false>& self, gocpp::slice<unsigned char>);
-    std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<File>& self, gocpp::slice<unsigned char>);
+        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<File, false>& self, gocpp::slice<unsigned char>);
+        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<File>& self, gocpp::slice<unsigned char>);
 
-    struct gocpp::error Close(const gocpp::PtrRecv<File, false>& self);
-    struct gocpp::error Close(const gocpp::ObjRecv<File>& self);
+        struct gocpp::error Close(const gocpp::PtrRecv<File, false>& self);
+        struct gocpp::error Close(const gocpp::ObjRecv<File>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
     struct DirEntry : gocpp::Interface
@@ -144,7 +150,7 @@ namespace golang::fs
         {
             virtual std::string vName() = 0;
             virtual bool vIsDir() = 0;
-            virtual FileMode vType() = 0;
+            virtual fs::FileMode vType() = 0;
             virtual std::tuple<struct FileInfo, struct gocpp::error> vInfo() = 0;
         };
 
@@ -160,7 +166,7 @@ namespace golang::fs
 
             bool vIsDir() override;
 
-            FileMode vType() override;
+            fs::FileMode vType() override;
 
             std::tuple<struct FileInfo, struct gocpp::error> vInfo() override;
 
@@ -170,17 +176,20 @@ namespace golang::fs
         std::shared_ptr<IDirEntry> value;
     };
 
-    std::string Name(const gocpp::PtrRecv<DirEntry, false>& self);
-    std::string Name(const gocpp::ObjRecv<DirEntry>& self);
+    namespace rec
+    {
+        std::string Name(const gocpp::PtrRecv<DirEntry, false>& self);
+        std::string Name(const gocpp::ObjRecv<DirEntry>& self);
 
-    bool IsDir(const gocpp::PtrRecv<DirEntry, false>& self);
-    bool IsDir(const gocpp::ObjRecv<DirEntry>& self);
+        bool IsDir(const gocpp::PtrRecv<DirEntry, false>& self);
+        bool IsDir(const gocpp::ObjRecv<DirEntry>& self);
 
-    FileMode Type(const gocpp::PtrRecv<DirEntry, false>& self);
-    FileMode Type(const gocpp::ObjRecv<DirEntry>& self);
+        fs::FileMode Type(const gocpp::PtrRecv<DirEntry, false>& self);
+        fs::FileMode Type(const gocpp::ObjRecv<DirEntry>& self);
 
-    std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<DirEntry, false>& self);
-    std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<DirEntry>& self);
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<DirEntry, false>& self);
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<DirEntry>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
     struct ReadDirFile : gocpp::Interface
@@ -225,8 +234,11 @@ namespace golang::fs
         std::shared_ptr<IReadDirFile> value;
     };
 
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::PtrRecv<ReadDirFile, false>& self, int n);
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<ReadDirFile>& self, int n);
+    namespace rec
+    {
+        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::PtrRecv<ReadDirFile, false>& self, int n);
+        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<ReadDirFile>& self, int n);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
     extern gocpp::error ErrInvalid;
@@ -264,7 +276,7 @@ namespace golang::fs
         {
             virtual std::string vName() = 0;
             virtual int64_t vSize() = 0;
-            virtual FileMode vMode() = 0;
+            virtual fs::FileMode vMode() = 0;
             virtual struct mocklib::Date vModTime() = 0;
             virtual bool vIsDir() = 0;
             virtual go_any vSys() = 0;
@@ -282,7 +294,7 @@ namespace golang::fs
 
             int64_t vSize() override;
 
-            FileMode vMode() override;
+            fs::FileMode vMode() override;
 
             struct mocklib::Date vModTime() override;
 
@@ -296,30 +308,28 @@ namespace golang::fs
         std::shared_ptr<IFileInfo> value;
     };
 
-    std::string Name(const gocpp::PtrRecv<FileInfo, false>& self);
-    std::string Name(const gocpp::ObjRecv<FileInfo>& self);
+    namespace rec
+    {
+        std::string Name(const gocpp::PtrRecv<FileInfo, false>& self);
+        std::string Name(const gocpp::ObjRecv<FileInfo>& self);
 
-    int64_t Size(const gocpp::PtrRecv<FileInfo, false>& self);
-    int64_t Size(const gocpp::ObjRecv<FileInfo>& self);
+        int64_t Size(const gocpp::PtrRecv<FileInfo, false>& self);
+        int64_t Size(const gocpp::ObjRecv<FileInfo>& self);
 
-    FileMode Mode(const gocpp::PtrRecv<FileInfo, false>& self);
-    FileMode Mode(const gocpp::ObjRecv<FileInfo>& self);
+        fs::FileMode Mode(const gocpp::PtrRecv<FileInfo, false>& self);
+        fs::FileMode Mode(const gocpp::ObjRecv<FileInfo>& self);
 
-    struct mocklib::Date ModTime(const gocpp::PtrRecv<FileInfo, false>& self);
-    struct mocklib::Date ModTime(const gocpp::ObjRecv<FileInfo>& self);
+        struct mocklib::Date ModTime(const gocpp::PtrRecv<FileInfo, false>& self);
+        struct mocklib::Date ModTime(const gocpp::ObjRecv<FileInfo>& self);
 
-    bool IsDir(const gocpp::PtrRecv<FileInfo, false>& self);
-    bool IsDir(const gocpp::ObjRecv<FileInfo>& self);
+        bool IsDir(const gocpp::PtrRecv<FileInfo, false>& self);
+        bool IsDir(const gocpp::ObjRecv<FileInfo>& self);
 
-    go_any Sys(const gocpp::PtrRecv<FileInfo, false>& self);
-    go_any Sys(const gocpp::ObjRecv<FileInfo>& self);
+        go_any Sys(const gocpp::PtrRecv<FileInfo, false>& self);
+        go_any Sys(const gocpp::ObjRecv<FileInfo>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct FileInfo& value);
-    std::string String(FileMode m);
-    bool IsDir(FileMode m);
-    bool IsRegular(FileMode m);
-    FileMode Perm(FileMode m);
-    FileMode Type(FileMode m);
     struct PathError
     {
         std::string Op;
@@ -338,9 +348,6 @@ namespace golang::fs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PathError& value);
-    std::string Error(struct PathError* e);
-    struct gocpp::error Unwrap(struct PathError* e);
-    bool Timeout(struct PathError* e);
     struct gocpp_id_0 : gocpp::Interface
     {
         gocpp_id_0(){}
@@ -383,9 +390,24 @@ namespace golang::fs
         std::shared_ptr<Igocpp_id_0> value;
     };
 
-    bool Timeout(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-    bool Timeout(const gocpp::ObjRecv<gocpp_id_0>& self);
+    namespace rec
+    {
+        bool Timeout(const gocpp::PtrRecv<gocpp_id_0, false>& self);
+        bool Timeout(const gocpp::ObjRecv<gocpp_id_0>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+
+    namespace rec
+    {
+        std::string String(fs::FileMode m);
+        bool IsDir(fs::FileMode m);
+        bool IsRegular(fs::FileMode m);
+        fs::FileMode Perm(fs::FileMode m);
+        fs::FileMode Type(fs::FileMode m);
+        std::string Error(struct PathError* e);
+        struct gocpp::error Unwrap(struct PathError* e);
+        bool Timeout(struct PathError* e);
+    }
 }
 

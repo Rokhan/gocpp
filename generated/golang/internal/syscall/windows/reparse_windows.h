@@ -70,7 +70,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SymbolicLinkReparseBuffer& value);
-    std::string Path(struct SymbolicLinkReparseBuffer* rb);
     struct MountPointReparseBuffer
     {
         uint16_t SubstituteNameOffset;
@@ -91,6 +90,11 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MountPointReparseBuffer& value);
-    std::string Path(struct MountPointReparseBuffer* rb);
+
+    namespace rec
+    {
+        std::string Path(struct SymbolicLinkReparseBuffer* rb);
+        std::string Path(struct MountPointReparseBuffer* rb);
+    }
 }
 

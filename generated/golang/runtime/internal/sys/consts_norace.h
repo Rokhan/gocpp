@@ -11,5 +11,9 @@
 
 namespace golang::sys
 {
+
+    namespace rec
+    {
+    }
 }
 

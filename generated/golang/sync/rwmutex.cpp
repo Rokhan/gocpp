@@ -19,6 +19,14 @@
 
 namespace golang::sync
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace sync::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     RWMutex::operator T()
@@ -60,14 +68,14 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void RLock(struct RWMutex* rw)
+    void rec::RLock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
             _ = rw->w.state;
             race::Disable();
         }
-        if(Add(gocpp::recv(rw->readerCount), 1) < 0)
+        if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
         {
             runtime_SemacquireRWMutexR(& rw->readerSem, false, 0);
         }
@@ -78,7 +86,7 @@ namespace golang::sync
         }
     }
 
-    bool TryRLock(struct RWMutex* rw)
+    bool rec::TryRLock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
@@ -87,7 +95,7 @@ namespace golang::sync
         }
         for(; ; )
         {
-            auto c = Load(gocpp::recv(rw->readerCount));
+            auto c = rec::Load(gocpp::recv(rw->readerCount));
             if(c < 0)
             {
                 if(race::Enabled)
@@ -96,7 +104,7 @@ namespace golang::sync
                 }
                 return false;
             }
-            if(CompareAndSwap(gocpp::recv(rw->readerCount), c, c + 1))
+            if(rec::CompareAndSwap(gocpp::recv(rw->readerCount), c, c + 1))
             {
                 if(race::Enabled)
                 {
@@ -108,7 +116,7 @@ namespace golang::sync
         }
     }
 
-    void RUnlock(struct RWMutex* rw)
+    void rec::RUnlock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
@@ -116,9 +124,9 @@ namespace golang::sync
             race::ReleaseMerge(unsafe::Pointer(& rw->writerSem));
             race::Disable();
         }
-        if(auto r = Add(gocpp::recv(rw->readerCount), - 1); r < 0)
+        if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
         {
-            rUnlockSlow(gocpp::recv(rw), r);
+            rec::rUnlockSlow(gocpp::recv(rw), r);
         }
         if(race::Enabled)
         {
@@ -126,29 +134,29 @@ namespace golang::sync
         }
     }
 
-    void rUnlockSlow(struct RWMutex* rw, int32_t r)
+    void rec::rUnlockSlow(struct RWMutex* rw, int32_t r)
     {
         if(r + 1 == 0 || r + 1 == - rwmutexMaxReaders)
         {
             race::Enable();
             fatal("sync: RUnlock of unlocked RWMutex");
         }
-        if(Add(gocpp::recv(rw->readerWait), - 1) == 0)
+        if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
         {
             runtime_Semrelease(& rw->writerSem, false, 1);
         }
     }
 
-    void Lock(struct RWMutex* rw)
+    void rec::Lock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
             _ = rw->w.state;
             race::Disable();
         }
-        Lock(gocpp::recv(rw->w));
-        auto r = Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
-        if(r != 0 && Add(gocpp::recv(rw->readerWait), r) != 0)
+        rec::Lock(gocpp::recv(rw->w));
+        auto r = rec::Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
+        if(r != 0 && rec::Add(gocpp::recv(rw->readerWait), r) != 0)
         {
             runtime_SemacquireRWMutex(& rw->writerSem, false, 0);
         }
@@ -160,14 +168,14 @@ namespace golang::sync
         }
     }
 
-    bool TryLock(struct RWMutex* rw)
+    bool rec::TryLock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
             _ = rw->w.state;
             race::Disable();
         }
-        if(! TryLock(gocpp::recv(rw->w)))
+        if(! rec::TryLock(gocpp::recv(rw->w)))
         {
             if(race::Enabled)
             {
@@ -175,9 +183,9 @@ namespace golang::sync
             }
             return false;
         }
-        if(! CompareAndSwap(gocpp::recv(rw->readerCount), 0, - rwmutexMaxReaders))
+        if(! rec::CompareAndSwap(gocpp::recv(rw->readerCount), 0, - rwmutexMaxReaders))
         {
-            Unlock(gocpp::recv(rw->w));
+            rec::Unlock(gocpp::recv(rw->w));
             if(race::Enabled)
             {
                 race::Enable();
@@ -193,7 +201,7 @@ namespace golang::sync
         return true;
     }
 
-    void Unlock(struct RWMutex* rw)
+    void rec::Unlock(struct RWMutex* rw)
     {
         if(race::Enabled)
         {
@@ -201,7 +209,7 @@ namespace golang::sync
             race::Release(unsafe::Pointer(& rw->readerSem));
             race::Disable();
         }
-        auto r = Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
+        auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)
         {
             race::Enable();
@@ -211,7 +219,7 @@ namespace golang::sync
         {
             runtime_Semrelease(& rw->readerSem, false, 0);
         }
-        Unlock(gocpp::recv(rw->w));
+        rec::Unlock(gocpp::recv(rw->w));
         if(race::Enabled)
         {
             race::Enable();
@@ -220,23 +228,23 @@ namespace golang::sync
 
     bool syscall_hasWaitingReaders(struct RWMutex* rw)
     {
-        auto r = Load(gocpp::recv(rw->readerCount));
+        auto r = rec::Load(gocpp::recv(rw->readerCount));
         return r < 0 && r + rwmutexMaxReaders > 0;
     }
 
-    struct Locker RLocker(struct RWMutex* rw)
+    struct Locker rec::RLocker(struct RWMutex* rw)
     {
         return (rlocker*)(rw);
     }
 
-    void Lock(struct rlocker* r)
+    void rec::Lock(struct rlocker* r)
     {
-        RLock(gocpp::recv((RWMutex*)(r)));
+        rec::RLock(gocpp::recv((RWMutex*)(r)));
     }
 
-    void Unlock(struct rlocker* r)
+    void rec::Unlock(struct rlocker* r)
     {
-        RUnlock(gocpp::recv((RWMutex*)(r)));
+        rec::RUnlock(gocpp::recv((RWMutex*)(r)));
     }
 
 }

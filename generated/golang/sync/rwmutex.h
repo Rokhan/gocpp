@@ -34,16 +34,20 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RWMutex& value);
-    void RLock(struct RWMutex* rw);
-    bool TryRLock(struct RWMutex* rw);
-    void RUnlock(struct RWMutex* rw);
-    void rUnlockSlow(struct RWMutex* rw, int32_t r);
-    void Lock(struct RWMutex* rw);
-    bool TryLock(struct RWMutex* rw);
-    void Unlock(struct RWMutex* rw);
     bool syscall_hasWaitingReaders(struct RWMutex* rw);
-    struct Locker RLocker(struct RWMutex* rw);
-    void Lock(struct rlocker* r);
-    void Unlock(struct rlocker* r);
+
+    namespace rec
+    {
+        void RLock(struct RWMutex* rw);
+        bool TryRLock(struct RWMutex* rw);
+        void RUnlock(struct RWMutex* rw);
+        void rUnlockSlow(struct RWMutex* rw, int32_t r);
+        void Lock(struct RWMutex* rw);
+        bool TryLock(struct RWMutex* rw);
+        void Unlock(struct RWMutex* rw);
+        struct Locker RLocker(struct RWMutex* rw);
+        void Lock(struct rlocker* r);
+        void Unlock(struct rlocker* r);
+    }
 }
 

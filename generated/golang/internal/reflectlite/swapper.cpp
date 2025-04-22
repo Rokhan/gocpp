@@ -20,16 +20,26 @@
 
 namespace golang::reflectlite
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace reflectlite::rec;
+        using namespace unsafe::rec;
+        using namespace unsafeheader::rec;
+    }
+
     std::function<void (int i, int j)> Swapper(go_any slice)
     {
         auto v = ValueOf(slice);
-        if(Kind(gocpp::recv(v)) != Slice)
+        if(rec::Kind(gocpp::recv(v)) != Slice)
         {
-            gocpp::panic(gocpp::InitPtr<ValueError>([](ValueError& x) { x.Method = "Swapper"; x.Kind = Kind(gocpp::recv(v)); }));
+            gocpp::panic(gocpp::InitPtr<ValueError>([](ValueError& x) { x.Method = "Swapper"; x.Kind = rec::Kind(gocpp::recv(v)); }));
         }
         //Go switch emulation
         {
-            auto condition = Len(gocpp::recv(v));
+            auto condition = rec::Len(gocpp::recv(v));
             int conditionId = -1;
             if(condition == 0) { conditionId = 0; }
             else if(condition == 1) { conditionId = 1; }
@@ -52,8 +62,8 @@ namespace golang::reflectlite
                     break;
             }
         }
-        auto typ = common(gocpp::recv(Elem(gocpp::recv(Type(gocpp::recv(v))))));
-        auto size = Size(gocpp::recv(typ));
+        auto typ = rec::common(gocpp::recv(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))));
+        auto size = rec::Size(gocpp::recv(typ));
         auto hasPtr = typ->PtrBytes != 0;
         if(hasPtr)
         {
@@ -65,7 +75,7 @@ namespace golang::reflectlite
                     std::tie(ps[i], ps[j]) = std::tuple{ps[j], ps[i]};
                 };
             }
-            if(Kind(gocpp::recv(typ)) == String)
+            if(rec::Kind(gocpp::recv(typ)) == String)
             {
                 auto ss = *(gocpp::slice<std::string>*)(v.ptr);
                 return [=](int i, int j) mutable -> void

@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     int gocpp_id_0 = 1 << 2;
     int gocpp_id_1 = (1 << 2) - 1;
     void main()

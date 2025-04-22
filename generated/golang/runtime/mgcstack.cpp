@@ -21,6 +21,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     stackWorkBuf::operator T()
@@ -205,7 +214,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void setRecord(struct stackObject* obj, struct stackObjectRecord* r)
+    void rec::setRecord(struct stackObject* obj, struct stackObjectRecord* r)
     {
         *(uintptr_t*)(unsafe::Pointer(& obj->r)) = uintptr_t(unsafe::Pointer(r));
     }
@@ -263,7 +272,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void putPtr(struct stackScanState* s, uintptr_t p, bool conservative)
+    void rec::putPtr(struct stackScanState* s, uintptr_t p, bool conservative)
     {
         if(p < s->stack.lo || p >= s->stack.hi)
         {
@@ -302,7 +311,7 @@ namespace golang::runtime
         buf->nobj++;
     }
 
-    std::tuple<uintptr_t, bool> getPtr(struct stackScanState* s)
+    std::tuple<uintptr_t, bool> rec::getPtr(struct stackScanState* s)
     {
         uintptr_t p;
         bool conservative;
@@ -350,7 +359,7 @@ namespace golang::runtime
         return {0, false};
     }
 
-    void addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
+    void rec::addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
     {
         auto x = s->tail;
         if(x == nullptr)
@@ -376,11 +385,11 @@ namespace golang::runtime
         x->nobj++;
         obj->off = uint32_t(addr - s->stack.lo);
         obj->size = uint32_t(r->size);
-        setRecord(gocpp::recv(obj), r);
+        rec::setRecord(gocpp::recv(obj), r);
         s->nobjs++;
     }
 
-    void buildIndex(struct stackScanState* s)
+    void rec::buildIndex(struct stackScanState* s)
     {
         std::tie(s->root, gocpp_id_0, gocpp_id_1) = binarySearchTree(s->head, 0, s->nobjs);
     }
@@ -416,7 +425,7 @@ namespace golang::runtime
         return {root, x, idx};
     }
 
-    struct stackObject* findObject(struct stackScanState* s, uintptr_t a)
+    struct stackObject* rec::findObject(struct stackScanState* s, uintptr_t a)
     {
         auto off = uint32_t(a - s->stack.lo);
         auto obj = s->root;

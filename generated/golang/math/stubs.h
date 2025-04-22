@@ -36,5 +36,9 @@ namespace golang::math
     double archSinh(double x);
     double archTan(double x);
     double archTanh(double x);
+
+    namespace rec
+    {
+    }
 }
 

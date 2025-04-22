@@ -41,5 +41,9 @@ namespace golang::atomic
     void StoreUint64(uint64_t* addr, uint64_t val);
     void StoreUintptr(uintptr_t* addr, uintptr_t val);
     void StorePointer(unsafe::Pointer* addr, unsafe::Pointer val);
+
+    namespace rec
+    {
+    }
 }
 

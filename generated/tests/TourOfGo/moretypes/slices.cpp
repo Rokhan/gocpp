@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     void main()
     {
         auto primes = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};

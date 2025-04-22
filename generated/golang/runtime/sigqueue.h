@@ -22,5 +22,9 @@ namespace golang::runtime
     void signal_ignore(uint32_t s);
     void sigInitIgnored(uint32_t s);
     bool signal_ignored(uint32_t s);
+
+    namespace rec
+    {
+    }
 }
 

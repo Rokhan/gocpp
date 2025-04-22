@@ -8,12 +8,12 @@ namespace golang::runtime
 {
     using traceGoStatus = uint8_t;
     using traceProcStatus = uint8_t;
-    const traceGoStatus traceGoBad = 0;
+    const runtime::traceGoStatus traceGoBad = 0;
     const traceGoStatus traceGoRunnable = 1;
     const traceGoStatus traceGoRunning = 2;
     const traceGoStatus traceGoSyscall = 3;
     const traceGoStatus traceGoWaiting = 4;
-    const traceProcStatus traceProcBad = 0;
+    const runtime::traceProcStatus traceProcBad = 0;
     const traceProcStatus traceProcRunning = 1;
     const traceProcStatus traceProcIdle = 2;
     const traceProcStatus traceProcSyscall = 3;

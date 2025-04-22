@@ -47,12 +47,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
-    struct traceWriter writer(struct traceLocker tl);
     struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf);
-    void end(struct traceWriter w);
-    std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize);
-    struct traceWriter flush(struct traceWriter w);
-    struct traceWriter refill(struct traceWriter w);
     struct traceBufQueue
     {
         traceBuf* head;
@@ -70,13 +65,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBufQueue& value);
-    void push(struct traceBufQueue* q, struct traceBuf* buf);
-    struct traceBuf* pop(struct traceBufQueue* q);
-    bool empty(struct traceBufQueue* q);
     struct traceBufHeader
     {
         traceBuf* link;
-        traceTime lastTime;
+        runtime::traceTime lastTime;
         int pos;
         int lenPos;
 
@@ -109,12 +101,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBuf& value);
-    void byte(struct traceBuf* buf, unsigned char v);
-    void varint(struct traceBuf* buf, uint64_t v);
-    int varintReserve(struct traceBuf* buf);
-    void stringData(struct traceBuf* buf, std::string s);
-    bool available(struct traceBuf* buf, int size);
-    void varintAt(struct traceBuf* buf, int pos, uint64_t v);
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen);
+
+    namespace rec
+    {
+        struct traceWriter writer(struct traceLocker tl);
+        void end(struct traceWriter w);
+        std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize);
+        struct traceWriter flush(struct traceWriter w);
+        struct traceWriter refill(struct traceWriter w);
+        void push(struct traceBufQueue* q, struct traceBuf* buf);
+        struct traceBuf* pop(struct traceBufQueue* q);
+        bool empty(struct traceBufQueue* q);
+        void byte(struct traceBuf* buf, unsigned char v);
+        void varint(struct traceBuf* buf, uint64_t v);
+        int varintReserve(struct traceBuf* buf);
+        void stringData(struct traceBuf* buf, std::string s);
+        bool available(struct traceBuf* buf, int size);
+        void varintAt(struct traceBuf* buf, int pos, uint64_t v);
+    }
 }
 

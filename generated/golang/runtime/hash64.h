@@ -18,5 +18,9 @@ namespace golang::runtime
     uintptr_t mix(uintptr_t a, uintptr_t b);
     uintptr_t r4(unsafe::Pointer p);
     uintptr_t r8(unsafe::Pointer p);
+
+    namespace rec
+    {
+    }
 }
 

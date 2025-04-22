@@ -8,7 +8,7 @@ namespace golang::poll
 {
     using fileKind = unsigned char;
     const int maxRW = 1 << 30;
-    const fileKind kindNet = 0;
+    const poll::fileKind kindNet = 0;
     const fileKind kindFile = 1;
     const fileKind kindConsole = 2;
     const fileKind kindPipe = 3;

@@ -41,6 +41,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     bool mutexContended(struct mutex* l)
     {
         return atomic::Loaduintptr(& l->key) > locked;
@@ -65,7 +76,7 @@ namespace golang::runtime
         }
         semacreate(gp->m);
         auto timer = gocpp::InitPtr<lockTimer>([](lockTimer& x) { x.lock = l; });
-        begin(gocpp::recv(timer));
+        rec::begin(gocpp::recv(timer));
         auto spin = 0;
         if(ncpu > 1)
         {
@@ -79,7 +90,7 @@ namespace golang::runtime
             {
                 if(atomic::Casuintptr(& l->key, v, v | locked))
                 {
-                    end(gocpp::recv(timer));
+                    rec::end(gocpp::recv(timer));
                     return;
                 }
                 i = 0;
@@ -144,7 +155,7 @@ namespace golang::runtime
             }
             else
             {
-                mp = ptr(gocpp::recv(muintptr(v &^ locked)));
+                mp = rec::ptr(gocpp::recv(muintptr(v &^ locked)));
                 if(atomic::Casuintptr(& l->key, v, uintptr_t(mp->nextwaitm)))
                 {
                     semawakeup(mp);
@@ -152,7 +163,7 @@ namespace golang::runtime
                 }
             }
         }
-        recordUnlock(gocpp::recv(gp->m->mLockProfile), l);
+        rec::recordUnlock(gocpp::recv(gp->m->mLockProfile), l);
         gp->m->locks--;
         if(gp->m->locks < 0)
         {

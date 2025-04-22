@@ -29,7 +29,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Person& value);
-    std::string String(struct Person p);
     void main();
+
+    namespace rec
+    {
+        std::string String(struct Person p);
+    }
 }
 

@@ -41,10 +41,10 @@ namespace golang::runtime
     struct unwinder
     {
         stkframe frame;
-        guintptr g;
+        runtime::guintptr g;
         int cgoCtxt;
         abi::FuncID calleeFuncID;
-        unwindFlags flags;
+        runtime::unwindFlags flags;
 
         using isGoStruct = void;
 
@@ -58,14 +58,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    void init(struct unwinder* u, struct g* gp, unwindFlags flags);
-    void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, unwindFlags flags);
-    bool valid(struct unwinder* u);
-    void resolveInternal(struct unwinder* u, bool innermost, bool isSyscall);
-    void next(struct unwinder* u);
-    void finishInternal(struct unwinder* u);
-    uintptr_t symPC(struct unwinder* u);
-    int cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf);
     int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
     void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc);
     std::tuple<std::string, std::string, std::string> funcNamePiecesForPrint(std::string name);
@@ -75,7 +67,7 @@ namespace golang::runtime
     void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
     void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
     void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, unwindFlags flags);
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, runtime::unwindFlags flags);
     std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max);
     void printAncestorTraceback(struct ancestorInfo ancestor);
     void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc);
@@ -152,5 +144,17 @@ namespace golang::runtime
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg);
     void callCgoSymbolizer(struct cgoSymbolizerArg* arg);
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
+
+    namespace rec
+    {
+        void init(struct unwinder* u, struct g* gp, runtime::unwindFlags flags);
+        void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, runtime::unwindFlags flags);
+        bool valid(struct unwinder* u);
+        void resolveInternal(struct unwinder* u, bool innermost, bool isSyscall);
+        void next(struct unwinder* u);
+        void finishInternal(struct unwinder* u);
+        uintptr_t symPC(struct unwinder* u);
+        int cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf);
+    }
 }
 

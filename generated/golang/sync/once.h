@@ -31,7 +31,11 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Once& value);
-    void Do(struct Once* o, std::function<void ()> f);
-    void doSlow(struct Once* o, std::function<void ()> f);
+
+    namespace rec
+    {
+        void Do(struct Once* o, std::function<void ()> f);
+        void doSlow(struct Once* o, std::function<void ()> f);
+    }
 }
 

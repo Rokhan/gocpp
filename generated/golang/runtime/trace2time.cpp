@@ -48,7 +48,18 @@
 
 namespace golang::runtime
 {
-    traceTime traceClockNow()
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
+    runtime::traceTime traceClockNow()
     {
         if(osHasLowResClock)
         {
@@ -69,9 +80,9 @@ namespace golang::runtime
     void traceFrequency(uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
-        std::tie(w, gocpp_id_0) = ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
-        unsigned char(gocpp::recv(w), unsigned char(traceEvFrequency));
-        varint(gocpp::recv(w), traceClockUnitsPerSecond());
+        std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
+        rec::unsigned char(gocpp::recv(w), unsigned char(traceEvFrequency));
+        rec::varint(gocpp::recv(w), traceClockUnitsPerSecond());
         systemstack([=]() mutable -> void
         {
             lock(& trace.lock);

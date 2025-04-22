@@ -367,5 +367,9 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
+
+    namespace rec
+    {
+    }
 }
 

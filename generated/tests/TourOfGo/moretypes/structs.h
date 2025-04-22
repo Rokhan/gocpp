@@ -61,5 +61,9 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy& value);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

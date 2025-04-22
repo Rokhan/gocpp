@@ -14,5 +14,9 @@ namespace golang::main
 {
     extern gocpp::slice<int> pow;
     void main();
+
+    namespace rec
+    {
+    }
 }
 

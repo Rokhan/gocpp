@@ -15,5 +15,9 @@ namespace golang::math
     bool isOddInt(double x);
     double Pow(double x, double y);
     double pow(double x, double y);
+
+    namespace rec
+    {
+    }
 }
 

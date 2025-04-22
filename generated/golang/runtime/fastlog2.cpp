@@ -16,6 +16,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+    }
+
     double fastlog2(double x)
     {
         auto fastlogScaleBits = 20;

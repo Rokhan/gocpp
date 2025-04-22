@@ -34,5 +34,9 @@ namespace golang::main
     extern Vertex v3;
     extern Vertex* p;
     void main();
+
+    namespace rec
+    {
+    }
 }
 

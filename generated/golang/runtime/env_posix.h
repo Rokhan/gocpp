@@ -18,5 +18,9 @@ namespace golang::runtime
     void setenv_c(std::string k, std::string v);
     void unsetenv_c(std::string k);
     unsafe::Pointer cstring(std::string s);
+
+    namespace rec
+    {
+    }
 }
 

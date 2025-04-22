@@ -29,9 +29,13 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
-    struct color::Model ColorModel(Image);
-    struct image::Rectangle Bounds(Image);
-    struct color::Color At(Image, int x, int y);
     void main();
+
+    namespace rec
+    {
+        struct color::Model ColorModel(Image);
+        struct image::Rectangle Bounds(Image);
+        struct color::Color At(Image, int x, int y);
+    }
 }
 

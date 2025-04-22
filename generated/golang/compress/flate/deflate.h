@@ -56,7 +56,7 @@ namespace golang::flate
         int windowEnd;
         int blockStart;
         bool byteAvailable;
-        gocpp::slice<token> tokens;
+        gocpp::slice<flate::token> tokens;
         int length;
         int offset;
         int maxInsertIndex;
@@ -75,25 +75,9 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compressor& value);
-    int fillDeflate(struct compressor* d, gocpp::slice<unsigned char> b);
-    struct gocpp::error writeBlock(struct compressor* d, gocpp::slice<token> tokens, int index);
-    void fillWindow(struct compressor* d, gocpp::slice<unsigned char> b);
-    std::tuple<int, int, bool> findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead);
-    struct gocpp::error writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf);
     uint32_t hash4(gocpp::slice<unsigned char> b);
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
-    void encSpeed(struct compressor* d);
-    void initDeflate(struct compressor* d);
-    void deflate(struct compressor* d);
-    int fillStore(struct compressor* d, gocpp::slice<unsigned char> b);
-    void store(struct compressor* d);
-    void storeHuff(struct compressor* d);
-    std::tuple<int, struct gocpp::error> write(struct compressor* d, gocpp::slice<unsigned char> b);
-    struct gocpp::error syncFlush(struct compressor* d);
-    struct gocpp::error init(struct compressor* d, struct io::Writer w, int level);
-    void reset(struct compressor* d, struct io::Writer w);
-    struct gocpp::error close(struct compressor* d);
     std::tuple<struct Writer*, struct gocpp::error> NewWriter(struct io::Writer w, int level);
     std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(struct io::Writer w, int level, gocpp::slice<unsigned char> dict);
     struct dictWriter
@@ -112,7 +96,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dictWriter& value);
-    std::tuple<int, struct gocpp::error> Write(struct dictWriter* w, gocpp::slice<unsigned char> b);
     extern gocpp::error errWriterClosed;
     struct Writer
     {
@@ -131,9 +114,30 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    std::tuple<int, struct gocpp::error> Write(struct Writer* w, gocpp::slice<unsigned char> data);
-    struct gocpp::error Flush(struct Writer* w);
-    struct gocpp::error Close(struct Writer* w);
-    void Reset(struct Writer* w, struct io::Writer dst);
+
+    namespace rec
+    {
+        int fillDeflate(struct compressor* d, gocpp::slice<unsigned char> b);
+        struct gocpp::error writeBlock(struct compressor* d, gocpp::slice<flate::token> tokens, int index);
+        void fillWindow(struct compressor* d, gocpp::slice<unsigned char> b);
+        std::tuple<int, int, bool> findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead);
+        struct gocpp::error writeStoredBlock(struct compressor* d, gocpp::slice<unsigned char> buf);
+        void encSpeed(struct compressor* d);
+        void initDeflate(struct compressor* d);
+        void deflate(struct compressor* d);
+        int fillStore(struct compressor* d, gocpp::slice<unsigned char> b);
+        void store(struct compressor* d);
+        void storeHuff(struct compressor* d);
+        std::tuple<int, struct gocpp::error> write(struct compressor* d, gocpp::slice<unsigned char> b);
+        struct gocpp::error syncFlush(struct compressor* d);
+        struct gocpp::error init(struct compressor* d, struct io::Writer w, int level);
+        void reset(struct compressor* d, struct io::Writer w);
+        struct gocpp::error close(struct compressor* d);
+        std::tuple<int, struct gocpp::error> Write(struct dictWriter* w, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> Write(struct Writer* w, gocpp::slice<unsigned char> data);
+        struct gocpp::error Flush(struct Writer* w);
+        struct gocpp::error Close(struct Writer* w);
+        void Reset(struct Writer* w, struct io::Writer dst);
+    }
 }
 

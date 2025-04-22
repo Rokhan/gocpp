@@ -26,10 +26,10 @@ namespace golang::abi
     const long UnsafePointRestart1 = - 3;
     const long UnsafePointRestart2 = - 4;
     const long UnsafePointRestartAtEntry = - 5;
-    const FuncFlag FuncFlagTopFrame = 1 << 0;
+    const abi::FuncFlag FuncFlagTopFrame = 1 << 0;
     const FuncFlag FuncFlagSPWrite = 1 << 1;
     const FuncFlag FuncFlagAsm = 1 << 2;
-    const FuncID FuncIDNormal = 0;
+    const abi::FuncID FuncIDNormal = 0;
     const FuncID FuncID_abort = 1;
     const FuncID FuncID_asmcgocall = 2;
     const FuncID FuncID_asyncPreempt = 3;

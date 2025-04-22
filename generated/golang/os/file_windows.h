@@ -43,15 +43,12 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
-    uintptr_t Fd(struct File* file);
     struct File* newFile(syscall::Handle h, std::string name, std::string kind);
     struct File* newConsoleFile(syscall::Handle h, std::string name);
     struct File* NewFile(uintptr_t fd, std::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
     extern std::string DevNull;
-    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, FileMode perm);
-    struct gocpp::error close(struct file* file);
-    std::tuple<int64_t, struct gocpp::error> seek(struct File* f, int64_t offset, int whence);
+    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, fs::FileMode perm);
     struct gocpp::error Truncate(std::string name, int64_t size);
     struct gocpp::error Remove(std::string name);
     struct gocpp::error rename(std::string oldname, std::string newname);
@@ -63,5 +60,12 @@ namespace golang::os
     std::tuple<std::string, struct gocpp::error> normaliseLinkPath(std::string path);
     std::tuple<std::string, struct gocpp::error> readReparseLink(std::string path);
     std::tuple<std::string, struct gocpp::error> readlink(std::string name);
+
+    namespace rec
+    {
+        uintptr_t Fd(struct File* file);
+        struct gocpp::error close(struct file* file);
+        std::tuple<int64_t, struct gocpp::error> seek(struct File* f, int64_t offset, int whence);
+    }
 }
 

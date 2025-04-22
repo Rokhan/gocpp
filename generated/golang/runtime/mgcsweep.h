@@ -53,7 +53,7 @@ namespace golang::runtime
         g* g;
         bool parked;
         activeSweep active;
-        sweepClass centralIndex;
+        runtime::sweepClass centralIndex;
 
         using isGoStruct = void;
 
@@ -67,11 +67,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
-    sweepClass load(sweepClass* s);
-    void update(sweepClass* s, sweepClass sNew);
-    void clear(sweepClass* s);
-    std::tuple<spanClass, bool> split(sweepClass s);
-    struct mspan* nextSpanForSweep(struct mheap* h);
     struct activeSweep
     {
         atomic::Uint32 state;
@@ -88,12 +83,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
-    struct sweepLocker begin(struct activeSweep* a);
-    void end(struct activeSweep* a, struct sweepLocker sl);
-    bool markDrained(struct activeSweep* a);
-    uint32_t sweepers(struct activeSweep* a);
-    bool isDone(struct activeSweep* a);
-    void reset(struct activeSweep* a);
     void finishsweep_m();
     void bgsweep(gocpp::channel<int> c);
     struct sweepLocker
@@ -128,14 +117,29 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
-    std::tuple<struct sweepLocked, bool> tryAcquire(struct sweepLocker* l, struct mspan* s);
     uintptr_t sweepone();
     bool isSweepDone();
-    void ensureSwept(struct mspan* s);
-    bool sweep(struct sweepLocked* sl, bool preserve);
-    void reportZombies(struct mspan* s);
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
     void clobberfree(unsafe::Pointer x, uintptr_t size);
     void gcPaceSweeper(uint64_t trigger);
+
+    namespace rec
+    {
+        runtime::sweepClass load(runtime::sweepClass* s);
+        void update(runtime::sweepClass* s, runtime::sweepClass sNew);
+        void clear(runtime::sweepClass* s);
+        std::tuple<runtime::spanClass, bool> split(runtime::sweepClass s);
+        struct mspan* nextSpanForSweep(struct mheap* h);
+        struct sweepLocker begin(struct activeSweep* a);
+        void end(struct activeSweep* a, struct sweepLocker sl);
+        bool markDrained(struct activeSweep* a);
+        uint32_t sweepers(struct activeSweep* a);
+        bool isDone(struct activeSweep* a);
+        void reset(struct activeSweep* a);
+        std::tuple<struct sweepLocked, bool> tryAcquire(struct sweepLocker* l, struct mspan* s);
+        void ensureSwept(struct mspan* s);
+        bool sweep(struct sweepLocked* sl, bool preserve);
+        void reportZombies(struct mspan* s);
+    }
 }
 

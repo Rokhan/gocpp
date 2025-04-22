@@ -60,5 +60,9 @@ namespace golang::runtime
     void init();
     bool wantAsyncPreempt(struct g* gp);
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr);
+
+    namespace rec
+    {
+    }
 }
 

@@ -17,6 +17,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
     
     template<typename T>
     Abser::Abser(T& ref)
@@ -44,17 +51,20 @@ namespace golang::main
     template<typename T, typename StoreT>
     double Abser::AbserImpl<T, StoreT>::vAbs()
     {
-        return Abs(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    double Abs(const gocpp::PtrRecv<Abser, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vAbs();
-    }
+        double Abs(const gocpp::PtrRecv<Abser, false>& self)
+        {
+            return self.ptr->value->vAbs();
+        }
 
-    double Abs(const gocpp::ObjRecv<Abser>& self)
-    {
-        return self.obj.value->vAbs();
+        double Abs(const gocpp::ObjRecv<Abser>& self)
+        {
+            return self.obj.value->vAbs();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value)
@@ -100,12 +110,12 @@ namespace golang::main
         auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
         a = f;
-        mocklib::Println(Abs(gocpp::recv(a)));
+        mocklib::Println(rec::Abs(gocpp::recv(a)));
         a = & v;
-        mocklib::Println(Abs(gocpp::recv(a)));
+        mocklib::Println(rec::Abs(gocpp::recv(a)));
     }
 
-    double Abs(MyFloat f)
+    double rec::Abs(main::MyFloat f)
     {
         if(f < 0)
         {
@@ -114,7 +124,7 @@ namespace golang::main
         return double(f);
     }
 
-    double Abs(struct Vertex* v)
+    double rec::Abs(struct Vertex* v)
     {
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }

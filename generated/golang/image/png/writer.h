@@ -26,7 +26,7 @@ namespace golang::png
 {
     struct Encoder
     {
-        CompressionLevel CompressionLevel;
+        png::CompressionLevel CompressionLevel;
         EncoderBufferPool BufferPool;
 
         using isGoStruct = void;
@@ -86,11 +86,14 @@ namespace golang::png
         std::shared_ptr<IEncoderBufferPool> value;
     };
 
-    struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self);
-    struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self);
+    namespace rec
+    {
+        struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self);
+        struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self);
 
-    void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*);
-    void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*);
+        void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*);
+        void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
     struct encoder
@@ -163,23 +166,30 @@ namespace golang::png
         std::shared_ptr<Iopaquer> value;
     };
 
-    bool Opaque(const gocpp::PtrRecv<opaquer, false>& self);
-    bool Opaque(const gocpp::ObjRecv<opaquer>& self);
+    namespace rec
+    {
+        bool Opaque(const gocpp::PtrRecv<opaquer, false>& self);
+        bool Opaque(const gocpp::ObjRecv<opaquer>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     bool opaque(struct image::Image m);
     int abs8(uint8_t d);
-    void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
-    void writeIHDR(struct encoder* e);
-    void writePLTEAndTRNS(struct encoder* e, color::Palette p);
-    std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
     int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
-    struct gocpp::error writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level);
-    void writeIDATs(struct encoder* e);
-    int levelToZlib(CompressionLevel l);
-    void writeIEND(struct encoder* e);
+    int levelToZlib(png::CompressionLevel l);
     struct gocpp::error Encode(struct io::Writer w, struct image::Image m);
-    struct gocpp::error Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m);
+
+    namespace rec
+    {
+        void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
+        void writeIHDR(struct encoder* e);
+        void writePLTEAndTRNS(struct encoder* e, color::Palette p);
+        std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
+        struct gocpp::error writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level);
+        void writeIDATs(struct encoder* e);
+        void writeIEND(struct encoder* e);
+        struct gocpp::error Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m);
+    }
 }
 

@@ -13,12 +13,16 @@ namespace golang::flate
 {
     extern gocpp::array_base<uint32_t> lengthCodes;
     extern gocpp::array_base<uint32_t> offsetCodes;
-    token literalToken(uint32_t literal);
-    token matchToken(uint32_t xlength, uint32_t xoffset);
-    uint32_t literal(token t);
-    uint32_t offset(token t);
-    uint32_t length(token t);
+    flate::token literalToken(uint32_t literal);
+    flate::token matchToken(uint32_t xlength, uint32_t xoffset);
     uint32_t lengthCode(uint32_t len);
     uint32_t offsetCode(uint32_t off);
+
+    namespace rec
+    {
+        uint32_t literal(flate::token t);
+        uint32_t offset(flate::token t);
+        uint32_t length(flate::token t);
+    }
 }
 

@@ -31,6 +31,22 @@
 
 namespace golang::png
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace binary::rec;
+        using namespace bufio::rec;
+        using namespace color::rec;
+        using namespace crc32::rec;
+        using namespace flate::rec;
+        using namespace hash::rec;
+        using namespace image::rec;
+        using namespace io::rec;
+        using namespace png::rec;
+        using namespace strconv::rec;
+        using namespace zlib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Encoder::operator T()
@@ -90,32 +106,35 @@ namespace golang::png
     template<typename T, typename StoreT>
     struct EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vGet()
     {
-        return Get(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Get(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
     void EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vPut(EncoderBuffer*)
     {
-        return Put(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Put(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vGet();
-    }
+        struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self)
+        {
+            return self.ptr->value->vGet();
+        }
 
-    struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self)
-    {
-        return self.obj.value->vGet();
-    }
+        struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self)
+        {
+            return self.obj.value->vGet();
+        }
 
-    void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*)
-    {
-        return self.ptr->value->vPut();
-    }
+        void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*)
+        {
+            return self.ptr->value->vPut();
+        }
 
-    void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*)
-    {
-        return self.obj.value->vPut();
+        void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*)
+        {
+            return self.obj.value->vPut();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value)
@@ -215,17 +234,20 @@ namespace golang::png
     template<typename T, typename StoreT>
     bool opaquer::opaquerImpl<T, StoreT>::vOpaque()
     {
-        return Opaque(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Opaque(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    bool Opaque(const gocpp::PtrRecv<opaquer, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vOpaque();
-    }
+        bool Opaque(const gocpp::PtrRecv<opaquer, false>& self)
+        {
+            return self.ptr->value->vOpaque();
+        }
 
-    bool Opaque(const gocpp::ObjRecv<opaquer>& self)
-    {
-        return self.obj.value->vOpaque();
+        bool Opaque(const gocpp::ObjRecv<opaquer>& self)
+        {
+            return self.obj.value->vOpaque();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value)
@@ -237,14 +259,14 @@ namespace golang::png
     {
         if(auto [o, ok] = gocpp::getValue<opaquer>(m); ok)
         {
-            return Opaque(gocpp::recv(o));
+            return rec::Opaque(gocpp::recv(o));
         }
-        auto b = Bounds(gocpp::recv(m));
+        auto b = rec::Bounds(gocpp::recv(m));
         for(auto y = b.Min.Y; y < b.Max.Y; y++)
         {
             for(auto x = b.Min.X; x < b.Max.X; x++)
             {
-                auto [gocpp_id_3, gocpp_id_4, gocpp_id_5, a] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
+                auto [gocpp_id_3, gocpp_id_4, gocpp_id_5, a] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
                 if(a != 0xffff)
                 {
                     return false;
@@ -263,7 +285,7 @@ namespace golang::png
         return 256 - int(d);
     }
 
-    void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name)
+    void rec::writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name)
     {
         if(e->err != nullptr)
         {
@@ -275,33 +297,33 @@ namespace golang::png
             e->err = UnsupportedError(name + " chunk is too large: " + strconv::Itoa(len(b)));
             return;
         }
-        PutUint32(gocpp::recv(binary::BigEndian), e->header.make_slice(0, 4), n);
+        rec::PutUint32(gocpp::recv(binary::BigEndian), e->header.make_slice(0, 4), n);
         e->header[4] = name[0];
         e->header[5] = name[1];
         e->header[6] = name[2];
         e->header[7] = name[3];
         auto crc = crc32::NewIEEE();
-        Write(gocpp::recv(crc), e->header.make_slice(4, 8));
-        Write(gocpp::recv(crc), b);
-        PutUint32(gocpp::recv(binary::BigEndian), e->footer.make_slice(0, 4), Sum32(gocpp::recv(crc)));
-        std::tie(gocpp_id_6, e->err) = Write(gocpp::recv(e->w), e->header.make_slice(0, 8));
+        rec::Write(gocpp::recv(crc), e->header.make_slice(4, 8));
+        rec::Write(gocpp::recv(crc), b);
+        rec::PutUint32(gocpp::recv(binary::BigEndian), e->footer.make_slice(0, 4), rec::Sum32(gocpp::recv(crc)));
+        std::tie(gocpp_id_6, e->err) = rec::Write(gocpp::recv(e->w), e->header.make_slice(0, 8));
         if(e->err != nullptr)
         {
             return;
         }
-        std::tie(gocpp_id_7, e->err) = Write(gocpp::recv(e->w), b);
+        std::tie(gocpp_id_7, e->err) = rec::Write(gocpp::recv(e->w), b);
         if(e->err != nullptr)
         {
             return;
         }
-        std::tie(gocpp_id_8, e->err) = Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
+        std::tie(gocpp_id_8, e->err) = rec::Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
     }
 
-    void writeIHDR(struct encoder* e)
+    void rec::writeIHDR(struct encoder* e)
     {
-        auto b = Bounds(gocpp::recv(e->m));
-        PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(0, 4), uint32_t(Dx(gocpp::recv(b))));
-        PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(4, 8), uint32_t(Dy(gocpp::recv(b))));
+        auto b = rec::Bounds(gocpp::recv(e->m));
+        rec::PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(0, 4), uint32_t(rec::Dx(gocpp::recv(b))));
+        rec::PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(4, 8), uint32_t(rec::Dy(gocpp::recv(b))));
         //Go switch emulation
         {
             auto condition = e->cb;
@@ -363,10 +385,10 @@ namespace golang::png
         e->tmp[10] = 0;
         e->tmp[11] = 0;
         e->tmp[12] = 0;
-        writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR");
+        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR");
     }
 
-    void writePLTEAndTRNS(struct encoder* e, color::Palette p)
+    void rec::writePLTEAndTRNS(struct encoder* e, color::Palette p)
     {
         if(len(p) < 1 || len(p) > 256)
         {
@@ -376,7 +398,7 @@ namespace golang::png
         auto last = - 1;
         for(auto [i, c] : p)
         {
-            auto c1 = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), c));
+            auto c1 = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
             e->tmp[3 * i + 0] = c1.R;
             e->tmp[3 * i + 1] = c1.G;
             e->tmp[3 * i + 2] = c1.B;
@@ -386,16 +408,16 @@ namespace golang::png
             }
             e->tmp[3 * 256 + i] = c1.A;
         }
-        writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 3 * len(p)), "PLTE");
+        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 3 * len(p)), "PLTE");
         if(last != - 1)
         {
-            writeChunk(gocpp::recv(e), e->tmp.make_slice(3 * 256, 3 * 256 + 1 + last), "tRNS");
+            rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(3 * 256, 3 * 256 + 1 + last), "tRNS");
         }
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
-        writeChunk(gocpp::recv(e), b, "IDAT");
+        rec::writeChunk(gocpp::recv(e), b, "IDAT");
         if(e->err != nullptr)
         {
             return {0, e->err};
@@ -504,7 +526,7 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level)
+    struct gocpp::error rec::writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -521,9 +543,9 @@ namespace golang::png
             }
             else
             {
-                Reset(gocpp::recv(e->zw), w);
+                rec::Reset(gocpp::recv(e->zw), w);
             }
-            defer.push_back([=]{ Close(gocpp::recv(e->zw)); });
+            defer.push_back([=]{ rec::Close(gocpp::recv(e->zw)); });
             auto bitsPerPixel = 0;
             //Go switch emulation
             {
@@ -573,8 +595,8 @@ namespace golang::png
                         break;
                 }
             }
-            auto b = Bounds(gocpp::recv(m));
-            auto sz = 1 + (bitsPerPixel * Dx(gocpp::recv(b)) + 7) / 8;
+            auto b = rec::Bounds(gocpp::recv(m));
+            auto sz = 1 + (bitsPerPixel * rec::Dx(gocpp::recv(b)) + 7) / 8;
             for(auto [i, gocpp_ignored] : e->cr)
             {
                 if(cap(e->cr[i]) < sz)
@@ -625,13 +647,13 @@ namespace golang::png
                             if(gray != nullptr)
                             {
                                 auto offset = (y - b.Min.Y) * gray->Stride;
-                                copy(cr[0].make_slice(1), gray->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
+                                copy(cr[0].make_slice(1), gray->Pix.make_slice(offset, offset + rec::Dx(gocpp::recv(b))));
                             }
                             else
                             {
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto c = gocpp::getValue<color::Gray>(Convert(gocpp::recv(color::GrayModel), At(gocpp::recv(m), x, y)));
+                                    auto c = gocpp::getValue<color::Gray>(rec::Convert(gocpp::recv(color::GrayModel), rec::At(gocpp::recv(m), x, y)));
                                     cr[0][i] = c.Y;
                                     i++;
                                 }
@@ -652,7 +674,7 @@ namespace golang::png
                             if(stride != 0)
                             {
                                 auto j0 = (y - b.Min.Y) * stride;
-                                auto j1 = j0 + Dx(gocpp::recv(b)) * 4;
+                                auto j1 = j0 + rec::Dx(gocpp::recv(b)) * 4;
                                 for(auto j = j0; j < j1; j += 4)
                                 {
                                     cr0[i + 0] = pix[j + 0];
@@ -665,7 +687,7 @@ namespace golang::png
                             {
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto [r, g, b, gocpp_id_18] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
+                                    auto [r, g, b, gocpp_id_18] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
                                     cr0[i + 0] = uint8_t(r >> 8);
                                     cr0[i + 1] = uint8_t(g >> 8);
                                     cr0[i + 2] = uint8_t(b >> 8);
@@ -677,14 +699,14 @@ namespace golang::png
                             if(paletted != nullptr)
                             {
                                 auto offset = (y - b.Min.Y) * paletted->Stride;
-                                copy(cr[0].make_slice(1), paletted->Pix.make_slice(offset, offset + Dx(gocpp::recv(b))));
+                                copy(cr[0].make_slice(1), paletted->Pix.make_slice(offset, offset + rec::Dx(gocpp::recv(b))));
                             }
                             else
                             {
                                 auto pi = gocpp::getValue<image::PalettedImage>(m);
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    cr[0][i] = ColorIndexAt(gocpp::recv(pi), x, y);
+                                    cr[0][i] = rec::ColorIndexAt(gocpp::recv(pi), x, y);
                                     i += 1;
                                 }
                             }
@@ -698,7 +720,7 @@ namespace golang::png
                             auto pixelsPerByte = 8 / bitsPerPixel;
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                a = (a << (unsigned int)(bitsPerPixel)) | ColorIndexAt(gocpp::recv(pi), x, y);
+                                a = (a << (unsigned int)(bitsPerPixel)) | rec::ColorIndexAt(gocpp::recv(pi), x, y);
                                 c++;
                                 if(c == pixelsPerByte)
                                 {
@@ -722,13 +744,13 @@ namespace golang::png
                             if(nrgba != nullptr)
                             {
                                 auto offset = (y - b.Min.Y) * nrgba->Stride;
-                                copy(cr[0].make_slice(1), nrgba->Pix.make_slice(offset, offset + Dx(gocpp::recv(b)) * 4));
+                                copy(cr[0].make_slice(1), nrgba->Pix.make_slice(offset, offset + rec::Dx(gocpp::recv(b)) * 4));
                             }
                             else
                             if(rgba != nullptr)
                             {
                                 auto dst = cr[0].make_slice(1);
-                                auto src = rgba->Pix.make_slice(PixOffset(gocpp::recv(rgba), b.Min.X, y), PixOffset(gocpp::recv(rgba), b.Max.X, y));
+                                auto src = rgba->Pix.make_slice(rec::PixOffset(gocpp::recv(rgba), b.Min.X, y), rec::PixOffset(gocpp::recv(rgba), b.Max.X, y));
                                 for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
                                 {
                                     auto d = (gocpp::array<unsigned char, 4>*)(dst);
@@ -760,7 +782,7 @@ namespace golang::png
                             {
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto c = gocpp::getValue<color::NRGBA>(Convert(gocpp::recv(color::NRGBAModel), At(gocpp::recv(m), x, y)));
+                                    auto c = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), rec::At(gocpp::recv(m), x, y)));
                                     cr[0][i + 0] = c.R;
                                     cr[0][i + 1] = c.G;
                                     cr[0][i + 2] = c.B;
@@ -772,7 +794,7 @@ namespace golang::png
                         case 7:
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<color::Gray16>(Convert(gocpp::recv(color::Gray16Model), At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::getValue<color::Gray16>(rec::Convert(gocpp::recv(color::Gray16Model), rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(c.Y >> 8);
                                 cr[0][i + 1] = uint8_t(c.Y);
                                 i += 2;
@@ -781,7 +803,7 @@ namespace golang::png
                         case 8:
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto [r, g, b, gocpp_id_20] = RGBA(gocpp::recv(At(gocpp::recv(m), x, y)));
+                                auto [r, g, b, gocpp_id_20] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(r >> 8);
                                 cr[0][i + 1] = uint8_t(r);
                                 cr[0][i + 2] = uint8_t(g >> 8);
@@ -794,7 +816,7 @@ namespace golang::png
                         case 9:
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto c = gocpp::getValue<color::NRGBA64>(Convert(gocpp::recv(color::NRGBA64Model), At(gocpp::recv(m), x, y)));
+                                auto c = gocpp::getValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(c.R >> 8);
                                 cr[0][i + 1] = uint8_t(c.R);
                                 cr[0][i + 2] = uint8_t(c.G >> 8);
@@ -814,7 +836,7 @@ namespace golang::png
                     auto bpp = bitsPerPixel / 8;
                     f = filter(& cr, pr, bpp);
                 }
-                if(auto [gocpp_id_22, err] = Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
+                if(auto [gocpp_id_22, err] = rec::Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
                 {
                     return err;
                 }
@@ -828,7 +850,7 @@ namespace golang::png
         }
     }
 
-    void writeIDATs(struct encoder* e)
+    void rec::writeIDATs(struct encoder* e)
     {
         if(e->err != nullptr)
         {
@@ -840,17 +862,17 @@ namespace golang::png
         }
         else
         {
-            Reset(gocpp::recv(e->bw), e);
+            rec::Reset(gocpp::recv(e->bw), e);
         }
-        e->err = writeImage(gocpp::recv(e), e->bw, e->m, e->cb, levelToZlib(e->enc->CompressionLevel));
+        e->err = rec::writeImage(gocpp::recv(e), e->bw, e->m, e->cb, levelToZlib(e->enc->CompressionLevel));
         if(e->err != nullptr)
         {
             return;
         }
-        e->err = Flush(gocpp::recv(e->bw));
+        e->err = rec::Flush(gocpp::recv(e->bw));
     }
 
-    int levelToZlib(CompressionLevel l)
+    int levelToZlib(png::CompressionLevel l)
     {
         //Go switch emulation
         {
@@ -881,23 +903,23 @@ namespace golang::png
         }
     }
 
-    void writeIEND(struct encoder* e)
+    void rec::writeIEND(struct encoder* e)
     {
-        writeChunk(gocpp::recv(e), nullptr, "IEND");
+        rec::writeChunk(gocpp::recv(e), nullptr, "IEND");
     }
 
     struct gocpp::error Encode(struct io::Writer w, struct image::Image m)
     {
         Encoder e = {};
-        return Encode(gocpp::recv(e), w, m);
+        return rec::Encode(gocpp::recv(e), w, m);
     }
 
-    struct gocpp::error Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m)
+    struct gocpp::error rec::Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m)
     {
         gocpp::Defer defer;
         try
         {
-            auto [mw, mh] = std::tuple{int64_t(Dx(gocpp::recv(Bounds(gocpp::recv(m))))), int64_t(Dy(gocpp::recv(Bounds(gocpp::recv(m)))))};
+            auto [mw, mh] = std::tuple{int64_t(rec::Dx(gocpp::recv(rec::Bounds(gocpp::recv(m))))), int64_t(rec::Dy(gocpp::recv(rec::Bounds(gocpp::recv(m)))))};
             if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
             {
                 return FormatError("invalid image size: " + strconv::FormatInt(mw, 10) + "x" + strconv::FormatInt(mh, 10));
@@ -905,7 +927,7 @@ namespace golang::png
             encoder* e = {};
             if(enc->BufferPool != nullptr)
             {
-                auto buffer = Get(gocpp::recv(enc->BufferPool));
+                auto buffer = rec::Get(gocpp::recv(enc->BufferPool));
                 e = (encoder*)(buffer);
             }
             if(e == nullptr)
@@ -914,7 +936,7 @@ namespace golang::png
             }
             if(enc->BufferPool != nullptr)
             {
-                defer.push_back([=]{ Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
+                defer.push_back([=]{ rec::Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
             }
             e->enc = enc;
             e->w = w;
@@ -922,7 +944,7 @@ namespace golang::png
             color::Palette pal = {};
             if(auto [gocpp_id_24, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
             {
-                std::tie(pal, gocpp_id_25) = gocpp::getValue<color::Palette>(ColorModel(gocpp::recv(m)));
+                std::tie(pal, gocpp_id_25) = gocpp::getValue<color::Palette>(rec::ColorModel(gocpp::recv(m)));
             }
             if(pal != nullptr)
             {
@@ -949,7 +971,7 @@ namespace golang::png
             {
                 //Go switch emulation
                 {
-                    auto condition = ColorModel(gocpp::recv(m));
+                    auto condition = rec::ColorModel(gocpp::recv(m));
                     int conditionId = -1;
                     if(condition == color::GrayModel) { conditionId = 0; }
                     else if(condition == color::Gray16Model) { conditionId = 1; }
@@ -990,13 +1012,13 @@ namespace golang::png
                 }
             }
             std::tie(gocpp_id_26, e->err) = io::WriteString(w, pngHeader);
-            writeIHDR(gocpp::recv(e));
+            rec::writeIHDR(gocpp::recv(e));
             if(pal != nullptr)
             {
-                writePLTEAndTRNS(gocpp::recv(e), pal);
+                rec::writePLTEAndTRNS(gocpp::recv(e), pal);
             }
-            writeIDATs(gocpp::recv(e));
-            writeIEND(gocpp::recv(e));
+            rec::writeIDATs(gocpp::recv(e));
+            rec::writeIEND(gocpp::recv(e));
             return e->err;
         }
         catch(gocpp::GoPanic& gp)

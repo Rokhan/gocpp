@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace unsafe::rec;
+    }
+
     
         template<typename T>
         gocpp_id_0::gocpp_id_0(T& ref)
@@ -43,17 +50,20 @@ namespace golang::main
         template<typename T, typename StoreT>
         void gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vM()
         {
-            return M(gocpp::PtrRecv<T, false>(value.get()));
+            return rec::M(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        void M(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        namespace rec
         {
-            return self.ptr->value->vM();
-        }
+            void M(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+            {
+                return self.ptr->value->vM();
+            }
 
-        void M(const gocpp::ObjRecv<gocpp_id_0>& self)
-        {
-            return self.obj.value->vM();
+            void M(const gocpp::ObjRecv<gocpp_id_0>& self)
+            {
+                return self.obj.value->vM();
+            }
         }
 
         std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)

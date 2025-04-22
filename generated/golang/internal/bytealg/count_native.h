@@ -15,5 +15,9 @@ namespace golang::bytealg
     int CountString(std::string s, unsigned char c);
     int countGeneric(gocpp::slice<unsigned char> b, unsigned char c);
     int countGenericString(std::string s, unsigned char c);
+
+    namespace rec
+    {
+    }
 }
 

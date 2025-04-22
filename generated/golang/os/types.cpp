@@ -28,6 +28,18 @@
 
 namespace golang::os
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fs::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+        using namespace windows::rec;
+    }
+
     int Getpagesize()
     {
         return syscall::Getpagesize();
@@ -59,14 +71,14 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string Name(struct fileStat* fs)
+    std::string rec::Name(struct fileStat* fs)
     {
         return fs->name;
     }
 
-    bool IsDir(struct fileStat* fs)
+    bool rec::IsDir(struct fileStat* fs)
     {
-        return IsDir(gocpp::recv(Mode(gocpp::recv(fs))));
+        return rec::IsDir(gocpp::recv(rec::Mode(gocpp::recv(fs))));
     }
 
     bool SameFile(struct FileInfo fi1, struct FileInfo fi2)

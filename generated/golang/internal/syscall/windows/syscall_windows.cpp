@@ -24,6 +24,16 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace unsafe::rec;
+        using namespace windows::rec;
+    }
+
     std::string UTF16PtrToString(uint16_t* p)
     {
         if(p == nullptr)
@@ -604,7 +614,7 @@ namespace golang::windows
 
     struct gocpp::error loadWSASendRecvMsg()
     {
-        Do(gocpp::recv(sendRecvMsgFunc.once), [=]() mutable -> void
+        rec::Do(gocpp::recv(sendRecvMsgFunc.once), [=]() mutable -> void
         {
             gocpp::Defer defer;
             try
@@ -744,7 +754,7 @@ namespace golang::windows
 
     struct gocpp::error ErrorLoadingGetTempPath2()
     {
-        return Find(gocpp::recv(procGetTempPath2W));
+        return rec::Find(gocpp::recv(procGetTempPath2W));
     }
 
     

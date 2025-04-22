@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Vertex::operator T()
@@ -48,7 +55,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(struct Vertex v)
+    double rec::Abs(struct Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
@@ -61,10 +68,10 @@ namespace golang::main
     void main()
     {
         auto v = Vertex {3, 4};
-        mocklib::Println(Abs(gocpp::recv(v)));
+        mocklib::Println(rec::Abs(gocpp::recv(v)));
         mocklib::Println(AbsFunc(v));
         auto p = new Vertex {4, 3};
-        mocklib::Println(Abs(gocpp::recv(p)));
+        mocklib::Println(rec::Abs(gocpp::recv(p)));
         mocklib::Println(AbsFunc(*p));
     }
 

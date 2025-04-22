@@ -117,5 +117,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct memoryBasicInformation& value);
+
+    namespace rec
+    {
+    }
 }
 

@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace color::rec;
+        using namespace fmt::rec;
+    }
+
     void main()
     {
         mocklib::Printf("Hello, world.\n");

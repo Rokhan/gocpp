@@ -50,8 +50,6 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value);
-    struct dedup* Load(struct atomicPointerDedup* p);
-    bool CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new);
     struct cond
     {
         uint64_t mask;
@@ -70,16 +68,8 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    bool MarkerOnly(struct Matcher* m);
-    bool ShouldEnable(struct Matcher* m, uint64_t id);
-    bool ShouldPrint(struct Matcher* m, uint64_t id);
-    bool matchResult(struct Matcher* m, uint64_t id);
-    bool FileLine(struct Matcher* m, struct Writer w, std::string file, int line);
-    bool fileLine(struct Matcher* m, struct Writer w, std::string file, int line);
     struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line);
     gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
-    bool Stack(struct Matcher* m, struct Writer w);
-    bool stack(struct Matcher* m, struct Writer w);
     struct Writer : gocpp::Interface
     {
         Writer(){}
@@ -122,8 +112,11 @@ namespace golang::bisect
         std::shared_ptr<IWriter> value;
     };
 
-    std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>);
-    std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>);
+    namespace rec
+    {
+        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<Writer, false>& self, gocpp::slice<unsigned char>);
+        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<Writer>& self, gocpp::slice<unsigned char>);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
@@ -132,8 +125,8 @@ namespace golang::bisect
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
     std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);
     uint64_t Hash(gocpp::slice<go_any> data);
-
-    template<typename... Args>
+    
+template<typename... Args>
     uint64_t Hash(Args... data)
     {
         return Hash(gocpp::ToSlice<go_any>(data...));
@@ -155,7 +148,6 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct parseError& value);
-    std::string Error(struct parseError* e);
     uint64_t fnv(uint64_t h, unsigned char x);
     uint64_t fnvString(uint64_t h, std::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
@@ -178,7 +170,22 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dedup& value);
-    bool seen(struct dedup* d, uint64_t h);
-    bool seenLossy(struct dedup* d, uint64_t h);
+
+    namespace rec
+    {
+        struct dedup* Load(struct atomicPointerDedup* p);
+        bool CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new);
+        bool MarkerOnly(struct Matcher* m);
+        bool ShouldEnable(struct Matcher* m, uint64_t id);
+        bool ShouldPrint(struct Matcher* m, uint64_t id);
+        bool matchResult(struct Matcher* m, uint64_t id);
+        bool FileLine(struct Matcher* m, struct Writer w, std::string file, int line);
+        bool fileLine(struct Matcher* m, struct Writer w, std::string file, int line);
+        bool Stack(struct Matcher* m, struct Writer w);
+        bool stack(struct Matcher* m, struct Writer w);
+        std::string Error(struct parseError* e);
+        bool seen(struct dedup* d, uint64_t h);
+        bool seenLossy(struct dedup* d, uint64_t h);
+    }
 }
 

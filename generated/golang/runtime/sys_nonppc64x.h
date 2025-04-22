@@ -12,5 +12,9 @@
 namespace golang::runtime
 {
     void prepGoExitFrame(uintptr_t sp);
+
+    namespace rec
+    {
+    }
 }
 

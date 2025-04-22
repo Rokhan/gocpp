@@ -15,5 +15,9 @@ namespace golang::math
     std::tuple<uintptr_t, bool> MulUintptr(uintptr_t a, uintptr_t b);
     std::tuple<uint64_t, uint64_t> Mul64(uint64_t x, uint64_t y);
     std::tuple<uint64_t, uint64_t> Add64(uint64_t x, uint64_t y, uint64_t carry);
+
+    namespace rec
+    {
+    }
 }
 

@@ -13,7 +13,7 @@ namespace golang::runtime
     const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
     struct gocpp_id_1;
     const long maxArgs = 42;
-    const abiPartKind abiPartBad = 0;
+    const runtime::abiPartKind abiPartBad = 0;
     const abiPartKind abiPartStack = 1;
     const abiPartKind abiPartReg = 2;
 }

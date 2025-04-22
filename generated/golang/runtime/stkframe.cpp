@@ -32,6 +32,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     stkframe::operator T()
@@ -117,17 +127,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t argBytes(struct stkframe* frame)
+    uintptr_t rec::argBytes(struct stkframe* frame)
     {
         if(frame->fn.args != abi::ArgsSizeUnknown)
         {
             return uintptr_t(frame->fn.args);
         }
-        auto [argMap, gocpp_id_1] = argMapInternal(gocpp::recv(frame));
+        auto [argMap, gocpp_id_1] = rec::argMapInternal(gocpp::recv(frame));
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
 
-    std::tuple<struct bitvector, bool> argMapInternal(struct stkframe* frame)
+    std::tuple<struct bitvector, bool> rec::argMapInternal(struct stkframe* frame)
     {
         struct bitvector argMap;
         bool hasReflectStackObj;
@@ -163,11 +173,11 @@ namespace golang::runtime
                     {
                         struct bitvector argMap;
                         bool hasReflectStackObj;
-                        if(frame->pc != entry(gocpp::recv(f)))
+                        if(frame->pc != rec::entry(gocpp::recv(f)))
                         {
                             struct bitvector argMap;
                             bool hasReflectStackObj;
-                            print("runtime: confused by ", funcname(f), ": no frame (sp=", hex(frame->sp), " fp=", hex(frame->fp), ") at entry+", hex(frame->pc - entry(gocpp::recv(f))), "\n");
+                            print("runtime: confused by ", funcname(f), ": no frame (sp=", hex(frame->sp), " fp=", hex(frame->fp), ") at entry+", hex(frame->pc - rec::entry(gocpp::recv(f))), "\n");
                             go_throw("reflect mismatch");
                         }
                         return {bitvector {}, false};
@@ -175,7 +185,7 @@ namespace golang::runtime
                     hasReflectStackObj = true;
                     auto mv = *(reflectMethodValue**)(unsafe::Pointer(arg0));
                     auto retValid = *(bool*)(unsafe::Pointer(arg0 + 4 * goarch::PtrSize));
-                    if(mv->fn != entry(gocpp::recv(f)))
+                    if(mv->fn != rec::entry(gocpp::recv(f)))
                     {
                         struct bitvector argMap;
                         bool hasReflectStackObj;
@@ -201,7 +211,7 @@ namespace golang::runtime
         return {argMap, hasReflectStackObj};
     }
 
-    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug)
+    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> rec::getStackMap(struct stkframe* frame, bool debug)
     {
         struct bitvector locals;
         struct bitvector args;
@@ -216,7 +226,7 @@ namespace golang::runtime
         }
         auto f = frame->fn;
         auto pcdata = int32_t(- 1);
-        if(targetpc != entry(gocpp::recv(f)))
+        if(targetpc != rec::entry(gocpp::recv(f)))
         {
             struct bitvector locals;
             struct bitvector args;
@@ -298,7 +308,7 @@ namespace golang::runtime
             }
         }
         bool isReflect = {};
-        std::tie(args, isReflect) = argMapInternal(gocpp::recv(frame));
+        std::tie(args, isReflect) = rec::argMapInternal(gocpp::recv(frame));
         if(args.n > 0 && args.bytedata == nullptr)
         {
             struct bitvector locals;

@@ -55,6 +55,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     timer::operator T()
@@ -178,14 +189,14 @@ namespace golang::runtime
         {
             go_throw("timer period must be non-negative");
         }
-        if(Load(gocpp::recv(t->status)) != timerNoStatus)
+        if(rec::Load(gocpp::recv(t->status)) != timerNoStatus)
         {
             go_throw("addtimer called with initialized timer");
         }
-        Store(gocpp::recv(t->status), timerWaiting);
+        rec::Store(gocpp::recv(t->status), timerWaiting);
         auto when = t->when;
         auto mp = acquirem();
-        auto pp = ptr(gocpp::recv(getg()->m->p));
+        auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         lock(& pp->timersLock);
         cleantimers(pp);
         doaddtimer(pp, t);
@@ -196,7 +207,7 @@ namespace golang::runtime
 
     void doaddtimer(struct p* pp, struct timer* t)
     {
-        if(Load(gocpp::recv(netpollInited)) == 0)
+        if(rec::Load(gocpp::recv(netpollInited)) == 0)
         {
             netpollGenericInit();
         }
@@ -204,15 +215,15 @@ namespace golang::runtime
         {
             go_throw("doaddtimer: P already set in timer");
         }
-        set(gocpp::recv(t->pp), pp);
+        rec::set(gocpp::recv(t->pp), pp);
         auto i = len(pp->timers);
         pp->timers = append(pp->timers, t);
         siftupTimer(pp->timers, i);
         if(t == pp->timers[0])
         {
-            Store(gocpp::recv(pp->timer0When), t->when);
+            rec::Store(gocpp::recv(pp->timer0When), t->when);
         }
-        Add(gocpp::recv(pp->numTimers), 1);
+        rec::Add(gocpp::recv(pp->numTimers), 1);
     }
 
     bool deltimer(struct timer* t)
@@ -221,7 +232,7 @@ namespace golang::runtime
         {
             //Go switch emulation
             {
-                auto s = Load(gocpp::recv(t->status));
+                auto s = rec::Load(gocpp::recv(t->status));
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == timerWaiting) { conditionId = 0; }
@@ -239,15 +250,15 @@ namespace golang::runtime
                     case 0:
                     case 1:
                         auto mp = acquirem();
-                        if(CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
                         {
-                            auto tpp = ptr(gocpp::recv(t->pp));
-                            if(! CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
+                            auto tpp = rec::ptr(gocpp::recv(t->pp));
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
                             {
                                 badTimer();
                             }
                             releasem(mp);
-                            Add(gocpp::recv(tpp->deletedTimers), 1);
+                            rec::Add(gocpp::recv(tpp->deletedTimers), 1);
                             return true;
                         }
                         else
@@ -257,15 +268,15 @@ namespace golang::runtime
                         break;
                     case 2:
                         auto mp = acquirem();
-                        if(CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerModifying))
                         {
-                            auto tpp = ptr(gocpp::recv(t->pp));
-                            if(! CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
+                            auto tpp = rec::ptr(gocpp::recv(t->pp));
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerDeleted))
                             {
                                 badTimer();
                             }
                             releasem(mp);
-                            Add(gocpp::recv(tpp->deletedTimers), 1);
+                            rec::Add(gocpp::recv(tpp->deletedTimers), 1);
                             return true;
                         }
                         else
@@ -298,7 +309,7 @@ namespace golang::runtime
 
     int dodeltimer(struct p* pp, int i)
     {
-        if(auto t = pp->timers[i]; ptr(gocpp::recv(t->pp)) != pp)
+        if(auto t = pp->timers[i]; rec::ptr(gocpp::recv(t->pp)) != pp)
         {
             go_throw("dodeltimer: wrong P");
         }
@@ -323,17 +334,17 @@ namespace golang::runtime
         {
             updateTimer0When(pp);
         }
-        auto n = Add(gocpp::recv(pp->numTimers), - 1);
+        auto n = rec::Add(gocpp::recv(pp->numTimers), - 1);
         if(n == 0)
         {
-            Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+            rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
         }
         return smallestChanged;
     }
 
     void dodeltimer0(struct p* pp)
     {
-        if(auto t = pp->timers[0]; ptr(gocpp::recv(t->pp)) != pp)
+        if(auto t = pp->timers[0]; rec::ptr(gocpp::recv(t->pp)) != pp)
         {
             go_throw("dodeltimer0: wrong P");
         }
@@ -353,10 +364,10 @@ namespace golang::runtime
             siftdownTimer(pp->timers, 0);
         }
         updateTimer0When(pp);
-        auto n = Add(gocpp::recv(pp->numTimers), - 1);
+        auto n = rec::Add(gocpp::recv(pp->numTimers), - 1);
         if(n == 0)
         {
-            Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+            rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
         }
     }
 
@@ -379,7 +390,7 @@ namespace golang::runtime
         {
             //Go switch emulation
             {
-                status = Load(gocpp::recv(t->status));
+                status = rec::Load(gocpp::recv(t->status));
                 auto condition = status;
                 int conditionId = -1;
                 if(condition == timerWaiting) { conditionId = 0; }
@@ -398,7 +409,7 @@ namespace golang::runtime
                     case 1:
                     case 2:
                         mp = acquirem();
-                        if(CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
                         {
                             pending = true;
                             goto loop_break;
@@ -408,7 +419,7 @@ namespace golang::runtime
                     case 3:
                     case 4:
                         mp = acquirem();
-                        if(CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
                         {
                             wasRemoved = true;
                             pending = false;
@@ -418,9 +429,9 @@ namespace golang::runtime
                         break;
                     case 5:
                         mp = acquirem();
-                        if(CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), status, timerModifying))
                         {
-                            Add(gocpp::recv(ptr(gocpp::recv(t->pp))->deletedTimers), - 1);
+                            rec::Add(gocpp::recv(rec::ptr(gocpp::recv(t->pp))->deletedTimers), - 1);
                             pending = false;
                             goto loop_break;
                         }
@@ -453,11 +464,11 @@ namespace golang::runtime
         if(wasRemoved)
         {
             t->when = when;
-            auto pp = ptr(gocpp::recv(getg()->m->p));
+            auto pp = rec::ptr(gocpp::recv(getg()->m->p));
             lock(& pp->timersLock);
             doaddtimer(pp, t);
             unlock(& pp->timersLock);
-            if(! CompareAndSwap(gocpp::recv(t->status), timerModifying, timerWaiting))
+            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, timerWaiting))
             {
                 badTimer();
             }
@@ -472,12 +483,12 @@ namespace golang::runtime
             {
                 newStatus = timerModifiedEarlier;
             }
-            auto tpp = ptr(gocpp::recv(t->pp));
+            auto tpp = rec::ptr(gocpp::recv(t->pp));
             if(newStatus == timerModifiedEarlier)
             {
                 updateTimerModifiedEarliest(tpp, when);
             }
-            if(! CompareAndSwap(gocpp::recv(t->status), timerModifying, newStatus))
+            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerModifying, newStatus))
             {
                 badTimer();
             }
@@ -509,13 +520,13 @@ namespace golang::runtime
                 return;
             }
             auto t = pp->timers[0];
-            if(ptr(gocpp::recv(t->pp)) != pp)
+            if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
                 go_throw("cleantimers: bad p");
             }
             //Go switch emulation
             {
-                auto s = Load(gocpp::recv(t->status));
+                auto s = rec::Load(gocpp::recv(t->status));
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == timerDeleted) { conditionId = 0; }
@@ -524,27 +535,27 @@ namespace golang::runtime
                 switch(conditionId)
                 {
                     case 0:
-                        if(! CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
                         {
                             continue;
                         }
                         dodeltimer0(pp);
-                        if(! CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
                         {
                             badTimer();
                         }
-                        Add(gocpp::recv(pp->deletedTimers), - 1);
+                        rec::Add(gocpp::recv(pp->deletedTimers), - 1);
                         break;
                     case 1:
                     case 2:
-                        if(! CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                         {
                             continue;
                         }
                         t->when = t->nextwhen;
                         dodeltimer0(pp);
                         doaddtimer(pp, t);
-                        if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
                         {
                             badTimer();
                         }
@@ -566,7 +577,7 @@ namespace golang::runtime
             {
                 //Go switch emulation
                 {
-                    auto s = Load(gocpp::recv(t->status));
+                    auto s = rec::Load(gocpp::recv(t->status));
                     auto condition = s;
                     int conditionId = -1;
                     if(condition == timerWaiting) { conditionId = 0; }
@@ -582,13 +593,13 @@ namespace golang::runtime
                     switch(conditionId)
                     {
                         case 0:
-                            if(! CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                             {
                                 continue;
                             }
                             t->pp = 0;
                             doaddtimer(pp, t);
-                            if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
                             {
                                 badTimer();
                             }
@@ -596,21 +607,21 @@ namespace golang::runtime
                             break;
                         case 1:
                         case 2:
-                            if(! CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                             {
                                 continue;
                             }
                             t->when = t->nextwhen;
                             t->pp = 0;
                             doaddtimer(pp, t);
-                            if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
                             {
                                 badTimer();
                             }
                             goto loop_break;
                             break;
                         case 3:
-                            if(! CompareAndSwap(gocpp::recv(t->status), s, timerRemoved))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoved))
                             {
                                 continue;
                             }
@@ -646,7 +657,7 @@ namespace golang::runtime
 
     void adjusttimers(struct p* pp, int64_t now)
     {
-        auto first = Load(gocpp::recv(pp->timerModifiedEarliest));
+        auto first = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
         if(first == 0 || first > now)
         {
             if(verifyTimers)
@@ -655,18 +666,18 @@ namespace golang::runtime
             }
             return;
         }
-        Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+        rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
         gocpp::slice<timer*> moved = {};
         for(auto i = 0; i < len(pp->timers); i++)
         {
             auto t = pp->timers[i];
-            if(ptr(gocpp::recv(t->pp)) != pp)
+            if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
                 go_throw("adjusttimers: bad p");
             }
             //Go switch emulation
             {
-                auto s = Load(gocpp::recv(t->status));
+                auto s = rec::Load(gocpp::recv(t->status));
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == timerDeleted) { conditionId = 0; }
@@ -682,20 +693,20 @@ namespace golang::runtime
                 switch(conditionId)
                 {
                     case 0:
-                        if(CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
                         {
                             auto changed = dodeltimer(pp, i);
-                            if(! CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
+                            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
                             {
                                 badTimer();
                             }
-                            Add(gocpp::recv(pp->deletedTimers), - 1);
+                            rec::Add(gocpp::recv(pp->deletedTimers), - 1);
                             i = changed - 1;
                         }
                         break;
                     case 1:
                     case 2:
-                        if(CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                        if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                         {
                             t->when = t->nextwhen;
                             auto changed = dodeltimer(pp, i);
@@ -737,7 +748,7 @@ namespace golang::runtime
         for(auto [gocpp_ignored, t] : moved)
         {
             doaddtimer(pp, t);
-            if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
             {
                 badTimer();
             }
@@ -746,8 +757,8 @@ namespace golang::runtime
 
     int64_t nobarrierWakeTime(struct p* pp)
     {
-        auto next = Load(gocpp::recv(pp->timer0When));
-        auto nextAdj = Load(gocpp::recv(pp->timerModifiedEarliest));
+        auto next = rec::Load(gocpp::recv(pp->timer0When));
+        auto nextAdj = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
         if(next == 0 || (nextAdj != 0 && nextAdj < next))
         {
             next = nextAdj;
@@ -760,13 +771,13 @@ namespace golang::runtime
         for(; ; )
         {
             auto t = pp->timers[0];
-            if(ptr(gocpp::recv(t->pp)) != pp)
+            if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
                 go_throw("runtimer: bad p");
             }
             //Go switch emulation
             {
-                auto s = Load(gocpp::recv(t->status));
+                auto s = rec::Load(gocpp::recv(t->status));
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == timerWaiting) { conditionId = 0; }
@@ -786,7 +797,7 @@ namespace golang::runtime
                         {
                             return t->when;
                         }
-                        if(! CompareAndSwap(gocpp::recv(t->status), s, timerRunning))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRunning))
                         {
                             continue;
                         }
@@ -794,16 +805,16 @@ namespace golang::runtime
                         return 0;
                         break;
                     case 1:
-                        if(! CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
                         {
                             continue;
                         }
                         dodeltimer0(pp);
-                        if(! CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
                         {
                             badTimer();
                         }
-                        Add(gocpp::recv(pp->deletedTimers), - 1);
+                        rec::Add(gocpp::recv(pp->deletedTimers), - 1);
                         if(len(pp->timers) == 0)
                         {
                             return - 1;
@@ -811,14 +822,14 @@ namespace golang::runtime
                         break;
                     case 2:
                     case 3:
-                        if(! CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                         {
                             continue;
                         }
                         t->when = t->nextwhen;
                         dodeltimer0(pp);
                         doaddtimer(pp, t);
-                        if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+                        if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
                         {
                             badTimer();
                         }
@@ -847,7 +858,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            auto ppcur = ptr(gocpp::recv(getg()->m->p));
+            auto ppcur = rec::ptr(gocpp::recv(getg()->m->p));
             if(ppcur->timerRaceCtx == 0)
             {
                 ppcur->timerRaceCtx = racegostart(abi::FuncPCABIInternal(runtimer) + sys::PCQuantum);
@@ -866,7 +877,7 @@ namespace golang::runtime
                 t->when = maxWhen;
             }
             siftdownTimer(pp->timers, 0);
-            if(! CompareAndSwap(gocpp::recv(t->status), timerRunning, timerWaiting))
+            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRunning, timerWaiting))
             {
                 badTimer();
             }
@@ -875,7 +886,7 @@ namespace golang::runtime
         else
         {
             dodeltimer0(pp);
-            if(! CompareAndSwap(gocpp::recv(t->status), timerRunning, timerNoStatus))
+            if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRunning, timerNoStatus))
             {
                 badTimer();
             }
@@ -887,7 +898,7 @@ namespace golang::runtime
             {
                 go_throw("runOneTimer: unexpected racectx");
             }
-            gp->racectx = ptr(gocpp::recv(gp->m->p))->timerRaceCtx;
+            gp->racectx = rec::ptr(gocpp::recv(gp->m->p))->timerRaceCtx;
         }
         unlock(& pp->timersLock);
         f(arg, seq);
@@ -901,7 +912,7 @@ namespace golang::runtime
 
     void clearDeletedTimers(struct p* pp)
     {
-        Store(gocpp::recv(pp->timerModifiedEarliest), 0);
+        rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
         auto cdel = int32_t(0);
         auto to = 0;
         auto changedHeap = false;
@@ -913,7 +924,7 @@ namespace golang::runtime
             {
                 //Go switch emulation
                 {
-                    auto s = Load(gocpp::recv(t->status));
+                    auto s = rec::Load(gocpp::recv(t->status));
                     auto condition = s;
                     int conditionId = -1;
                     if(condition == timerWaiting) { conditionId = 0; }
@@ -939,14 +950,14 @@ namespace golang::runtime
                             break;
                         case 1:
                         case 2:
-                            if(CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
+                            if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerMoving))
                             {
                                 t->when = t->nextwhen;
                                 timers[to] = t;
                                 siftupTimer(timers, to);
                                 to++;
                                 changedHeap = true;
-                                if(! CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
+                                if(! rec::CompareAndSwap(gocpp::recv(t->status), timerMoving, timerWaiting))
                                 {
                                     badTimer();
                                 }
@@ -954,11 +965,11 @@ namespace golang::runtime
                             }
                             break;
                         case 3:
-                            if(CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
+                            if(rec::CompareAndSwap(gocpp::recv(t->status), s, timerRemoving))
                             {
                                 t->pp = 0;
                                 cdel++;
-                                if(! CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
+                                if(! rec::CompareAndSwap(gocpp::recv(t->status), timerRemoving, timerRemoved))
                                 {
                                     badTimer();
                                 }
@@ -995,8 +1006,8 @@ namespace golang::runtime
         {
             timers[i] = nullptr;
         }
-        Add(gocpp::recv(pp->deletedTimers), - cdel);
-        Add(gocpp::recv(pp->numTimers), - cdel);
+        rec::Add(gocpp::recv(pp->deletedTimers), - cdel);
+        rec::Add(gocpp::recv(pp->numTimers), - cdel);
         timers = timers.make_slice(0, to);
         pp->timers = timers;
         updateTimer0When(pp);
@@ -1021,7 +1032,7 @@ namespace golang::runtime
                 go_throw("bad timer heap");
             }
         }
-        if(auto numTimers = int(Load(gocpp::recv(pp->numTimers))); len(pp->timers) != numTimers)
+        if(auto numTimers = int(rec::Load(gocpp::recv(pp->numTimers))); len(pp->timers) != numTimers)
         {
             println("timer heap len", len(pp->timers), "!= numTimers", numTimers);
             go_throw("bad timer heap len");
@@ -1032,11 +1043,11 @@ namespace golang::runtime
     {
         if(len(pp->timers) == 0)
         {
-            Store(gocpp::recv(pp->timer0When), 0);
+            rec::Store(gocpp::recv(pp->timer0When), 0);
         }
         else
         {
-            Store(gocpp::recv(pp->timer0When), pp->timers[0]->when);
+            rec::Store(gocpp::recv(pp->timer0When), pp->timers[0]->when);
         }
     }
 
@@ -1044,12 +1055,12 @@ namespace golang::runtime
     {
         for(; ; )
         {
-            auto old = Load(gocpp::recv(pp->timerModifiedEarliest));
+            auto old = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
             if(old != 0 && old < nextwhen)
             {
                 return;
             }
-            if(CompareAndSwap(gocpp::recv(pp->timerModifiedEarliest), old, nextwhen))
+            if(rec::CompareAndSwap(gocpp::recv(pp->timerModifiedEarliest), old, nextwhen))
             {
                 return;
             }
@@ -1066,12 +1077,12 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto w = Load(gocpp::recv(pp->timer0When));
+            auto w = rec::Load(gocpp::recv(pp->timer0When));
             if(w != 0 && w < next)
             {
                 next = w;
             }
-            w = Load(gocpp::recv(pp->timerModifiedEarliest));
+            w = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
             if(w != 0 && w < next)
             {
                 next = w;

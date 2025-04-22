@@ -11,5 +11,9 @@
 
 namespace golang::goexperiment
 {
+
+    namespace rec
+    {
+    }
 }
 

@@ -13,6 +13,11 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     MemoryBasicInformation::operator T()

@@ -29,6 +29,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     void typedmemmove(struct abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(dst == src)
@@ -90,7 +100,7 @@ namespace golang::runtime
         memmove(dst, src, size);
         for(auto [i, gocpp_ignored] : regs->Ints)
         {
-            if(Get(gocpp::recv(regs->ReturnIsPtr), i))
+            if(rec::Get(gocpp::recv(regs->ReturnIsPtr), i))
             {
                 regs->Ptrs[i] = unsafe::Pointer(regs->Ints[i]);
             }

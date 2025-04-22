@@ -34,7 +34,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timeval& value);
-    int64_t Nanoseconds(struct Timeval* tv);
     struct Timeval NsecToTimeval(int64_t nsec);
     struct SecurityAttributes
     {
@@ -60,7 +59,7 @@ namespace golang::syscall
         uintptr_t InternalHigh;
         uint32_t Offset;
         uint32_t OffsetHigh;
-        Handle HEvent;
+        syscall::Handle HEvent;
 
         using isGoStruct = void;
 
@@ -110,7 +109,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
-    int64_t Nanoseconds(struct Filetime* ft);
     struct Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
@@ -226,9 +224,9 @@ namespace golang::syscall
         uint16_t ShowWindow;
         uint16_t _;
         unsigned char* _;
-        Handle StdInput;
-        Handle StdOutput;
-        Handle StdErr;
+        syscall::Handle StdInput;
+        syscall::Handle StdOutput;
+        syscall::Handle StdErr;
 
         using isGoStruct = void;
 
@@ -276,8 +274,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct ProcessInformation
     {
-        Handle Process;
-        Handle Thread;
+        syscall::Handle Process;
+        syscall::Handle Thread;
         uint32_t ProcessId;
         uint32_t ThreadId;
 
@@ -678,7 +676,7 @@ namespace golang::syscall
         unsigned char* EncodedCert;
         uint32_t Length;
         CertInfo* CertInfo;
-        Handle Store;
+        syscall::Handle Store;
 
         using isGoStruct = void;
 
@@ -1114,5 +1112,11 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reparseDataBuffer& value);
+
+    namespace rec
+    {
+        int64_t Nanoseconds(struct Timeval* tv);
+        int64_t Nanoseconds(struct Filetime* ft);
+    }
 }
 

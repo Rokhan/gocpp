@@ -15,5 +15,9 @@ namespace golang::main
     void main();
     void f();
     void g(int i);
+
+    namespace rec
+    {
+    }
 }
 

@@ -8,7 +8,7 @@ namespace golang::runtime
 {
     const bool debugSelect = false;
     using selectDir = int;
-    const selectDir _ = 0;
+    const runtime::selectDir _ = 0;
     const selectDir selectSend = 1;
     const selectDir selectRecv = 2;
     const selectDir selectDefault = 3;

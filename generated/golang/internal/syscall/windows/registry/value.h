@@ -17,23 +17,27 @@ namespace golang::registry
     extern syscall::Errno ErrShortBuffer;
     extern syscall::Errno ErrNotExist;
     extern gocpp::error ErrUnexpectedType;
-    std::tuple<int, uint32_t, struct gocpp::error> GetValue(Key k, std::string name, gocpp::slice<unsigned char> buf);
-    std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> getValue(Key k, std::string name, gocpp::slice<unsigned char> buf);
-    std::tuple<std::string, uint32_t, struct gocpp::error> GetStringValue(Key k, std::string name);
-    std::tuple<std::string, struct gocpp::error> GetMUIStringValue(Key k, std::string name);
     std::tuple<std::string, struct gocpp::error> ExpandString(std::string value);
-    std::tuple<gocpp::slice<std::string>, uint32_t, struct gocpp::error> GetStringsValue(Key k, std::string name);
-    std::tuple<uint64_t, uint32_t, struct gocpp::error> GetIntegerValue(Key k, std::string name);
-    std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> GetBinaryValue(Key k, std::string name);
-    struct gocpp::error setValue(Key k, std::string name, uint32_t valtype, gocpp::slice<unsigned char> data);
-    struct gocpp::error SetDWordValue(Key k, std::string name, uint32_t value);
-    struct gocpp::error SetQWordValue(Key k, std::string name, uint64_t value);
-    struct gocpp::error setStringValue(Key k, std::string name, uint32_t valtype, std::string value);
-    struct gocpp::error SetStringValue(Key k, std::string name, std::string value);
-    struct gocpp::error SetExpandStringValue(Key k, std::string name, std::string value);
-    struct gocpp::error SetStringsValue(Key k, std::string name, gocpp::slice<std::string> value);
-    struct gocpp::error SetBinaryValue(Key k, std::string name, gocpp::slice<unsigned char> value);
-    struct gocpp::error DeleteValue(Key k, std::string name);
-    std::tuple<gocpp::slice<std::string>, struct gocpp::error> ReadValueNames(Key k);
+
+    namespace rec
+    {
+        std::tuple<int, uint32_t, struct gocpp::error> GetValue(registry::Key k, std::string name, gocpp::slice<unsigned char> buf);
+        std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> getValue(registry::Key k, std::string name, gocpp::slice<unsigned char> buf);
+        std::tuple<std::string, uint32_t, struct gocpp::error> GetStringValue(registry::Key k, std::string name);
+        std::tuple<std::string, struct gocpp::error> GetMUIStringValue(registry::Key k, std::string name);
+        std::tuple<gocpp::slice<std::string>, uint32_t, struct gocpp::error> GetStringsValue(registry::Key k, std::string name);
+        std::tuple<uint64_t, uint32_t, struct gocpp::error> GetIntegerValue(registry::Key k, std::string name);
+        std::tuple<gocpp::slice<unsigned char>, uint32_t, struct gocpp::error> GetBinaryValue(registry::Key k, std::string name);
+        struct gocpp::error setValue(registry::Key k, std::string name, uint32_t valtype, gocpp::slice<unsigned char> data);
+        struct gocpp::error SetDWordValue(registry::Key k, std::string name, uint32_t value);
+        struct gocpp::error SetQWordValue(registry::Key k, std::string name, uint64_t value);
+        struct gocpp::error setStringValue(registry::Key k, std::string name, uint32_t valtype, std::string value);
+        struct gocpp::error SetStringValue(registry::Key k, std::string name, std::string value);
+        struct gocpp::error SetExpandStringValue(registry::Key k, std::string name, std::string value);
+        struct gocpp::error SetStringsValue(registry::Key k, std::string name, gocpp::slice<std::string> value);
+        struct gocpp::error SetBinaryValue(registry::Key k, std::string name, gocpp::slice<unsigned char> value);
+        struct gocpp::error DeleteValue(registry::Key k, std::string name);
+        std::tuple<gocpp::slice<std::string>, struct gocpp::error> ReadValueNames(registry::Key k);
+    }
 }
 

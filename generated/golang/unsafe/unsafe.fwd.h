@@ -8,5 +8,5 @@ namespace golang::unsafe
 {
     using ArbitraryType = int;
     using IntegerType = int;
-    using Pointer = ArbitraryType*;
+    using Pointer = unsafe::ArbitraryType*;
 }

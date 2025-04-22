@@ -17,6 +17,14 @@
 
 namespace golang::strings
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace io::rec;
+        using namespace utf8::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
@@ -52,7 +60,7 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
-    int Len(struct Reader* r)
+    int rec::Len(struct Reader* r)
     {
         if(r->i >= int64_t(len(r->s)))
         {
@@ -61,12 +69,12 @@ namespace golang::strings
         return int(int64_t(len(r->s)) - r->i);
     }
 
-    int64_t Size(struct Reader* r)
+    int64_t rec::Size(struct Reader* r)
     {
         return int64_t(len(r->s));
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct Reader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Read(struct Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -82,7 +90,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    std::tuple<int, struct gocpp::error> ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -108,7 +116,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    std::tuple<unsigned char, struct gocpp::error> ReadByte(struct Reader* r)
+    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(struct Reader* r)
     {
         r->prevRune = - 1;
         if(r->i >= int64_t(len(r->s)))
@@ -120,7 +128,7 @@ namespace golang::strings
         return {b, nullptr};
     }
 
-    struct gocpp::error UnreadByte(struct Reader* r)
+    struct gocpp::error rec::UnreadByte(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -131,7 +139,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(struct Reader* r)
+    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(struct Reader* r)
     {
         gocpp::rune ch;
         int size;
@@ -158,7 +166,7 @@ namespace golang::strings
         return {ch, size, err};
     }
 
-    struct gocpp::error UnreadRune(struct Reader* r)
+    struct gocpp::error rec::UnreadRune(struct Reader* r)
     {
         if(r->i <= 0)
         {
@@ -173,7 +181,7 @@ namespace golang::strings
         return nullptr;
     }
 
-    std::tuple<int64_t, struct gocpp::error> Seek(struct Reader* r, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::Seek(struct Reader* r, int64_t offset, int whence)
     {
         r->prevRune = - 1;
         int64_t abs = {};
@@ -208,7 +216,7 @@ namespace golang::strings
         return {abs, nullptr};
     }
 
-    std::tuple<int64_t, struct gocpp::error> WriteTo(struct Reader* r, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* r, struct io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -238,7 +246,7 @@ namespace golang::strings
         return {n, err};
     }
 
-    void Reset(struct Reader* r, std::string s)
+    void rec::Reset(struct Reader* r, std::string s)
     {
         *r = Reader {s, 0, - 1};
     }

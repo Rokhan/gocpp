@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace runtime::rec;
+    }
+
     void testFallThrough(int n)
     {
         //Go switch emulation

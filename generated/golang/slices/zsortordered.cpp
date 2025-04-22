@@ -16,6 +16,11 @@
 
 namespace golang::slices
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     void insertionSortOrdered(gocpp::slice<E> data, int a, int b)
     {
         for(auto i = a + 1; i < b; i++)
@@ -271,7 +276,7 @@ namespace golang::slices
             auto modulus = nextPowerOfTwo(length);
             for(auto idx = a + (length / 4) * 2 - 1; idx <= a + (length / 4) * 2 + 1; idx++)
             {
-                auto other = int((unsigned int)(Next(gocpp::recv(random))) & (modulus - 1));
+                auto other = int((unsigned int)(rec::Next(gocpp::recv(random))) & (modulus - 1));
                 if(other >= length)
                 {
                     other -= length;
@@ -281,10 +286,10 @@ namespace golang::slices
         }
     }
 
-    std::tuple<int, sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
+    std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
     {
         int pivot;
-        sortedHint hint;
+        slices::sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
         auto l = b - a;
@@ -295,11 +300,11 @@ namespace golang::slices
         if(l >= 8)
         {
             int pivot;
-            sortedHint hint;
+            slices::sortedHint hint;
             if(l >= shortestNinther)
             {
                 int pivot;
-                sortedHint hint;
+                slices::sortedHint hint;
                 i = medianAdjacentOrdered(data, i, & swaps);
                 j = medianAdjacentOrdered(data, j, & swaps);
                 k = medianAdjacentOrdered(data, k, & swaps);
@@ -315,7 +320,7 @@ namespace golang::slices
             switch(conditionId)
             {
                 int pivot;
-                sortedHint hint;
+                slices::sortedHint hint;
                 case 0:
                     return {j, increasingHint};
                     break;

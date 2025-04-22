@@ -14,5 +14,9 @@ namespace golang::math
 {
     std::tuple<double, double> Modf(double f);
     std::tuple<double, double> modf(double f);
+
+    namespace rec
+    {
+    }
 }
 

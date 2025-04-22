@@ -11,10 +11,10 @@ namespace golang::bytes
     using readOp = int8_t;
     const int maxInt = int(~ (unsigned int)(0) >> 1);
     const long MinRead = 512;
-    const readOp opRead = - 1;
-    const readOp opInvalid = 0;
-    const readOp opReadRune1 = 1;
-    const readOp opReadRune2 = 2;
-    const readOp opReadRune3 = 3;
-    const readOp opReadRune4 = 4;
+    const bytes::readOp opRead = - 1;
+    const bytes::readOp opInvalid = 0;
+    const bytes::readOp opReadRune1 = 1;
+    const bytes::readOp opReadRune2 = 2;
+    const bytes::readOp opReadRune3 = 3;
+    const bytes::readOp opReadRune4 = 4;
 }

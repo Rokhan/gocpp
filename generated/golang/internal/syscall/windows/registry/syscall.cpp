@@ -15,5 +15,11 @@
 
 namespace golang::registry
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+    }
+
 }
 

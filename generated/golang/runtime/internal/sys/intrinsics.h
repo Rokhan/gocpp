@@ -27,5 +27,9 @@ namespace golang::sys
     uint32_t Bswap32(uint32_t x);
     void Prefetch(uintptr_t addr);
     void PrefetchStreamed(uintptr_t addr);
+
+    namespace rec
+    {
+    }
 }
 

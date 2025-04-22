@@ -41,8 +41,12 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    std::string Name(struct fileStat* fs);
-    bool IsDir(struct fileStat* fs);
     bool SameFile(struct FileInfo fi1, struct FileInfo fi2);
+
+    namespace rec
+    {
+        std::string Name(struct fileStat* fs);
+        bool IsDir(struct fileStat* fs);
+    }
 }
 

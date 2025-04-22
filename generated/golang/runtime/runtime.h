@@ -34,7 +34,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ticksType& value);
-    void init(struct ticksType* t);
     int64_t ticksPerSecond();
     gocpp::slice<std::string> syscall_runtime_envs();
     int syscall_Getpagesize();
@@ -59,11 +58,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct godebugInc& value);
-    void IncNonDefault(struct godebugInc* g);
     void godebugNotify(bool envChanged);
     void syscall_runtimeSetenv(std::string key, std::string value);
     void syscall_runtimeUnsetenv(std::string key);
     void writeErrStr(std::string s);
     gocpp::slice<uintptr_t> getAuxv();
+
+    namespace rec
+    {
+        void init(struct ticksType* t);
+        void IncNonDefault(struct godebugInc* g);
+    }
 }
 

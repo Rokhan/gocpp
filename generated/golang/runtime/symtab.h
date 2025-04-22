@@ -61,7 +61,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct Frame& value);
     struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
-    std::tuple<struct Frame, bool> Next(struct Frames* ci);
     int runtime_FrameStartLine(struct Frame* f);
     std::string runtime_FrameSymbolName(struct Frame* f);
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
@@ -82,9 +81,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Func& value);
-    struct _func* raw(struct Func* f);
-    struct funcInfo funcInfo(struct Func* f);
-    struct funcInfo funcInfo(struct _func* f);
     struct pcHeader
     {
         uint32_t magic;
@@ -156,7 +152,7 @@ namespace golang::runtime
         uint8_t hasmain;
         bitvector gcdatamask;
         bitvector gcbssmask;
-        gocpp::map<typeOff, _type*> typemap;
+        gocpp::map<abi::typeOff, _type*> typemap;
         bool bad;
         moduledata* next;
 
@@ -246,14 +242,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value);
     void moduledataverify();
     void moduledataverify1(struct moduledata* datap);
-    uintptr_t textAddr(struct moduledata* md, uint32_t off32);
-    std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc);
-    std::string funcName(struct moduledata* md, int32_t nameOff);
     struct Func* FuncForPC(uintptr_t pc);
-    std::string Name(struct Func* f);
-    uintptr_t Entry(struct Func* f);
-    std::tuple<std::string, int> FileLine(struct Func* f, uintptr_t pc);
-    int32_t startLine(struct Func* f);
     struct moduledata* findmoduledatap(uintptr_t pc);
     struct funcInfo
     {
@@ -271,10 +260,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
-    bool valid(struct funcInfo f);
-    struct Func* _Func(struct funcInfo f);
-    bool isInlined(struct _func* f);
-    uintptr_t entry(struct funcInfo f);
     struct funcInfo findfunc(uintptr_t pc);
     struct srcFunc
     {
@@ -295,8 +280,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
-    struct srcFunc srcFunc(struct funcInfo f);
-    std::string name(struct srcFunc s);
     struct pcvalueCache
     {
         gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries;
@@ -368,5 +351,26 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct stackmap& value);
     struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n);
+
+    namespace rec
+    {
+        std::tuple<struct Frame, bool> Next(struct Frames* ci);
+        struct _func* raw(struct Func* f);
+        struct funcInfo funcInfo(struct Func* f);
+        struct funcInfo funcInfo(struct _func* f);
+        uintptr_t textAddr(struct moduledata* md, uint32_t off32);
+        std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc);
+        std::string funcName(struct moduledata* md, int32_t nameOff);
+        std::string Name(struct Func* f);
+        uintptr_t Entry(struct Func* f);
+        std::tuple<std::string, int> FileLine(struct Func* f, uintptr_t pc);
+        int32_t startLine(struct Func* f);
+        bool valid(struct funcInfo f);
+        struct Func* _Func(struct funcInfo f);
+        bool isInlined(struct _func* f);
+        uintptr_t entry(struct funcInfo f);
+        struct srcFunc srcFunc(struct funcInfo f);
+        std::string name(struct srcFunc s);
+    }
 }
 

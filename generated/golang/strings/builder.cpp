@@ -17,6 +17,13 @@
 
 namespace golang::strings
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+        using namespace utf8::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Builder::operator T()
@@ -55,7 +62,7 @@ namespace golang::strings
         return unsafe::Pointer(x ^ 0);
     }
 
-    void copyCheck(struct Builder* b)
+    void rec::copyCheck(struct Builder* b)
     {
         if(b->addr == nullptr)
         {
@@ -68,72 +75,72 @@ namespace golang::strings
         }
     }
 
-    std::string String(struct Builder* b)
+    std::string rec::String(struct Builder* b)
     {
         return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
     }
 
-    int Len(struct Builder* b)
+    int rec::Len(struct Builder* b)
     {
         return len(b->buf);
     }
 
-    int Cap(struct Builder* b)
+    int rec::Cap(struct Builder* b)
     {
         return cap(b->buf);
     }
 
-    void Reset(struct Builder* b)
+    void rec::Reset(struct Builder* b)
     {
         b->addr = nullptr;
         b->buf = nullptr;
     }
 
-    void grow(struct Builder* b, int n)
+    void rec::grow(struct Builder* b, int n)
     {
         auto buf = bytealg::MakeNoZero(2 * cap(b->buf) + n).make_slice(0, len(b->buf));
         copy(buf, b->buf);
         b->buf = buf;
     }
 
-    void Grow(struct Builder* b, int n)
+    void rec::Grow(struct Builder* b, int n)
     {
-        copyCheck(gocpp::recv(b));
+        rec::copyCheck(gocpp::recv(b));
         if(n < 0)
         {
             gocpp::panic("strings.Builder.Grow: negative count");
         }
         if(cap(b->buf) - len(b->buf) < n)
         {
-            grow(gocpp::recv(b), n);
+            rec::grow(gocpp::recv(b), n);
         }
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct Builder* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(struct Builder* b, gocpp::slice<unsigned char> p)
     {
-        copyCheck(gocpp::recv(b));
+        rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, p);
         return {len(p), nullptr};
     }
 
-    struct gocpp::error WriteByte(struct Builder* b, unsigned char c)
+    struct gocpp::error rec::WriteByte(struct Builder* b, unsigned char c)
     {
-        copyCheck(gocpp::recv(b));
+        rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, c);
         return nullptr;
     }
 
-    std::tuple<int, struct gocpp::error> WriteRune(struct Builder* b, gocpp::rune r)
+    std::tuple<int, struct gocpp::error> rec::WriteRune(struct Builder* b, gocpp::rune r)
     {
-        copyCheck(gocpp::recv(b));
+        rec::copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
         b->buf = utf8::AppendRune(b->buf, r);
         return {len(b->buf) - n, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> WriteString(struct Builder* b, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct Builder* b, std::string s)
     {
-        copyCheck(gocpp::recv(b));
+        rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);
         return {len(s), nullptr};
     }

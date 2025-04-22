@@ -15,6 +15,12 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+    }
+
     void main()
     {
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 5);

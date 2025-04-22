@@ -18,6 +18,15 @@
 
 namespace golang::bytes
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bytes::rec;
+        using namespace errors::rec;
+        using namespace io::rec;
+        using namespace utf8::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Buffer::operator T()
@@ -55,17 +64,17 @@ namespace golang::bytes
 
     gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large");
     gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read");
-    gocpp::slice<unsigned char> Bytes(struct Buffer* b)
+    gocpp::slice<unsigned char> rec::Bytes(struct Buffer* b)
     {
         return b->buf.make_slice(b->off);
     }
 
-    gocpp::slice<unsigned char> AvailableBuffer(struct Buffer* b)
+    gocpp::slice<unsigned char> rec::AvailableBuffer(struct Buffer* b)
     {
         return b->buf.make_slice(len(b->buf));
     }
 
-    std::string String(struct Buffer* b)
+    std::string rec::String(struct Buffer* b)
     {
         if(b == nullptr)
         {
@@ -74,49 +83,49 @@ namespace golang::bytes
         return string(b->buf.make_slice(b->off));
     }
 
-    bool empty(struct Buffer* b)
+    bool rec::empty(struct Buffer* b)
     {
         return len(b->buf) <= b->off;
     }
 
-    int Len(struct Buffer* b)
+    int rec::Len(struct Buffer* b)
     {
         return len(b->buf) - b->off;
     }
 
-    int Cap(struct Buffer* b)
+    int rec::Cap(struct Buffer* b)
     {
         return cap(b->buf);
     }
 
-    int Available(struct Buffer* b)
+    int rec::Available(struct Buffer* b)
     {
         return cap(b->buf) - len(b->buf);
     }
 
-    void Truncate(struct Buffer* b, int n)
+    void rec::Truncate(struct Buffer* b, int n)
     {
         if(n == 0)
         {
-            Reset(gocpp::recv(b));
+            rec::Reset(gocpp::recv(b));
             return;
         }
         b->lastRead = opInvalid;
-        if(n < 0 || n > Len(gocpp::recv(b)))
+        if(n < 0 || n > rec::Len(gocpp::recv(b)))
         {
             gocpp::panic("bytes.Buffer: truncation out of range");
         }
         b->buf = b->buf.make_slice(0, b->off + n);
     }
 
-    void Reset(struct Buffer* b)
+    void rec::Reset(struct Buffer* b)
     {
         b->buf = b->buf.make_slice(0, 0);
         b->off = 0;
         b->lastRead = opInvalid;
     }
 
-    std::tuple<int, bool> tryGrowByReslice(struct Buffer* b, int n)
+    std::tuple<int, bool> rec::tryGrowByReslice(struct Buffer* b, int n)
     {
         if(auto l = len(b->buf); n <= cap(b->buf) - l)
         {
@@ -126,14 +135,14 @@ namespace golang::bytes
         return {0, false};
     }
 
-    int grow(struct Buffer* b, int n)
+    int rec::grow(struct Buffer* b, int n)
     {
-        auto m = Len(gocpp::recv(b));
+        auto m = rec::Len(gocpp::recv(b));
         if(m == 0 && b->off != 0)
         {
-            Reset(gocpp::recv(b));
+            rec::Reset(gocpp::recv(b));
         }
-        if(auto [i, ok] = tryGrowByReslice(gocpp::recv(b), n); ok)
+        if(auto [i, ok] = rec::tryGrowByReslice(gocpp::recv(b), n); ok)
         {
             return i;
         }
@@ -161,47 +170,47 @@ namespace golang::bytes
         return m;
     }
 
-    void Grow(struct Buffer* b, int n)
+    void rec::Grow(struct Buffer* b, int n)
     {
         if(n < 0)
         {
             gocpp::panic("bytes.Buffer.Grow: negative count");
         }
-        auto m = grow(gocpp::recv(b), n);
+        auto m = rec::grow(gocpp::recv(b), n);
         b->buf = b->buf.make_slice(0, m);
     }
 
-    std::tuple<int, struct gocpp::error> Write(struct Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(struct Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
         b->lastRead = opInvalid;
-        auto [m, ok] = tryGrowByReslice(gocpp::recv(b), len(p));
+        auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(p));
         if(! ok)
         {
             int n;
             struct gocpp::error err;
-            m = grow(gocpp::recv(b), len(p));
+            m = rec::grow(gocpp::recv(b), len(p));
         }
         return {copy(b->buf.make_slice(m), p), nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> WriteString(struct Buffer* b, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct Buffer* b, std::string s)
     {
         int n;
         struct gocpp::error err;
         b->lastRead = opInvalid;
-        auto [m, ok] = tryGrowByReslice(gocpp::recv(b), len(s));
+        auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(s));
         if(! ok)
         {
             int n;
             struct gocpp::error err;
-            m = grow(gocpp::recv(b), len(s));
+            m = rec::grow(gocpp::recv(b), len(s));
         }
         return {copy(b->buf.make_slice(m), s), nullptr};
     }
 
-    std::tuple<int64_t, struct gocpp::error> ReadFrom(struct Buffer* b, struct io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Buffer* b, struct io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;
@@ -210,9 +219,9 @@ namespace golang::bytes
         {
             int64_t n;
             struct gocpp::error err;
-            auto i = grow(gocpp::recv(b), MinRead);
+            auto i = rec::grow(gocpp::recv(b), MinRead);
             b->buf = b->buf.make_slice(0, i);
-            auto [m, e] = Read(gocpp::recv(r), b->buf.make_slice(i, cap(b->buf)));
+            auto [m, e] = rec::Read(gocpp::recv(r), b->buf.make_slice(i, cap(b->buf)));
             if(m < 0)
             {
                 int64_t n;
@@ -263,16 +272,16 @@ namespace golang::bytes
         }
     }
 
-    std::tuple<int64_t, struct gocpp::error> WriteTo(struct Buffer* b, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Buffer* b, struct io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
         b->lastRead = opInvalid;
-        if(auto nBytes = Len(gocpp::recv(b)); nBytes > 0)
+        if(auto nBytes = rec::Len(gocpp::recv(b)); nBytes > 0)
         {
             int64_t n;
             struct gocpp::error err;
-            auto [m, e] = Write(gocpp::recv(w), b->buf.make_slice(b->off));
+            auto [m, e] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->off));
             if(m > nBytes)
             {
                 int64_t n;
@@ -294,23 +303,23 @@ namespace golang::bytes
                 return {n, io::ErrShortWrite};
             }
         }
-        Reset(gocpp::recv(b));
+        rec::Reset(gocpp::recv(b));
         return {n, nullptr};
     }
 
-    struct gocpp::error WriteByte(struct Buffer* b, unsigned char c)
+    struct gocpp::error rec::WriteByte(struct Buffer* b, unsigned char c)
     {
         b->lastRead = opInvalid;
-        auto [m, ok] = tryGrowByReslice(gocpp::recv(b), 1);
+        auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), 1);
         if(! ok)
         {
-            m = grow(gocpp::recv(b), 1);
+            m = rec::grow(gocpp::recv(b), 1);
         }
         b->buf[m] = c;
         return nullptr;
     }
 
-    std::tuple<int, struct gocpp::error> WriteRune(struct Buffer* b, gocpp::rune r)
+    std::tuple<int, struct gocpp::error> rec::WriteRune(struct Buffer* b, gocpp::rune r)
     {
         int n;
         struct gocpp::error err;
@@ -318,31 +327,31 @@ namespace golang::bytes
         {
             int n;
             struct gocpp::error err;
-            WriteByte(gocpp::recv(b), unsigned char(r));
+            rec::WriteByte(gocpp::recv(b), unsigned char(r));
             return {1, nullptr};
         }
         b->lastRead = opInvalid;
-        auto [m, ok] = tryGrowByReslice(gocpp::recv(b), utf8::UTFMax);
+        auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), utf8::UTFMax);
         if(! ok)
         {
             int n;
             struct gocpp::error err;
-            m = grow(gocpp::recv(b), utf8::UTFMax);
+            m = rec::grow(gocpp::recv(b), utf8::UTFMax);
         }
         b->buf = utf8::AppendRune(b->buf.make_slice(0, m), r);
         return {len(b->buf) - m, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(struct Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
         b->lastRead = opInvalid;
-        if(empty(gocpp::recv(b)))
+        if(rec::empty(gocpp::recv(b)))
         {
             int n;
             struct gocpp::error err;
-            Reset(gocpp::recv(b));
+            rec::Reset(gocpp::recv(b));
             if(len(p) == 0)
             {
                 int n;
@@ -362,10 +371,10 @@ namespace golang::bytes
         return {n, nullptr};
     }
 
-    gocpp::slice<unsigned char> Next(struct Buffer* b, int n)
+    gocpp::slice<unsigned char> rec::Next(struct Buffer* b, int n)
     {
         b->lastRead = opInvalid;
-        auto m = Len(gocpp::recv(b));
+        auto m = rec::Len(gocpp::recv(b));
         if(n > m)
         {
             n = m;
@@ -379,11 +388,11 @@ namespace golang::bytes
         return data;
     }
 
-    std::tuple<unsigned char, struct gocpp::error> ReadByte(struct Buffer* b)
+    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(struct Buffer* b)
     {
-        if(empty(gocpp::recv(b)))
+        if(rec::empty(gocpp::recv(b)))
         {
-            Reset(gocpp::recv(b));
+            rec::Reset(gocpp::recv(b));
             return {0, io::go_EOF};
         }
         auto c = b->buf[b->off];
@@ -392,17 +401,17 @@ namespace golang::bytes
         return {c, nullptr};
     }
 
-    std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(struct Buffer* b)
+    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(struct Buffer* b)
     {
         gocpp::rune r;
         int size;
         struct gocpp::error err;
-        if(empty(gocpp::recv(b)))
+        if(rec::empty(gocpp::recv(b)))
         {
             gocpp::rune r;
             int size;
             struct gocpp::error err;
-            Reset(gocpp::recv(b));
+            rec::Reset(gocpp::recv(b));
             return {0, 0, io::go_EOF};
         }
         auto c = b->buf[b->off];
@@ -421,7 +430,7 @@ namespace golang::bytes
         return {r, n, nullptr};
     }
 
-    struct gocpp::error UnreadRune(struct Buffer* b)
+    struct gocpp::error rec::UnreadRune(struct Buffer* b)
     {
         if(b->lastRead <= opInvalid)
         {
@@ -436,7 +445,7 @@ namespace golang::bytes
     }
 
     gocpp::error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read");
-    struct gocpp::error UnreadByte(struct Buffer* b)
+    struct gocpp::error rec::UnreadByte(struct Buffer* b)
     {
         if(b->lastRead == opInvalid)
         {
@@ -450,16 +459,16 @@ namespace golang::bytes
         return nullptr;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadBytes(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadBytes(struct Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
-        auto [slice, err] = readSlice(gocpp::recv(b), delim);
+        auto [slice, err] = rec::readSlice(gocpp::recv(b), delim);
         line = append(line, slice);
         return {line, err};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readSlice(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::readSlice(struct Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
@@ -478,11 +487,11 @@ namespace golang::bytes
         return {line, err};
     }
 
-    std::tuple<std::string, struct gocpp::error> ReadString(struct Buffer* b, unsigned char delim)
+    std::tuple<std::string, struct gocpp::error> rec::ReadString(struct Buffer* b, unsigned char delim)
     {
         std::string line;
         struct gocpp::error err;
-        auto [slice, err] = readSlice(gocpp::recv(b), delim);
+        auto [slice, err] = rec::readSlice(gocpp::recv(b), delim);
         return {string(slice), err};
     }
 

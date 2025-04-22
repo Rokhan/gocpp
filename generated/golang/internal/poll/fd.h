@@ -27,9 +27,6 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errNetClosing& value);
-    std::string Error(struct errNetClosing e);
-    bool Timeout(struct errNetClosing e);
-    bool Temporary(struct errNetClosing e);
     extern errNetClosing ErrNetClosing;
     extern gocpp::error ErrFileClosing;
     extern gocpp::error ErrNoDeadline;
@@ -50,11 +47,18 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DeadlineExceededError& value);
-    std::string Error(struct DeadlineExceededError* e);
-    bool Timeout(struct DeadlineExceededError* e);
-    bool Temporary(struct DeadlineExceededError* e);
     extern gocpp::error ErrNotPollable;
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
     extern std::function<void (int)> TestHookDidWritev;
+
+    namespace rec
+    {
+        std::string Error(struct errNetClosing e);
+        bool Timeout(struct errNetClosing e);
+        bool Temporary(struct errNetClosing e);
+        std::string Error(struct DeadlineExceededError* e);
+        bool Timeout(struct DeadlineExceededError* e);
+        bool Temporary(struct DeadlineExceededError* e);
+    }
 }
 

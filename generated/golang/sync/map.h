@@ -68,25 +68,29 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
     struct entry* newEntry(go_any i);
-    struct readOnly loadReadOnly(struct Map* m);
-    std::tuple<go_any, bool> Load(struct Map* m, go_any key);
-    std::tuple<go_any, bool> load(struct entry* e);
-    void Store(struct Map* m, go_any key, go_any value);
-    bool tryCompareAndSwap(struct entry* e, go_any old, go_any go_new);
-    bool unexpungeLocked(struct entry* e);
-    go_any* swapLocked(struct entry* e, go_any* i);
-    std::tuple<go_any, bool> LoadOrStore(struct Map* m, go_any key, go_any value);
-    std::tuple<go_any, bool, bool> tryLoadOrStore(struct entry* e, go_any i);
-    std::tuple<go_any, bool> LoadAndDelete(struct Map* m, go_any key);
-    void Delete(struct Map* m, go_any key);
-    std::tuple<go_any, bool> go_delete(struct entry* e);
-    std::tuple<go_any*, bool> trySwap(struct entry* e, go_any* i);
-    std::tuple<go_any, bool> Swap(struct Map* m, go_any key, go_any value);
-    bool CompareAndSwap(struct Map* m, go_any key, go_any old, go_any go_new);
-    bool CompareAndDelete(struct Map* m, go_any key, go_any old);
-    void Range(struct Map* m, std::function<bool (go_any key, go_any value)> f);
-    void missLocked(struct Map* m);
-    void dirtyLocked(struct Map* m);
-    bool tryExpungeLocked(struct entry* e);
+
+    namespace rec
+    {
+        struct readOnly loadReadOnly(struct Map* m);
+        std::tuple<go_any, bool> Load(struct Map* m, go_any key);
+        std::tuple<go_any, bool> load(struct entry* e);
+        void Store(struct Map* m, go_any key, go_any value);
+        bool tryCompareAndSwap(struct entry* e, go_any old, go_any go_new);
+        bool unexpungeLocked(struct entry* e);
+        go_any* swapLocked(struct entry* e, go_any* i);
+        std::tuple<go_any, bool> LoadOrStore(struct Map* m, go_any key, go_any value);
+        std::tuple<go_any, bool, bool> tryLoadOrStore(struct entry* e, go_any i);
+        std::tuple<go_any, bool> LoadAndDelete(struct Map* m, go_any key);
+        void Delete(struct Map* m, go_any key);
+        std::tuple<go_any, bool> go_delete(struct entry* e);
+        std::tuple<go_any*, bool> trySwap(struct entry* e, go_any* i);
+        std::tuple<go_any, bool> Swap(struct Map* m, go_any key, go_any value);
+        bool CompareAndSwap(struct Map* m, go_any key, go_any old, go_any go_new);
+        bool CompareAndDelete(struct Map* m, go_any key, go_any old);
+        void Range(struct Map* m, std::function<bool (go_any key, go_any value)> f);
+        void missLocked(struct Map* m);
+        void dirtyLocked(struct Map* m);
+        bool tryExpungeLocked(struct entry* e);
+    }
 }
 

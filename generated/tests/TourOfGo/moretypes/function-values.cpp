@@ -17,6 +17,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace math::rec;
+    }
+
     double compute(std::function<double (double, double)> fn)
     {
         return fn(3, 4);

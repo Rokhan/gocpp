@@ -77,6 +77,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     bool heapObjectsCanMove()
     {
         return false;
@@ -88,8 +99,8 @@ namespace golang::runtime
         {
             go_throw("size of Workbuf is suboptimal");
         }
-        Store(gocpp::recv(sweep.active.state), sweepDrainedMask);
-        init(gocpp::recv(gcController), readGOGC(), readGOMEMLIMIT());
+        rec::Store(gocpp::recv(sweep.active.state), sweepDrainedMask);
+        rec::init(gocpp::recv(gcController), readGOGC(), readGOMEMLIMIT());
         work.startSema = 1;
         work.markDoneSema = 1;
         lockInit(& work.sweepWaiters.lock, lockRankSweepWaiters);
@@ -169,7 +180,7 @@ namespace golang::runtime
         {
             return true;
         }
-        auto p = ptr(gocpp::recv(getg()->m->p));
+        auto p = rec::ptr(gocpp::recv(getg()->m->p));
         auto selfTime = p->gcFractionalMarkTime + (now - p->gcMarkWorkerStartTime);
         return double(selfTime) / double(delta) > 1.2 * gcController.fractionalUtilizationGoal;
     }
@@ -329,20 +340,20 @@ namespace golang::runtime
 
     void GC()
     {
-        auto n = Load(gocpp::recv(work.cycles));
+        auto n = rec::Load(gocpp::recv(work.cycles));
         gcWaitOnMark(n);
         gcStart(gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerCycle; x.n = n + 1; }));
         gcWaitOnMark(n + 1);
-        for(; Load(gocpp::recv(work.cycles)) == n + 1 && sweepone() != ~ uintptr_t(0); )
+        for(; rec::Load(gocpp::recv(work.cycles)) == n + 1 && sweepone() != ~ uintptr_t(0); )
         {
             Gosched();
         }
-        for(; Load(gocpp::recv(work.cycles)) == n + 1 && ! isSweepDone(); )
+        for(; rec::Load(gocpp::recv(work.cycles)) == n + 1 && ! isSweepDone(); )
         {
             Gosched();
         }
         auto mp = acquirem();
-        auto cycle = Load(gocpp::recv(work.cycles));
+        auto cycle = rec::Load(gocpp::recv(work.cycles));
         if(cycle == n + 1 || (gcphase == _GCmark && cycle == n + 2))
         {
             mProf_PostSweep();
@@ -355,7 +366,7 @@ namespace golang::runtime
         for(; ; )
         {
             lock(& work.sweepWaiters.lock);
-            auto nMarks = Load(gocpp::recv(work.cycles));
+            auto nMarks = rec::Load(gocpp::recv(work.cycles));
             if(gcphase != _GCmark)
             {
                 nMarks++;
@@ -365,7 +376,7 @@ namespace golang::runtime
                 unlock(& work.sweepWaiters.lock);
                 return;
             }
-            push(gocpp::recv(work.sweepWaiters.list), getg());
+            rec::push(gocpp::recv(work.sweepWaiters.list), getg());
             goparkunlock(& work.sweepWaiters.lock, waitReasonWaitForGCCycle, traceBlockUntilGCEnds, 1);
         }
     }
@@ -405,9 +416,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool test(struct gcTrigger t)
+    bool rec::test(struct gcTrigger t)
     {
-        if(! memstats.enablegc || Load(gocpp::recv(panicking)) != 0 || gcphase != _GCoff)
+        if(! memstats.enablegc || rec::Load(gocpp::recv(panicking)) != 0 || gcphase != _GCoff)
         {
             return false;
         }
@@ -421,11 +432,11 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    auto [trigger, gocpp_id_5] = trigger(gocpp::recv(gcController));
-                    return Load(gocpp::recv(gcController.heapLive)) >= trigger;
+                    auto [trigger, gocpp_id_5] = rec::trigger(gocpp::recv(gcController));
+                    return rec::Load(gocpp::recv(gcController.heapLive)) >= trigger;
                     break;
                 case 1:
-                    if(Load(gocpp::recv(gcController.gcPercent)) < 0)
+                    if(rec::Load(gocpp::recv(gcController.gcPercent)) < 0)
                     {
                         return false;
                     }
@@ -433,7 +444,7 @@ namespace golang::runtime
                     return lastgc != 0 && t.now - lastgc > forcegcperiod;
                     break;
                 case 2:
-                    return int32_t(t.n - Load(gocpp::recv(work.cycles))) > 0;
+                    return int32_t(t.n - rec::Load(gocpp::recv(work.cycles))) > 0;
                     break;
             }
         }
@@ -450,11 +461,11 @@ namespace golang::runtime
         }
         releasem(mp);
         mp = nullptr;
-        for(; test(gocpp::recv(trigger)) && sweepone() != ~ uintptr_t(0); )
+        for(; rec::test(gocpp::recv(trigger)) && sweepone() != ~ uintptr_t(0); )
         {
         }
         semacquire(& work.startSema);
-        if(! test(gocpp::recv(trigger)))
+        if(! rec::test(gocpp::recv(trigger)))
         {
             semrelease(& work.startSema);
             return;
@@ -473,14 +484,14 @@ namespace golang::runtime
         semacquire(& worldsema);
         work.userForced = trigger.kind == gcTriggerCycle;
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GCStart(gocpp::recv(trace));
+            rec::GCStart(gocpp::recv(trace));
             traceRelease(trace);
         }
         for(auto [gocpp_ignored, p] : allp)
         {
-            if(auto fg = Load(gocpp::recv(p->mcache->flushGen)); fg != mheap_.sweepgen)
+            if(auto fg = rec::Load(gocpp::recv(p->mcache->flushGen)); fg != mheap_.sweepgen)
             {
                 println("runtime: p", p->id, "flushGen", fg, "!= sweepgen", mheap_.sweepgen);
                 go_throw("p mcache not flushed");
@@ -493,7 +504,7 @@ namespace golang::runtime
         {
             work.stwprocs = ncpu;
         }
-        work.heap0 = Load(gocpp::recv(gcController.heapLive));
+        work.heap0 = rec::Load(gocpp::recv(gcController.heapLive));
         work.pauseNS = 0;
         work.mode = mode;
         auto now = nanotime();
@@ -508,9 +519,9 @@ namespace golang::runtime
             finishsweep_m();
         });
         clearpools();
-        Add(gocpp::recv(work.cycles), 1);
-        startCycle(gocpp::recv(gcController), now, int(gomaxprocs), trigger);
-        startGCTransition(gocpp::recv(gcCPULimiter), true, now);
+        rec::Add(gocpp::recv(work.cycles), 1);
+        rec::startCycle(gocpp::recv(gcController), now, int(gomaxprocs), trigger);
+        rec::startGCTransition(gocpp::recv(gcCPULimiter), true, now);
         if(mode != gcBackgroundMode)
         {
             schedEnableUser(false);
@@ -529,7 +540,7 @@ namespace golang::runtime
             auto sweepTermCpu = int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm);
             work.cpuStats.gcPauseTime += sweepTermCpu;
             work.cpuStats.gcTotalTime += sweepTermCpu;
-            finishGCTransition(gocpp::recv(gcCPULimiter), now);
+            rec::finishGCTransition(gocpp::recv(gcCPULimiter), now);
         });
         semrelease(& worldsema);
         releasem(mp);
@@ -555,7 +566,7 @@ namespace golang::runtime
         forEachP(waitReasonGCMarkTermination, [=](struct p* pp) mutable -> void
         {
             wbBufFlush1(pp);
-            dispose(gocpp::recv(pp->gcw));
+            rec::dispose(gocpp::recv(pp->gcw));
             if(pp->gcw.flushedWork)
             {
                 atomic::Xadd(& gcMarkDoneFlushed, 1);
@@ -581,7 +592,7 @@ namespace golang::runtime
             for(auto [gocpp_ignored, p] : allp)
             {
                 wbBufFlush1(p);
-                if(! empty(gocpp::recv(p->gcw)))
+                if(! rec::empty(gocpp::recv(p->gcw)))
                 {
                     restart = true;
                     break;
@@ -601,18 +612,18 @@ namespace golang::runtime
         }
         gcComputeStartingStackSize();
         atomic::Store(& gcBlackenEnabled, 0);
-        startGCTransition(gocpp::recv(gcCPULimiter), false, now);
+        rec::startGCTransition(gocpp::recv(gcCPULimiter), false, now);
         gcWakeAllAssists();
         semrelease(& work.markDoneSema);
         schedEnableUser(true);
-        endCycle(gocpp::recv(gcController), now, int(gomaxprocs), work.userForced);
+        rec::endCycle(gocpp::recv(gcController), now, int(gomaxprocs), work.userForced);
         gcMarkTermination(stw);
     }
 
     void gcMarkTermination(struct worldStop stw)
     {
         setGCPhase(_GCmarktermination);
-        work.heap1 = Load(gocpp::recv(gcController.heapLive));
+        work.heap1 = rec::Load(gocpp::recv(gcController.heapLive));
         auto startTime = nanotime();
         auto mp = acquirem();
         mp->preemptoff = "gcing";
@@ -631,10 +642,10 @@ namespace golang::runtime
             {
                 startCheckmarks();
                 gcResetMarkState();
-                auto gcw = & ptr(gocpp::recv(getg()->m->p))->gcw;
+                auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
                 gcDrain(gcw, 0);
-                wbBufFlush1(ptr(gocpp::recv(getg()->m->p)));
-                dispose(gocpp::recv(gcw));
+                wbBufFlush1(rec::ptr(gocpp::recv(getg()->m->p)));
+                rec::dispose(gocpp::recv(gcw));
                 endCheckmarks();
             }
             setGCPhase(_GCoff);
@@ -643,9 +654,9 @@ namespace golang::runtime
         mp->traceback = 0;
         casgstatus(curgp, _Gwaiting, _Grunning);
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GCDone(gocpp::recv(trace));
+            rec::GCDone(gocpp::recv(trace));
             traceRelease(trace);
         }
         mp->preemptoff = "";
@@ -653,7 +664,7 @@ namespace golang::runtime
         {
             go_throw("gc done but gcphase != _GCoff");
         }
-        memstats.lastHeapInUse = load(gocpp::recv(gcController.heapInUse));
+        memstats.lastHeapInUse = rec::load(gocpp::recv(gcController.heapInUse));
         systemstack(gcControllerCommit);
         auto now = nanotime();
         auto [sec, nsec, gocpp_id_7] = time_now();
@@ -668,11 +679,11 @@ namespace golang::runtime
         auto markTermCpu = int64_t(work.stwprocs) * (work.tEnd - work.tMarkTerm);
         work.cpuStats.gcPauseTime += markTermCpu;
         work.cpuStats.gcTotalTime += markTermCpu;
-        accumulate(gocpp::recv(work.cpuStats), now, true);
+        rec::accumulate(gocpp::recv(work.cpuStats), now, true);
         memstats.gc_cpu_fraction = double(work.cpuStats.gcTotalTime - work.cpuStats.gcIdleTime) / double(work.cpuStats.totalTime);
-        Store(gocpp::recv(scavenge.assistTime), 0);
-        Store(gocpp::recv(scavenge.backgroundTime), 0);
-        Store(gocpp::recv(sched.idleTime), 0);
+        rec::Store(gocpp::recv(scavenge.assistTime), 0);
+        rec::Store(gocpp::recv(scavenge.backgroundTime), 0);
+        rec::Store(gocpp::recv(sched.idleTime), 0);
         if(work.userForced)
         {
             memstats.numforcedgc++;
@@ -681,10 +692,10 @@ namespace golang::runtime
         memstats.numgc++;
         injectglist(& work.sweepWaiters.list);
         unlock(& work.sweepWaiters.lock);
-        nextGen(gocpp::recv(mheap_.pages.scav.index));
-        finishGCTransition(gocpp::recv(gcCPULimiter), now);
+        rec::nextGen(gocpp::recv(mheap_.pages.scav.index));
+        rec::finishGCTransition(gocpp::recv(gcCPULimiter), now);
         mProf_NextCycle();
-        auto sl = begin(gocpp::recv(sweep.active));
+        auto sl = rec::begin(gocpp::recv(sweep.active));
         if(! stwSwept && ! sl.valid)
         {
             go_throw("failed to set sweep barrier");
@@ -703,13 +714,13 @@ namespace golang::runtime
         systemstack(freeStackSpans);
         forEachP(waitReasonFlushProcCaches, [=](struct p* pp) mutable -> void
         {
-            prepareForSweep(gocpp::recv(pp->mcache));
+            rec::prepareForSweep(gocpp::recv(pp->mcache));
             if(pp->status == _Pidle)
             {
                 systemstack([=]() mutable -> void
                 {
                     lock(& mheap_.lock);
-                    flush(gocpp::recv(pp->pcache), & mheap_.pages);
+                    rec::flush(gocpp::recv(pp->pcache), & mheap_.pages);
                     unlock(& mheap_.lock);
                 });
             }
@@ -717,7 +728,7 @@ namespace golang::runtime
         });
         if(sl.valid)
         {
-            end(gocpp::recv(sweep.active), sl);
+            rec::end(gocpp::recv(sweep.active), sl);
         }
         if(debug.gctrace > 0)
         {
@@ -736,7 +747,7 @@ namespace golang::runtime
                 prev = ns;
             }
             print(" ms clock, ");
-            for(auto [i, ns] : gocpp::slice<int64_t> {int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm), Load(gocpp::recv(gcController.assistTime)), Load(gocpp::recv(gcController.dedicatedMarkTime)) + Load(gocpp::recv(gcController.fractionalMarkTime)), Load(gocpp::recv(gcController.idleMarkTime)), markTermCpu})
+            for(auto [i, ns] : gocpp::slice<int64_t> {int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm), rec::Load(gocpp::recv(gcController.assistTime)), rec::Load(gocpp::recv(gcController.dedicatedMarkTime)) + rec::Load(gocpp::recv(gcController.fractionalMarkTime)), rec::Load(gocpp::recv(gcController.idleMarkTime)), markTermCpu})
             {
                 if(i == 2 || i == 3)
                 {
@@ -749,7 +760,7 @@ namespace golang::runtime
                 }
                 print(string(fmtNSAsMS(sbuf.make_slice(0, ), uint64_t(ns))));
             }
-            print(" ms cpu, ", work.heap0 >> 20, "->", work.heap1 >> 20, "->", work.heap2 >> 20, " MB, ", gcController.lastHeapGoal >> 20, " MB goal, ", Load(gocpp::recv(gcController.lastStackScan)) >> 20, " MB stacks, ", Load(gocpp::recv(gcController.globalsScan)) >> 20, " MB globals, ", work.maxprocs, " P");
+            print(" ms cpu, ", work.heap0 >> 20, "->", work.heap1 >> 20, "->", work.heap2 >> 20, " MB, ", gcController.lastHeapGoal >> 20, " MB goal, ", rec::Load(gocpp::recv(gcController.lastStackScan)) >> 20, " MB stacks, ", rec::Load(gocpp::recv(gcController.globalsScan)) >> 20, " MB globals, ", work.maxprocs, " P");
             if(work.userForced)
             {
                 print(" (forced)");
@@ -763,13 +774,13 @@ namespace golang::runtime
         unlock(& userArenaState.lock);
         for(auto [gocpp_ignored, lc] : faultList)
         {
-            setUserArenaChunkToFault(gocpp::recv(lc.mspan));
+            rec::setUserArenaChunkToFault(gocpp::recv(lc.mspan));
         }
-        if(heapGoal(gocpp::recv(gcController)) > minHeapForMetadataHugePages)
+        if(rec::heapGoal(gocpp::recv(gcController)) > minHeapForMetadataHugePages)
         {
             systemstack([=]() mutable -> void
             {
-                enableMetadataHugePages(gocpp::recv(mheap_));
+                rec::enableMetadataHugePages(gocpp::recv(mheap_));
             });
         }
         semrelease(& worldsema);
@@ -840,23 +851,23 @@ namespace golang::runtime
         gp->m->preemptoff = "GC worker init";
         auto node = go_new(gcBgMarkWorkerNode);
         gp->m->preemptoff = "";
-        set(gocpp::recv(node->gp), gp);
-        set(gocpp::recv(node->m), acquirem());
+        rec::set(gocpp::recv(node->gp), gp);
+        rec::set(gocpp::recv(node->m), acquirem());
         notewakeup(& work.bgMarkReady);
         for(; ; )
         {
             gopark([=](struct g* g, unsafe::Pointer nodep) mutable -> bool
             {
                 auto node = (gcBgMarkWorkerNode*)(nodep);
-                if(auto mp = ptr(gocpp::recv(node->m)); mp != nullptr)
+                if(auto mp = rec::ptr(gocpp::recv(node->m)); mp != nullptr)
                 {
                     releasem(mp);
                 }
-                push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
+                rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
                 return true;
             }, unsafe::Pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
-            set(gocpp::recv(node->m), acquirem());
-            auto pp = ptr(gocpp::recv(gp->m->p));
+            rec::set(gocpp::recv(node->m), acquirem());
+            auto pp = rec::ptr(gocpp::recv(gp->m->p));
             if(gcBlackenEnabled == 0)
             {
                 println("worker mode", pp->gcMarkWorkerMode);
@@ -871,7 +882,7 @@ namespace golang::runtime
             bool trackLimiterEvent = {};
             if(pp->gcMarkWorkerMode == gcMarkWorkerIdleMode)
             {
-                trackLimiterEvent = start(gocpp::recv(pp->limiterEvent), limiterEventIdleMarkWork, startTime);
+                trackLimiterEvent = rec::start(gocpp::recv(pp->limiterEvent), limiterEventIdleMarkWork, startTime);
             }
             auto decnwait = atomic::Xadd(& work.nwait, - 1);
             if(decnwait == work.nproc)
@@ -919,10 +930,10 @@ namespace golang::runtime
             });
             auto now = nanotime();
             auto duration = now - startTime;
-            markWorkerStop(gocpp::recv(gcController), pp->gcMarkWorkerMode, duration);
+            rec::markWorkerStop(gocpp::recv(gcController), pp->gcMarkWorkerMode, duration);
             if(trackLimiterEvent)
             {
-                stop(gocpp::recv(pp->limiterEvent), limiterEventIdleMarkWork, now);
+                rec::stop(gocpp::recv(pp->limiterEvent), limiterEventIdleMarkWork, now);
             }
             if(pp->gcMarkWorkerMode == gcMarkWorkerFractionalMode)
             {
@@ -937,8 +948,8 @@ namespace golang::runtime
             pp->gcMarkWorkerMode = gcMarkWorkerNotWorker;
             if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
             {
-                releasem(ptr(gocpp::recv(node->m)));
-                set(gocpp::recv(node->m), nullptr);
+                releasem(rec::ptr(gocpp::recv(node->m)));
+                rec::set(gocpp::recv(node->m), nullptr);
                 gcMarkDone();
             }
         }
@@ -946,11 +957,11 @@ namespace golang::runtime
 
     bool gcMarkWorkAvailable(struct p* p)
     {
-        if(p != nullptr && ! empty(gocpp::recv(p->gcw)))
+        if(p != nullptr && ! rec::empty(gocpp::recv(p->gcw)))
         {
             return true;
         }
-        if(! empty(gocpp::recv(work.full)))
+        if(! rec::empty(gocpp::recv(work.full)))
         {
             return true;
         }
@@ -990,10 +1001,10 @@ namespace golang::runtime
             }
             else
             {
-                reset(gocpp::recv(p->wbBuf));
+                rec::reset(gocpp::recv(p->wbBuf));
             }
             auto gcw = & p->gcw;
-            if(! empty(gocpp::recv(gcw)))
+            if(! rec::empty(gocpp::recv(gcw)))
             {
                 printlock();
                 print("runtime: P ", p->id, " flushedWork ", gcw->flushedWork);
@@ -1016,7 +1027,7 @@ namespace golang::runtime
                 print("\n");
                 go_throw("P has cached GC work at end of mark termination");
             }
-            dispose(gocpp::recv(gcw));
+            rec::dispose(gocpp::recv(gcw));
         }
         for(auto [gocpp_ignored, p] : allp)
         {
@@ -1027,10 +1038,10 @@ namespace golang::runtime
             }
             c->scanAlloc = 0;
         }
-        resetLive(gocpp::recv(gcController), work.bytesMarked);
+        rec::resetLive(gocpp::recv(gcController), work.bytesMarked);
     }
 
-    bool gcSweep(gcMode mode)
+    bool gcSweep(runtime::gcMode mode)
     {
         assertWorldStopped();
         if(gcphase != _GCoff)
@@ -1039,13 +1050,13 @@ namespace golang::runtime
         }
         lock(& mheap_.lock);
         mheap_.sweepgen += 2;
-        reset(gocpp::recv(sweep.active));
-        Store(gocpp::recv(mheap_.pagesSwept), 0);
+        rec::reset(gocpp::recv(sweep.active));
+        rec::Store(gocpp::recv(mheap_.pagesSwept), 0);
         mheap_.sweepArenas = mheap_.allArenas;
-        Store(gocpp::recv(mheap_.reclaimIndex), 0);
-        Store(gocpp::recv(mheap_.reclaimCredit), 0);
+        rec::Store(gocpp::recv(mheap_.reclaimIndex), 0);
+        rec::Store(gocpp::recv(mheap_.reclaimCredit), 0);
         unlock(& mheap_.lock);
-        clear(gocpp::recv(sweep.centralIndex));
+        rec::clear(gocpp::recv(sweep.centralIndex));
         if(! concurrentSweep || mode == gcForceBlockMode)
         {
             lock(& mheap_.lock);
@@ -1053,7 +1064,7 @@ namespace golang::runtime
             unlock(& mheap_.lock);
             for(auto [gocpp_ignored, pp] : allp)
             {
-                prepareForSweep(gocpp::recv(pp->mcache));
+                rec::prepareForSweep(gocpp::recv(pp->mcache));
             }
             for(; sweepone() != ~ uintptr_t(0); )
             {
@@ -1088,14 +1099,14 @@ namespace golang::runtime
         unlock(& mheap_.lock);
         for(auto [gocpp_ignored, ai] : arenas)
         {
-            auto ha = mheap_.arenas[l1(gocpp::recv(ai))][l2(gocpp::recv(ai))];
+            auto ha = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             for(auto [i, gocpp_ignored] : ha->pageMarks)
             {
                 ha->pageMarks[i] = 0;
             }
         }
         work.bytesMarked = 0;
-        work.initialHeapLive = Load(gocpp::recv(gcController.heapLive));
+        work.initialHeapLive = rec::Load(gocpp::recv(gcController.heapLive));
     }
 
     std::function<void ()> poolcleanup;
@@ -1202,7 +1213,7 @@ namespace golang::runtime
         {
             uint64_t mask;
             lock(& mheap_.speciallock);
-            auto s = (specialReachable*)(alloc(gocpp::recv(mheap_.specialReachableAlloc)));
+            auto s = (specialReachable*)(rec::alloc(gocpp::recv(mheap_.specialReachableAlloc)));
             unlock(& mheap_.speciallock);
             s->special.kind = _KindSpecialReachable;
             if(! addspecial(p, & s->special))
@@ -1231,7 +1242,7 @@ namespace golang::runtime
                 mask |= 1 << i;
             }
             lock(& mheap_.speciallock);
-            free(gocpp::recv(mheap_.specialReachableAlloc), unsafe::Pointer(s));
+            rec::free(gocpp::recv(mheap_.specialReachableAlloc), unsafe::Pointer(s));
             unlock(& mheap_.speciallock);
         }
         return mask;

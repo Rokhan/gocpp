@@ -16,7 +16,13 @@
 
 namespace golang::time
 {
-    void Sleep(Duration d)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace time::rec;
+    }
+
+    void Sleep(time::Duration d)
     /* convertBlockStmt, nil block */;
 
     
@@ -69,7 +75,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    int64_t when(Duration d)
+    int64_t when(time::Duration d)
     {
         if(d <= 0)
         {
@@ -127,7 +133,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    bool Stop(struct Timer* t)
+    bool rec::Stop(struct Timer* t)
     {
         if(t->r.f == nullptr)
         {
@@ -136,7 +142,7 @@ namespace golang::time
         return stopTimer(& t->r);
     }
 
-    struct Timer* NewTimer(Duration d)
+    struct Timer* NewTimer(time::Duration d)
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
         auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.C = c; x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = sendTime; x.arg = c; }); });
@@ -144,7 +150,7 @@ namespace golang::time
         return t;
     }
 
-    bool Reset(struct Timer* t, Duration d)
+    bool rec::Reset(struct Timer* t, time::Duration d)
     {
         if(t->r.f == nullptr)
         {
@@ -171,12 +177,12 @@ namespace golang::time
         std::this_thread::yield();
     }
 
-    gocpp::channel<Time> After(Duration d)
+    gocpp::channel<Time> After(time::Duration d)
     {
         return NewTimer(d)->C;
     }
 
-    struct Timer* AfterFunc(Duration d, std::function<void ()> f)
+    struct Timer* AfterFunc(time::Duration d, std::function<void ()> f)
     {
         auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = goFunc; x.arg = f; }); });
         startTimer(& t->r);

@@ -56,8 +56,11 @@ namespace golang::main
         std::shared_ptr<IIII> value;
     };
 
-    void M(const gocpp::PtrRecv<III, false>& self);
-    void M(const gocpp::ObjRecv<III>& self);
+    namespace rec
+    {
+        void M(const gocpp::PtrRecv<III, false>& self);
+        void M(const gocpp::ObjRecv<III>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct III& value);
     struct T
@@ -75,7 +78,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct T& value);
-    void M(T*);
     struct Vertex
     {
         double Lat;
@@ -94,5 +96,10 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
+
+    namespace rec
+    {
+        void M(T*);
+    }
 }
 

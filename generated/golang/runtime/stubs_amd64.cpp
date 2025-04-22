@@ -15,6 +15,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     void gcWriteBarrierCX()
     /* convertBlockStmt, nil block */;
 

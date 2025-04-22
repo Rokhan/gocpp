@@ -37,6 +37,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     coro::operator T()
@@ -84,7 +95,7 @@ namespace golang::runtime
         gp->coroarg = c;
         gp->waitreason = waitReasonCoroutine;
         casgstatus(gp, _Grunnable, _Gwaiting);
-        set(gocpp::recv(c->gp), gp);
+        rec::set(gocpp::recv(c->gp), gp);
         return c;
     }
 
@@ -93,7 +104,7 @@ namespace golang::runtime
         auto gp = getg();
         auto c = gp->coroarg;
         gp->coroarg = nullptr;
-        f(gocpp::recv(c), c);
+        rec::f(gocpp::recv(c), c);
         coroexit(c);
     }
 
@@ -127,7 +138,7 @@ namespace golang::runtime
         else
         {
             gp->waitreason = waitReasonCoroutine;
-            if(! CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gwaiting))
+            if(! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gwaiting))
             {
                 casgstatus(gp, _Grunning, _Gwaiting);
             }
@@ -137,21 +148,21 @@ namespace golang::runtime
         for(; ; )
         {
             auto next = c->gp;
-            if(ptr(gocpp::recv(next)) == nullptr)
+            if(rec::ptr(gocpp::recv(next)) == nullptr)
             {
                 go_throw("coroswitch on exited coro");
             }
-            guintptr self = {};
-            set(gocpp::recv(self), gp);
-            if(cas(gocpp::recv(c->gp), next, self))
+            runtime::guintptr self = {};
+            rec::set(gocpp::recv(self), gp);
+            if(rec::cas(gocpp::recv(c->gp), next, self))
             {
-                gnext = ptr(gocpp::recv(next));
+                gnext = rec::ptr(gocpp::recv(next));
                 break;
             }
         }
         setGNoWB(& mp->curg, gnext);
         setMNoWB(& gnext->m, mp);
-        if(! CompareAndSwap(gocpp::recv(gnext->atomicstatus), _Gwaiting, _Grunning))
+        if(! rec::CompareAndSwap(gocpp::recv(gnext->atomicstatus), _Gwaiting, _Grunning))
         {
             casgstatus(gnext, _Gwaiting, _Grunnable);
             casgstatus(gnext, _Grunnable, _Grunning);

@@ -28,6 +28,15 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace goarch::rec;
+        using namespace runtime::rec;
+        using namespace unsafe::rec;
+    }
+
     uintptr_t memhash0(unsafe::Pointer p, uintptr_t h)
     {
         return h;
@@ -143,7 +152,7 @@ namespace golang::runtime
         auto t = tab->_type;
         if(t->Equal == nullptr)
         {
-            gocpp::panic(errorString("hash of unhashable type " + string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("hash of unhashable type " + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -165,7 +174,7 @@ namespace golang::runtime
         }
         if(t->Equal == nullptr)
         {
-            gocpp::panic(errorString("hash of unhashable type " + string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("hash of unhashable type " + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -250,7 +259,7 @@ namespace golang::runtime
                     auto s = (structtype*)(unsafe::Pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
-                        if(IsBlank(gocpp::recv(f.Name)))
+                        if(rec::IsBlank(gocpp::recv(f.Name)))
                         {
                             continue;
                         }
@@ -259,7 +268,7 @@ namespace golang::runtime
                     return h;
                     break;
                 default:
-                    gocpp::panic(errorString("hash of unhashable type " + string(gocpp::recv(toRType(t)))));
+                    gocpp::panic(errorString("hash of unhashable type " + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
         }
@@ -267,7 +276,7 @@ namespace golang::runtime
 
     struct gocpp::error mapKeyError(struct maptype* t, unsafe::Pointer p)
     {
-        if(! HashMightPanic(gocpp::recv(t)))
+        if(! rec::HashMightPanic(gocpp::recv(t)))
         {
             return nullptr;
         }
@@ -327,7 +336,7 @@ namespace golang::runtime
                     }
                     if(t->Equal == nullptr)
                     {
-                        return errorString("hash of unhashable type " + string(gocpp::recv(toRType(t))));
+                        return errorString("hash of unhashable type " + rec::string(gocpp::recv(toRType(t))));
                     }
                     if(isDirectIface(t))
                     {
@@ -353,7 +362,7 @@ namespace golang::runtime
                     auto s = (structtype*)(unsafe::Pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
-                        if(IsBlank(gocpp::recv(f.Name)))
+                        if(rec::IsBlank(gocpp::recv(f.Name)))
                         {
                             continue;
                         }
@@ -365,7 +374,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 default:
-                    return errorString("hash of unhashable type " + string(gocpp::recv(toRType(t))));
+                    return errorString("hash of unhashable type " + rec::string(gocpp::recv(toRType(t))));
                     break;
             }
         }
@@ -454,7 +463,7 @@ namespace golang::runtime
         auto eq = t->Equal;
         if(eq == nullptr)
         {
-            gocpp::panic(errorString("comparing uncomparable type " + string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("comparing uncomparable type " + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -473,7 +482,7 @@ namespace golang::runtime
         auto eq = t->Equal;
         if(eq == nullptr)
         {
-            gocpp::panic(errorString("comparing uncomparable type " + string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("comparing uncomparable type " + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -535,17 +544,20 @@ namespace golang::runtime
     template<typename T, typename StoreT>
     void gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vF()
     {
-        return F(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::F(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    void F(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vF();
-    }
+        void F(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        {
+            return self.ptr->value->vF();
+        }
 
-    void F(const gocpp::ObjRecv<gocpp_id_0>& self)
-    {
-        return self.obj.value->vF();
+        void F(const gocpp::ObjRecv<gocpp_id_0>& self)
+        {
+            return self.obj.value->vF();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)

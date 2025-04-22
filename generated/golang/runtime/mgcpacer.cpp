@@ -68,6 +68,17 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goexperiment::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     gcControllerState gcController;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -212,27 +223,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit)
+    void rec::init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit)
     {
         c->heapMinimum = defaultHeapMinimum;
         c->triggered = ~ uint64_t(0);
-        setGCPercent(gocpp::recv(c), gcPercent);
-        setMemoryLimit(gocpp::recv(c), memoryLimit);
-        commit(gocpp::recv(c), true);
+        rec::setGCPercent(gocpp::recv(c), gcPercent);
+        rec::setMemoryLimit(gocpp::recv(c), memoryLimit);
+        rec::commit(gocpp::recv(c), true);
     }
 
-    void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
+    void rec::startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
     {
-        Store(gocpp::recv(c->heapScanWork), 0);
-        Store(gocpp::recv(c->stackScanWork), 0);
-        Store(gocpp::recv(c->globalsScanWork), 0);
-        Store(gocpp::recv(c->bgScanCredit), 0);
-        Store(gocpp::recv(c->assistTime), 0);
-        Store(gocpp::recv(c->dedicatedMarkTime), 0);
-        Store(gocpp::recv(c->fractionalMarkTime), 0);
-        Store(gocpp::recv(c->idleMarkTime), 0);
+        rec::Store(gocpp::recv(c->heapScanWork), 0);
+        rec::Store(gocpp::recv(c->stackScanWork), 0);
+        rec::Store(gocpp::recv(c->globalsScanWork), 0);
+        rec::Store(gocpp::recv(c->bgScanCredit), 0);
+        rec::Store(gocpp::recv(c->assistTime), 0);
+        rec::Store(gocpp::recv(c->dedicatedMarkTime), 0);
+        rec::Store(gocpp::recv(c->fractionalMarkTime), 0);
+        rec::Store(gocpp::recv(c->idleMarkTime), 0);
         c->markStartTime = markStartTime;
-        c->triggered = Load(gocpp::recv(c->heapLive));
+        c->triggered = rec::Load(gocpp::recv(c->heapLive));
         auto totalUtilizationGoal = double(procs) * gcBackgroundUtilization;
         auto dedicatedMarkWorkersNeeded = int64_t(totalUtilizationGoal + 0.5);
         auto utilError = double(dedicatedMarkWorkersNeeded) / totalUtilizationGoal - 1;
@@ -263,41 +274,41 @@ namespace golang::runtime
         {
             if(dedicatedMarkWorkersNeeded > 0)
             {
-                setMaxIdleMarkWorkers(gocpp::recv(c), 0);
+                rec::setMaxIdleMarkWorkers(gocpp::recv(c), 0);
             }
             else
             {
-                setMaxIdleMarkWorkers(gocpp::recv(c), 1);
+                rec::setMaxIdleMarkWorkers(gocpp::recv(c), 1);
             }
         }
         else
         {
-            setMaxIdleMarkWorkers(gocpp::recv(c), int32_t(procs) - int32_t(dedicatedMarkWorkersNeeded));
+            rec::setMaxIdleMarkWorkers(gocpp::recv(c), int32_t(procs) - int32_t(dedicatedMarkWorkersNeeded));
         }
-        Store(gocpp::recv(c->dedicatedMarkWorkersNeeded), dedicatedMarkWorkersNeeded);
-        revise(gocpp::recv(c));
+        rec::Store(gocpp::recv(c->dedicatedMarkWorkersNeeded), dedicatedMarkWorkersNeeded);
+        rec::revise(gocpp::recv(c));
         if(debug.gcpacertrace > 0)
         {
-            auto heapGoal = heapGoal(gocpp::recv(c));
-            auto assistRatio = Load(gocpp::recv(c->assistWorkPerByte));
-            print("pacer: assist ratio=", assistRatio, " (scan ", Load(gocpp::recv(gcController.heapScan)) >> 20, " MB in ", work.initialHeapLive >> 20, "->", heapGoal >> 20, " MB)", " workers=", dedicatedMarkWorkersNeeded, "+", c->fractionalUtilizationGoal, "\n");
+            auto heapGoal = rec::heapGoal(gocpp::recv(c));
+            auto assistRatio = rec::Load(gocpp::recv(c->assistWorkPerByte));
+            print("pacer: assist ratio=", assistRatio, " (scan ", rec::Load(gocpp::recv(gcController.heapScan)) >> 20, " MB in ", work.initialHeapLive >> 20, "->", heapGoal >> 20, " MB)", " workers=", dedicatedMarkWorkersNeeded, "+", c->fractionalUtilizationGoal, "\n");
         }
     }
 
-    void revise(struct gcControllerState* c)
+    void rec::revise(struct gcControllerState* c)
     {
-        auto gcPercent = Load(gocpp::recv(c->gcPercent));
+        auto gcPercent = rec::Load(gocpp::recv(c->gcPercent));
         if(gcPercent < 0)
         {
             gcPercent = 100000;
         }
-        auto live = Load(gocpp::recv(c->heapLive));
-        auto scan = Load(gocpp::recv(c->heapScan));
-        auto work = Load(gocpp::recv(c->heapScanWork)) + Load(gocpp::recv(c->stackScanWork)) + Load(gocpp::recv(c->globalsScanWork));
-        auto heapGoal = int64_t(heapGoal(gocpp::recv(c)));
-        auto scanWorkExpected = int64_t(c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)));
-        auto maxStackScan = Load(gocpp::recv(c->maxStackScan));
-        auto maxScanWork = int64_t(scan + maxStackScan + Load(gocpp::recv(c->globalsScan)));
+        auto live = rec::Load(gocpp::recv(c->heapLive));
+        auto scan = rec::Load(gocpp::recv(c->heapScan));
+        auto work = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
+        auto heapGoal = int64_t(rec::heapGoal(gocpp::recv(c)));
+        auto scanWorkExpected = int64_t(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)));
+        auto maxStackScan = rec::Load(gocpp::recv(c->maxStackScan));
+        auto maxScanWork = int64_t(scan + maxStackScan + rec::Load(gocpp::recv(c->globalsScan)));
         if(work > scanWorkExpected)
         {
             auto extHeapGoal = int64_t(double(heapGoal - int64_t(c->triggered)) / double(scanWorkExpected) * double(maxScanWork)) + int64_t(c->triggered);
@@ -327,30 +338,30 @@ namespace golang::runtime
         }
         auto assistWorkPerByte = double(scanWorkRemaining) / double(heapRemaining);
         auto assistBytesPerWork = double(heapRemaining) / double(scanWorkRemaining);
-        Store(gocpp::recv(c->assistWorkPerByte), assistWorkPerByte);
-        Store(gocpp::recv(c->assistBytesPerWork), assistBytesPerWork);
+        rec::Store(gocpp::recv(c->assistWorkPerByte), assistWorkPerByte);
+        rec::Store(gocpp::recv(c->assistBytesPerWork), assistBytesPerWork);
     }
 
-    void endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced)
+    void rec::endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced)
     {
-        gcController.lastHeapGoal = heapGoal(gocpp::recv(c));
+        gcController.lastHeapGoal = rec::heapGoal(gocpp::recv(c));
         auto assistDuration = now - c->markStartTime;
         auto utilization = gcBackgroundUtilization;
         if(assistDuration > 0)
         {
-            utilization += double(Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64_t(procs));
+            utilization += double(rec::Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64_t(procs));
         }
-        if(Load(gocpp::recv(c->heapLive)) <= c->triggered)
+        if(rec::Load(gocpp::recv(c->heapLive)) <= c->triggered)
         {
             return;
         }
         auto idleUtilization = 0.0;
         if(assistDuration > 0)
         {
-            idleUtilization = double(Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64_t(procs));
+            idleUtilization = double(rec::Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64_t(procs));
         }
-        auto scanWork = Load(gocpp::recv(c->heapScanWork)) + Load(gocpp::recv(c->stackScanWork)) + Load(gocpp::recv(c->globalsScanWork));
-        auto currentConsMark = (double(Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
+        auto scanWork = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
+        auto currentConsMark = (double(rec::Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
         auto oldConsMark = c->consMark;
         c->consMark = currentConsMark;
         for(auto [i, gocpp_ignored] : c->lastConsMark)
@@ -367,17 +378,17 @@ namespace golang::runtime
             printlock();
             auto goal = gcGoalUtilization * 100;
             print("pacer: ", int(utilization * 100), "% CPU (", int(goal), " exp.) for ");
-            print(Load(gocpp::recv(c->heapScanWork)), "+", Load(gocpp::recv(c->stackScanWork)), "+", Load(gocpp::recv(c->globalsScanWork)), " B work (", c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)), " B exp.) ");
-            auto live = Load(gocpp::recv(c->heapLive));
+            print(rec::Load(gocpp::recv(c->heapScanWork)), "+", rec::Load(gocpp::recv(c->stackScanWork)), "+", rec::Load(gocpp::recv(c->globalsScanWork)), " B work (", c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)), " B exp.) ");
+            auto live = rec::Load(gocpp::recv(c->heapLive));
             print("in ", c->triggered, " B -> ", live, " B (∆goal ", int64_t(live) - int64_t(c->lastHeapGoal), ", cons/mark ", oldConsMark, ")");
             println();
             printunlock();
         }
     }
 
-    void enlistWorker(struct gcControllerState* c)
+    void rec::enlistWorker(struct gcControllerState* c)
     {
-        if(Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
+        if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
         {
             return;
         }
@@ -390,7 +401,7 @@ namespace golang::runtime
         {
             return;
         }
-        auto myID = ptr(gocpp::recv(gp->m->p))->id;
+        auto myID = rec::ptr(gocpp::recv(gp->m->p))->id;
         for(auto tries = 0; tries < 5; tries++)
         {
             auto id = int32_t(cheaprandn(uint32_t(gomaxprocs - 1)));
@@ -410,7 +421,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now)
+    std::tuple<struct g*, int64_t> rec::findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
         {
@@ -420,15 +431,15 @@ namespace golang::runtime
         {
             now = nanotime();
         }
-        if(needUpdate(gocpp::recv(gcCPULimiter), now))
+        if(rec::needUpdate(gocpp::recv(gcCPULimiter), now))
         {
-            update(gocpp::recv(gcCPULimiter), now);
+            rec::update(gocpp::recv(gcCPULimiter), now);
         }
         if(! gcMarkWorkAvailable(pp))
         {
             return {nullptr, now};
         }
-        auto node = (gcBgMarkWorkerNode*)(pop(gocpp::recv(gcBgMarkWorkerPool)));
+        auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
         {
             return {nullptr, now};
@@ -437,12 +448,12 @@ namespace golang::runtime
         {
             for(; ; )
             {
-                auto v = Load(gocpp::recv(val));
+                auto v = rec::Load(gocpp::recv(val));
                 if(v <= 0)
                 {
                     return false;
                 }
-                if(CompareAndSwap(gocpp::recv(val), v, v - 1))
+                if(rec::CompareAndSwap(gocpp::recv(val), v, v - 1))
                 {
                     return true;
                 }
@@ -455,7 +466,7 @@ namespace golang::runtime
         else
         if(c->fractionalUtilizationGoal == 0)
         {
-            push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
+            rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
             return {nullptr, now};
         }
         else
@@ -463,39 +474,39 @@ namespace golang::runtime
             auto delta = now - c->markStartTime;
             if(delta > 0 && double(pp->gcFractionalMarkTime) / double(delta) > c->fractionalUtilizationGoal)
             {
-                push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
+                rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
                 return {nullptr, now};
             }
             pp->gcMarkWorkerMode = gcMarkWorkerFractionalMode;
         }
-        auto gp = ptr(gocpp::recv(node->gp));
+        auto gp = rec::ptr(gocpp::recv(node->gp));
         auto trace = traceAcquire();
         casgstatus(gp, _Gwaiting, _Grunnable);
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            GoUnpark(gocpp::recv(trace), gp, 0);
+            rec::GoUnpark(gocpp::recv(trace), gp, 0);
             traceRelease(trace);
         }
         return {gp, now};
     }
 
-    void resetLive(struct gcControllerState* c, uint64_t bytesMarked)
+    void rec::resetLive(struct gcControllerState* c, uint64_t bytesMarked)
     {
         c->heapMarked = bytesMarked;
-        Store(gocpp::recv(c->heapLive), bytesMarked);
-        Store(gocpp::recv(c->heapScan), uint64_t(Load(gocpp::recv(c->heapScanWork))));
-        c->lastHeapScan = uint64_t(Load(gocpp::recv(c->heapScanWork)));
-        Store(gocpp::recv(c->lastStackScan), uint64_t(Load(gocpp::recv(c->stackScanWork))));
+        rec::Store(gocpp::recv(c->heapLive), bytesMarked);
+        rec::Store(gocpp::recv(c->heapScan), uint64_t(rec::Load(gocpp::recv(c->heapScanWork))));
+        c->lastHeapScan = uint64_t(rec::Load(gocpp::recv(c->heapScanWork)));
+        rec::Store(gocpp::recv(c->lastStackScan), uint64_t(rec::Load(gocpp::recv(c->stackScanWork))));
         c->triggered = ~ uint64_t(0);
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            HeapAlloc(gocpp::recv(trace), bytesMarked);
+            rec::HeapAlloc(gocpp::recv(trace), bytesMarked);
             traceRelease(trace);
         }
     }
 
-    void markWorkerStop(struct gcControllerState* c, gcMarkWorkerMode mode, int64_t duration)
+    void rec::markWorkerStop(struct gcControllerState* c, runtime::gcMarkWorkerMode mode, int64_t duration)
     {
         //Go switch emulation
         {
@@ -507,15 +518,15 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    Add(gocpp::recv(c->dedicatedMarkTime), duration);
-                    Add(gocpp::recv(c->dedicatedMarkWorkersNeeded), 1);
+                    rec::Add(gocpp::recv(c->dedicatedMarkTime), duration);
+                    rec::Add(gocpp::recv(c->dedicatedMarkWorkersNeeded), 1);
                     break;
                 case 1:
-                    Add(gocpp::recv(c->fractionalMarkTime), duration);
+                    rec::Add(gocpp::recv(c->fractionalMarkTime), duration);
                     break;
                 case 2:
-                    Add(gocpp::recv(c->idleMarkTime), duration);
-                    removeIdleMarkWorker(gocpp::recv(c));
+                    rec::Add(gocpp::recv(c->idleMarkTime), duration);
+                    rec::removeIdleMarkWorker(gocpp::recv(c));
                     break;
                 default:
                     go_throw("markWorkerStop: unknown mark worker mode");
@@ -524,15 +535,15 @@ namespace golang::runtime
         }
     }
 
-    void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan)
+    void rec::update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan)
     {
         if(dHeapLive != 0)
         {
             auto trace = traceAcquire();
-            auto live = Add(gocpp::recv(gcController.heapLive), dHeapLive);
-            if(ok(gocpp::recv(trace)))
+            auto live = rec::Add(gocpp::recv(gcController.heapLive), dHeapLive);
+            if(rec::ok(gocpp::recv(trace)))
             {
-                HeapAlloc(gocpp::recv(trace), live);
+                rec::HeapAlloc(gocpp::recv(trace), live);
                 traceRelease(trace);
             }
         }
@@ -540,47 +551,47 @@ namespace golang::runtime
         {
             if(dHeapScan != 0)
             {
-                Add(gocpp::recv(gcController.heapScan), dHeapScan);
+                rec::Add(gocpp::recv(gcController.heapScan), dHeapScan);
             }
         }
         else
         {
-            revise(gocpp::recv(c));
+            rec::revise(gocpp::recv(c));
         }
     }
 
-    void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount)
+    void rec::addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount)
     {
         if(pp == nullptr)
         {
-            Add(gocpp::recv(c->maxStackScan), amount);
+            rec::Add(gocpp::recv(c->maxStackScan), amount);
             return;
         }
         pp->maxStackScanDelta += amount;
         if(pp->maxStackScanDelta >= maxStackScanSlack || pp->maxStackScanDelta <= - maxStackScanSlack)
         {
-            Add(gocpp::recv(c->maxStackScan), pp->maxStackScanDelta);
+            rec::Add(gocpp::recv(c->maxStackScan), pp->maxStackScanDelta);
             pp->maxStackScanDelta = 0;
         }
     }
 
-    void addGlobals(struct gcControllerState* c, int64_t amount)
+    void rec::addGlobals(struct gcControllerState* c, int64_t amount)
     {
-        Add(gocpp::recv(c->globalsScan), amount);
+        rec::Add(gocpp::recv(c->globalsScan), amount);
     }
 
-    uint64_t heapGoal(struct gcControllerState* c)
+    uint64_t rec::heapGoal(struct gcControllerState* c)
     {
-        auto [goal, gocpp_id_1] = heapGoalInternal(gocpp::recv(c));
+        auto [goal, gocpp_id_1] = rec::heapGoalInternal(gocpp::recv(c));
         return goal;
     }
 
-    std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c)
+    std::tuple<uint64_t, uint64_t> rec::heapGoalInternal(struct gcControllerState* c)
     {
         uint64_t goal;
         uint64_t minTrigger;
-        goal = Load(gocpp::recv(c->gcPercentHeapGoal));
-        if(auto newGoal = memoryLimitHeapGoal(gocpp::recv(c)); newGoal < goal)
+        goal = rec::Load(gocpp::recv(c->gcPercentHeapGoal));
+        if(auto newGoal = rec::memoryLimitHeapGoal(gocpp::recv(c)); newGoal < goal)
         {
             uint64_t goal;
             uint64_t minTrigger;
@@ -590,7 +601,7 @@ namespace golang::runtime
         {
             uint64_t goal;
             uint64_t minTrigger;
-            auto sweepDistTrigger = Load(gocpp::recv(c->sweepDistMinTrigger));
+            auto sweepDistTrigger = rec::Load(gocpp::recv(c->sweepDistMinTrigger));
             if(sweepDistTrigger > goal)
             {
                 uint64_t goal;
@@ -609,22 +620,22 @@ namespace golang::runtime
         return {goal, minTrigger};
     }
 
-    uint64_t memoryLimitHeapGoal(struct gcControllerState* c)
+    uint64_t rec::memoryLimitHeapGoal(struct gcControllerState* c)
     {
         uint64_t heapFree = {};
         uint64_t heapAlloc = {};
         uint64_t mappedReady = {};
         for(; ; )
         {
-            heapFree = load(gocpp::recv(c->heapFree));
-            heapAlloc = Load(gocpp::recv(c->totalAlloc)) - Load(gocpp::recv(c->totalFree));
-            mappedReady = Load(gocpp::recv(c->mappedReady));
+            heapFree = rec::load(gocpp::recv(c->heapFree));
+            heapAlloc = rec::Load(gocpp::recv(c->totalAlloc)) - rec::Load(gocpp::recv(c->totalFree));
+            mappedReady = rec::Load(gocpp::recv(c->mappedReady));
             if(heapFree + heapAlloc <= mappedReady)
             {
                 break;
             }
         }
-        auto memoryLimit = uint64_t(Load(gocpp::recv(c->memoryLimit)));
+        auto memoryLimit = uint64_t(rec::Load(gocpp::recv(c->memoryLimit)));
         auto nonHeapMemory = mappedReady - heapFree - heapAlloc;
         uint64_t overage = {};
         if(mappedReady > memoryLimit)
@@ -656,9 +667,9 @@ namespace golang::runtime
         return goal;
     }
 
-    std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c)
+    std::tuple<uint64_t, uint64_t> rec::trigger(struct gcControllerState* c)
     {
-        auto [goal, minTrigger] = heapGoalInternal(gocpp::recv(c));
+        auto [goal, minTrigger] = rec::heapGoalInternal(gocpp::recv(c));
         if(c->heapMarked >= goal)
         {
             return {goal, goal};
@@ -679,7 +690,7 @@ namespace golang::runtime
         }
         maxTrigger = max(maxTrigger, minTrigger);
         uint64_t trigger = {};
-        auto runway = Load(gocpp::recv(c->runway));
+        auto runway = rec::Load(gocpp::recv(c->runway));
         if(runway > goal)
         {
             trigger = minTrigger;
@@ -699,7 +710,7 @@ namespace golang::runtime
         return {trigger, goal};
     }
 
-    void commit(struct gcControllerState* c, bool isSweepDone)
+    void rec::commit(struct gcControllerState* c, bool isSweepDone)
     {
         if(! c->test)
         {
@@ -707,38 +718,38 @@ namespace golang::runtime
         }
         if(isSweepDone)
         {
-            Store(gocpp::recv(c->sweepDistMinTrigger), 0);
+            rec::Store(gocpp::recv(c->sweepDistMinTrigger), 0);
         }
         else
         {
-            Store(gocpp::recv(c->sweepDistMinTrigger), Load(gocpp::recv(c->heapLive)) + sweepMinHeapDistance);
+            rec::Store(gocpp::recv(c->sweepDistMinTrigger), rec::Load(gocpp::recv(c->heapLive)) + sweepMinHeapDistance);
         }
         auto gcPercentHeapGoal = ~ uint64_t(0);
-        if(auto gcPercent = Load(gocpp::recv(c->gcPercent)); gcPercent >= 0)
+        if(auto gcPercent = rec::Load(gocpp::recv(c->gcPercent)); gcPercent >= 0)
         {
-            gcPercentHeapGoal = c->heapMarked + (c->heapMarked + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan))) * uint64_t(gcPercent) / 100;
+            gcPercentHeapGoal = c->heapMarked + (c->heapMarked + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan))) * uint64_t(gcPercent) / 100;
         }
         if(gcPercentHeapGoal < c->heapMinimum)
         {
             gcPercentHeapGoal = c->heapMinimum;
         }
-        Store(gocpp::recv(c->gcPercentHeapGoal), gcPercentHeapGoal);
-        Store(gocpp::recv(c->runway), uint64_t((c->consMark * (1 - gcGoalUtilization) / (gcGoalUtilization)) * double(c->lastHeapScan + Load(gocpp::recv(c->lastStackScan)) + Load(gocpp::recv(c->globalsScan)))));
+        rec::Store(gocpp::recv(c->gcPercentHeapGoal), gcPercentHeapGoal);
+        rec::Store(gocpp::recv(c->runway), uint64_t((c->consMark * (1 - gcGoalUtilization) / (gcGoalUtilization)) * double(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)))));
     }
 
-    int32_t setGCPercent(struct gcControllerState* c, int32_t in)
+    int32_t rec::setGCPercent(struct gcControllerState* c, int32_t in)
     {
         if(! c->test)
         {
             assertWorldStoppedOrLockHeld(& mheap_.lock);
         }
-        auto out = Load(gocpp::recv(c->gcPercent));
+        auto out = rec::Load(gocpp::recv(c->gcPercent));
         if(in < 0)
         {
             in = - 1;
         }
         c->heapMinimum = defaultHeapMinimum * uint64_t(in) / 100;
-        Store(gocpp::recv(c->gcPercent), in);
+        rec::Store(gocpp::recv(c->gcPercent), in);
         return out;
     }
 
@@ -748,14 +759,14 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            out = setGCPercent(gocpp::recv(gcController), in);
+            out = rec::setGCPercent(gocpp::recv(gcController), in);
             gcControllerCommit();
             unlock(& mheap_.lock);
         });
         if(in < 0)
         {
             int32_t out;
-            gcWaitOnMark(Load(gocpp::recv(work.cycles)));
+            gcWaitOnMark(rec::Load(gocpp::recv(work.cycles)));
         }
         return out;
     }
@@ -774,16 +785,16 @@ namespace golang::runtime
         return 100;
     }
 
-    int64_t setMemoryLimit(struct gcControllerState* c, int64_t in)
+    int64_t rec::setMemoryLimit(struct gcControllerState* c, int64_t in)
     {
         if(! c->test)
         {
             assertWorldStoppedOrLockHeld(& mheap_.lock);
         }
-        auto out = Load(gocpp::recv(c->memoryLimit));
+        auto out = rec::Load(gocpp::recv(c->memoryLimit));
         if(in >= 0)
         {
-            Store(gocpp::recv(c->memoryLimit), in);
+            rec::Store(gocpp::recv(c->memoryLimit), in);
         }
         return out;
     }
@@ -794,7 +805,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            out = setMemoryLimit(gocpp::recv(gcController), in);
+            out = rec::setMemoryLimit(gocpp::recv(gcController), in);
             if(in < 0 || out == in)
             {
                 unlock(& mheap_.lock);
@@ -822,11 +833,11 @@ namespace golang::runtime
         return n;
     }
 
-    bool addIdleMarkWorker(struct gcControllerState* c)
+    bool rec::addIdleMarkWorker(struct gcControllerState* c)
     {
         for(; ; )
         {
-            auto old = Load(gocpp::recv(c->idleMarkWorkers));
+            auto old = rec::Load(gocpp::recv(c->idleMarkWorkers));
             auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n >= max)
             {
@@ -838,25 +849,25 @@ namespace golang::runtime
                 go_throw("negative idle mark workers");
             }
             auto go_new = uint64_t(uint32_t(n + 1)) | (uint64_t(max) << 32);
-            if(CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
+            if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
             {
                 return true;
             }
         }
     }
 
-    bool needIdleMarkWorker(struct gcControllerState* c)
+    bool rec::needIdleMarkWorker(struct gcControllerState* c)
     {
-        auto p = Load(gocpp::recv(c->idleMarkWorkers));
+        auto p = rec::Load(gocpp::recv(c->idleMarkWorkers));
         auto [n, max] = std::tuple{int32_t(p & uint64_t(~ uint32_t(0))), int32_t(p >> 32)};
         return n < max;
     }
 
-    void removeIdleMarkWorker(struct gcControllerState* c)
+    void rec::removeIdleMarkWorker(struct gcControllerState* c)
     {
         for(; ; )
         {
-            auto old = Load(gocpp::recv(c->idleMarkWorkers));
+            auto old = rec::Load(gocpp::recv(c->idleMarkWorkers));
             auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n - 1 < 0)
             {
@@ -864,18 +875,18 @@ namespace golang::runtime
                 go_throw("negative idle mark workers");
             }
             auto go_new = uint64_t(uint32_t(n - 1)) | (uint64_t(max) << 32);
-            if(CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
+            if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
             {
                 return;
             }
         }
     }
 
-    void setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max)
+    void rec::setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max)
     {
         for(; ; )
         {
-            auto old = Load(gocpp::recv(c->idleMarkWorkers));
+            auto old = rec::Load(gocpp::recv(c->idleMarkWorkers));
             auto n = int32_t(old & uint64_t(~ uint32_t(0)));
             if(n < 0)
             {
@@ -883,7 +894,7 @@ namespace golang::runtime
                 go_throw("negative idle mark workers");
             }
             auto go_new = uint64_t(uint32_t(n)) | (uint64_t(max) << 32);
-            if(CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
+            if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
             {
                 return;
             }
@@ -893,20 +904,20 @@ namespace golang::runtime
     void gcControllerCommit()
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);
-        commit(gocpp::recv(gcController), isSweepDone());
+        rec::commit(gocpp::recv(gcController), isSweepDone());
         if(gcphase != _GCoff)
         {
-            revise(gocpp::recv(gcController));
+            rec::revise(gocpp::recv(gcController));
         }
         auto trace = traceAcquire();
-        if(ok(gocpp::recv(trace)))
+        if(rec::ok(gocpp::recv(trace)))
         {
-            HeapGoal(gocpp::recv(trace));
+            rec::HeapGoal(gocpp::recv(trace));
             traceRelease(trace);
         }
-        auto [trigger, heapGoal] = trigger(gocpp::recv(gcController));
+        auto [trigger, heapGoal] = rec::trigger(gocpp::recv(gcController));
         gcPaceSweeper(trigger);
-        gcPaceScavenger(Load(gocpp::recv(gcController.memoryLimit)), heapGoal, gcController.lastHeapGoal);
+        gcPaceScavenger(rec::Load(gocpp::recv(gcController.memoryLimit)), heapGoal, gcController.lastHeapGoal);
     }
 
 }

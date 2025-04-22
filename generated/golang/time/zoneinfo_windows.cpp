@@ -23,6 +23,15 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace registry::rec;
+        using namespace syscall::rec;
+        using namespace time::rec;
+    }
+
     gocpp::slice<std::string> platformZoneSources;
     std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
     {
@@ -38,27 +47,27 @@ namespace golang::time
                 struct gocpp::error err2;
                 return {false, err};
             }
-            defer.push_back([=]{ Close(gocpp::recv(k)); });
+            defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
             std::string std = {};
             std::string dlt = {};
-            std::tie(std, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Std");
+            std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std");
             if(err == nullptr)
             {
                 bool matched;
                 struct gocpp::error err2;
-                std::tie(dlt, err) = GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
+                std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
             }
             if(err != nullptr)
             {
                 bool matched;
                 struct gocpp::error err2;
-                if(std::tie(std, gocpp_id_0, err) = GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
+                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
                 {
                     bool matched;
                     struct gocpp::error err2;
                     return {false, err};
                 }
-                if(std::tie(dlt, gocpp_id_1, err) = GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
+                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
                 {
                     bool matched;
                     struct gocpp::error err2;
@@ -95,9 +104,9 @@ namespace golang::time
             {
                 return {"", err};
             }
-            defer.push_back([=]{ Close(gocpp::recv(k)); });
+            defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
             gocpp::slice<std::string> names;
-            std::tie(names, err) = ReadSubKeyNames(gocpp::recv(k));
+            std::tie(names, err) = rec::ReadSubKeyNames(gocpp::recv(k));
             if(err != nullptr)
             {
                 return {"", err};
@@ -164,7 +173,7 @@ namespace golang::time
     {
         auto day = 1;
         auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, UTC);
-        auto i = int(d->DayOfWeek) - int(Weekday(gocpp::recv(t)));
+        auto i = int(d->DayOfWeek) - int(rec::Weekday(gocpp::recv(t)));
         if(i < 0)
         {
             i += 7;
@@ -182,7 +191,7 @@ namespace golang::time
                 day -= 7;
             }
         }
-        return sec(gocpp::recv(t)) + int64_t(day - 1) * secondsPerDay + internalToUnix;
+        return rec::sec(gocpp::recv(t)) + int64_t(day - 1) * secondsPerDay + internalToUnix;
     }
 
     void initLocalFromTZI(struct syscall::Timezoneinformation* i)
@@ -224,8 +233,8 @@ namespace golang::time
             std::tie(i0, i1) = std::tuple{i1, i0};
         }
         l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 400);
-        auto t = UTC(gocpp::recv(Now()));
-        auto year = Year(gocpp::recv(t));
+        auto t = rec::UTC(gocpp::recv(Now()));
+        auto year = rec::Year(gocpp::recv(t));
         auto txi = 0;
         for(auto y = year - 100; y < year + 100; y++)
         {

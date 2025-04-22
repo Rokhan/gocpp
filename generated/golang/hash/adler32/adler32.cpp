@@ -17,7 +17,15 @@
 
 namespace golang::adler32
 {
-    void Reset(digest* d)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace hash::rec;
+        using namespace io::rec;
+    }
+
+    void rec::Reset(adler32::digest* d)
     {
         *d = 1;
     }
@@ -25,22 +33,22 @@ namespace golang::adler32
     struct hash::Hash32 New()
     {
         auto d = go_new(digest);
-        Reset(gocpp::recv(d));
+        rec::Reset(gocpp::recv(d));
         return d;
     }
 
-    int Size(digest* d)
+    int rec::Size(adler32::digest* d)
     {
         return Size;
     }
 
-    int BlockSize(digest* d)
+    int rec::BlockSize(adler32::digest* d)
     {
         return 4;
     }
 
     std::string magic = "adl\x01";
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(adler32::digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -48,7 +56,7 @@ namespace golang::adler32
         return {b, nullptr};
     }
 
-    struct gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error rec::UnmarshalBinary(adler32::digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
         {
@@ -73,7 +81,7 @@ namespace golang::adler32
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
-    digest update(digest d, gocpp::slice<unsigned char> p)
+    adler32::digest update(adler32::digest d, gocpp::slice<unsigned char> p)
     {
         auto [s1, s2] = std::tuple{uint32_t(d & 0xffff), uint32_t(d >> 16)};
         for(; len(p) > 0; )
@@ -107,7 +115,7 @@ namespace golang::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, struct gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(adler32::digest* d, gocpp::slice<unsigned char> p)
     {
         int nn;
         struct gocpp::error err;
@@ -115,12 +123,12 @@ namespace golang::adler32
         return {len(p), nullptr};
     }
 
-    uint32_t Sum32(digest* d)
+    uint32_t rec::Sum32(adler32::digest* d)
     {
         return uint32_t(*d);
     }
 
-    gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> rec::Sum(adler32::digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = uint32_t(*d);
         return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));

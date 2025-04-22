@@ -13,6 +13,11 @@
 
 namespace golang::math
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     double archExp(double x)
     /* convertBlockStmt, nil block */;
 

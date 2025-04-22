@@ -9,7 +9,7 @@ namespace golang::runtime
     const long semTabSize = 251;
     struct gocpp_id_0;
     using semaProfileFlags = int;
-    const semaProfileFlags semaBlockProfile = 1 << 0;
+    const runtime::semaProfileFlags semaBlockProfile = 1 << 0;
     const semaProfileFlags semaMutexProfile = 1 << 1;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"

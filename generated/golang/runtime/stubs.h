@@ -45,8 +45,8 @@ namespace golang::runtime
     void reflect_memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n);
     bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size);
     unsafe::Pointer noescape(unsafe::Pointer p);
-
-    template<typename T>
+    
+template<typename T>
     T* noEscapePtr(T* p);
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt);
     void gogo(struct gobuf* buf);
@@ -128,5 +128,9 @@ namespace golang::runtime
     void addmoduledata();
     void sigpanic0();
     extern int intArgRegs;
+
+    namespace rec
+    {
+    }
 }
 

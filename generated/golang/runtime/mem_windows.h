@@ -22,5 +22,9 @@ namespace golang::runtime
     void sysFaultOS(unsafe::Pointer v, uintptr_t n);
     unsafe::Pointer sysReserveOS(unsafe::Pointer v, uintptr_t n);
     void sysMapOS(unsafe::Pointer v, uintptr_t n);
+
+    namespace rec
+    {
+    }
 }
 

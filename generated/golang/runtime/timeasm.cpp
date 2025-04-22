@@ -13,6 +13,11 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     std::tuple<int64_t, int32_t, int64_t> time_now()
     /* convertBlockStmt, nil block */;
 

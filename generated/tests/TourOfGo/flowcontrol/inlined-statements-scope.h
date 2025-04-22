@@ -18,5 +18,9 @@ namespace golang::main
     void test_for();
     void test_switch();
     void main();
+
+    namespace rec
+    {
+    }
 }
 

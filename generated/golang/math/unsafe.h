@@ -16,5 +16,9 @@ namespace golang::math
     double Float32frombits(uint32_t b);
     uint64_t Float64bits(double f);
     double Float64frombits(uint64_t b);
+
+    namespace rec
+    {
+    }
 }
 

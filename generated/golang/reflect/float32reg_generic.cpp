@@ -15,6 +15,12 @@
 
 namespace golang::reflect
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace unsafe::rec;
+    }
+
     double archFloat32FromReg(uint64_t reg)
     {
         auto i = uint32_t(reg);

@@ -107,12 +107,6 @@ namespace golang::runtime
     uintptr_t bucketMask(uint8_t b);
     uint8_t tophash(uintptr_t hash);
     bool evacuated(struct bmap* b);
-    struct bmap* overflow(struct bmap* b, struct maptype* t);
-    void setoverflow(struct bmap* b, struct maptype* t, struct bmap* ovf);
-    unsafe::Pointer keys(struct bmap* b);
-    void incrnoverflow(struct hmap* h);
-    struct bmap* newoverflow(struct hmap* h, struct maptype* t, struct bmap* b);
-    void createOverflow(struct hmap* h);
     struct hmap* makemap64(struct maptype* t, int64_t hint, struct hmap* h);
     struct hmap* makemap_small();
     struct hmap* makemap(struct maptype* t, int hint, struct hmap* h);
@@ -130,10 +124,6 @@ namespace golang::runtime
     void hashGrow(struct maptype* t, struct hmap* h);
     bool overLoadFactor(int count, uint8_t B);
     bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B);
-    bool growing(struct hmap* h);
-    bool sameSizeGrow(struct hmap* h);
-    uintptr_t noldbuckets(struct hmap* h);
-    uintptr_t oldbucketmask(struct hmap* h);
     void growWork(struct maptype* t, struct hmap* h, uintptr_t bucket);
     bool bucketEvacuated(struct maptype* t, struct hmap* h, uintptr_t bucket);
     struct evacDst
@@ -179,5 +169,19 @@ namespace golang::runtime
     void copyKeys(struct maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
     void values(go_any m, unsafe::Pointer p);
     void copyValues(struct maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
+
+    namespace rec
+    {
+        struct bmap* overflow(struct bmap* b, struct maptype* t);
+        void setoverflow(struct bmap* b, struct maptype* t, struct bmap* ovf);
+        unsafe::Pointer keys(struct bmap* b);
+        void incrnoverflow(struct hmap* h);
+        struct bmap* newoverflow(struct hmap* h, struct maptype* t, struct bmap* b);
+        void createOverflow(struct hmap* h);
+        bool growing(struct hmap* h);
+        bool sameSizeGrow(struct hmap* h);
+        uintptr_t noldbuckets(struct hmap* h);
+        uintptr_t oldbucketmask(struct hmap* h);
+    }
 }
 

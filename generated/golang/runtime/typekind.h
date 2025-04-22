@@ -14,5 +14,9 @@
 namespace golang::runtime
 {
     bool isDirectIface(struct _type* t);
+
+    namespace rec
+    {
+    }
 }
 

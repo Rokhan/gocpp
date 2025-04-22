@@ -20,5 +20,9 @@ namespace golang::runtime
     double copysign(double x, double y);
     uint64_t float64bits(double f);
     double float64frombits(uint64_t b);
+
+    namespace rec
+    {
+    }
 }
 

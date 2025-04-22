@@ -15,6 +15,12 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     FILE_ATTRIBUTE_TAG_INFO::operator T()

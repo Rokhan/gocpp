@@ -17,6 +17,13 @@
 
 namespace golang::rand
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace math::rec;
+        using namespace rand::rec;
+    }
+
     uint32_t absInt32(int32_t i)
     {
         if(i < 0)
@@ -26,11 +33,11 @@ namespace golang::rand
         return uint32_t(i);
     }
 
-    double NormFloat64(struct Rand* r)
+    double rec::NormFloat64(struct Rand* r)
     {
         for(; ; )
         {
-            auto j = int32_t(Uint32(gocpp::recv(r)));
+            auto j = int32_t(rec::Uint32(gocpp::recv(r)));
             auto i = j & 0x7F;
             auto x = double(j) * double(wn[i]);
             if(absInt32(j) < kn[i])
@@ -41,8 +48,8 @@ namespace golang::rand
             {
                 for(; ; )
                 {
-                    x = - math::Log(Float64(gocpp::recv(r))) * (1.0 / rn);
-                    auto y = - math::Log(Float64(gocpp::recv(r)));
+                    x = - math::Log(rec::Float64(gocpp::recv(r))) * (1.0 / rn);
+                    auto y = - math::Log(rec::Float64(gocpp::recv(r)));
                     if(y + y >= x * x)
                     {
                         break;
@@ -54,7 +61,7 @@ namespace golang::rand
                 }
                 return - rn - x;
             }
-            if(fn[i] + float(Float64(gocpp::recv(r))) * (fn[i - 1] - fn[i]) < float(math::Exp(- .5 * x * x)))
+            if(fn[i] + float(rec::Float64(gocpp::recv(r))) * (fn[i - 1] - fn[i]) < float(math::Exp(- .5 * x * x)))
             {
                 return x;
             }

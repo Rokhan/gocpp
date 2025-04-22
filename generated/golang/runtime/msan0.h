@@ -17,5 +17,9 @@ namespace golang::runtime
     void msanmalloc(unsafe::Pointer addr, uintptr_t sz);
     void msanfree(unsafe::Pointer addr, uintptr_t sz);
     void msanmove(unsafe::Pointer dst, unsafe::Pointer src, uintptr_t sz);
+
+    namespace rec
+    {
+    }
 }
 

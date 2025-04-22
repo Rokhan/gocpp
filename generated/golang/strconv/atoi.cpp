@@ -17,6 +17,13 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace errors::rec;
+        using namespace strconv::rec;
+    }
+
     unsigned char lower(unsigned char c)
     {
         return c | ('x' - 'X');
@@ -59,12 +66,12 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    std::string Error(struct NumError* e)
+    std::string rec::Error(struct NumError* e)
     {
-        return "strconv." + e->Func + ": " + "parsing " + Quote(e->Num) + ": " + Error(gocpp::recv(e->Err));
+        return "strconv." + e->Func + ": " + "parsing " + Quote(e->Num) + ": " + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error Unwrap(struct NumError* e)
+    struct gocpp::error rec::Unwrap(struct NumError* e)
     {
         return e->Err;
     }

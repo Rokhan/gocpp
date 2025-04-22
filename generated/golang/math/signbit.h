@@ -13,5 +13,9 @@
 namespace golang::math
 {
     bool Signbit(double x);
+
+    namespace rec
+    {
+    }
 }
 

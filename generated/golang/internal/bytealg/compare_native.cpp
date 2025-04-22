@@ -13,6 +13,11 @@
 
 namespace golang::bytealg
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
 

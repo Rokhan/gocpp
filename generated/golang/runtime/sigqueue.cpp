@@ -25,6 +25,13 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace runtime::rec;
+    }
+
     struct gocpp_id_0
     {
         note note;
@@ -97,10 +104,10 @@ namespace golang::runtime
         {
             return false;
         }
-        Add(gocpp::recv(sig.delivering), 1);
+        rec::Add(gocpp::recv(sig.delivering), 1);
         if(auto w = atomic::Load(& sig.wanted[s / 32]); w & bit == 0)
         {
-            Add(gocpp::recv(sig.delivering), - 1);
+            rec::Add(gocpp::recv(sig.delivering), - 1);
             return false;
         }
         for(; ; )
@@ -108,7 +115,7 @@ namespace golang::runtime
             auto mask = sig.mask[s / 32];
             if(mask & bit != 0)
             {
-                Add(gocpp::recv(sig.delivering), - 1);
+                rec::Add(gocpp::recv(sig.delivering), - 1);
                 return true;
             }
             if(atomic::Cas(& sig.mask[s / 32], mask, mask | bit))
@@ -121,7 +128,7 @@ namespace golang::runtime
         {
             //Go switch emulation
             {
-                auto condition = Load(gocpp::recv(sig.state));
+                auto condition = rec::Load(gocpp::recv(sig.state));
                 int conditionId = -1;
                 else if(condition == sigIdle) { conditionId = 0; }
                 else if(condition == sigSending) { conditionId = 1; }
@@ -132,7 +139,7 @@ namespace golang::runtime
                         go_throw("sigsend: inconsistent state");
                         break;
                     case 0:
-                        if(CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigSending))
+                        if(rec::CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigSending))
                         {
                             goto Send_break;
                         }
@@ -141,7 +148,7 @@ namespace golang::runtime
                         goto Send_break;
                         break;
                     case 2:
-                        if(CompareAndSwap(gocpp::recv(sig.state), sigReceiving, sigIdle))
+                        if(rec::CompareAndSwap(gocpp::recv(sig.state), sigReceiving, sigIdle))
                         {
                             if(GOOS == "darwin" || GOOS == "ios")
                             {
@@ -161,7 +168,7 @@ namespace golang::runtime
                 break;
             }
         }
-        Add(gocpp::recv(sig.delivering), - 1);
+        rec::Add(gocpp::recv(sig.delivering), - 1);
         return true;
     }
 
@@ -182,7 +189,7 @@ namespace golang::runtime
             {
                 //Go switch emulation
                 {
-                    auto condition = Load(gocpp::recv(sig.state));
+                    auto condition = rec::Load(gocpp::recv(sig.state));
                     int conditionId = -1;
                     else if(condition == sigIdle) { conditionId = 0; }
                     else if(condition == sigSending) { conditionId = 1; }
@@ -192,7 +199,7 @@ namespace golang::runtime
                             go_throw("signal_recv: inconsistent state");
                             break;
                         case 0:
-                            if(CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigReceiving))
+                            if(rec::CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigReceiving))
                             {
                                 if(GOOS == "darwin" || GOOS == "ios")
                                 {
@@ -205,7 +212,7 @@ namespace golang::runtime
                             }
                             break;
                         case 1:
-                            if(CompareAndSwap(gocpp::recv(sig.state), sigSending, sigIdle))
+                            if(rec::CompareAndSwap(gocpp::recv(sig.state), sigSending, sigIdle))
                             {
                                 goto Receive_break;
                             }
@@ -228,11 +235,11 @@ namespace golang::runtime
 
     void signalWaitUntilIdle()
     {
-        for(; Load(gocpp::recv(sig.delivering)) != 0; )
+        for(; rec::Load(gocpp::recv(sig.delivering)) != 0; )
         {
             Gosched();
         }
-        for(; Load(gocpp::recv(sig.state)) != sigReceiving; )
+        for(; rec::Load(gocpp::recv(sig.state)) != sigReceiving; )
         {
             Gosched();
         }

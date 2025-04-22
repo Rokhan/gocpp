@@ -21,7 +21,7 @@ namespace golang::slices
     int partitionEqualCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp);
     bool partialInsertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
     void breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
-    std::tuple<int, sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
+    std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
     std::tuple<int, int> order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, std::function<int (E a, E b)> cmp);
     int medianCmpFunc(gocpp::slice<E> data, int a, int b, int c, int* swaps, std::function<int (E a, E b)> cmp);
     int medianAdjacentCmpFunc(gocpp::slice<E> data, int a, int* swaps, std::function<int (E a, E b)> cmp);
@@ -30,5 +30,9 @@ namespace golang::slices
     void stableCmpFunc(gocpp::slice<E> data, int n, std::function<int (E a, E b)> cmp);
     void symMergeCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp);
     void rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp);
+
+    namespace rec
+    {
+    }
 }
 

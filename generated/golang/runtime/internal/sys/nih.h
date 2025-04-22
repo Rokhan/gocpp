@@ -42,5 +42,9 @@ namespace golang::sys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NotInHeap& value);
+
+    namespace rec
+    {
+    }
 }
 

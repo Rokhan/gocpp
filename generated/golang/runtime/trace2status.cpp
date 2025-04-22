@@ -48,28 +48,38 @@
 
 namespace golang::runtime
 {
-    struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
+    struct traceWriter rec::writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, runtime::traceGoStatus status, bool markAssist)
     {
         if(status == traceGoBad)
         {
             print("runtime: goid=", goid, "\n");
             go_throw("attempted to trace a bad status for a goroutine");
         }
-        w = event(gocpp::recv(w), traceEvGoStatus, traceArg(goid), traceArg(uint64_t(mid)), traceArg(status));
+        w = rec::event(gocpp::recv(w), traceEvGoStatus, traceArg(goid), traceArg(uint64_t(mid)), traceArg(status));
         if(markAssist)
         {
-            w = event(gocpp::recv(w), traceEvGCMarkAssistActive, traceArg(goid));
+            w = rec::event(gocpp::recv(w), traceEvGCMarkAssistActive, traceArg(goid));
         }
         return w;
     }
 
-    struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW)
+    struct traceWriter rec::writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW)
     {
-        if(! acquireStatus(gocpp::recv(pp->trace), w.gen))
+        if(! rec::acquireStatus(gocpp::recv(pp->trace), w.gen))
         {
             return w;
         }
-        traceProcStatus status = {};
+        runtime::traceProcStatus status = {};
         //Go switch emulation
         {
             auto condition = pp->status;
@@ -90,7 +100,7 @@ namespace golang::runtime
                     break;
                 case 2:
                     status = traceProcRunning;
-                    if(ptr(gocpp::recv(w.mp->p)) == pp && w.mp->curg != nullptr && readgstatus(w.mp->curg) &^ _Gscan == _Gsyscall)
+                    if(rec::ptr(gocpp::recv(w.mp->p)) == pp && w.mp->curg != nullptr && readgstatus(w.mp->curg) &^ _Gscan == _Gsyscall)
                     {
                         status = traceProcSyscall;
                     }
@@ -103,28 +113,28 @@ namespace golang::runtime
                     break;
             }
         }
-        w = writeProcStatus(gocpp::recv(w), uint64_t(pp->id), status, pp->trace.inSweep);
+        w = rec::writeProcStatus(gocpp::recv(w), uint64_t(pp->id), status, pp->trace.inSweep);
         return w;
     }
 
-    struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
+    struct traceWriter rec::writeProcStatus(struct traceWriter w, uint64_t pid, runtime::traceProcStatus status, bool inSweep)
     {
         if(status == traceProcBad)
         {
             print("runtime: pid=", pid, "\n");
             go_throw("attempted to trace a bad status for a proc");
         }
-        w = event(gocpp::recv(w), traceEvProcStatus, traceArg(pid), traceArg(status));
+        w = rec::event(gocpp::recv(w), traceEvProcStatus, traceArg(pid), traceArg(status));
         if(inSweep)
         {
-            w = event(gocpp::recv(w), traceEvGCSweepActive, traceArg(pid));
+            w = rec::event(gocpp::recv(w), traceEvGCSweepActive, traceArg(pid));
         }
         return w;
     }
 
-    traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr)
+    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, runtime::waitReason wr)
     {
-        traceGoStatus tgs = {};
+        runtime::traceGoStatus tgs = {};
         //Go switch emulation
         {
             auto condition = status &^ _Gscan;
@@ -199,34 +209,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool acquireStatus(struct traceSchedResourceState* r, uintptr_t gen)
+    bool rec::acquireStatus(struct traceSchedResourceState* r, uintptr_t gen)
     {
-        if(! CompareAndSwap(gocpp::recv(r->statusTraced[gen % 3]), 0, 1))
+        if(! rec::CompareAndSwap(gocpp::recv(r->statusTraced[gen % 3]), 0, 1))
         {
             return false;
         }
-        readyNextGen(gocpp::recv(r), gen);
+        rec::readyNextGen(gocpp::recv(r), gen);
         return true;
     }
 
-    void readyNextGen(struct traceSchedResourceState* r, uintptr_t gen)
+    void rec::readyNextGen(struct traceSchedResourceState* r, uintptr_t gen)
     {
         auto nextGen = traceNextGen(gen);
         r->seq[nextGen % 2] = 0;
-        Store(gocpp::recv(r->statusTraced[nextGen % 3]), 0);
+        rec::Store(gocpp::recv(r->statusTraced[nextGen % 3]), 0);
     }
 
-    bool statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen)
+    bool rec::statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen)
     {
-        return Load(gocpp::recv(r->statusTraced[gen % 3])) != 0;
+        return rec::Load(gocpp::recv(r->statusTraced[gen % 3])) != 0;
     }
 
-    void setStatusTraced(struct traceSchedResourceState* r, uintptr_t gen)
+    void rec::setStatusTraced(struct traceSchedResourceState* r, uintptr_t gen)
     {
-        Store(gocpp::recv(r->statusTraced[gen % 3]), 1);
+        rec::Store(gocpp::recv(r->statusTraced[gen % 3]), 1);
     }
 
-    traceArg nextSeq(struct traceSchedResourceState* r, uintptr_t gen)
+    runtime::traceArg rec::nextSeq(struct traceSchedResourceState* r, uintptr_t gen)
     {
         r->seq[gen % 2]++;
         return traceArg(r->seq[gen % 2]);

@@ -28,5 +28,9 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
+
+    namespace rec
+    {
+    }
 }
 

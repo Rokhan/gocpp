@@ -15,5 +15,9 @@ namespace golang::poll
 {
     extern gocpp::error errERROR_IO_PENDING;
     struct gocpp::error errnoErr(syscall::Errno e);
+
+    namespace rec
+    {
+    }
 }
 

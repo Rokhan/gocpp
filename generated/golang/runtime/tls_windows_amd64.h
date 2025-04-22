@@ -34,5 +34,9 @@
 namespace golang::runtime
 {
     void osSetupTLS(struct m* mp);
+
+    namespace rec
+    {
+    }
 }
 

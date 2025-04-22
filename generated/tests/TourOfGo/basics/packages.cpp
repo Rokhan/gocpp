@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace rand::rec;
+    }
+
     void main()
     {
         mocklib::Println("My favorite number is", mocklib::Intn(10));

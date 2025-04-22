@@ -19,6 +19,13 @@
 
 namespace golang::windows
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     LUID::operator T()
@@ -190,7 +197,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    uint32_t Size(struct TOKEN_MANDATORY_LABEL* tml)
+    uint32_t rec::Size(struct TOKEN_MANDATORY_LABEL* tml)
     {
         return uint32_t(gocpp::Sizeof<TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
     }

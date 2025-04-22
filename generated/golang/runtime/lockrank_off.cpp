@@ -17,6 +17,12 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace runtime::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     lockRankStruct::operator T()
@@ -43,21 +49,21 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void lockInit(struct mutex* l, lockRank rank)
+    void lockInit(struct mutex* l, runtime::lockRank rank)
     {
     }
 
-    lockRank getLockRank(struct mutex* l)
+    runtime::lockRank getLockRank(struct mutex* l)
     {
         return 0;
     }
 
-    void lockWithRank(struct mutex* l, lockRank rank)
+    void lockWithRank(struct mutex* l, runtime::lockRank rank)
     {
         lock2(l);
     }
 
-    void acquireLockRank(lockRank rank)
+    void acquireLockRank(runtime::lockRank rank)
     {
     }
 
@@ -66,11 +72,11 @@ namespace golang::runtime
         unlock2(l);
     }
 
-    void releaseLockRank(lockRank rank)
+    void releaseLockRank(runtime::lockRank rank)
     {
     }
 
-    void lockWithRankMayAcquire(struct mutex* l, lockRank rank)
+    void lockWithRankMayAcquire(struct mutex* l, runtime::lockRank rank)
     {
     }
 
@@ -78,7 +84,7 @@ namespace golang::runtime
     {
     }
 
-    void assertRankHeld(lockRank r)
+    void assertRankHeld(runtime::lockRank r)
     {
     }
 

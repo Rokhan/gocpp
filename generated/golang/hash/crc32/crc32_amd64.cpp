@@ -18,6 +18,13 @@
 
 namespace golang::crc32
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace crc32::rec;
+        using namespace unsafe::rec;
+    }
+
     uint32_t castagnoliSSE42(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 

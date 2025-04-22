@@ -14,5 +14,9 @@ namespace golang::reflect
 {
     double archFloat32FromReg(uint64_t reg);
     uint64_t archFloat32ToReg(double val);
+
+    namespace rec
+    {
+    }
 }
 

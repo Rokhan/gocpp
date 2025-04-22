@@ -59,14 +59,17 @@ namespace golang::syscall
         std::shared_ptr<IRawConn> value;
     };
 
-    struct gocpp::error Control(const gocpp::PtrRecv<RawConn, false>& self, std::function<void (uintptr_t fd)> f);
-    struct gocpp::error Control(const gocpp::ObjRecv<RawConn>& self, std::function<void (uintptr_t fd)> f);
+    namespace rec
+    {
+        struct gocpp::error Control(const gocpp::PtrRecv<RawConn, false>& self, std::function<void (uintptr_t fd)> f);
+        struct gocpp::error Control(const gocpp::ObjRecv<RawConn>& self, std::function<void (uintptr_t fd)> f);
 
-    struct gocpp::error Read(const gocpp::PtrRecv<RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
-    struct gocpp::error Read(const gocpp::ObjRecv<RawConn>& self, std::function<bool (uintptr_t fd)> f);
+        struct gocpp::error Read(const gocpp::PtrRecv<RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
+        struct gocpp::error Read(const gocpp::ObjRecv<RawConn>& self, std::function<bool (uintptr_t fd)> f);
 
-    struct gocpp::error Write(const gocpp::PtrRecv<RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
-    struct gocpp::error Write(const gocpp::ObjRecv<RawConn>& self, std::function<bool (uintptr_t fd)> f);
+        struct gocpp::error Write(const gocpp::PtrRecv<RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
+        struct gocpp::error Write(const gocpp::ObjRecv<RawConn>& self, std::function<bool (uintptr_t fd)> f);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct RawConn& value);
     struct Conn : gocpp::Interface
@@ -111,9 +114,16 @@ namespace golang::syscall
         std::shared_ptr<IConn> value;
     };
 
-    std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::PtrRecv<Conn, false>& self);
-    std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::ObjRecv<Conn>& self);
+    namespace rec
+    {
+        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::PtrRecv<Conn, false>& self);
+        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::ObjRecv<Conn>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Conn& value);
+
+    namespace rec
+    {
+    }
 }
 

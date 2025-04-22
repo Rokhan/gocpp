@@ -17,6 +17,12 @@
 
 namespace golang::time
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace time::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Ticker::operator T()
@@ -49,7 +55,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    struct Ticker* NewTicker(Duration d)
+    struct Ticker* NewTicker(time::Duration d)
     {
         if(d <= 0)
         {
@@ -61,12 +67,12 @@ namespace golang::time
         return t;
     }
 
-    void Stop(struct Ticker* t)
+    void rec::Stop(struct Ticker* t)
     {
         stopTimer(& t->r);
     }
 
-    void Reset(struct Ticker* t, Duration d)
+    void rec::Reset(struct Ticker* t, time::Duration d)
     {
         if(d <= 0)
         {
@@ -79,7 +85,7 @@ namespace golang::time
         modTimer(& t->r, when(d), int64_t(d), t->r.f, t->r.arg, t->r.seq);
     }
 
-    gocpp::channel<Time> Tick(Duration d)
+    gocpp::channel<Time> Tick(time::Duration d)
     {
         if(d <= 0)
         {

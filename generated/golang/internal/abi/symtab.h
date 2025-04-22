@@ -11,5 +11,9 @@
 
 namespace golang::abi
 {
+
+    namespace rec
+    {
+    }
 }
 

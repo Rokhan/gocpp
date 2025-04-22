@@ -43,5 +43,9 @@ namespace golang::strconv
     bool IsPrint(gocpp::rune r);
     bool IsGraphic(gocpp::rune r);
     bool isInGraphicList(gocpp::rune r);
+
+    namespace rec
+    {
+    }
 }
 

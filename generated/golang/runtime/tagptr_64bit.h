@@ -13,8 +13,12 @@
 
 namespace golang::runtime
 {
-    taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag);
-    unsafe::Pointer pointer(taggedPointer tp);
-    uintptr_t tag(taggedPointer tp);
+    runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag);
+
+    namespace rec
+    {
+        unsafe::Pointer pointer(runtime::taggedPointer tp);
+        uintptr_t tag(runtime::taggedPointer tp);
+    }
 }
 

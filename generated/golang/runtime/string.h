@@ -77,5 +77,9 @@ namespace golang::runtime
     int findnullw(uint16_t* s);
     std::string gostringnocopy(unsigned char* str);
     std::string gostringw(uint16_t* strw);
+
+    namespace rec
+    {
+    }
 }
 

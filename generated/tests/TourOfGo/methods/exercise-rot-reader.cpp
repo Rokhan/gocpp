@@ -26,6 +26,18 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace io::rec;
+        using namespace os::rec;
+        using namespace poll::rec;
+        using namespace strings::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     rot13Reader::operator T()
@@ -55,9 +67,9 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> rec::Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf)
     {
-        auto [n, err] = Read(gocpp::recv(r13.r), buf);
+        auto [n, err] = rec::Read(gocpp::recv(r13.r), buf);
         if(err != nullptr)
         {
             return {n, err};

@@ -21,6 +21,16 @@
 
 namespace golang::godebug
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace bisect::rec;
+        using namespace godebugs::rec;
+        using namespace sync::rec;
+        using namespace unsafe::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     Setting::operator T()
@@ -128,7 +138,7 @@ namespace golang::godebug
         return gocpp::InitPtr<Setting>([](Setting& x) { x.name = name; });
     }
 
-    std::string Name(struct Setting* s)
+    std::string rec::Name(struct Setting* s)
     {
         if(s->name != "" && s->name[0] == '#')
         {
@@ -137,45 +147,45 @@ namespace golang::godebug
         return s->name;
     }
 
-    bool Undocumented(struct Setting* s)
+    bool rec::Undocumented(struct Setting* s)
     {
         return s->name != "" && s->name[0] == '#';
     }
 
-    std::string String(struct Setting* s)
+    std::string rec::String(struct Setting* s)
     {
-        return Name(gocpp::recv(s)) + "=" + Value(gocpp::recv(s));
+        return rec::Name(gocpp::recv(s)) + "=" + rec::Value(gocpp::recv(s));
     }
 
-    void IncNonDefault(struct Setting* s)
+    void rec::IncNonDefault(struct Setting* s)
     {
-        Do(gocpp::recv(s->nonDefaultOnce), s->go_register);
-        Add(gocpp::recv(s->nonDefault), 1);
+        rec::Do(gocpp::recv(s->nonDefaultOnce), s->go_register);
+        rec::Add(gocpp::recv(s->nonDefault), 1);
     }
 
-    void go_register(struct Setting* s)
+    void rec::go_register(struct Setting* s)
     {
         if(s->info == nullptr || s->info->Opaque)
         {
             gocpp::panic("godebug: unexpected IncNonDefault of " + s->name);
         }
-        registerMetric("/godebug/non-default-behavior/" + Name(gocpp::recv(s)) + ":events", s->nonDefault.Load);
+        registerMetric("/godebug/non-default-behavior/" + rec::Name(gocpp::recv(s)) + ":events", s->nonDefault.Load);
     }
 
     sync::Map cache;
     value empty;
-    std::string Value(struct Setting* s)
+    std::string rec::Value(struct Setting* s)
     {
-        Do(gocpp::recv(s->once), [=]() mutable -> void
+        rec::Do(gocpp::recv(s->once), [=]() mutable -> void
         {
-            s->setting = lookup(Name(gocpp::recv(s)));
-            if(s->info == nullptr && ! Undocumented(gocpp::recv(s)))
+            s->setting = lookup(rec::Name(gocpp::recv(s)));
+            if(s->info == nullptr && ! rec::Undocumented(gocpp::recv(s)))
             {
                 gocpp::panic("godebug: Value of name not listed in godebugs.All: " + s->name);
             }
         });
-        auto v = *Load(gocpp::recv(s->value));
-        if(v.bisect != nullptr && ! Stack(gocpp::recv(v.bisect), & stderr))
+        auto v = *rec::Load(gocpp::recv(s->value));
+        if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & stderr))
         {
             return "";
         }
@@ -184,14 +194,14 @@ namespace golang::godebug
 
     struct setting* lookup(std::string name)
     {
-        if(auto [v, ok] = Load(gocpp::recv(cache), name); ok)
+        if(auto [v, ok] = rec::Load(gocpp::recv(cache), name); ok)
         {
             return gocpp::getValue<setting*>(v);
         }
         auto s = go_new(setting);
         s->info = godebugs::Lookup(name);
-        Store(gocpp::recv(s->value), & empty);
-        if(auto [v, loaded] = LoadOrStore(gocpp::recv(cache), name, s); loaded)
+        rec::Store(gocpp::recv(s->value), & empty);
+        if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
         {
             return gocpp::getValue<setting*>(v);
         }
@@ -216,7 +226,7 @@ namespace golang::godebug
     std::function<void ()> newIncNonDefault(std::string name)
     {
         auto s = New(name);
-        Value(gocpp::recv(s));
+        rec::Value(gocpp::recv(s));
         return s->IncNonDefault;
     }
 
@@ -226,16 +236,16 @@ namespace golang::godebug
         gocpp::Defer defer;
         try
         {
-            Lock(gocpp::recv(updateMu));
-            defer.push_back([=]{ Unlock(gocpp::recv(updateMu)); });
+            rec::Lock(gocpp::recv(updateMu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(updateMu)); });
             auto did = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
             parse(did, env);
             parse(did, def);
-            Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
+            rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
                 if(! did[gocpp::getValue<std::string>(name)])
                 {
-                    Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
+                    rec::Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
                 }
                 return true;
             });
@@ -270,7 +280,7 @@ namespace golang::godebug
                                 break;
                             }
                         }
-                        Store(gocpp::recv(lookup(name)->value), v);
+                        rec::Store(gocpp::recv(lookup(name)->value), v);
                     }
                 }
                 eq = - 1;
@@ -311,7 +321,7 @@ namespace golang::godebug
     }
 
     runtimeStderr stderr;
-    std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

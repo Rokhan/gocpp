@@ -45,6 +45,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     traceWriter::operator T()
@@ -71,7 +81,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct traceWriter writer(struct traceLocker tl)
+    struct traceWriter rec::writer(struct traceLocker tl)
     {
         return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = tl; x.traceBuf = tl.mp->trace.buf[tl.gen % 2]; });
     }
@@ -81,7 +91,7 @@ namespace golang::runtime
         return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = gocpp::Init<traceLocker>([](traceLocker& x) { x.gen = gen; }); x.traceBuf = buf; });
     }
 
-    void end(struct traceWriter w)
+    void rec::end(struct traceWriter w)
     {
         if(w.mp == nullptr)
         {
@@ -90,17 +100,17 @@ namespace golang::runtime
         w.mp->trace.buf[w.gen % 2] = w.traceBuf;
     }
 
-    std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize)
+    std::tuple<struct traceWriter, bool> rec::ensure(struct traceWriter w, int maxSize)
     {
-        auto refill = w.traceBuf == nullptr || ! available(gocpp::recv(w), maxSize);
+        auto refill = w.traceBuf == nullptr || ! rec::available(gocpp::recv(w), maxSize);
         if(refill)
         {
-            w = refill(gocpp::recv(w));
+            w = rec::refill(gocpp::recv(w));
         }
         return {w, refill};
     }
 
-    struct traceWriter flush(struct traceWriter w)
+    struct traceWriter rec::flush(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -115,7 +125,7 @@ namespace golang::runtime
         return w;
     }
 
-    struct traceWriter refill(struct traceWriter w)
+    struct traceWriter rec::refill(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -153,11 +163,11 @@ namespace golang::runtime
         {
             mID = uint64_t(w.mp->procid);
         }
-        unsigned char(gocpp::recv(w), unsigned char(traceEvEventBatch));
-        varint(gocpp::recv(w), uint64_t(w.gen));
-        varint(gocpp::recv(w), uint64_t(mID));
-        varint(gocpp::recv(w), uint64_t(ts));
-        w.traceBuf->lenPos = varintReserve(gocpp::recv(w));
+        rec::unsigned char(gocpp::recv(w), unsigned char(traceEvEventBatch));
+        rec::varint(gocpp::recv(w), uint64_t(w.gen));
+        rec::varint(gocpp::recv(w), uint64_t(mID));
+        rec::varint(gocpp::recv(w), uint64_t(ts));
+        w.traceBuf->lenPos = rec::varintReserve(gocpp::recv(w));
         return w;
     }
 
@@ -193,7 +203,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void push(struct traceBufQueue* q, struct traceBuf* buf)
+    void rec::push(struct traceBufQueue* q, struct traceBuf* buf)
     {
         buf->link = nullptr;
         if(q->head == nullptr)
@@ -207,7 +217,7 @@ namespace golang::runtime
         q->tail = buf;
     }
 
-    struct traceBuf* pop(struct traceBufQueue* q)
+    struct traceBuf* rec::pop(struct traceBufQueue* q)
     {
         auto buf = q->head;
         if(buf == nullptr)
@@ -223,7 +233,7 @@ namespace golang::runtime
         return buf;
     }
 
-    bool empty(struct traceBufQueue* q)
+    bool rec::empty(struct traceBufQueue* q)
     {
         return q->head == nullptr;
     }
@@ -298,13 +308,13 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void byte(struct traceBuf* buf, unsigned char v)
+    void rec::byte(struct traceBuf* buf, unsigned char v)
     {
         buf->arr[buf->pos] = v;
         buf->pos++;
     }
 
-    void varint(struct traceBuf* buf, uint64_t v)
+    void rec::varint(struct traceBuf* buf, uint64_t v)
     {
         auto pos = buf->pos;
         auto arr = buf->arr.make_slice(pos, pos + traceBytesPerNumber);
@@ -322,24 +332,24 @@ namespace golang::runtime
         buf->pos = pos;
     }
 
-    int varintReserve(struct traceBuf* buf)
+    int rec::varintReserve(struct traceBuf* buf)
     {
         auto p = buf->pos;
         buf->pos += traceBytesPerNumber;
         return p;
     }
 
-    void stringData(struct traceBuf* buf, std::string s)
+    void rec::stringData(struct traceBuf* buf, std::string s)
     {
         buf->pos += copy(buf->arr.make_slice(buf->pos), s);
     }
 
-    bool available(struct traceBuf* buf, int size)
+    bool rec::available(struct traceBuf* buf, int size)
     {
         return len(buf->arr) - buf->pos >= size;
     }
 
-    void varintAt(struct traceBuf* buf, int pos, uint64_t v)
+    void rec::varintAt(struct traceBuf* buf, int pos, uint64_t v)
     {
         for(auto i = 0; i < traceBytesPerNumber; i++)
         {
@@ -363,11 +373,11 @@ namespace golang::runtime
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
-        varintAt(gocpp::recv(buf), buf->lenPos, uint64_t(buf->pos - (buf->lenPos + traceBytesPerNumber)));
-        push(gocpp::recv(trace.full[gen % 2]), buf);
-        if(! Load(gocpp::recv(trace.workAvailable)))
+        rec::varintAt(gocpp::recv(buf), buf->lenPos, uint64_t(buf->pos - (buf->lenPos + traceBytesPerNumber)));
+        rec::push(gocpp::recv(trace.full[gen % 2]), buf);
+        if(! rec::Load(gocpp::recv(trace.workAvailable)))
         {
-            Store(gocpp::recv(trace.workAvailable), true);
+            rec::Store(gocpp::recv(trace.workAvailable), true);
         }
     }
 

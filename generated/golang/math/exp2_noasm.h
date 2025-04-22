@@ -12,5 +12,9 @@
 namespace golang::math
 {
     double archExp2(double x);
+
+    namespace rec
+    {
+    }
 }
 

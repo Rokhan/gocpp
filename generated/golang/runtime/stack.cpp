@@ -86,6 +86,20 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace cpu::rec;
+        using namespace goarch::rec;
+        using namespace goos::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     long stackPoisonCopy = 0;
     struct gocpp_id_0
     {
@@ -212,12 +226,12 @@ namespace golang::runtime
         }
         for(auto [i, gocpp_ignored] : stackpool)
         {
-            init(gocpp::recv(stackpool[i].item.span));
+            rec::init(gocpp::recv(stackpool[i].item.span));
             lockInit(& stackpool[i].item.mu, lockRankStackpool);
         }
         for(auto [i, gocpp_ignored] : stackLarge.free)
         {
-            init(gocpp::recv(stackLarge.free[i]));
+            rec::init(gocpp::recv(stackLarge.free[i]));
             lockInit(& stackLarge.lock, lockRankStackLarge);
         }
     }
@@ -233,14 +247,14 @@ namespace golang::runtime
         return log2;
     }
 
-    gclinkptr stackpoolalloc(uint8_t order)
+    runtime::gclinkptr stackpoolalloc(uint8_t order)
     {
         auto list = & stackpool[order].item.span;
         auto s = list->first;
         lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
         if(s == nullptr)
         {
-            s = allocManual(gocpp::recv(mheap_), _StackCacheSize >> _PageShift, spanAllocStack);
+            s = rec::allocManual(gocpp::recv(mheap_), _StackCacheSize >> _PageShift, spanAllocStack);
             if(s == nullptr)
             {
                 go_throw("out of memory");
@@ -249,7 +263,7 @@ namespace golang::runtime
             {
                 go_throw("bad allocCount");
             }
-            if(ptr(gocpp::recv(s->manualFreeList)) != nullptr)
+            if(rec::ptr(gocpp::recv(s->manualFreeList)) != nullptr)
             {
                 go_throw("bad manualFreeList");
             }
@@ -257,46 +271,46 @@ namespace golang::runtime
             s->elemsize = fixedStack << order;
             for(auto i = uintptr_t(0); i < _StackCacheSize; i += s->elemsize)
             {
-                auto x = gclinkptr(base(gocpp::recv(s)) + i);
-                ptr(gocpp::recv(x))->next = s->manualFreeList;
+                auto x = gclinkptr(rec::base(gocpp::recv(s)) + i);
+                rec::ptr(gocpp::recv(x))->next = s->manualFreeList;
                 s->manualFreeList = x;
             }
-            insert(gocpp::recv(list), s);
+            rec::insert(gocpp::recv(list), s);
         }
         auto x = s->manualFreeList;
-        if(ptr(gocpp::recv(x)) == nullptr)
+        if(rec::ptr(gocpp::recv(x)) == nullptr)
         {
             go_throw("span has no free stacks");
         }
-        s->manualFreeList = ptr(gocpp::recv(x))->next;
+        s->manualFreeList = rec::ptr(gocpp::recv(x))->next;
         s->allocCount++;
-        if(ptr(gocpp::recv(s->manualFreeList)) == nullptr)
+        if(rec::ptr(gocpp::recv(s->manualFreeList)) == nullptr)
         {
-            remove(gocpp::recv(list), s);
+            rec::remove(gocpp::recv(list), s);
         }
         return x;
     }
 
-    void stackpoolfree(gclinkptr x, uint8_t order)
+    void stackpoolfree(runtime::gclinkptr x, uint8_t order)
     {
         auto s = spanOfUnchecked(uintptr_t(x));
-        if(get(gocpp::recv(s->state)) != mSpanManual)
+        if(rec::get(gocpp::recv(s->state)) != mSpanManual)
         {
             go_throw("freeing stack not in a stack span");
         }
-        if(ptr(gocpp::recv(s->manualFreeList)) == nullptr)
+        if(rec::ptr(gocpp::recv(s->manualFreeList)) == nullptr)
         {
-            insert(gocpp::recv(stackpool[order].item.span), s);
+            rec::insert(gocpp::recv(stackpool[order].item.span), s);
         }
-        ptr(gocpp::recv(x))->next = s->manualFreeList;
+        rec::ptr(gocpp::recv(x))->next = s->manualFreeList;
         s->manualFreeList = x;
         s->allocCount--;
         if(gcphase == _GCoff && s->allocCount == 0)
         {
-            remove(gocpp::recv(stackpool[order].item.span), s);
+            rec::remove(gocpp::recv(stackpool[order].item.span), s);
             s->manualFreeList = 0;
             osStackFree(s);
-            freeManual(gocpp::recv(mheap_), s, spanAllocStack);
+            rec::freeManual(gocpp::recv(mheap_), s, spanAllocStack);
         }
     }
 
@@ -306,13 +320,13 @@ namespace golang::runtime
         {
             print("stackcacherefill order=", order, "\n");
         }
-        gclinkptr list = {};
+        runtime::gclinkptr list = {};
         uintptr_t size = {};
         lock(& stackpool[order].item.mu);
         for(; size < _StackCacheSize / 2; )
         {
             auto x = stackpoolalloc(order);
-            ptr(gocpp::recv(x))->next = list;
+            rec::ptr(gocpp::recv(x))->next = list;
             list = x;
             size += fixedStack << order;
         }
@@ -332,7 +346,7 @@ namespace golang::runtime
         lock(& stackpool[order].item.mu);
         for(; size > _StackCacheSize / 2; )
         {
-            auto y = ptr(gocpp::recv(x))->next;
+            auto y = rec::ptr(gocpp::recv(x))->next;
             stackpoolfree(x, order);
             x = y;
             size -= fixedStack << order;
@@ -352,9 +366,9 @@ namespace golang::runtime
         {
             lock(& stackpool[order].item.mu);
             auto x = c->stackcache[order].list;
-            for(; ptr(gocpp::recv(x)) != nullptr; )
+            for(; rec::ptr(gocpp::recv(x)) != nullptr; )
             {
-                auto y = ptr(gocpp::recv(x))->next;
+                auto y = rec::ptr(gocpp::recv(x))->next;
                 stackpoolfree(x, order);
                 x = y;
             }
@@ -399,7 +413,7 @@ namespace golang::runtime
                 order++;
                 n2 >>= 1;
             }
-            gclinkptr x = {};
+            runtime::gclinkptr x = {};
             if(stackNoCache != 0 || thisg->m->p == 0 || thisg->m->preemptoff != "")
             {
                 lock(& stackpool[order].item.mu);
@@ -408,14 +422,14 @@ namespace golang::runtime
             }
             else
             {
-                auto c = ptr(gocpp::recv(thisg->m->p))->mcache;
+                auto c = rec::ptr(gocpp::recv(thisg->m->p))->mcache;
                 x = c->stackcache[order].list;
-                if(ptr(gocpp::recv(x)) == nullptr)
+                if(rec::ptr(gocpp::recv(x)) == nullptr)
                 {
                     stackcacherefill(c, order);
                     x = c->stackcache[order].list;
                 }
-                c->stackcache[order].list = ptr(gocpp::recv(x))->next;
+                c->stackcache[order].list = rec::ptr(gocpp::recv(x))->next;
                 c->stackcache[order].size -= uintptr_t(n);
             }
             v = unsafe::Pointer(x);
@@ -426,16 +440,16 @@ namespace golang::runtime
             auto npage = uintptr_t(n) >> _PageShift;
             auto log2npage = stacklog2(npage);
             lock(& stackLarge.lock);
-            if(! isEmpty(gocpp::recv(stackLarge.free[log2npage])))
+            if(! rec::isEmpty(gocpp::recv(stackLarge.free[log2npage])))
             {
                 s = stackLarge.free[log2npage].first;
-                remove(gocpp::recv(stackLarge.free[log2npage]), s);
+                rec::remove(gocpp::recv(stackLarge.free[log2npage]), s);
             }
             unlock(& stackLarge.lock);
             lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
             if(s == nullptr)
             {
-                s = allocManual(gocpp::recv(mheap_), npage, spanAllocStack);
+                s = rec::allocManual(gocpp::recv(mheap_), npage, spanAllocStack);
                 if(s == nullptr)
                 {
                     go_throw("out of memory");
@@ -443,7 +457,7 @@ namespace golang::runtime
                 osStackAlloc(s);
                 s->elemsize = uintptr_t(n);
             }
-            v = unsafe::Pointer(base(gocpp::recv(s)));
+            v = unsafe::Pointer(rec::base(gocpp::recv(s)));
         }
         if(raceenabled)
         {
@@ -520,12 +534,12 @@ namespace golang::runtime
             }
             else
             {
-                auto c = ptr(gocpp::recv(gp->m->p))->mcache;
+                auto c = rec::ptr(gocpp::recv(gp->m->p))->mcache;
                 if(c->stackcache[order].size >= _StackCacheSize)
                 {
                     stackcacherelease(c, order);
                 }
-                ptr(gocpp::recv(x))->next = c->stackcache[order].list;
+                rec::ptr(gocpp::recv(x))->next = c->stackcache[order].list;
                 c->stackcache[order].list = x;
                 c->stackcache[order].size += n;
             }
@@ -533,21 +547,21 @@ namespace golang::runtime
         else
         {
             auto s = spanOfUnchecked(uintptr_t(v));
-            if(get(gocpp::recv(s->state)) != mSpanManual)
+            if(rec::get(gocpp::recv(s->state)) != mSpanManual)
             {
-                println(hex(base(gocpp::recv(s))), v);
+                println(hex(rec::base(gocpp::recv(s))), v);
                 go_throw("bad span state");
             }
             if(gcphase == _GCoff)
             {
                 osStackFree(s);
-                freeManual(gocpp::recv(mheap_), s, spanAllocStack);
+                rec::freeManual(gocpp::recv(mheap_), s, spanAllocStack);
             }
             else
             {
                 auto log2npage = stacklog2(s->npages);
                 lock(& stackLarge.lock);
-                insert(gocpp::recv(stackLarge.free[log2npage]), s);
+                rec::insert(gocpp::recv(stackLarge.free[log2npage]), s);
                 unlock(& stackLarge.lock);
             }
         }
@@ -641,7 +655,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uint8_t ptrbit(struct bitvector* bv, uintptr_t i)
+    uint8_t rec::ptrbit(struct bitvector* bv, uintptr_t i)
     {
         auto b = *(addb(bv->bytedata, i / 8));
         return (b >> (i % 8)) & 1;
@@ -660,7 +674,7 @@ namespace golang::runtime
             {
                 for(auto j = uintptr_t(0); j < 8; j++)
                 {
-                    print("        ", add(scanp, (i + j) * goarch::PtrSize), ":", ptrnames[ptrbit(gocpp::recv(bv), i + j)], ":", hex(*(uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize))), " # ", i, " ", *addb(bv->bytedata, i / 8), "\n");
+                    print("        ", add(scanp, (i + j) * goarch::PtrSize), ":", ptrnames[rec::ptrbit(gocpp::recv(bv), i + j)], ":", hex(*(uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize))), " # ", i, " ", *addb(bv->bytedata, i / 8), "\n");
                 }
             }
             auto b = *(addb(bv->bytedata, i / 8));
@@ -671,7 +685,7 @@ namespace golang::runtime
                 auto pp = (uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize));
                 retry:
                 auto p = *pp;
-                if(valid(gocpp::recv(f)) && 0 < p && p < minLegalPointer && debug.invalidptr != 0)
+                if(rec::valid(gocpp::recv(f)) && 0 < p && p < minLegalPointer && debug.invalidptr != 0)
                 {
                     getg()->m->traceback = 2;
                     print("runtime: bad pointer in frame ", funcname(f), " at ", pp, ": ", hex(p), "\n");
@@ -729,7 +743,7 @@ namespace golang::runtime
             }
             adjustpointer(adjinfo, unsafe::Pointer(frame->varp));
         }
-        auto [locals, args, objs] = getStackMap(gocpp::recv(frame), true);
+        auto [locals, args, objs] = rec::getStackMap(gocpp::recv(frame), true);
         if(locals.n > 0)
         {
             auto size = uintptr_t(locals.n) * goarch::PtrSize;
@@ -759,10 +773,10 @@ namespace golang::runtime
                 {
                     continue;
                 }
-                auto ptrdata = ptrdata(gocpp::recv(obj));
-                auto gcdata = gcdata(gocpp::recv(obj));
+                auto ptrdata = rec::ptrdata(gocpp::recv(obj));
+                auto gcdata = rec::gcdata(gocpp::recv(obj));
                 mspan* s = {};
-                if(useGCProg(gocpp::recv(obj)))
+                if(rec::useGCProg(gocpp::recv(obj)))
                 {
                     s = materializeGCProg(ptrdata, gcdata);
                     gcdata = (unsigned char*)(unsafe::Pointer(s->startAddr));
@@ -905,7 +919,7 @@ namespace golang::runtime
             go_throw("nil stackbase");
         }
         auto used = old.hi - gp->sched.sp;
-        addScannableStack(gocpp::recv(gcController), ptr(gocpp::recv(getg()->m->p)), int64_t(newsize) - int64_t(old.hi - old.lo));
+        rec::addScannableStack(gocpp::recv(gcController), rec::ptr(gocpp::recv(getg()->m->p)), int64_t(newsize) - int64_t(old.hi - old.lo));
         auto go_new = stackalloc(uint32_t(newsize));
         if(stackPoisonCopy != 0)
         {
@@ -921,7 +935,7 @@ namespace golang::runtime
         auto ncopy = used;
         if(! gp->activeStackChans)
         {
-            if(newsize < old.hi - old.lo && Load(gocpp::recv(gp->parkingOnChan)))
+            if(newsize < old.hi - old.lo && rec::Load(gocpp::recv(gp->parkingOnChan)))
             {
                 go_throw("racy sudog adjustment due to parking on channel");
             }
@@ -945,7 +959,7 @@ namespace golang::runtime
         gp->sched.sp = go_new.hi - used;
         gp->stktopsp += adjinfo->delta;
         unwinder u = {};
-        for(init(gocpp::recv(u), gp, 0); valid(gocpp::recv(u)); next(gocpp::recv(u)))
+        for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             adjustframe(& u.frame, & adjinfo);
         }
@@ -969,15 +983,15 @@ namespace golang::runtime
     void newstack()
     {
         auto thisg = getg();
-        if(ptr(gocpp::recv(thisg->m->morebuf.g))->stackguard0 == stackFork)
+        if(rec::ptr(gocpp::recv(thisg->m->morebuf.g))->stackguard0 == stackFork)
         {
             go_throw("stack growth after fork");
         }
-        if(ptr(gocpp::recv(thisg->m->morebuf.g)) != thisg->m->curg)
+        if(rec::ptr(gocpp::recv(thisg->m->morebuf.g)) != thisg->m->curg)
         {
             print("runtime: newstack called from g=", hex(thisg->m->morebuf.g), "\n" + "\tm=", thisg->m, " m->curg=", thisg->m->curg, " m->g0=", thisg->m->g0, " m->gsignal=", thisg->m->gsignal, "\n");
             auto morebuf = thisg->m->morebuf;
-            traceback(morebuf.pc, morebuf.sp, morebuf.lr, ptr(gocpp::recv(morebuf.g)));
+            traceback(morebuf.pc, morebuf.sp, morebuf.lr, rec::ptr(gocpp::recv(morebuf.g)));
             go_throw("runtime: wrong goroutine in newstack");
         }
         auto gp = thisg->m->curg;
@@ -988,10 +1002,10 @@ namespace golang::runtime
             gp->syscallpc = morebuf.pc;
             auto [pcname, pcoff] = std::tuple{"(unknown)", uintptr_t(0)};
             auto f = findfunc(gp->sched.pc);
-            if(valid(gocpp::recv(f)))
+            if(rec::valid(gocpp::recv(f)))
             {
                 pcname = funcname(f);
-                pcoff = gp->sched.pc - entry(gocpp::recv(f));
+                pcoff = gp->sched.pc - rec::entry(gocpp::recv(f));
             }
             print("runtime: newstack at ", pcname, "+", hex(pcoff), " sp=", hex(gp->sched.sp), " stack=[", hex(gp->stack.lo), ", ", hex(gp->stack.hi), "]\n", "\tmorebuf={pc:", hex(morebuf.pc), " sp:", hex(morebuf.sp), " lr:", hex(morebuf.lr), "}\n", "\tsched={pc:", hex(gp->sched.pc), " sp:", hex(gp->sched.sp), " lr:", hex(gp->sched.lr), " ctxt:", gp->sched.ctxt, "}\n");
             thisg->m->traceback = 2;
@@ -1055,7 +1069,7 @@ namespace golang::runtime
         }
         auto oldsize = gp->stack.hi - gp->stack.lo;
         auto newsize = oldsize * 2;
-        if(auto f = findfunc(gp->sched.pc); valid(gocpp::recv(f)))
+        if(auto f = findfunc(gp->sched.pc); rec::valid(gocpp::recv(f)))
         {
             auto max = uintptr_t(funcMaxSPDelta(f));
             auto needed = max + stackGuard;
@@ -1113,7 +1127,7 @@ namespace golang::runtime
 
     bool isShrinkStackSafe(struct g* gp)
     {
-        return gp->syscallsp == 0 && ! gp->asyncSafePoint && ! Load(gocpp::recv(gp->parkingOnChan));
+        return gp->syscallsp == 0 && ! gp->asyncSafePoint && ! rec::Load(gocpp::recv(gp->parkingOnChan));
     }
 
     void shrinkstack(struct g* gp)
@@ -1142,7 +1156,7 @@ namespace golang::runtime
             return;
         }
         auto f = findfunc(gp->startpc);
-        if(valid(gocpp::recv(f)) && f.funcID == abi::FuncID_gcBgMarkWorker)
+        if(rec::valid(gocpp::recv(f)) && f.funcID == abi::FuncID_gcBgMarkWorker)
         {
             return;
         }
@@ -1175,10 +1189,10 @@ namespace golang::runtime
                 auto next = s->next;
                 if(s->allocCount == 0)
                 {
-                    remove(gocpp::recv(list), s);
+                    rec::remove(gocpp::recv(list), s);
                     s->manualFreeList = 0;
                     osStackFree(s);
-                    freeManual(gocpp::recv(mheap_), s, spanAllocStack);
+                    rec::freeManual(gocpp::recv(mheap_), s, spanAllocStack);
                 }
                 s = next;
             }
@@ -1190,9 +1204,9 @@ namespace golang::runtime
             for(auto s = stackLarge.free[i].first; s != nullptr; )
             {
                 auto next = s->next;
-                remove(gocpp::recv(stackLarge.free[i]), s);
+                rec::remove(gocpp::recv(stackLarge.free[i]), s);
                 osStackFree(s);
-                freeManual(gocpp::recv(mheap_), s, spanAllocStack);
+                rec::freeManual(gocpp::recv(mheap_), s, spanAllocStack);
                 s = next;
             }
         }
@@ -1237,12 +1251,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool useGCProg(struct stackObjectRecord* r)
+    bool rec::useGCProg(struct stackObjectRecord* r)
     {
         return r->_ptrdata < 0;
     }
 
-    uintptr_t ptrdata(struct stackObjectRecord* r)
+    uintptr_t rec::ptrdata(struct stackObjectRecord* r)
     {
         auto x = r->_ptrdata;
         if(x < 0)
@@ -1252,7 +1266,7 @@ namespace golang::runtime
         return uintptr_t(x);
     }
 
-    unsigned char* gcdata(struct stackObjectRecord* r)
+    unsigned char* rec::gcdata(struct stackObjectRecord* r)
     {
         auto ptr = uintptr_t(unsafe::Pointer(r));
         moduledata* mod = {};

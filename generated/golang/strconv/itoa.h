@@ -22,5 +22,9 @@ namespace golang::strconv
     extern std::string digits;
     std::tuple<gocpp::slice<unsigned char>, std::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_);
     bool isPowerOfTwo(int x);
+
+    namespace rec
+    {
+    }
 }
 

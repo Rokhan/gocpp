@@ -16,6 +16,13 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace tree::rec;
+    }
+
     void Walk(struct tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::panic("Not implemented");

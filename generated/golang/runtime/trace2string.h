@@ -38,9 +38,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceStringTable& value);
-    uint64_t put(struct traceStringTable* t, uintptr_t gen, std::string s);
-    uint64_t emit(struct traceStringTable* t, uintptr_t gen, std::string s);
-    void writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, std::string s);
-    void reset(struct traceStringTable* t, uintptr_t gen);
+
+    namespace rec
+    {
+        uint64_t put(struct traceStringTable* t, uintptr_t gen, std::string s);
+        uint64_t emit(struct traceStringTable* t, uintptr_t gen, std::string s);
+        void writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, std::string s);
+        void reset(struct traceStringTable* t, uintptr_t gen);
+    }
 }
 

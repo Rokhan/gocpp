@@ -13,5 +13,9 @@ namespace golang::runtime
 {
     bool isSecureMode();
     void secure();
+
+    namespace rec
+    {
+    }
 }
 

@@ -18,6 +18,14 @@
 
 namespace golang::main
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace fmt::rec;
+        using namespace sync::rec;
+        using namespace time::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     SafeCounter::operator T()
@@ -50,20 +58,20 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void Inc(struct SafeCounter* c, std::string key)
+    void rec::Inc(struct SafeCounter* c, std::string key)
     {
-        Lock(gocpp::recv(c->mu));
+        rec::Lock(gocpp::recv(c->mu));
         c->v[key]++;
-        Unlock(gocpp::recv(c->mu));
+        rec::Unlock(gocpp::recv(c->mu));
     }
 
-    int Value(struct SafeCounter* c, std::string key)
+    int rec::Value(struct SafeCounter* c, std::string key)
     {
         gocpp::Defer defer;
         try
         {
-            Lock(gocpp::recv(c->mu));
-            defer.push_back([=]{ Unlock(gocpp::recv(c->mu)); });
+            rec::Lock(gocpp::recv(c->mu));
+            defer.push_back([=]{ rec::Unlock(gocpp::recv(c->mu)); });
             return c->v[key];
         }
         catch(gocpp::GoPanic& gp)
@@ -77,10 +85,10 @@ namespace golang::main
         auto c = gocpp::InitPtr<SafeCounter>([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
         for(auto i = 0; i < 1000; i++)
         {
-            gocpp::go([&]{ Inc(gocpp::recv(c), "somekey"); });
+            gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"); });
         }
         mocklib::Sleep(mocklib::Second);
-        mocklib::Println("result: ", Value(gocpp::recv(c), "somekey"));
+        mocklib::Println("result: ", rec::Value(gocpp::recv(c), "somekey"));
         mocklib::Println("expected: ", 1000);
     }
 

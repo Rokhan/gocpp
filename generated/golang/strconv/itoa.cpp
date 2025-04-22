@@ -15,6 +15,12 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+    }
+
     std::string FormatUint(uint64_t i, int base)
     {
         if(fastSmalls && i < nSmalls && base == 10)

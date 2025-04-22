@@ -16,6 +16,13 @@
 
 namespace golang::strconv
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace bits::rec;
+        using namespace math::rec;
+    }
+
     std::tuple<double, bool> eiselLemire64(uint64_t man, int exp10, bool neg)
     {
         double f;

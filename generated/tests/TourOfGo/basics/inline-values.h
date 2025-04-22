@@ -32,5 +32,9 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
     extern fakeFetcher fetcher;
+
+    namespace rec
+    {
+    }
 }
 

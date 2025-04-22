@@ -14,5 +14,9 @@ namespace golang::main
 {
     double compute(std::function<double (double, double)> fn);
     void main();
+
+    namespace rec
+    {
+    }
 }
 

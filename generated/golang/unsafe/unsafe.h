@@ -11,13 +11,17 @@
 
 namespace golang::unsafe
 {
-    uintptr_t Sizeof(ArbitraryType x);
-    uintptr_t Offsetof(ArbitraryType x);
-    uintptr_t Alignof(ArbitraryType x);
-    Pointer Add(Pointer ptr, IntegerType len);
-    gocpp::slice<ArbitraryType> Slice(ArbitraryType* ptr, IntegerType len);
-    ArbitraryType* SliceData(gocpp::slice<ArbitraryType> slice);
-    std::string String(unsigned char* ptr, IntegerType len);
+    uintptr_t Sizeof(unsafe::ArbitraryType x);
+    uintptr_t Offsetof(unsafe::ArbitraryType x);
+    uintptr_t Alignof(unsafe::ArbitraryType x);
+    Pointer Add(Pointer ptr, unsafe::IntegerType len);
+    gocpp::slice<unsafe::ArbitraryType> Slice(unsafe::ArbitraryType* ptr, unsafe::IntegerType len);
+    unsafe::ArbitraryType* SliceData(gocpp::slice<unsafe::ArbitraryType> slice);
+    std::string String(unsigned char* ptr, unsafe::IntegerType len);
     unsigned char* StringData(std::string str);
+
+    namespace rec
+    {
+    }
 }
 

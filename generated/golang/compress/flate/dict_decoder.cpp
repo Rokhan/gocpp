@@ -13,6 +13,11 @@
 
 namespace golang::flate
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     dictDecoder::operator T()
@@ -51,7 +56,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    void init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
+    void rec::init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
     {
         *dd = gocpp::Init<dictDecoder>([](dictDecoder& x) { x.hist = dd->hist; });
         if(cap(dd->hist) < size)
@@ -72,7 +77,7 @@ namespace golang::flate
         dd->rdPos = dd->wrPos;
     }
 
-    int histSize(struct dictDecoder* dd)
+    int rec::histSize(struct dictDecoder* dd)
     {
         if(dd->full)
         {
@@ -81,33 +86,33 @@ namespace golang::flate
         return dd->wrPos;
     }
 
-    int availRead(struct dictDecoder* dd)
+    int rec::availRead(struct dictDecoder* dd)
     {
         return dd->wrPos - dd->rdPos;
     }
 
-    int availWrite(struct dictDecoder* dd)
+    int rec::availWrite(struct dictDecoder* dd)
     {
         return len(dd->hist) - dd->wrPos;
     }
 
-    gocpp::slice<unsigned char> writeSlice(struct dictDecoder* dd)
+    gocpp::slice<unsigned char> rec::writeSlice(struct dictDecoder* dd)
     {
         return dd->hist.make_slice(dd->wrPos);
     }
 
-    void writeMark(struct dictDecoder* dd, int cnt)
+    void rec::writeMark(struct dictDecoder* dd, int cnt)
     {
         dd->wrPos += cnt;
     }
 
-    void writeByte(struct dictDecoder* dd, unsigned char c)
+    void rec::writeByte(struct dictDecoder* dd, unsigned char c)
     {
         dd->hist[dd->wrPos] = c;
         dd->wrPos++;
     }
 
-    int writeCopy(struct dictDecoder* dd, int dist, int length)
+    int rec::writeCopy(struct dictDecoder* dd, int dist, int length)
     {
         auto dstBase = dd->wrPos;
         auto dstPos = dstBase;
@@ -131,7 +136,7 @@ namespace golang::flate
         return dstPos - dstBase;
     }
 
-    int tryWriteCopy(struct dictDecoder* dd, int dist, int length)
+    int rec::tryWriteCopy(struct dictDecoder* dd, int dist, int length)
     {
         auto dstPos = dd->wrPos;
         auto endPos = dstPos + length;
@@ -149,7 +154,7 @@ namespace golang::flate
         return dstPos - dstBase;
     }
 
-    gocpp::slice<unsigned char> readFlush(struct dictDecoder* dd)
+    gocpp::slice<unsigned char> rec::readFlush(struct dictDecoder* dd)
     {
         auto toRead = dd->hist.make_slice(dd->rdPos, dd->wrPos);
         dd->rdPos = dd->wrPos;

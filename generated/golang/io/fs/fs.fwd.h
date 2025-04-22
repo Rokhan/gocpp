@@ -12,7 +12,7 @@ namespace golang::fs
     struct ReadDirFile;
     using FileMode = uint32_t;
     struct PathError;
-    const FileMode ModeDir = 1 << (32 - 1 - 0);
+    const fs::FileMode ModeDir = 1 << (32 - 1 - 0);
     const FileMode ModeAppend = 1 << (32 - 1 - 1);
     const FileMode ModeExclusive = 1 << (32 - 1 - 2);
     const FileMode ModeTemporary = 1 << (32 - 1 - 3);
@@ -25,7 +25,7 @@ namespace golang::fs
     const FileMode ModeCharDevice = 1 << (32 - 1 - 10);
     const FileMode ModeSticky = 1 << (32 - 1 - 11);
     const FileMode ModeIrregular = 1 << (32 - 1 - 12);
-    const FileMode ModePerm = 0777;
+    const fs::FileMode ModePerm = 0777;
 }
 #include "golang/time/time.fwd.h"
 

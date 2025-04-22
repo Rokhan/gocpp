@@ -13,5 +13,9 @@
 namespace golang::strconv
 {
     int index(std::string s, unsigned char c);
+
+    namespace rec
+    {
+    }
 }
 

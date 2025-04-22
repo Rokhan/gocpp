@@ -17,5 +17,9 @@ namespace golang::math
     bool IsNaN(double f);
     bool IsInf(double f, int sign);
     std::tuple<double, int> normalize(double x);
+
+    namespace rec
+    {
+    }
 }
 

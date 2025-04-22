@@ -13,6 +13,11 @@
 
 namespace golang::color
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     
     template<typename T>
     Color::Color(T& ref)
@@ -40,17 +45,20 @@ namespace golang::color
     template<typename T, typename StoreT>
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> Color::ColorImpl<T, StoreT>::vRGBA()
     {
-        return RGBA(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::RGBA(gocpp::PtrRecv<T, false>(value.get()));
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<Color, false>& self)
+    namespace rec
     {
-        return self.ptr->value->vRGBA();
-    }
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<Color, false>& self)
+        {
+            return self.ptr->value->vRGBA();
+        }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<Color>& self)
-    {
-        return self.obj.value->vRGBA();
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<Color>& self)
+        {
+            return self.obj.value->vRGBA();
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Color& value)
@@ -96,7 +104,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct RGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -151,7 +159,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct RGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -198,7 +206,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NRGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -259,7 +267,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NRGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -307,7 +315,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Alpha c)
     {
         uint32_t r;
         uint32_t g;
@@ -347,7 +355,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Alpha16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -386,7 +394,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Gray c)
     {
         uint32_t r;
         uint32_t g;
@@ -426,7 +434,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Gray16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -463,17 +471,20 @@ namespace golang::color
     template<typename T, typename StoreT>
     struct Color Model::ModelImpl<T, StoreT>::vConvert(struct Color c)
     {
-        return Convert(gocpp::PtrRecv<T, false>(value.get()), c);
+        return rec::Convert(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
-    struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c)
+    namespace rec
     {
-        return self.ptr->value->vConvert(c);
-    }
+        struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c)
+        {
+            return self.ptr->value->vConvert(c);
+        }
 
-    struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c)
-    {
-        return self.obj.value->vConvert(c);
+        struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c)
+        {
+            return self.obj.value->vConvert(c);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value)
@@ -515,9 +526,9 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    struct Color Convert(struct modelFunc* m, struct Color c)
+    struct Color rec::Convert(struct modelFunc* m, struct Color c)
     {
-        return f(gocpp::recv(m), c);
+        return rec::f(gocpp::recv(m), c);
     }
 
     Model RGBAModel = ModelFunc(rgbaModel);
@@ -534,7 +545,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, a] = RGBA(gocpp::recv(c));
+        auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         return RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
@@ -544,7 +555,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, a] = RGBA(gocpp::recv(c));
+        auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         return RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
@@ -554,7 +565,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, a] = RGBA(gocpp::recv(c));
+        auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         if(a == 0xffff)
         {
             return NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), 0xff};
@@ -575,7 +586,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, a] = RGBA(gocpp::recv(c));
+        auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         if(a == 0xffff)
         {
             return NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), 0xffff};
@@ -596,7 +607,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [gocpp_id_13, gocpp_id_14, gocpp_id_15, a] = RGBA(gocpp::recv(c));
+        auto [gocpp_id_13, gocpp_id_14, gocpp_id_15, a] = rec::RGBA(gocpp::recv(c));
         return Alpha {uint8_t(a >> 8)};
     }
 
@@ -606,7 +617,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [gocpp_id_21, gocpp_id_22, gocpp_id_23, a] = RGBA(gocpp::recv(c));
+        auto [gocpp_id_21, gocpp_id_22, gocpp_id_23, a] = rec::RGBA(gocpp::recv(c));
         return Alpha16 {uint16_t(a)};
     }
 
@@ -616,7 +627,7 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_27] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_27] = rec::RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
         return Gray {uint8_t(y)};
     }
@@ -627,27 +638,27 @@ namespace golang::color
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_31] = RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_31] = rec::RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
         return Gray16 {uint16_t(y)};
     }
 
-    struct Color Convert(Palette p, struct Color c)
+    struct Color rec::Convert(Palette p, struct Color c)
     {
         if(len(p) == 0)
         {
             return nullptr;
         }
-        return p[Index(gocpp::recv(p), c)];
+        return p[rec::Index(gocpp::recv(p), c)];
     }
 
-    int Index(Palette p, struct Color c)
+    int rec::Index(Palette p, struct Color c)
     {
-        auto [cr, cg, cb, ca] = RGBA(gocpp::recv(c));
+        auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));
         auto [ret, bestSum] = std::tuple{0, uint32_t((1 << 32) - 1)};
         for(auto [i, v] : p)
         {
-            auto [vr, vg, vb, va] = RGBA(gocpp::recv(v));
+            auto [vr, vg, vb, va] = rec::RGBA(gocpp::recv(v));
             auto sum = sqDiff(cr, vr) + sqDiff(cg, vg) + sqDiff(cb, vb) + sqDiff(ca, va);
             if(sum < bestSum)
             {

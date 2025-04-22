@@ -15,6 +15,12 @@
 
 namespace golang::testlog
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace atomic::rec;
+    }
+
     
     template<typename T>
     Interface::Interface(T& ref)
@@ -42,62 +48,65 @@ namespace golang::testlog
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vGetenv(std::string key)
     {
-        return Getenv(gocpp::PtrRecv<T, false>(value.get()), key);
+        return rec::Getenv(gocpp::PtrRecv<T, false>(value.get()), key);
     }
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vStat(std::string file)
     {
-        return Stat(gocpp::PtrRecv<T, false>(value.get()), file);
+        return rec::Stat(gocpp::PtrRecv<T, false>(value.get()), file);
     }
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vOpen(std::string file)
     {
-        return Open(gocpp::PtrRecv<T, false>(value.get()), file);
+        return rec::Open(gocpp::PtrRecv<T, false>(value.get()), file);
     }
     template<typename T, typename StoreT>
     void Interface::InterfaceImpl<T, StoreT>::vChdir(std::string dir)
     {
-        return Chdir(gocpp::PtrRecv<T, false>(value.get()), dir);
+        return rec::Chdir(gocpp::PtrRecv<T, false>(value.get()), dir);
     }
 
-    void Getenv(const gocpp::PtrRecv<Interface, false>& self, std::string key)
+    namespace rec
     {
-        return self.ptr->value->vGetenv(key);
-    }
+        void Getenv(const gocpp::PtrRecv<Interface, false>& self, std::string key)
+        {
+            return self.ptr->value->vGetenv(key);
+        }
 
-    void Getenv(const gocpp::ObjRecv<Interface>& self, std::string key)
-    {
-        return self.obj.value->vGetenv(key);
-    }
+        void Getenv(const gocpp::ObjRecv<Interface>& self, std::string key)
+        {
+            return self.obj.value->vGetenv(key);
+        }
 
-    void Stat(const gocpp::PtrRecv<Interface, false>& self, std::string file)
-    {
-        return self.ptr->value->vStat(file);
-    }
+        void Stat(const gocpp::PtrRecv<Interface, false>& self, std::string file)
+        {
+            return self.ptr->value->vStat(file);
+        }
 
-    void Stat(const gocpp::ObjRecv<Interface>& self, std::string file)
-    {
-        return self.obj.value->vStat(file);
-    }
+        void Stat(const gocpp::ObjRecv<Interface>& self, std::string file)
+        {
+            return self.obj.value->vStat(file);
+        }
 
-    void Open(const gocpp::PtrRecv<Interface, false>& self, std::string file)
-    {
-        return self.ptr->value->vOpen(file);
-    }
+        void Open(const gocpp::PtrRecv<Interface, false>& self, std::string file)
+        {
+            return self.ptr->value->vOpen(file);
+        }
 
-    void Open(const gocpp::ObjRecv<Interface>& self, std::string file)
-    {
-        return self.obj.value->vOpen(file);
-    }
+        void Open(const gocpp::ObjRecv<Interface>& self, std::string file)
+        {
+            return self.obj.value->vOpen(file);
+        }
 
-    void Chdir(const gocpp::PtrRecv<Interface, false>& self, std::string dir)
-    {
-        return self.ptr->value->vChdir(dir);
-    }
+        void Chdir(const gocpp::PtrRecv<Interface, false>& self, std::string dir)
+        {
+            return self.ptr->value->vChdir(dir);
+        }
 
-    void Chdir(const gocpp::ObjRecv<Interface>& self, std::string dir)
-    {
-        return self.obj.value->vChdir(dir);
+        void Chdir(const gocpp::ObjRecv<Interface>& self, std::string dir)
+        {
+            return self.obj.value->vChdir(dir);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value)
@@ -108,16 +117,16 @@ namespace golang::testlog
     atomic::Value logger;
     void SetLogger(struct Interface impl)
     {
-        if(Load(gocpp::recv(logger)) != nullptr)
+        if(rec::Load(gocpp::recv(logger)) != nullptr)
         {
             gocpp::panic("testlog: SetLogger must be called only once");
         }
-        Store(gocpp::recv(logger), & impl);
+        rec::Store(gocpp::recv(logger), & impl);
     }
 
     struct Interface Logger()
     {
-        auto impl = Load(gocpp::recv(logger));
+        auto impl = rec::Load(gocpp::recv(logger));
         if(impl == nullptr)
         {
             return nullptr;
@@ -129,7 +138,7 @@ namespace golang::testlog
     {
         if(auto log = Logger(); log != nullptr)
         {
-            Getenv(gocpp::recv(log), name);
+            rec::Getenv(gocpp::recv(log), name);
         }
     }
 
@@ -137,7 +146,7 @@ namespace golang::testlog
     {
         if(auto log = Logger(); log != nullptr)
         {
-            Open(gocpp::recv(log), name);
+            rec::Open(gocpp::recv(log), name);
         }
     }
 
@@ -145,7 +154,7 @@ namespace golang::testlog
     {
         if(auto log = Logger(); log != nullptr)
         {
-            Stat(gocpp::recv(log), name);
+            rec::Stat(gocpp::recv(log), name);
         }
     }
 

@@ -91,6 +91,21 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace goarch::rec;
+        using namespace goexperiment::rec;
+        using namespace goos::rec;
+        using namespace math::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+        using namespace unsafe::rec;
+    }
+
     uintptr_t physPageSize;
     uintptr_t physHugePageSize;
     unsigned int physHugePageShift;
@@ -173,7 +188,7 @@ namespace golang::runtime
         {
             go_throw("taggedPointerbits too small");
         }
-        init(gocpp::recv(mheap_));
+        rec::init(gocpp::recv(mheap_));
         mcache0 = allocmcache();
         lockInit(& gcBitsArenas.lock, lockRankGcBitsArenas);
         lockInit(& profInsertLock, lockRankProfInsert);
@@ -228,7 +243,7 @@ namespace golang::runtime
                 {
                     hintList = & mheap_.userArena.arenaHints;
                 }
-                auto hint = (arenaHint*)(alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+                auto hint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
                 hint->addr = p;
                 std::tie(hint->next, *hintList) = std::tuple{*hintList, hint};
             }
@@ -239,7 +254,7 @@ namespace golang::runtime
             auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize));
             if(meta != 0)
             {
-                init(gocpp::recv(mheap_.heapArenaAlloc), meta, arenaMetaSize, true);
+                rec::init(gocpp::recv(mheap_.heapArenaAlloc), meta, arenaMetaSize, true);
             }
             auto procBrk = sbrk0();
             auto p = firstmoduledata.end;
@@ -258,22 +273,22 @@ namespace golang::runtime
                 auto [a, size] = sysReserveAligned(unsafe::Pointer(p), arenaSize, heapArenaBytes);
                 if(a != nullptr)
                 {
-                    init(gocpp::recv(mheap_.arena), uintptr_t(a), size, false);
+                    rec::init(gocpp::recv(mheap_.arena), uintptr_t(a), size, false);
                     p = mheap_.arena.end;
                     break;
                 }
             }
-            auto hint = (arenaHint*)(alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+            auto hint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
             hint->addr = p;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
-            auto userArenaHint = (arenaHint*)(alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+            auto userArenaHint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
             userArenaHint->addr = p;
             std::tie(userArenaHint->next, mheap_.userArena.arenaHints) = std::tuple{mheap_.userArena.arenaHints, userArenaHint};
         }
-        Store(gocpp::recv(gcController.memoryLimit), maxInt64);
+        rec::Store(gocpp::recv(gcController.memoryLimit), maxInt64);
     }
 
-    std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
+    std::tuple<unsafe::Pointer, uintptr_t> rec::sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
     {
         unsafe::Pointer v;
         uintptr_t size;
@@ -283,7 +298,7 @@ namespace golang::runtime
         {
             unsafe::Pointer v;
             uintptr_t size;
-            v = alloc(gocpp::recv(h->arena), n, heapArenaBytes, & gcController.heapReleased);
+            v = rec::alloc(gocpp::recv(h->arena), n, heapArenaBytes, & gcController.heapReleased);
             if(v != nullptr)
             {
                 unsafe::Pointer v;
@@ -344,7 +359,7 @@ namespace golang::runtime
                 sysFreeOS(v, n);
             }
             *hintList = hint->next;
-            free(gocpp::recv(h->arenaHintAlloc), unsafe::Pointer(hint));
+            rec::free(gocpp::recv(h->arenaHintAlloc), unsafe::Pointer(hint));
         }
         if(size == 0)
         {
@@ -363,10 +378,10 @@ namespace golang::runtime
                 uintptr_t size;
                 return {nullptr, 0};
             }
-            auto hint = (arenaHint*)(alloc(gocpp::recv(h->arenaHintAlloc)));
+            auto hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
             std::tie(hint->addr, hint->down) = std::tuple{uintptr_t(v), true};
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
-            hint = (arenaHint*)(alloc(gocpp::recv(h->arenaHintAlloc)));
+            hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
             hint->addr = uintptr_t(v) + size;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
         }
@@ -414,7 +429,7 @@ namespace golang::runtime
         {
             unsafe::Pointer v;
             uintptr_t size;
-            auto l2 = h->arenas[l1(gocpp::recv(ri))];
+            auto l2 = h->arenas[rec::l1(gocpp::recv(ri))];
             if(l2 == nullptr)
             {
                 unsafe::Pointer v;
@@ -438,16 +453,16 @@ namespace golang::runtime
                     uintptr_t size;
                     sysNoHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
                 }
-                atomic::StorepNoWB(unsafe::Pointer(& h->arenas[l1(gocpp::recv(ri))]), unsafe::Pointer(l2));
+                atomic::StorepNoWB(unsafe::Pointer(& h->arenas[rec::l1(gocpp::recv(ri))]), unsafe::Pointer(l2));
             }
-            if(l2[l2(gocpp::recv(ri))] != nullptr)
+            if(l2[rec::l2(gocpp::recv(ri))] != nullptr)
             {
                 unsafe::Pointer v;
                 uintptr_t size;
                 go_throw("arena already initialized");
             }
             heapArena* r = {};
-            r = (heapArena*)(alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
+            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
             if(r == nullptr)
             {
                 unsafe::Pointer v;
@@ -489,7 +504,7 @@ namespace golang::runtime
                 h->allArenas = h->allArenas.make_slice(0, len(h->allArenas) + 1);
                 h->allArenas[len(h->allArenas) - 1] = ri;
             }
-            atomic::StorepNoWB(unsafe::Pointer(& l2[l2(gocpp::recv(ri))]), unsafe::Pointer(r));
+            atomic::StorepNoWB(unsafe::Pointer(& l2[rec::l2(gocpp::recv(ri))]), unsafe::Pointer(r));
             if(false) {
             mapped_continue:
                 continue;
@@ -555,9 +570,9 @@ namespace golang::runtime
         }
     }
 
-    void enableMetadataHugePages(struct mheap* h)
+    void rec::enableMetadataHugePages(struct mheap* h)
     {
-        enableChunkHugePages(gocpp::recv(h->pages));
+        rec::enableChunkHugePages(gocpp::recv(h->pages));
         lock(& h->lock);
         if(h->arenasHugePages)
         {
@@ -578,7 +593,7 @@ namespace golang::runtime
     }
 
     uintptr_t zerobase;
-    gclinkptr nextFreeFast(struct mspan* s)
+    runtime::gclinkptr nextFreeFast(struct mspan* s)
     {
         auto theBit = sys::TrailingZeros64(s->allocCache);
         if(theBit < 64)
@@ -594,50 +609,50 @@ namespace golang::runtime
                 s->allocCache >>= (unsigned int)(theBit + 1);
                 s->freeindex = freeidx;
                 s->allocCount++;
-                return gclinkptr(uintptr_t(result) * s->elemsize + base(gocpp::recv(s)));
+                return gclinkptr(uintptr_t(result) * s->elemsize + rec::base(gocpp::recv(s)));
             }
         }
         return 0;
     }
 
-    std::tuple<gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, spanClass spc)
+    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(struct mcache* c, runtime::spanClass spc)
     {
-        gclinkptr v;
+        runtime::gclinkptr v;
         struct mspan* s;
         bool shouldhelpgc;
         s = c->alloc[spc];
         shouldhelpgc = false;
-        auto freeIndex = nextFreeIndex(gocpp::recv(s));
+        auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
         if(freeIndex == s->nelems)
         {
-            gclinkptr v;
+            runtime::gclinkptr v;
             struct mspan* s;
             bool shouldhelpgc;
             if(s->allocCount != s->nelems)
             {
-                gclinkptr v;
+                runtime::gclinkptr v;
                 struct mspan* s;
                 bool shouldhelpgc;
                 println("runtime: s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
                 go_throw("s.allocCount != s.nelems && freeIndex == s.nelems");
             }
-            refill(gocpp::recv(c), spc);
+            rec::refill(gocpp::recv(c), spc);
             shouldhelpgc = true;
             s = c->alloc[spc];
-            freeIndex = nextFreeIndex(gocpp::recv(s));
+            freeIndex = rec::nextFreeIndex(gocpp::recv(s));
         }
         if(freeIndex >= s->nelems)
         {
-            gclinkptr v;
+            runtime::gclinkptr v;
             struct mspan* s;
             bool shouldhelpgc;
             go_throw("freeIndex is not valid");
         }
-        v = gclinkptr(uintptr_t(freeIndex) * s->elemsize + base(gocpp::recv(s)));
+        v = gclinkptr(uintptr_t(freeIndex) * s->elemsize + rec::base(gocpp::recv(s)));
         s->allocCount++;
         if(s->allocCount > s->nelems)
         {
-            gclinkptr v;
+            runtime::gclinkptr v;
             struct mspan* s;
             bool shouldhelpgc;
             println("s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
@@ -755,7 +770,7 @@ namespace golang::runtime
                 auto v = nextFreeFast(span);
                 if(v == 0)
                 {
-                    std::tie(v, span, shouldhelpgc) = nextFree(gocpp::recv(c), tinySpanClass);
+                    std::tie(v, span, shouldhelpgc) = rec::nextFree(gocpp::recv(c), tinySpanClass);
                 }
                 x = unsafe::Pointer(v);
                 (gocpp::array<uint64_t, 2>*)(x)[0] = 0;
@@ -789,7 +804,7 @@ namespace golang::runtime
                 auto v = nextFreeFast(span);
                 if(v == 0)
                 {
-                    std::tie(v, span, shouldhelpgc) = nextFree(gocpp::recv(c), spc);
+                    std::tie(v, span, shouldhelpgc) = rec::nextFree(gocpp::recv(c), spc);
                 }
                 x = unsafe::Pointer(v);
                 if(needzero && span->needzero != 0)
@@ -807,11 +822,11 @@ namespace golang::runtime
         else
         {
             shouldhelpgc = true;
-            span = allocLarge(gocpp::recv(c), size, noscan);
+            span = rec::allocLarge(gocpp::recv(c), size, noscan);
             span->freeindex = 1;
             span->allocCount = 1;
             size = span->elemsize;
-            x = unsafe::Pointer(base(gocpp::recv(span)));
+            x = unsafe::Pointer(rec::base(gocpp::recv(span)));
             if(needzero && span->needzero != 0)
             {
                 if(noscan)
@@ -919,7 +934,7 @@ namespace golang::runtime
         }
         if(shouldhelpgc)
         {
-            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerHeap; })); test(gocpp::recv(t)))
+            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerHeap; })); rec::test(gocpp::recv(t)))
             {
                 gcStart(t);
             }
@@ -1139,7 +1154,7 @@ namespace golang::runtime
 
     gocpp_id_0 globalAlloc;
     notInHeap* persistentChunks;
-    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
+    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
     {
         notInHeap* p = {};
         systemstack([=]() mutable -> void
@@ -1149,7 +1164,7 @@ namespace golang::runtime
         return unsafe::Pointer(p);
     }
 
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
         if(size == 0)
@@ -1179,7 +1194,7 @@ namespace golang::runtime
         persistentAlloc* persistent = {};
         if(mp != nullptr && mp->p != 0)
         {
-            persistent = & ptr(gocpp::recv(mp->p))->palloc;
+            persistent = & rec::ptr(gocpp::recv(mp->p))->palloc;
         }
         else
         {
@@ -1209,7 +1224,7 @@ namespace golang::runtime
             }
             persistent->off = alignUp(goarch::PtrSize, align);
         }
-        auto p = add(gocpp::recv(persistent->base), persistent->off);
+        auto p = rec::add(gocpp::recv(persistent->base), persistent->off);
         persistent->off += size;
         releasem(mp);
         if(persistent == & globalAlloc.persistentAlloc)
@@ -1218,8 +1233,8 @@ namespace golang::runtime
         }
         if(sysStat != & memstats.other_sys)
         {
-            add(gocpp::recv(sysStat), int64_t(size));
-            add(gocpp::recv(memstats.other_sys), - int64_t(size));
+            rec::add(gocpp::recv(sysStat), int64_t(size));
+            rec::add(gocpp::recv(memstats.other_sys), - int64_t(size));
         }
         return p;
     }
@@ -1276,7 +1291,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void init(struct linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
+    void rec::init(struct linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
     {
         if(base + size < base)
         {
@@ -1287,7 +1302,7 @@ namespace golang::runtime
         l->mapMemory = mapMemory;
     }
 
-    unsafe::Pointer alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat)
+    unsafe::Pointer rec::alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
     {
         auto p = alignUp(l->next, align);
         if(p + size > l->end)
@@ -1337,7 +1352,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct notInHeap* add(struct notInHeap* p, uintptr_t bytes)
+    struct notInHeap* rec::add(struct notInHeap* p, uintptr_t bytes)
     {
         return (notInHeap*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + bytes));
     }

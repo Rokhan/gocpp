@@ -13,6 +13,11 @@
 
 namespace golang::png
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+    }
+
     int abs(int x)
     {
         auto m = x >> (intSize - 1);

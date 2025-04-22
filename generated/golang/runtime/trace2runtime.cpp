@@ -61,6 +61,16 @@
 
 namespace golang::runtime
 {
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace abi::rec;
+        using namespace atomic::rec;
+        using namespace chacha8rand::rec;
+        using namespace runtime::rec;
+        using namespace sys::rec;
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     gTraceState::operator T()
@@ -87,7 +97,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void reset(struct gTraceState* s)
+    void rec::reset(struct gTraceState* s)
     {
         s->seq = gocpp::array<uint64_t, 2> {};
     }
@@ -188,12 +198,12 @@ namespace golang::runtime
     gocpp::array_base<std::string> traceGoStopReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.traceGoStopGeneric = "unspecified"; x.traceGoStopGoSched = "runtime.Gosched"; x.traceGoStopPreempted = "preempted"; });
     bool traceEnabled()
     {
-        return Load(gocpp::recv(trace.gen)) != 0;
+        return rec::Load(gocpp::recv(trace.gen)) != 0;
     }
 
     bool traceShuttingDown()
     {
-        return Load(gocpp::recv(trace.shutdown));
+        return rec::Load(gocpp::recv(trace.shutdown));
     }
 
     
@@ -241,29 +251,29 @@ namespace golang::runtime
     {
         lockRankMayTraceFlush();
         auto mp = acquirem();
-        auto seq = Add(gocpp::recv(mp->trace.seqlock), 1);
+        auto seq = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 1)
         {
             go_throw("bad use of trace.seqlock or tracer is reentrant");
         }
-        auto gen = Load(gocpp::recv(trace.gen));
+        auto gen = rec::Load(gocpp::recv(trace.gen));
         if(gen == 0)
         {
-            Add(gocpp::recv(mp->trace.seqlock), 1);
+            rec::Add(gocpp::recv(mp->trace.seqlock), 1);
             releasem(mp);
             return traceLocker {};
         }
         return traceLocker {mp, gen};
     }
 
-    bool ok(struct traceLocker tl)
+    bool rec::ok(struct traceLocker tl)
     {
         return tl.gen != 0;
     }
 
     void traceRelease(struct traceLocker tl)
     {
-        auto seq = Add(gocpp::recv(tl.mp->trace.seqlock), 1);
+        auto seq = rec::Add(gocpp::recv(tl.mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 0)
         {
             print("runtime: seq=", seq, "\n");
@@ -274,61 +284,61 @@ namespace golang::runtime
 
     void traceExitingSyscall()
     {
-        Add(gocpp::recv(trace.exitingSyscall), 1);
+        rec::Add(gocpp::recv(trace.exitingSyscall), 1);
     }
 
     void traceExitedSyscall()
     {
-        Add(gocpp::recv(trace.exitingSyscall), - 1);
+        rec::Add(gocpp::recv(trace.exitingSyscall), - 1);
     }
 
-    void Gomaxprocs(struct traceLocker tl, int32_t procs)
+    void rec::Gomaxprocs(struct traceLocker tl, int32_t procs)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvProcsChange, traceArg(procs), stack(gocpp::recv(tl), 1));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvProcsChange, traceArg(procs), rec::stack(gocpp::recv(tl), 1));
     }
 
-    void ProcStart(struct traceLocker tl)
+    void rec::ProcStart(struct traceLocker tl)
     {
-        auto pp = ptr(gocpp::recv(tl.mp->p));
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcIdle)), traceEvProcStart, traceArg(pp->id), nextSeq(gocpp::recv(pp->trace), tl.gen));
+        auto pp = rec::ptr(gocpp::recv(tl.mp->p));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcIdle)), traceEvProcStart, traceArg(pp->id), rec::nextSeq(gocpp::recv(pp->trace), tl.gen));
     }
 
-    void ProcStop(struct traceLocker tl, struct p* pp)
+    void rec::ProcStop(struct traceLocker tl, struct p* pp)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcRunning)), traceEvProcStop);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcRunning)), traceEvProcStop);
     }
 
-    void GCActive(struct traceLocker tl)
+    void rec::GCActive(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCActive, traceArg(trace.seqGC));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCActive, traceArg(trace.seqGC));
         trace.seqGC++;
     }
 
-    void GCStart(struct traceLocker tl)
+    void rec::GCStart(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCBegin, traceArg(trace.seqGC), stack(gocpp::recv(tl), 3));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCBegin, traceArg(trace.seqGC), rec::stack(gocpp::recv(tl), 3));
         trace.seqGC++;
     }
 
-    void GCDone(struct traceLocker tl)
+    void rec::GCDone(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCEnd, traceArg(trace.seqGC));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCEnd, traceArg(trace.seqGC));
         trace.seqGC++;
     }
 
-    void STWStart(struct traceLocker tl, stwReason reason)
+    void rec::STWStart(struct traceLocker tl, runtime::stwReason reason)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvSTWBegin, string(gocpp::recv(tl), String(gocpp::recv(reason))), stack(gocpp::recv(tl), 2));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvSTWBegin, rec::string(gocpp::recv(tl), rec::String(gocpp::recv(reason))), rec::stack(gocpp::recv(tl), 2));
     }
 
-    void STWDone(struct traceLocker tl)
+    void rec::STWDone(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvSTWEnd);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvSTWEnd);
     }
 
-    void GCSweepStart(struct traceLocker tl)
+    void rec::GCSweepStart(struct traceLocker tl)
     {
-        auto pp = ptr(gocpp::recv(tl.mp->p));
+        auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(pp->trace.maySweep)
         {
             go_throw("double traceGCSweepStart");
@@ -336,100 +346,100 @@ namespace golang::runtime
         std::tie(pp->trace.maySweep, pp->trace.swept, pp->trace.reclaimed) = std::tuple{true, 0, 0};
     }
 
-    void GCSweepSpan(struct traceLocker tl, uintptr_t bytesSwept)
+    void rec::GCSweepSpan(struct traceLocker tl, uintptr_t bytesSwept)
     {
-        auto pp = ptr(gocpp::recv(tl.mp->p));
+        auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(pp->trace.maySweep)
         {
             if(pp->trace.swept == 0)
             {
-                commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCSweepBegin, stack(gocpp::recv(tl), 1));
+                rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCSweepBegin, rec::stack(gocpp::recv(tl), 1));
                 pp->trace.inSweep = true;
             }
             pp->trace.swept += bytesSwept;
         }
     }
 
-    void GCSweepDone(struct traceLocker tl)
+    void rec::GCSweepDone(struct traceLocker tl)
     {
-        auto pp = ptr(gocpp::recv(tl.mp->p));
+        auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(! pp->trace.maySweep)
         {
             go_throw("missing traceGCSweepStart");
         }
         if(pp->trace.inSweep)
         {
-            commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCSweepEnd, traceArg(pp->trace.swept), traceArg(pp->trace.reclaimed));
+            rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCSweepEnd, traceArg(pp->trace.swept), traceArg(pp->trace.reclaimed));
             pp->trace.inSweep = false;
         }
         pp->trace.maySweep = false;
     }
 
-    void GCMarkAssistStart(struct traceLocker tl)
+    void rec::GCMarkAssistStart(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistBegin, stack(gocpp::recv(tl), 1));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistBegin, rec::stack(gocpp::recv(tl), 1));
     }
 
-    void GCMarkAssistDone(struct traceLocker tl)
+    void rec::GCMarkAssistDone(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistEnd);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistEnd);
     }
 
-    void GoCreate(struct traceLocker tl, struct g* newg, uintptr_t pc)
+    void rec::GoCreate(struct traceLocker tl, struct g* newg, uintptr_t pc)
     {
-        setStatusTraced(gocpp::recv(newg->trace), tl.gen);
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoCreate, traceArg(newg->goid), startPC(gocpp::recv(tl), pc), stack(gocpp::recv(tl), 2));
+        rec::setStatusTraced(gocpp::recv(newg->trace), tl.gen);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoCreate, traceArg(newg->goid), rec::startPC(gocpp::recv(tl), pc), rec::stack(gocpp::recv(tl), 2));
     }
 
-    void GoStart(struct traceLocker tl)
+    void rec::GoStart(struct traceLocker tl)
     {
         auto gp = getg()->m->curg;
         auto pp = gp->m->p;
-        auto w = eventWriter(gocpp::recv(tl), traceGoRunnable, traceProcRunning);
-        w = write(gocpp::recv(w), traceEvGoStart, traceArg(gp->goid), nextSeq(gocpp::recv(gp->trace), tl.gen));
-        if(ptr(gocpp::recv(pp))->gcMarkWorkerMode != gcMarkWorkerNotWorker)
+        auto w = rec::eventWriter(gocpp::recv(tl), traceGoRunnable, traceProcRunning);
+        w = rec::write(gocpp::recv(w), traceEvGoStart, traceArg(gp->goid), rec::nextSeq(gocpp::recv(gp->trace), tl.gen));
+        if(rec::ptr(gocpp::recv(pp))->gcMarkWorkerMode != gcMarkWorkerNotWorker)
         {
-            w = write(gocpp::recv(w), traceEvGoLabel, trace.markWorkerLabels[tl.gen % 2][ptr(gocpp::recv(pp))->gcMarkWorkerMode]);
+            w = rec::write(gocpp::recv(w), traceEvGoLabel, trace.markWorkerLabels[tl.gen % 2][rec::ptr(gocpp::recv(pp))->gcMarkWorkerMode]);
         }
-        end(gocpp::recv(w));
+        rec::end(gocpp::recv(w));
     }
 
-    void GoEnd(struct traceLocker tl)
+    void rec::GoEnd(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoDestroy);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoDestroy);
     }
 
-    void GoSched(struct traceLocker tl)
+    void rec::GoSched(struct traceLocker tl)
     {
-        GoStop(gocpp::recv(tl), traceGoStopGoSched);
+        rec::GoStop(gocpp::recv(tl), traceGoStopGoSched);
     }
 
-    void GoPreempt(struct traceLocker tl)
+    void rec::GoPreempt(struct traceLocker tl)
     {
-        GoStop(gocpp::recv(tl), traceGoStopPreempted);
+        rec::GoStop(gocpp::recv(tl), traceGoStopPreempted);
     }
 
-    void GoStop(struct traceLocker tl, traceGoStopReason reason)
+    void rec::GoStop(struct traceLocker tl, runtime::traceGoStopReason reason)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoStop, traceArg(trace.goStopReasons[tl.gen % 2][reason]), stack(gocpp::recv(tl), 1));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoStop, traceArg(trace.goStopReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), 1));
     }
 
-    void GoPark(struct traceLocker tl, traceBlockReason reason, int skip)
+    void rec::GoPark(struct traceLocker tl, runtime::traceBlockReason reason, int skip)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoBlock, traceArg(trace.goBlockReasons[tl.gen % 2][reason]), stack(gocpp::recv(tl), skip));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoBlock, traceArg(trace.goBlockReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), skip));
     }
 
-    void GoUnpark(struct traceLocker tl, struct g* gp, int skip)
+    void rec::GoUnpark(struct traceLocker tl, struct g* gp, int skip)
     {
-        auto w = eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning);
-        if(! statusWasTraced(gocpp::recv(gp->trace), tl.gen) && acquireStatus(gocpp::recv(gp->trace), tl.gen))
+        auto w = rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning);
+        if(! rec::statusWasTraced(gocpp::recv(gp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(gp->trace), tl.gen))
         {
-            w.w = writeGoStatus(gocpp::recv(w.w), gp->goid, - 1, traceGoWaiting, gp->inMarkAssist);
+            w.w = rec::writeGoStatus(gocpp::recv(w.w), gp->goid, - 1, traceGoWaiting, gp->inMarkAssist);
         }
-        commit(gocpp::recv(w), traceEvGoUnblock, traceArg(gp->goid), nextSeq(gocpp::recv(gp->trace), tl.gen), stack(gocpp::recv(tl), skip));
+        rec::commit(gocpp::recv(w), traceEvGoUnblock, traceArg(gp->goid), rec::nextSeq(gocpp::recv(gp->trace), tl.gen), rec::stack(gocpp::recv(tl), skip));
     }
 
-    void GoSysCall(struct traceLocker tl)
+    void rec::GoSysCall(struct traceLocker tl)
     {
         int skip = {};
         //Go switch emulation
@@ -450,12 +460,12 @@ namespace golang::runtime
                     break;
             }
         }
-        auto pp = ptr(gocpp::recv(tl.mp->p));
+        auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         pp->trace.mSyscallID = int64_t(tl.mp->procid);
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoSyscallBegin, nextSeq(gocpp::recv(pp->trace), tl.gen), stack(gocpp::recv(tl), skip));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoSyscallBegin, rec::nextSeq(gocpp::recv(pp->trace), tl.gen), rec::stack(gocpp::recv(tl), skip));
     }
 
-    void GoSysExit(struct traceLocker tl, bool lostP)
+    void rec::GoSysExit(struct traceLocker tl, bool lostP)
     {
         auto ev = traceEvGoSyscallEnd;
         auto procStatus = traceProcSyscall;
@@ -466,12 +476,12 @@ namespace golang::runtime
         }
         else
         {
-            ptr(gocpp::recv(tl.mp->p))->trace.mSyscallID = - 1;
+            rec::ptr(gocpp::recv(tl.mp->p))->trace.mSyscallID = - 1;
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, procStatus)), ev);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoSyscall, procStatus)), ev);
     }
 
-    void ProcSteal(struct traceLocker tl, struct p* pp, bool inSyscall)
+    void rec::ProcSteal(struct traceLocker tl, struct p* pp, bool inSyscall)
     {
         auto mStolenFrom = pp->trace.mSyscallID;
         pp->trace.mSyscallID = - 1;
@@ -482,78 +492,78 @@ namespace golang::runtime
             goStatus = traceGoSyscall;
             procStatus = traceProcSyscallAbandoned;
         }
-        auto w = eventWriter(gocpp::recv(tl), goStatus, procStatus);
-        if(! statusWasTraced(gocpp::recv(pp->trace), tl.gen) && acquireStatus(gocpp::recv(pp->trace), tl.gen))
+        auto w = rec::eventWriter(gocpp::recv(tl), goStatus, procStatus);
+        if(! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(pp->trace), tl.gen))
         {
-            w.w = writeProcStatus(gocpp::recv(w.w), uint64_t(pp->id), traceProcSyscallAbandoned, pp->trace.inSweep);
+            w.w = rec::writeProcStatus(gocpp::recv(w.w), uint64_t(pp->id), traceProcSyscallAbandoned, pp->trace.inSweep);
         }
-        commit(gocpp::recv(w), traceEvProcSteal, traceArg(pp->id), nextSeq(gocpp::recv(pp->trace), tl.gen), traceArg(mStolenFrom));
+        rec::commit(gocpp::recv(w), traceEvProcSteal, traceArg(pp->id), rec::nextSeq(gocpp::recv(pp->trace), tl.gen), traceArg(mStolenFrom));
     }
 
-    void GoSysBlock(struct traceLocker tl, struct p* pp)
+    void rec::GoSysBlock(struct traceLocker tl, struct p* pp)
     {
     }
 
-    void HeapAlloc(struct traceLocker tl, uint64_t live)
+    void rec::HeapAlloc(struct traceLocker tl, uint64_t live)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapAlloc, traceArg(live));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapAlloc, traceArg(live));
     }
 
-    void HeapGoal(struct traceLocker tl)
+    void rec::HeapGoal(struct traceLocker tl)
     {
-        auto heapGoal = heapGoal(gocpp::recv(gcController));
+        auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
         if(heapGoal == ~ uint64_t(0))
         {
             heapGoal = 0;
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapGoal, traceArg(heapGoal));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapGoal, traceArg(heapGoal));
     }
 
-    void OneNewExtraM(struct traceLocker tl, struct g* _)
+    void rec::OneNewExtraM(struct traceLocker tl, struct g* _)
     {
     }
 
-    void GoCreateSyscall(struct traceLocker tl, struct g* gp)
+    void rec::GoCreateSyscall(struct traceLocker tl, struct g* gp)
     {
-        setStatusTraced(gocpp::recv(gp->trace), tl.gen);
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoBad, traceProcBad)), traceEvGoCreateSyscall, traceArg(gp->goid));
+        rec::setStatusTraced(gocpp::recv(gp->trace), tl.gen);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoBad, traceProcBad)), traceEvGoCreateSyscall, traceArg(gp->goid));
     }
 
-    void GoDestroySyscall(struct traceLocker tl)
+    void rec::GoDestroySyscall(struct traceLocker tl)
     {
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcBad)), traceEvGoDestroySyscall);
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoSyscall, traceProcBad)), traceEvGoDestroySyscall);
     }
 
     void trace_userTaskCreate(uint64_t id, uint64_t parentID, std::string taskType)
     {
         auto tl = traceAcquire();
-        if(! ok(gocpp::recv(tl)))
+        if(! rec::ok(gocpp::recv(tl)))
         {
             return;
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserTaskBegin, traceArg(id), traceArg(parentID), string(gocpp::recv(tl), taskType), stack(gocpp::recv(tl), 3));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserTaskBegin, traceArg(id), traceArg(parentID), rec::string(gocpp::recv(tl), taskType), rec::stack(gocpp::recv(tl), 3));
         traceRelease(tl);
     }
 
     void trace_userTaskEnd(uint64_t id)
     {
         auto tl = traceAcquire();
-        if(! ok(gocpp::recv(tl)))
+        if(! rec::ok(gocpp::recv(tl)))
         {
             return;
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserTaskEnd, traceArg(id), stack(gocpp::recv(tl), 2));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserTaskEnd, traceArg(id), rec::stack(gocpp::recv(tl), 2));
         traceRelease(tl);
     }
 
     void trace_userRegion(uint64_t id, uint64_t mode, std::string name)
     {
         auto tl = traceAcquire();
-        if(! ok(gocpp::recv(tl)))
+        if(! rec::ok(gocpp::recv(tl)))
         {
             return;
         }
-        traceEv ev = {};
+        runtime::traceEv ev = {};
         //Go switch emulation
         {
             auto condition = mode;
@@ -573,18 +583,18 @@ namespace golang::runtime
                     break;
             }
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), ev, traceArg(id), string(gocpp::recv(tl), name), stack(gocpp::recv(tl), 3));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), ev, traceArg(id), rec::string(gocpp::recv(tl), name), rec::stack(gocpp::recv(tl), 3));
         traceRelease(tl);
     }
 
     void trace_userLog(uint64_t id, std::string category, std::string message)
     {
         auto tl = traceAcquire();
-        if(! ok(gocpp::recv(tl)))
+        if(! rec::ok(gocpp::recv(tl)))
         {
             return;
         }
-        commit(gocpp::recv(eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserLog, traceArg(id), string(gocpp::recv(tl), category), uniqueString(gocpp::recv(tl), message), stack(gocpp::recv(tl), 3));
+        rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvUserLog, traceArg(id), rec::string(gocpp::recv(tl), category), rec::uniqueString(gocpp::recv(tl), message), rec::stack(gocpp::recv(tl), 3));
         traceRelease(tl);
     }
 
@@ -595,7 +605,7 @@ namespace golang::runtime
     void traceThreadDestroy(struct m* mp)
     {
         assertLockHeld(& sched.lock);
-        auto seq = Add(gocpp::recv(mp->trace.seqlock), 1);
+        auto seq = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 1)
         {
             go_throw("bad use of trace.seqlock or tracer is reentrant");
@@ -613,7 +623,7 @@ namespace golang::runtime
             }
             unlock(& trace.lock);
         });
-        auto seq1 = Add(gocpp::recv(mp->trace.seqlock), 1);
+        auto seq1 = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(seq1 != seq + 1)
         {
             print("runtime: seq1=", seq1, "\n");
@@ -621,7 +631,7 @@ namespace golang::runtime
         }
     }
 
-    void RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _)
+    void rec::RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _)
     {
     }
 

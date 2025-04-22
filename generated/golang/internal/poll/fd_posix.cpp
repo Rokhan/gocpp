@@ -22,7 +22,16 @@
 
 namespace golang::poll
 {
-    struct gocpp::error eofError(struct FD* fd, int n, struct gocpp::error err)
+    namespace rec
+    {
+        using namespace mocklib::rec;
+        using namespace poll::rec;
+        using namespace sync::rec;
+        using namespace syscall::rec;
+        using namespace windows::rec;
+    }
+
+    struct gocpp::error rec::eofError(struct FD* fd, int n, struct gocpp::error err)
     {
         if(n == 0 && err == nullptr && fd->ZeroReadIsEOF)
         {
@@ -31,16 +40,16 @@ namespace golang::poll
         return err;
     }
 
-    struct gocpp::error Shutdown(struct FD* fd, int how)
+    struct gocpp::error rec::Shutdown(struct FD* fd, int how)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return syscall::Shutdown(fd->Sysfd, how);
         }
         catch(gocpp::GoPanic& gp)
@@ -49,16 +58,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error Fchown(struct FD* fd, int uid, int gid)
+    struct gocpp::error rec::Fchown(struct FD* fd, int uid, int gid)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return ignoringEINTR([=]() mutable -> struct gocpp::error
             {
                 return syscall::Fchown(fd->Sysfd, uid, gid);
@@ -70,16 +79,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error Ftruncate(struct FD* fd, int64_t size)
+    struct gocpp::error rec::Ftruncate(struct FD* fd, int64_t size)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             return ignoringEINTR([=]() mutable -> struct gocpp::error
             {
                 return syscall::Ftruncate(fd->Sysfd, size);
@@ -91,16 +100,16 @@ namespace golang::poll
         }
     }
 
-    struct gocpp::error RawControl(struct FD* fd, std::function<void (uintptr_t)> f)
+    struct gocpp::error rec::RawControl(struct FD* fd, std::function<void (uintptr_t)> f)
     {
         gocpp::Defer defer;
         try
         {
-            if(auto err = incref(gocpp::recv(fd)); err != nullptr)
+            if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return err;
             }
-            defer.push_back([=]{ decref(gocpp::recv(fd)); });
+            defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
             f(uintptr_t(fd->Sysfd));
             return nullptr;
         }

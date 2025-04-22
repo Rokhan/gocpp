@@ -14,5 +14,9 @@ namespace golang::main
 {
     std::function<int (int)> adder();
     void main();
+
+    namespace rec
+    {
+    }
 }
 

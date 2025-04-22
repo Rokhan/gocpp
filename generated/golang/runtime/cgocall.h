@@ -50,8 +50,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct argset& value);
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args);
-
-    template<typename... Args>
+    
+template<typename... Args>
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, Args... args)
     {
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(args...));
@@ -72,5 +72,9 @@ namespace golang::runtime
     bool cgoIsGoPointer(unsafe::Pointer p);
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end);
     void cgoCheckResult(go_any val);
+
+    namespace rec
+    {
+    }
 }
 

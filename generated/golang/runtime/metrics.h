@@ -42,12 +42,17 @@ namespace golang::runtime
     void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
     statDepSet makeStatDepSet(gocpp::slice<runtime::statDep> deps);
     
-template<typename... Args>
+    template<typename... Args>
     statDepSet makeStatDepSet(Args... deps)
     {
         return makeStatDepSet(gocpp::ToSlice<runtime::statDep>(deps...));
     }
-
+    
+    template<typename... Args>
+    statDepSet makeStatDepSet(runtime::statDep value, Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<runtime::statDep>(value, deps...));
+    }
     struct heapStatsAggregate
     {
         uint64_t inObjects;

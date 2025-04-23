@@ -287,12 +287,17 @@ namespace golang::reflect
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe);
     struct Value Append(struct Value s, gocpp::slice<Value> x);
     
-template<typename... Args>
+    template<typename... Args>
     struct Value Append(struct Value s, Args... x)
     {
         return Append(s, gocpp::ToSlice<Value>(x...));
     }
-
+    
+    template<typename... Args>
+    struct Value Append(struct Value s, Value value, Args... x)
+    {
+        return Append(s, gocpp::ToSlice<Value>(value, x...));
+    }
     struct Value AppendSlice(struct Value s, struct Value t);
     int Copy(struct Value dst, struct Value src);
     struct runtimeSelect

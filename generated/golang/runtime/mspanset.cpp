@@ -310,6 +310,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+
+    template<typename spanSetBlock>
     atomic::Pointer<spanSetBlock>* rec::lookup(struct spanSetSpinePointer s, uintptr_t idx)
     {
         return (atomic::Pointer<spanSetBlock>*)(add(s.p, goarch::PtrSize * idx));

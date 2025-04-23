@@ -166,12 +166,17 @@ namespace golang::runtime
     void gcTestMoveStackOnNextCall();
     uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs);
     
-template<typename... Args>
+    template<typename... Args>
     uint64_t gcTestIsReachable(Args... ptrs)
     {
         return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(ptrs...));
     }
-
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(unsafe::Pointer value, Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(value, ptrs...));
+    }
     std::string gcTestPointerClass(unsafe::Pointer p);
 
     namespace rec

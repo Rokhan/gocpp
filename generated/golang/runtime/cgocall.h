@@ -51,12 +51,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct argset& value);
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args);
     
-template<typename... Args>
+    template<typename... Args>
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, Args... args)
     {
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(args...));
     }
-
+    
+    template<typename... Args>
+    uintptr_t syscall_cgocaller(unsafe::Pointer fn, uintptr_t value, Args... args)
+    {
+        return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
     int32_t cgocall(unsafe::Pointer fn, unsafe::Pointer arg);
     void callbackUpdateSystemStack(struct m* mp, uintptr_t sp, bool signal);
     void cgocallbackg(unsafe::Pointer fn, unsafe::Pointer frame, uintptr_t ctxt);

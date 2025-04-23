@@ -14,12 +14,17 @@ namespace golang::fmt
 {
     struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a);
     
-template<typename... Args>
+    template<typename... Args>
     struct gocpp::error Errorf(std::string format, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(a...));
     }
-
+    
+    template<typename... Args>
+    struct gocpp::error Errorf(std::string format, go_any value, Args... a)
+    {
+        return Errorf(format, gocpp::ToSlice<go_any>(value, a...));
+    }
     struct wrapError
     {
         std::string msg;

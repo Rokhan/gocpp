@@ -126,12 +126,17 @@ namespace golang::bisect
     std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);
     uint64_t Hash(gocpp::slice<go_any> data);
     
-template<typename... Args>
+    template<typename... Args>
     uint64_t Hash(Args... data)
     {
         return Hash(gocpp::ToSlice<go_any>(data...));
     }
-
+    
+    template<typename... Args>
+    uint64_t Hash(go_any value, Args... data)
+    {
+        return Hash(gocpp::ToSlice<go_any>(value, data...));
+    }
     struct parseError
     {
         std::string text;

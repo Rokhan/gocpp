@@ -147,6 +147,8 @@ namespace golang::runtime
         void reset(struct spanSet* b);
         struct spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s);
         void StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p);
+        
+        template<typename spanSetBlock>
         atomic::Pointer<spanSetBlock>* lookup(struct spanSetSpinePointer s, uintptr_t idx);
         struct spanSetBlock* alloc(struct spanSetBlockAlloc* p);
         void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block);

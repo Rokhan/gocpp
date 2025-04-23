@@ -11,7 +11,7 @@
 #include "golang/slices/sort.h"
 #include "gocpp/support.h"
 
-// #include "golang/cmp/cmp.h"  [Ignored, known errors]
+#include "golang/cmp/cmp.h"
 #include "golang/math/bits/bits.h"
 // #include "golang/slices/zsortanyfunc.h"  [Ignored, known errors]
 // #include "golang/slices/zsortordered.h"  [Ignored, known errors]
@@ -22,6 +22,7 @@ namespace golang::slices
     {
         using namespace mocklib::rec;
         using namespace bits::rec;
+        using namespace cmp::rec;
     }
 
 
@@ -76,7 +77,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     E Min(S x)
     {
         if(len(x) < 1)
@@ -92,7 +93,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     E MinFunc(S x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)
@@ -111,7 +112,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     E Max(S x)
     {
         if(len(x) < 1)
@@ -127,7 +128,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     E MaxFunc(S x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)

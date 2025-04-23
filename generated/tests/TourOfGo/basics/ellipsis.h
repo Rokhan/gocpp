@@ -18,12 +18,17 @@ namespace golang::main
     void DummyPrintList(std::string format, gocpp::slice<std::any> elts);
     void DummyPrintf(std::string format, gocpp::slice<std::any> a);
     
-template<typename... Args>
+    template<typename... Args>
     void DummyPrintf(std::string format, Args... a)
     {
         return DummyPrintf(format, gocpp::ToSlice<std::any>(a...));
     }
-
+    
+    template<typename... Args>
+    void DummyPrintf(std::string format, std::any value, Args... a)
+    {
+        return DummyPrintf(format, gocpp::ToSlice<std::any>(value, a...));
+    }
     void main();
 
     namespace rec

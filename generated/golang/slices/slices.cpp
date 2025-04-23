@@ -11,7 +11,7 @@
 #include "golang/slices/slices.h"
 #include "gocpp/support.h"
 
-// #include "golang/cmp/cmp.h"  [Ignored, known errors]
+#include "golang/cmp/cmp.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::slices
@@ -19,6 +19,7 @@ namespace golang::slices
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace cmp::rec;
         using namespace unsafe::rec;
     }
 
@@ -148,7 +149,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Insert(S s, int i, gocpp::slice<E> v)
     {
         _ = s.make_slice(i);
@@ -218,7 +219,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Replace(S s, int i, int j, gocpp::slice<E> v)
     {
         _ = s.make_slice(i, j);
@@ -350,6 +351,8 @@ namespace golang::slices
         return s.make_slice(, len(s), len(s));
     }
 
+
+    template<typename E>
     void rotateLeft(gocpp::slice<E> s, int r)
     {
         for(; r != 0 && r != len(s); )
@@ -367,11 +370,15 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void rotateRight(gocpp::slice<E> s, int r)
     {
         rotateLeft(s, len(s) - r);
     }
 
+
+    template<typename E>
     void swap(gocpp::slice<E> x, gocpp::slice<E> y)
     {
         for(auto i = 0; i < len(x); i++)
@@ -380,6 +387,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b)
     {
         if(len(a) == 0 || len(b) == 0)
@@ -394,6 +403,8 @@ namespace golang::slices
         return uintptr_t(unsafe::Pointer(& a[0])) <= uintptr_t(unsafe::Pointer(& b[len(b) - 1])) + (elemSize - 1) && uintptr_t(unsafe::Pointer(& b[0])) <= uintptr_t(unsafe::Pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
 
+
+    template<typename E>
     int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle)
     {
         auto p = & needle[0];
@@ -417,6 +428,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename S>
     S Concat(gocpp::slice<S> slices)
     {
         auto size = 0;
@@ -428,7 +441,7 @@ namespace golang::slices
                 gocpp::panic("len out of range");
             }
         }
-        auto newslice = Grow[S](nullptr, size);
+        auto newslice = Grow<S>(nullptr, size);
         for(auto [gocpp_ignored, s] : slices)
         {
             newslice = append(newslice, s);

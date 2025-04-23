@@ -86,6 +86,8 @@ namespace golang::cmp
         return x != x;
     }
 
+
+    template<typename T>
     T Or(gocpp::slice<T> vals)
     {
         T zero = {};

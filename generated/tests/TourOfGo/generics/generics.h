@@ -13,7 +13,7 @@
 namespace golang::main
 {
     
-template<typename T>
+    template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep);
     template<typename T> 
     struct Wrapper
@@ -33,12 +33,45 @@ template<typename T>
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value);
+    
+    template<typename T>
+    T Or(gocpp::slice<T> vals);
+    
+    template<typename T, typename... Args>
+    T Or(Args... vals)
+    {
+        return Or(gocpp::ToSlice<T>(vals...));
+    }
+    
+    template<typename T, typename... Args>
+    T Or(T value, Args... vals)
+    {
+        return Or(gocpp::ToSlice<T>(value, vals...));
+    }
+    
+    template<typename T>
+    T Dummy(std::string dummy, gocpp::slice<T> vals);
+    
+    template<typename T, typename... Args>
+    T Dummy(std::string dummy, Args... vals)
+    {
+        return Dummy(dummy, gocpp::ToSlice<T>(vals...));
+    }
+    
+    template<typename T, typename... Args>
+    T Dummy(std::string dummy, T value, Args... vals)
+    {
+        return Dummy(dummy, gocpp::ToSlice<T>(value, vals...));
+    }
+    
+    template<typename T>
+    T Zero();
     void main();
 
     namespace rec
     {
         
-template<typename T>
+        template<typename T>
         T Get(Wrapper<T>* p);
     }
 }

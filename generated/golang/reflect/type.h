@@ -440,12 +440,17 @@ namespace golang::reflect
     struct abi::Type* ptrTo(struct abi::Type* t);
     uint32_t fnv1(uint32_t x, gocpp::slice<unsigned char> list);
     
-template<typename... Args>
+    template<typename... Args>
     uint32_t fnv1(uint32_t x, Args... list)
     {
         return fnv1(x, gocpp::ToSlice<unsigned char>(list...));
     }
-
+    
+    template<typename... Args>
+    uint32_t fnv1(uint32_t x, unsigned char value, Args... list)
+    {
+        return fnv1(x, gocpp::ToSlice<unsigned char>(value, list...));
+    }
     bool implements(struct abi::Type* T, struct abi::Type* V);
     bool specialChannelAssignability(struct abi::Type* T, struct abi::Type* V);
     bool directlyAssignable(struct abi::Type* T, struct abi::Type* V);

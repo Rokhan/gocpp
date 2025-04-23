@@ -40,12 +40,17 @@ namespace golang::syscall
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
     
-template<typename... Args>
+    template<typename... Args>
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> SyscallN(uintptr_t trap, Args... args)
     {
         return SyscallN(trap, gocpp::ToSlice<uintptr_t>(args...));
     }
-
+    
+    template<typename... Args>
+    std::tuple<uintptr_t, uintptr_t, syscall::Errno> SyscallN(uintptr_t trap, uintptr_t value, Args... args)
+    {
+        return SyscallN(trap, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
     std::tuple<uintptr_t, syscall::Errno> loadlibrary(uint16_t* filename);
     std::tuple<uintptr_t, syscall::Errno> loadsystemlibrary(uint16_t* filename);
     std::tuple<uintptr_t, syscall::Errno> getprocaddress(uintptr_t handle, uint8_t* procname);
@@ -135,12 +140,17 @@ template<typename... Args>
         uintptr_t Addr(struct Proc* p);
         std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct Proc* p, gocpp::slice<uintptr_t> a);
         
-template<typename... Args>
+        template<typename... Args>
         std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct Proc* p, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(a...));
         }
-
+        
+        template<typename... Args>
+        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct Proc* p, uintptr_t value, Args... a)
+        {
+            return Call(p, gocpp::ToSlice<uintptr_t>(value, a...));
+        }
         struct gocpp::error Load(struct LazyDLL* d);
         void mustLoad(struct LazyDLL* d);
         uintptr_t Handle(struct LazyDLL* d);
@@ -150,12 +160,17 @@ template<typename... Args>
         uintptr_t Addr(struct LazyProc* p);
         std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct LazyProc* p, gocpp::slice<uintptr_t> a);
         
-template<typename... Args>
+        template<typename... Args>
         std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct LazyProc* p, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(a...));
         }
-
+        
+        template<typename... Args>
+        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct LazyProc* p, uintptr_t value, Args... a)
+        {
+            return Call(p, gocpp::ToSlice<uintptr_t>(value, a...));
+        }
     }
 }
 

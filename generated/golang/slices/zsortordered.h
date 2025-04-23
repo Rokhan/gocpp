@@ -13,22 +13,56 @@
 
 namespace golang::slices
 {
+    
+    template<typename E>
     void insertionSortOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     void siftDownOrdered(gocpp::slice<E> data, int lo, int hi, int first);
+    
+    template<typename E>
     void heapSortOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     void pdqsortOrdered(gocpp::slice<E> data, int a, int b, int limit);
+    
+    template<typename E>
     std::tuple<int, bool> partitionOrdered(gocpp::slice<E> data, int a, int b, int pivot);
+    
+    template<typename E>
     int partitionEqualOrdered(gocpp::slice<E> data, int a, int b, int pivot);
+    
+    template<typename E>
     bool partialInsertionSortOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     void breakPatternsOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps);
+    
+    template<typename E>
     int medianOrdered(gocpp::slice<E> data, int a, int b, int c, int* swaps);
+    
+    template<typename E>
     int medianAdjacentOrdered(gocpp::slice<E> data, int a, int* swaps);
+    
+    template<typename E>
     void reverseRangeOrdered(gocpp::slice<E> data, int a, int b);
+    
+    template<typename E>
     void swapRangeOrdered(gocpp::slice<E> data, int a, int b, int n);
+    
+    template<typename E>
     void stableOrdered(gocpp::slice<E> data, int n);
+    
+    template<typename E>
     void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b);
+    
+    template<typename E>
     void rotateOrdered(gocpp::slice<E> data, int a, int m, int b);
 
     namespace rec

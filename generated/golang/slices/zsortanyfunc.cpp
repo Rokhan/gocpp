@@ -20,6 +20,8 @@ namespace golang::slices
         using namespace mocklib::rec;
     }
 
+
+    template<typename E>
     void insertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         for(auto i = a + 1; i < b; i++)
@@ -31,6 +33,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void siftDownCmpFunc(gocpp::slice<E> data, int lo, int hi, int first, std::function<int (E a, E b)> cmp)
     {
         auto root = lo;
@@ -54,6 +58,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void heapSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         auto first = a;
@@ -70,6 +76,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void pdqsortCmpFunc(gocpp::slice<E> data, int a, int b, int limit, std::function<int (E a, E b)> cmp)
     {
         auto maxInsertion = 12;
@@ -132,6 +140,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     std::tuple<int, bool> partitionCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp)
     {
         int newpivot;
@@ -190,6 +200,8 @@ namespace golang::slices
         return {j, false};
     }
 
+
+    template<typename E>
     int partitionEqualCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp)
     {
         int newpivot;
@@ -220,6 +232,8 @@ namespace golang::slices
         return i;
     }
 
+
+    template<typename E>
     bool partialInsertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         auto maxSteps = 5;
@@ -266,6 +280,8 @@ namespace golang::slices
         return false;
     }
 
+
+    template<typename E>
     void breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         auto length = b - a;
@@ -285,6 +301,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         int pivot;
@@ -333,6 +351,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     std::tuple<int, int> order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, std::function<int (E a, E b)> cmp)
     {
         if(cmp(data[b], data[a]) < 0)
@@ -343,6 +363,8 @@ namespace golang::slices
         return {a, b};
     }
 
+
+    template<typename E>
     int medianCmpFunc(gocpp::slice<E> data, int a, int b, int c, int* swaps, std::function<int (E a, E b)> cmp)
     {
         std::tie(a, b) = order2CmpFunc(data, a, b, swaps, cmp);
@@ -351,11 +373,15 @@ namespace golang::slices
         return b;
     }
 
+
+    template<typename E>
     int medianAdjacentCmpFunc(gocpp::slice<E> data, int a, int* swaps, std::function<int (E a, E b)> cmp)
     {
         return medianCmpFunc(data, a - 1, a, a + 1, swaps, cmp);
     }
 
+
+    template<typename E>
     void reverseRangeCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
         auto i = a;
@@ -368,6 +394,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void swapRangeCmpFunc(gocpp::slice<E> data, int a, int b, int n, std::function<int (E a, E b)> cmp)
     {
         for(auto i = 0; i < n; i++)
@@ -376,6 +404,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void stableCmpFunc(gocpp::slice<E> data, int n, std::function<int (E a, E b)> cmp)
     {
         auto blockSize = 20;
@@ -404,6 +434,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void symMergeCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp)
     {
         if(m - a == 1)
@@ -492,6 +524,8 @@ namespace golang::slices
         }
     }
 
+
+    template<typename E>
     void rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp)
     {
         auto i = m - a;

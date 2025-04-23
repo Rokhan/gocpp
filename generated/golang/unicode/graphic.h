@@ -20,12 +20,17 @@ namespace golang::unicode
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r);
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges);
     
-template<typename... Args>
+    template<typename... Args>
     bool In(gocpp::rune r, Args... ranges)
     {
         return In(r, gocpp::ToSlice<RangeTable*>(ranges...));
     }
-
+    
+    template<typename... Args>
+    bool In(gocpp::rune r, RangeTable* value, Args... ranges)
+    {
+        return In(r, gocpp::ToSlice<RangeTable*>(value, ranges...));
+    }
     bool IsControl(gocpp::rune r);
     bool IsLetter(gocpp::rune r);
     bool IsMark(gocpp::rune r);

@@ -55,22 +55,29 @@ namespace golang::cmp
 
     std::ostream& operator<<(std::ostream& os, const struct Ordered& value);
     
-template<typename T>
+    template<typename T>
     bool Less(T x, T y);
     
-template<typename T>
+    template<typename T>
     int Compare(T x, T y);
     
-template<typename T>
+    template<typename T>
     bool isNaN(T x);
+    
+    template<typename T>
     T Or(gocpp::slice<T> vals);
     
-template<typename... Args>
+    template<typename T, typename... Args>
     T Or(Args... vals)
     {
         return Or(gocpp::ToSlice<T>(vals...));
     }
-
+    
+    template<typename T, typename... Args>
+    T Or(T value, Args... vals)
+    {
+        return Or(gocpp::ToSlice<T>(value, vals...));
+    }
 
     namespace rec
     {

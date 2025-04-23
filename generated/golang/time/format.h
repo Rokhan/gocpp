@@ -45,7 +45,7 @@ namespace golang::time
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
     extern gocpp::error errAtoi;
     
-template<typename bytes>
+    template<typename bytes>
     std::tuple<int, struct gocpp::error> atoi(bytes s);
     int stdFracSecond(int code, int n, int c);
     int digitsLen(int std);
@@ -77,7 +77,7 @@ template<typename bytes>
     extern std::string lowerhex;
     std::string quote(std::string s);
     
-template<typename bytes>
+    template<typename bytes>
     bool isDigit(bytes s, int i);
     std::tuple<int, std::string, struct gocpp::error> getnum(std::string s, bool fixed);
     std::tuple<int, std::string, struct gocpp::error> getnum3(std::string s, bool fixed);
@@ -91,11 +91,11 @@ template<typename bytes>
     int parseSignedOffset(std::string value);
     bool commaOrPeriod(unsigned char b);
     
-template<typename bytes>
+    template<typename bytes>
     std::tuple<int, std::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes);
     extern gocpp::error errLeadingInt;
     
-template<typename bytes>
+    template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, std::string> leadingFraction(std::string s);
     extern gocpp::map<std::string, uint64_t> unitMap;

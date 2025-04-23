@@ -46,7 +46,7 @@ namespace golang::runtime
     bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size);
     unsafe::Pointer noescape(unsafe::Pointer p);
     
-template<typename T>
+    template<typename T>
     T* noEscapePtr(T* p);
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt);
     void gogo(struct gobuf* buf);

@@ -1081,6 +1081,16 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			typenames = append(typenames, outType.typenames...)
 		}
 
+		// Is it really necessary to get typenames from outTypes and params ?
+		// The following code should give us all what we need
+		if d.Type.TypeParams != nil {
+			for _, tp := range d.Type.TypeParams.List {
+				for _, name := range tp.Names {
+					typenames = append(typenames, GetCppName(name.Name))
+				}
+			}
+		}
+
 		// Deduplicate but keep initial ordering
 		typenames = deduplicate(typenames)
 
@@ -2994,6 +3004,7 @@ func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
 		case cppExpr:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
+			typeNames = append(typeNames, prm.typenames...)
 		default:
 			params = append(params, srcParam)
 		}
@@ -3184,7 +3195,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 	case *ast.IndexExpr:
 		if cv.IsFunc(n.X) && cv.IsFunc(n) {
-			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprType(n.Index))
+			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprCppType(n.Index))
 		} else {
 			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 		}

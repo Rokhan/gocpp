@@ -46,7 +46,7 @@ func Or[T comparable](vals ...T) T {
 	return zero
 }
 
-func Dummy[T comparable](dummy string, vals ...T) T {
+func Dummy1[T comparable](dummy string, vals ...T) T {
 	var zero T
 	for _, val := range vals {
 		if val != zero {
@@ -54,6 +54,25 @@ func Dummy[T comparable](dummy string, vals ...T) T {
 		}
 	}
 	return zero
+}
+
+func OneOrDefault[T comparable, U comparable](dummy map[T]U) U {
+	var zero U
+	for _, val := range dummy {
+		if val != zero {
+			return val
+		}
+	}
+	return zero
+}
+
+func RemoveOne[T comparable](dummy chan T) bool {
+	_, ok := <-dummy
+	return ok
+}
+
+func UnusedGenericParameter[T comparable]() int {
+	return 3
 }
 
 func Zero[T comparable]() T {
@@ -73,4 +92,6 @@ func main() {
 	fmt.Printf("o1: %v, o2:%v\n", o1, o2)
 
 	fmt.Printf("Zero: %v\n", Zero[int]())
+
+	fmt.Printf("Unused: %v\n", UnusedGenericParameter[float64]())
 }

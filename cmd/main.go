@@ -1077,6 +1077,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			typenames = append(typenames, param.Type.typenames...)
 		}
 
+		for _, outType := range outTypes {
+			typenames = append(typenames, outType.typenames...)
+		}
+
 		// Deduplicate but keep initial ordering
 		typenames = deduplicate(typenames)
 
@@ -1096,7 +1100,8 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			appendStrf(&funcDef, "/* %s %s(%s); [Ignored, known name conflict] */ \n", resultType, name, params)
 		} else {
 			if len(typenames) != 0 {
-				appendStrf(&funcDef, "\n%s\n", mkTemplateDec(typenames))
+				appendStrf(&funcDef, "\n")
+				appendStrf(&funcDef, "%s\n", mkTemplateDec(typenames))
 			}
 			appendStrf(&funcDef, "%s %s(%s);\n", resultType, name, params)
 		}
@@ -1108,21 +1113,34 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 				cv.Panicf("convertDecls, multiple ellipsis parameters not managed, declararation: [%v], input: %v", d, cv.Position(d))
 			}
 
-			varidicParams := params[:len(params)-1]
-			varidicParams = append(make([]typeName, 0, len(varidicParams)), varidicParams...)
+			variadicParams := params[:len(params)-1]
+			variadicParams = append(make([]typeName, 0, len(variadicParams)), variadicParams...)
 			var strs []string
-			for _, params := range varidicParams {
+			for _, params := range variadicParams {
 				strs = append(strs, params.names...)
 			}
-			strs = append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType, last.names[0]))
-			callParams := strings.Join(strs, ", ")
-			varidicParams = append(varidicParams, typeName{last.names, mkCppType("Args...", nil), false})
+			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType, last.names[0]))
+			callParams1 := strings.Join(strs1, ", ")
+			variadicParams1 := append(variadicParams, typeName{last.names, mkCppType("Args...", nil), false})
 
-			appendStrf(&funcDef, "\ntemplate<typename... Args>\n")
-			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, varidicParams)
+			appendStrf(&funcDef, "\n")
+			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
+			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams1)
 			appendStrf(&funcDef, "{\n")
-			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams)
-			appendStrf(&funcDef, "}\n\n")
+			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams1)
+			appendStrf(&funcDef, "}\n")
+
+			paramName := "value" // TODO, chose name to avoid name conflict
+			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType, paramName, last.names[0]))
+			callParams2 := strings.Join(strs2, ", ")
+			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, mkCppType(last.Type.eltType, nil), false}, typeName{last.names, mkCppType("Args...", nil), false})
+			appendStrf(&funcDef, "\n")
+			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
+			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
+			appendStrf(&funcDef, "{\n")
+			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams2)
+			appendStrf(&funcDef, "}\n")
+
 		}
 
 		cv.printOrKeepPlaces(funcDef, &outPlaces, nil)
@@ -1799,11 +1817,6 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 	panic("inlineStmt, bug, unreacheable code reached !")
 }
 
-type outType struct {
-	str      string
-	isStruct bool
-}
-
 func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []string, outTypes []outType) {
 	goResults := cv.readFields(funcType.Results)
 	defs := []place{}
@@ -2161,6 +2174,16 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	return false, ""
 }
 
+func (cv *cppConverter) IsFunc(expr ast.Expr) bool {
+	tv := cv.typeInfo.Types[expr].Type
+
+	switch tv.(type) {
+	case *types.Signature:
+		return true
+	}
+	return false
+}
+
 func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	switch cppType.str {
 	case "std::string":
@@ -2275,7 +2298,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 				defs = append(defs, outlineStr(structDef, node))
 			}
 
-			return mkCppPtrType(cppExpr{name, defs})
+			return mkCppPtrType(cppExpr{name, defs, nil})
 		}
 
 	case *ast.Ellipsis:
@@ -2957,15 +2980,17 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	}
 }
 
-func extractParamDefs(srcParams ...any) ([]place, []any) {
+func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
 	defs := []place{}
 	params := []any{}
+	typeNames := []string{}
 
 	for _, srcParam := range srcParams {
 		switch prm := srcParam.(type) {
 		case cppType:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
+			typeNames = append(typeNames, prm.typenames...)
 		case cppExpr:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
@@ -2973,18 +2998,18 @@ func extractParamDefs(srcParams ...any) ([]place, []any) {
 			params = append(params, srcParam)
 		}
 	}
-	return defs, params
+	return defs, params, typeNames
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func ExprPrintf(format string, srcParams ...any) cppExpr {
-	defs, params := extractParamDefs(srcParams...)
-	return cppExpr{fmt.Sprintf(format, params...), defs}
+	defs, params, typeNames := extractParamDefs(srcParams...)
+	return cppExpr{fmt.Sprintf(format, params...), defs, typeNames}
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
-	defs, params := extractParamDefs(srcParams...)
+	defs, params, _ := extractParamDefs(srcParams...)
 	*buff.defs = append(*buff.defs, defs...)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
@@ -3001,7 +3026,7 @@ func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []plac
 
 // Sprintf formats according to a format specifier.
 func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], format string, srcParams ...any) (n int, err error) {
-	defs, params := extractParamDefs(srcParams...)
+	defs, params, _ := extractParamDefs(srcParams...)
 	cv.printInline(buff.buff, buff.defs, defs)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
@@ -3158,7 +3183,11 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		}
 
 	case *ast.IndexExpr:
-		return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+		if cv.IsFunc(n.X) && cv.IsFunc(n) {
+			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprType(n.Index))
+		} else {
+			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+		}
 
 	case *ast.SelectorExpr:
 		name := cv.convertExpr(n.X)
@@ -3278,15 +3307,17 @@ func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
 	cppExprs := cv.convertExprList(exprs)
 	defs := []place{}
 	strs := []string{}
+	tns := []string{}
 	for _, expr := range cppExprs {
 		defs = append(defs, expr.defs...)
 		if expr.str == "_" {
 			expr.str = cv.GenerateId()
 		}
 		strs = append(strs, expr.str)
+		tns = append(tns, expr.typenames...)
 	}
 
-	return cppExpr{strings.Join(strs, ", "), defs}
+	return cppExpr{strings.Join(strs, ", "), defs, tns}
 }
 
 func (cv *cppConverter) Position(expr ast.Node) token.Position {

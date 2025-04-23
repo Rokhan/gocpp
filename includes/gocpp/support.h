@@ -1115,6 +1115,12 @@ namespace gocpp
     }
 
     template<typename T, typename... Args>
+    gocpp::slice<T> ToSlice(T value, Args&&... args)
+    {
+        return gocpp::slice<T> { value, T(args)... }; 
+    }
+
+    template<typename T, typename... Args>
     gocpp::slice<T> ToSlice(Args&&... args)
     {
         return gocpp::slice<T> { T(args)... }; 

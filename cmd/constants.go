@@ -133,7 +133,6 @@ var stdFuncMapping = map[string]string{
 var knownCompilationErrors = []*errorFilter{
 	{"abi", "internal/abi/symtab.go"},
 	{"bytealg", "internal/bytealg/bytealg.go"},
-	/**/ {"cmp", "cmp/cmp.go"},
 	{"cpu", "internal/cpu/cpu.go"},
 	{"atomic", "sync/atomic/doc.go"},
 	{"fmtsort", "internal/fmtsort/sort.go"},

@@ -92,7 +92,7 @@ func GetCppExprFunc(funcName cppExpr) cppExpr {
 	funcName.str = GetCppName(funcName.str)
 	val, ok := stdFuncMapping[funcName.str]
 	if ok {
-		return cppExpr{val, funcName.defs}
+		return cppExpr{val, funcName.defs, funcName.typenames}
 	} else {
 		return funcName
 	}
@@ -104,8 +104,14 @@ type typeName struct {
 	isRecv bool
 }
 
+type outType struct {
+	str       string
+	isStruct  bool
+	typenames []string
+}
+
 func (tn typeName) outType() outType {
-	return outType{tn.Type.str, tn.Type.isStruct}
+	return outType{tn.Type.str, tn.Type.isStruct, tn.Type.typenames}
 }
 
 func (tn typeName) ParamDecl() []string {
@@ -172,6 +178,13 @@ func JoinWithPrefix(elements []string, separator string) string {
 		return ""
 	}
 	return separator + strings.Join(elements, separator)
+}
+
+func JoinWithSuffix(elements []string, separator string) string {
+	if len(elements) == 0 {
+		return ""
+	}
+	return strings.Join(elements, separator) + separator
 }
 
 type outFile struct {
@@ -642,17 +655,19 @@ func appendHeaderEndStrf(places *[]place, format string, params ...any) {
 }
 
 type cppExpr struct {
-	str  string  // cpp type as a string
-	defs []place // inline def used by type
+	str       string  // cpp type as a string
+	defs      []place // inline def used by type
+	typenames []string
+
 	// probably need some depInfo here
 }
 
 func (expr cppExpr) toCppType() cppType {
-	return cppType{expr, false, false, false, "", nil, true}
+	return cppType{expr, false, false, false, "", true}
 }
 
 func mkCppExpr(str string) cppExpr {
-	return cppExpr{str, nil}
+	return cppExpr{str, nil, nil}
 }
 
 type cppType struct {
@@ -661,21 +676,20 @@ type cppType struct {
 	isStruct   bool // is the name of a stuct or an interface
 	isEllipsis bool // is type created by an ellipsis
 	eltType    string
-	typenames  []string
 
 	canFwd bool // Can go in forward header
 }
 
 func mkCppType(str string, defs []place) cppType {
-	return cppType{cppExpr{str, defs}, false, false, false, "", nil, true}
+	return cppType{cppExpr{str, defs, nil}, false, false, false, "", true}
 }
 
 func mkCppPtrType(expr cppExpr) cppType {
-	return cppType{expr, true, false, false, "", nil, true}
+	return cppType{expr, true, false, false, "", true}
 }
 
 func mkCppEllipsis(expr cppExpr, eltType string) cppType {
-	return cppType{expr, false, false, true, eltType, nil, true}
+	return cppType{expr, false, false, true, eltType, true}
 }
 
 type cppExprWritter[TWritter io.Writer] struct {
@@ -700,11 +714,19 @@ func mkCppBuffer() *cppExprBuffer {
 // }
 
 func (buff *cppExprBuffer) Expr() cppExpr {
-	return cppExpr{buff.buff.String(), *buff.defs}
+	return cppExpr{buff.buff.String(), *buff.defs, nil}
 }
 
 func mkTemplateDec(templatePrms []string) string {
 	return fmt.Sprintf("template<typename %s>", strings.Join(templatePrms, ", typename "))
+}
+
+func mkVariadicTemplateDec(templatePrms []string, variadicPrm string) string {
+	if len(templatePrms) == 0 {
+		return fmt.Sprintf("template<typename... %s>", variadicPrm)
+	} else {
+		return fmt.Sprintf("template<typename %s, typename... %s>", strings.Join(templatePrms, ", typename "), variadicPrm)
+	}
 }
 
 type GetIdentfiers struct {

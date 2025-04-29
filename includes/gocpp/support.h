@@ -21,11 +21,6 @@
 // Temporary definitions to mock broken include files
 namespace golang
 {
-    namespace reflect
-    {
-        struct Value{};
-    }
-
     namespace runtime
     {
         struct g {};

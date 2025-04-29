@@ -13,6 +13,16 @@ type Vertex struct {
 type Empty struct{}
 type Dummy struct{ i int }
 
+type Person struct {
+	identity *struct {
+		firstName string
+		lastName  string
+	}
+	age int
+}
+
+func inlineStructDef(dummy struct{ a int }) {}
+
 func main() {
 	fmt.Println(Vertex{1, 2})
 

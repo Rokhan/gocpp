@@ -138,7 +138,6 @@ var knownCompilationErrors = []*errorFilter{
 	{"fmtsort", "internal/fmtsort/sort.go"},
 	{"png", "image/png/writer.go"},
 	{"race", "internal/race/norace.go"},
-	/**/ {"reflect", "reflect/value.go"},
 	{"runtime", "runtime/alg.go"},
 	{"runtime", "runtime/cgocall.go"},
 	{"runtime", "runtime/defs_windows.go"},
@@ -173,9 +172,6 @@ var knownCompilationErrors = []*errorFilter{
 	{"runtime", "runtime/trace2runtime.go"},
 	{"runtime", "runtime/time.go"},
 	{"runtime", "runtime/typekind.go"},
-	/**/ {"slices", "slices/sort.go"},
-	/**/ {"slices", "slices/zsortanyfunc.go"},
-	/**/ {"slices", "slices/zsortordered.go"},
 	/**/ {"sync", "sync/cond.go"},
 	{"sync", "sync/runtime.go"},
 	{"sync", "sync/runtime2.go"},
@@ -328,4 +324,7 @@ var knownIncomplete = []*errorFilter{
 	{"Matcher::dedup", "internal/bisect/bisect"}, // Declaration order problem
 
 	{"Location::cacheZone", "time/zoneinfo"}, // Declaration order problem
+
+	{"Method::Func", "reflect/type"},          // Multi header Declaration order problem
+	{"methodValue::rcvr", "reflect/makefunc"}, // Multi header Declaration order problem
 }

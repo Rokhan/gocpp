@@ -761,6 +761,11 @@ func (target set[T]) append(src map[T]bool) {
 	}
 }
 
+func (target set[T]) has(value T) bool {
+	v, ok := target[value]
+	return ok && v
+}
+
 func isMapType(node ast.Expr) bool {
 	switch n := node.(type) {
 	case *ast.MapType:

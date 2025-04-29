@@ -65,6 +65,7 @@ type cppConverter struct {
 	// golang tokens, parsing and types infos
 	typeInfo *types.Info
 	astFile  *ast.File
+	typedefs set[types.Type]
 
 	// Parsing and codegen parameters
 	currentSwitchId *list.List
@@ -119,7 +120,7 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 		if (pkgInfo.tag & tag) != tag {
 			continue
 		}
-		if _, done := alreadyIncluded[pkgInfo.filePath]; done {
+		if alreadyIncluded.has(pkgInfo.filePath) {
 			continue
 		}
 		alreadyIncluded.add(pkgInfo.filePath)
@@ -299,6 +300,7 @@ func (cv *cppConverter) InitAndParse() {
 
 	cv.currentSwitchId = new(list.List)
 	cv.scopes = new(list.List)
+	cv.typedefs = make(set[types.Type])
 
 	if cv.genMakeFile {
 		cv.makeFile = createOutput(cv.shared.cppOutDir, "Makefile")
@@ -319,10 +321,17 @@ func (cv *cppConverter) InitAndParse() {
 	}
 }
 
-type variables map[string]bool
+type scope struct {
+	vars  map[string]bool
+	types map[string]bool
+}
+
+func makeScope() scope {
+	return scope{vars: make(map[string]bool), types: make(map[string]bool)}
+}
 
 func (cv *cppConverter) startScope() {
-	cv.scopes.PushBack(variables{})
+	cv.scopes.PushBack(makeScope())
 }
 
 func (cv *cppConverter) endScope() {
@@ -330,8 +339,13 @@ func (cv *cppConverter) endScope() {
 }
 
 func (cv *cppConverter) DeclareVar(name string, isPtr bool) {
-	vars := cv.scopes.Back().Value.(variables)
-	vars[name] = isPtr
+	scope := cv.scopes.Back().Value.(scope)
+	scope.vars[name] = isPtr
+}
+
+func (cv *cppConverter) DeclareType(name string) {
+	scope := cv.scopes.Back().Value.(scope)
+	scope.types[name] = true
 }
 
 func (cv *cppConverter) DeclareVars(params typeNames) {
@@ -345,8 +359,19 @@ func (cv *cppConverter) DeclareVars(params typeNames) {
 // FIXME : manage composed names like A.B.C
 func (cv *cppConverter) IsPtr(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
-		vars := elt.Value.(variables)
-		value, ok := vars[name]
+		scope := elt.Value.(scope)
+		value, ok := scope.vars[name]
+		if ok {
+			return value
+		}
+	}
+	return false
+}
+
+func (cv *cppConverter) IsLocalType(name string) bool {
+	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
+		scope := elt.Value.(scope)
+		value, ok := scope.types[name]
 		if ok {
 			return value
 		}
@@ -989,6 +1014,10 @@ func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFi
 }
 
 func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
+	return cv.readFieldsCtx(fields, ctContext{})
+}
+
+func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (params typeNames) {
 	if fields == nil {
 		return
 	}
@@ -998,7 +1027,7 @@ func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
 		for _, name := range field.Names {
 			param.names = append(param.names, GetCppName(name.Name))
 		}
-		param.Type = cv.convertTypeExpr(field.Type)
+		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		params = append(params, param)
 	}
 	return
@@ -1062,9 +1091,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		}
 
 	case *ast.FuncDecl:
-		params := cv.readFields(d.Recv)
+		ctx := ctContext{inDeclaration: true, namespace: cv.namespace}
+		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
-		params = append(params, cv.readFields(d.Type.Params)...)
+		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
 		resultType := buildOutType(outTypes)
 
@@ -1917,7 +1947,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 					}
 				} else {
 					for i := range s.Names {
-						exprType := cv.convertTypeExpr(s.Type)
+						exprType := cv.convertTypeExpr(s.Type, ctContext{})
 						name := GetCppName(s.Names[i].Name)
 
 						if len(values) == 0 {
@@ -1970,7 +2000,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 				} else {
 					for i := range s.Names {
 						name := GetCppName(s.Names[i].Name)
-						t := cv.convertTypeExpr(s.Type)
+						t := cv.convertTypeExpr(s.Type, ctContext{})
 						if len(values) == 0 {
 							result = append(result, inlineStrf(s, "%s %s = {}%s", t, name, end)...)
 						} else {
@@ -2044,20 +2074,24 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	// Check if it possible to simplify other case and delegates
 	// more things to "convertTypeExpr".
 	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.Ident, *ast.MapType, *ast.SelectorExpr, *ast.StarExpr:
-		t := cv.convertTypeExpr(n)
+		cppType := cv.convertTypeExpr(n, ctContext{})
 		name := GetCppName(node.Name.Name)
 		var usingDec string
 
+		cv.typedefs.add(cv.typeInfo.Defs[node.Name].Type())
+
 		if cv.ignoreKnownError(name, knownMissingDeps) {
-			usingDec = fmt.Sprintf("/* %susing %s = %s */%s", templateDec, name, t.str, end)
+			usingDec = fmt.Sprintf("/* %susing %s = %s */%s", templateDec, name, cppType.str, end)
 		} else {
-			usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, t.str, end)
+			// TODO: make a type alias if node.Assign != nil
+			usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)
 		}
 
 		if isNamespace {
-			return mkCppType("", append(t.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
+			return mkCppType("", append(cppType.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
 		} else {
-			return mkCppType("", append(t.defs, inlineStr(usingDec, node)))
+			cv.DeclareType(name)
+			return mkCppType("", append(cppType.defs, inlineStr(usingDec, node)))
 		}
 
 	case *ast.StructType:
@@ -2068,14 +2102,16 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
 			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
-			structDecl := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with})
+			structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with})
+			defs = append(defs, places...)
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
 			defs = append(defs, headerStr(structDecl, node))
 		}
-
-		return mkCppType(cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, implem, with}), defs)
+		structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, implem, with})
+		defs = append(defs, places...)
+		return mkCppType(structDecl, defs)
 
 	case *ast.InterfaceType:
 		name := GetCppName(node.Name.Name)
@@ -2169,18 +2205,50 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 }
 
 func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
-	tv := cv.typeInfo.Types[id].Type
 
-	switch obj := tv.(type) {
+	tv := cv.typeInfo.Types[id].Type
+	pkg := cv.typeInfo.Uses[id].Pkg()
+
+	if cv.typedefs.has(tv) {
+		return true, pkg.Name()
+	}
+
+	switch tv.(type) {
 	case *types.Named:
 		switch tv.Underlying().(type) {
 		case *types.Basic:
-			if pkg := obj.Obj().Pkg(); pkg != nil {
-				return true, pkg.Name()
-			}
-			return false, ""
+			return true, pkg.Name()
 		}
 	}
+
+	// var pkg *types.Package
+	// if ident, ok := expr.(*ast.Ident); ok {
+	// 	if def := cv.typeInfo.Defs[ident]; def != nil {
+	// 		pkg = def.Pkg()
+	// 	} else if def := cv.typeInfo.Uses[ident]; def != nil {
+	// 		pkg = def.Pkg()
+	// 	}
+	// }
+
+	cv.Logf("isTypedef, %v, isAlias: %v, pos:%v \n", types.ExprString(id), cv.typedefs.has(tv), cv.Position(id))
+	cv.Logf("isTypedef, %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
+
+	if tv != nil {
+		exprStr := types.ExprString(id)
+		typStr := tv.String()
+
+		if pkg != nil {
+			if !strings.Contains(exprStr, ".") {
+				exprStr = pkg.Name() + "." + exprStr
+			}
+
+			cv.Logf("isTypedef, exprStr: %v, typeStr: %v\n", exprStr, typStr)
+			if typStr != exprStr {
+				return true, pkg.Name()
+			}
+		}
+	}
+
 	return false, ""
 }
 
@@ -2217,9 +2285,14 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 	return id, true
 }
 
+type ctContext struct {
+	inDeclaration bool
+	namespace     string
+}
+
 // Maybe merge this function with "convertExprType" in future ?
 // Maybe merge this function with "convertExprCppType" in future ?
-func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
+func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -2228,43 +2301,49 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 	case *ast.Ident:
 		var identType cppType
 		isTD, pkg := cv.isTypedef(n)
-		if isTD {
-			identType = mkCppType(pkg+"::"+GetCppType(n.Name), nil)
+		isParam, _ := cv.isParam(n)
+		identType = mkCppType(GetCppType(n.Name), nil)
+		if isTD && !isParam {
+			if !cv.IsLocalType(identType.str) {
+				if pkg != ctx.namespace {
+					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+				} else {
+					identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
+				}
+			}
 		} else {
-			identType = mkCppType(GetCppType(n.Name), nil)
+			cv.checkStructType(n, &identType)
 		}
 
-		cv.checkStructType(n, &identType)
 		cv.checkCanFwd(&identType)
 		cv.checkIsParam(n, &identType)
 		return identType
 
 	case *ast.ArrayType:
-		return cv.convertArrayTypeExpr(n)
+		return cv.convertArrayTypeExpr(n, ctx)
 
 	case *ast.ChanType:
-		return cv.convertChanTypeExpr(n)
+		return cv.convertChanTypeExpr(n, ctx)
 
 	case *ast.FuncType:
-		return cv.convertFuncTypeExpr(n)
+		return cv.convertFuncTypeExpr(n, ctx)
 
 	case *ast.IndexExpr:
 		// TODO: CppTypePrintf ?
-		typeName := cv.convertTypeExpr(n.Index)
-		cppType := ExprPrintf("%s<%s>", cv.convertTypeExpr(n.X), typeName).toCppType()
+		typeName := cv.convertTypeExpr(n.Index, ctx)
+		cppType := ExprPrintf("%s<%s>", cv.convertTypeExpr(n.X, ctx), typeName).toCppType()
 		cppType.typenames = append(cppType.typenames, typeName.str)
 		return cppType
 
 	case *ast.MapType:
-		return cv.convertMapTypeExpr(n)
+		return cv.convertMapTypeExpr(n, ctx)
 
 	case *ast.ParenExpr:
-		return cv.convertTypeExpr(n.X)
+		return cv.convertTypeExpr(n.X, ctx)
 
 	case *ast.SelectorExpr:
 		namespace := cv.convertExpr(n.X)
-		field := cv.convertTypeExpr(n.Sel)
-		cv.checkStructType(n, &field)
+		field := cv.convertTypeExpr(n.Sel, ctx)
 		typeName := GetCppExprFunc(ExprPrintf("%s::%s", namespace, field))
 		// TODO: Check this. Why mkCppPtrType and not mkCppType ?
 		cppType := mkCppPtrType(typeName)
@@ -2272,9 +2351,8 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		return cppType
 
 	case *ast.StarExpr:
-		typeExpr := cv.convertTypeExpr(n.X)
+		typeExpr := cv.convertTypeExpr(n.X, ctx)
 		cppType := mkCppPtrType(ExprPrintf("%s*", typeExpr))
-		cv.checkStructType(n.X, &cppType)
 		cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
 		cppType.isStruct = typeExpr.isStruct
 		return cppType
@@ -2286,9 +2364,21 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 
 			// if we want to use "inlineStr" we have to know if we are inside function or not to disable
 			// stream operator generation.
-			structDef := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with})
-			//return mkCppType(name, []place{inlineStr(structDef), fwdHeaderStr(structFwdDecl, depInfo{})})
-			return mkCppType(name, []place{outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{})})
+			if ctx.inDeclaration {
+				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, decl, with})
+				defs = append(defs, headerStr(structDef, node))
+
+				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with})
+				defs = append(defs, outlineStr(structImpl, node))
+				return mkCppType(name, defs)
+			} else {
+				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with})
+				//defs = append(defs, inlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
+
+				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
+				return mkCppType(name, defs)
+			}
+
 		}
 		return mkCppType(name, nil)
 
@@ -2312,13 +2402,18 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr) cppType {
 		}
 
 	case *ast.Ellipsis:
-		return cv.convertEllipsisTypeExpr(n)
+		return cv.convertEllipsisTypeExpr(n, ctx)
 
 	default:
 		cv.Panicf("convertTypeExpr, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) isParam(n *ast.Ident) (bool, string) {
+	_, isParam := cv.typeInfo.Types[n].Type.(*types.TypeParam)
+	return isParam, n.Name
 }
 
 func (cv *cppConverter) checkIsParam(n *ast.Ident, identType *cppType) {
@@ -2345,8 +2440,8 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, typeNames) {
 	}
 }
 
-func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType) cppType {
-	elt := cv.convertTypeExpr(node.Elt)
+func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType, ctx ctContext) cppType {
+	elt := cv.convertTypeExpr(node.Elt, ctx)
 
 	switch node.Len.(type) {
 	case nil:
@@ -2358,26 +2453,26 @@ func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType) cppType {
 	}
 }
 
-func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis) cppType {
-	elt := cv.convertTypeExpr(node.Elt)
+func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis, ctx ctContext) cppType {
+	elt := cv.convertTypeExpr(node.Elt, ctx)
 	return mkCppEllipsis(ExprPrintf("gocpp::slice<%s>", elt), elt.str)
 }
 
-func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType) cppType {
-	elt := cv.convertTypeExpr(node.Value)
+func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType, ctx ctContext) cppType {
+	elt := cv.convertTypeExpr(node.Value, ctx)
 	return mkCppType(fmt.Sprintf("gocpp::channel<%s>", elt.str), elt.defs)
 }
 
-func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType) cppType {
-	params := cv.readFields(node.Params)
+func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) cppType {
+	params := cv.readFieldsCtx(node.Params, ctx)
 	_, outTypes := cv.getResultInfos(node)
 	resultType := buildOutType(outTypes)
 	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), params.getDefs())
 }
 
-func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType) cppType {
-	key := cv.convertTypeExpr(node.Key)
-	value := cv.convertTypeExpr(node.Value)
+func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType, ctx ctContext) cppType {
+	key := cv.convertTypeExpr(node.Key, ctx)
+	value := cv.convertTypeExpr(node.Value, ctx)
 	return mkCppType(fmt.Sprintf("gocpp::map<%s, %s>", key.str, value.str), append(key.defs, value.defs...))
 }
 
@@ -2438,13 +2533,17 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
-func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms []string, param genStructParam) string {
+func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms []string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
-	fields := cv.readFields(node.Fields)
+	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, namespace: cv.namespace})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
 		templatePrmList = fmt.Sprintf("<%s>", strings.Join(templatePrms, ", "))
+	}
+
+	for _, param := range fields {
+		places = append(places, param.Type.defs...)
 	}
 
 	data := cv.computeGenStructData(param, templatePrmList)
@@ -2585,7 +2684,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 			fmt.Fprintf(buf, "\n")
 		}
 	}
-	return buf.String()
+	return buf.String(), places
 }
 
 func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms []string) {
@@ -2762,7 +2861,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		}
 		fmt.Fprintf(buf, "\n")
 
-		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<%s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 			fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
@@ -2770,7 +2869,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			fmt.Fprintf(buf, "\n")
 		}
 
-		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<%s>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
+		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 			fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
@@ -2875,7 +2974,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		switch fun := n.Fun.(type) {
 		// Type conversion expression
 		case *ast.ParenExpr:
-			return cv.convertTypeExpr(fun.X)
+			return cv.convertTypeExpr(fun.X, ctContext{})
 		}
 
 		// case *ast.BinaryExpr, *ast.Ident:
@@ -2887,7 +2986,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 
 	case *ast.InterfaceType, *ast.StructType:
-		return cv.convertTypeExpr(n)
+		return cv.convertTypeExpr(n, ctContext{})
 	}
 
 	// Generic fallback to guess type
@@ -3059,7 +3158,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	switch n := node.(type) {
 
 	case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.InterfaceType:
-		typeDesc := cv.convertTypeExpr(n)
+		typeDesc := cv.convertTypeExpr(n, ctContext{})
 		// Type used as parameter, we use a dummy tag value that is used only for its type
 		return ExprPrintf("gocpp::Tag<%s>()", typeDesc)
 
@@ -3158,7 +3257,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 				sep = ", "
 			}
 		case *ast.ParenExpr:
-			cv.BuffExprPrintf(buf, "(%v)(", cv.convertTypeExpr(fun.X))
+			cv.BuffExprPrintf(buf, "(%v)(", cv.convertTypeExpr(fun.X, ctContext{}))
 
 		case *ast.Ident:
 			if fun.Name == "recover" {
@@ -3252,7 +3351,7 @@ func (cv *cppConverter) isNameSpace(expr ast.Expr) bool {
 
 func (cv *cppConverter) convertCompositeLitType(n *ast.CompositeLit, addPtr bool) cppType {
 	if n.Type != nil {
-		result := cv.convertTypeExpr(n.Type)
+		result := cv.convertTypeExpr(n.Type, ctContext{})
 		if addPtr {
 			result.str += "*"
 		}
@@ -3267,7 +3366,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 	buf := mkCppBuffer()
 	var litType cppExpr
 	if n.Type != nil {
-		litType = cv.convertTypeExpr(n.Type).cppExpr
+		litType = cv.convertTypeExpr(n.Type, ctContext{}).cppExpr
 	}
 
 	var isKvInit bool

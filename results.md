@@ -406,9 +406,9 @@
 | $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))| ❌ |
 | $(ImportDir)/runtime/zcallback_windows.go | ✔️ ([cpp](generated/golang/runtime/zcallback_windows.cpp), [h](generated/golang/runtime/zcallback_windows.h))| ✔️ |
 | $(ImportDir)/slices/slices.go | ✔️ ([cpp](generated/golang/slices/slices.cpp), [h](generated/golang/slices/slices.h))| ❌ |
-| $(ImportDir)/slices/sort.go | ✔️ ([cpp](generated/golang/slices/sort.cpp), [h](generated/golang/slices/sort.h))| ❌ |
-| $(ImportDir)/slices/zsortanyfunc.go | ✔️ ([cpp](generated/golang/slices/zsortanyfunc.cpp), [h](generated/golang/slices/zsortanyfunc.h))| ❌ |
-| $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))| ❌ |
+| $(ImportDir)/slices/sort.go | ✔️ ([cpp](generated/golang/slices/sort.cpp), [h](generated/golang/slices/sort.h))| ✔️ |
+| $(ImportDir)/slices/zsortanyfunc.go | ✔️ ([cpp](generated/golang/slices/zsortanyfunc.cpp), [h](generated/golang/slices/zsortanyfunc.h))| ✔️ |
+| $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))| ✔️ |
 | $(ImportDir)/sort/slice.go | ✔️ ([cpp](generated/golang/sort/slice.cpp), [h](generated/golang/sort/slice.h))| ❌ |
 | $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))| ❌ |
 | $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))| ❌ |

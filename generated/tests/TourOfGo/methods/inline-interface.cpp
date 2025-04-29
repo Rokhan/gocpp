@@ -23,12 +23,12 @@ namespace golang::main
         using namespace math::rec;
     }
 
-    double rec::Abs(main::MyInt i)
+    double rec::Abs(golang::main::MyInt i)
     {
         return std::sqrt(double(i * i));
     }
 
-    double rec::Abs(main::MyFloat f)
+    double rec::Abs(golang::main::MyFloat f)
     {
         return std::sqrt(double(f * f));
     }
@@ -102,12 +102,12 @@ namespace golang::main
 
         namespace rec
         {
-            double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+            double Abs(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
             {
                 return self.ptr->value->vAbs();
             }
 
-            double Abs(const gocpp::ObjRecv<gocpp_id_0>& self)
+            double Abs(const gocpp::ObjRecv<struct gocpp_id_0>& self)
             {
                 return self.obj.value->vAbs();
             }
@@ -163,12 +163,12 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self)
+        double Abs(const gocpp::PtrRecv<struct gocpp_id_1, false>& self)
         {
             return self.ptr->value->vAbs();
         }
 
-        double Abs(const gocpp::ObjRecv<gocpp_id_1>& self)
+        double Abs(const gocpp::ObjRecv<struct gocpp_id_1>& self)
         {
             return self.obj.value->vAbs();
         }

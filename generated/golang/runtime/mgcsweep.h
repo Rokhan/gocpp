@@ -53,7 +53,7 @@ namespace golang::runtime
         g* g;
         bool parked;
         activeSweep active;
-        runtime::sweepClass centralIndex;
+        golang::runtime::sweepClass centralIndex;
 
         using isGoStruct = void;
 
@@ -125,10 +125,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        runtime::sweepClass load(runtime::sweepClass* s);
-        void update(runtime::sweepClass* s, runtime::sweepClass sNew);
-        void clear(runtime::sweepClass* s);
-        std::tuple<runtime::spanClass, bool> split(runtime::sweepClass s);
+        runtime::sweepClass load(golang::runtime::sweepClass* s);
+        void update(golang::runtime::sweepClass* s, golang::runtime::sweepClass sNew);
+        void clear(golang::runtime::sweepClass* s);
+        std::tuple<runtime::spanClass, bool> split(golang::runtime::sweepClass s);
         struct mspan* nextSpanForSweep(struct mheap* h);
         struct sweepLocker begin(struct activeSweep* a);
         void end(struct activeSweep* a, struct sweepLocker sl);

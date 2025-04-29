@@ -425,12 +425,12 @@ namespace golang::syscall
         return {t, nullptr};
     }
 
-    struct gocpp::error rec::Close(syscall::Token t)
+    struct gocpp::error rec::Close(golang::syscall::Token t)
     {
         return CloseHandle(Handle(t));
     }
 
-    std::tuple<unsafe::Pointer, struct gocpp::error> rec::getInfo(syscall::Token t, uint32_t go_class, int initSize)
+    std::tuple<unsafe::Pointer, struct gocpp::error> rec::getInfo(golang::syscall::Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -452,7 +452,7 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<struct Tokenuser*, struct gocpp::error> rec::GetTokenUser(syscall::Token t)
+    std::tuple<struct Tokenuser*, struct gocpp::error> rec::GetTokenUser(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenUser, 50);
         if(e != nullptr)
@@ -462,7 +462,7 @@ namespace golang::syscall
         return {(Tokenuser*)(i), nullptr};
     }
 
-    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(syscall::Token t)
+    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
         if(e != nullptr)
@@ -472,7 +472,7 @@ namespace golang::syscall
         return {(Tokenprimarygroup*)(i), nullptr};
     }
 
-    std::tuple<std::string, struct gocpp::error> rec::GetUserProfileDirectory(syscall::Token t)
+    std::tuple<std::string, struct gocpp::error> rec::GetUserProfileDirectory(golang::syscall::Token t)
     {
         auto n = uint32_t(100);
         for(; ; )

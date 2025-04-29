@@ -116,7 +116,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, runtime::sysMemStat* stat)
+    void rec::init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {

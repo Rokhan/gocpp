@@ -53,12 +53,12 @@ namespace golang::main
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<I, false>& self)
+        void M(const gocpp::PtrRecv<struct I, false>& self)
         {
             return self.ptr->value->vM();
         }
 
-        void M(const gocpp::ObjRecv<I>& self)
+        void M(const gocpp::ObjRecv<struct I>& self)
         {
             return self.obj.value->vM();
         }

@@ -68,7 +68,7 @@ namespace golang::runtime
     struct traceBufHeader
     {
         traceBuf* link;
-        runtime::traceTime lastTime;
+        golang::runtime::traceTime lastTime;
         int pos;
         int lenPos;
 

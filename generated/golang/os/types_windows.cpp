@@ -120,7 +120,7 @@ namespace golang::os
         {
             struct fileStat* fs;
             struct gocpp::error err;
-            return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "GetFileInformationByHandle"; x.Path = path; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "GetFileInformationByHandle"; x.Path = path; x.Err = err; })};
         }
         windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
         err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(unsafe::Pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
@@ -138,23 +138,23 @@ namespace golang::os
             {
                 struct fileStat* fs;
                 struct gocpp::error err;
-                return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "GetFileInformationByHandleEx"; x.Path = path; x.Err = err; })};
+                return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "GetFileInformationByHandleEx"; x.Path = path; x.Err = err; })};
             }
         }
         return {gocpp::InitPtr<fileStat>([](fileStat& x) { x.name = basename(path); x.FileAttributes = d.FileAttributes; x.CreationTime = d.CreationTime; x.LastAccessTime = d.LastAccessTime; x.LastWriteTime = d.LastWriteTime; x.FileSizeHigh = d.FileSizeHigh; x.FileSizeLow = d.FileSizeLow; x.vol = d.VolumeSerialNumber; x.idxhi = d.FileIndexHigh; x.idxlo = d.FileIndexLow; x.ReparseTag = ti.ReparseTag; }), nullptr};
     }
 
-    struct fileStat* newFileStatFromFileIDBothDirInfo(struct windows::FILE_ID_BOTH_DIR_INFO* d)
+    struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
         return gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = uint32_t(d->EndOfFile >> 32); x.FileSizeLow = uint32_t(d->EndOfFile); x.ReparseTag = d->EaSize; x.idxhi = uint32_t(d->FileID >> 32); x.idxlo = uint32_t(d->FileID); });
     }
 
-    struct fileStat* newFileStatFromFileFullDirInfo(struct windows::FILE_FULL_DIR_INFO* d)
+    struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
     {
         return gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = uint32_t(d->EndOfFile >> 32); x.FileSizeLow = uint32_t(d->EndOfFile); x.ReparseTag = d->EaSize; });
     }
 
-    struct fileStat* newFileStatFromWin32finddata(struct syscall::Win32finddata* d)
+    struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
     {
         auto fs = gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = d->FileSizeHigh; x.FileSizeLow = d->FileSizeLow; });
         if(d->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
@@ -179,27 +179,27 @@ namespace golang::os
         return (int64_t(fs->FileSizeHigh) << 32) + int64_t(fs->FileSizeLow);
     }
 
-    fs::FileMode rec::Mode(struct fileStat* fs)
+    os::FileMode rec::Mode(struct fileStat* fs)
     {
-        fs::FileMode m;
+        os::FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
         {
-            fs::FileMode m;
+            os::FileMode m;
             m |= 0444;
         }
         else
         {
-            fs::FileMode m;
+            os::FileMode m;
             m |= 0666;
         }
         if(rec::isSymlink(gocpp::recv(fs)))
         {
-            fs::FileMode m;
+            os::FileMode m;
             return m | ModeSymlink;
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
         {
-            fs::FileMode m;
+            os::FileMode m;
             m |= ModeDir | 0111;
         }
         //Go switch emulation
@@ -210,7 +210,7 @@ namespace golang::os
             else if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
             switch(conditionId)
             {
-                fs::FileMode m;
+                os::FileMode m;
                 case 0:
                     m |= ModeNamedPipe;
                     break;
@@ -221,21 +221,21 @@ namespace golang::os
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0 && m & ModeType == 0)
         {
-            fs::FileMode m;
+            os::FileMode m;
             if(fs->ReparseTag == windows::IO_REPARSE_TAG_DEDUP)
             {
-                fs::FileMode m;
+                os::FileMode m;
             }
             else
             {
-                fs::FileMode m;
+                os::FileMode m;
                 m |= ModeIrregular;
             }
         }
         return m;
     }
 
-    struct mocklib::Date rec::ModTime(struct fileStat* fs)
+    mocklib::Date rec::ModTime(struct fileStat* fs)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(fs->LastWriteTime)));
     }
@@ -305,7 +305,7 @@ namespace golang::os
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
             if(err != nullptr)
             {
-                return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "FullPath"; x.Path = path; x.Err = err; });
+                return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "FullPath"; x.Path = path; x.Err = err; });
             }
         }
         fs->name = basename(path);
@@ -327,7 +327,7 @@ namespace golang::os
         return fs1->vol == fs2->vol && fs1->idxhi == fs2->idxhi && fs1->idxlo == fs2->idxlo;
     }
 
-    struct mocklib::Date atime(struct FileInfo fi)
+    mocklib::Date atime(golang::os::FileInfo fi)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));
     }

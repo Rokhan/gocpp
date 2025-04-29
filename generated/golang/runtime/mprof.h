@@ -37,7 +37,7 @@ namespace golang::runtime
         sys::NotInHeap _;
         bucket* next;
         bucket* allnext;
-        runtime::bucketType typ;
+        golang::runtime::bucketType typ;
         uintptr_t hash;
         uintptr_t size;
         uintptr_t nstk;
@@ -123,8 +123,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mProfCycleHolder& value);
-    struct bucket* newBucket(runtime::bucketType typ, int nstk);
-    struct bucket* stkbucket(runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
+    struct bucket* newBucket(golang::runtime::bucketType typ, int nstk);
+    struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
     bool eqslice(gocpp::slice<uintptr_t> x, gocpp::slice<uintptr_t> y);
     void mProf_NextCycle();
     void mProf_Flush();
@@ -135,7 +135,7 @@ namespace golang::runtime
     void SetBlockProfileRate(int rate);
     void blockevent(int64_t cycles, int skip);
     bool blocksampled(int64_t cycles, int64_t rate);
-    void saveblockevent(int64_t cycles, int64_t rate, int skip, runtime::bucketType which);
+    void saveblockevent(int64_t cycles, int64_t rate, int skip, golang::runtime::bucketType which);
     struct lockTimer
     {
         /* mutex* lock; [Known incomplete type] */
@@ -176,7 +176,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
-    void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, runtime::bucketType which);
+    void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, golang::runtime::bucketType which);
     int SetMutexProfileFraction(int rate);
     void mutexevent(int64_t cycles, int skip);
     struct StackRecord
@@ -250,7 +250,7 @@ namespace golang::runtime
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
     /* void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r); [Ignored, known name conflict] */ 
     int Stack(gocpp::slice<unsigned char> buf, bool all);
-    void tracealloc(unsafe::Pointer p, uintptr_t size, struct _type* typ);
+    void tracealloc(unsafe::Pointer p, uintptr_t size, golang::runtime::_type* typ);
     void tracefree(unsafe::Pointer p, uintptr_t size);
     void tracegc();
 
@@ -273,9 +273,9 @@ namespace golang::runtime
         int64_t InUseBytes(struct MemProfileRecord* r);
         int64_t InUseObjects(struct MemProfileRecord* r);
         gocpp::slice<uintptr_t> Stack(struct MemProfileRecord* r);
-        runtime::goroutineProfileState Load(struct goroutineProfileStateHolder* p);
-        void Store(struct goroutineProfileStateHolder* p, runtime::goroutineProfileState value);
-        bool CompareAndSwap(struct goroutineProfileStateHolder* p, runtime::goroutineProfileState old, runtime::goroutineProfileState go_new);
+        runtime::goroutineProfileState Load(golang::runtime::goroutineProfileStateHolder* p);
+        void Store(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState value);
+        bool CompareAndSwap(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState old, golang::runtime::goroutineProfileState go_new);
     }
 }
 

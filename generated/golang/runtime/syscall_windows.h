@@ -37,7 +37,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
     struct abiPart
     {
-        runtime::abiPartKind kind;
+        golang::runtime::abiPartKind kind;
         uintptr_t srcStackOffset;
         uintptr_t dstStackOffset;
         int dstRegister;
@@ -142,8 +142,8 @@ namespace golang::runtime
     namespace rec
     {
         bool tryMerge(struct abiPart* a, struct abiPart b);
-        void assignArg(struct abiDesc* p, struct _type* t);
-        bool tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset);
+        void assignArg(struct abiDesc* p, golang::runtime::_type* t);
+        bool tryRegAssignArg(struct abiDesc* p, golang::runtime::_type* t, uintptr_t offset);
         bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset);
     }
 }

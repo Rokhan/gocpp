@@ -23,7 +23,7 @@
 #include "golang/os/file_windows.h"
 #include "golang/os/types.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 #include "golang/strconv/itoa.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/mutex.h"
@@ -111,42 +111,42 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<State, false>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
         {
             return self.ptr->value->vWrite(b);
         }
 
-        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<State>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
         {
             return self.obj.value->vWrite(b);
         }
 
-        std::tuple<int, bool> Width(const gocpp::PtrRecv<State, false>& self)
+        std::tuple<int, bool> Width(const gocpp::PtrRecv<struct State, false>& self)
         {
             return self.ptr->value->vWidth();
         }
 
-        std::tuple<int, bool> Width(const gocpp::ObjRecv<State>& self)
+        std::tuple<int, bool> Width(const gocpp::ObjRecv<struct State>& self)
         {
             return self.obj.value->vWidth();
         }
 
-        std::tuple<int, bool> Precision(const gocpp::PtrRecv<State, false>& self)
+        std::tuple<int, bool> Precision(const gocpp::PtrRecv<struct State, false>& self)
         {
             return self.ptr->value->vPrecision();
         }
 
-        std::tuple<int, bool> Precision(const gocpp::ObjRecv<State>& self)
+        std::tuple<int, bool> Precision(const gocpp::ObjRecv<struct State>& self)
         {
             return self.obj.value->vPrecision();
         }
 
-        bool Flag(const gocpp::PtrRecv<State, false>& self, int c)
+        bool Flag(const gocpp::PtrRecv<struct State, false>& self, int c)
         {
             return self.ptr->value->vFlag(c);
         }
 
-        bool Flag(const gocpp::ObjRecv<State>& self, int c)
+        bool Flag(const gocpp::ObjRecv<struct State>& self, int c)
         {
             return self.obj.value->vFlag(c);
         }
@@ -189,12 +189,12 @@ namespace golang::fmt
 
     namespace rec
     {
-        void Format(const gocpp::PtrRecv<Formatter, false>& self, struct State f, gocpp::rune verb)
+        void Format(const gocpp::PtrRecv<struct Formatter, false>& self, struct State f, gocpp::rune verb)
         {
             return self.ptr->value->vFormat(f, verb);
         }
 
-        void Format(const gocpp::ObjRecv<Formatter>& self, struct State f, gocpp::rune verb)
+        void Format(const gocpp::ObjRecv<struct Formatter>& self, struct State f, gocpp::rune verb)
         {
             return self.obj.value->vFormat(f, verb);
         }
@@ -237,12 +237,12 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<Stringer, false>& self)
+        std::string String(const gocpp::PtrRecv<struct Stringer, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<Stringer>& self)
+        std::string String(const gocpp::ObjRecv<struct Stringer>& self)
         {
             return self.obj.value->vString();
         }
@@ -285,12 +285,12 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::string GoString(const gocpp::PtrRecv<GoStringer, false>& self)
+        std::string GoString(const gocpp::PtrRecv<struct GoStringer, false>& self)
         {
             return self.ptr->value->vGoString();
         }
 
-        std::string GoString(const gocpp::ObjRecv<GoStringer>& self)
+        std::string GoString(const gocpp::ObjRecv<struct GoStringer>& self)
         {
             return self.obj.value->vGoString();
         }
@@ -325,22 +325,22 @@ namespace golang::fmt
         return string(b);
     }
 
-    void rec::write(buffer* b, gocpp::slice<unsigned char> p)
+    void rec::write(golang::fmt::buffer* b, gocpp::slice<unsigned char> p)
     {
         *b = append(*b, p);
     }
 
-    void rec::writeString(buffer* b, std::string s)
+    void rec::writeString(golang::fmt::buffer* b, std::string s)
     {
         *b = append(*b, s);
     }
 
-    void rec::writeByte(buffer* b, unsigned char c)
+    void rec::writeByte(golang::fmt::buffer* b, unsigned char c)
     {
         *b = append(*b, c);
     }
 
-    void rec::writeRune(buffer* b, gocpp::rune r)
+    void rec::writeRune(golang::fmt::buffer* b, gocpp::rune r)
     {
         *b = utf8::AppendRune(*b, r);
     }
@@ -498,7 +498,7 @@ namespace golang::fmt
         return {len(s), nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Fprintf(struct io::Writer w, std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
     {
         int n;
         struct gocpp::error err;
@@ -534,7 +534,7 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, struct gocpp::error> Fprint(struct io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
         struct gocpp::error err;
@@ -570,7 +570,7 @@ namespace golang::fmt
         return b;
     }
 
-    std::tuple<int, struct gocpp::error> Fprintln(struct io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
         struct gocpp::error err;
@@ -606,7 +606,7 @@ namespace golang::fmt
         return b;
     }
 
-    struct reflect::Value getField(struct reflect::Value v, int i)
+    reflect::Value getField(reflect::Value v, int i)
     {
         auto val = rec::Field(gocpp::recv(v), i);
         if(rec::Kind(gocpp::recv(val)) == reflect::Interface && ! rec::IsNil(gocpp::recv(val)))
@@ -652,7 +652,7 @@ namespace golang::fmt
         return {num, isnum, newi};
     }
 
-    void rec::unknownType(struct pp* p, struct reflect::Value v)
+    void rec::unknownType(struct pp* p, reflect::Value v)
     {
         if(! rec::IsValid(gocpp::recv(v)))
         {
@@ -981,7 +981,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtPointer(struct pp* p, struct reflect::Value value, gocpp::rune verb)
+    void rec::fmtPointer(struct pp* p, reflect::Value value, gocpp::rune verb)
     {
         uintptr_t u = {};
         //Go switch emulation
@@ -1403,7 +1403,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::printValue(struct pp* p, struct reflect::Value value, gocpp::rune verb, int depth)
+    void rec::printValue(struct pp* p, reflect::Value value, gocpp::rune verb, int depth)
     {
         if(depth > 0 && rec::IsValid(gocpp::recv(value)) && rec::CanInterface(gocpp::recv(value)))
         {

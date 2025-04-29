@@ -20,9 +20,9 @@ namespace golang::flate
 
     namespace rec
     {
-        uint32_t literal(flate::token t);
-        uint32_t offset(flate::token t);
-        uint32_t length(flate::token t);
+        uint32_t literal(golang::flate::token t);
+        uint32_t offset(golang::flate::token t);
+        uint32_t length(golang::flate::token t);
     }
 }
 

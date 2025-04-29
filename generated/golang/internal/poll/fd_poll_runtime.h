@@ -49,7 +49,7 @@ namespace golang::poll
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
     struct gocpp::error convertErr(int res, bool isFile);
-    struct gocpp::error setDeadlineImpl(struct FD* fd, struct mocklib::Date t, int mode);
+    struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode);
     bool IsPollDescriptor(uintptr_t fd);
 
     namespace rec
@@ -65,9 +65,9 @@ namespace golang::poll
         struct gocpp::error waitWrite(struct pollDesc* pd, bool isFile);
         void waitCanceled(struct pollDesc* pd, int mode);
         bool pollable(struct pollDesc* pd);
-        struct gocpp::error SetDeadline(struct FD* fd, struct mocklib::Date t);
-        struct gocpp::error SetReadDeadline(struct FD* fd, struct mocklib::Date t);
-        struct gocpp::error SetWriteDeadline(struct FD* fd, struct mocklib::Date t);
+        struct gocpp::error SetDeadline(struct FD* fd, mocklib::Date t);
+        struct gocpp::error SetReadDeadline(struct FD* fd, mocklib::Date t);
+        struct gocpp::error SetWriteDeadline(struct FD* fd, mocklib::Date t);
     }
 }
 

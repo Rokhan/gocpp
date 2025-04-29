@@ -394,7 +394,7 @@ namespace golang::runtime
         out->scalar = 0;
     }
 
-    void rec::compute(metricReader f, struct statAggregate* _, struct metricValue* out)
+    void rec::compute(golang::runtime::metricReader f, struct statAggregate* _, struct metricValue* out)
     {
         out->kind = metricKindUint64;
         out->scalar = f();
@@ -414,9 +414,9 @@ namespace golang::runtime
         metricsUnlock();
     }
 
-    statDepSet makeStatDepSet(gocpp::slice<runtime::statDep> deps)
+    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps)
     {
-        statDepSet s = {};
+        runtime::statDepSet s = {};
         for(auto [gocpp_ignored, d] : deps)
         {
             s[d / 64] |= 1 << (d % 64);
@@ -424,9 +424,9 @@ namespace golang::runtime
         return s;
     }
 
-    statDepSet rec::difference(statDepSet s, statDepSet b)
+    runtime::statDepSet rec::difference(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
     {
-        statDepSet c = {};
+        runtime::statDepSet c = {};
         for(auto [i, gocpp_ignored] : s)
         {
             c[i] = s[i] &^ b[i];
@@ -434,9 +434,9 @@ namespace golang::runtime
         return c;
     }
 
-    statDepSet rec::union(statDepSet s, statDepSet b)
+    runtime::statDepSet rec::union(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
     {
-        statDepSet c = {};
+        runtime::statDepSet c = {};
         for(auto [i, gocpp_ignored] : s)
         {
             c[i] = s[i] | b[i];
@@ -444,7 +444,7 @@ namespace golang::runtime
         return c;
     }
 
-    bool rec::empty(statDepSet* s)
+    bool rec::empty(golang::runtime::statDepSet* s)
     {
         for(auto [gocpp_ignored, c] : s)
         {
@@ -456,7 +456,7 @@ namespace golang::runtime
         return true;
     }
 
-    bool rec::has(statDepSet* s, runtime::statDep d)
+    bool rec::has(golang::runtime::statDepSet* s, golang::runtime::statDep d)
     {
         return s[d / 64] & (1 << (d % 64)) != 0;
     }
@@ -727,7 +727,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::ensure(struct statAggregate* a, statDepSet* deps)
+    void rec::ensure(struct statAggregate* a, golang::runtime::statDepSet* deps)
     {
         auto missing = rec::difference(gocpp::recv(deps), a->ensured);
         if(rec::empty(gocpp::recv(missing)))

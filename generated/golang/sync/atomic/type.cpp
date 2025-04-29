@@ -85,7 +85,7 @@ namespace golang::atomic
         return 0;
     }
 
-    Pointer<int>* gocpp_id_0 = new Pointer<int> {};
+    atomic::Pointer<int>* gocpp_id_0 = new atomic::Pointer<int> {};
     
     template<typename T>
     template<typename U> requires gocpp::GoStruct<U>
@@ -127,21 +127,21 @@ namespace golang::atomic
 
 
     template<typename T>
-    T* rec::Load(Pointer<T>* x)
+    T* rec::Load(golang::atomic::Pointer<T>* x)
     {
         return (T*)(LoadPointer(& x->v));
     }
 
 
     template<typename T>
-    void rec::Store(Pointer<T>* x, T* val)
+    void rec::Store(golang::atomic::Pointer<T>* x, T* val)
     {
         StorePointer(& x->v, unsafe::Pointer(val));
     }
 
 
     template<typename T>
-    T* rec::Swap(Pointer<T>* x, T* go_new)
+    T* rec::Swap(golang::atomic::Pointer<T>* x, T* go_new)
     {
         T* old;
         return (T*)(SwapPointer(& x->v, unsafe::Pointer(go_new)));
@@ -149,7 +149,7 @@ namespace golang::atomic
 
 
     template<typename T>
-    bool rec::CompareAndSwap(Pointer<T>* x, T* old, T* go_new)
+    bool rec::CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new)
     {
         bool swapped;
         return CompareAndSwapPointer(& x->v, unsafe::Pointer(old), unsafe::Pointer(go_new));

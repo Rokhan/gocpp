@@ -17,7 +17,7 @@ namespace golang::bytes
     {
         gocpp::slice<unsigned char> buf;
         int off;
-        bytes::readOp lastRead;
+        golang::bytes::readOp lastRead;
 
         using isGoStruct = void;
 
@@ -54,8 +54,8 @@ namespace golang::bytes
         void Grow(struct Buffer* b, int n);
         std::tuple<int, struct gocpp::error> Write(struct Buffer* b, gocpp::slice<unsigned char> p);
         std::tuple<int, struct gocpp::error> WriteString(struct Buffer* b, std::string s);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(struct Buffer* b, struct io::Reader r);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(struct Buffer* b, struct io::Writer w);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(struct Buffer* b, io::Reader r);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(struct Buffer* b, io::Writer w);
         struct gocpp::error WriteByte(struct Buffer* b, unsigned char c);
         std::tuple<int, struct gocpp::error> WriteRune(struct Buffer* b, gocpp::rune r);
         std::tuple<int, struct gocpp::error> Read(struct Buffer* b, gocpp::slice<unsigned char> p);

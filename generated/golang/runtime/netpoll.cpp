@@ -135,22 +135,22 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::closing(runtime::pollInfo i)
+    bool rec::closing(golang::runtime::pollInfo i)
     {
         return i & pollClosing != 0;
     }
 
-    bool rec::eventErr(runtime::pollInfo i)
+    bool rec::eventErr(golang::runtime::pollInfo i)
     {
         return i & pollEventErr != 0;
     }
 
-    bool rec::expiredReadDeadline(runtime::pollInfo i)
+    bool rec::expiredReadDeadline(golang::runtime::pollInfo i)
     {
         return i & pollExpiredReadDeadline != 0;
     }
 
-    bool rec::expiredWriteDeadline(runtime::pollInfo i)
+    bool rec::expiredWriteDeadline(golang::runtime::pollInfo i)
     {
         return i & pollExpiredWriteDeadline != 0;
     }
@@ -774,6 +774,6 @@ namespace golang::runtime
     }
 
     go_any pdEface = (pollDesc*)(nullptr);
-    _type* pdType = efaceOf(& pdEface)->_type;
+    runtime::_type* pdType = efaceOf(& pdEface)->_type;
 }
 

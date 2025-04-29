@@ -54,15 +54,15 @@ namespace golang::strings
     int LastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f);
     int indexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
     int lastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
-    std::tuple<asciiSet, bool> makeASCIISet(std::string chars);
+    std::tuple<strings::asciiSet, bool> makeASCIISet(std::string chars);
     std::string Trim(std::string s, std::string cutset);
     std::string TrimLeft(std::string s, std::string cutset);
     std::string trimLeftByte(std::string s, unsigned char c);
-    std::string trimLeftASCII(std::string s, asciiSet* as);
+    std::string trimLeftASCII(std::string s, golang::strings::asciiSet* as);
     std::string trimLeftUnicode(std::string s, std::string cutset);
     std::string TrimRight(std::string s, std::string cutset);
     std::string trimRightByte(std::string s, unsigned char c);
-    std::string trimRightASCII(std::string s, asciiSet* as);
+    std::string trimRightASCII(std::string s, golang::strings::asciiSet* as);
     std::string trimRightUnicode(std::string s, std::string cutset);
     std::string TrimSpace(std::string s);
     std::string TrimPrefix(std::string s, std::string prefix);
@@ -77,7 +77,7 @@ namespace golang::strings
 
     namespace rec
     {
-        bool contains(asciiSet* as, unsigned char c);
+        bool contains(golang::strings::asciiSet* as, unsigned char c);
     }
 }
 

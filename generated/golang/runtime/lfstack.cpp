@@ -39,7 +39,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    void rec::push(runtime::lfstack* head, struct lfnode* node)
+    void rec::push(golang::runtime::lfstack* head, struct lfnode* node)
     {
         node->pushcnt++;
         auto go_new = lfstackPack(node, node->pushcnt);
@@ -59,7 +59,7 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer rec::pop(runtime::lfstack* head)
+    unsafe::Pointer rec::pop(golang::runtime::lfstack* head)
     {
         for(; ; )
         {
@@ -77,7 +77,7 @@ namespace golang::runtime
         }
     }
 
-    bool rec::empty(runtime::lfstack* head)
+    bool rec::empty(golang::runtime::lfstack* head)
     {
         return atomic::Load64((uint64_t*)(head)) == 0;
     }

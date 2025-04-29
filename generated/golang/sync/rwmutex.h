@@ -46,8 +46,8 @@ namespace golang::sync
         bool TryLock(struct RWMutex* rw);
         void Unlock(struct RWMutex* rw);
         struct Locker RLocker(struct RWMutex* rw);
-        void Lock(struct rlocker* r);
-        void Unlock(struct rlocker* r);
+        void Lock(golang::sync::rlocker* r);
+        void Unlock(golang::sync::rlocker* r);
     }
 }
 

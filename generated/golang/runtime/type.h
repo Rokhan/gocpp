@@ -32,14 +32,14 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     void reflectOffsLock();
     void reflectOffsUnlock();
-    struct name resolveNameOff(unsafe::Pointer ptrInModule, abi::nameOff off);
-    struct _type* resolveTypeOff(unsafe::Pointer ptrInModule, abi::typeOff off);
-    std::string pkgPath(struct name n);
+    runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off);
+    runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off);
+    std::string pkgPath(golang::runtime::name n);
     void typelinksinit();
     struct _typePair
     {
-        _type* t1;
-        _type* t2;
+        golang::runtime::_type* t1;
+        golang::runtime::_type* t2;
 
         using isGoStruct = void;
 
@@ -53,18 +53,33 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
-    struct rtype toRType(struct abi::Type* t);
-    /* bool typesEqual(struct _type* t, struct _type* v, gocpp::map<_typePair, gocpp_id_2> seen); [Ignored, known name conflict] */ 
+    struct rtype toRType(abi::Type* t);
+    struct gocpp_id_2
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    /* bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen); [Ignored, known name conflict] */ 
 
     namespace rec
     {
         std::string string(struct rtype t);
-        struct uncommontype* uncommon(struct rtype t);
+        runtime::uncommontype* uncommon(struct rtype t);
         /* std::string name(struct rtype t); [Ignored, known name conflict] */ 
         std::string pkgpath(struct rtype t);
-        /* struct name nameOff(struct rtype t, abi::nameOff off); [Ignored, known name conflict] */ 
-        /* struct _type* typeOff(struct rtype t, abi::typeOff off); [Ignored, known name conflict] */ 
-        /* unsafe::Pointer textOff(struct rtype t, abi::textOff off); [Ignored, known name conflict] */ 
+        /* runtime::name nameOff(struct rtype t, golang::runtime::nameOff off); [Ignored, known name conflict] */ 
+        /* runtime::_type* typeOff(struct rtype t, golang::runtime::typeOff off); [Ignored, known name conflict] */ 
+        /* unsafe::Pointer textOff(struct rtype t, golang::runtime::textOff off); [Ignored, known name conflict] */ 
     }
 }
 

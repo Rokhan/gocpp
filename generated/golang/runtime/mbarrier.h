@@ -15,18 +15,18 @@
 
 namespace golang::runtime
 {
-    void typedmemmove(struct abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void wbZero(struct _type* typ, unsafe::Pointer dst);
-    void wbMove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflect_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflectlite_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void reflectcallmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, struct abi::RegArgs* regs);
-    int typedslicecopy(struct _type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen);
-    int reflect_typedslicecopy(struct _type* elemType, struct slice dst, struct slice src);
-    void typedmemclr(struct _type* typ, unsafe::Pointer ptr);
-    void reflect_typedmemclr(struct _type* typ, unsafe::Pointer ptr);
-    void reflect_typedmemclrpartial(struct _type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size);
-    void reflect_typedarrayclear(struct _type* typ, unsafe::Pointer ptr, int len);
+    void typedmemmove(abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void wbZero(golang::runtime::_type* typ, unsafe::Pointer dst);
+    void wbMove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflect_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflectlite_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
+    void reflectcallmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, abi::RegArgs* regs);
+    int typedslicecopy(golang::runtime::_type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen);
+    int reflect_typedslicecopy(golang::runtime::_type* elemType, struct slice dst, struct slice src);
+    void typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr);
+    void reflect_typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr);
+    void reflect_typedmemclrpartial(golang::runtime::_type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size);
+    void reflect_typedarrayclear(golang::runtime::_type* typ, unsafe::Pointer ptr, int len);
     void memclrHasPointers(unsafe::Pointer ptr, uintptr_t n);
 
     namespace rec

@@ -69,12 +69,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        void RuntimeError(const gocpp::PtrRecv<Error, false>& self)
+        void RuntimeError(const gocpp::PtrRecv<struct Error, false>& self)
         {
             return self.ptr->value->vRuntimeError();
         }
 
-        void RuntimeError(const gocpp::ObjRecv<Error>& self)
+        void RuntimeError(const gocpp::ObjRecv<struct Error>& self)
         {
             return self.obj.value->vRuntimeError();
         }
@@ -172,11 +172,11 @@ namespace golang::runtime
         return buf.make_slice(i);
     }
 
-    void rec::RuntimeError(runtime::errorString e)
+    void rec::RuntimeError(golang::runtime::errorString e)
     {
     }
 
-    std::string rec::Error(runtime::errorString e)
+    std::string rec::Error(golang::runtime::errorString e)
     {
         return "runtime error: " + string(e);
     }
@@ -227,11 +227,11 @@ namespace golang::runtime
         return e.addr;
     }
 
-    void rec::RuntimeError(runtime::plainError e)
+    void rec::RuntimeError(golang::runtime::plainError e)
     {
     }
 
-    std::string rec::Error(runtime::plainError e)
+    std::string rec::Error(golang::runtime::plainError e)
     {
         return string(e);
     }
@@ -362,12 +362,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<stringer, false>& self)
+        std::string String(const gocpp::PtrRecv<struct stringer, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<stringer>& self)
+        std::string String(const gocpp::ObjRecv<struct stringer>& self)
         {
             return self.obj.value->vString();
         }

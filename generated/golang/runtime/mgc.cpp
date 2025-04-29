@@ -188,6 +188,108 @@ namespace golang::runtime
     workType work;
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.free = this->free;
+        result.busy = this->busy;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (free != ref.free) return false;
+        if (busy != ref.busy) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << free;
+        os << " " << busy;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_2::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.q = this->q;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_2::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (q != ref.q) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << q;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_3::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.list = this->list;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_3::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (list != ref.list) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << list;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     workType::operator T()
     {
         T result;
@@ -1041,7 +1143,7 @@ namespace golang::runtime
         rec::resetLive(gocpp::recv(gcController), work.bytesMarked);
     }
 
-    bool gcSweep(runtime::gcMode mode)
+    bool gcSweep(golang::runtime::gcMode mode)
     {
         assertWorldStopped();
         if(gcphase != _GCoff)

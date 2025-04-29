@@ -17,14 +17,14 @@ namespace golang::abi
         uintptr_t Size_;
         uintptr_t PtrBytes;
         uint32_t Hash;
-        abi::TFlag TFlag;
+        golang::abi::TFlag TFlag;
         uint8_t Align_;
         uint8_t FieldAlign_;
         uint8_t Kind_;
         std::function<bool (unsafe::Pointer, unsafe::Pointer)> Equal;
         unsigned char* GCData;
-        abi::NameOff Str;
-        abi::TypeOff PtrToThis;
+        golang::abi::NameOff Str;
+        golang::abi::TypeOff PtrToThis;
 
         using isGoStruct = void;
 
@@ -41,10 +41,10 @@ namespace golang::abi
     extern gocpp::slice<std::string> kindNames;
     struct Method
     {
-        abi::NameOff Name;
-        abi::TypeOff Mtyp;
-        abi::TextOff Ifn;
-        abi::TextOff Tfn;
+        golang::abi::NameOff Name;
+        golang::abi::TypeOff Mtyp;
+        golang::abi::TextOff Ifn;
+        golang::abi::TextOff Tfn;
 
         using isGoStruct = void;
 
@@ -60,7 +60,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct Method& value);
     struct UncommonType
     {
-        abi::NameOff PkgPath;
+        golang::abi::NameOff PkgPath;
         uint16_t Mcount;
         uint16_t Xcount;
         uint32_t Moff;
@@ -81,8 +81,8 @@ namespace golang::abi
     unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Imethod
     {
-        abi::NameOff Name;
-        abi::TypeOff Typ;
+        golang::abi::NameOff Name;
+        golang::abi::TypeOff Typ;
 
         using isGoStruct = void;
 
@@ -117,7 +117,7 @@ namespace golang::abi
     struct ChanType
     {
         Type* Elem;
-        abi::ChanDir Dir;
+        golang::abi::ChanDir Dir;
 
         using isGoStruct = void;
 
@@ -292,7 +292,7 @@ namespace golang::abi
 
     namespace rec
     {
-        /* std::string String(abi::Kind k); [Ignored, known name conflict] */ 
+        /* std::string String(golang::abi::Kind k); [Ignored, known name conflict] */ 
         /* abi::Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
         bool HasName(struct Type* t);
         bool Pointers(struct Type* t);

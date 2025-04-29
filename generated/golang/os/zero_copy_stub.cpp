@@ -36,7 +36,7 @@ namespace golang::os
         using namespace windows::rec;
     }
 
-    std::tuple<int64_t, bool, struct gocpp::error> rec::writeTo(struct File* f, struct io::Writer w)
+    std::tuple<int64_t, bool, struct gocpp::error> rec::writeTo(struct File* f, io::Writer w)
     {
         int64_t written;
         bool handled;
@@ -44,7 +44,7 @@ namespace golang::os
         return {0, false, nullptr};
     }
 
-    std::tuple<int64_t, bool, struct gocpp::error> rec::readFrom(struct File* f, struct io::Reader r)
+    std::tuple<int64_t, bool, struct gocpp::error> rec::readFrom(struct File* f, io::Reader r)
     {
         int64_t n;
         bool handled;

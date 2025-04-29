@@ -35,13 +35,13 @@ namespace golang::time
     std::tuple<int, int, int> absClock(uint64_t abs);
     std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
     int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
-    bool lessThanHalf(time::Duration x, time::Duration y);
+    bool lessThanHalf(golang::time::Duration x, golang::time::Duration y);
     time::Duration subMono(int64_t t, int64_t u);
     time::Duration Since(struct Time t);
     time::Duration Until(struct Time t);
     std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
     extern gocpp::array_base<int32_t> daysBefore;
-    int daysIn(time::Month m, int year);
+    int daysIn(golang::time::Month m, int year);
     uint64_t daysSinceEpoch(int year);
     std::tuple<int64_t, int32_t, int64_t> now();
     int64_t runtimeNano();
@@ -53,8 +53,8 @@ namespace golang::time
     struct Time UnixMicro(int64_t usec);
     bool isLeap(int year);
     std::tuple<int, int> norm(int hi, int lo, int base);
-    struct Time Date(int year, time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
-    std::tuple<int, time::Duration> div(struct Time t, time::Duration d);
+    struct Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
+    std::tuple<int, time::Duration> div(struct Time t, golang::time::Duration d);
 
     namespace rec
     {
@@ -70,8 +70,8 @@ namespace golang::time
         bool Before(struct Time t, struct Time u);
         int Compare(struct Time t, struct Time u);
         bool Equal(struct Time t, struct Time u);
-        std::string String(time::Month m);
-        std::string String(time::Weekday d);
+        std::string String(golang::time::Month m);
+        std::string String(golang::time::Weekday d);
         bool IsZero(struct Time t);
         uint64_t abs(struct Time t);
         std::tuple<std::string, int, uint64_t> locabs(struct Time t);
@@ -87,18 +87,18 @@ namespace golang::time
         /* int Second(struct Time t); [Ignored, known name conflict] */ 
         /* int Nanosecond(struct Time t); [Ignored, known name conflict] */ 
         int YearDay(struct Time t);
-        std::string String(time::Duration d);
-        int format(time::Duration d, gocpp::array<unsigned char, 32>* buf);
-        int64_t Nanoseconds(time::Duration d);
-        int64_t Microseconds(time::Duration d);
-        int64_t Milliseconds(time::Duration d);
-        double Seconds(time::Duration d);
-        double Minutes(time::Duration d);
-        double Hours(time::Duration d);
-        time::Duration Truncate(time::Duration d, time::Duration m);
-        time::Duration Round(time::Duration d, time::Duration m);
-        time::Duration Abs(time::Duration d);
-        struct Time Add(struct Time t, time::Duration d);
+        std::string String(golang::time::Duration d);
+        int format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf);
+        int64_t Nanoseconds(golang::time::Duration d);
+        int64_t Microseconds(golang::time::Duration d);
+        int64_t Milliseconds(golang::time::Duration d);
+        double Seconds(golang::time::Duration d);
+        double Minutes(golang::time::Duration d);
+        double Hours(golang::time::Duration d);
+        time::Duration Truncate(golang::time::Duration d, golang::time::Duration m);
+        time::Duration Round(golang::time::Duration d, golang::time::Duration m);
+        time::Duration Abs(golang::time::Duration d);
+        struct Time Add(struct Time t, golang::time::Duration d);
         time::Duration Sub(struct Time t, struct Time u);
         struct Time AddDate(struct Time t, int years, int months, int days);
         std::tuple<int, time::Month, int, int> date(struct Time t, bool full);
@@ -121,8 +121,8 @@ namespace golang::time
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(struct Time t);
         struct gocpp::error UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data);
         bool IsDST(struct Time t);
-        struct Time Truncate(struct Time t, time::Duration d);
-        struct Time Round(struct Time t, time::Duration d);
+        struct Time Truncate(struct Time t, golang::time::Duration d);
+        struct Time Round(struct Time t, golang::time::Duration d);
     }
 }
 

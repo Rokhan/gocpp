@@ -147,7 +147,7 @@ namespace golang::os
         {
             int n;
             struct gocpp::error err;
-            return {0, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "readat"; x.Path = f->name; x.Err = errors::New("negative offset"); })};
+            return {0, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readat"; x.Path = f->name; x.Err = errors::New("negative offset"); })};
         }
         for(; len(b) > 0; )
         {
@@ -168,7 +168,7 @@ namespace golang::os
         return {n, err};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct File* f, struct io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct File* f, io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;
@@ -245,7 +245,7 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, struct io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r)
     {
         return io::Copy(gocpp::Init<fileWithoutReadFrom>([](fileWithoutReadFrom& x) { x.File = f; }), r);
     }
@@ -304,7 +304,7 @@ namespace golang::os
         {
             int n;
             struct gocpp::error err;
-            return {0, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "writeat"; x.Path = f->name; x.Err = errors::New("negative offset"); })};
+            return {0, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "writeat"; x.Path = f->name; x.Err = errors::New("negative offset"); })};
         }
         for(; len(b) > 0; )
         {
@@ -325,7 +325,7 @@ namespace golang::os
         return {n, err};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct File* f, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct File* f, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -402,7 +402,7 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w)
     {
         return io::Copy(w, gocpp::Init<fileWithoutWriteTo>([](fileWithoutWriteTo& x) { x.File = f; }));
     }
@@ -441,7 +441,7 @@ namespace golang::os
         return rec::Write(gocpp::recv(f), b);
     }
 
-    struct gocpp::error Mkdir(std::string name, fs::FileMode perm)
+    struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm)
     {
         auto longName = fixLongPath(name);
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -450,7 +450,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "mkdir"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "mkdir"; x.Path = name; x.Err = e; });
         }
         if(! supportsCreateWithStickyBit && perm & ModeSticky != 0)
         {
@@ -479,7 +479,7 @@ namespace golang::os
         if(auto e = syscall::Chdir(dir); e != nullptr)
         {
             testlog::Open(dir);
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "chdir"; x.Path = dir; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "chdir"; x.Path = dir; x.Err = e; });
         }
         if(auto log = testlog::Logger(); log != nullptr)
         {
@@ -502,7 +502,7 @@ namespace golang::os
         return OpenFile(name, O_RDWR | O_CREATE | O_TRUNC, 0666);
     }
 
-    std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, fs::FileMode perm)
+    std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm)
     {
         testlog::Open(name);
         auto [f, err] = openFileNolog(name, flag, perm);
@@ -550,7 +550,7 @@ namespace golang::os
         {
             gocpp::panic("unexpected error wrapping poll.ErrFileClosing: " + rec::Error(gocpp::recv(err)));
         }
-        return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = op; x.Path = f->name; x.Err = err; });
+        return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = op; x.Path = f->name; x.Err = err; });
     }
 
     std::string TempDir()
@@ -708,32 +708,32 @@ namespace golang::os
         return {"", errors::New(enverr + " is not defined")};
     }
 
-    struct gocpp::error Chmod(std::string name, fs::FileMode mode)
+    struct gocpp::error Chmod(std::string name, golang::os::FileMode mode)
     {
         return chmod(name, mode);
     }
 
-    struct gocpp::error rec::Chmod(struct File* f, fs::FileMode mode)
+    struct gocpp::error rec::Chmod(struct File* f, golang::os::FileMode mode)
     {
         return rec::chmod(gocpp::recv(f), mode);
     }
 
-    struct gocpp::error rec::SetDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::SetDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setDeadline(gocpp::recv(f), t);
     }
 
-    struct gocpp::error rec::SetReadDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::SetReadDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setReadDeadline(gocpp::recv(f), t);
     }
 
-    struct gocpp::error rec::SetWriteDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::SetWriteDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setWriteDeadline(gocpp::recv(f), t);
     }
 
-    std::tuple<struct syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
+    std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"); err != nullptr)
         {
@@ -742,17 +742,17 @@ namespace golang::os
         return newRawConn(f);
     }
 
-    struct fs::FS DirFS(std::string dir)
+    fs::FS DirFS(std::string dir)
     {
         return dirFS(dir);
     }
 
-    std::tuple<struct fs::File, struct gocpp::error> rec::Open(os::dirFS dir, std::string name)
+    std::tuple<fs::File, struct gocpp::error> rec::Open(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "open"; x.Path = name; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = err; })};
         }
         File* f;
         std::tie(f, err) = Open(fullname);
@@ -764,12 +764,12 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadFile(os::dirFS dir, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadFile(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "readfile"; x.Path = name; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readfile"; x.Path = name; x.Err = err; })};
         }
         gocpp::slice<unsigned char> b;
         std::tie(b, err) = ReadFile(fullname);
@@ -784,12 +784,12 @@ namespace golang::os
         return {b, nullptr};
     }
 
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> rec::ReadDir(os::dirFS dir, std::string name)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "readdir"; x.Path = name; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = name; x.Err = err; })};
         }
         fs::DirEntry> entries;
         std::tie(entries, err) = ReadDir(fullname);
@@ -804,12 +804,12 @@ namespace golang::os
         return {entries, nullptr};
     }
 
-    std::tuple<struct fs::FileInfo, struct gocpp::error> rec::Stat(os::dirFS dir, std::string name)
+    std::tuple<fs::FileInfo, struct gocpp::error> rec::Stat(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "stat"; x.Path = name; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "stat"; x.Path = name; x.Err = err; })};
         }
         fs::FileInfo f;
         std::tie(f, err) = Stat(fullname);
@@ -821,7 +821,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    std::tuple<std::string, struct gocpp::error> rec::join(os::dirFS dir, std::string name)
+    std::tuple<std::string, struct gocpp::error> rec::join(golang::os::dirFS dir, std::string name)
     {
         if(dir == "")
         {
@@ -894,7 +894,7 @@ namespace golang::os
         }
     }
 
-    struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, fs::FileMode perm)
+    struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm)
     {
         auto [f, err] = OpenFile(name, O_WRONLY | O_CREATE | O_TRUNC, perm);
         if(err != nullptr)

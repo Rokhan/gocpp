@@ -68,42 +68,42 @@ namespace golang::testlog
 
     namespace rec
     {
-        void Getenv(const gocpp::PtrRecv<Interface, false>& self, std::string key)
+        void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, std::string key)
         {
             return self.ptr->value->vGetenv(key);
         }
 
-        void Getenv(const gocpp::ObjRecv<Interface>& self, std::string key)
+        void Getenv(const gocpp::ObjRecv<struct Interface>& self, std::string key)
         {
             return self.obj.value->vGetenv(key);
         }
 
-        void Stat(const gocpp::PtrRecv<Interface, false>& self, std::string file)
+        void Stat(const gocpp::PtrRecv<struct Interface, false>& self, std::string file)
         {
             return self.ptr->value->vStat(file);
         }
 
-        void Stat(const gocpp::ObjRecv<Interface>& self, std::string file)
+        void Stat(const gocpp::ObjRecv<struct Interface>& self, std::string file)
         {
             return self.obj.value->vStat(file);
         }
 
-        void Open(const gocpp::PtrRecv<Interface, false>& self, std::string file)
+        void Open(const gocpp::PtrRecv<struct Interface, false>& self, std::string file)
         {
             return self.ptr->value->vOpen(file);
         }
 
-        void Open(const gocpp::ObjRecv<Interface>& self, std::string file)
+        void Open(const gocpp::ObjRecv<struct Interface>& self, std::string file)
         {
             return self.obj.value->vOpen(file);
         }
 
-        void Chdir(const gocpp::PtrRecv<Interface, false>& self, std::string dir)
+        void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, std::string dir)
         {
             return self.ptr->value->vChdir(dir);
         }
 
-        void Chdir(const gocpp::ObjRecv<Interface>& self, std::string dir)
+        void Chdir(const gocpp::ObjRecv<struct Interface>& self, std::string dir)
         {
             return self.obj.value->vChdir(dir);
         }

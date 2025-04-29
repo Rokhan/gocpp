@@ -181,10 +181,10 @@ namespace golang::runtime
         {
             return gocpp::Init<typePointers>([](typePointers& x) { x.elem = addr; x.addr = addr; x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr); });
         }
-        _type* typ = {};
+        runtime::_type* typ = {};
         if(rec::sizeclass(gocpp::recv(spc)) != 0)
         {
-            typ = *(_type**)(unsafe::Pointer(addr));
+            typ = *(runtime::_type**)(unsafe::Pointer(addr));
             addr += mallocHeaderSize;
         }
         else
@@ -195,7 +195,7 @@ namespace golang::runtime
         return gocpp::Init<typePointers>([](typePointers& x) { x.elem = addr; x.addr = addr; x.mask = readUintptr(gcdata); x.typ = typ; });
     }
 
-    struct typePointers rec::typePointersOfType(struct mspan* span, struct abi::Type* typ, uintptr_t addr)
+    struct typePointers rec::typePointersOfType(struct mspan* span, abi::Type* typ, uintptr_t addr)
     {
         auto doubleCheck = false;
         if(doubleCheck && (typ == nullptr || typ->Kind_ & kindGCProg != 0))
@@ -318,7 +318,7 @@ namespace golang::runtime
         return rec::base(gocpp::recv(span)) + rec::objIndex(gocpp::recv(span), addr) * span->elemsize;
     }
 
-    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, struct abi::Type* typ)
+    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ)
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
         {
@@ -401,7 +401,7 @@ namespace golang::runtime
         }
     }
 
-    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, struct abi::Type* typ)
+    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ)
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
         {
@@ -654,7 +654,7 @@ namespace golang::runtime
         return read;
     }
 
-    uintptr_t rec::writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, struct _type* typ)
+    uintptr_t rec::writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ)
     {
         uintptr_t scanSize;
         auto src0 = readUintptr(typ->GCData);
@@ -716,11 +716,11 @@ namespace golang::runtime
         return scanSize;
     }
 
-    void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, struct _type* typ)
+    void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ)
     {
     }
 
-    uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, struct _type* typ, struct _type** header, struct mspan* span)
+    uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span)
     {
         uintptr_t scanSize;
         auto doubleCheck = false;
@@ -746,7 +746,7 @@ namespace golang::runtime
                     uintptr_t scanSize;
                     go_throw("GCProg for type that isn't large");
                 }
-                auto spaceNeeded = alignUp(gocpp::Sizeof<_type>(), goarch::PtrSize);
+                auto spaceNeeded = alignUp(gocpp::Sizeof<runtime::_type>(), goarch::PtrSize);
                 auto heapBitsOff = spaceNeeded;
                 spaceNeeded += alignUp(typ->PtrBytes / goarch::PtrSize / 8, goarch::PtrSize);
                 auto npages = alignUp(spaceNeeded, pageSize) / pageSize;
@@ -756,7 +756,7 @@ namespace golang::runtime
                     progSpan = rec::allocManual(gocpp::recv(mheap_), npages, spanAllocPtrScalarBits);
                     memclrNoHeapPointers(unsafe::Pointer(rec::base(gocpp::recv(progSpan))), progSpan->npages * pageSize);
                 });
-                gctyp = (_type*)(unsafe::Pointer(rec::base(gocpp::recv(progSpan))));
+                gctyp = (runtime::_type*)(unsafe::Pointer(rec::base(gocpp::recv(progSpan))));
                 gctyp->Size_ = typ->Size_;
                 gctyp->PtrBytes = typ->PtrBytes;
                 gctyp->GCData = (unsigned char*)(add(unsafe::Pointer(rec::base(gocpp::recv(progSpan))), heapBitsOff));
@@ -802,7 +802,7 @@ namespace golang::runtime
         return scanSize;
     }
 
-    void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, struct _type* typ, struct _type** header, struct mspan* span)
+    void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span)
     {
         auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), rec::objBase(gocpp::recv(span), x));
         auto maxIterBytes = span->elemsize;
@@ -869,7 +869,7 @@ namespace golang::runtime
         go_throw("heapSetType: pointer entry not correct");
     }
 
-    void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, struct _type* typ, struct _type** header, struct mspan* span)
+    void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span)
     {
         auto bad = false;
         if(interior < x)
@@ -960,7 +960,7 @@ namespace golang::runtime
         go_throw("heapSetType: pointer entry not correct");
     }
 
-    void doubleCheckTypePointersOfType(struct mspan* s, struct _type* typ, uintptr_t addr, uintptr_t size)
+    void doubleCheckTypePointersOfType(struct mspan* s, golang::runtime::_type* typ, uintptr_t addr, uintptr_t size)
     {
         if(typ == nullptr || typ->Kind_ & kindGCProg != 0)
         {
@@ -1037,13 +1037,13 @@ namespace golang::runtime
         auto e = *efaceOf(& ep);
         auto p = e.data;
         auto t = e._type;
-        _type* et = {};
+        runtime::_type* et = {};
         if(t->Kind_ & kindMask != kindPtr)
         {
             gocpp::slice<unsigned char> mask;
             go_throw("bad argument to getgcmask: expected type to be a pointer to the value type whose mask is being queried");
         }
-        et = (ptrtype*)(unsafe::Pointer(t))->Elem;
+        et = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem;
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             gocpp::slice<unsigned char> mask;
@@ -1190,7 +1190,7 @@ namespace golang::runtime
                     return mask;
                 }
                 auto size = uintptr_t(locals.n) * goarch::PtrSize;
-                auto n = (ptrtype*)(unsafe::Pointer(t))->Elem->Size_;
+                auto n = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem->Size_;
                 mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n / goarch::PtrSize);
                 for(auto i = uintptr_t(0); i < n; i += goarch::PtrSize)
                 {
@@ -1204,7 +1204,7 @@ namespace golang::runtime
         return mask;
     }
 
-    void userArenaHeapBitsSetType(struct _type* typ, unsafe::Pointer ptr, struct mspan* s)
+    void userArenaHeapBitsSetType(golang::runtime::_type* typ, unsafe::Pointer ptr, struct mspan* s)
     {
         auto base = rec::base(gocpp::recv(s));
         auto h = rec::writeUserArenaHeapBits(gocpp::recv(s), uintptr_t(ptr));

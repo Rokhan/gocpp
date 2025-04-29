@@ -34,8 +34,8 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
-    sse42Table* castagnoliSSE42TableK1;
-    sse42Table* castagnoliSSE42TableK2;
+    crc32::sse42Table* castagnoliSSE42TableK1;
+    crc32::sse42Table* castagnoliSSE42TableK2;
     bool archAvailableCastagnoli()
     {
         return cpu::X86.HasSSE42;
@@ -61,7 +61,7 @@ namespace golang::crc32
         }
     }
 
-    uint32_t castagnoliShift(sse42Table* table, uint32_t crc)
+    uint32_t castagnoliShift(golang::crc32::sse42Table* table, uint32_t crc)
     {
         return table[3][crc >> 24] ^ table[2][(crc >> 16) & 0xFF] ^ table[1][(crc >> 8) & 0xFF] ^ table[0][crc & 0xFF];
     }

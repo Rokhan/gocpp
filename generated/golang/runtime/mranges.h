@@ -70,7 +70,7 @@ namespace golang::runtime
     {
         gocpp::slice<addrRange> ranges;
         uintptr_t totalBytes;
-        runtime::sysMemStat* sysStat;
+        golang::runtime::sysMemStat* sysStat;
 
         using isGoStruct = void;
 
@@ -105,7 +105,7 @@ namespace golang::runtime
         void StoreUnmark(struct atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr);
         void StoreMarked(struct atomicOffAddr* b, uintptr_t addr);
         std::tuple<uintptr_t, bool> Load(struct atomicOffAddr* b);
-        void init(struct addrRanges* a, runtime::sysMemStat* sysStat);
+        void init(struct addrRanges* a, golang::runtime::sysMemStat* sysStat);
         int findSucc(struct addrRanges* a, uintptr_t addr);
         std::tuple<uintptr_t, bool> findAddrGreaterEqual(struct addrRanges* a, uintptr_t addr);
         bool contains(struct addrRanges* a, uintptr_t addr);

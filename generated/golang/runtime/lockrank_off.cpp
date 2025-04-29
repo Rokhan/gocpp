@@ -49,7 +49,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void lockInit(struct mutex* l, runtime::lockRank rank)
+    void lockInit(struct mutex* l, golang::runtime::lockRank rank)
     {
     }
 
@@ -58,12 +58,12 @@ namespace golang::runtime
         return 0;
     }
 
-    void lockWithRank(struct mutex* l, runtime::lockRank rank)
+    void lockWithRank(struct mutex* l, golang::runtime::lockRank rank)
     {
         lock2(l);
     }
 
-    void acquireLockRank(runtime::lockRank rank)
+    void acquireLockRank(golang::runtime::lockRank rank)
     {
     }
 
@@ -72,11 +72,11 @@ namespace golang::runtime
         unlock2(l);
     }
 
-    void releaseLockRank(runtime::lockRank rank)
+    void releaseLockRank(golang::runtime::lockRank rank)
     {
     }
 
-    void lockWithRankMayAcquire(struct mutex* l, runtime::lockRank rank)
+    void lockWithRankMayAcquire(struct mutex* l, golang::runtime::lockRank rank)
     {
     }
 
@@ -84,7 +84,7 @@ namespace golang::runtime
     {
     }
 
-    void assertRankHeld(runtime::lockRank r)
+    void assertRankHeld(golang::runtime::lockRank r)
     {
     }
 

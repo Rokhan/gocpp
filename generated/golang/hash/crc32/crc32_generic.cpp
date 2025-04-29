@@ -58,7 +58,7 @@ namespace golang::crc32
         return ~ crc;
     }
 
-    slicing8Table* slicingMakeTable(uint32_t poly)
+    crc32::slicing8Table* slicingMakeTable(uint32_t poly)
     {
         auto t = go_new(slicing8Table);
         simplePopulateTable(poly, & t[0]);
@@ -74,7 +74,7 @@ namespace golang::crc32
         return t;
     }
 
-    uint32_t slicingUpdate(uint32_t crc, slicing8Table* tab, gocpp::slice<unsigned char> p)
+    uint32_t slicingUpdate(uint32_t crc, golang::crc32::slicing8Table* tab, gocpp::slice<unsigned char> p)
     {
         if(len(p) >= slicing8Cutoff)
         {

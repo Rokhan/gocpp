@@ -157,7 +157,7 @@ namespace golang::runtime
             gocpp::slice<initTask*> initTasks;
             std::string errstr;
             auto symName = resolveNameOff(unsafe::Pointer(md->types), ptab.name);
-            auto t = rec::typeOff(gocpp::recv(toRType((_type*)(unsafe::Pointer(md->types)))), ptab.typ);
+            auto t = rec::typeOff(gocpp::recv(toRType((runtime::_type*)(unsafe::Pointer(md->types)))), ptab.typ);
             go_any val = {};
             auto valp = (gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& val));
             (*valp)[0] = unsafe::Pointer(t);

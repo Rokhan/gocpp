@@ -86,11 +86,11 @@ namespace golang::runtime
         void setPinned(struct pinState* v, bool val);
         void setMultiPinned(struct pinState* v, bool val);
         void set(struct pinState* v, bool val, bool multipin);
-        struct pinState ofObject(struct pinnerBits* p, uintptr_t n);
+        struct pinState ofObject(golang::runtime::pinnerBits* p, uintptr_t n);
         uintptr_t pinnerBitSize(struct mspan* s);
-        struct pinnerBits* newPinnerBits(struct mspan* s);
-        struct pinnerBits* getPinnerBits(struct mspan* s);
-        void setPinnerBits(struct mspan* s, struct pinnerBits* p);
+        runtime::pinnerBits* newPinnerBits(struct mspan* s);
+        runtime::pinnerBits* getPinnerBits(struct mspan* s);
+        void setPinnerBits(struct mspan* s, golang::runtime::pinnerBits* p);
         void refreshPinnerBits(struct mspan* s);
         void incPinCounter(struct mspan* span, uintptr_t offset);
         bool decPinCounter(struct mspan* span, uintptr_t offset);

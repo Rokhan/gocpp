@@ -26,9 +26,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void push(runtime::lfstack* head, struct lfnode* node);
-        unsafe::Pointer pop(runtime::lfstack* head);
-        bool empty(runtime::lfstack* head);
+        void push(golang::runtime::lfstack* head, struct lfnode* node);
+        unsafe::Pointer pop(golang::runtime::lfstack* head);
+        bool empty(golang::runtime::lfstack* head);
     }
 }
 

@@ -444,7 +444,7 @@ namespace golang::runtime
         {
             return {nullptr, now};
         }
-        auto decIfPositive = [=](struct atomic::Int64* val) mutable -> bool
+        auto decIfPositive = [=](atomic::Int64* val) mutable -> bool
         {
             for(; ; )
             {
@@ -506,7 +506,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::markWorkerStop(struct gcControllerState* c, runtime::gcMarkWorkerMode mode, int64_t duration)
+    void rec::markWorkerStop(struct gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration)
     {
         //Go switch emulation
         {

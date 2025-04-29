@@ -392,39 +392,39 @@ namespace golang::flate
         rec::assignEncodingAndSize(gocpp::recv(h), bitCount, list);
     }
 
-    void rec::sort(byLiteral* s, gocpp::slice<literalNode> a)
+    void rec::sort(golang::flate::byLiteral* s, gocpp::slice<literalNode> a)
     {
         *s = byLiteral(a);
         sort::Sort(s);
     }
 
-    int rec::Len(byLiteral s)
+    int rec::Len(golang::flate::byLiteral s)
     {
         return len(s);
     }
 
-    bool rec::Less(byLiteral s, int i, int j)
+    bool rec::Less(golang::flate::byLiteral s, int i, int j)
     {
         return s[i].literal < s[j].literal;
     }
 
-    void rec::Swap(byLiteral s, int i, int j)
+    void rec::Swap(golang::flate::byLiteral s, int i, int j)
     {
         std::tie(s[i], s[j]) = std::tuple{s[j], s[i]};
     }
 
-    void rec::sort(byFreq* s, gocpp::slice<literalNode> a)
+    void rec::sort(golang::flate::byFreq* s, gocpp::slice<literalNode> a)
     {
         *s = byFreq(a);
         sort::Sort(s);
     }
 
-    int rec::Len(byFreq s)
+    int rec::Len(golang::flate::byFreq s)
     {
         return len(s);
     }
 
-    bool rec::Less(byFreq s, int i, int j)
+    bool rec::Less(golang::flate::byFreq s, int i, int j)
     {
         if(s[i].freq == s[j].freq)
         {
@@ -433,7 +433,7 @@ namespace golang::flate
         return s[i].freq < s[j].freq;
     }
 
-    void rec::Swap(byFreq s, int i, int j)
+    void rec::Swap(golang::flate::byFreq s, int i, int j)
     {
         std::tie(s[i], s[j]) = std::tuple{s[j], s[i]};
     }

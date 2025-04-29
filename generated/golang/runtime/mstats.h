@@ -18,12 +18,12 @@ namespace golang::runtime
     struct mstats
     {
         /* consistentHeapStats heapStats; [Known incomplete type] */
-        runtime::sysMemStat stacks_sys;
-        runtime::sysMemStat mspan_sys;
-        runtime::sysMemStat mcache_sys;
-        runtime::sysMemStat buckhash_sys;
-        runtime::sysMemStat gcMiscSys;
-        runtime::sysMemStat other_sys;
+        golang::runtime::sysMemStat stacks_sys;
+        golang::runtime::sysMemStat mspan_sys;
+        golang::runtime::sysMemStat mcache_sys;
+        golang::runtime::sysMemStat buckhash_sys;
+        golang::runtime::sysMemStat gcMiscSys;
+        golang::runtime::sysMemStat other_sys;
         uint64_t last_gc_unix;
         uint64_t pause_total_ns;
         gocpp::array<uint64_t, 256> pause_ns;
@@ -47,6 +47,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mstats& value);
+    struct gocpp_id_0
+    {
+        uint32_t Size;
+        uint64_t Mallocs;
+        uint64_t Frees;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct MemStats
     {
         uint64_t Alloc;
@@ -177,8 +195,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        uint64_t load(runtime::sysMemStat* s);
-        void add(runtime::sysMemStat* s, int64_t n);
+        uint64_t load(golang::runtime::sysMemStat* s);
+        void add(golang::runtime::sysMemStat* s, int64_t n);
         void merge(struct heapStatsDelta* a, struct heapStatsDelta* b);
         struct heapStatsDelta* acquire(struct consistentHeapStats* m);
         void release(struct consistentHeapStats* m);

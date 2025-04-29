@@ -216,7 +216,7 @@ namespace golang::flate
         return n;
     }
 
-    struct gocpp::error rec::writeBlock(struct compressor* d, gocpp::slice<flate::token> tokens, int index)
+    struct gocpp::error rec::writeBlock(struct compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
     {
         if(index > 0)
         {
@@ -689,7 +689,7 @@ namespace golang::flate
         return d->err;
     }
 
-    struct gocpp::error rec::init(struct compressor* d, struct io::Writer w, int level)
+    struct gocpp::error rec::init(struct compressor* d, io::Writer w, int level)
     {
         struct gocpp::error err;
         d->w = newHuffmanBitWriter(w);
@@ -738,7 +738,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    void rec::reset(struct compressor* d, struct io::Writer w)
+    void rec::reset(struct compressor* d, io::Writer w)
     {
         rec::reset(gocpp::recv(d->w), w);
         d->sync = false;
@@ -810,7 +810,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    std::tuple<struct Writer*, struct gocpp::error> NewWriter(struct io::Writer w, int level)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level)
     {
         Writer dw = {};
         if(auto err = rec::init(gocpp::recv(dw.d), w, level); err != nullptr)
@@ -820,7 +820,7 @@ namespace golang::flate
         return {& dw, nullptr};
     }
 
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(struct io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         auto dw = new dictWriter {w};
         auto [zw, err] = NewWriter(dw, level);
@@ -919,7 +919,7 @@ namespace golang::flate
         return rec::close(gocpp::recv(w->d));
     }
 
-    void rec::Reset(struct Writer* w, struct io::Writer dst)
+    void rec::Reset(struct Writer* w, io::Writer dst)
     {
         if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
         {

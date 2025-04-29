@@ -56,12 +56,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<FS, false>& self, std::string name)
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, std::string name)
         {
             return self.ptr->value->vOpen(name);
         }
 
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<FS>& self, std::string name)
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, std::string name)
         {
             return self.obj.value->vOpen(name);
         }
@@ -144,32 +144,32 @@ namespace golang::fs
 
     namespace rec
     {
-        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<File, false>& self)
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<struct File, false>& self)
         {
             return self.ptr->value->vStat();
         }
 
-        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<File>& self)
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<struct File>& self)
         {
             return self.obj.value->vStat();
         }
 
-        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<File, false>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char>)
         {
             return self.ptr->value->vRead();
         }
 
-        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<File>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char>)
         {
             return self.obj.value->vRead();
         }
 
-        struct gocpp::error Close(const gocpp::PtrRecv<File, false>& self)
+        struct gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self)
         {
             return self.ptr->value->vClose();
         }
 
-        struct gocpp::error Close(const gocpp::ObjRecv<File>& self)
+        struct gocpp::error Close(const gocpp::ObjRecv<struct File>& self)
         {
             return self.obj.value->vClose();
         }
@@ -227,42 +227,42 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<DirEntry, false>& self)
+        std::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vName();
         }
 
-        std::string Name(const gocpp::ObjRecv<DirEntry>& self)
+        std::string Name(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vName();
         }
 
-        bool IsDir(const gocpp::PtrRecv<DirEntry, false>& self)
+        bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vIsDir();
         }
 
-        bool IsDir(const gocpp::ObjRecv<DirEntry>& self)
+        bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vIsDir();
         }
 
-        fs::FileMode Type(const gocpp::PtrRecv<DirEntry, false>& self)
+        fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vType();
         }
 
-        fs::FileMode Type(const gocpp::ObjRecv<DirEntry>& self)
+        fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vType();
         }
 
-        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<DirEntry, false>& self)
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vInfo();
         }
 
-        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<DirEntry>& self)
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vInfo();
         }
@@ -305,12 +305,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::PtrRecv<ReadDirFile, false>& self, int n)
+        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int n)
         {
             return self.ptr->value->vReadDir(n);
         }
 
-        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<ReadDirFile>& self, int n)
+        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n)
         {
             return self.obj.value->vReadDir(n);
         }
@@ -391,7 +391,7 @@ namespace golang::fs
         return rec::Mode(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    struct mocklib::Date FileInfo::FileInfoImpl<T, StoreT>::vModTime()
+    mocklib::Date FileInfo::FileInfoImpl<T, StoreT>::vModTime()
     {
         return rec::ModTime(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -408,62 +408,62 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<FileInfo, false>& self)
+        std::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vName();
         }
 
-        std::string Name(const gocpp::ObjRecv<FileInfo>& self)
+        std::string Name(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vName();
         }
 
-        int64_t Size(const gocpp::PtrRecv<FileInfo, false>& self)
+        int64_t Size(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vSize();
         }
 
-        int64_t Size(const gocpp::ObjRecv<FileInfo>& self)
+        int64_t Size(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vSize();
         }
 
-        fs::FileMode Mode(const gocpp::PtrRecv<FileInfo, false>& self)
+        fs::FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vMode();
         }
 
-        fs::FileMode Mode(const gocpp::ObjRecv<FileInfo>& self)
+        fs::FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vMode();
         }
 
-        struct mocklib::Date ModTime(const gocpp::PtrRecv<FileInfo, false>& self)
+        mocklib::Date ModTime(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vModTime();
         }
 
-        struct mocklib::Date ModTime(const gocpp::ObjRecv<FileInfo>& self)
+        mocklib::Date ModTime(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vModTime();
         }
 
-        bool IsDir(const gocpp::PtrRecv<FileInfo, false>& self)
+        bool IsDir(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vIsDir();
         }
 
-        bool IsDir(const gocpp::ObjRecv<FileInfo>& self)
+        bool IsDir(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vIsDir();
         }
 
-        go_any Sys(const gocpp::PtrRecv<FileInfo, false>& self)
+        go_any Sys(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vSys();
         }
 
-        go_any Sys(const gocpp::ObjRecv<FileInfo>& self)
+        go_any Sys(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vSys();
         }
@@ -474,7 +474,7 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
-    std::string rec::String(fs::FileMode m)
+    std::string rec::String(golang::fs::FileMode m)
     {
         auto str = "dalTLDpSugct?";
         gocpp::array<unsigned char, 32> buf = {};
@@ -508,22 +508,22 @@ namespace golang::fs
         return string(buf.make_slice(0, w));
     }
 
-    bool rec::IsDir(fs::FileMode m)
+    bool rec::IsDir(golang::fs::FileMode m)
     {
         return m & ModeDir != 0;
     }
 
-    bool rec::IsRegular(fs::FileMode m)
+    bool rec::IsRegular(golang::fs::FileMode m)
     {
         return m & ModeType == 0;
     }
 
-    fs::FileMode rec::Perm(fs::FileMode m)
+    fs::FileMode rec::Perm(golang::fs::FileMode m)
     {
         return m & ModePerm;
     }
 
-    fs::FileMode rec::Type(fs::FileMode m)
+    fs::FileMode rec::Type(golang::fs::FileMode m)
     {
         return m & ModeType;
     }
@@ -605,12 +605,12 @@ namespace golang::fs
 
         namespace rec
         {
-            bool Timeout(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+            bool Timeout(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
             {
                 return self.ptr->value->vTimeout();
             }
 
-            bool Timeout(const gocpp::ObjRecv<gocpp_id_0>& self)
+            bool Timeout(const gocpp::ObjRecv<struct gocpp_id_0>& self)
             {
                 return self.obj.value->vTimeout();
             }

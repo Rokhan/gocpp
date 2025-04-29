@@ -265,19 +265,19 @@ namespace golang::atomic
         bool CompareAndSwap(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
         
         template<typename T>
-        T* Load(Pointer<T>* p);
+        T* Load(golang::atomic::Pointer<T>* p);
         
         template<typename T>
-        void StoreNoWB(Pointer<T>* p, T* value);
+        void StoreNoWB(golang::atomic::Pointer<T>* p, T* value);
         
         template<typename T>
-        void Store(Pointer<T>* p, T* value);
+        void Store(golang::atomic::Pointer<T>* p, T* value);
         
         template<typename T>
-        bool CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new);
+        bool CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new);
         
         template<typename T>
-        bool CompareAndSwap(Pointer<T>* p, T* old, T* go_new);
+        bool CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new);
         void Lock(noCopy*);
         void Unlock(noCopy*);
     }

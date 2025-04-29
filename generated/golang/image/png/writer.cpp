@@ -116,22 +116,22 @@ namespace golang::png
 
     namespace rec
     {
-        struct EncoderBuffer* Get(const gocpp::PtrRecv<EncoderBufferPool, false>& self)
+        struct EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self)
         {
             return self.ptr->value->vGet();
         }
 
-        struct EncoderBuffer* Get(const gocpp::ObjRecv<EncoderBufferPool>& self)
+        struct EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self)
         {
             return self.obj.value->vGet();
         }
 
-        void Put(const gocpp::PtrRecv<EncoderBufferPool, false>& self, EncoderBuffer*)
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer*)
         {
             return self.ptr->value->vPut();
         }
 
-        void Put(const gocpp::ObjRecv<EncoderBufferPool>& self, EncoderBuffer*)
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer*)
         {
             return self.obj.value->vPut();
         }
@@ -239,12 +239,12 @@ namespace golang::png
 
     namespace rec
     {
-        bool Opaque(const gocpp::PtrRecv<opaquer, false>& self)
+        bool Opaque(const gocpp::PtrRecv<struct opaquer, false>& self)
         {
             return self.ptr->value->vOpaque();
         }
 
-        bool Opaque(const gocpp::ObjRecv<opaquer>& self)
+        bool Opaque(const gocpp::ObjRecv<struct opaquer>& self)
         {
             return self.obj.value->vOpaque();
         }
@@ -255,7 +255,7 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    bool opaque(struct image::Image m)
+    bool opaque(image::Image m)
     {
         if(auto [o, ok] = gocpp::getValue<opaquer>(m); ok)
         {
@@ -526,7 +526,7 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error rec::writeImage(struct encoder* e, struct io::Writer w, struct image::Image m, int cb, int level)
+    struct gocpp::error rec::writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -872,7 +872,7 @@ namespace golang::png
         e->err = rec::Flush(gocpp::recv(e->bw));
     }
 
-    int levelToZlib(png::CompressionLevel l)
+    int levelToZlib(golang::png::CompressionLevel l)
     {
         //Go switch emulation
         {
@@ -908,13 +908,13 @@ namespace golang::png
         rec::writeChunk(gocpp::recv(e), nullptr, "IEND");
     }
 
-    struct gocpp::error Encode(struct io::Writer w, struct image::Image m)
+    struct gocpp::error Encode(io::Writer w, image::Image m)
     {
         Encoder e = {};
         return rec::Encode(gocpp::recv(e), w, m);
     }
 
-    struct gocpp::error rec::Encode(struct Encoder* enc, struct io::Writer w, struct image::Image m)
+    struct gocpp::error rec::Encode(struct Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
         try
@@ -936,7 +936,7 @@ namespace golang::png
             }
             if(enc->BufferPool != nullptr)
             {
-                defer.push_back([=]{ rec::Put(gocpp::recv(enc->BufferPool), (EncoderBuffer*)(e)); });
+                defer.push_back([=]{ rec::Put(gocpp::recv(enc->BufferPool), (png::EncoderBuffer*)(e)); });
             }
             e->enc = enc;
             e->w = w;

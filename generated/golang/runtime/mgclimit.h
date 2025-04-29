@@ -13,6 +13,23 @@
 
 namespace golang::runtime
 {
+    struct gocpp_id_0
+    {
+        uint64_t fill;
+        uint64_t capacity;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct gcCPULimiterState
     {
         atomic::Uint32 lock;
@@ -41,7 +58,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
-    runtime::limiterEventStamp makeLimiterEventStamp(runtime::limiterEventType typ, int64_t now);
+    runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
     struct limiterEvent
     {
         atomic::Uint64 stamp;
@@ -73,11 +90,11 @@ namespace golang::runtime
         bool tryLock(struct gcCPULimiterState* l);
         void unlock(struct gcCPULimiterState* l);
         void resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs);
-        int64_t duration(runtime::limiterEventStamp s, int64_t now);
-        runtime::limiterEventType typ(runtime::limiterEventStamp s);
-        bool start(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now);
+        int64_t duration(golang::runtime::limiterEventStamp s, int64_t now);
+        runtime::limiterEventType typ(golang::runtime::limiterEventStamp s);
+        bool start(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now);
         std::tuple<runtime::limiterEventType, int64_t> consume(struct limiterEvent* e, int64_t now);
-        void stop(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now);
+        void stop(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now);
     }
 }
 

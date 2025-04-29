@@ -50,19 +50,28 @@ namespace golang::main
     }
     
     template<typename T>
-    T Dummy(std::string dummy, gocpp::slice<T> vals);
+    T Dummy1(std::string dummy, gocpp::slice<T> vals);
     
     template<typename T, typename... Args>
-    T Dummy(std::string dummy, Args... vals)
+    T Dummy1(std::string dummy, Args... vals)
     {
-        return Dummy(dummy, gocpp::ToSlice<T>(vals...));
+        return Dummy1(dummy, gocpp::ToSlice<T>(vals...));
     }
     
     template<typename T, typename... Args>
-    T Dummy(std::string dummy, T value, Args... vals)
+    T Dummy1(std::string dummy, T value, Args... vals)
     {
-        return Dummy(dummy, gocpp::ToSlice<T>(value, vals...));
+        return Dummy1(dummy, gocpp::ToSlice<T>(value, vals...));
     }
+    
+    template<typename U, typename T>
+    U OneOrDefault(gocpp::map<T, U> dummy);
+    
+    template<typename T>
+    bool RemoveOne(gocpp::channel<T> dummy);
+    
+    template<typename T>
+    int UnusedGenericParameter();
     
     template<typename T>
     T Zero();
@@ -72,7 +81,7 @@ namespace golang::main
     {
         
         template<typename T>
-        T Get(Wrapper<T>* p);
+        T Get(golang::main::Wrapper<T>* p);
     }
 }
 

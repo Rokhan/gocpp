@@ -13,19 +13,19 @@
 namespace golang::slices
 {
     
-    template<typename S>
+    template<typename S, typename E>
     void Sort(S x);
     
-    template<typename S>
+    template<typename S, typename E>
     void SortFunc(S x, std::function<int (E a, E b)> cmp);
     
-    template<typename S>
+    template<typename S, typename E>
     void SortStableFunc(S x, std::function<int (E a, E b)> cmp);
     
-    template<typename S>
+    template<typename S, typename E>
     bool IsSorted(S x);
     
-    template<typename S>
+    template<typename S, typename E>
     bool IsSortedFunc(S x, std::function<int (E a, E b)> cmp);
     
     template<typename S, typename E>
@@ -43,7 +43,7 @@ namespace golang::slices
     template<typename S, typename E>
     std::tuple<int, bool> BinarySearch(S x, E target);
     
-    template<typename S, typename T>
+    template<typename S, typename T, typename E>
     std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp);
     unsigned int nextPowerOfTwo(int length);
     
@@ -52,7 +52,7 @@ namespace golang::slices
 
     namespace rec
     {
-        uint64_t Next(slices::xorshift* r);
+        uint64_t Next(golang::slices::xorshift* r);
     }
 }
 

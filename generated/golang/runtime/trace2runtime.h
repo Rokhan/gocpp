@@ -142,7 +142,7 @@ namespace golang::runtime
         void GCActive(struct traceLocker tl);
         void GCStart(struct traceLocker tl);
         void GCDone(struct traceLocker tl);
-        void STWStart(struct traceLocker tl, runtime::stwReason reason);
+        void STWStart(struct traceLocker tl, golang::runtime::stwReason reason);
         void STWDone(struct traceLocker tl);
         void GCSweepStart(struct traceLocker tl);
         void GCSweepSpan(struct traceLocker tl, uintptr_t bytesSwept);
@@ -154,8 +154,8 @@ namespace golang::runtime
         void GoEnd(struct traceLocker tl);
         void GoSched(struct traceLocker tl);
         void GoPreempt(struct traceLocker tl);
-        void GoStop(struct traceLocker tl, runtime::traceGoStopReason reason);
-        void GoPark(struct traceLocker tl, runtime::traceBlockReason reason, int skip);
+        void GoStop(struct traceLocker tl, golang::runtime::traceGoStopReason reason);
+        void GoPark(struct traceLocker tl, golang::runtime::traceBlockReason reason, int skip);
         void GoUnpark(struct traceLocker tl, struct g* gp, int skip);
         void GoSysCall(struct traceLocker tl);
         void GoSysExit(struct traceLocker tl, bool lostP);

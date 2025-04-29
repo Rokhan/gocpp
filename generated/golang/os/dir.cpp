@@ -43,7 +43,7 @@ namespace golang::os
         using namespace windows::rec;
     }
 
-    std::tuple<gocpp::slice<FileInfo>, struct gocpp::error> rec::Readdir(struct File* f, int n)
+    std::tuple<gocpp::slice<os::FileInfo>, struct gocpp::error> rec::Readdir(struct File* f, int n)
     {
         if(f == nullptr)
         {
@@ -52,7 +52,7 @@ namespace golang::os
         auto [gocpp_id_2, gocpp_id_3, infos, err] = rec::readdir(gocpp::recv(f), n, readdirFileInfo);
         if(infos == nullptr)
         {
-            infos = gocpp::slice<FileInfo> {};
+            infos = gocpp::slice<os::FileInfo> {};
         }
         return {infos, err};
     }
@@ -77,7 +77,7 @@ namespace golang::os
         return {names, err};
     }
 
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> rec::ReadDir(struct File* f, int n)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(struct File* f, int n)
     {
         if(f == nullptr)
         {
@@ -86,13 +86,13 @@ namespace golang::os
         auto [gocpp_id_8, dirents, gocpp_id_9, err] = rec::readdir(gocpp::recv(f), n, readdirDirEntry);
         if(dirents == nullptr)
         {
-            dirents = gocpp::slice<DirEntry> {};
+            dirents = gocpp::slice<os::DirEntry> {};
         }
         return {dirents, err};
     }
 
     bool testingForceReadDirLstat;
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(std::string name)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(std::string name)
     {
         gocpp::Defer defer;
         try

@@ -3,7 +3,7 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/reflect/value.fwd.h" [Ignored, known errors]
+#include "golang/reflect/value.fwd.h"
 
 namespace golang::fmtsort
 {

@@ -78,7 +78,7 @@ namespace golang::main
 
 
     template<typename T>
-    T rec::Get(Wrapper<T>* p)
+    T rec::Get(golang::main::Wrapper<T>* p)
     {
         return p->value;
     }
@@ -100,7 +100,7 @@ namespace golang::main
 
 
     template<typename T>
-    T Dummy(std::string dummy, gocpp::slice<T> vals)
+    T Dummy1(std::string dummy, gocpp::slice<T> vals)
     {
         T zero = {};
         for(auto [gocpp_ignored, val] : vals)
@@ -111,6 +111,36 @@ namespace golang::main
             }
         }
         return zero;
+    }
+
+
+    template<typename U, typename T>
+    U OneOrDefault(gocpp::map<T, U> dummy)
+    {
+        U zero = {};
+        for(auto [gocpp_ignored, val] : dummy)
+        {
+            if(val != zero)
+            {
+                return val;
+            }
+        }
+        return zero;
+    }
+
+
+    template<typename T>
+    bool RemoveOne(gocpp::channel<T> dummy)
+    {
+        auto [gocpp_id_1, ok] = dummy.recv();
+        return ok;
+    }
+
+
+    template<typename T>
+    int UnusedGenericParameter()
+    {
+        return 3;
     }
 
 
@@ -131,6 +161,7 @@ namespace golang::main
         auto o2 = Or(0, 1, 2, 2, 3, 0, 0);
         mocklib::Printf("o1: %v, o2:%v\n", o1, o2);
         mocklib::Printf("Zero: %v\n", Zero<int>());
+        mocklib::Printf("Unused: %v\n", UnusedGenericParameter<double>());
     }
 
 }

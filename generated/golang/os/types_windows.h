@@ -49,19 +49,19 @@ namespace golang::os
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
     std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(std::string path, syscall::Handle h);
-    struct fileStat* newFileStatFromFileIDBothDirInfo(struct windows::FILE_ID_BOTH_DIR_INFO* d);
-    struct fileStat* newFileStatFromFileFullDirInfo(struct windows::FILE_FULL_DIR_INFO* d);
-    struct fileStat* newFileStatFromWin32finddata(struct syscall::Win32finddata* d);
+    struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
+    struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
+    struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
     bool sameFile(struct fileStat* fs1, struct fileStat* fs2);
-    struct mocklib::Date atime(struct FileInfo fi);
+    mocklib::Date atime(golang::os::FileInfo fi);
 
     namespace rec
     {
         bool isReparseTagNameSurrogate(struct fileStat* fs);
         bool isSymlink(struct fileStat* fs);
         int64_t Size(struct fileStat* fs);
-        fs::FileMode Mode(struct fileStat* fs);
-        struct mocklib::Date ModTime(struct fileStat* fs);
+        os::FileMode Mode(struct fileStat* fs);
+        mocklib::Date ModTime(struct fileStat* fs);
         go_any Sys(struct fileStat* fs);
         struct gocpp::error loadFileId(struct fileStat* fs);
         struct gocpp::error saveInfoFromPath(struct fileStat* fs, std::string path);

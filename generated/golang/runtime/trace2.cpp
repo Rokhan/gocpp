@@ -78,6 +78,33 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     struct gocpp_id_0
     {
         mutex lock;
@@ -98,9 +125,9 @@ namespace golang::runtime
         gocpp::channel<gocpp_id_1> cpuLogDone;
         gocpp::array<traceBuf*, 2> cpuBuf;
         atomic::Pointer<g> reader;
-        gocpp::array<gocpp::array<runtime::traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels;
-        gocpp::array<gocpp::array<runtime::traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons;
-        gocpp::array<gocpp::array<runtime::traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons;
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels;
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons;
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons;
         atomic::Uintptr gen;
         uintptr_t lastNonZeroGen;
         atomic::Bool shutdown;
@@ -742,6 +769,33 @@ namespace golang::runtime
     traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_2::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_2::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     traceAdvancerState::operator T()
     {
         T result;
@@ -858,6 +912,33 @@ namespace golang::runtime
         close(s->done);
         rec::close(gocpp::recv(s->timer));
     }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_5::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_5::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& gocpp_id_5::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+    {
+        return value.PrintTo(os);
+    }
+
 
     
     template<typename T> requires gocpp::GoStruct<T>

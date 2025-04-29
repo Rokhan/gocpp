@@ -958,18 +958,18 @@ namespace golang::bytes
         return - 1;
     }
 
-    std::tuple<asciiSet, bool> makeASCIISet(std::string chars)
+    std::tuple<bytes::asciiSet, bool> makeASCIISet(std::string chars)
     {
-        asciiSet as;
+        bytes::asciiSet as;
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
-            asciiSet as;
+            bytes::asciiSet as;
             bool ok;
             auto c = chars[i];
             if(c >= utf8::RuneSelf)
             {
-                asciiSet as;
+                bytes::asciiSet as;
                 bool ok;
                 return {as, false};
             }
@@ -978,7 +978,7 @@ namespace golang::bytes
         return {as, true};
     }
 
-    bool rec::contains(asciiSet* as, unsigned char c)
+    bool rec::contains(golang::bytes::asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -1050,7 +1050,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, asciiSet* as)
+    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, golang::bytes::asciiSet* as)
     {
         for(; len(s) > 0; )
         {
@@ -1115,7 +1115,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, asciiSet* as)
+    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, golang::bytes::asciiSet* as)
     {
         for(; len(s) > 0; )
         {

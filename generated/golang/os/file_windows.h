@@ -48,7 +48,7 @@ namespace golang::os
     struct File* NewFile(uintptr_t fd, std::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
     extern std::string DevNull;
-    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, fs::FileMode perm);
+    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm);
     struct gocpp::error Truncate(std::string name, int64_t size);
     struct gocpp::error Remove(std::string name);
     struct gocpp::error rename(std::string oldname, std::string newname);

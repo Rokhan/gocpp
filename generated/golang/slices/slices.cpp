@@ -24,7 +24,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     bool Equal(S s1, S s2)
     {
         if(len(s1) != len(s2))
@@ -42,7 +42,7 @@ namespace golang::slices
     }
 
 
-    template<typename S1, typename S2>
+    template<typename S1, typename S2, typename E1, typename E2>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq)
     {
         if(len(s1) != len(s2))
@@ -61,7 +61,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     int Compare(S s1, S s2)
     {
         for(auto [i, v1] : s1)
@@ -84,7 +84,7 @@ namespace golang::slices
     }
 
 
-    template<typename S1, typename S2>
+    template<typename S1, typename S2, typename E1, typename E2>
     int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp)
     {
         for(auto [i, v1] : s1)
@@ -121,7 +121,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     int IndexFunc(S s, std::function<bool (E)> f)
     {
         for(auto [i, gocpp_ignored] : s)
@@ -142,7 +142,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     bool ContainsFunc(S s, std::function<bool (E)> f)
     {
         return IndexFunc(s, f) >= 0;
@@ -183,7 +183,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Delete(S s, int i, int j)
     {
         _ = s.make_slice(i, j, len(s));
@@ -198,7 +198,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S DeleteFunc(S s, std::function<bool (E)> del)
     {
         auto i = IndexFunc(s, del);
@@ -275,14 +275,14 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Clone(S s)
     {
         return append(s.make_slice(, 0, 0), s);
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Compact(S s)
     {
         if(len(s) < 2)
@@ -306,7 +306,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S CompactFunc(S s, std::function<bool (E, E)> eq)
     {
         if(len(s) < 2)
@@ -330,7 +330,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Grow(S s, int n)
     {
         if(n < 0)
@@ -345,7 +345,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Clip(S s)
     {
         return s.make_slice(, len(s), len(s));
@@ -419,7 +419,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     void Reverse(S s)
     {
         for(auto [i, j] = std::tuple{0, len(s) - 1}; i < j; std::tie(i, j) = std::tuple{i + 1, j - 1})
@@ -429,7 +429,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     S Concat(gocpp::slice<S> slices)
     {
         auto size = 0;

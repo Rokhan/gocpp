@@ -49,14 +49,14 @@ namespace golang::runtime
     void mallocinit();
     std::tuple<unsafe::Pointer, uintptr_t> sysReserveAligned(unsafe::Pointer v, uintptr_t size, uintptr_t align);
     runtime::gclinkptr nextFreeFast(struct mspan* s);
-    unsafe::Pointer mallocgc(uintptr_t size, struct _type* typ, bool needzero);
+    unsafe::Pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero);
     struct g* deductAssistCredit(uintptr_t size);
     void memclrNoHeapPointersChunked(uintptr_t size, unsafe::Pointer x);
-    unsafe::Pointer newobject(struct _type* typ);
-    unsafe::Pointer reflect_unsafe_New(struct _type* typ);
-    unsafe::Pointer reflectlite_unsafe_New(struct _type* typ);
-    unsafe::Pointer newarray(struct _type* typ, int n);
-    unsafe::Pointer reflect_unsafe_NewArray(struct _type* typ, int n);
+    unsafe::Pointer newobject(golang::runtime::_type* typ);
+    unsafe::Pointer reflect_unsafe_New(golang::runtime::_type* typ);
+    unsafe::Pointer reflectlite_unsafe_New(golang::runtime::_type* typ);
+    unsafe::Pointer newarray(golang::runtime::_type* typ, int n);
+    unsafe::Pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n);
     void profilealloc(struct m* mp, unsafe::Pointer x, uintptr_t size);
     uintptr_t nextSample();
     int32_t fastexprand(int mean);
@@ -78,8 +78,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct persistentAlloc& value);
-    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat);
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat);
+    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
     bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
@@ -122,9 +122,9 @@ namespace golang::runtime
     {
         std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register);
         void enableMetadataHugePages(struct mheap* h);
-        std::tuple<runtime::gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, runtime::spanClass spc);
+        std::tuple<runtime::gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, golang::runtime::spanClass spc);
         void init(struct linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory);
-        unsafe::Pointer alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat);
+        unsafe::Pointer alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
         struct notInHeap* add(struct notInHeap* p, uintptr_t bytes);
     }
 }

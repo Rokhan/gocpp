@@ -62,7 +62,7 @@ namespace golang::runtime
     void stackinit();
     int stacklog2(uintptr_t n);
     runtime::gclinkptr stackpoolalloc(uint8_t order);
-    void stackpoolfree(runtime::gclinkptr x, uint8_t order);
+    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order);
     void stackcacherefill(struct mcache* c, uint8_t order);
     void stackcacherelease(struct mcache* c, uint8_t order);
     void stackcache_clear(struct mcache* c);

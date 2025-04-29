@@ -100,7 +100,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct mcentral* c, runtime::spanClass spc)
+    void rec::init(struct mcentral* c, golang::runtime::spanClass spc)
     {
         c->spanclass = spc;
         lockInit(& c->partial[0].spineLock, lockRankSpanSetSpine);

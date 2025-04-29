@@ -324,7 +324,7 @@ namespace golang::base64
         return e->err;
     }
 
-    struct io::WriteCloser NewEncoder(struct Encoding* enc, struct io::Writer w)
+    io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w)
     {
         return gocpp::InitPtr<encoder>([](encoder& x) { x.enc = enc; x.w = w; });
     }
@@ -338,7 +338,7 @@ namespace golang::base64
         return (n + 2) / 3 * 4;
     }
 
-    std::string rec::Error(base64::CorruptInputError e)
+    std::string rec::Error(golang::base64::CorruptInputError e)
     {
         return "illegal base64 data at input byte " + strconv::FormatInt(int64_t(e), 10);
     }
@@ -844,7 +844,7 @@ namespace golang::base64
         return {n, err};
     }
 
-    struct io::Reader NewDecoder(struct Encoding* enc, struct io::Reader r)
+    io::Reader NewDecoder(struct Encoding* enc, io::Reader r)
     {
         return gocpp::InitPtr<decoder>([](decoder& x) { x.enc = enc; x.r = new newlineFilteringReader {r}; });
     }

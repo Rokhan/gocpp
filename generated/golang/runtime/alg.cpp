@@ -186,7 +186,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t typehash(struct _type* t, unsafe::Pointer p, uintptr_t h)
+    uintptr_t typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
@@ -240,7 +240,7 @@ namespace golang::runtime
                     return strhash(p, h);
                     break;
                 case 5:
-                    auto i = (interfacetype*)(unsafe::Pointer(t));
+                    auto i = (runtime::interfacetype*)(unsafe::Pointer(t));
                     if(len(i->Methods) == 0)
                     {
                         return nilinterhash(p, h);
@@ -248,7 +248,7 @@ namespace golang::runtime
                     return interhash(p, h);
                     break;
                 case 6:
-                    auto a = (arraytype*)(unsafe::Pointer(t));
+                    auto a = (runtime::arraytype*)(unsafe::Pointer(t));
                     for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
                         h = typehash(a->Elem, add(p, i * a->Elem->Size_), h);
@@ -256,7 +256,7 @@ namespace golang::runtime
                     return h;
                     break;
                 case 7:
-                    auto s = (structtype*)(unsafe::Pointer(t));
+                    auto s = (runtime::structtype*)(unsafe::Pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
                         if(rec::IsBlank(gocpp::recv(f.Name)))
@@ -274,7 +274,7 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp::error mapKeyError(struct maptype* t, unsafe::Pointer p)
+    struct gocpp::error mapKeyError(golang::runtime::maptype* t, unsafe::Pointer p)
     {
         if(! rec::HashMightPanic(gocpp::recv(t)))
         {
@@ -283,7 +283,7 @@ namespace golang::runtime
         return mapKeyError2(t->Key, p);
     }
 
-    struct gocpp::error mapKeyError2(struct _type* t, unsafe::Pointer p)
+    struct gocpp::error mapKeyError2(golang::runtime::_type* t, unsafe::Pointer p)
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
@@ -311,8 +311,8 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 case 5:
-                    auto i = (interfacetype*)(unsafe::Pointer(t));
-                    _type* t = {};
+                    auto i = (runtime::interfacetype*)(unsafe::Pointer(t));
+                    runtime::_type* t = {};
                     unsafe::Pointer* pdata = {};
                     if(len(i->Methods) == 0)
                     {
@@ -348,7 +348,7 @@ namespace golang::runtime
                     }
                     break;
                 case 6:
-                    auto a = (arraytype*)(unsafe::Pointer(t));
+                    auto a = (runtime::arraytype*)(unsafe::Pointer(t));
                     for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
                         if(auto err = mapKeyError2(a->Elem, add(p, i * a->Elem->Size_)); err != nullptr)
@@ -359,7 +359,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 case 7:
-                    auto s = (structtype*)(unsafe::Pointer(t));
+                    auto s = (runtime::structtype*)(unsafe::Pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
                         if(rec::IsBlank(gocpp::recv(f.Name)))
@@ -380,7 +380,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t reflect_typehash(struct _type* t, unsafe::Pointer p, uintptr_t h)
+    uintptr_t reflect_typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h)
     {
         return typehash(t, p, h);
     }
@@ -454,7 +454,7 @@ namespace golang::runtime
         return x._type == y._type && efaceeq(x._type, x.data, y.data);
     }
 
-    bool efaceeq(struct _type* t, unsafe::Pointer x, unsafe::Pointer y)
+    bool efaceeq(golang::runtime::_type* t, unsafe::Pointer x, unsafe::Pointer y)
     {
         if(t == nullptr)
         {
@@ -549,12 +549,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        void F(const gocpp::PtrRecv<gocpp_id_0, false>& self)
+        void F(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
         {
             return self.ptr->value->vF();
         }
 
-        void F(const gocpp::ObjRecv<gocpp_id_0>& self)
+        void F(const gocpp::ObjRecv<struct gocpp_id_0>& self)
         {
             return self.obj.value->vF();
         }

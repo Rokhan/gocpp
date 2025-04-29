@@ -37,7 +37,7 @@ namespace golang::time
     }
 
     std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
-    std::string rec::Error(time::fileSizeError f)
+    std::string rec::Error(golang::time::fileSizeError f)
     {
         return "time: file " + string(f) + " is too large";
     }

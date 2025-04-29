@@ -98,6 +98,108 @@ namespace golang::runtime
     /* bool physPageAlignedStacks = GOOS == "openbsd" [known mising deps] */;
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.base = this->base;
+        result.end = this->end;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (base != ref.base) return false;
+        if (end != ref.end) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << base;
+        os << " " << end;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        result.mcentral = this->mcentral;
+        result.pad = this->pad;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        if (mcentral != ref.mcentral) return false;
+        if (pad != ref.pad) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << mcentral;
+        os << " " << pad;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_2::operator T()
+    {
+        T result;
+        result.arenaHints = this->arenaHints;
+        result.quarantineList = this->quarantineList;
+        result.readyList = this->readyList;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_2::operator==(const T& ref) const
+    {
+        if (arenaHints != ref.arenaHints) return false;
+        if (quarantineList != ref.quarantineList) return false;
+        if (readyList != ref.readyList) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << arenaHints;
+        os << " " << quarantineList;
+        os << " " << readyList;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     mheap::operator T()
     {
         T result;
@@ -337,7 +439,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::set(struct mSpanStateBox* b, runtime::mSpanState s)
+    void rec::set(struct mSpanStateBox* b, golang::runtime::mSpanState s)
     {
         rec::Store(gocpp::recv(b->s), uint8_t(s));
     }
@@ -555,12 +657,12 @@ namespace golang::runtime
         return spanClass(sizeclass << 1) | spanClass(bool2int(noscan));
     }
 
-    int8_t rec::sizeclass(runtime::spanClass sc)
+    int8_t rec::sizeclass(golang::runtime::spanClass sc)
     {
         return int8_t(sc >> 1);
     }
 
-    bool rec::noscan(runtime::spanClass sc)
+    bool rec::noscan(golang::runtime::spanClass sc)
     {
         return sc & 1 != 0;
     }
@@ -570,12 +672,12 @@ namespace golang::runtime
         return arenaIdx((p - arenaBaseOffset) / heapArenaBytes);
     }
 
-    uintptr_t arenaBase(runtime::arenaIdx i)
+    uintptr_t arenaBase(golang::runtime::arenaIdx i)
     {
         return uintptr_t(i) * heapArenaBytes + arenaBaseOffset;
     }
 
-    unsigned int rec::l1(runtime::arenaIdx i)
+    unsigned int rec::l1(golang::runtime::arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
@@ -587,7 +689,7 @@ namespace golang::runtime
         }
     }
 
-    unsigned int rec::l2(runtime::arenaIdx i)
+    unsigned int rec::l2(golang::runtime::arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
@@ -772,7 +874,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    uintptr_t rec::reclaimChunk(struct mheap* h, gocpp::slice<runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
+    uintptr_t rec::reclaimChunk(struct mheap* h, gocpp::slice<golang::runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
     {
         assertLockHeld(& h->lock);
         auto n0 = n;
@@ -836,12 +938,12 @@ namespace golang::runtime
         return nFreed;
     }
 
-    bool rec::manual(runtime::spanAllocType s)
+    bool rec::manual(golang::runtime::spanAllocType s)
     {
         return s != spanAllocHeap;
     }
 
-    struct mspan* rec::alloc(struct mheap* h, uintptr_t npages, runtime::spanClass spanclass)
+    struct mspan* rec::alloc(struct mheap* h, uintptr_t npages, golang::runtime::spanClass spanclass)
     {
         mspan* s = {};
         systemstack([=]() mutable -> void
@@ -855,7 +957,7 @@ namespace golang::runtime
         return s;
     }
 
-    struct mspan* rec::allocManual(struct mheap* h, uintptr_t npages, runtime::spanAllocType typ)
+    struct mspan* rec::allocManual(struct mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ)
     {
         if(! rec::manual(gocpp::recv(typ)))
         {
@@ -970,7 +1072,7 @@ namespace golang::runtime
         rec::free(gocpp::recv(h->spanalloc), unsafe::Pointer(s));
     }
 
-    struct mspan* rec::allocSpan(struct mheap* h, uintptr_t npages, runtime::spanAllocType typ, runtime::spanClass spanclass)
+    struct mspan* rec::allocSpan(struct mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass)
     {
         struct mspan* s;
         auto gp = getg();
@@ -1156,7 +1258,7 @@ namespace golang::runtime
         return s;
     }
 
-    void rec::initSpan(struct mheap* h, struct mspan* s, runtime::spanAllocType typ, runtime::spanClass spanclass, uintptr_t base, uintptr_t npages)
+    void rec::initSpan(struct mheap* h, struct mspan* s, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass, uintptr_t base, uintptr_t npages)
     {
         rec::init(gocpp::recv(s), base, npages);
         if(rec::allocNeedsZero(gocpp::recv(h), base, npages))
@@ -1281,7 +1383,7 @@ namespace golang::runtime
         });
     }
 
-    void rec::freeManual(struct mheap* h, struct mspan* s, runtime::spanAllocType typ)
+    void rec::freeManual(struct mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)
     {
         pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
         s->needzero = 1;
@@ -1290,7 +1392,7 @@ namespace golang::runtime
         unlock(& h->lock);
     }
 
-    void rec::freeSpanLocked(struct mheap* h, struct mspan* s, runtime::spanAllocType typ)
+    void rec::freeSpanLocked(struct mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)
     {
         assertLockHeld(& h->lock);
         //Go switch emulation
@@ -1689,7 +1791,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, struct _type* fint, struct ptrtype* ot)
+    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
     {
         lock(& mheap_.speciallock);
         auto s = (specialfinalizer*)(rec::alloc(gocpp::recv(mheap_.specialfinalizeralloc)));

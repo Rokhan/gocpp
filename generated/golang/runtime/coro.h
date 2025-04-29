@@ -34,7 +34,7 @@ namespace golang::runtime
 {
     struct coro
     {
-        runtime::guintptr gp;
+        golang::runtime::guintptr gp;
         std::function<void (coro*)> f;
 
         using isGoStruct = void;

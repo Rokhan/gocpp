@@ -39,7 +39,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    void typedmemmove(struct abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void typedmemmove(abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(dst == src)
         {
@@ -56,17 +56,17 @@ namespace golang::runtime
         }
     }
 
-    void wbZero(struct _type* typ, unsafe::Pointer dst)
+    void wbZero(golang::runtime::_type* typ, unsafe::Pointer dst)
     {
         bulkBarrierPreWrite(uintptr_t(dst), 0, typ->PtrBytes, typ);
     }
 
-    void wbMove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void wbMove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
     }
 
-    void reflect_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void reflect_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(raceenabled)
         {
@@ -86,12 +86,12 @@ namespace golang::runtime
         typedmemmove(typ, dst, src);
     }
 
-    void reflectlite_typedmemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void reflectlite_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         reflect_typedmemmove(typ, dst, src);
     }
 
-    void reflectcallmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, struct abi::RegArgs* regs)
+    void reflectcallmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, abi::RegArgs* regs)
     {
         if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
         {
@@ -107,7 +107,7 @@ namespace golang::runtime
         }
     }
 
-    int typedslicecopy(struct _type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen)
+    int typedslicecopy(golang::runtime::_type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen)
     {
         auto n = dstLen;
         if(n > srcLen)
@@ -153,7 +153,7 @@ namespace golang::runtime
         return n;
     }
 
-    int reflect_typedslicecopy(struct _type* elemType, struct slice dst, struct slice src)
+    int reflect_typedslicecopy(golang::runtime::_type* elemType, struct slice dst, struct slice src)
     {
         if(elemType->PtrBytes == 0)
         {
@@ -162,7 +162,7 @@ namespace golang::runtime
         return typedslicecopy(elemType, dst.array, dst.len, src.array, src.len);
     }
 
-    void typedmemclr(struct _type* typ, unsafe::Pointer ptr)
+    void typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
@@ -171,12 +171,12 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, typ->Size_);
     }
 
-    void reflect_typedmemclr(struct _type* typ, unsafe::Pointer ptr)
+    void reflect_typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr)
     {
         typedmemclr(typ, ptr);
     }
 
-    void reflect_typedmemclrpartial(struct _type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size)
+    void reflect_typedmemclrpartial(golang::runtime::_type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
@@ -185,7 +185,7 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, size);
     }
 
-    void reflect_typedarrayclear(struct _type* typ, unsafe::Pointer ptr, int len)
+    void reflect_typedarrayclear(golang::runtime::_type* typ, unsafe::Pointer ptr, int len)
     {
         auto size = typ->Size_ * uintptr_t(len);
         if(writeBarrier.enabled && typ->PtrBytes != 0)

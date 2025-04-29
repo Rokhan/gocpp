@@ -28,7 +28,7 @@ namespace golang::registry
     extern syscall::LazyProc* procRegLoadMUIStringW;
     extern syscall::LazyProc* procRegSetValueExW;
     extern syscall::LazyProc* procExpandEnvironmentStringsW;
-    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, struct syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
+    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
     struct gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey);
     struct gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name);
     struct gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen);

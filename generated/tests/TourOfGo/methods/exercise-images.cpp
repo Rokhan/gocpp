@@ -52,17 +52,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    struct color::Model rec::ColorModel(Image)
+    color::Model rec::ColorModel(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    struct image::Rectangle rec::Bounds(Image)
+    image::Rectangle rec::Bounds(Image)
     {
         gocpp::panic("not implemented");
     }
 
-    struct color::Color rec::At(Image, int x, int y)
+    color::Color rec::At(Image, int x, int y)
     {
         gocpp::panic("not implemented");
     }

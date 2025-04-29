@@ -133,7 +133,7 @@ namespace golang::runtime
     }
 
 
-    struct semaRoot* rec::rootFor(semTable* t, uint32_t* addr)
+    struct semaRoot* rec::rootFor(golang::runtime::semTable* t, uint32_t* addr)
     {
         return & t[(uintptr_t(unsafe::Pointer(addr)) >> 3) % semTabSize].root;
     }
@@ -187,7 +187,7 @@ namespace golang::runtime
         semacquire1(addr, false, 0, 0, waitReasonSemacquire);
     }
 
-    void semacquire1(uint32_t* addr, bool lifo, runtime::semaProfileFlags profile, int skipframes, runtime::waitReason reason)
+    void semacquire1(uint32_t* addr, bool lifo, golang::runtime::semaProfileFlags profile, int skipframes, golang::runtime::waitReason reason)
     {
         auto gp = getg();
         if(gp != gp->m->curg)

@@ -85,18 +85,18 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
-    struct Writer* NewWriter(struct io::Writer w)
+    struct Writer* NewWriter(io::Writer w)
     {
         auto [z, gocpp_id_1] = NewWriterLevelDict(w, DefaultCompression, nullptr);
         return z;
     }
 
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(struct io::Writer w, int level)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level)
     {
         return NewWriterLevelDict(w, level, nullptr);
     }
 
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(struct io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         if(level < HuffmanOnly || level > BestCompression)
         {
@@ -105,7 +105,7 @@ namespace golang::zlib
         return {gocpp::InitPtr<Writer>([](Writer& x) { x.w = w; x.level = level; x.dict = dict; }), nullptr};
     }
 
-    void rec::Reset(struct Writer* z, struct io::Writer w)
+    void rec::Reset(struct Writer* z, io::Writer w)
     {
         z->w = w;
         if(z->compressor != nullptr)

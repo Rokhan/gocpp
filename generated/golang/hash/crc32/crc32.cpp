@@ -33,7 +33,7 @@ namespace golang::crc32
         using namespace sync::rec;
     }
 
-    Table* castagnoliTable;
+    crc32::Table* castagnoliTable;
     slicing8Table* castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     sync::Once castagnoliOnce;
@@ -78,7 +78,7 @@ namespace golang::crc32
         }
     }
 
-    Table* MakeTable(uint32_t poly)
+    crc32::Table* MakeTable(uint32_t poly)
     {
         //Go switch emulation
         {
@@ -135,7 +135,7 @@ namespace golang::crc32
         return value.PrintTo(os);
     }
 
-    struct hash::Hash32 New(Table* tab)
+    hash::Hash32 New(golang::crc32::Table* tab)
     {
         if(tab == IEEETable)
         {
@@ -144,7 +144,7 @@ namespace golang::crc32
         return new digest {0, tab};
     }
 
-    struct hash::Hash32 NewIEEE()
+    hash::Hash32 NewIEEE()
     {
         return New(IEEETable);
     }
@@ -203,7 +203,7 @@ namespace golang::crc32
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
-    uint32_t update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE)
+    uint32_t update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE)
     {
         //Go switch emulation
         {
@@ -229,7 +229,7 @@ namespace golang::crc32
         }
     }
 
-    uint32_t Update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p)
+    uint32_t Update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p)
     {
         return update(crc, tab, p, true);
     }
@@ -253,7 +253,7 @@ namespace golang::crc32
         return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));
     }
 
-    uint32_t Checksum(gocpp::slice<unsigned char> data, Table* tab)
+    uint32_t Checksum(gocpp::slice<unsigned char> data, golang::crc32::Table* tab)
     {
         return Update(0, tab, data);
     }
@@ -264,7 +264,7 @@ namespace golang::crc32
         return updateIEEE(0, data);
     }
 
-    uint32_t tableSum(Table* t)
+    uint32_t tableSum(golang::crc32::Table* t)
     {
         gocpp::array<unsigned char, 1024> a = {};
         auto b = a.make_slice(0, 0);

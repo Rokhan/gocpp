@@ -58,7 +58,7 @@ namespace golang::runtime
         using namespace sys::rec;
     }
 
-    struct traceWriter rec::writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, runtime::traceGoStatus status, bool markAssist)
+    struct traceWriter rec::writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist)
     {
         if(status == traceGoBad)
         {
@@ -117,7 +117,7 @@ namespace golang::runtime
         return w;
     }
 
-    struct traceWriter rec::writeProcStatus(struct traceWriter w, uint64_t pid, runtime::traceProcStatus status, bool inSweep)
+    struct traceWriter rec::writeProcStatus(struct traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep)
     {
         if(status == traceProcBad)
         {
@@ -132,7 +132,7 @@ namespace golang::runtime
         return w;
     }
 
-    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, runtime::waitReason wr)
+    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr)
     {
         runtime::traceGoStatus tgs = {};
         //Go switch emulation

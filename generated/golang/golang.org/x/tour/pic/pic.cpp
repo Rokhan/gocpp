@@ -77,7 +77,7 @@ namespace golang::pic
         ShowImage(m);
     }
 
-    void ShowImage(struct image::Image m)
+    void ShowImage(image::Image m)
     {
         gocpp::Defer defer;
         try

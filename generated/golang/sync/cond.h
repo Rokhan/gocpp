@@ -19,7 +19,7 @@ namespace golang::sync
         noCopy noCopy;
         Locker L;
         notifyList notify;
-        sync::copyChecker checker;
+        golang::sync::copyChecker checker;
 
         using isGoStruct = void;
 
@@ -55,7 +55,7 @@ namespace golang::sync
         void Wait(struct Cond* c);
         void Signal(struct Cond* c);
         void Broadcast(struct Cond* c);
-        void check(sync::copyChecker* c);
+        void check(golang::sync::copyChecker* c);
         void Lock(noCopy*);
         void Unlock(noCopy*);
     }

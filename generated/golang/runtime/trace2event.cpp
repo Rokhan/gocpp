@@ -93,7 +93,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct traceEventWriter rec::eventWriter(struct traceLocker tl, runtime::traceGoStatus goStatus, runtime::traceProcStatus procStatus)
+    struct traceEventWriter rec::eventWriter(struct traceLocker tl, golang::runtime::traceGoStatus goStatus, golang::runtime::traceProcStatus procStatus)
     {
         auto w = rec::writer(gocpp::recv(tl));
         if(auto pp = rec::ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(pp->trace), tl.gen))
@@ -107,13 +107,13 @@ namespace golang::runtime
         return traceEventWriter {w};
     }
 
-    void rec::commit(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
+    void rec::commit(struct traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         e = rec::write(gocpp::recv(e), ev, args);
         rec::end(gocpp::recv(e));
     }
 
-    struct traceEventWriter rec::write(struct traceEventWriter e, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
+    struct traceEventWriter rec::write(struct traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         e.w = rec::event(gocpp::recv(e.w), ev, args);
         return e;
@@ -124,7 +124,7 @@ namespace golang::runtime
         rec::end(gocpp::recv(e.w));
     }
 
-    struct traceWriter rec::event(struct traceWriter w, runtime::traceEv ev, gocpp::slice<runtime::traceArg> args)
+    struct traceWriter rec::event(struct traceWriter w, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();

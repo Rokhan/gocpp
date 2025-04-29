@@ -13,28 +13,28 @@
 namespace golang::slices
 {
     
-    template<typename S>
+    template<typename S, typename E>
     bool Equal(S s1, S s2);
     
-    template<typename S1, typename S2>
+    template<typename S1, typename S2, typename E1, typename E2>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq);
     
-    template<typename S>
+    template<typename S, typename E>
     int Compare(S s1, S s2);
     
-    template<typename S1, typename S2>
+    template<typename S1, typename S2, typename E1, typename E2>
     int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp);
     
     template<typename S, typename E>
     int Index(S s, E v);
     
-    template<typename S>
+    template<typename S, typename E>
     int IndexFunc(S s, std::function<bool (E)> f);
     
     template<typename S, typename E>
     bool Contains(S s, E v);
     
-    template<typename S>
+    template<typename S, typename E>
     bool ContainsFunc(S s, std::function<bool (E)> f);
     
     template<typename S, typename E>
@@ -52,10 +52,10 @@ namespace golang::slices
         return Insert(s, i, gocpp::ToSlice<E>(value, v...));
     }
     
-    template<typename S>
+    template<typename S, typename E>
     S Delete(S s, int i, int j);
     
-    template<typename S>
+    template<typename S, typename E>
     S DeleteFunc(S s, std::function<bool (E)> del);
     
     template<typename S, typename E>
@@ -73,19 +73,19 @@ namespace golang::slices
         return Replace(s, i, j, gocpp::ToSlice<E>(value, v...));
     }
     
-    template<typename S>
+    template<typename S, typename E>
     S Clone(S s);
     
-    template<typename S>
+    template<typename S, typename E>
     S Compact(S s);
     
-    template<typename S>
+    template<typename S, typename E>
     S CompactFunc(S s, std::function<bool (E, E)> eq);
     
-    template<typename S>
+    template<typename S, typename E>
     S Grow(S s, int n);
     
-    template<typename S>
+    template<typename S, typename E>
     S Clip(S s);
     
     template<typename E>
@@ -103,19 +103,19 @@ namespace golang::slices
     template<typename E>
     int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle);
     
-    template<typename S>
+    template<typename S, typename E>
     void Reverse(S s);
     
-    template<typename S>
+    template<typename S, typename E>
     S Concat(gocpp::slice<S> slices);
     
-    template<typename S, typename... Args>
+    template<typename S, typename E, typename... Args>
     S Concat(Args... slices)
     {
         return Concat(gocpp::ToSlice<S>(slices...));
     }
     
-    template<typename S, typename... Args>
+    template<typename S, typename E, typename... Args>
     S Concat(S value, Args... slices)
     {
         return Concat(gocpp::ToSlice<S>(value, slices...));

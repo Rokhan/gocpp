@@ -326,7 +326,7 @@ namespace golang::runtime
         trace.seqGC++;
     }
 
-    void rec::STWStart(struct traceLocker tl, runtime::stwReason reason)
+    void rec::STWStart(struct traceLocker tl, golang::runtime::stwReason reason)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvSTWBegin, rec::string(gocpp::recv(tl), rec::String(gocpp::recv(reason))), rec::stack(gocpp::recv(tl), 2));
     }
@@ -419,12 +419,12 @@ namespace golang::runtime
         rec::GoStop(gocpp::recv(tl), traceGoStopPreempted);
     }
 
-    void rec::GoStop(struct traceLocker tl, runtime::traceGoStopReason reason)
+    void rec::GoStop(struct traceLocker tl, golang::runtime::traceGoStopReason reason)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoStop, traceArg(trace.goStopReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), 1));
     }
 
-    void rec::GoPark(struct traceLocker tl, runtime::traceBlockReason reason, int skip)
+    void rec::GoPark(struct traceLocker tl, golang::runtime::traceBlockReason reason, int skip)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoBlock, traceArg(trace.goBlockReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), skip));
     }

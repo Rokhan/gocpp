@@ -322,7 +322,7 @@ namespace golang::runtime
         }
     }
 
-    struct bucket* newBucket(runtime::bucketType typ, int nstk)
+    struct bucket* newBucket(golang::runtime::bucketType typ, int nstk)
     {
         auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
         //Go switch emulation
@@ -382,16 +382,16 @@ namespace golang::runtime
         return (blockRecord*)(data);
     }
 
-    struct bucket* stkbucket(runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
+    struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
     {
-        auto bh = (buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
+        auto bh = (runtime::buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
         if(bh == nullptr)
         {
             lock(& profInsertLock);
-            bh = (buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
+            bh = (runtime::buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (buckhashArray*)(sysAlloc(gocpp::Sizeof<buckhashArray>(), & memstats.buckhash_sys));
+                bh = (runtime::buckhashArray*)(sysAlloc(gocpp::Sizeof<runtime::buckhashArray>(), & memstats.buckhash_sys));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory");
@@ -595,7 +595,7 @@ namespace golang::runtime
         return true;
     }
 
-    void saveblockevent(int64_t cycles, int64_t rate, int skip, runtime::bucketType which)
+    void saveblockevent(int64_t cycles, int64_t rate, int skip, golang::runtime::bucketType which)
     {
         auto gp = getg();
         int nstk = {};
@@ -828,7 +828,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, runtime::bucketType which)
+    void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, golang::runtime::bucketType which)
     {
         auto b = stkbucket(which, 0, stk, true);
         auto bp = rec::bp(gocpp::recv(b));
@@ -1389,17 +1389,17 @@ namespace golang::runtime
 
 
     gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](gocpp_id_0& x) { x.sema = 1; });
-    runtime::goroutineProfileState rec::Load(struct goroutineProfileStateHolder* p)
+    runtime::goroutineProfileState rec::Load(golang::runtime::goroutineProfileStateHolder* p)
     {
         return goroutineProfileState(rec::Load(gocpp::recv((atomic::Uint32*)(p))));
     }
 
-    void rec::Store(struct goroutineProfileStateHolder* p, runtime::goroutineProfileState value)
+    void rec::Store(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState value)
     {
         rec::Store(gocpp::recv((atomic::Uint32*)(p)), uint32_t(value));
     }
 
-    bool rec::CompareAndSwap(struct goroutineProfileStateHolder* p, runtime::goroutineProfileState old, runtime::goroutineProfileState go_new)
+    bool rec::CompareAndSwap(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState old, golang::runtime::goroutineProfileState go_new)
     {
         return rec::CompareAndSwap(gocpp::recv((atomic::Uint32*)(p)), uint32_t(old), uint32_t(go_new));
     }
@@ -1673,7 +1673,7 @@ namespace golang::runtime
     }
 
     mutex tracelock;
-    void tracealloc(unsafe::Pointer p, uintptr_t size, struct _type* typ)
+    void tracealloc(unsafe::Pointer p, uintptr_t size, golang::runtime::_type* typ)
     {
         lock(& tracelock);
         auto gp = getg();

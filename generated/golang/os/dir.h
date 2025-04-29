@@ -25,13 +25,13 @@
 
 namespace golang::os
 {
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(std::string name);
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(std::string name);
 
     namespace rec
     {
-        std::tuple<gocpp::slice<FileInfo>, struct gocpp::error> Readdir(struct File* f, int n);
+        std::tuple<gocpp::slice<os::FileInfo>, struct gocpp::error> Readdir(struct File* f, int n);
         std::tuple<gocpp::slice<std::string>, struct gocpp::error> Readdirnames(struct File* f, int n);
-        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(struct File* f, int n);
+        std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(struct File* f, int n);
     }
 }
 

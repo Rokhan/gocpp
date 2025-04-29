@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    bool isDirectIface(struct _type* t);
+    bool isDirectIface(golang::runtime::_type* t);
 
     namespace rec
     {

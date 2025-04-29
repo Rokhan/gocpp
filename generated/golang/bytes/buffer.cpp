@@ -210,7 +210,7 @@ namespace golang::bytes
         return {copy(b->buf.make_slice(m), s), nullptr};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Buffer* b, struct io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Buffer* b, io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;
@@ -272,7 +272,7 @@ namespace golang::bytes
         }
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Buffer* b, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Buffer* b, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;

@@ -11,13 +11,14 @@
 #include "golang/slices/zsortanyfunc.h"
 #include "gocpp/support.h"
 
-// #include "golang/slices/sort.h"  [Ignored, known errors]
+#include "golang/slices/sort.h"
 
 namespace golang::slices
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace slices::rec;
     }
 
 

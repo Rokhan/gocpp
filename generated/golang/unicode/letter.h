@@ -117,9 +117,9 @@ namespace golang::unicode
 
     namespace rec
     {
-        gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
-        gocpp::rune ToTitle(SpecialCase special, gocpp::rune r);
-        gocpp::rune ToLower(SpecialCase special, gocpp::rune r);
+        gocpp::rune ToUpper(golang::unicode::SpecialCase special, gocpp::rune r);
+        gocpp::rune ToTitle(golang::unicode::SpecialCase special, gocpp::rune r);
+        gocpp::rune ToLower(golang::unicode::SpecialCase special, gocpp::rune r);
     }
 }
 

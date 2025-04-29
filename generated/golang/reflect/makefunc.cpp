@@ -16,7 +16,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
@@ -71,7 +71,7 @@ namespace golang::reflect
             gocpp::panic("reflect: call of MakeFunc with non-Func type");
         }
         auto t = rec::common(gocpp::recv(typ));
-        auto ftyp = (funcType*)(unsafe::Pointer(t));
+        auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([](makeFuncImpl& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.ftyp = ftyp; x.fn = fn; });
@@ -122,7 +122,7 @@ namespace golang::reflect
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));
         auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
-        auto ftyp = (funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
+        auto ftyp = (reflect::funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
         auto [gocpp_id_6, gocpp_id_7, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([](methodValue& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.method = int(v.flag) >> flagMethodShift; x.rcvr = rcvr; });
@@ -176,7 +176,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, struct abi::RegArgs* args)
+    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args)
     {
         for(auto [i, arg] : args->Ints)
         {

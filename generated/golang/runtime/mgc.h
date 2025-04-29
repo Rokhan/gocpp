@@ -53,11 +53,63 @@ namespace golang::runtime
     void setGCPhase(uint32_t x);
     extern gocpp::array_base<std::string> gcMarkWorkerModeStrings;
     bool pollFractionalWorkerExit();
+    struct gocpp_id_1
+    {
+        mutex lock;
+        mSpanList free;
+        mSpanList busy;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    struct gocpp_id_2
+    {
+        mutex lock;
+        gQueue q;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    struct gocpp_id_3
+    {
+        mutex lock;
+        gList list;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     struct workType
     {
-        runtime::lfstack full;
+        golang::runtime::lfstack full;
         cpu::CacheLinePad _;
-        runtime::lfstack empty;
+        golang::runtime::lfstack empty;
         cpu::CacheLinePad _;
         gocpp_id_1 wbufSpans;
         uint32_t _;
@@ -81,7 +133,7 @@ namespace golang::runtime
         uint32_t markDoneSema;
         note bgMarkReady;
         uint32_t bgMarkDone;
-        runtime::gcMode mode;
+        golang::runtime::gcMode mode;
         bool userForced;
         uint64_t initialHeapLive;
         gocpp_id_2 assistQueue;
@@ -114,7 +166,7 @@ namespace golang::runtime
     void gcWaitOnMark(uint32_t n);
     struct gcTrigger
     {
-        runtime::gcTriggerKind kind;
+        golang::runtime::gcTriggerKind kind;
         int64_t now;
         uint32_t n;
 
@@ -138,8 +190,8 @@ namespace golang::runtime
     struct gcBgMarkWorkerNode
     {
         lfnode node;
-        runtime::guintptr gp;
-        runtime::muintptr m;
+        golang::runtime::guintptr gp;
+        golang::runtime::muintptr m;
 
         using isGoStruct = void;
 
@@ -156,7 +208,7 @@ namespace golang::runtime
     void gcBgMarkWorker();
     bool gcMarkWorkAvailable(struct p* p);
     void gcMark(int64_t startTime);
-    bool gcSweep(runtime::gcMode mode);
+    bool gcSweep(golang::runtime::gcMode mode);
     void gcResetMarkState();
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
     void boring_registerCache(unsafe::Pointer p);

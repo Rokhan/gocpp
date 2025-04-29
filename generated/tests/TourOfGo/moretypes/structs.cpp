@@ -108,73 +108,107 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
-        {
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.firstName = this->firstName;
+        result.lastName = this->lastName;
+        return result;
+    }
 
-            using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (firstName != ref.firstName) return false;
+        if (lastName != ref.lastName) return false;
+        return true;
+    }
 
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << firstName;
+        os << " " << lastName;
+        os << '}';
+        return os;
+    }
 
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-        {
-            return value.PrintTo(os);
-        }
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
 
 
-    struct gocpp_id_1
-        {
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Person::operator T()
+    {
+        T result;
+        result.identity = this->identity;
+        result.age = this->age;
+        return result;
+    }
 
-            using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Person::operator==(const T& ref) const
+    {
+        if (identity != ref.identity) return false;
+        if (age != ref.age) return false;
+        return true;
+    }
 
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                return result;
-            }
+    std::ostream& Person::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << identity;
+        os << " " << age;
+        os << '}';
+        return os;
+    }
 
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                return true;
-            }
+    std::ostream& operator<<(std::ostream& os, const struct Person& value)
+    {
+        return value.PrintTo(os);
+    }
 
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << '}';
-                return os;
-            }
-        };
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        result.a = this->a;
+        return result;
+    }
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-        {
-            return value.PrintTo(os);
-        }
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        if (a != ref.a) return false;
+        return true;
+    }
 
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << a;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    void inlineStructDef(gocpp_id_1 dummy)
+    {
+    }
 
     struct gocpp_id_2
         {
-            int i;
 
             using isGoStruct = void;
 
@@ -182,21 +216,18 @@ namespace golang::main
             operator T()
             {
                 T result;
-                result.i = this->i;
                 return result;
             }
 
             template<typename T> requires gocpp::GoStruct<T>
             bool operator==(const T& ref) const
             {
-                if (i != ref.i) return false;
                 return true;
             }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
-                os << "" << i;
                 os << '}';
                 return os;
             }
@@ -210,7 +241,6 @@ namespace golang::main
 
     struct gocpp_id_3
         {
-            int i;
 
             using isGoStruct = void;
 
@@ -218,21 +248,18 @@ namespace golang::main
             operator T()
             {
                 T result;
-                result.i = this->i;
                 return result;
             }
 
             template<typename T> requires gocpp::GoStruct<T>
             bool operator==(const T& ref) const
             {
-                if (i != ref.i) return false;
                 return true;
             }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
-                os << "" << i;
                 os << '}';
                 return os;
             }
@@ -280,19 +307,91 @@ namespace golang::main
         }
 
 
+    struct gocpp_id_5
+        {
+            int i;
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.i = this->i;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (i != ref.i) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << i;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
+    struct gocpp_id_6
+        {
+            int i;
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.i = this->i;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (i != ref.i) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << i;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
     void main()
     {
         mocklib::Println(Vertex {1, 2});
-        gocpp_id_0 i = {};
-        gocpp_id_1 j = {};
+        gocpp_id_2 i = {};
+        gocpp_id_3 j = {};
         mocklib::Println(i == j);
         auto e = Empty {};
         mocklib::Println(e == j);
-        auto v1 = gocpp_id_2 {1};
-        auto v2 = gocpp_id_3 {1};
+        auto v1 = gocpp_id_4 {1};
+        auto v2 = gocpp_id_5 {1};
         mocklib::Println(v1 == v2);
         auto d = Dummy {1};
-        d = gocpp_id_4 {1};
+        d = gocpp_id_6 {1};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
         Dummy* p1 = & d;

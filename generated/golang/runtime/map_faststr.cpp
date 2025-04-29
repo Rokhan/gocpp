@@ -37,7 +37,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    unsafe::Pointer mapaccess1_faststr(struct maptype* t, struct hmap* h, std::string ky)
+    unsafe::Pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -151,7 +151,7 @@ namespace golang::runtime
         return unsafe::Pointer(& zeroVal[0]);
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2_faststr(struct maptype* t, struct hmap* h, std::string ky)
+    std::tuple<unsafe::Pointer, bool> mapaccess2_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -265,7 +265,7 @@ namespace golang::runtime
         return {unsafe::Pointer(& zeroVal[0]), false};
     }
 
-    unsafe::Pointer mapassign_faststr(struct maptype* t, struct hmap* h, std::string s)
+    unsafe::Pointer mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, std::string s)
     {
         if(h == nullptr)
         {
@@ -367,7 +367,7 @@ namespace golang::runtime
         return elem;
     }
 
-    void mapdelete_faststr(struct maptype* t, struct hmap* h, std::string ky)
+    void mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -478,7 +478,7 @@ namespace golang::runtime
         h->flags &^= hashWriting;
     }
 
-    void growWork_faststr(struct maptype* t, struct hmap* h, uintptr_t bucket)
+    void growWork_faststr(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket)
     {
         evacuate_faststr(t, h, bucket & rec::oldbucketmask(gocpp::recv(h)));
         if(rec::growing(gocpp::recv(h)))
@@ -487,7 +487,7 @@ namespace golang::runtime
         }
     }
 
-    void evacuate_faststr(struct maptype* t, struct hmap* h, uintptr_t oldbucket)
+    void evacuate_faststr(golang::runtime::maptype* t, struct hmap* h, uintptr_t oldbucket)
     {
         auto b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
         auto newbit = rec::noldbuckets(gocpp::recv(h));

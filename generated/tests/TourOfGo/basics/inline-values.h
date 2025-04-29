@@ -13,7 +13,7 @@
 namespace golang::main
 {
     void main();
-    extern ints smallPrimes;
+    extern main::ints smallPrimes;
     struct fakeResult
     {
         std::string body;
@@ -31,7 +31,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    extern fakeFetcher fetcher;
+    extern main::fakeFetcher fetcher;
 
     namespace rec
     {

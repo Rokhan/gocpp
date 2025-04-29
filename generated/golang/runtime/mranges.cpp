@@ -335,7 +335,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct addrRanges* a, runtime::sysMemStat* sysStat)
+    void rec::init(struct addrRanges* a, golang::runtime::sysMemStat* sysStat)
     {
         auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
         ranges->len = 0;

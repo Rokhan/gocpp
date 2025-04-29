@@ -1003,7 +1003,7 @@ namespace golang::runtime
         gogo(& gp->sched);
     }
 
-    void fatalthrow(runtime::throwType t)
+    void fatalthrow(golang::runtime::throwType t)
     {
         auto pc = getcallerpc();
         auto sp = getcallersp();

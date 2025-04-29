@@ -54,12 +54,12 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url)
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, std::string url)
         {
             return self.ptr->value->vFetch(url);
         }
 
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url)
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, std::string url)
         {
             return self.obj.value->vFetch(url);
         }
@@ -127,7 +127,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> rec::Fetch(fakeFetcher f, std::string url)
+    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> rec::Fetch(golang::main::fakeFetcher f, std::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {
@@ -136,7 +136,7 @@ namespace golang::main
         return {"", nullptr, mocklib::Errorf("not found: %s", url)};
     }
 
-    fakeFetcher fetcher = fakeFetcher {{ "https://golang.org/", new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};
+    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/", new fakeResult {"The Go Programming Language", gocpp::slice<std::string> {"https://golang.org/pkg/", "https://golang.org/cmd/"}} }, { "https://golang.org/pkg/", new fakeResult {"Packages", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/cmd/", "https://golang.org/pkg/fmt/", "https://golang.org/pkg/os/"}} }, { "https://golang.org/pkg/fmt/", new fakeResult {"Package fmt", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }, { "https://golang.org/pkg/os/", new fakeResult {"Package os", gocpp::slice<std::string> {"https://golang.org/", "https://golang.org/pkg/"}} }};
 }
 
 int main()

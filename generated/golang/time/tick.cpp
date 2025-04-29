@@ -55,7 +55,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    struct Ticker* NewTicker(time::Duration d)
+    struct Ticker* NewTicker(golang::time::Duration d)
     {
         if(d <= 0)
         {
@@ -72,7 +72,7 @@ namespace golang::time
         stopTimer(& t->r);
     }
 
-    void rec::Reset(struct Ticker* t, time::Duration d)
+    void rec::Reset(struct Ticker* t, golang::time::Duration d)
     {
         if(d <= 0)
         {
@@ -85,7 +85,7 @@ namespace golang::time
         modTimer(& t->r, when(d), int64_t(d), t->r.f, t->r.arg, t->r.seq);
     }
 
-    gocpp::channel<Time> Tick(time::Duration d)
+    gocpp::channel<Time> Tick(golang::time::Duration d)
     {
         if(d <= 0)
         {

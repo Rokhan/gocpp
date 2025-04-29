@@ -367,17 +367,17 @@ namespace golang::runtime
         return headTailIndex((uint64_t(head) << 32) | uint64_t(tail));
     }
 
-    uint32_t rec::head(runtime::headTailIndex h)
+    uint32_t rec::head(golang::runtime::headTailIndex h)
     {
         return uint32_t(h >> 32);
     }
 
-    uint32_t rec::tail(runtime::headTailIndex h)
+    uint32_t rec::tail(golang::runtime::headTailIndex h)
     {
         return uint32_t(h);
     }
 
-    std::tuple<uint32_t, uint32_t> rec::split(runtime::headTailIndex h)
+    std::tuple<uint32_t, uint32_t> rec::split(golang::runtime::headTailIndex h)
     {
         uint32_t head;
         uint32_t tail;
@@ -418,7 +418,7 @@ namespace golang::runtime
         return headTailIndex(rec::Load(gocpp::recv(h->u)));
     }
 
-    bool rec::cas(struct atomicHeadTailIndex* h, runtime::headTailIndex old, runtime::headTailIndex go_new)
+    bool rec::cas(struct atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new)
     {
         return rec::CompareAndSwap(gocpp::recv(h->u), uint64_t(old), uint64_t(go_new));
     }

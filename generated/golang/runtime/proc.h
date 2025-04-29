@@ -53,8 +53,8 @@ namespace golang::runtime
     void Gosched();
     void goschedguarded();
     void goschedIfBusy();
-    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip);
-    void goparkunlock(struct mutex* lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip);
+    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
+    void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
     void goready(struct g* gp, int traceskip);
     struct sudog* acquireSudog();
     void releaseSudog(struct sudog* s);
@@ -89,14 +89,14 @@ namespace golang::runtime
     bool castogscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
     extern bool casgstatusAlwaysTrack;
     void casgstatus(struct g* gp, uint32_t oldval, uint32_t newval);
-    void casGToWaiting(struct g* gp, uint32_t old, runtime::waitReason reason);
+    void casGToWaiting(struct g* gp, uint32_t old, golang::runtime::waitReason reason);
     uint32_t casgcopystack(struct g* gp);
     void casGToPreemptScan(struct g* gp, uint32_t old, uint32_t go_new);
     bool casGFromPreempted(struct g* gp, uint32_t old, uint32_t go_new);
     extern gocpp::array_base<std::string> stwReasonStrings;
     struct worldStop
     {
-        runtime::stwReason reason;
+        golang::runtime::stwReason reason;
         int64_t start;
 
         using isGoStruct = void;
@@ -111,13 +111,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
-    struct worldStop stopTheWorld(runtime::stwReason reason);
+    struct worldStop stopTheWorld(golang::runtime::stwReason reason);
     void startTheWorld(struct worldStop w);
-    struct worldStop stopTheWorldGC(runtime::stwReason reason);
+    struct worldStop stopTheWorldGC(golang::runtime::stwReason reason);
     void startTheWorldGC(struct worldStop w);
     extern uint32_t worldsema;
     extern uint32_t gcsema;
-    struct worldStop stopTheWorldWithSema(runtime::stwReason reason);
+    struct worldStop stopTheWorldWithSema(golang::runtime::stwReason reason);
     int64_t startTheWorldWithSema(int64_t now, struct worldStop w);
     bool usesLibcall();
     bool mStackIsSystemAllocated();
@@ -127,12 +127,12 @@ namespace golang::runtime
     void mstartm0();
     void mPark();
     void mexit(bool osStack);
-    void forEachP(runtime::waitReason reason, std::function<void (p*)> fn);
+    void forEachP(golang::runtime::waitReason reason, std::function<void (p*)> fn);
     void forEachPInternal(std::function<void (p*)> fn);
     void runSafePointFn();
     struct cgothreadstart
     {
-        runtime::guintptr g;
+        golang::runtime::guintptr g;
         uint64_t* tls;
         unsafe::Pointer fn;
 
@@ -294,12 +294,12 @@ namespace golang::runtime
     void runqputbatch(struct p* pp, struct gQueue* q, int qsize);
     std::tuple<struct g*, bool> runqget(struct p* pp);
     std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
-    uint32_t runqgrab(struct p* pp, gocpp::array<runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
+    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
     struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
     struct gQueue
     {
-        runtime::guintptr head;
-        runtime::guintptr tail;
+        golang::runtime::guintptr head;
+        golang::runtime::guintptr tail;
 
         using isGoStruct = void;
 
@@ -315,7 +315,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
     struct gList
     {
-        runtime::guintptr head;
+        golang::runtime::guintptr head;
 
         using isGoStruct = void;
 
@@ -418,13 +418,13 @@ namespace golang::runtime
     {
         void becomeSpinning(struct m* mp);
         bool hasCgoOnStack(struct m* mp);
-        std::string String(runtime::stwReason r);
-        bool isGC(runtime::stwReason r);
+        std::string String(golang::runtime::stwReason r);
+        bool isGC(golang::runtime::stwReason r);
         void init(struct p* pp, int32_t id);
         void destroy(struct p* pp);
-        bool read(pMask p, uint32_t id);
-        void set(pMask p, int32_t id);
-        void clear(pMask p, int32_t id);
+        bool read(golang::runtime::pMask p, uint32_t id);
+        void set(golang::runtime::pMask p, int32_t id);
+        void clear(golang::runtime::pMask p, int32_t id);
         bool empty(struct gQueue* q);
         void push(struct gQueue* q, struct g* gp);
         void pushBack(struct gQueue* q, struct g* gp);

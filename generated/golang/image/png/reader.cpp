@@ -157,13 +157,13 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(png::FormatError e)
+    std::string rec::Error(golang::png::FormatError e)
     {
         return "png: invalid format: " + string(e);
     }
 
     FormatError chunkOrderError = FormatError("chunk out of order");
-    std::string rec::Error(png::UnsupportedError e)
+    std::string rec::Error(golang::png::UnsupportedError e)
     {
         return "png: unsupported feature: " + string(e);
     }
@@ -534,7 +534,7 @@ namespace golang::png
         return {n, err};
     }
 
-    std::tuple<struct image::Image, struct gocpp::error> rec::decode(struct decoder* d)
+    std::tuple<image::Image, struct gocpp::error> rec::decode(struct decoder* d)
     {
         gocpp::Defer defer;
         try
@@ -600,7 +600,7 @@ namespace golang::png
         }
     }
 
-    std::tuple<struct image::Image, struct gocpp::error> rec::readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly)
+    std::tuple<image::Image, struct gocpp::error> rec::readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -1129,7 +1129,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
-    void rec::mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass)
+    void rec::mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
@@ -1398,7 +1398,7 @@ namespace golang::png
         return nullptr;
     }
 
-    std::tuple<struct image::Image, struct gocpp::error> Decode(struct io::Reader r)
+    std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
         if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)
@@ -1423,7 +1423,7 @@ namespace golang::png
         return {d->img, nullptr};
     }
 
-    std::tuple<struct image::Config, struct gocpp::error> DecodeConfig(struct io::Reader r)
+    std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
         if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)

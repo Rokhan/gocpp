@@ -109,12 +109,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct unwinder* u, struct g* gp, runtime::unwindFlags flags)
+    void rec::init(struct unwinder* u, struct g* gp, golang::runtime::unwindFlags flags)
     {
         rec::initAt(gocpp::recv(u), ~ uintptr_t(0), ~ uintptr_t(0), ~ uintptr_t(0), gp, flags);
     }
 
-    void rec::initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, runtime::unwindFlags flags)
+    void rec::initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags)
     {
         if(auto ourg = getg(); ourg == gp && ourg == ourg->m->curg)
         {
@@ -667,7 +667,7 @@ namespace golang::runtime
         traceback1(pc, sp, lr, gp, unwindTrap);
     }
 
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, runtime::unwindFlags flags)
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, golang::runtime::unwindFlags flags)
     {
         if(iscgo && gp->m != nullptr && gp->m->ncgo > 0 && gp->syscallsp != 0 && gp->m->cgoCallers != nullptr && gp->m->cgoCallers[0] != 0)
         {

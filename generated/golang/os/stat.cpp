@@ -29,13 +29,13 @@ namespace golang::os
         using namespace time::rec;
     }
 
-    std::tuple<struct FileInfo, struct gocpp::error> Stat(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> Stat(std::string name)
     {
         testlog::Stat(name);
         return statNolog(name);
     }
 
-    std::tuple<struct FileInfo, struct gocpp::error> Lstat(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> Lstat(std::string name)
     {
         testlog::Stat(name);
         return lstatNolog(name);

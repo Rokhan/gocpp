@@ -99,22 +99,22 @@ namespace golang::sync
 
     namespace rec
     {
-        void Lock(const gocpp::PtrRecv<Locker, false>& self)
+        void Lock(const gocpp::PtrRecv<struct Locker, false>& self)
         {
             return self.ptr->value->vLock();
         }
 
-        void Lock(const gocpp::ObjRecv<Locker>& self)
+        void Lock(const gocpp::ObjRecv<struct Locker>& self)
         {
             return self.obj.value->vLock();
         }
 
-        void Unlock(const gocpp::PtrRecv<Locker, false>& self)
+        void Unlock(const gocpp::PtrRecv<struct Locker, false>& self)
         {
             return self.ptr->value->vUnlock();
         }
 
-        void Unlock(const gocpp::ObjRecv<Locker>& self)
+        void Unlock(const gocpp::ObjRecv<struct Locker>& self)
         {
             return self.obj.value->vUnlock();
         }

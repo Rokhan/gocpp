@@ -140,7 +140,7 @@ namespace golang::syscall
         return formatMessage(flags, uintptr_t(msgsrc), msgid, langid, buf, args);
     }
 
-    std::string rec::Error(syscall::Errno e)
+    std::string rec::Error(golang::syscall::Errno e)
     {
         auto idx = int(e - APPLICATION_ERROR);
         if(0 <= idx && idx < len(errors))
@@ -164,7 +164,7 @@ namespace golang::syscall
         return UTF16ToString(b.make_slice(0, n));
     }
 
-    bool rec::Is(syscall::Errno e, struct gocpp::error target)
+    bool rec::Is(golang::syscall::Errno e, struct gocpp::error target)
     {
         //Go switch emulation
         {
@@ -193,12 +193,12 @@ namespace golang::syscall
         return false;
     }
 
-    bool rec::Temporary(syscall::Errno e)
+    bool rec::Temporary(golang::syscall::Errno e)
     {
         return e == EINTR || e == EMFILE || rec::Timeout(gocpp::recv(e));
     }
 
-    bool rec::Timeout(syscall::Errno e)
+    bool rec::Timeout(golang::syscall::Errno e)
     {
         return e == EAGAIN || e == EWOULDBLOCK || e == ETIMEDOUT;
     }
@@ -363,7 +363,7 @@ namespace golang::syscall
         return CreateFile(pathp, access, sharemode, sa, createmode, attrs, 0);
     }
 
-    std::tuple<int, struct gocpp::error> Read(syscall::Handle fd, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -384,7 +384,7 @@ namespace golang::syscall
         return {int(done), nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> Write(syscall::Handle fd, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> Write(golang::syscall::Handle fd, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -399,7 +399,7 @@ namespace golang::syscall
         return {int(done), nullptr};
     }
 
-    struct gocpp::error ReadFile(syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, struct Overlapped* overlapped)
+    struct gocpp::error ReadFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, struct Overlapped* overlapped)
     {
         auto err = readFile(fd, p, done, overlapped);
         if(race::Enabled)
@@ -421,7 +421,7 @@ namespace golang::syscall
         return err;
     }
 
-    struct gocpp::error WriteFile(syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, struct Overlapped* overlapped)
+    struct gocpp::error WriteFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, struct Overlapped* overlapped)
     {
         if(race::Enabled)
         {
@@ -445,7 +445,7 @@ namespace golang::syscall
 
     int64_t ioSync;
     LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx");
-    struct gocpp::error setFilePointerEx(syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
+    struct gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
     {
         syscall::Errno e1 = {};
         if(gocpp::Sizeof<uintptr_t>() == 8)
@@ -481,7 +481,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    std::tuple<int64_t, struct gocpp::error> Seek(syscall::Handle fd, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> Seek(golang::syscall::Handle fd, int64_t offset, int whence)
     {
         int64_t newoffset;
         struct gocpp::error err;
@@ -512,7 +512,7 @@ namespace golang::syscall
         return {newoffset, err};
     }
 
-    struct gocpp::error Close(syscall::Handle fd)
+    struct gocpp::error Close(golang::syscall::Handle fd)
     {
         struct gocpp::error err;
         return CloseHandle(fd);
@@ -637,7 +637,7 @@ namespace golang::syscall
         return {UTF16ToString(b.make_slice(0, n)), nullptr};
     }
 
-    struct gocpp::error Ftruncate(syscall::Handle fd, int64_t length)
+    struct gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length)
     {
         gocpp::Defer defer;
         try
@@ -679,7 +679,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    struct gocpp::error Pipe(gocpp::slice<syscall::Handle> p)
+    struct gocpp::error Pipe(gocpp::slice<golang::syscall::Handle> p)
     {
         struct gocpp::error err;
         if(len(p) != 2)
@@ -790,7 +790,7 @@ namespace golang::syscall
         }
     }
 
-    struct gocpp::error Fsync(syscall::Handle fd)
+    struct gocpp::error Fsync(golang::syscall::Handle fd)
     {
         struct gocpp::error err;
         return FlushFileBuffers(fd);
@@ -1011,12 +1011,12 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::PtrRecv<Sockaddr, false>& self)
+        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::PtrRecv<struct Sockaddr, false>& self)
         {
             return self.ptr->value->vsockaddr();
         }
 
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::ObjRecv<Sockaddr>& self)
+        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::ObjRecv<struct Sockaddr>& self)
         {
             return self.obj.value->vsockaddr();
         }
@@ -1284,14 +1284,14 @@ namespace golang::syscall
         return socket(int32_t(domain), int32_t(typ), int32_t(proto));
     }
 
-    struct gocpp::error SetsockoptInt(syscall::Handle fd, int level, int opt, int value)
+    struct gocpp::error SetsockoptInt(golang::syscall::Handle fd, int level, int opt, int value)
     {
         struct gocpp::error err;
         auto v = int32_t(value);
         return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& v)), int32_t(gocpp::Sizeof<int32_t>()));
     }
 
-    struct gocpp::error Bind(syscall::Handle fd, struct Sockaddr sa)
+    struct gocpp::error Bind(golang::syscall::Handle fd, struct Sockaddr sa)
     {
         struct gocpp::error err;
         auto [ptr, n, err] = rec::sockaddr(gocpp::recv(sa));
@@ -1303,7 +1303,7 @@ namespace golang::syscall
         return bind(fd, ptr, n);
     }
 
-    struct gocpp::error Connect(syscall::Handle fd, struct Sockaddr sa)
+    struct gocpp::error Connect(golang::syscall::Handle fd, struct Sockaddr sa)
     {
         struct gocpp::error err;
         auto [ptr, n, err] = rec::sockaddr(gocpp::recv(sa));
@@ -1315,7 +1315,7 @@ namespace golang::syscall
         return connect(fd, ptr, n);
     }
 
-    std::tuple<struct Sockaddr, struct gocpp::error> Getsockname(syscall::Handle fd)
+    std::tuple<struct Sockaddr, struct gocpp::error> Getsockname(golang::syscall::Handle fd)
     {
         struct Sockaddr sa;
         struct gocpp::error err;
@@ -1330,7 +1330,7 @@ namespace golang::syscall
         return rec::Sockaddr(gocpp::recv(rsa));
     }
 
-    std::tuple<struct Sockaddr, struct gocpp::error> Getpeername(syscall::Handle fd)
+    std::tuple<struct Sockaddr, struct gocpp::error> Getpeername(golang::syscall::Handle fd)
     {
         struct Sockaddr sa;
         struct gocpp::error err;
@@ -1345,19 +1345,19 @@ namespace golang::syscall
         return rec::Sockaddr(gocpp::recv(rsa));
     }
 
-    struct gocpp::error Listen(syscall::Handle s, int n)
+    struct gocpp::error Listen(golang::syscall::Handle s, int n)
     {
         struct gocpp::error err;
         return listen(s, int32_t(n));
     }
 
-    struct gocpp::error Shutdown(syscall::Handle fd, int how)
+    struct gocpp::error Shutdown(golang::syscall::Handle fd, int how)
     {
         struct gocpp::error err;
         return shutdown(fd, int32_t(how));
     }
 
-    struct gocpp::error WSASendto(syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct Sockaddr to, struct Overlapped* overlapped, unsigned char* croutine)
+    struct gocpp::error WSASendto(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct Sockaddr to, struct Overlapped* overlapped, unsigned char* croutine)
     {
         struct gocpp::error err;
         unsafe::Pointer rsa = {};
@@ -1390,7 +1390,7 @@ namespace golang::syscall
         return err;
     }
 
-    struct gocpp::error wsaSendtoInet4(syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet4* to, struct Overlapped* overlapped, unsigned char* croutine)
+    struct gocpp::error wsaSendtoInet4(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet4* to, struct Overlapped* overlapped, unsigned char* croutine)
     {
         struct gocpp::error err;
         auto [rsa, len, err] = rec::sockaddr(gocpp::recv(to));
@@ -1417,7 +1417,7 @@ namespace golang::syscall
         return err;
     }
 
-    struct gocpp::error wsaSendtoInet6(syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet6* to, struct Overlapped* overlapped, unsigned char* croutine)
+    struct gocpp::error wsaSendtoInet6(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet6* to, struct Overlapped* overlapped, unsigned char* croutine)
     {
         struct gocpp::error err;
         auto [rsa, len, err] = rec::sockaddr(gocpp::recv(to));
@@ -1519,7 +1519,7 @@ namespace golang::syscall
         return connectExFunc.err;
     }
 
-    struct gocpp::error connectEx(syscall::Handle s, unsafe::Pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped)
+    struct gocpp::error connectEx(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_17, e1] = Syscall9(connectExFunc.addr, 7, uintptr_t(s), uintptr_t(name), uintptr_t(namelen), uintptr_t(unsafe::Pointer(sendBuf)), uintptr_t(sendDataLen), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), 0, 0);
@@ -1540,7 +1540,7 @@ namespace golang::syscall
         return err;
     }
 
-    struct gocpp::error ConnectEx(syscall::Handle fd, struct Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped)
+    struct gocpp::error ConnectEx(golang::syscall::Handle fd, struct Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped)
     {
         auto err = LoadConnectEx();
         if(err != nullptr)
@@ -1714,7 +1714,7 @@ namespace golang::syscall
         return ts;
     }
 
-    std::tuple<syscall::Handle, struct Sockaddr, struct gocpp::error> Accept(syscall::Handle fd)
+    std::tuple<syscall::Handle, struct Sockaddr, struct gocpp::error> Accept(golang::syscall::Handle fd)
     {
         syscall::Handle nfd;
         struct Sockaddr sa;
@@ -1722,7 +1722,7 @@ namespace golang::syscall
         return {0, nullptr, EWINDOWS};
     }
 
-    std::tuple<int, struct Sockaddr, struct gocpp::error> Recvfrom(syscall::Handle fd, gocpp::slice<unsigned char> p, int flags)
+    std::tuple<int, struct Sockaddr, struct gocpp::error> Recvfrom(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int flags)
     {
         int n;
         struct Sockaddr from;
@@ -1730,13 +1730,13 @@ namespace golang::syscall
         return {0, nullptr, EWINDOWS};
     }
 
-    struct gocpp::error Sendto(syscall::Handle fd, gocpp::slice<unsigned char> p, int flags, struct Sockaddr to)
+    struct gocpp::error Sendto(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int flags, struct Sockaddr to)
     {
         struct gocpp::error err;
         return EWINDOWS;
     }
 
-    struct gocpp::error SetsockoptTimeval(syscall::Handle fd, int level, int opt, struct Timeval* tv)
+    struct gocpp::error SetsockoptTimeval(golang::syscall::Handle fd, int level, int opt, struct Timeval* tv)
     {
         struct gocpp::error err;
         return EWINDOWS;
@@ -1870,31 +1870,31 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> GetsockoptInt(syscall::Handle fd, int level, int opt)
+    std::tuple<int, struct gocpp::error> GetsockoptInt(golang::syscall::Handle fd, int level, int opt)
     {
         return {- 1, EWINDOWS};
     }
 
-    struct gocpp::error SetsockoptLinger(syscall::Handle fd, int level, int opt, struct Linger* l)
+    struct gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int level, int opt, struct Linger* l)
     {
         struct gocpp::error err;
         auto sys = gocpp::Init<sysLinger>([](sysLinger& x) { x.Onoff = uint16_t(l->Onoff); x.Linger = uint16_t(l->Linger); });
         return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& sys)), int32_t(gocpp::Sizeof<sysLinger>()));
     }
 
-    struct gocpp::error SetsockoptInet4Addr(syscall::Handle fd, int level, int opt, gocpp::array<unsigned char, 4> value)
+    struct gocpp::error SetsockoptInet4Addr(golang::syscall::Handle fd, int level, int opt, gocpp::array<unsigned char, 4> value)
     {
         struct gocpp::error err;
         return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& value[0])), 4);
     }
 
-    struct gocpp::error SetsockoptIPMreq(syscall::Handle fd, int level, int opt, struct IPMreq* mreq)
+    struct gocpp::error SetsockoptIPMreq(golang::syscall::Handle fd, int level, int opt, struct IPMreq* mreq)
     {
         struct gocpp::error err;
         return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(mreq)), int32_t(gocpp::Sizeof<IPMreq>()));
     }
 
-    struct gocpp::error SetsockoptIPv6Mreq(syscall::Handle fd, int level, int opt, struct IPv6Mreq* mreq)
+    struct gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int level, int opt, struct IPv6Mreq* mreq)
     {
         struct gocpp::error err;
         return EWINDOWS;
@@ -1921,7 +1921,7 @@ namespace golang::syscall
         return {handle, err};
     }
 
-    struct gocpp::error FindNextFile(syscall::Handle handle, struct Win32finddata* data)
+    struct gocpp::error FindNextFile(golang::syscall::Handle handle, struct Win32finddata* data)
     {
         struct gocpp::error err;
         win32finddata1 data1 = {};
@@ -1982,7 +1982,7 @@ namespace golang::syscall
         return int(pe->ParentProcessID);
     }
 
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> fdpath(syscall::Handle fd, gocpp::slice<uint16_t> buf)
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> fdpath(golang::syscall::Handle fd, gocpp::slice<uint16_t> buf)
     {
         auto FILE_NAME_NORMALIZED = 0;
         auto VOLUME_NAME_DOS = 0;
@@ -2003,7 +2003,7 @@ namespace golang::syscall
         return {buf, nullptr};
     }
 
-    struct gocpp::error Fchdir(syscall::Handle fd)
+    struct gocpp::error Fchdir(golang::syscall::Handle fd)
     {
         struct gocpp::error err;
         gocpp::array<uint16_t, MAX_PATH + 1> buf = {};
@@ -2033,7 +2033,7 @@ namespace golang::syscall
         return EWINDOWS;
     }
 
-    struct gocpp::error Fchmod(syscall::Handle fd, uint32_t mode)
+    struct gocpp::error Fchmod(golang::syscall::Handle fd, uint32_t mode)
     {
         struct gocpp::error err;
         return EWINDOWS;
@@ -2051,7 +2051,7 @@ namespace golang::syscall
         return EWINDOWS;
     }
 
-    struct gocpp::error Fchown(syscall::Handle fd, int uid, int gid)
+    struct gocpp::error Fchown(golang::syscall::Handle fd, int uid, int gid)
     {
         struct gocpp::error err;
         return EWINDOWS;
@@ -2088,11 +2088,11 @@ namespace golang::syscall
         return {nullptr, EWINDOWS};
     }
 
-    void rec::Signal(syscall::Signal s)
+    void rec::Signal(golang::syscall::Signal s)
     {
     }
 
-    std::string rec::String(syscall::Signal s)
+    std::string rec::String(golang::syscall::Signal s)
     {
         if(0 <= s && int(s) < len(signals))
         {
@@ -2215,12 +2215,12 @@ namespace golang::syscall
         }
     }
 
-    std::tuple<syscall::Handle, struct gocpp::error> CreateIoCompletionPort(syscall::Handle filehandle, syscall::Handle cphandle, uint32_t key, uint32_t threadcnt)
+    std::tuple<syscall::Handle, struct gocpp::error> CreateIoCompletionPort(golang::syscall::Handle filehandle, golang::syscall::Handle cphandle, uint32_t key, uint32_t threadcnt)
     {
         return createIoCompletionPort(filehandle, cphandle, uintptr_t(key), threadcnt);
     }
 
-    struct gocpp::error GetQueuedCompletionStatus(syscall::Handle cphandle, uint32_t* qty, uint32_t* key, struct Overlapped** overlapped, uint32_t timeout)
+    struct gocpp::error GetQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uint32_t* key, struct Overlapped** overlapped, uint32_t timeout)
     {
         uintptr_t ukey = {};
         uintptr_t* pukey = {};
@@ -2241,7 +2241,7 @@ namespace golang::syscall
         return err;
     }
 
-    struct gocpp::error PostQueuedCompletionStatus(syscall::Handle cphandle, uint32_t qty, uint32_t key, struct Overlapped* overlapped)
+    struct gocpp::error PostQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t qty, uint32_t key, struct Overlapped* overlapped)
     {
         return postQueuedCompletionStatus(cphandle, qty, uintptr_t(key), overlapped);
     }
@@ -2267,7 +2267,7 @@ namespace golang::syscall
         return {al, nullptr};
     }
 
-    struct gocpp::error RegEnumKeyEx(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, struct Filetime* lastWriteTime)
+    struct gocpp::error RegEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, struct Filetime* lastWriteTime)
     {
         struct gocpp::error regerrno;
         return regEnumKeyEx(key, index, name, nameLen, reserved, go_class, classLen, lastWriteTime);

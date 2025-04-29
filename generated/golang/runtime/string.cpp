@@ -62,7 +62,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    std::string concatstrings(tmpBuf* buf, gocpp::slice<std::string> a)
+    std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a)
     {
         auto idx = 0;
         auto l = 0;
@@ -99,27 +99,27 @@ namespace golang::runtime
         return s;
     }
 
-    std::string concatstring2(tmpBuf* buf, std::string a0, std::string a1)
+    std::string concatstring2(golang::runtime::tmpBuf* buf, std::string a0, std::string a1)
     {
         return concatstrings(buf, gocpp::slice<std::string> {a0, a1});
     }
 
-    std::string concatstring3(tmpBuf* buf, std::string a0, std::string a1, std::string a2)
+    std::string concatstring3(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2)
     {
         return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2});
     }
 
-    std::string concatstring4(tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3)
+    std::string concatstring4(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3)
     {
         return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2, a3});
     }
 
-    std::string concatstring5(tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4)
+    std::string concatstring5(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4)
     {
         return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2, a3, a4});
     }
 
-    std::string slicebytetostring(tmpBuf* buf, unsigned char* ptr, int n)
+    std::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n)
     {
         if(n == 0)
         {
@@ -166,7 +166,7 @@ namespace golang::runtime
         return stk.lo <= ptr && ptr < stk.hi;
     }
 
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(tmpBuf* buf, int l)
+    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l)
     {
         std::string s;
         gocpp::slice<unsigned char> b;
@@ -203,12 +203,12 @@ namespace golang::runtime
         return unsafe::String(ptr, n);
     }
 
-    gocpp::slice<unsigned char> stringtoslicebyte(tmpBuf* buf, std::string s)
+    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, std::string s)
     {
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr && len(s) <= len(buf))
         {
-            *buf = tmpBuf {};
+            *buf = runtime::tmpBuf {};
             b = buf.make_slice(0, len(s));
         }
         else
@@ -245,7 +245,7 @@ namespace golang::runtime
         return a;
     }
 
-    std::string slicerunetostring(tmpBuf* buf, gocpp::slice<gocpp::rune> a)
+    std::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a)
     {
         if(raceenabled && len(a) > 0)
         {

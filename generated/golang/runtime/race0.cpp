@@ -48,12 +48,12 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    void raceReadObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceReadObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race");
     }
 
-    void raceWriteObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceWriteObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race");
     }

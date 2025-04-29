@@ -110,7 +110,7 @@ namespace golang::runtime
         p->summaryMappedReady += rec::sysGrow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
     }
 
-    uintptr_t rec::sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -150,7 +150,7 @@ namespace golang::runtime
         return rec::size(gocpp::recv(need));
     }
 
-    uintptr_t rec::sysInit(struct scavengeIndex* s, bool test, runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysInit(struct scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
     {
         auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();

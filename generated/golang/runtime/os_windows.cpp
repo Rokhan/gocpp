@@ -808,7 +808,7 @@ namespace golang::runtime
         go_throw("bad newosproc0");
     }
 
-    void exitThread(struct atomic::Uint32* wait)
+    void exitThread(atomic::Uint32* wait)
     {
         go_throw("exitThread");
     }
@@ -910,14 +910,14 @@ namespace golang::runtime
     void asmstdcall_trampoline(unsafe::Pointer args)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t stdcall_no_g(runtime::stdFunction fn, int n, uintptr_t args)
+    uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
         auto libcall = gocpp::Init<libcall>([](libcall& x) { x.fn = uintptr_t(unsafe::Pointer(fn)); x.n = uintptr_t(n); x.args = args; });
         asmstdcall_trampoline(noescape(unsafe::Pointer(& libcall)));
         return libcall.r1;
     }
 
-    uintptr_t stdcall(runtime::stdFunction fn)
+    uintptr_t stdcall(golang::runtime::stdFunction fn)
     {
         auto gp = getg();
         auto mp = gp->m;
@@ -938,7 +938,7 @@ namespace golang::runtime
         return mp->libcall.r1;
     }
 
-    uintptr_t stdcall0(runtime::stdFunction fn)
+    uintptr_t stdcall0(golang::runtime::stdFunction fn)
     {
         auto mp = getg()->m;
         mp->libcall.n = 0;
@@ -946,7 +946,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall1(runtime::stdFunction fn, uintptr_t a0)
+    uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0)
     {
         auto mp = getg()->m;
         mp->libcall.n = 1;
@@ -954,7 +954,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall2(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1)
+    uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1)
     {
         auto mp = getg()->m;
         mp->libcall.n = 2;
@@ -962,7 +962,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall3(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
+    uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
     {
         auto mp = getg()->m;
         mp->libcall.n = 3;
@@ -970,7 +970,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall4(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
+    uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     {
         auto mp = getg()->m;
         mp->libcall.n = 4;
@@ -978,7 +978,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall5(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
+    uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
     {
         auto mp = getg()->m;
         mp->libcall.n = 5;
@@ -986,7 +986,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall6(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
+    uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
     {
         auto mp = getg()->m;
         mp->libcall.n = 6;
@@ -994,7 +994,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall7(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
+    uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     {
         auto mp = getg()->m;
         mp->libcall.n = 7;
@@ -1002,7 +1002,7 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
-    uintptr_t stdcall8(runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
+    uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
     {
         auto mp = getg()->m;
         mp->libcall.n = 8;

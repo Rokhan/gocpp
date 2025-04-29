@@ -90,7 +90,7 @@ namespace golang::sync
         runtime_notifyListNotifyAll(& c->notify);
     }
 
-    void rec::check(sync::copyChecker* c)
+    void rec::check(golang::sync::copyChecker* c)
     {
         if(uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(unsafe::Pointer(c))) && uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)))
         {

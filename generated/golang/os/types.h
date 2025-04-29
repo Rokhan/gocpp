@@ -41,7 +41,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    bool SameFile(struct FileInfo fi1, struct FileInfo fi2);
+    bool SameFile(golang::os::FileInfo fi1, golang::os::FileInfo fi2);
 
     namespace rec
     {

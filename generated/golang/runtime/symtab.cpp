@@ -323,6 +323,33 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     Func::operator T()
     {
         T result;
@@ -638,7 +665,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::slice<gocpp::map<abi::typeOff, _type*>> pinnedTypemaps;
+    gocpp::slice<gocpp::map<runtime::typeOff, runtime::_type*>> pinnedTypemaps;
     moduledata firstmoduledata;
     moduledata* lastmoduledatap;
     gocpp::slice<moduledata*>* modulesSlice;

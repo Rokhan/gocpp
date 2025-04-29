@@ -19,13 +19,13 @@ namespace golang::runtime
     struct rwmutex
     {
         mutex rLock;
-        runtime::muintptr readers;
+        golang::runtime::muintptr readers;
         uint32_t readerPass;
         mutex wLock;
-        runtime::muintptr writer;
+        golang::runtime::muintptr writer;
         atomic::Int32 readerCount;
         atomic::Int32 readerWait;
-        runtime::lockRank readRank;
+        golang::runtime::lockRank readRank;
 
         using isGoStruct = void;
 
@@ -42,7 +42,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct rwmutex* rw, runtime::lockRank readRank, runtime::lockRank readRankInternal, runtime::lockRank writeRank);
+        void init(struct rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank);
         void rlock(struct rwmutex* rw);
         void runlock(struct rwmutex* rw);
         void lock(struct rwmutex* rw);

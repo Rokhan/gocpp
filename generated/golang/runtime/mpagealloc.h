@@ -21,23 +21,41 @@ namespace golang::runtime
 {
     struct offAddr maxSearchAddr();
     runtime::chunkIdx chunkIndex(uintptr_t p);
-    uintptr_t chunkBase(runtime::chunkIdx ci);
+    uintptr_t chunkBase(golang::runtime::chunkIdx ci);
     unsigned int chunkPageIndex(uintptr_t p);
     int offAddrToLevelIndex(int level, struct offAddr addr);
     struct offAddr levelIndexToOffAddr(int level, int idx);
     std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
+    struct gocpp_id_0
+    {
+        scavengeIndex index;
+        atomic::Uintptr releasedBg;
+        atomic::Uintptr releasedEager;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct pageAlloc
     {
-        gocpp::array<gocpp::slice<runtime::pallocSum>, summaryLevels> summary;
+        gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary;
         gocpp::array<gocpp::array<pallocData, 1 << pallocChunksL2Bits>*, 1 << pallocChunksL1Bits> chunks;
         offAddr searchAddr;
-        runtime::chunkIdx start;
-        runtime::chunkIdx end;
+        golang::runtime::chunkIdx start;
+        golang::runtime::chunkIdx end;
         addrRanges inUse;
         /* gocpp_id_0 scav; [Known incomplete type] */
         mutex* mheapLock;
-        runtime::sysMemStat* sysStat;
+        golang::runtime::sysMemStat* sysStat;
         uintptr_t summaryMappedReady;
         bool chunkHugePages;
         bool test;
@@ -55,15 +73,15 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct pageAlloc& value);
     runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    runtime::pallocSum mergeSummaries(gocpp::slice<runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
+    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
 
     namespace rec
     {
-        unsigned int l1(runtime::chunkIdx i);
-        unsigned int l2(runtime::chunkIdx i);
-        void init(struct pageAlloc* p, struct mutex* mheapLock, runtime::sysMemStat* sysStat, bool test);
-        struct pallocData* tryChunkOf(struct pageAlloc* p, runtime::chunkIdx ci);
-        struct pallocData* chunkOf(struct pageAlloc* p, runtime::chunkIdx ci);
+        unsigned int l1(golang::runtime::chunkIdx i);
+        unsigned int l2(golang::runtime::chunkIdx i);
+        void init(struct pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test);
+        struct pallocData* tryChunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci);
+        struct pallocData* chunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci);
         void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size);
         void enableChunkHugePages(struct pageAlloc* p);
         void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
@@ -72,10 +90,10 @@ namespace golang::runtime
         std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages);
         std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages);
         void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
-        unsigned int start(runtime::pallocSum p);
-        unsigned int max(runtime::pallocSum p);
-        unsigned int end(runtime::pallocSum p);
-        std::tuple<unsigned int, unsigned int, unsigned int> unpack(runtime::pallocSum p);
+        unsigned int start(golang::runtime::pallocSum p);
+        unsigned int max(golang::runtime::pallocSum p);
+        unsigned int end(golang::runtime::pallocSum p);
+        std::tuple<unsigned int, unsigned int, unsigned int> unpack(golang::runtime::pallocSum p);
     }
 }
 

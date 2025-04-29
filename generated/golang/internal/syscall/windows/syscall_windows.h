@@ -261,8 +261,8 @@ namespace golang::windows
 
     std::ostream& operator<<(std::ostream& os, const struct WSAMsg& value);
     struct gocpp::error loadWSASendRecvMsg();
-    struct gocpp::error WSASendMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, struct syscall::Overlapped* overlapped, unsigned char* croutine);
-    struct gocpp::error WSARecvMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t* bytesReceived, struct syscall::Overlapped* overlapped, unsigned char* croutine);
+    struct gocpp::error WSASendMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
+    struct gocpp::error WSARecvMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error Rename(std::string oldpath, std::string newpath);
     struct SHARE_INFO_2
     {

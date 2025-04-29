@@ -74,7 +74,7 @@ namespace golang::windows
     extern syscall::LazyProc* procGetProfilesDirectoryW;
     extern syscall::LazyProc* procWSASocketW;
     std::tuple<uint32_t, struct gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
-    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, struct syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, windows::TokenType tokenType, syscall::Token* phNewToken);
+    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, golang::windows::TokenType tokenType, syscall::Token* phNewToken);
     struct gocpp::error ImpersonateSelf(uint32_t impersonationlevel);
     struct gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, struct LUID* luid);
     std::tuple<syscall::Handle, struct gocpp::error> OpenSCManager(uint16_t* machineName, uint16_t* databaseName, uint32_t access);
@@ -96,7 +96,7 @@ namespace golang::windows
     std::tuple<uint32_t, struct gocpp::error> GetTempPath2(uint32_t buflen, uint16_t* buf);
     struct gocpp::error GetVolumeInformationByHandle(syscall::Handle file, uint16_t* volumeNameBuffer, uint32_t volumeNameSize, uint32_t* volumeNameSerialNumber, uint32_t* maximumComponentLength, uint32_t* fileSystemFlags, uint16_t* fileSystemNameBuffer, uint32_t fileSystemNameSize);
     struct gocpp::error GetVolumeNameForVolumeMountPoint(uint16_t* volumeMountPoint, uint16_t* volumeName, uint32_t bufferlength);
-    struct gocpp::error LockFileEx(syscall::Handle file, uint32_t flags, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, struct syscall::Overlapped* overlapped);
+    struct gocpp::error LockFileEx(syscall::Handle file, uint32_t flags, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped);
     struct gocpp::error Module32First(syscall::Handle snapshot, struct ModuleEntry32* moduleEntry);
     struct gocpp::error Module32Next(syscall::Handle snapshot, struct ModuleEntry32* moduleEntry);
     struct gocpp::error MoveFileEx(uint16_t* from, uint16_t* to, uint32_t flags);
@@ -104,7 +104,7 @@ namespace golang::windows
     uintptr_t RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, unsigned char* table);
     uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, uintptr_t entry, uintptr_t ctxt, uintptr_t* data, uintptr_t* frame, unsigned char* ctxptrs);
     struct gocpp::error SetFileInformationByHandle(syscall::Handle handle, uint32_t fileInformationClass, unsafe::Pointer buf, uint32_t bufsize);
-    struct gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, struct syscall::Overlapped* overlapped);
+    struct gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped);
     struct gocpp::error VirtualQuery(uintptr_t address, struct MemoryBasicInformation* buffer, uintptr_t length);
     struct gocpp::error NetShareAdd(uint16_t* serverName, uint32_t level, unsigned char* buf, uint16_t* parmErr);
     struct gocpp::error NetShareDel(uint16_t* serverName, uint16_t* netName, uint32_t reserved);
@@ -113,7 +113,7 @@ namespace golang::windows
     struct gocpp::error CreateEnvironmentBlock(uint16_t** block, syscall::Token token, bool inheritExisting);
     struct gocpp::error DestroyEnvironmentBlock(uint16_t* block);
     struct gocpp::error GetProfilesDirectory(uint16_t* dir, uint32_t* dirLen);
-    std::tuple<syscall::Handle, struct gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, struct syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags);
+    std::tuple<syscall::Handle, struct gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags);
 
     namespace rec
     {

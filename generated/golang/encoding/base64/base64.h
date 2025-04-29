@@ -59,7 +59,7 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
-    struct io::WriteCloser NewEncoder(struct Encoding* enc, struct io::Writer w);
+    io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w);
     struct decoder
     {
         gocpp::error err;
@@ -101,7 +101,7 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct newlineFilteringReader& value);
-    struct io::Reader NewDecoder(struct Encoding* enc, struct io::Reader r);
+    io::Reader NewDecoder(struct Encoding* enc, io::Reader r);
     int decodedLen(int n, gocpp::rune padChar);
 
     namespace rec
@@ -114,7 +114,7 @@ namespace golang::base64
         std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> p);
         struct gocpp::error Close(struct encoder* e);
         int EncodedLen(struct Encoding* enc, int n);
-        std::string Error(base64::CorruptInputError e);
+        std::string Error(golang::base64::CorruptInputError e);
         std::tuple<int, int, struct gocpp::error> decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(struct Encoding* enc, std::string s);

@@ -12,18 +12,18 @@
 
 namespace golang::runtime
 {
-    std::string concatstrings(tmpBuf* buf, gocpp::slice<std::string> a);
-    std::string concatstring2(tmpBuf* buf, std::string a0, std::string a1);
-    std::string concatstring3(tmpBuf* buf, std::string a0, std::string a1, std::string a2);
-    std::string concatstring4(tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3);
-    std::string concatstring5(tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4);
-    std::string slicebytetostring(tmpBuf* buf, unsigned char* ptr, int n);
+    std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a);
+    std::string concatstring2(golang::runtime::tmpBuf* buf, std::string a0, std::string a1);
+    std::string concatstring3(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2);
+    std::string concatstring4(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3);
+    std::string concatstring5(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4);
+    std::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n);
     bool stringDataOnStack(std::string s);
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(tmpBuf* buf, int l);
+    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l);
     std::string slicebytetostringtmp(unsigned char* ptr, int n);
-    gocpp::slice<unsigned char> stringtoslicebyte(tmpBuf* buf, std::string s);
+    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, std::string s);
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, std::string s);
-    std::string slicerunetostring(tmpBuf* buf, gocpp::slice<gocpp::rune> a);
+    std::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a);
     struct stringStruct
     {
         unsafe::Pointer str;

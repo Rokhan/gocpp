@@ -16,7 +16,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string String(runtime::lockRank rank);
+        std::string String(golang::runtime::lockRank rank);
     }
 }
 

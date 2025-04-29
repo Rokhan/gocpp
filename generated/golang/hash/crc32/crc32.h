@@ -21,11 +21,11 @@ namespace golang::crc32
     void castagnoliInit();
     extern Table* IEEETable;
     void ieeeInit();
-    Table* MakeTable(uint32_t poly);
+    crc32::Table* MakeTable(uint32_t poly);
     struct digest
     {
         uint32_t crc;
-        Table* tab;
+        golang::crc32::Table* tab;
 
         using isGoStruct = void;
 
@@ -39,16 +39,16 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    struct hash::Hash32 New(Table* tab);
-    struct hash::Hash32 NewIEEE();
+    hash::Hash32 New(golang::crc32::Table* tab);
+    hash::Hash32 NewIEEE();
     extern std::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
-    uint32_t update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
-    uint32_t Update(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p);
-    uint32_t Checksum(gocpp::slice<unsigned char> data, Table* tab);
+    uint32_t update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
+    uint32_t Update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p);
+    uint32_t Checksum(gocpp::slice<unsigned char> data, golang::crc32::Table* tab);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
-    uint32_t tableSum(Table* t);
+    uint32_t tableSum(golang::crc32::Table* t);
 
     namespace rec
     {

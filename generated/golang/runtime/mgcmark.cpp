@@ -864,7 +864,7 @@ namespace golang::runtime
         gcDrain(gcw, gcDrainFractional | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
-    void gcDrain(struct gcWork* gcw, runtime::gcDrainFlags flags)
+    void gcDrain(struct gcWork* gcw, golang::runtime::gcDrainFlags flags)
     {
         if(! writeBarrier.enabled)
         {

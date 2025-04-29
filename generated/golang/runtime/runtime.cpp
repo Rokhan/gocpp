@@ -201,7 +201,7 @@ namespace golang::runtime
                 return;
             }
             inc = go_new(gocpp::Tag<std::function<void ()>>());
-            *inc = (newInc*)(g->name);
+            *inc = (runtime::newInc*)(g->name);
             if(raceenabled)
             {
                 racereleasemerge(unsafe::Pointer(& g->inc));
@@ -215,7 +215,7 @@ namespace golang::runtime
         {
             raceacquire(unsafe::Pointer(& g->inc));
         }
-        (inc*)();
+        (runtime::inc*)();
     }
 
     void godebugNotify(bool envChanged)
@@ -232,7 +232,7 @@ namespace golang::runtime
         }
         if(update != nullptr)
         {
-            (update*)(godebugDefault, env);
+            (runtime::update*)(godebugDefault, env);
         }
     }
 

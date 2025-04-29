@@ -50,12 +50,12 @@ namespace golang::color
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<Color, false>& self)
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct Color, false>& self)
         {
             return self.ptr->value->vRGBA();
         }
 
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<Color>& self)
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct Color>& self)
         {
             return self.obj.value->vRGBA();
         }
@@ -476,12 +476,12 @@ namespace golang::color
 
     namespace rec
     {
-        struct Color Convert(const gocpp::PtrRecv<Model, false>& self, struct Color c)
+        struct Color Convert(const gocpp::PtrRecv<struct Model, false>& self, struct Color c)
         {
             return self.ptr->value->vConvert(c);
         }
 
-        struct Color Convert(const gocpp::ObjRecv<Model>& self, struct Color c)
+        struct Color Convert(const gocpp::ObjRecv<struct Model>& self, struct Color c)
         {
             return self.obj.value->vConvert(c);
         }
@@ -643,7 +643,7 @@ namespace golang::color
         return Gray16 {uint16_t(y)};
     }
 
-    struct Color rec::Convert(Palette p, struct Color c)
+    struct Color rec::Convert(golang::color::Palette p, struct Color c)
     {
         if(len(p) == 0)
         {
@@ -652,7 +652,7 @@ namespace golang::color
         return p[rec::Index(gocpp::recv(p), c)];
     }
 
-    int rec::Index(Palette p, struct Color c)
+    int rec::Index(golang::color::Palette p, struct Color c)
     {
         auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));
         auto [ret, bestSum] = std::tuple{0, uint32_t((1 << 32) - 1)};

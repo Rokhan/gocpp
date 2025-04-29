@@ -39,7 +39,7 @@ namespace golang::runtime
         unsafe::Pointer buf;
         uint16_t elemsize;
         uint32_t closed;
-        _type* elemtype;
+        golang::runtime::_type* elemtype;
         unsigned int sendx;
         unsigned int recvx;
         /* waitq recvq; [Known incomplete type] */
@@ -75,16 +75,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct waitq& value);
-    struct hchan* reflect_makechan(struct chantype* t, int size);
-    struct hchan* makechan64(struct chantype* t, int64_t size);
-    struct hchan* makechan(struct chantype* t, int size);
+    struct hchan* reflect_makechan(golang::runtime::chantype* t, int size);
+    struct hchan* makechan64(golang::runtime::chantype* t, int64_t size);
+    struct hchan* makechan(golang::runtime::chantype* t, int size);
     unsafe::Pointer chanbuf(struct hchan* c, unsigned int i);
     bool full(struct hchan* c);
     void chansend1(struct hchan* c, unsafe::Pointer elem);
     bool chansend(struct hchan* c, unsafe::Pointer ep, bool block, uintptr_t callerpc);
     void send(struct hchan* c, struct sudog* sg, unsafe::Pointer ep, std::function<void ()> unlockf, int skip);
-    void sendDirect(struct _type* t, struct sudog* sg, unsafe::Pointer src);
-    void recvDirect(struct _type* t, struct sudog* sg, unsafe::Pointer dst);
+    void sendDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer src);
+    void recvDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer dst);
     void closechan(struct hchan* c);
     bool empty(struct hchan* c);
     void chanrecv1(struct hchan* c, unsafe::Pointer elem);

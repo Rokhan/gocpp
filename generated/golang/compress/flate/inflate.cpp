@@ -38,12 +38,12 @@ namespace golang::flate
 
     sync::Once fixedOnce;
     huffmanDecoder fixedHuffmanDecoder;
-    std::string rec::Error(flate::CorruptInputError e)
+    std::string rec::Error(golang::flate::CorruptInputError e)
     {
         return "flate: corrupt input before offset " + strconv::FormatInt(int64_t(e), 10);
     }
 
-    std::string rec::Error(flate::InternalError e)
+    std::string rec::Error(golang::flate::InternalError e)
     {
         return "flate: internal error: " + string(e);
     }
@@ -147,19 +147,19 @@ namespace golang::flate
     }
 
     template<typename T, typename StoreT>
-    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(struct io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
     namespace rec
     {
-        struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        struct gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
             return self.ptr->value->vReset(r, dict);
         }
 
-        struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        struct gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
             return self.obj.value->vReset(r, dict);
         }
@@ -985,7 +985,7 @@ namespace golang::flate
         }
     }
 
-    void rec::makeReader(struct decompressor* f, struct io::Reader r)
+    void rec::makeReader(struct decompressor* f, io::Reader r)
     {
         if(auto [rr, ok] = gocpp::getValue<Reader>(r); ok)
         {
@@ -1029,7 +1029,7 @@ namespace golang::flate
         });
     }
 
-    struct gocpp::error rec::Reset(struct decompressor* f, struct io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error rec::Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *f = gocpp::Init<decompressor>([](decompressor& x) { x.rBuf = f->rBuf; x.bits = f->bits; x.codebits = f->codebits; x.dict = f->dict; x.step = (*decompressor)->nextBlock; });
         rec::makeReader(gocpp::recv(f), r);
@@ -1037,7 +1037,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    struct io::ReadCloser NewReader(struct io::Reader r)
+    io::ReadCloser NewReader(io::Reader r)
     {
         fixedHuffmanDecoderInit();
         decompressor f = {};
@@ -1049,7 +1049,7 @@ namespace golang::flate
         return & f;
     }
 
-    struct io::ReadCloser NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict)
+    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         fixedHuffmanDecoderInit();
         decompressor f = {};

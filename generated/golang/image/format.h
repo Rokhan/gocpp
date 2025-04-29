@@ -83,16 +83,16 @@ namespace golang::image
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    struct reader asReader(struct io::Reader r);
+    struct reader asReader(io::Reader r);
     bool match(std::string magic, gocpp::slice<unsigned char> b);
     struct format sniff(struct reader r);
-    std::tuple<struct Image, std::string, struct gocpp::error> Decode(struct io::Reader r);
-    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(struct io::Reader r);
+    std::tuple<struct Image, std::string, struct gocpp::error> Decode(io::Reader r);
+    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(io::Reader r);
 
     namespace rec
     {

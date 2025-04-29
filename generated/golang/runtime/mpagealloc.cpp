@@ -59,7 +59,7 @@ namespace golang::runtime
         return chunkIdx((p - arenaBaseOffset) / pallocChunkBytes);
     }
 
-    uintptr_t chunkBase(runtime::chunkIdx ci)
+    uintptr_t chunkBase(golang::runtime::chunkIdx ci)
     {
         return uintptr_t(ci) * pallocChunkBytes + arenaBaseOffset;
     }
@@ -69,7 +69,7 @@ namespace golang::runtime
         return (unsigned int)(p % pallocChunkBytes / pageSize);
     }
 
-    unsigned int rec::l1(runtime::chunkIdx i)
+    unsigned int rec::l1(golang::runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -81,7 +81,7 @@ namespace golang::runtime
         }
     }
 
-    unsigned int rec::l2(runtime::chunkIdx i)
+    unsigned int rec::l2(golang::runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -117,6 +117,42 @@ namespace golang::runtime
         auto e = uintptr_t(1) << levelBits[level];
         return {int(alignDown(uintptr_t(lo), e)), int(alignUp(uintptr_t(hi), e))};
     }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.index = this->index;
+        result.releasedBg = this->releasedBg;
+        result.releasedEager = this->releasedEager;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (index != ref.index) return false;
+        if (releasedBg != ref.releasedBg) return false;
+        if (releasedEager != ref.releasedEager) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << index;
+        os << " " << releasedBg;
+        os << " " << releasedEager;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
 
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -180,7 +216,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct pageAlloc* p, struct mutex* mheapLock, runtime::sysMemStat* sysStat, bool test)
+    void rec::init(struct pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test)
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
@@ -197,7 +233,7 @@ namespace golang::runtime
         p->test = test;
     }
 
-    struct pallocData* rec::tryChunkOf(struct pageAlloc* p, runtime::chunkIdx ci)
+    struct pallocData* rec::tryChunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         auto l2 = p->chunks[rec::l1(gocpp::recv(ci))];
         if(l2 == nullptr)
@@ -207,7 +243,7 @@ namespace golang::runtime
         return & l2[rec::l2(gocpp::recv(ci))];
     }
 
-    struct pallocData* rec::chunkOf(struct pageAlloc* p, runtime::chunkIdx ci)
+    struct pallocData* rec::chunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         return & p->chunks[rec::l1(gocpp::recv(ci))][rec::l2(gocpp::recv(ci))];
     }
@@ -704,7 +740,7 @@ namespace golang::runtime
         return pallocSum((uint64_t(start) & (maxPackedValue - 1)) | ((uint64_t(max) & (maxPackedValue - 1)) << logMaxPackedValue) | ((uint64_t(end) & (maxPackedValue - 1)) << (2 * logMaxPackedValue)));
     }
 
-    unsigned int rec::start(runtime::pallocSum p)
+    unsigned int rec::start(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -713,7 +749,7 @@ namespace golang::runtime
         return (unsigned int)(uint64_t(p) & (maxPackedValue - 1));
     }
 
-    unsigned int rec::max(runtime::pallocSum p)
+    unsigned int rec::max(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -722,7 +758,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1));
     }
 
-    unsigned int rec::end(runtime::pallocSum p)
+    unsigned int rec::end(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -731,7 +767,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1));
     }
 
-    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(runtime::pallocSum p)
+    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -740,7 +776,7 @@ namespace golang::runtime
         return {(unsigned int)(uint64_t(p) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1))};
     }
 
-    runtime::pallocSum mergeSummaries(gocpp::slice<runtime::pallocSum> sums, unsigned int logMaxPagesPerSum)
+    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum)
     {
         auto [start, most, end] = rec::unpack(gocpp::recv(sums[0]));
         for(auto i = 1; i < len(sums); i++)

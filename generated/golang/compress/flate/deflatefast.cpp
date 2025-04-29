@@ -113,7 +113,7 @@ namespace golang::flate
         return gocpp::InitPtr<deflateFast>([](deflateFast& x) { x.cur = maxStoreBlockSize; x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize); });
     }
 
-    gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<flate::token> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
     {
         if(e->cur >= bufferReset)
         {
@@ -198,7 +198,7 @@ namespace golang::flate
         return dst;
     }
 
-    gocpp::slice<flate::token> emitLiteral(gocpp::slice<flate::token> dst, gocpp::slice<unsigned char> lit)
+    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit)
     {
         for(auto [gocpp_ignored, v] : lit)
         {

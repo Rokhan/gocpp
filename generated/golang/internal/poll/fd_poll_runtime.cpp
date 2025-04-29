@@ -214,22 +214,22 @@ namespace golang::poll
         gocpp::panic("unreachable");
     }
 
-    struct gocpp::error rec::SetDeadline(struct FD* fd, struct mocklib::Date t)
+    struct gocpp::error rec::SetDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r' + 'w');
     }
 
-    struct gocpp::error rec::SetReadDeadline(struct FD* fd, struct mocklib::Date t)
+    struct gocpp::error rec::SetReadDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r');
     }
 
-    struct gocpp::error rec::SetWriteDeadline(struct FD* fd, struct mocklib::Date t)
+    struct gocpp::error rec::SetWriteDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'w');
     }
 
-    struct gocpp::error setDeadlineImpl(struct FD* fd, struct mocklib::Date t, int mode)
+    struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode)
     {
         gocpp::Defer defer;
         try

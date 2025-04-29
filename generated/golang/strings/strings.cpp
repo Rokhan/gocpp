@@ -917,18 +917,18 @@ namespace golang::strings
         return - 1;
     }
 
-    std::tuple<asciiSet, bool> makeASCIISet(std::string chars)
+    std::tuple<strings::asciiSet, bool> makeASCIISet(std::string chars)
     {
-        asciiSet as;
+        strings::asciiSet as;
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
-            asciiSet as;
+            strings::asciiSet as;
             bool ok;
             auto c = chars[i];
             if(c >= utf8::RuneSelf)
             {
-                asciiSet as;
+                strings::asciiSet as;
                 bool ok;
                 return {as, false};
             }
@@ -937,7 +937,7 @@ namespace golang::strings
         return {as, true};
     }
 
-    bool rec::contains(asciiSet* as, unsigned char c)
+    bool rec::contains(golang::strings::asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -985,7 +985,7 @@ namespace golang::strings
         return s;
     }
 
-    std::string trimLeftASCII(std::string s, asciiSet* as)
+    std::string trimLeftASCII(std::string s, golang::strings::asciiSet* as)
     {
         for(; len(s) > 0; )
         {
@@ -1042,7 +1042,7 @@ namespace golang::strings
         return s;
     }
 
-    std::string trimRightASCII(std::string s, asciiSet* as)
+    std::string trimRightASCII(std::string s, golang::strings::asciiSet* as)
     {
         for(; len(s) > 0; )
         {

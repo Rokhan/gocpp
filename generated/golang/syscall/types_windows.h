@@ -59,7 +59,7 @@ namespace golang::syscall
         uintptr_t InternalHigh;
         uint32_t Offset;
         uint32_t OffsetHigh;
-        syscall::Handle HEvent;
+        golang::syscall::Handle HEvent;
 
         using isGoStruct = void;
 
@@ -224,9 +224,9 @@ namespace golang::syscall
         uint16_t ShowWindow;
         uint16_t _;
         unsigned char* _;
-        syscall::Handle StdInput;
-        syscall::Handle StdOutput;
-        syscall::Handle StdErr;
+        golang::syscall::Handle StdInput;
+        golang::syscall::Handle StdOutput;
+        golang::syscall::Handle StdErr;
 
         using isGoStruct = void;
 
@@ -274,8 +274,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct ProcessInformation
     {
-        syscall::Handle Process;
-        syscall::Handle Thread;
+        golang::syscall::Handle Process;
+        golang::syscall::Handle Thread;
         uint32_t ProcessId;
         uint32_t ThreadId;
 
@@ -532,9 +532,9 @@ namespace golang::syscall
     struct InterfaceInfo
     {
         uint32_t Flags;
-        SockaddrGen Address;
-        SockaddrGen BroadcastAddress;
-        SockaddrGen Netmask;
+        golang::syscall::SockaddrGen Address;
+        golang::syscall::SockaddrGen BroadcastAddress;
+        golang::syscall::SockaddrGen Netmask;
 
         using isGoStruct = void;
 
@@ -568,7 +568,7 @@ namespace golang::syscall
     {
         IpAddrString* Next;
         IpAddressString IpAddress;
-        IpMaskString IpMask;
+        golang::syscall::IpMaskString IpMask;
         uint32_t Context;
 
         using isGoStruct = void;
@@ -676,7 +676,7 @@ namespace golang::syscall
         unsigned char* EncodedCert;
         uint32_t Length;
         CertInfo* CertInfo;
-        syscall::Handle Store;
+        golang::syscall::Handle Store;
 
         using isGoStruct = void;
 
@@ -792,7 +792,7 @@ namespace golang::syscall
         uint32_t Size;
         uint32_t RevocationResult;
         unsigned char* RevocationOid;
-        Pointer OidSpecificInfo;
+        golang::syscall::Pointer OidSpecificInfo;
         uint32_t HasFreshnessTime;
         uint32_t FreshnessTime;
         CertRevocationCrlInfo* CrlInfo;
@@ -886,7 +886,7 @@ namespace golang::syscall
     {
         uint32_t Size;
         uint32_t Flags;
-        Pointer ExtraPolicyPara;
+        golang::syscall::Pointer ExtraPolicyPara;
 
         using isGoStruct = void;
 
@@ -925,7 +925,7 @@ namespace golang::syscall
         uint32_t Error;
         uint32_t ChainIndex;
         uint32_t ElementIndex;
-        Pointer ExtraPolicyStatus;
+        golang::syscall::Pointer ExtraPolicyStatus;
 
         using isGoStruct = void;
 
@@ -947,7 +947,7 @@ namespace golang::syscall
         int32_t Protocol;
         uintptr_t Addrlen;
         uint16_t* Canonname;
-        Pointer Addr;
+        golang::syscall::Pointer Addr;
         AddrinfoW* Next;
 
         using isGoStruct = void;

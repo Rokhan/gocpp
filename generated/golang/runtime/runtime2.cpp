@@ -222,17 +222,17 @@ namespace golang::runtime
         return (eface*)(unsafe::Pointer(ep));
     }
 
-    struct g* rec::ptr(runtime::guintptr gp)
+    struct g* rec::ptr(golang::runtime::guintptr gp)
     {
         return (g*)(unsafe::Pointer(gp));
     }
 
-    void rec::set(runtime::guintptr* gp, struct g* g)
+    void rec::set(golang::runtime::guintptr* gp, struct g* g)
     {
         *gp = guintptr(unsafe::Pointer(g));
     }
 
-    bool rec::cas(runtime::guintptr* gp, runtime::guintptr old, runtime::guintptr go_new)
+    bool rec::cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new)
     {
         return atomic::Casuintptr((uintptr_t*)(unsafe::Pointer(gp)), uintptr_t(old), uintptr_t(go_new));
     }
@@ -247,22 +247,22 @@ namespace golang::runtime
         rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
     }
 
-    struct p* rec::ptr(runtime::puintptr pp)
+    struct p* rec::ptr(golang::runtime::puintptr pp)
     {
         return (p*)(unsafe::Pointer(pp));
     }
 
-    void rec::set(runtime::puintptr* pp, struct p* p)
+    void rec::set(golang::runtime::puintptr* pp, struct p* p)
     {
         *pp = puintptr(unsafe::Pointer(p));
     }
 
-    struct m* rec::ptr(runtime::muintptr mp)
+    struct m* rec::ptr(golang::runtime::muintptr mp)
     {
         return (m*)(unsafe::Pointer(mp));
     }
 
-    void rec::set(runtime::muintptr* mp, struct m* m)
+    void rec::set(golang::runtime::muintptr* mp, struct m* m)
     {
         *mp = muintptr(unsafe::Pointer(m));
     }
@@ -912,6 +912,69 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (n != ref.n) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << n;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        result.len = this->len;
+        result.buf = this->buf;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        if (len != ref.len) return false;
+        if (buf != ref.buf) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << len;
+        os << " " << buf;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     p::operator T()
     {
         T result;
@@ -1073,6 +1136,81 @@ namespace golang::runtime
     {
         return value.PrintTo(os);
     }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_2::operator T()
+    {
+        T result;
+        result.user = this->user;
+        result.runnable = this->runnable;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_2::operator==(const T& ref) const
+    {
+        if (user != ref.user) return false;
+        if (runnable != ref.runnable) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << user;
+        os << " " << runnable;
+        os << " " << n;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_3::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.stack = this->stack;
+        result.noStack = this->noStack;
+        result.n = this->n;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_3::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (stack != ref.stack) return false;
+        if (noStack != ref.noStack) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << stack;
+        os << " " << noStack;
+        os << " " << n;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    {
+        return value.PrintTo(os);
+    }
+
 
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1641,7 +1779,7 @@ namespace golang::runtime
     }
 
     gocpp::array_base<std::string> waitReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.waitReasonZero = ""; x.waitReasonGCAssistMarking = "GC assist marking"; x.waitReasonIOWait = "IO wait"; x.waitReasonChanReceiveNilChan = "chan receive (nil chan)"; x.waitReasonChanSendNilChan = "chan send (nil chan)"; x.waitReasonDumpingHeap = "dumping heap"; x.waitReasonGarbageCollection = "garbage collection"; x.waitReasonGarbageCollectionScan = "garbage collection scan"; x.waitReasonPanicWait = "panicwait"; x.waitReasonSelect = "select"; x.waitReasonSelectNoCases = "select (no cases)"; x.waitReasonGCAssistWait = "GC assist wait"; x.waitReasonGCSweepWait = "GC sweep wait"; x.waitReasonGCScavengeWait = "GC scavenge wait"; x.waitReasonChanReceive = "chan receive"; x.waitReasonChanSend = "chan send"; x.waitReasonFinalizerWait = "finalizer wait"; x.waitReasonForceGCIdle = "force gc (idle)"; x.waitReasonSemacquire = "semacquire"; x.waitReasonSleep = "sleep"; x.waitReasonSyncCondWait = "sync.Cond.Wait"; x.waitReasonSyncMutexLock = "sync.Mutex.Lock"; x.waitReasonSyncRWMutexRLock = "sync.RWMutex.RLock"; x.waitReasonSyncRWMutexLock = "sync.RWMutex.Lock"; x.waitReasonTraceReaderBlocked = "trace reader (blocked)"; x.waitReasonWaitForGCCycle = "wait for GC cycle"; x.waitReasonGCWorkerIdle = "GC worker (idle)"; x.waitReasonGCWorkerActive = "GC worker (active)"; x.waitReasonPreempted = "preempted"; x.waitReasonDebugCall = "debug call"; x.waitReasonGCMarkTermination = "GC mark termination"; x.waitReasonStoppingTheWorld = "stopping the world"; x.waitReasonFlushProcCaches = "flushing proc caches"; x.waitReasonTraceGoroutineStatus = "trace goroutine status"; x.waitReasonTraceProcStatus = "trace proc status"; x.waitReasonPageTraceFlush = "page trace flush"; x.waitReasonCoroutine = "coroutine"; });
-    std::string rec::String(runtime::waitReason w)
+    std::string rec::String(golang::runtime::waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))
         {
@@ -1650,7 +1788,7 @@ namespace golang::runtime
         return waitReasonStrings[w];
     }
 
-    bool rec::isMutexWait(runtime::waitReason w)
+    bool rec::isMutexWait(golang::runtime::waitReason w)
     {
         return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
     }

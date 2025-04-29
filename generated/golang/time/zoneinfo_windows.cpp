@@ -140,7 +140,7 @@ namespace golang::time
         return string(short);
     }
 
-    std::tuple<std::string, std::string> abbrev(struct syscall::Timezoneinformation* z)
+    std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z)
     {
         std::string std;
         std::string dst;
@@ -169,7 +169,7 @@ namespace golang::time
         return {a.std, a.dst};
     }
 
-    int64_t pseudoUnix(int year, struct syscall::Systemtime* d)
+    int64_t pseudoUnix(int year, syscall::Systemtime* d)
     {
         auto day = 1;
         auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, UTC);
@@ -194,7 +194,7 @@ namespace golang::time
         return rec::sec(gocpp::recv(t)) + int64_t(day - 1) * secondsPerDay + internalToUnix;
     }
 
-    void initLocalFromTZI(struct syscall::Timezoneinformation* i)
+    void initLocalFromTZI(syscall::Timezoneinformation* i)
     {
         auto l = & localLoc;
         l->name = "Local";

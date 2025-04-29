@@ -56,8 +56,8 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<Abser, false>& self);
-        double Abs(const gocpp::ObjRecv<Abser>& self);
+        double Abs(const gocpp::PtrRecv<struct Abser, false>& self);
+        double Abs(const gocpp::ObjRecv<struct Abser>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value);
@@ -82,7 +82,7 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(main::MyFloat f);
+        double Abs(golang::main::MyFloat f);
         double Abs(struct Vertex* v);
     }
 }

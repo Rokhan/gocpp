@@ -80,7 +80,7 @@ namespace golang::bufio
         return value.PrintTo(os);
     }
 
-    struct Reader* NewReaderSize(struct io::Reader rd, int size)
+    struct Reader* NewReaderSize(io::Reader rd, int size)
     {
         auto [b, ok] = gocpp::getValue<Reader*>(rd);
         if(ok && len(b->buf) >= size)
@@ -92,7 +92,7 @@ namespace golang::bufio
         return r;
     }
 
-    struct Reader* NewReader(struct io::Reader rd)
+    struct Reader* NewReader(io::Reader rd)
     {
         return NewReaderSize(rd, defaultBufSize);
     }
@@ -102,7 +102,7 @@ namespace golang::bufio
         return len(b->buf);
     }
 
-    void rec::Reset(struct Reader* b, struct io::Reader r)
+    void rec::Reset(struct Reader* b, io::Reader r)
     {
         if(b == r)
         {
@@ -115,7 +115,7 @@ namespace golang::bufio
         rec::reset(gocpp::recv(b), b->buf, r);
     }
 
-    void rec::reset(struct Reader* b, gocpp::slice<unsigned char> buf, struct io::Reader r)
+    void rec::reset(struct Reader* b, gocpp::slice<unsigned char> buf, io::Reader r)
     {
         *b = gocpp::Init<Reader>([](Reader& x) { x.buf = buf; x.rd = r; x.lastByte = - 1; x.lastRuneSize = - 1; });
     }
@@ -579,7 +579,7 @@ namespace golang::bufio
         return {rec::String(gocpp::recv(buf)), err};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* b, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* b, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -638,7 +638,7 @@ namespace golang::bufio
     }
 
     gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write");
-    std::tuple<int64_t, struct gocpp::error> rec::writeBuf(struct Reader* b, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::writeBuf(struct Reader* b, io::Writer w)
     {
         auto [n, err] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->r, b->w));
         if(n < 0)
@@ -687,7 +687,7 @@ namespace golang::bufio
         return value.PrintTo(os);
     }
 
-    struct Writer* NewWriterSize(struct io::Writer w, int size)
+    struct Writer* NewWriterSize(io::Writer w, int size)
     {
         auto [b, ok] = gocpp::getValue<Writer*>(w);
         if(ok && len(b->buf) >= size)
@@ -701,7 +701,7 @@ namespace golang::bufio
         return gocpp::InitPtr<Writer>([](Writer& x) { x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size); x.wr = w; });
     }
 
-    struct Writer* NewWriter(struct io::Writer w)
+    struct Writer* NewWriter(io::Writer w)
     {
         return NewWriterSize(w, defaultBufSize);
     }
@@ -711,7 +711,7 @@ namespace golang::bufio
         return len(b->buf);
     }
 
-    void rec::Reset(struct Writer* b, struct io::Writer w)
+    void rec::Reset(struct Writer* b, io::Writer w)
     {
         if(b == w)
         {
@@ -905,7 +905,7 @@ namespace golang::bufio
         return {nn, nullptr};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Writer* b, struct io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Writer* b, io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;

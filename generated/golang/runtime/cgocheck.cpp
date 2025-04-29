@@ -104,12 +104,12 @@ namespace golang::runtime
         });
     }
 
-    void cgoCheckMemmove(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void cgoCheckMemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         cgoCheckMemmove2(typ, dst, src, 0, typ->Size_);
     }
 
-    void cgoCheckMemmove2(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckMemmove2(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -126,7 +126,7 @@ namespace golang::runtime
         cgoCheckTypedBlock(typ, src, off, size);
     }
 
-    void cgoCheckSliceCopy(struct _type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
+    void cgoCheckSliceCopy(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
     {
         if(typ->PtrBytes == 0)
         {
@@ -148,7 +148,7 @@ namespace golang::runtime
         }
     }
 
-    void cgoCheckTypedBlock(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckTypedBlock(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes <= off)
         {
@@ -261,7 +261,7 @@ namespace golang::runtime
         }
     }
 
-    void cgoCheckUsingType(struct _type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckUsingType(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -292,7 +292,7 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (arraytype*)(unsafe::Pointer(typ));
+                    auto at = (runtime::arraytype*)(unsafe::Pointer(typ));
                     for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
                         if(off < at->Elem->Size_)
@@ -315,7 +315,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
-                    auto st = (structtype*)(unsafe::Pointer(typ));
+                    auto st = (runtime::structtype*)(unsafe::Pointer(typ));
                     for(auto [gocpp_ignored, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)

@@ -857,12 +857,12 @@ namespace golang::runtime
 
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
     unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
     {
-        return rec::textOff(gocpp::recv(toRType((_type*)(rtype))), textOff(off));
+        return rec::textOff(gocpp::recv(toRType((runtime::_type*)(rtype))), textOff(off));
     }
 
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
@@ -872,7 +872,7 @@ namespace golang::runtime
 
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((_type*)(rtype))), typeOff(off)));
+        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
     int32_t reflect_addReflectOff(unsafe::Pointer ptr)

@@ -18,25 +18,25 @@ namespace golang::unsafe
         using namespace mocklib::rec;
     }
 
-    uintptr_t Sizeof(unsafe::ArbitraryType x)
+    uintptr_t Sizeof(golang::unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t Offsetof(unsafe::ArbitraryType x)
+    uintptr_t Offsetof(golang::unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    uintptr_t Alignof(unsafe::ArbitraryType x)
+    uintptr_t Alignof(golang::unsafe::ArbitraryType x)
     /* convertBlockStmt, nil block */;
 
-    Pointer Add(Pointer ptr, unsafe::IntegerType len)
+    unsafe::Pointer Add(golang::unsafe::Pointer ptr, golang::unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
-    gocpp::slice<unsafe::ArbitraryType> Slice(unsafe::ArbitraryType* ptr, unsafe::IntegerType len)
+    gocpp::slice<unsafe::ArbitraryType> Slice(golang::unsafe::ArbitraryType* ptr, golang::unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
-    unsafe::ArbitraryType* SliceData(gocpp::slice<unsafe::ArbitraryType> slice)
+    unsafe::ArbitraryType* SliceData(gocpp::slice<golang::unsafe::ArbitraryType> slice)
     /* convertBlockStmt, nil block */;
 
-    std::string String(unsigned char* ptr, unsafe::IntegerType len)
+    std::string String(unsigned char* ptr, golang::unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
     unsigned char* StringData(std::string str)

@@ -17,7 +17,7 @@
 #include "golang/internal/goarch/goarch.h"
 #include "golang/reflect/float32reg_generic.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::reflect
@@ -151,7 +151,7 @@ namespace golang::reflect
         return a->steps.make_slice(s, e);
     }
 
-    struct abiStep* rec::addArg(struct abiSeq* a, struct abi::Type* t)
+    struct abiStep* rec::addArg(struct abiSeq* a, abi::Type* t)
     {
         auto pStart = len(a->steps);
         a->valueStart = append(a->valueStart, pStart);
@@ -170,7 +170,7 @@ namespace golang::reflect
         return nullptr;
     }
 
-    std::tuple<struct abiStep*, bool> rec::addRcvr(struct abiSeq* a, struct abi::Type* rcvr)
+    std::tuple<struct abiStep*, bool> rec::addRcvr(struct abiSeq* a, abi::Type* rcvr)
     {
         a->valueStart = append(a->valueStart, len(a->steps));
         bool ok = {};
@@ -193,7 +193,7 @@ namespace golang::reflect
         return {nullptr, ptr};
     }
 
-    bool rec::regAssign(struct abiSeq* a, struct abi::Type* t, uintptr_t offset)
+    bool rec::regAssign(struct abiSeq* a, abi::Type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -285,7 +285,7 @@ namespace golang::reflect
                     return rec::assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 3, 0b001);
                     break;
                 case 24:
-                    auto tt = (arrayType*)(unsafe::Pointer(t));
+                    auto tt = (reflect::arrayType*)(unsafe::Pointer(t));
                     //Go switch emulation
                     {
                         auto condition = tt->Len;
@@ -460,7 +460,7 @@ namespace golang::reflect
         }
     }
 
-    struct abiDesc newAbiDesc(struct funcType* t, struct abi::Type* rcvr)
+    struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr)
     {
         auto spill = uintptr_t(0);
         auto stackPtrs = go_new(bitVector);
@@ -533,17 +533,17 @@ namespace golang::reflect
         return abiDesc {in, out, stackCallArgsSize, retOffset, spill, stackPtrs, inRegPtrs, outRegPtrs};
     }
 
-    void intFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
     {
         memmove(to, rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), argSize);
     }
 
-    void intToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
     {
         memmove(rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), from, argSize);
     }
 
-    void floatFromReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
     {
         //Go switch emulation
         {
@@ -566,7 +566,7 @@ namespace golang::reflect
         }
     }
 
-    void floatToReg(struct abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
     {
         //Go switch emulation
         {

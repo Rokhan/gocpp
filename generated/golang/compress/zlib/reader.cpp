@@ -102,19 +102,19 @@ namespace golang::zlib
     }
 
     template<typename T, typename StoreT>
-    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(struct io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
     namespace rec
     {
-        struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        struct gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
             return self.ptr->value->vReset(r, dict);
         }
 
-        struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict)
+        struct gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
             return self.obj.value->vReset(r, dict);
         }
@@ -125,12 +125,12 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
-    std::tuple<struct io::ReadCloser, struct gocpp::error> NewReader(struct io::Reader r)
+    std::tuple<io::ReadCloser, struct gocpp::error> NewReader(io::Reader r)
     {
         return NewReaderDict(r, nullptr);
     }
 
-    std::tuple<struct io::ReadCloser, struct gocpp::error> NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict)
+    std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         auto z = go_new(reader);
         auto err = rec::Reset(gocpp::recv(z), r, dict);
@@ -182,7 +182,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    struct gocpp::error rec::Reset(struct reader* z, struct io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error rec::Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
         if(auto [fr, ok] = gocpp::getValue<flate::Reader>(r); ok)

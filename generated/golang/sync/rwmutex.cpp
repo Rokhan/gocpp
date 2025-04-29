@@ -237,12 +237,12 @@ namespace golang::sync
         return (rlocker*)(rw);
     }
 
-    void rec::Lock(struct rlocker* r)
+    void rec::Lock(golang::sync::rlocker* r)
     {
         rec::RLock(gocpp::recv((RWMutex*)(r)));
     }
 
-    void rec::Unlock(struct rlocker* r)
+    void rec::Unlock(golang::sync::rlocker* r)
     {
         rec::RUnlock(gocpp::recv((RWMutex*)(r)));
     }

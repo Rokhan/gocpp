@@ -61,6 +61,8 @@ namespace golang::sync
         };
     }
 
+
+    template<typename T>
     std::function<T ()> OnceValue(std::function<T ()> f)
     {
         Once once = {};
@@ -100,6 +102,8 @@ namespace golang::sync
         };
     }
 
+
+    template<typename T1, typename T2>
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f)
     {
         Once once = {};

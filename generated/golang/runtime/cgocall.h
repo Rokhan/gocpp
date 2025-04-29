@@ -72,7 +72,7 @@ namespace golang::runtime
     void cgoCheckPointer(go_any ptr, go_any arg);
     extern std::string cgoCheckPointerFail;
     extern std::string cgoResultFail;
-    void cgoCheckArg(struct _type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
+    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
     std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg);
     bool cgoIsGoPointer(unsafe::Pointer p);
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end);

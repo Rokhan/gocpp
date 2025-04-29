@@ -353,7 +353,7 @@ namespace golang::runtime
                         {
                             break;
                         }
-                        auto pt = (ptrtype*)(unsafe::Pointer(t));
+                        auto pt = (runtime::ptrtype*)(unsafe::Pointer(t));
                         cgoCheckArg(pt->Elem, p, true, false, cgoCheckPointerFail);
                         return;
                         break;
@@ -377,7 +377,7 @@ namespace golang::runtime
 
     std::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer";
     std::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer";
-    void cgoCheckArg(struct _type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
+    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
     {
         if(t->PtrBytes == 0 || p == nullptr)
         {
@@ -403,7 +403,7 @@ namespace golang::runtime
                     go_throw("can't happen");
                     break;
                 case 0:
-                    auto at = (arraytype*)(unsafe::Pointer(t));
+                    auto at = (runtime::arraytype*)(unsafe::Pointer(t));
                     if(! indir)
                     {
                         if(at->Len != 1)
@@ -435,7 +435,7 @@ namespace golang::runtime
                     gocpp::panic(errorString(msg));
                     break;
                 case 4:
-                    auto it = *(_type**)(p);
+                    auto it = *(runtime::_type**)(p);
                     if(it == nullptr)
                     {
                         return;
@@ -456,7 +456,7 @@ namespace golang::runtime
                     cgoCheckArg(it, p, it->Kind_ & kindDirectIface == 0, false, msg);
                     break;
                 case 5:
-                    auto st = (slicetype*)(unsafe::Pointer(t));
+                    auto st = (runtime::slicetype*)(unsafe::Pointer(t));
                     auto s = (slice*)(p);
                     p = s->array;
                     if(p == nullptr || ! cgoIsGoPointer(p))
@@ -489,7 +489,7 @@ namespace golang::runtime
                     }
                     break;
                 case 7:
-                    auto st = (structtype*)(unsafe::Pointer(t));
+                    auto st = (runtime::structtype*)(unsafe::Pointer(t));
                     if(! indir)
                     {
                         if(len(st->Fields) != 1)

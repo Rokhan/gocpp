@@ -45,7 +45,7 @@
 
 namespace golang::runtime
 {
-    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, runtime::waitReason wr);
+    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr);
     struct traceSchedResourceState
     {
         gocpp::array<atomic::Uint32, 3> statusTraced;
@@ -66,9 +66,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, runtime::traceGoStatus status, bool markAssist);
+        struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist);
         struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW);
-        struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, runtime::traceProcStatus status, bool inSweep);
+        struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep);
         bool acquireStatus(struct traceSchedResourceState* r, uintptr_t gen);
         void readyNextGen(struct traceSchedResourceState* r, uintptr_t gen);
         bool statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen);

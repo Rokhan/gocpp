@@ -56,8 +56,8 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<Fetcher, false>& self, std::string url);
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<Fetcher>& self, std::string url);
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, std::string url);
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, std::string url);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
@@ -80,11 +80,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    extern fakeFetcher fetcher;
+    extern main::fakeFetcher fetcher;
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(fakeFetcher f, std::string url);
+        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(golang::main::fakeFetcher f, std::string url);
     }
 }
 

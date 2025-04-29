@@ -81,7 +81,7 @@ namespace golang::os
         return rec::IsDir(gocpp::recv(rec::Mode(gocpp::recv(fs))));
     }
 
-    bool SameFile(struct FileInfo fi1, struct FileInfo fi2)
+    bool SameFile(golang::os::FileInfo fi1, golang::os::FileInfo fi2)
     {
         auto [fs1, ok1] = gocpp::getValue<fileStat*>(fi1);
         auto [fs2, ok2] = gocpp::getValue<fileStat*>(fi2);

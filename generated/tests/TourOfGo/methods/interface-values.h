@@ -56,8 +56,8 @@ namespace golang::main
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<I, false>& self);
-        void M(const gocpp::ObjRecv<I>& self);
+        void M(const gocpp::PtrRecv<struct I, false>& self);
+        void M(const gocpp::ObjRecv<struct I>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct I& value);
@@ -83,7 +83,7 @@ namespace golang::main
     namespace rec
     {
         void M(struct T* t);
-        void M(main::F f);
+        void M(golang::main::F f);
     }
 }
 

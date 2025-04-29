@@ -157,7 +157,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gclink* rec::ptr(runtime::gclinkptr p)
+    struct gclink* rec::ptr(golang::runtime::gclinkptr p)
     {
         return (gclink*)(unsafe::Pointer(p));
     }
@@ -240,7 +240,7 @@ namespace golang::runtime
         return c;
     }
 
-    void rec::refill(struct mcache* c, runtime::spanClass spc)
+    void rec::refill(struct mcache* c, golang::runtime::spanClass spc)
     {
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)

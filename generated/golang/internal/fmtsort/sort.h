@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 
 namespace golang::fmtsort
 {
@@ -31,9 +31,9 @@ namespace golang::fmtsort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SortedMap& value);
-    struct SortedMap* Sort(struct reflect::Value mapValue);
-    int compare(struct reflect::Value aVal, struct reflect::Value bVal);
-    std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal);
+    struct SortedMap* Sort(reflect::Value mapValue);
+    int compare(reflect::Value aVal, reflect::Value bVal);
+    std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
     int floatCompare(double a, double b);
     bool isNaN(double a);
 

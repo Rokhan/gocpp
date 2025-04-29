@@ -114,7 +114,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct iface& value);
     struct eface
     {
-        _type* _type;
+        golang::runtime::_type* _type;
         unsafe::Pointer data;
 
         using isGoStruct = void;
@@ -136,7 +136,7 @@ namespace golang::runtime
     {
         uintptr_t sp;
         uintptr_t pc;
-        runtime::guintptr g;
+        golang::runtime::guintptr g;
         unsafe::Pointer ctxt;
         uintptr_t ret;
         uintptr_t lr;
@@ -224,7 +224,7 @@ namespace golang::runtime
     struct heldLockInfo
     {
         uintptr_t lockAddr;
-        runtime::lockRank rank;
+        golang::runtime::lockRank rank;
 
         using isGoStruct = void;
 
@@ -254,9 +254,9 @@ namespace golang::runtime
         atomic::Uint32 atomicstatus;
         uint32_t stackLock;
         uint64_t goid;
-        runtime::guintptr schedlink;
+        golang::runtime::guintptr schedlink;
         int64_t waitsince;
-        runtime::waitReason waitreason;
+        golang::runtime::waitReason waitreason;
         bool preempt;
         bool preemptStop;
         bool preemptShrink;
@@ -274,7 +274,7 @@ namespace golang::runtime
         uint8_t trackingSeq;
         int64_t trackingStamp;
         int64_t runnableTime;
-        runtime::muintptr lockedm;
+        golang::runtime::muintptr lockedm;
         uint32_t sig;
         gocpp::slice<unsigned char> writebuf;
         uintptr_t sigcode0;
@@ -320,13 +320,13 @@ namespace golang::runtime
         gocpp::array<uintptr_t, tlsSlots> tls;
         std::function<void ()> mstartfn;
         g* curg;
-        runtime::guintptr caughtsig;
-        runtime::puintptr p;
-        runtime::puintptr nextp;
-        runtime::puintptr oldp;
+        golang::runtime::guintptr caughtsig;
+        golang::runtime::puintptr p;
+        golang::runtime::puintptr nextp;
+        golang::runtime::puintptr oldp;
         int64_t id;
         int32_t mallocing;
-        runtime::throwType throwing;
+        golang::runtime::throwType throwing;
         std::string preemptoff;
         int32_t locks;
         int32_t dying;
@@ -348,16 +348,16 @@ namespace golang::runtime
         cgoCallers* cgoCallers;
         note park;
         m* alllink;
-        runtime::muintptr schedlink;
-        runtime::guintptr lockedg;
+        golang::runtime::muintptr schedlink;
+        golang::runtime::guintptr lockedg;
         gocpp::array<uintptr_t, 32> createstack;
         uint32_t lockedExt;
         uint32_t lockedInt;
-        runtime::muintptr nextwaitm;
+        golang::runtime::muintptr nextwaitm;
         mLockProfile mLockProfile;
         std::function<bool (g*, unsafe::Pointer)> waitunlockf;
         unsafe::Pointer waitlock;
-        runtime::traceBlockReason waitTraceBlockReason;
+        golang::runtime::traceBlockReason waitTraceBlockReason;
         int waitTraceSkip;
         uint32_t syscalltick;
         m* freelink;
@@ -365,7 +365,7 @@ namespace golang::runtime
         libcall libcall;
         uintptr_t libcallpc;
         uintptr_t libcallsp;
-        runtime::guintptr libcallg;
+        golang::runtime::guintptr libcallg;
         libcall syscall;
         uintptr_t vdsoSP;
         uintptr_t vdsoPC;
@@ -389,15 +389,48 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct m& value);
+    struct gocpp_id_0
+    {
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct gocpp_id_1
+    {
+        int len;
+        gocpp::array<mspan*, 128> buf;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct p
     {
         int32_t id;
         uint32_t status;
-        runtime::puintptr link;
+        golang::runtime::puintptr link;
         uint32_t schedtick;
         uint32_t syscalltick;
         sysmontick sysmontick;
-        runtime::muintptr m;
+        golang::runtime::muintptr m;
         mcache* mcache;
         pageCache pcache;
         uintptr_t raceprocctx;
@@ -407,8 +440,8 @@ namespace golang::runtime
         uint64_t goidcacheend;
         uint32_t runqhead;
         uint32_t runqtail;
-        gocpp::array<runtime::guintptr, 256> runq;
-        runtime::guintptr runnext;
+        gocpp::array<golang::runtime::guintptr, 256> runq;
+        golang::runtime::guintptr runnext;
         gocpp_id_0 gFree;
         gocpp::slice<sudog*> sudogcache;
         gocpp::array<sudog*, 128> sudogbuf;
@@ -421,7 +454,7 @@ namespace golang::runtime
         int64_t gcAssistTime;
         int64_t gcFractionalMarkTime;
         limiterEvent limiterEvent;
-        runtime::gcMarkWorkerMode gcMarkWorkerMode;
+        golang::runtime::gcMarkWorkerMode gcMarkWorkerMode;
         int64_t gcMarkWorkerStartTime;
         gcWork gcw;
         wbBuf wbBuf;
@@ -450,13 +483,50 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct p& value);
+    struct gocpp_id_2
+    {
+        bool user;
+        gQueue runnable;
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    struct gocpp_id_3
+    {
+        mutex lock;
+        gList stack;
+        gList noStack;
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     struct schedt
     {
         atomic::Uint64 goidgen;
         atomic::Int64 lastpoll;
         atomic::Int64 pollUntil;
         mutex lock;
-        runtime::muintptr midle;
+        golang::runtime::muintptr midle;
         int32_t nmidle;
         int32_t nmidlelocked;
         int64_t mnext;
@@ -464,7 +534,7 @@ namespace golang::runtime
         int32_t nmsys;
         int64_t nmfreed;
         atomic::Int32 ngsys;
-        runtime::puintptr pidle;
+        golang::runtime::puintptr pidle;
         atomic::Int32 npidle;
         atomic::Int32 nmspinning;
         atomic::Uint32 needspinning;
@@ -562,8 +632,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct funcinl& value);
     struct itab
     {
-        interfacetype* inter;
-        _type* _type;
+        golang::runtime::interfacetype* inter;
+        golang::runtime::_type* _type;
         uint32_t hash;
         gocpp::array<unsigned char, 4> _;
         gocpp::array<uintptr_t, 1> fun;
@@ -707,16 +777,16 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct g* ptr(runtime::guintptr gp);
-        void set(runtime::guintptr* gp, struct g* g);
-        bool cas(runtime::guintptr* gp, runtime::guintptr old, runtime::guintptr go_new);
+        struct g* ptr(golang::runtime::guintptr gp);
+        void set(golang::runtime::guintptr* gp, struct g* g);
+        bool cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new);
         runtime::guintptr guintptr(struct g* gp);
-        struct p* ptr(runtime::puintptr pp);
-        void set(runtime::puintptr* pp, struct p* p);
-        struct m* ptr(runtime::muintptr mp);
-        void set(runtime::muintptr* mp, struct m* m);
-        std::string String(runtime::waitReason w);
-        bool isMutexWait(runtime::waitReason w);
+        struct p* ptr(golang::runtime::puintptr pp);
+        void set(golang::runtime::puintptr* pp, struct p* p);
+        struct m* ptr(golang::runtime::muintptr mp);
+        void set(golang::runtime::muintptr* mp, struct m* m);
+        std::string String(golang::runtime::waitReason w);
+        bool isMutexWait(golang::runtime::waitReason w);
     }
 }
 

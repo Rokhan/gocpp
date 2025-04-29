@@ -57,16 +57,16 @@ namespace golang::runtime
 
     namespace rec
     {
-        void RuntimeError(const gocpp::PtrRecv<Error, false>& self);
-        void RuntimeError(const gocpp::ObjRecv<Error>& self);
+        void RuntimeError(const gocpp::PtrRecv<struct Error, false>& self);
+        void RuntimeError(const gocpp::ObjRecv<struct Error>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
     struct TypeAssertionError
     {
-        _type* _interface;
-        _type* concrete;
-        _type* asserted;
+        golang::runtime::_type* _interface;
+        golang::runtime::_type* concrete;
+        golang::runtime::_type* asserted;
         std::string missingMethod;
 
         using isGoStruct = void;
@@ -104,7 +104,7 @@ namespace golang::runtime
         int64_t x;
         int y;
         bool go_signed;
-        runtime::boundsErrorCode code;
+        golang::runtime::boundsErrorCode code;
 
         using isGoStruct = void;
 
@@ -165,8 +165,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<stringer, false>& self);
-        std::string String(const gocpp::ObjRecv<stringer>& self);
+        std::string String(const gocpp::PtrRecv<struct stringer, false>& self);
+        std::string String(const gocpp::ObjRecv<struct stringer>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
@@ -178,13 +178,13 @@ namespace golang::runtime
     {
         void RuntimeError(TypeAssertionError*);
         std::string Error(struct TypeAssertionError* e);
-        void RuntimeError(runtime::errorString e);
-        std::string Error(runtime::errorString e);
+        void RuntimeError(golang::runtime::errorString e);
+        std::string Error(golang::runtime::errorString e);
         void RuntimeError(struct errorAddressString e);
         std::string Error(struct errorAddressString e);
         uintptr_t Addr(struct errorAddressString e);
-        void RuntimeError(runtime::plainError e);
-        std::string Error(runtime::plainError e);
+        void RuntimeError(golang::runtime::plainError e);
+        std::string Error(golang::runtime::plainError e);
         void RuntimeError(struct boundsError e);
         std::string Error(struct boundsError e);
     }

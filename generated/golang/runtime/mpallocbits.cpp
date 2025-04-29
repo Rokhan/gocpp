@@ -23,22 +23,22 @@ namespace golang::runtime
         using namespace sys::rec;
     }
 
-    unsigned int rec::get(pageBits* b, unsigned int i)
+    unsigned int rec::get(golang::runtime::pageBits* b, unsigned int i)
     {
         return (unsigned int)((b[i / 64] >> (i % 64)) & 1);
     }
 
-    uint64_t rec::block64(pageBits* b, unsigned int i)
+    uint64_t rec::block64(golang::runtime::pageBits* b, unsigned int i)
     {
         return b[i / 64];
     }
 
-    void rec::set(pageBits* b, unsigned int i)
+    void rec::set(golang::runtime::pageBits* b, unsigned int i)
     {
         b[i / 64] |= 1 << (i % 64);
     }
 
-    void rec::setRange(pageBits* b, unsigned int i, unsigned int n)
+    void rec::setRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         _ = b[i / 64];
         if(n == 1)
@@ -61,7 +61,7 @@ namespace golang::runtime
         b[j / 64] |= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
-    void rec::setAll(pageBits* b)
+    void rec::setAll(golang::runtime::pageBits* b)
     {
         for(auto [i, gocpp_ignored] : b)
         {
@@ -69,17 +69,17 @@ namespace golang::runtime
         }
     }
 
-    void rec::setBlock64(pageBits* b, unsigned int i, uint64_t v)
+    void rec::setBlock64(golang::runtime::pageBits* b, unsigned int i, uint64_t v)
     {
         b[i / 64] |= v;
     }
 
-    void rec::clear(pageBits* b, unsigned int i)
+    void rec::clear(golang::runtime::pageBits* b, unsigned int i)
     {
         b[i / 64] &^= 1 << (i % 64);
     }
 
-    void rec::clearRange(pageBits* b, unsigned int i, unsigned int n)
+    void rec::clearRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         _ = b[i / 64];
         if(n == 1)
@@ -102,7 +102,7 @@ namespace golang::runtime
         b[j / 64] &^= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
-    void rec::clearAll(pageBits* b)
+    void rec::clearAll(golang::runtime::pageBits* b)
     {
         for(auto [i, gocpp_ignored] : b)
         {
@@ -110,12 +110,12 @@ namespace golang::runtime
         }
     }
 
-    void rec::clearBlock64(pageBits* b, unsigned int i, uint64_t v)
+    void rec::clearBlock64(golang::runtime::pageBits* b, unsigned int i, uint64_t v)
     {
         b[i / 64] &^= v;
     }
 
-    unsigned int rec::popcntRange(pageBits* b, unsigned int i, unsigned int n)
+    unsigned int rec::popcntRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         unsigned int s;
         if(n == 1)
@@ -141,7 +141,7 @@ namespace golang::runtime
         return s;
     }
 
-    runtime::pallocSum rec::summarize(pallocBits* b)
+    runtime::pallocSum rec::summarize(golang::runtime::pallocBits* b)
     {
         unsigned int start = {};
         unsigned int most = {};
@@ -229,7 +229,7 @@ namespace golang::runtime
         return packPallocSum(start, most, cur);
     }
 
-    std::tuple<unsigned int, unsigned int> rec::find(pallocBits* b, uintptr_t npages, unsigned int searchIdx)
+    std::tuple<unsigned int, unsigned int> rec::find(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         if(npages == 1)
         {
@@ -244,7 +244,7 @@ namespace golang::runtime
         return rec::findLargeN(gocpp::recv(b), npages, searchIdx);
     }
 
-    unsigned int rec::find1(pallocBits* b, unsigned int searchIdx)
+    unsigned int rec::find1(golang::runtime::pallocBits* b, unsigned int searchIdx)
     {
         _ = b[0];
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
@@ -259,7 +259,7 @@ namespace golang::runtime
         return ~ (unsigned int)(0);
     }
 
-    std::tuple<unsigned int, unsigned int> rec::findSmallN(pallocBits* b, uintptr_t npages, unsigned int searchIdx)
+    std::tuple<unsigned int, unsigned int> rec::findSmallN(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         auto [end, newSearchIdx] = std::tuple{(unsigned int)(0), ~ (unsigned int)(0)};
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
@@ -289,7 +289,7 @@ namespace golang::runtime
         return {~ (unsigned int)(0), newSearchIdx};
     }
 
-    std::tuple<unsigned int, unsigned int> rec::findLargeN(pallocBits* b, uintptr_t npages, unsigned int searchIdx)
+    std::tuple<unsigned int, unsigned int> rec::findLargeN(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         auto [start, size, newSearchIdx] = std::tuple{~ (unsigned int)(0), (unsigned int)(0), ~ (unsigned int)(0)};
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
@@ -331,39 +331,39 @@ namespace golang::runtime
         return {start, newSearchIdx};
     }
 
-    void rec::allocRange(pallocBits* b, unsigned int i, unsigned int n)
+    void rec::allocRange(golang::runtime::pallocBits* b, unsigned int i, unsigned int n)
     {
-        rec::setRange(gocpp::recv((pageBits*)(b)), i, n);
+        rec::setRange(gocpp::recv((runtime::pageBits*)(b)), i, n);
     }
 
-    void rec::allocAll(pallocBits* b)
+    void rec::allocAll(golang::runtime::pallocBits* b)
     {
-        rec::setAll(gocpp::recv((pageBits*)(b)));
+        rec::setAll(gocpp::recv((runtime::pageBits*)(b)));
     }
 
-    void rec::free1(pallocBits* b, unsigned int i)
+    void rec::free1(golang::runtime::pallocBits* b, unsigned int i)
     {
-        rec::clear(gocpp::recv((pageBits*)(b)), i);
+        rec::clear(gocpp::recv((runtime::pageBits*)(b)), i);
     }
 
-    void rec::free(pallocBits* b, unsigned int i, unsigned int n)
+    void rec::free(golang::runtime::pallocBits* b, unsigned int i, unsigned int n)
     {
-        rec::clearRange(gocpp::recv((pageBits*)(b)), i, n);
+        rec::clearRange(gocpp::recv((runtime::pageBits*)(b)), i, n);
     }
 
-    void rec::freeAll(pallocBits* b)
+    void rec::freeAll(golang::runtime::pallocBits* b)
     {
-        rec::clearAll(gocpp::recv((pageBits*)(b)));
+        rec::clearAll(gocpp::recv((runtime::pageBits*)(b)));
     }
 
-    uint64_t rec::pages64(pallocBits* b, unsigned int i)
+    uint64_t rec::pages64(golang::runtime::pallocBits* b, unsigned int i)
     {
-        return rec::block64(gocpp::recv((pageBits*)(b)), i);
+        return rec::block64(gocpp::recv((runtime::pageBits*)(b)), i);
     }
 
-    void rec::allocPages64(pallocBits* b, unsigned int i, uint64_t alloc)
+    void rec::allocPages64(golang::runtime::pallocBits* b, unsigned int i, uint64_t alloc)
     {
-        rec::setBlock64(gocpp::recv((pageBits*)(b)), i, alloc);
+        rec::setBlock64(gocpp::recv((runtime::pageBits*)(b)), i, alloc);
     }
 
     unsigned int findBitRange64(uint64_t c, unsigned int n)

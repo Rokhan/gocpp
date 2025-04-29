@@ -70,21 +70,21 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
     extern FormatError chunkOrderError;
-    std::tuple<struct image::Image, struct gocpp::error> Decode(struct io::Reader r);
-    std::tuple<struct image::Config, struct gocpp::error> DecodeConfig(struct io::Reader r);
+    std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r);
+    std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r);
     void init();
 
     namespace rec
     {
-        std::string Error(png::FormatError e);
-        std::string Error(png::UnsupportedError e);
+        std::string Error(golang::png::FormatError e);
+        std::string Error(golang::png::UnsupportedError e);
         struct gocpp::error parseIHDR(struct decoder* d, uint32_t length);
         struct gocpp::error parsePLTE(struct decoder* d, uint32_t length);
         struct gocpp::error parsetRNS(struct decoder* d, uint32_t length);
         std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<struct image::Image, struct gocpp::error> decode(struct decoder* d);
-        std::tuple<struct image::Image, struct gocpp::error> readImagePass(struct decoder* d, struct io::Reader r, int pass, bool allocateOnly);
-        void mergePassInto(struct decoder* d, struct image::Image dst, struct image::Image src, int pass);
+        std::tuple<image::Image, struct gocpp::error> decode(struct decoder* d);
+        std::tuple<image::Image, struct gocpp::error> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
+        void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass);
         struct gocpp::error parseIDAT(struct decoder* d, uint32_t length);
         struct gocpp::error parseIEND(struct decoder* d, uint32_t length);
         struct gocpp::error parseChunk(struct decoder* d, bool configOnly);

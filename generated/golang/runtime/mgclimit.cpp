@@ -63,6 +63,39 @@ namespace golang::runtime
     gcCPULimiterState gcCPULimiter;
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.fill = this->fill;
+        result.capacity = this->capacity;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (fill != ref.fill) return false;
+        if (capacity != ref.capacity) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << fill;
+        os << " " << capacity;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     gcCPULimiterState::operator T()
     {
         T result;
@@ -322,12 +355,12 @@ namespace golang::runtime
         rec::unlock(gocpp::recv(l));
     }
 
-    runtime::limiterEventStamp makeLimiterEventStamp(runtime::limiterEventType typ, int64_t now)
+    runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now)
     {
         return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));
     }
 
-    int64_t rec::duration(runtime::limiterEventStamp s, int64_t now)
+    int64_t rec::duration(golang::runtime::limiterEventStamp s, int64_t now)
     {
         auto start = int64_t((uint64_t(now) & limiterEventTypeMask) | (uint64_t(s) &^ limiterEventTypeMask));
         if(now < start)
@@ -337,7 +370,7 @@ namespace golang::runtime
         return now - start;
     }
 
-    runtime::limiterEventType rec::typ(runtime::limiterEventStamp s)
+    runtime::limiterEventType rec::typ(golang::runtime::limiterEventStamp s)
     {
         return limiterEventType(s >> (64 - limiterEventBits));
     }
@@ -371,7 +404,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::start(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now)
+    bool rec::start(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
     {
         if(rec::typ(gocpp::recv(limiterEventStamp(rec::Load(gocpp::recv(e->stamp))))) != limiterEventNone)
         {
@@ -415,7 +448,7 @@ namespace golang::runtime
         return {typ, duration};
     }
 
-    void rec::stop(struct limiterEvent* e, runtime::limiterEventType typ, int64_t now)
+    void rec::stop(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
     {
         runtime::limiterEventStamp stamp = {};
         for(; ; )

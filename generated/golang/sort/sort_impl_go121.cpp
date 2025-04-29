@@ -11,13 +11,14 @@
 #include "golang/sort/sort_impl_go121.h"
 #include "gocpp/support.h"
 
-// #include "golang/slices/sort.h"  [Ignored, known errors]
+#include "golang/slices/sort.h"
 
 namespace golang::sort
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace slices::rec;
     }
 
     void intsImpl(gocpp::slice<int> x)

@@ -107,14 +107,14 @@ namespace golang::runtime
     bool netpollAnyWaiters();
     void netpollAdjustWaiters(int32_t delta);
     extern go_any pdEface;
-    extern _type* pdType;
+    extern runtime::_type* pdType;
 
     namespace rec
     {
-        bool closing(runtime::pollInfo i);
-        bool eventErr(runtime::pollInfo i);
-        bool expiredReadDeadline(runtime::pollInfo i);
-        bool expiredWriteDeadline(runtime::pollInfo i);
+        bool closing(golang::runtime::pollInfo i);
+        bool eventErr(golang::runtime::pollInfo i);
+        bool expiredReadDeadline(golang::runtime::pollInfo i);
+        bool expiredWriteDeadline(golang::runtime::pollInfo i);
         runtime::pollInfo info(struct pollDesc* pd);
         void publishInfo(struct pollDesc* pd);
         void setEventErr(struct pollDesc* pd, bool b, uintptr_t seq);

@@ -39,14 +39,14 @@ namespace golang::reflectlite
             virtual std::string vName() = 0;
             virtual std::string vPkgPath() = 0;
             virtual uintptr_t vSize() = 0;
-            virtual abi::Kind vKind() = 0;
+            virtual reflectlite::Kind vKind() = 0;
             virtual bool vImplements(struct Type u) = 0;
             virtual bool vAssignableTo(struct Type u) = 0;
             virtual bool vComparable() = 0;
             virtual std::string vString() = 0;
             virtual struct Type vElem() = 0;
-            virtual struct abi::Type* vcommon() = 0;
-            virtual struct uncommonType* vuncommon() = 0;
+            virtual abi::Type* vcommon() = 0;
+            virtual reflectlite::uncommonType* vuncommon() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -63,7 +63,7 @@ namespace golang::reflectlite
 
             uintptr_t vSize() override;
 
-            abi::Kind vKind() override;
+            reflectlite::Kind vKind() override;
 
             bool vImplements(struct Type u) override;
 
@@ -75,9 +75,9 @@ namespace golang::reflectlite
 
             struct Type vElem() override;
 
-            struct abi::Type* vcommon() override;
+            abi::Type* vcommon() override;
 
-            struct uncommonType* vuncommon() override;
+            reflectlite::uncommonType* vuncommon() override;
 
             StoreT value;
         };
@@ -87,38 +87,38 @@ namespace golang::reflectlite
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<Type, false>& self);
-        std::string Name(const gocpp::ObjRecv<Type>& self);
+        std::string Name(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string Name(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string PkgPath(const gocpp::PtrRecv<Type, false>& self);
-        std::string PkgPath(const gocpp::ObjRecv<Type>& self);
+        std::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string PkgPath(const gocpp::ObjRecv<struct Type>& self);
 
-        uintptr_t Size(const gocpp::PtrRecv<Type, false>& self);
-        uintptr_t Size(const gocpp::ObjRecv<Type>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct Type, false>& self);
+        uintptr_t Size(const gocpp::ObjRecv<struct Type>& self);
 
-        abi::Kind Kind(const gocpp::PtrRecv<Type, false>& self);
-        abi::Kind Kind(const gocpp::ObjRecv<Type>& self);
+        reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self);
+        reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self);
 
-        bool Implements(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-        bool Implements(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, struct Type u);
+        bool Implements(const gocpp::ObjRecv<struct Type>& self, struct Type u);
 
-        bool AssignableTo(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-        bool AssignableTo(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, struct Type u);
+        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, struct Type u);
 
-        bool Comparable(const gocpp::PtrRecv<Type, false>& self);
-        bool Comparable(const gocpp::ObjRecv<Type>& self);
+        bool Comparable(const gocpp::PtrRecv<struct Type, false>& self);
+        bool Comparable(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string String(const gocpp::PtrRecv<Type, false>& self);
-        std::string String(const gocpp::ObjRecv<Type>& self);
+        std::string String(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string String(const gocpp::ObjRecv<struct Type>& self);
 
-        struct Type Elem(const gocpp::PtrRecv<Type, false>& self);
-        struct Type Elem(const gocpp::ObjRecv<Type>& self);
+        struct Type Elem(const gocpp::PtrRecv<struct Type, false>& self);
+        struct Type Elem(const gocpp::ObjRecv<struct Type>& self);
 
-        struct abi::Type* common(const gocpp::PtrRecv<Type, false>& self);
-        struct abi::Type* common(const gocpp::ObjRecv<Type>& self);
+        abi::Type* common(const gocpp::PtrRecv<struct Type, false>& self);
+        abi::Type* common(const gocpp::ObjRecv<struct Type>& self);
 
-        struct uncommonType* uncommon(const gocpp::PtrRecv<Type, false>& self);
-        struct uncommonType* uncommon(const gocpp::ObjRecv<Type>& self);
+        reflectlite::uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self);
+        reflectlite::uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
@@ -176,19 +176,19 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct name& value);
-    std::string pkgPath(struct abi::Name n);
+    std::string pkgPath(abi::Name n);
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    struct rtype toRType(struct abi::Type* t);
-    struct abi::Type* elem(struct abi::Type* t);
+    struct rtype toRType(abi::Type* t);
+    abi::Type* elem(abi::Type* t);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Type TypeOf(go_any i);
-    bool implements(struct abi::Type* T, struct abi::Type* V);
-    bool directlyAssignable(struct abi::Type* T, struct abi::Type* V);
-    bool haveIdenticalType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
-    bool haveIdenticalUnderlyingType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
-    struct Type toType(struct abi::Type* t);
-    bool ifaceIndir(struct abi::Type* t);
+    bool implements(abi::Type* T, abi::Type* V);
+    bool directlyAssignable(abi::Type* T, abi::Type* V);
+    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
+    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
+    struct Type toType(abi::Type* t);
+    bool ifaceIndir(abi::Type* t);
 
     namespace rec
     {
@@ -199,11 +199,11 @@ namespace golang::reflectlite
         std::tuple<int, int> readVarint(struct name n, int off);
         std::string name(struct name n);
         std::string tag(struct name n);
-        struct abi::Name nameOff(struct rtype t, abi::nameOff off);
-        struct abi::Type* typeOff(struct rtype t, abi::typeOff off);
-        struct uncommonType* uncommon(struct rtype t);
+        abi::Name nameOff(struct rtype t, golang::reflectlite::nameOff off);
+        abi::Type* typeOff(struct rtype t, golang::reflectlite::typeOff off);
+        reflectlite::uncommonType* uncommon(struct rtype t);
         std::string String(struct rtype t);
-        struct abi::Type* common(struct rtype t);
+        abi::Type* common(struct rtype t);
         gocpp::slice<abi::Method> exportedMethods(struct rtype t);
         int NumMethod(struct rtype t);
         std::string PkgPath(struct rtype t);

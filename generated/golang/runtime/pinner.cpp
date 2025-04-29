@@ -376,7 +376,7 @@ namespace golang::runtime
         }
     }
 
-    struct pinState rec::ofObject(struct pinnerBits* p, uintptr_t n)
+    struct pinState rec::ofObject(golang::runtime::pinnerBits* p, uintptr_t n)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv((gcBits*)(p)), n * 2);
         auto byteVal = atomic::Load8(bytep);
@@ -388,17 +388,17 @@ namespace golang::runtime
         return divRoundUp(uintptr_t(s->nelems) * 2, 8);
     }
 
-    struct pinnerBits* rec::newPinnerBits(struct mspan* s)
+    runtime::pinnerBits* rec::newPinnerBits(struct mspan* s)
     {
-        return (pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
+        return (runtime::pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
 
-    struct pinnerBits* rec::getPinnerBits(struct mspan* s)
+    runtime::pinnerBits* rec::getPinnerBits(struct mspan* s)
     {
-        return (pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
+        return (runtime::pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
     }
 
-    void rec::setPinnerBits(struct mspan* s, struct pinnerBits* p)
+    void rec::setPinnerBits(struct mspan* s, golang::runtime::pinnerBits* p)
     {
         atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
     }

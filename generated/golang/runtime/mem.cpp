@@ -28,7 +28,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    unsafe::Pointer sysAlloc(uintptr_t n, runtime::sysMemStat* sysStat)
+    unsafe::Pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(n));
@@ -62,7 +62,7 @@ namespace golang::runtime
         sysHugePageCollapseOS(v, n);
     }
 
-    void sysFree(unsafe::Pointer v, uintptr_t n, runtime::sysMemStat* sysStat)
+    void sysFree(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), - int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
@@ -80,7 +80,7 @@ namespace golang::runtime
         return sysReserveOS(v, n);
     }
 
-    void sysMap(unsafe::Pointer v, uintptr_t n, runtime::sysMemStat* sysStat)
+    void sysMap(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         sysMapOS(v, n);

@@ -57,7 +57,7 @@ namespace golang::syscall
     struct DLL
     {
         std::string Name;
-        syscall::Handle Handle;
+        golang::syscall::Handle Handle;
 
         using isGoStruct = void;
 

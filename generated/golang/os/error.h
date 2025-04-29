@@ -66,8 +66,8 @@ namespace golang::os
 
     namespace rec
     {
-        bool Timeout(const gocpp::PtrRecv<timeout, false>& self);
-        bool Timeout(const gocpp::ObjRecv<timeout>& self);
+        bool Timeout(const gocpp::PtrRecv<struct timeout, false>& self);
+        bool Timeout(const gocpp::ObjRecv<struct timeout>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct timeout& value);

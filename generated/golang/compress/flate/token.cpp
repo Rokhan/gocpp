@@ -30,17 +30,17 @@ namespace golang::flate
         return token(matchType + (xlength << lengthShift) + xoffset);
     }
 
-    uint32_t rec::literal(flate::token t)
+    uint32_t rec::literal(golang::flate::token t)
     {
         return uint32_t(t - literalType);
     }
 
-    uint32_t rec::offset(flate::token t)
+    uint32_t rec::offset(golang::flate::token t)
     {
         return uint32_t(t) & offsetMask;
     }
 
-    uint32_t rec::length(flate::token t)
+    uint32_t rec::length(golang::flate::token t)
     {
         return uint32_t((t - matchType) >> lengthShift);
     }

@@ -92,7 +92,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct spanSetSpinePointer& value);
     struct spanSetBlockAlloc
     {
-        /* runtime::lfstack stack; [Known incomplete type] */
+        /* golang::runtime::lfstack stack; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -152,11 +152,11 @@ namespace golang::runtime
         atomic::Pointer<spanSetBlock>* lookup(struct spanSetSpinePointer s, uintptr_t idx);
         struct spanSetBlock* alloc(struct spanSetBlockAlloc* p);
         void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block);
-        uint32_t head(runtime::headTailIndex h);
-        uint32_t tail(runtime::headTailIndex h);
-        std::tuple<uint32_t, uint32_t> split(runtime::headTailIndex h);
+        uint32_t head(golang::runtime::headTailIndex h);
+        uint32_t tail(golang::runtime::headTailIndex h);
+        std::tuple<uint32_t, uint32_t> split(golang::runtime::headTailIndex h);
         runtime::headTailIndex load(struct atomicHeadTailIndex* h);
-        bool cas(struct atomicHeadTailIndex* h, runtime::headTailIndex old, runtime::headTailIndex go_new);
+        bool cas(struct atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new);
         runtime::headTailIndex incHead(struct atomicHeadTailIndex* h);
         runtime::headTailIndex decHead(struct atomicHeadTailIndex* h);
         runtime::headTailIndex incTail(struct atomicHeadTailIndex* h);

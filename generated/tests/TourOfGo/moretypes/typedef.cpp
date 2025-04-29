@@ -53,9 +53,27 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    void UseTypedefPtr1(golang::main::vvvv1* t)
+    {
+    }
+
+    void UseTypedefPtr2(golang::main::vvvv2* t)
+    {
+    }
+
+    void UseStructPtr(golang::main::Vertex* t)
+    {
+    }
+
     void main()
     {
-        mocklib::Println(Vertex {1, 2});
+        auto vstr1 = str1("hello");
+        auto vstr2 = str2("hello");
+        mocklib::Println("str1:", vstr1, ", str2:", vstr2);
+        mocklib::Println(main::Vertex {1, 2});
+        UseTypedefPtr1(new main::Vertex {1, 2});
+        UseTypedefPtr2(new main::vvvv2 {1, 2});
+        UseStructPtr(new main::Vertex {1, 2});
     }
 
 }

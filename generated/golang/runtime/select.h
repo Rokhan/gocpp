@@ -60,7 +60,7 @@ namespace golang::runtime
     std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     struct runtimeSelect
     {
-        runtime::selectDir dir;
+        golang::runtime::selectDir dir;
         unsafe::Pointer typ;
         hchan* ch;
         unsafe::Pointer val;

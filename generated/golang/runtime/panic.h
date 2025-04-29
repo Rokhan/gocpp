@@ -124,7 +124,7 @@ namespace golang::runtime
     void go_throw(std::string s);
     void fatal(std::string s);
     void recovery(struct g* gp);
-    void fatalthrow(runtime::throwType t);
+    void fatalthrow(golang::runtime::throwType t);
     void fatalpanic(struct _panic* msgs);
     bool startpanic_m();
     bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);

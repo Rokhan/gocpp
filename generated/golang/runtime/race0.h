@@ -33,8 +33,8 @@
 
 namespace golang::runtime
 {
-    void raceReadObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void raceWriteObjectPC(struct _type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceReadObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceWriteObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc);
     std::tuple<uintptr_t, uintptr_t> raceinit();
     void racefini();
     uintptr_t raceproccreate();

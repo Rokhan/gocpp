@@ -64,12 +64,12 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    abi::Kind rec::kind(reflectlite::flag f)
+    reflectlite::Kind rec::kind(golang::reflectlite::flag f)
     {
         return Kind(f & flagKindMask);
     }
 
-    reflectlite::flag rec::ro(reflectlite::flag f)
+    reflectlite::flag rec::ro(golang::reflectlite::flag f)
     {
         if(f & flagRO != 0)
         {
@@ -78,7 +78,7 @@ namespace golang::reflectlite
         return 0;
     }
 
-    struct abi::Type* rec::typ(struct Value v)
+    abi::Type* rec::typ(struct Value v)
     {
         return (abi::Type*)(noescape(unsafe::Pointer(v.typ_)));
     }
@@ -234,7 +234,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    void rec::mustBeExported(reflectlite::flag f)
+    void rec::mustBeExported(golang::reflectlite::flag f)
     {
         if(f == 0)
         {
@@ -246,7 +246,7 @@ namespace golang::reflectlite
         }
     }
 
-    void rec::mustBeAssignable(reflectlite::flag f)
+    void rec::mustBeAssignable(golang::reflectlite::flag f)
     {
         if(f == 0)
         {
@@ -299,12 +299,12 @@ namespace golang::reflectlite
 
                         namespace rec
                         {
-                            void M(const gocpp::PtrRecv<gocpp_id_6, false>& self)
+                            void M(const gocpp::PtrRecv<struct gocpp_id_6, false>& self)
                             {
                                 return self.ptr->value->vM();
                             }
 
-                            void M(const gocpp::ObjRecv<gocpp_id_6>& self)
+                            void M(const gocpp::ObjRecv<struct gocpp_id_6>& self)
                             {
                                 return self.obj.value->vM();
                             }
@@ -354,7 +354,7 @@ namespace golang::reflectlite
                     {
                         return Value {};
                     }
-                    auto tt = (ptrType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (reflectlite::ptrType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
@@ -397,12 +397,12 @@ namespace golang::reflectlite
 
             namespace rec
             {
-                void M(const gocpp::PtrRecv<gocpp_id_7, false>& self)
+                void M(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
                 {
                     return self.ptr->value->vM();
                 }
 
-                void M(const gocpp::ObjRecv<gocpp_id_7>& self)
+                void M(const gocpp::ObjRecv<struct gocpp_id_7>& self)
                 {
                     return self.obj.value->vM();
                 }
@@ -473,7 +473,7 @@ namespace golang::reflectlite
         return v.flag != 0;
     }
 
-    abi::Kind rec::Kind(struct Value v)
+    reflectlite::Kind rec::Kind(struct Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -499,7 +499,7 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
-                    auto tt = (arrayType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (reflectlite::arrayType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
                 case 1:
@@ -570,7 +570,7 @@ namespace golang::reflectlite
         return unpackEface(i);
     }
 
-    struct Value rec::assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target)
+    struct Value rec::assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target)
     {
         //Go switch emulation
         {
@@ -614,10 +614,10 @@ namespace golang::reflectlite
         return add(p, uintptr_t(i) * eltSize, "i < len");
     }
 
-    void ifaceE2I(struct abi::Type* t, go_any src, unsafe::Pointer dst)
+    void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst)
     /* convertBlockStmt, nil block */;
 
-    void typedmemmove(struct abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src)
+    void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src)
     /* convertBlockStmt, nil block */;
 
     void escapes(go_any x)

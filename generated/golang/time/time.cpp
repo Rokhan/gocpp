@@ -215,7 +215,7 @@ namespace golang::time
         return rec::sec(gocpp::recv(t)) == rec::sec(gocpp::recv(u)) && rec::nsec(gocpp::recv(t)) == rec::nsec(gocpp::recv(u));
     }
 
-    std::string rec::String(time::Month m)
+    std::string rec::String(golang::time::Month m)
     {
         if(January <= m && m <= December)
         {
@@ -226,7 +226,7 @@ namespace golang::time
         return "%!Month(" + string(buf.make_slice(n)) + ")";
     }
 
-    std::string rec::String(time::Weekday d)
+    std::string rec::String(golang::time::Weekday d)
     {
         if(Sunday <= d && d <= Saturday)
         {
@@ -414,14 +414,14 @@ namespace golang::time
         return yday + 1;
     }
 
-    std::string rec::String(time::Duration d)
+    std::string rec::String(golang::time::Duration d)
     {
         gocpp::array<unsigned char, 32> arr = {};
         auto n = rec::format(gocpp::recv(d), & arr);
         return string(arr.make_slice(n));
     }
 
-    int rec::format(time::Duration d, gocpp::array<unsigned char, 32>* buf)
+    int rec::format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf)
     {
         auto w = len(buf);
         auto u = uint64_t(d);
@@ -546,43 +546,43 @@ namespace golang::time
         return w;
     }
 
-    int64_t rec::Nanoseconds(time::Duration d)
+    int64_t rec::Nanoseconds(golang::time::Duration d)
     {
         return int64_t(d);
     }
 
-    int64_t rec::Microseconds(time::Duration d)
+    int64_t rec::Microseconds(golang::time::Duration d)
     {
         return int64_t(d) / 1e3;
     }
 
-    int64_t rec::Milliseconds(time::Duration d)
+    int64_t rec::Milliseconds(golang::time::Duration d)
     {
         return int64_t(d) / 1e6;
     }
 
-    double rec::Seconds(time::Duration d)
+    double rec::Seconds(golang::time::Duration d)
     {
         auto sec = d / Second;
         auto nsec = d % Second;
         return double(sec) + double(nsec) / 1e9;
     }
 
-    double rec::Minutes(time::Duration d)
+    double rec::Minutes(golang::time::Duration d)
     {
         auto min = d / Minute;
         auto nsec = d % Minute;
         return double(min) + double(nsec) / (60 * 1e9);
     }
 
-    double rec::Hours(time::Duration d)
+    double rec::Hours(golang::time::Duration d)
     {
         auto hour = d / Hour;
         auto nsec = d % Hour;
         return double(hour) + double(nsec) / (60 * 60 * 1e9);
     }
 
-    time::Duration rec::Truncate(time::Duration d, time::Duration m)
+    time::Duration rec::Truncate(golang::time::Duration d, golang::time::Duration m)
     {
         if(m <= 0)
         {
@@ -591,12 +591,12 @@ namespace golang::time
         return d - d % m;
     }
 
-    bool lessThanHalf(time::Duration x, time::Duration y)
+    bool lessThanHalf(golang::time::Duration x, golang::time::Duration y)
     {
         return uint64_t(x) + uint64_t(x) < uint64_t(y);
     }
 
-    time::Duration rec::Round(time::Duration d, time::Duration m)
+    time::Duration rec::Round(golang::time::Duration d, golang::time::Duration m)
     {
         if(m <= 0)
         {
@@ -627,7 +627,7 @@ namespace golang::time
         return maxDuration;
     }
 
-    time::Duration rec::Abs(time::Duration d)
+    time::Duration rec::Abs(golang::time::Duration d)
     {
         //Go switch emulation
         {
@@ -649,7 +649,7 @@ namespace golang::time
         }
     }
 
-    struct Time rec::Add(struct Time t, time::Duration d)
+    struct Time rec::Add(struct Time t, golang::time::Duration d)
     {
         auto dsec = int64_t(d / 1e9);
         auto nsec = rec::nsec(gocpp::recv(t)) + int32_t(d % 1e9);
@@ -842,7 +842,7 @@ namespace golang::time
     }
 
     gocpp::array_base<int32_t> daysBefore = gocpp::array_base<int32_t> {0, 31, 31 + 28, 31 + 28 + 31, 31 + 28 + 31 + 30, 31 + 28 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31};
-    int daysIn(time::Month m, int year)
+    int daysIn(golang::time::Month m, int year)
     {
         if(m == February && isLeap(year))
         {
@@ -1177,7 +1177,7 @@ namespace golang::time
         return {hi, lo};
     }
 
-    struct Time Date(int year, time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc)
+    struct Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1215,7 +1215,7 @@ namespace golang::time
         return t;
     }
 
-    struct Time rec::Truncate(struct Time t, time::Duration d)
+    struct Time rec::Truncate(struct Time t, golang::time::Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1226,7 +1226,7 @@ namespace golang::time
         return rec::Add(gocpp::recv(t), - r);
     }
 
-    struct Time rec::Round(struct Time t, time::Duration d)
+    struct Time rec::Round(struct Time t, golang::time::Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1241,7 +1241,7 @@ namespace golang::time
         return rec::Add(gocpp::recv(t), d - r);
     }
 
-    std::tuple<int, time::Duration> div(struct Time t, time::Duration d)
+    std::tuple<int, time::Duration> div(struct Time t, golang::time::Duration d)
     {
         int qmod2;
         time::Duration r;

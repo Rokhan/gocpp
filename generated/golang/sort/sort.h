@@ -62,14 +62,14 @@ namespace golang::sort
 
     namespace rec
     {
-        int Len(const gocpp::PtrRecv<Interface, false>& self);
-        int Len(const gocpp::ObjRecv<Interface>& self);
+        int Len(const gocpp::PtrRecv<struct Interface, false>& self);
+        int Len(const gocpp::ObjRecv<struct Interface>& self);
 
-        bool Less(const gocpp::PtrRecv<Interface, false>& self, int i, int j);
-        bool Less(const gocpp::ObjRecv<Interface>& self, int i, int j);
+        bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
+        bool Less(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
 
-        void Swap(const gocpp::PtrRecv<Interface, false>& self, int i, int j);
-        void Swap(const gocpp::ObjRecv<Interface>& self, int i, int j);
+        void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j);
+        void Swap(const gocpp::ObjRecv<struct Interface>& self, int i, int j);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
@@ -120,20 +120,20 @@ namespace golang::sort
 
     namespace rec
     {
-        uint64_t Next(sort::xorshift* r);
+        uint64_t Next(golang::sort::xorshift* r);
         bool Less(struct reverse r, int i, int j);
-        int Len(IntSlice x);
-        bool Less(IntSlice x, int i, int j);
-        void Swap(IntSlice x, int i, int j);
-        void Sort(IntSlice x);
-        int Len(Float64Slice x);
-        bool Less(Float64Slice x, int i, int j);
-        void Swap(Float64Slice x, int i, int j);
-        void Sort(Float64Slice x);
-        int Len(StringSlice x);
-        bool Less(StringSlice x, int i, int j);
-        void Swap(StringSlice x, int i, int j);
-        void Sort(StringSlice x);
+        int Len(golang::sort::IntSlice x);
+        bool Less(golang::sort::IntSlice x, int i, int j);
+        void Swap(golang::sort::IntSlice x, int i, int j);
+        void Sort(golang::sort::IntSlice x);
+        int Len(golang::sort::Float64Slice x);
+        bool Less(golang::sort::Float64Slice x, int i, int j);
+        void Swap(golang::sort::Float64Slice x, int i, int j);
+        void Sort(golang::sort::Float64Slice x);
+        int Len(golang::sort::StringSlice x);
+        bool Less(golang::sort::StringSlice x, int i, int j);
+        void Swap(golang::sort::StringSlice x, int i, int j);
+        void Sort(golang::sort::StringSlice x);
     }
 }
 

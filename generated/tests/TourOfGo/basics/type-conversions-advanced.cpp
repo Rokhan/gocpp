@@ -64,12 +64,12 @@ namespace golang::main
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<III, false>& self)
+        void M(const gocpp::PtrRecv<struct III, false>& self)
         {
             return self.ptr->value->vM();
         }
 
-        void M(const gocpp::ObjRecv<III>& self)
+        void M(const gocpp::ObjRecv<struct III>& self)
         {
             return self.obj.value->vM();
         }
@@ -155,7 +155,7 @@ namespace golang::main
         mocklib::Println("z2:", z3);
         go_any ifunc1 = (std::function<void ()>)(toto);
         mocklib::Println(ifunc1);
-        go_any ifunc2 = (totoInt)();
+        go_any ifunc2 = (main::totoInt)();
         mocklib::Println(ifunc2);
         auto m1 = gocpp::make(gocpp::Tag<gocpp::map<std::string, Vertex>>());
         auto m2 = gocpp::make((gocpp::Tag<gocpp::map<std::string, Vertex>>()));

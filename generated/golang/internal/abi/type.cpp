@@ -80,7 +80,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    std::string rec::String(abi::Kind k)
+    std::string rec::String(golang::abi::Kind k)
     {
         if(int(k) < len(kindNames))
         {

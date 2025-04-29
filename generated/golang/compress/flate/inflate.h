@@ -75,7 +75,7 @@ namespace golang::flate
 
         struct IResetter
         {
-            virtual struct gocpp::error vReset(struct io::Reader r, gocpp::slice<unsigned char> dict) = 0;
+            virtual struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -86,7 +86,7 @@ namespace golang::flate
                 value.reset(ptr);
             }
 
-            struct gocpp::error vReset(struct io::Reader r, gocpp::slice<unsigned char> dict) override;
+            struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) override;
 
             StoreT value;
         };
@@ -96,8 +96,8 @@ namespace golang::flate
 
     namespace rec
     {
-        struct gocpp::error Reset(const gocpp::PtrRecv<Resetter, false>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
-        struct gocpp::error Reset(const gocpp::ObjRecv<Resetter>& self, struct io::Reader r, gocpp::slice<unsigned char> dict);
+        struct gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict);
+        struct gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
@@ -201,13 +201,13 @@ namespace golang::flate
     extern gocpp::array_base<int> codeOrder;
     struct gocpp::error noEOF(struct gocpp::error e);
     void fixedHuffmanDecoderInit();
-    struct io::ReadCloser NewReader(struct io::Reader r);
-    struct io::ReadCloser NewReaderDict(struct io::Reader r, gocpp::slice<unsigned char> dict);
+    io::ReadCloser NewReader(io::Reader r);
+    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 
     namespace rec
     {
-        std::string Error(flate::CorruptInputError e);
-        std::string Error(flate::InternalError e);
+        std::string Error(golang::flate::CorruptInputError e);
+        std::string Error(golang::flate::InternalError e);
         std::string Error(struct ReadError* e);
         std::string Error(struct WriteError* e);
         bool init(struct huffmanDecoder* h, gocpp::slice<int> lengths);
@@ -221,8 +221,8 @@ namespace golang::flate
         void finishBlock(struct decompressor* f);
         struct gocpp::error moreBits(struct decompressor* f);
         std::tuple<int, struct gocpp::error> huffSym(struct decompressor* f, struct huffmanDecoder* h);
-        void makeReader(struct decompressor* f, struct io::Reader r);
-        struct gocpp::error Reset(struct decompressor* f, struct io::Reader r, gocpp::slice<unsigned char> dict);
+        void makeReader(struct decompressor* f, io::Reader r);
+        struct gocpp::error Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 }
 

@@ -29,15 +29,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lockRankStruct& value);
-    void lockInit(struct mutex* l, runtime::lockRank rank);
+    void lockInit(struct mutex* l, golang::runtime::lockRank rank);
     runtime::lockRank getLockRank(struct mutex* l);
-    void lockWithRank(struct mutex* l, runtime::lockRank rank);
-    void acquireLockRank(runtime::lockRank rank);
+    void lockWithRank(struct mutex* l, golang::runtime::lockRank rank);
+    void acquireLockRank(golang::runtime::lockRank rank);
     void unlockWithRank(struct mutex* l);
-    void releaseLockRank(runtime::lockRank rank);
-    void lockWithRankMayAcquire(struct mutex* l, runtime::lockRank rank);
+    void releaseLockRank(golang::runtime::lockRank rank);
+    void lockWithRankMayAcquire(struct mutex* l, golang::runtime::lockRank rank);
     void assertLockHeld(struct mutex* l);
-    void assertRankHeld(runtime::lockRank r);
+    void assertRankHeld(golang::runtime::lockRank r);
     void worldStopped();
     void worldStarted();
     void assertWorldStopped();

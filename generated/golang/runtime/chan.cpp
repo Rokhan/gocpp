@@ -153,12 +153,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct hchan* reflect_makechan(struct chantype* t, int size)
+    struct hchan* reflect_makechan(golang::runtime::chantype* t, int size)
     {
         return makechan(t, size);
     }
 
-    struct hchan* makechan64(struct chantype* t, int64_t size)
+    struct hchan* makechan64(golang::runtime::chantype* t, int64_t size)
     {
         if(int64_t(int(size)) != size)
         {
@@ -167,7 +167,7 @@ namespace golang::runtime
         return makechan(t, int(size));
     }
 
-    struct hchan* makechan(struct chantype* t, int size)
+    struct hchan* makechan(golang::runtime::chantype* t, int size)
     {
         auto elem = t->Elem;
         if(elem->Size_ >= (1 << 16))
@@ -378,14 +378,14 @@ namespace golang::runtime
         goready(gp, skip + 1);
     }
 
-    void sendDirect(struct _type* t, struct sudog* sg, unsafe::Pointer src)
+    void sendDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer src)
     {
         auto dst = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);
         memmove(dst, src, t->Size_);
     }
 
-    void recvDirect(struct _type* t, struct sudog* sg, unsafe::Pointer dst)
+    void recvDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer dst)
     {
         auto src = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);

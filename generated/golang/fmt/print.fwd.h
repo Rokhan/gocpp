@@ -13,7 +13,7 @@ namespace golang::fmt
     using buffer = gocpp::slice<unsigned char>;
 }
 #include "golang/fmt/format.fwd.h"
-// #include "golang/reflect/value.fwd.h" [Ignored, known errors]
+#include "golang/reflect/value.fwd.h"
 
 namespace golang::fmt
 {

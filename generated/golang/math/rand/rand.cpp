@@ -71,22 +71,22 @@ namespace golang::rand
 
     namespace rec
     {
-        int64_t Int63(const gocpp::PtrRecv<Source, false>& self)
+        int64_t Int63(const gocpp::PtrRecv<struct Source, false>& self)
         {
             return self.ptr->value->vInt63();
         }
 
-        int64_t Int63(const gocpp::ObjRecv<Source>& self)
+        int64_t Int63(const gocpp::ObjRecv<struct Source>& self)
         {
             return self.obj.value->vInt63();
         }
 
-        void Seed(const gocpp::PtrRecv<Source, false>& self, int64_t seed)
+        void Seed(const gocpp::PtrRecv<struct Source, false>& self, int64_t seed)
         {
             return self.ptr->value->vSeed(seed);
         }
 
-        void Seed(const gocpp::ObjRecv<Source>& self, int64_t seed)
+        void Seed(const gocpp::ObjRecv<struct Source>& self, int64_t seed)
         {
             return self.obj.value->vSeed(seed);
         }
@@ -129,12 +129,12 @@ namespace golang::rand
 
     namespace rec
     {
-        uint64_t Uint64(const gocpp::PtrRecv<Source64, false>& self)
+        uint64_t Uint64(const gocpp::PtrRecv<struct Source64, false>& self)
         {
             return self.ptr->value->vUint64();
         }
 
-        uint64_t Uint64(const gocpp::ObjRecv<Source64>& self)
+        uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self)
         {
             return self.obj.value->vUint64();
         }

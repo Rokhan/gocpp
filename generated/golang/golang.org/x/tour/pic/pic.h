@@ -16,7 +16,7 @@
 namespace golang::pic
 {
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f);
-    void ShowImage(struct image::Image m);
+    void ShowImage(image::Image m);
 
     namespace rec
     {

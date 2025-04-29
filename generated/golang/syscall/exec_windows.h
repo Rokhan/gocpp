@@ -22,8 +22,8 @@ namespace golang::syscall
     gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s);
     std::string makeCmdLine(gocpp::slice<std::string> args);
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv);
-    void CloseOnExec(syscall::Handle fd);
-    struct gocpp::error SetNonblock(syscall::Handle fd, bool nonblocking);
+    void CloseOnExec(golang::syscall::Handle fd);
+    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
     std::tuple<std::string, struct gocpp::error> FullPath(std::string name);
     bool isSlash(uint8_t c);
     std::tuple<std::string, struct gocpp::error> normalizeDir(std::string dir);
@@ -53,12 +53,12 @@ namespace golang::syscall
         bool HideWindow;
         std::string CmdLine;
         uint32_t CreationFlags;
-        syscall::Token Token;
+        golang::syscall::Token Token;
         SecurityAttributes* ProcessAttributes;
         SecurityAttributes* ThreadAttributes;
         bool NoInheritHandles;
-        gocpp::slice<syscall::Handle> AdditionalInheritedHandles;
-        syscall::Handle ParentProcess;
+        gocpp::slice<golang::syscall::Handle> AdditionalInheritedHandles;
+        golang::syscall::Handle ParentProcess;
 
         using isGoStruct = void;
 

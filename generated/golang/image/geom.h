@@ -76,10 +76,10 @@ namespace golang::image
         bool Overlaps(struct Rectangle r, struct Rectangle s);
         bool In(struct Rectangle r, struct Rectangle s);
         struct Rectangle Canon(struct Rectangle r);
-        struct color::Color At(struct Rectangle r, int x, int y);
-        struct color::RGBA64 RGBA64At(struct Rectangle r, int x, int y);
+        color::Color At(struct Rectangle r, int x, int y);
+        color::RGBA64 RGBA64At(struct Rectangle r, int x, int y);
         struct Rectangle Bounds(struct Rectangle r);
-        struct color::Model ColorModel(struct Rectangle r);
+        color::Model ColorModel(struct Rectangle r);
     }
 }
 

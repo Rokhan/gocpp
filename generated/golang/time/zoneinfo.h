@@ -85,7 +85,7 @@ namespace golang::time
     std::tuple<int, std::string, bool> tzsetOffset(std::string s);
     struct rule
     {
-        time::ruleKind kind;
+        golang::time::ruleKind kind;
         int day;
         int week;
         int mon;

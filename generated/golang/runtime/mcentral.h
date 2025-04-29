@@ -24,7 +24,7 @@ namespace golang::runtime
     struct mcentral
     {
         sys::NotInHeap _;
-        runtime::spanClass spanclass;
+        golang::runtime::spanClass spanclass;
         /* gocpp::array<spanSet, 2> partial; [Known incomplete type] */
         /* gocpp::array<spanSet, 2> full; [Known incomplete type] */
 
@@ -43,7 +43,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct mcentral* c, runtime::spanClass spc);
+        void init(struct mcentral* c, golang::runtime::spanClass spc);
         /* struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
         /* struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
         /* struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 

@@ -131,7 +131,7 @@ namespace golang::windows
         return {ret, err};
     }
 
-    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, struct syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, windows::TokenType tokenType, syscall::Token* phNewToken)
+    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, golang::windows::TokenType tokenType, syscall::Token* phNewToken)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_3, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procDuplicateTokenEx)), 6, uintptr_t(hExistingToken), uintptr_t(dwDesiredAccess), uintptr_t(unsafe::Pointer(lpTokenAttributes)), uintptr_t(impersonationLevel), uintptr_t(tokenType), uintptr_t(unsafe::Pointer(phNewToken)));
@@ -420,7 +420,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error LockFileEx(syscall::Handle file, uint32_t flags, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, struct syscall::Overlapped* overlapped)
+    struct gocpp::error LockFileEx(syscall::Handle file, uint32_t flags, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_53, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procLockFileEx)), 6, uintptr_t(file), uintptr_t(flags), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(unsafe::Pointer(overlapped)));
@@ -511,7 +511,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, struct syscall::Overlapped* overlapped)
+    struct gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_73, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procUnlockFileEx)), 5, uintptr_t(file), uintptr_t(reserved), uintptr_t(bytesLow), uintptr_t(bytesHigh), uintptr_t(unsafe::Pointer(overlapped)), 0);
@@ -625,7 +625,7 @@ namespace golang::windows
         return err;
     }
 
-    std::tuple<syscall::Handle, struct gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, struct syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags)
+    std::tuple<syscall::Handle, struct gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags)
     {
         syscall::Handle handle;
         struct gocpp::error err;

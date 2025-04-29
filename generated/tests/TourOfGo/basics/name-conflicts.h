@@ -33,7 +33,7 @@ namespace golang::main
     {
         double Pi(struct toto t);
         double toto(struct toto t);
-        main::titi titi(struct toto t, main::titi d);
+        main::titi titi(struct toto t, golang::main::titi d);
     }
 }
 

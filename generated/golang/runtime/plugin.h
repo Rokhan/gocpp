@@ -23,8 +23,8 @@ namespace golang::runtime
     bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
     struct ptabEntry
     {
-        abi::nameOff name;
-        abi::typeOff typ;
+        golang::runtime::nameOff name;
+        golang::runtime::typeOff typ;
 
         using isGoStruct = void;
 

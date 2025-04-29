@@ -65,6 +65,21 @@ namespace golang::runtime
     std::string runtime_FrameSymbolName(struct Frame* f);
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    struct gocpp_id_0
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct Func
     {
         gocpp_id_0 opaque;
@@ -152,7 +167,7 @@ namespace golang::runtime
         uint8_t hasmain;
         bitvector gcdatamask;
         bitvector gcbssmask;
-        gocpp::map<abi::typeOff, _type*> typemap;
+        gocpp::map<golang::runtime::typeOff, golang::runtime::_type*> typemap;
         bool bad;
         moduledata* next;
 

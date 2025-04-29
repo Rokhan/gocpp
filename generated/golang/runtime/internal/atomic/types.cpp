@@ -584,35 +584,35 @@ namespace golang::atomic
 
 
     template<typename T>
-    T* rec::Load(Pointer<T>* p)
+    T* rec::Load(golang::atomic::Pointer<T>* p)
     {
         return (T*)(rec::Load(gocpp::recv(p->u)));
     }
 
 
     template<typename T>
-    void rec::StoreNoWB(Pointer<T>* p, T* value)
+    void rec::StoreNoWB(golang::atomic::Pointer<T>* p, T* value)
     {
         rec::StoreNoWB(gocpp::recv(p->u), unsafe::Pointer(value));
     }
 
 
     template<typename T>
-    void rec::Store(Pointer<T>* p, T* value)
+    void rec::Store(golang::atomic::Pointer<T>* p, T* value)
     {
         rec::Store(gocpp::recv(p->u), unsafe::Pointer(value));
     }
 
 
     template<typename T>
-    bool rec::CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new)
+    bool rec::CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {
         return rec::CompareAndSwapNoWB(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
 
 
     template<typename T>
-    bool rec::CompareAndSwap(Pointer<T>* p, T* old, T* go_new)
+    bool rec::CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {
         return rec::CompareAndSwap(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
     }

@@ -23,7 +23,7 @@ namespace golang::runtime
         using namespace runtime::rec;
     }
 
-    bool isDirectIface(struct _type* t)
+    bool isDirectIface(golang::runtime::_type* t)
     {
         return t->Kind_ & kindDirectIface != 0;
     }

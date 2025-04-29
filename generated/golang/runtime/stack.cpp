@@ -291,7 +291,7 @@ namespace golang::runtime
         return x;
     }
 
-    void stackpoolfree(runtime::gclinkptr x, uint8_t order)
+    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order)
     {
         auto s = spanOfUnchecked(uintptr_t(x));
         if(rec::get(gocpp::recv(s->state)) != mSpanManual)

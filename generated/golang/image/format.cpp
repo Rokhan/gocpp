@@ -115,12 +115,12 @@ namespace golang::image
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<reader, false>& self, int)
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int)
         {
             return self.ptr->value->vPeek();
         }
 
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<reader>& self, int)
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int)
         {
             return self.obj.value->vPeek();
         }
@@ -131,7 +131,7 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
-    struct reader asReader(struct io::Reader r)
+    struct reader asReader(io::Reader r)
     {
         if(auto [rr, ok] = gocpp::getValue<reader>(r); ok)
         {
@@ -170,7 +170,7 @@ namespace golang::image
         return format {};
     }
 
-    std::tuple<struct Image, std::string, struct gocpp::error> Decode(struct io::Reader r)
+    std::tuple<struct Image, std::string, struct gocpp::error> Decode(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
@@ -182,7 +182,7 @@ namespace golang::image
         return {m, f.name, err};
     }
 
-    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(struct io::Reader r)
+    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);

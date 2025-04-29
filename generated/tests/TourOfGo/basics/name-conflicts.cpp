@@ -57,7 +57,7 @@ namespace golang::main
         return 0 + 0;
     }
 
-    main::titi rec::titi(struct toto t, main::titi d)
+    main::titi rec::titi(struct toto t, golang::main::titi d)
     {
         return d;
     }

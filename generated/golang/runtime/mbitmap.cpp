@@ -408,7 +408,7 @@ namespace golang::runtime
         }
     }
 
-    void typeBitsBulkBarrier(struct _type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
+    void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
     {
         if(typ == nullptr)
         {

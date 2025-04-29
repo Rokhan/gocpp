@@ -92,7 +92,7 @@ namespace golang::os
         return {n, err};
     }
 
-    uint32_t syscallMode(fs::FileMode i)
+    uint32_t syscallMode(golang::os::FileMode i)
     {
         uint32_t o;
         o |= uint32_t(rec::Perm(gocpp::recv(i)));
@@ -114,7 +114,7 @@ namespace golang::os
         return o;
     }
 
-    struct gocpp::error chmod(std::string name, fs::FileMode mode)
+    struct gocpp::error chmod(std::string name, golang::os::FileMode mode)
     {
         auto longName = fixLongPath(name);
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -123,12 +123,12 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "chmod"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "chmod"; x.Path = name; x.Err = e; });
         }
         return nullptr;
     }
 
-    struct gocpp::error rec::chmod(struct File* f, fs::FileMode mode)
+    struct gocpp::error rec::chmod(struct File* f, golang::os::FileMode mode)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chmod"); err != nullptr)
         {
@@ -149,7 +149,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "chown"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "chown"; x.Path = name; x.Err = e; });
         }
         return nullptr;
     }
@@ -162,7 +162,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "lchown"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "lchown"; x.Path = name; x.Err = e; });
         }
         return nullptr;
     }
@@ -206,10 +206,10 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp::error Chtimes(std::string name, struct mocklib::Date atime, struct mocklib::Date mtime)
+    struct gocpp::error Chtimes(std::string name, mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
-        auto set = [=](int i, struct mocklib::Date t) mutable -> void
+        auto set = [=](int i, mocklib::Date t) mutable -> void
         {
             if(rec::IsZero(gocpp::recv(t)))
             {
@@ -224,7 +224,7 @@ namespace golang::os
         set(1, mtime);
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
-            return gocpp::InitPtr<PathError>([](PathError& x) { x.Op = "chtimes"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "chtimes"; x.Path = name; x.Err = e; });
         }
         return nullptr;
     }
@@ -242,7 +242,7 @@ namespace golang::os
         return nullptr;
     }
 
-    struct gocpp::error rec::setDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"); err != nullptr)
         {
@@ -251,7 +251,7 @@ namespace golang::os
         return rec::SetDeadline(gocpp::recv(f->pfd), t);
     }
 
-    struct gocpp::error rec::setReadDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setReadDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"); err != nullptr)
         {
@@ -260,7 +260,7 @@ namespace golang::os
         return rec::SetReadDeadline(gocpp::recv(f->pfd), t);
     }
 
-    struct gocpp::error rec::setWriteDeadline(struct File* f, struct mocklib::Date t)
+    struct gocpp::error rec::setWriteDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"); err != nullptr)
         {

@@ -13,8 +13,8 @@
 
 #include "golang/cmp/cmp.h"
 #include "golang/math/bits/bits.h"
-// #include "golang/slices/zsortanyfunc.h"  [Ignored, known errors]
-// #include "golang/slices/zsortordered.h"  [Ignored, known errors]
+#include "golang/slices/zsortanyfunc.h"
+#include "golang/slices/zsortordered.h"
 
 namespace golang::slices
 {
@@ -23,10 +23,11 @@ namespace golang::slices
         using namespace mocklib::rec;
         using namespace bits::rec;
         using namespace cmp::rec;
+        using namespace slices::rec;
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     void Sort(S x)
     {
         auto n = len(x);
@@ -34,7 +35,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     void SortFunc(S x, std::function<int (E a, E b)> cmp)
     {
         auto n = len(x);
@@ -42,14 +43,14 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     void SortStableFunc(S x, std::function<int (E a, E b)> cmp)
     {
         stableCmpFunc(x, len(x), cmp);
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     bool IsSorted(S x)
     {
         for(auto i = len(x) - 1; i > 0; i--)
@@ -63,7 +64,7 @@ namespace golang::slices
     }
 
 
-    template<typename S>
+    template<typename S, typename E>
     bool IsSortedFunc(S x, std::function<int (E a, E b)> cmp)
     {
         for(auto i = len(x) - 1; i > 0; i--)
@@ -168,7 +169,7 @@ namespace golang::slices
     }
 
 
-    template<typename S, typename T>
+    template<typename S, typename T, typename E>
     std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp)
     {
         auto n = len(x);
@@ -189,7 +190,7 @@ namespace golang::slices
     }
 
     // // hint for pdqsort when choosing the pivot
-    uint64_t rec::Next(slices::xorshift* r)
+    uint64_t rec::Next(golang::slices::xorshift* r)
     {
         *r ^= *r << 13;
         *r ^= *r >> 17;

@@ -13,7 +13,7 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 #include "golang/sort/sort.h"
 
 namespace golang::fmtsort
@@ -74,7 +74,7 @@ namespace golang::fmtsort
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
     }
 
-    struct SortedMap* Sort(struct reflect::Value mapValue)
+    struct SortedMap* Sort(reflect::Value mapValue)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
@@ -94,7 +94,7 @@ namespace golang::fmtsort
         return sorted;
     }
 
-    int compare(struct reflect::Value aVal, struct reflect::Value bVal)
+    int compare(reflect::Value aVal, reflect::Value bVal)
     {
         auto [aType, bType] = std::tuple{rec::Type(gocpp::recv(aVal)), rec::Type(gocpp::recv(bVal))};
         if(aType != bType)
@@ -322,7 +322,7 @@ namespace golang::fmtsort
         }
     }
 
-    std::tuple<int, bool> nilCompare(struct reflect::Value aVal, struct reflect::Value bVal)
+    std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal)
     {
         if(rec::IsNil(gocpp::recv(aVal)))
         {

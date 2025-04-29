@@ -199,12 +199,12 @@ namespace golang::syscall
         return {b, nullptr};
     }
 
-    void CloseOnExec(syscall::Handle fd)
+    void CloseOnExec(golang::syscall::Handle fd)
     {
         SetHandleInformation(Handle(fd), HANDLE_FLAG_INHERIT, 0);
     }
 
-    struct gocpp::error SetNonblock(syscall::Handle fd, bool nonblocking)
+    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking)
     {
         struct gocpp::error err;
         return nullptr;

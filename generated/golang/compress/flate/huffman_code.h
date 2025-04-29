@@ -101,14 +101,14 @@ namespace golang::flate
         gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
         void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
         void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
-        void sort(byLiteral* s, gocpp::slice<literalNode> a);
-        int Len(byLiteral s);
-        bool Less(byLiteral s, int i, int j);
-        void Swap(byLiteral s, int i, int j);
-        void sort(byFreq* s, gocpp::slice<literalNode> a);
-        int Len(byFreq s);
-        bool Less(byFreq s, int i, int j);
-        void Swap(byFreq s, int i, int j);
+        void sort(golang::flate::byLiteral* s, gocpp::slice<literalNode> a);
+        int Len(golang::flate::byLiteral s);
+        bool Less(golang::flate::byLiteral s, int i, int j);
+        void Swap(golang::flate::byLiteral s, int i, int j);
+        void sort(golang::flate::byFreq* s, gocpp::slice<literalNode> a);
+        int Len(golang::flate::byFreq s);
+        bool Less(golang::flate::byFreq s, int i, int j);
+        void Swap(golang::flate::byFreq s, int i, int j);
     }
 }
 

@@ -98,7 +98,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct rwmutex* rw, runtime::lockRank readRank, runtime::lockRank readRankInternal, runtime::lockRank writeRank)
+    void rec::init(struct rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank)
     {
         rw->readRank = readRank;
         lockInit(& rw->rLock, readRankInternal);

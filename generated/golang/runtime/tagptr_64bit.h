@@ -17,8 +17,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        unsafe::Pointer pointer(runtime::taggedPointer tp);
-        uintptr_t tag(runtime::taggedPointer tp);
+        unsafe::Pointer pointer(golang::runtime::taggedPointer tp);
+        uintptr_t tag(golang::runtime::taggedPointer tp);
     }
 }
 

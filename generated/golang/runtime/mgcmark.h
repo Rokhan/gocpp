@@ -60,7 +60,7 @@ namespace golang::runtime
     void gcDrainMarkWorkerIdle(struct gcWork* gcw);
     void gcDrainMarkWorkerDedicated(struct gcWork* gcw, bool untilPreempt);
     void gcDrainMarkWorkerFractional(struct gcWork* gcw);
-    void gcDrain(struct gcWork* gcw, runtime::gcDrainFlags flags);
+    void gcDrain(struct gcWork* gcw, golang::runtime::gcDrainFlags flags);
     int64_t gcDrainN(struct gcWork* gcw, int64_t scanWork);
     void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk);
     void scanobject(uintptr_t b, struct gcWork* gcw);

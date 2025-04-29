@@ -96,12 +96,12 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    struct huffmanBitWriter* newHuffmanBitWriter(struct io::Writer w)
+    struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w)
     {
         return gocpp::InitPtr<huffmanBitWriter>([](huffmanBitWriter& x) { x.writer = w; x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit); x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount); x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1); x.literalEncoding = newHuffmanEncoder(maxNumLit); x.codegenEncoding = newHuffmanEncoder(codegenCodeCount); x.offsetEncoding = newHuffmanEncoder(offsetCodeCount); });
     }
 
-    void rec::reset(struct huffmanBitWriter* w, struct io::Writer writer)
+    void rec::reset(struct huffmanBitWriter* w, io::Writer writer)
     {
         w->writer = writer;
         std::tie(w->bits, w->nbits, w->nbytes, w->err) = std::tuple{0, 0, 0, nullptr};
@@ -442,7 +442,7 @@ namespace golang::flate
         rec::writeBits(gocpp::recv(w), value, 3);
     }
 
-    void rec::writeBlock(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlock(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -493,7 +493,7 @@ namespace golang::flate
         rec::writeTokens(gocpp::recv(w), tokens, literalEncoding->codes, offsetEncoding->codes);
     }
 
-    void rec::writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -514,7 +514,7 @@ namespace golang::flate
         rec::writeTokens(gocpp::recv(w), tokens, w->literalEncoding->codes, w->offsetEncoding->codes);
     }
 
-    std::tuple<int, int> rec::indexTokens(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens)
+    std::tuple<int, int> rec::indexTokens(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens)
     {
         int numLiterals;
         int numOffsets;
@@ -572,7 +572,7 @@ namespace golang::flate
         return {numLiterals, numOffsets};
     }
 
-    void rec::writeTokens(struct huffmanBitWriter* w, gocpp::slice<flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
+    void rec::writeTokens(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
     {
         if(w->err != nullptr)
         {

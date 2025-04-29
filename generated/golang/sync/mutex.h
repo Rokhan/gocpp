@@ -78,11 +78,11 @@ namespace golang::sync
 
     namespace rec
     {
-        void Lock(const gocpp::PtrRecv<Locker, false>& self);
-        void Lock(const gocpp::ObjRecv<Locker>& self);
+        void Lock(const gocpp::PtrRecv<struct Locker, false>& self);
+        void Lock(const gocpp::ObjRecv<struct Locker>& self);
 
-        void Unlock(const gocpp::PtrRecv<Locker, false>& self);
-        void Unlock(const gocpp::ObjRecv<Locker>& self);
+        void Unlock(const gocpp::PtrRecv<struct Locker, false>& self);
+        void Unlock(const gocpp::ObjRecv<struct Locker>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value);

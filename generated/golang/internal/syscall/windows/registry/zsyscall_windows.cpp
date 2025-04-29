@@ -63,7 +63,7 @@ namespace golang::registry
     syscall::LazyProc* procRegLoadMUIStringW = rec::NewProc(gocpp::recv(modadvapi32), "RegLoadMUIStringW");
     syscall::LazyProc* procRegSetValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegSetValueExW");
     syscall::LazyProc* procExpandEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "ExpandEnvironmentStringsW");
-    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, struct syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
+    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
     {
         struct gocpp::error regerrno;
         auto [r0, gocpp_id_2, gocpp_id_3] = syscall::Syscall9(rec::Addr(gocpp::recv(procRegCreateKeyExW)), 9, uintptr_t(key), uintptr_t(unsafe::Pointer(subkey)), uintptr_t(reserved), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(options), uintptr_t(desired), uintptr_t(unsafe::Pointer(sa)), uintptr_t(unsafe::Pointer(result)), uintptr_t(unsafe::Pointer(disposition)));

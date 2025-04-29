@@ -216,7 +216,7 @@ namespace golang::strings
         return {abs, nullptr};
     }
 
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* r, struct io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* r, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;

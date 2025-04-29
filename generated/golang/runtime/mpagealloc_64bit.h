@@ -28,8 +28,8 @@ namespace golang::runtime
     {
         void sysInit(struct pageAlloc* p, bool test);
         void sysGrow(struct pageAlloc* p, uintptr_t base, uintptr_t limit);
-        uintptr_t sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, runtime::sysMemStat* sysStat);
-        uintptr_t sysInit(struct scavengeIndex* s, bool test, runtime::sysMemStat* sysStat);
+        uintptr_t sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat);
+        uintptr_t sysInit(struct scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat);
     }
 }
 

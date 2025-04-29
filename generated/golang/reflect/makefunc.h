@@ -12,7 +12,7 @@
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/pool.h"
 
@@ -20,7 +20,7 @@ namespace golang::reflect
 {
     struct makeFuncImpl
     {
-        funcType* ftyp;
+        golang::reflect::funcType* ftyp;
         std::function<gocpp::slice<Value> (gocpp::slice<Value>)> fn;
 
         using isGoStruct = void;
@@ -40,7 +40,7 @@ namespace golang::reflect
     struct methodValue
     {
         int method;
-        Value rcvr;
+        /* Value rcvr; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -76,7 +76,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncCtxt& value);
-    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, struct abi::RegArgs* args);
+    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args);
 
     namespace rec
     {

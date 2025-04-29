@@ -615,7 +615,7 @@ namespace golang::runtime
         return 0;
     }
 
-    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(struct mcache* c, runtime::spanClass spc)
+    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(struct mcache* c, golang::runtime::spanClass spc)
     {
         runtime::gclinkptr v;
         struct mspan* s;
@@ -661,7 +661,7 @@ namespace golang::runtime
         return {v, s, shouldhelpgc};
     }
 
-    unsafe::Pointer mallocgc(uintptr_t size, struct _type* typ, bool needzero)
+    unsafe::Pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero)
     {
         if(gcphase == _GCmarktermination)
         {
@@ -729,7 +729,7 @@ namespace golang::runtime
             go_throw("mallocgc called without a P or outside bootstrapping");
         }
         mspan* span = {};
-        _type** header = {};
+        runtime::_type** header = {};
         unsafe::Pointer x = {};
         auto noscan = typ == nullptr || typ->PtrBytes == 0;
         auto delayedZeroing = false;
@@ -813,7 +813,7 @@ namespace golang::runtime
                 }
                 if(goexperiment::AllocHeaders && hasHeader)
                 {
-                    header = (_type**)(x);
+                    header = (runtime::_type**)(x);
                     x = add(x, mallocHeaderSize);
                     size -= mallocHeaderSize;
                 }
@@ -985,22 +985,22 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer newobject(struct _type* typ)
+    unsafe::Pointer newobject(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer reflect_unsafe_New(struct _type* typ)
+    unsafe::Pointer reflect_unsafe_New(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer reflectlite_unsafe_New(struct _type* typ)
+    unsafe::Pointer reflectlite_unsafe_New(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
-    unsafe::Pointer newarray(struct _type* typ, int n)
+    unsafe::Pointer newarray(golang::runtime::_type* typ, int n)
     {
         if(n == 1)
         {
@@ -1014,7 +1014,7 @@ namespace golang::runtime
         return mallocgc(mem, typ, true);
     }
 
-    unsafe::Pointer reflect_unsafe_NewArray(struct _type* typ, int n)
+    unsafe::Pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n)
     {
         return newarray(typ, n);
     }
@@ -1154,7 +1154,7 @@ namespace golang::runtime
 
     gocpp_id_0 globalAlloc;
     notInHeap* persistentChunks;
-    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
+    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         notInHeap* p = {};
         systemstack([=]() mutable -> void
@@ -1164,7 +1164,7 @@ namespace golang::runtime
         return unsafe::Pointer(p);
     }
 
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
         if(size == 0)
@@ -1302,7 +1302,7 @@ namespace golang::runtime
         l->mapMemory = mapMemory;
     }
 
-    unsafe::Pointer rec::alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, runtime::sysMemStat* sysStat)
+    unsafe::Pointer rec::alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         auto p = alignUp(l->next, align);
         if(p + size > l->end)

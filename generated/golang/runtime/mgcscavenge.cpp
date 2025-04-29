@@ -494,7 +494,7 @@ namespace golang::runtime
         printunlock();
     }
 
-    uintptr_t rec::scavengeOne(struct pageAlloc* p, runtime::chunkIdx ci, unsigned int searchIdx, uintptr_t max)
+    uintptr_t rec::scavengeOne(struct pageAlloc* p, golang::runtime::chunkIdx ci, unsigned int searchIdx, uintptr_t max)
     {
         auto maxPages = max / pageSize;
         if(max % pageSize != 0)
@@ -719,7 +719,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t rec::init(struct scavengeIndex* s, bool test, runtime::sysMemStat* sysStat)
+    uintptr_t rec::init(struct scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
     {
         rec::Clear(gocpp::recv(s->searchAddrBg));
         rec::Clear(gocpp::recv(s->searchAddrForce));
@@ -728,7 +728,7 @@ namespace golang::runtime
         return rec::sysInit(gocpp::recv(s), test, sysStat);
     }
 
-    uintptr_t rec::grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, runtime::sysMemStat* sysStat)
+    uintptr_t rec::grow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
     {
         auto minHeapIdx = rec::Load(gocpp::recv(s->minHeapIdx));
         if(auto baseIdx = uintptr_t(chunkIndex(base)); minHeapIdx == 0 || baseIdx < minHeapIdx)
@@ -778,14 +778,14 @@ namespace golang::runtime
         return {0, 0};
     }
 
-    void rec::alloc(struct scavengeIndex* s, runtime::chunkIdx ci, unsigned int npages)
+    void rec::alloc(struct scavengeIndex* s, golang::runtime::chunkIdx ci, unsigned int npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::alloc(gocpp::recv(sc), npages, s->gen);
         rec::store(gocpp::recv(s->chunks[ci]), sc);
     }
 
-    void rec::free(struct scavengeIndex* s, runtime::chunkIdx ci, unsigned int page, unsigned int npages)
+    void rec::free(struct scavengeIndex* s, golang::runtime::chunkIdx ci, unsigned int page, unsigned int npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::free(gocpp::recv(sc), npages, s->gen);
@@ -813,7 +813,7 @@ namespace golang::runtime
         s->freeHWM = minOffAddr;
     }
 
-    void rec::setEmpty(struct scavengeIndex* s, runtime::chunkIdx ci)
+    void rec::setEmpty(struct scavengeIndex* s, golang::runtime::chunkIdx ci)
     {
         auto val = rec::load(gocpp::recv(s->chunks[ci]));
         rec::setEmpty(gocpp::recv(val));
@@ -904,17 +904,17 @@ namespace golang::runtime
         return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
     }
 
-    bool rec::isEmpty(runtime::scavChunkFlags* sc)
+    bool rec::isEmpty(golang::runtime::scavChunkFlags* sc)
     {
         return (*sc) & scavChunkHasFree == 0;
     }
 
-    void rec::setEmpty(runtime::scavChunkFlags* sc)
+    void rec::setEmpty(golang::runtime::scavChunkFlags* sc)
     {
         *sc &^= scavChunkHasFree;
     }
 
-    void rec::setNonEmpty(runtime::scavChunkFlags* sc)
+    void rec::setNonEmpty(golang::runtime::scavChunkFlags* sc)
     {
         *sc |= scavChunkHasFree;
     }

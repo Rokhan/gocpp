@@ -30,10 +30,10 @@ namespace golang::runtime
     uintptr_t c128hash(unsafe::Pointer p, uintptr_t h);
     uintptr_t interhash(unsafe::Pointer p, uintptr_t h);
     uintptr_t nilinterhash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t typehash(struct _type* t, unsafe::Pointer p, uintptr_t h);
-    struct gocpp::error mapKeyError(struct maptype* t, unsafe::Pointer p);
-    struct gocpp::error mapKeyError2(struct _type* t, unsafe::Pointer p);
-    uintptr_t reflect_typehash(struct _type* t, unsafe::Pointer p, uintptr_t h);
+    uintptr_t typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h);
+    struct gocpp::error mapKeyError(golang::runtime::maptype* t, unsafe::Pointer p);
+    struct gocpp::error mapKeyError2(golang::runtime::_type* t, unsafe::Pointer p);
+    uintptr_t reflect_typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h);
     bool memequal0(unsafe::Pointer p, unsafe::Pointer q);
     bool memequal8(unsafe::Pointer p, unsafe::Pointer q);
     bool memequal16(unsafe::Pointer p, unsafe::Pointer q);
@@ -47,7 +47,7 @@ namespace golang::runtime
     bool strequal(unsafe::Pointer p, unsafe::Pointer q);
     bool interequal(unsafe::Pointer p, unsafe::Pointer q);
     bool nilinterequal(unsafe::Pointer p, unsafe::Pointer q);
-    bool efaceeq(struct _type* t, unsafe::Pointer x, unsafe::Pointer y);
+    bool efaceeq(golang::runtime::_type* t, unsafe::Pointer x, unsafe::Pointer y);
     bool ifaceeq(struct itab* tab, unsafe::Pointer x, unsafe::Pointer y);
     uintptr_t stringHash(std::string s, uintptr_t seed);
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed);
@@ -98,8 +98,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        void F(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-        void F(const gocpp::ObjRecv<gocpp_id_0>& self);
+        void F(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
+        void F(const gocpp::ObjRecv<struct gocpp_id_0>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);

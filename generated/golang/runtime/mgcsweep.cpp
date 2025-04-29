@@ -125,12 +125,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    runtime::sweepClass rec::load(runtime::sweepClass* s)
+    runtime::sweepClass rec::load(golang::runtime::sweepClass* s)
     {
         return sweepClass(atomic::Load((uint32_t*)(s)));
     }
 
-    void rec::update(runtime::sweepClass* s, runtime::sweepClass sNew)
+    void rec::update(golang::runtime::sweepClass* s, golang::runtime::sweepClass sNew)
     {
         auto sOld = rec::load(gocpp::recv(s));
         for(; sOld < sNew && ! atomic::Cas((uint32_t*)(s), uint32_t(sOld), uint32_t(sNew)); )
@@ -139,12 +139,12 @@ namespace golang::runtime
         }
     }
 
-    void rec::clear(runtime::sweepClass* s)
+    void rec::clear(golang::runtime::sweepClass* s)
     {
         atomic::Store((uint32_t*)(s), 0);
     }
 
-    std::tuple<runtime::spanClass, bool> rec::split(runtime::sweepClass s)
+    std::tuple<runtime::spanClass, bool> rec::split(golang::runtime::sweepClass s)
     {
         runtime::spanClass spc;
         bool full;

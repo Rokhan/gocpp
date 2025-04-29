@@ -61,7 +61,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mcache& value);
     struct gclink
     {
-        runtime::gclinkptr next;
+        golang::runtime::gclinkptr next;
 
         using isGoStruct = void;
 
@@ -77,7 +77,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gclink& value);
     struct stackfreelist
     {
-        runtime::gclinkptr list;
+        golang::runtime::gclinkptr list;
         uintptr_t size;
 
         using isGoStruct = void;
@@ -98,8 +98,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct gclink* ptr(runtime::gclinkptr p);
-        void refill(struct mcache* c, runtime::spanClass spc);
+        struct gclink* ptr(golang::runtime::gclinkptr p);
+        void refill(struct mcache* c, golang::runtime::spanClass spc);
         struct mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan);
         void releaseAll(struct mcache* c);
         void prepareForSweep(struct mcache* c);

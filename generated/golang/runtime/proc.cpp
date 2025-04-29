@@ -321,7 +321,7 @@ namespace golang::runtime
         mcall(gosched_m);
     }
 
-    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip)
+    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
     {
         if(reason != waitReasonSleep)
         {
@@ -343,7 +343,7 @@ namespace golang::runtime
         mcall(park_m);
     }
 
-    void goparkunlock(struct mutex* lock, runtime::waitReason reason, runtime::traceBlockReason traceReason, int traceskip)
+    void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
     {
         gopark(parkunlock_c, unsafe::Pointer(lock), reason, traceReason, traceskip);
     }
@@ -1070,7 +1070,7 @@ namespace golang::runtime
         }
     }
 
-    void casGToWaiting(struct g* gp, uint32_t old, runtime::waitReason reason)
+    void casGToWaiting(struct g* gp, uint32_t old, golang::runtime::waitReason reason)
     {
         gp->waitreason = reason;
         casgstatus(gp, old, _Gwaiting);
@@ -1114,12 +1114,12 @@ namespace golang::runtime
         return rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Gpreempted, _Gwaiting);
     }
 
-    std::string rec::String(runtime::stwReason r)
+    std::string rec::String(golang::runtime::stwReason r)
     {
         return stwReasonStrings[r];
     }
 
-    bool rec::isGC(runtime::stwReason r)
+    bool rec::isGC(golang::runtime::stwReason r)
     {
         return r == stwGCMarkTerm || r == stwGCSweepTerm;
     }
@@ -1158,7 +1158,7 @@ namespace golang::runtime
     }
 
     worldStop stopTheWorldContext;
-    struct worldStop stopTheWorld(runtime::stwReason reason)
+    struct worldStop stopTheWorld(golang::runtime::stwReason reason)
     {
         semacquire(& worldsema);
         auto gp = getg();
@@ -1184,7 +1184,7 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    struct worldStop stopTheWorldGC(runtime::stwReason reason)
+    struct worldStop stopTheWorldGC(golang::runtime::stwReason reason)
     {
         semacquire(& gcsema);
         return stopTheWorld(reason);
@@ -1198,7 +1198,7 @@ namespace golang::runtime
 
     uint32_t worldsema = 1;
     uint32_t gcsema = 1;
-    struct worldStop stopTheWorldWithSema(runtime::stwReason reason)
+    struct worldStop stopTheWorldWithSema(golang::runtime::stwReason reason)
     {
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -1563,7 +1563,7 @@ namespace golang::runtime
         exitThread(& mp->freeWait);
     }
 
-    void forEachP(runtime::waitReason reason, std::function<void (p*)> fn)
+    void forEachP(golang::runtime::waitReason reason, std::function<void (p*)> fn)
     {
         systemstack([=]() mutable -> void
         {
@@ -2005,7 +2005,7 @@ namespace golang::runtime
     struct gocpp_id_2
     {
         mutex lock;
-        runtime::muintptr newm;
+        golang::runtime::muintptr newm;
         bool waiting;
         note wake;
         uint32_t haveTemplateThread;
@@ -5564,21 +5564,21 @@ namespace golang::runtime
         return gp;
     }
 
-    bool rec::read(pMask p, uint32_t id)
+    bool rec::read(golang::runtime::pMask p, uint32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
         return (atomic::Load(& p[word]) & mask) != 0;
     }
 
-    void rec::set(pMask p, int32_t id)
+    void rec::set(golang::runtime::pMask p, int32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
         atomic::Or(& p[word], mask);
     }
 
-    void rec::clear(pMask p, int32_t id)
+    void rec::clear(golang::runtime::pMask p, int32_t id)
     {
         auto word = id / 32;
         auto mask = uint32_t(1) << (id % 32);
@@ -5854,7 +5854,7 @@ namespace golang::runtime
         return {drainQ, n};
     }
 
-    uint32_t runqgrab(struct p* pp, gocpp::array<runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
+    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
     {
         for(; ; )
         {

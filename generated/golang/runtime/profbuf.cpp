@@ -88,27 +88,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    runtime::profIndex rec::load(runtime::profAtomic* x)
+    runtime::profIndex rec::load(golang::runtime::profAtomic* x)
     {
         return profIndex(atomic::Load64((uint64_t*)(x)));
     }
 
-    void rec::store(runtime::profAtomic* x, runtime::profIndex go_new)
+    void rec::store(golang::runtime::profAtomic* x, golang::runtime::profIndex go_new)
     {
         atomic::Store64((uint64_t*)(x), uint64_t(go_new));
     }
 
-    bool rec::cas(runtime::profAtomic* x, runtime::profIndex old, runtime::profIndex go_new)
+    bool rec::cas(golang::runtime::profAtomic* x, golang::runtime::profIndex old, golang::runtime::profIndex go_new)
     {
         return atomic::Cas64((uint64_t*)(x), uint64_t(old), uint64_t(go_new));
     }
 
-    uint32_t rec::dataCount(runtime::profIndex x)
+    uint32_t rec::dataCount(golang::runtime::profIndex x)
     {
         return uint32_t(x);
     }
 
-    uint32_t rec::tagCount(runtime::profIndex x)
+    uint32_t rec::tagCount(golang::runtime::profIndex x)
     {
         return uint32_t(x >> 34);
     }
@@ -118,7 +118,7 @@ namespace golang::runtime
         return int((int32_t(x - y) << 2) >> 2);
     }
 
-    runtime::profIndex rec::addCountsAndClearFlags(runtime::profIndex x, int data, int tag)
+    runtime::profIndex rec::addCountsAndClearFlags(golang::runtime::profIndex x, int data, int tag)
     {
         return profIndex((((uint64_t(x) >> 34) + uint64_t((uint32_t(tag) << 2) >> 2)) << 34) | uint64_t(uint32_t(x) + uint32_t(data)));
     }
@@ -353,7 +353,7 @@ namespace golang::runtime
     }
 
     gocpp::array<unsafe::Pointer, 1> overflowTag;
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(struct profBuf* b, runtime::profBufReadMode mode)
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(struct profBuf* b, golang::runtime::profBufReadMode mode)
     {
         gocpp::slice<uint64_t> data;
         gocpp::slice<unsafe::Pointer> tags;

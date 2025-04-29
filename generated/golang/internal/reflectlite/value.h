@@ -36,7 +36,7 @@ namespace golang::reflectlite
     struct ValueError
     {
         std::string Method;
-        abi::Kind Kind;
+        golang::reflectlite::Kind Kind;
 
         using isGoStruct = void;
 
@@ -112,8 +112,8 @@ namespace golang::reflectlite
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<gocpp_id_6, false>& self);
-        void M(const gocpp::ObjRecv<gocpp_id_6>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_id_6, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_id_6>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value);
@@ -162,8 +162,8 @@ namespace golang::reflectlite
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<gocpp_id_7, false>& self);
-        void M(const gocpp::ObjRecv<gocpp_id_7>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_id_7, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_id_7>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
@@ -172,30 +172,30 @@ namespace golang::reflectlite
     unsafe::Pointer unsafe_New(abi::Type*);
     struct Value ValueOf(go_any i);
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe);
-    void ifaceE2I(struct abi::Type* t, go_any src, unsafe::Pointer dst);
-    void typedmemmove(struct abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
+    void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst);
+    void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
     void escapes(go_any x);
     unsafe::Pointer noescape(unsafe::Pointer p);
 
     namespace rec
     {
-        abi::Kind kind(reflectlite::flag f);
-        reflectlite::flag ro(reflectlite::flag f);
-        struct abi::Type* typ(struct Value v);
+        reflectlite::Kind kind(golang::reflectlite::flag f);
+        reflectlite::flag ro(golang::reflectlite::flag f);
+        abi::Type* typ(struct Value v);
         unsafe::Pointer pointer(struct Value v);
         std::string Error(struct ValueError* e);
-        void mustBeExported(reflectlite::flag f);
-        void mustBeAssignable(reflectlite::flag f);
+        void mustBeExported(golang::reflectlite::flag f);
+        void mustBeAssignable(golang::reflectlite::flag f);
         bool CanSet(struct Value v);
         struct Value Elem(struct Value v);
         bool IsNil(struct Value v);
         bool IsValid(struct Value v);
-        abi::Kind Kind(struct Value v);
+        reflectlite::Kind Kind(struct Value v);
         int Len(struct Value v);
         int numMethod(struct Value v);
         void Set(struct Value v, struct Value x);
         struct Type Type(struct Value v);
-        struct Value assignTo(struct Value v, std::string context, struct abi::Type* dst, unsafe::Pointer target);
+        struct Value assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target);
     }
 }
 

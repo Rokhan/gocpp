@@ -21,14 +21,14 @@ namespace golang::main
         using namespace fmt::rec;
     }
 
-    std::string rec::String(IPAddr ip)
+    std::string rec::String(golang::main::IPAddr ip)
     {
         return mocklib::Sprintf("%v.%v.%v.%v", ip[0], ip[1], ip[2], ip[3]);
     }
 
     void main()
     {
-        auto hosts = gocpp::map<std::string, IPAddr> {{ "loopback",  {127, 0, 0, 1} }, { "googleDNS",  {8, 8, 8, 8} }};
+        auto hosts = gocpp::map<std::string, main::IPAddr> {{ "loopback",  {127, 0, 0, 1} }, { "googleDNS",  {8, 8, 8, 8} }};
         for(auto [name, ip] : hosts)
         {
             mocklib::Printf("%v: %v\n", name, ip);

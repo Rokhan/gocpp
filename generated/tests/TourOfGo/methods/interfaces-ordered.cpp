@@ -56,12 +56,12 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<Abser, false>& self)
+        double Abs(const gocpp::PtrRecv<struct Abser, false>& self)
         {
             return self.ptr->value->vAbs();
         }
 
-        double Abs(const gocpp::ObjRecv<Abser>& self)
+        double Abs(const gocpp::ObjRecv<struct Abser>& self)
         {
             return self.obj.value->vAbs();
         }
@@ -115,7 +115,7 @@ namespace golang::main
         mocklib::Println(rec::Abs(gocpp::recv(a)));
     }
 
-    double rec::Abs(main::MyFloat f)
+    double rec::Abs(golang::main::MyFloat f)
     {
         if(f < 0)
         {

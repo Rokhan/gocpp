@@ -293,7 +293,7 @@ namespace golang::image
         return r;
     }
 
-    struct color::Color rec::At(struct Rectangle r, int x, int y)
+    color::Color rec::At(struct Rectangle r, int x, int y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -302,7 +302,7 @@ namespace golang::image
         return color::Transparent;
     }
 
-    struct color::RGBA64 rec::RGBA64At(struct Rectangle r, int x, int y)
+    color::RGBA64 rec::RGBA64At(struct Rectangle r, int x, int y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -316,7 +316,7 @@ namespace golang::image
         return r;
     }
 
-    struct color::Model rec::ColorModel(struct Rectangle r)
+    color::Model rec::ColorModel(struct Rectangle r)
     {
         return color::Alpha16Model;
     }

@@ -38,7 +38,7 @@ namespace golang::reader
         using namespace windows::rec;
     }
 
-    void Validate(struct io::Reader r)
+    void Validate(io::Reader r)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 1024, 2048);
         auto [i, o] = std::tuple{0, 0};

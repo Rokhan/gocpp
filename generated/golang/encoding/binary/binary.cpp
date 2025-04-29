@@ -17,7 +17,7 @@
 #include "golang/io/io.h"
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
@@ -99,72 +99,72 @@ namespace golang::binary
 
     namespace rec
     {
-        uint16_t Uint16(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint16_t Uint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
         {
             return self.ptr->value->vUint16();
         }
 
-        uint16_t Uint16(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint16_t Uint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
         {
             return self.obj.value->vUint16();
         }
 
-        uint32_t Uint32(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint32_t Uint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
         {
             return self.ptr->value->vUint32();
         }
 
-        uint32_t Uint32(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint32_t Uint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
         {
             return self.obj.value->vUint32();
         }
 
-        uint64_t Uint64(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint64_t Uint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
         {
             return self.ptr->value->vUint64();
         }
 
-        uint64_t Uint64(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint64_t Uint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
         {
             return self.obj.value->vUint64();
         }
 
-        void PutUint16(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
+        void PutUint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
         {
             return self.ptr->value->vPutUint16();
         }
 
-        void PutUint16(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
+        void PutUint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
         {
             return self.obj.value->vPutUint16();
         }
 
-        void PutUint32(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
+        void PutUint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
         {
             return self.ptr->value->vPutUint32();
         }
 
-        void PutUint32(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
+        void PutUint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
         {
             return self.obj.value->vPutUint32();
         }
 
-        void PutUint64(const gocpp::PtrRecv<ByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
+        void PutUint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
         {
             return self.ptr->value->vPutUint64();
         }
 
-        void PutUint64(const gocpp::ObjRecv<ByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
+        void PutUint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
         {
             return self.obj.value->vPutUint64();
         }
 
-        std::string String(const gocpp::PtrRecv<ByteOrder, false>& self)
+        std::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<ByteOrder>& self)
+        std::string String(const gocpp::ObjRecv<struct ByteOrder>& self)
         {
             return self.obj.value->vString();
         }
@@ -222,42 +222,42 @@ namespace golang::binary
 
     namespace rec
     {
-        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
         {
             return self.ptr->value->vAppendUint16();
         }
 
-        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
         {
             return self.obj.value->vAppendUint16();
         }
 
-        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
         {
             return self.ptr->value->vAppendUint32();
         }
 
-        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
         {
             return self.obj.value->vAppendUint32();
         }
 
-        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
         {
             return self.ptr->value->vAppendUint64();
         }
 
-        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<AppendByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
         {
             return self.obj.value->vAppendUint64();
         }
 
-        std::string String(const gocpp::PtrRecv<AppendByteOrder, false>& self)
+        std::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<AppendByteOrder>& self)
+        std::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self)
         {
             return self.obj.value->vString();
         }
@@ -476,7 +476,7 @@ namespace golang::binary
         return "binary.NativeEndian";
     }
 
-    struct gocpp::error Read(struct io::Reader r, struct ByteOrder order, go_any data)
+    struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -720,7 +720,7 @@ namespace golang::binary
         return nullptr;
     }
 
-    struct gocpp::error Write(struct io::Writer w, struct ByteOrder order, go_any data)
+    struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
         {
@@ -1037,7 +1037,7 @@ namespace golang::binary
     }
 
     sync::Map structSize;
-    int dataSize(struct reflect::Value v)
+    int dataSize(reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1074,7 +1074,7 @@ namespace golang::binary
         return - 1;
     }
 
-    int sizeof(struct reflect::Type t)
+    int sizeof(reflect::Type t)
     {
         //Go switch emulation
         {
@@ -1171,14 +1171,14 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    bool rec::bool(struct decoder* d)
+    bool rec::bool(golang::binary::decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x != 0;
     }
 
-    void rec::bool(struct encoder* e, bool x)
+    void rec::bool(golang::binary::encoder* e, bool x)
     {
         if(x)
         {
@@ -1191,99 +1191,99 @@ namespace golang::binary
         e->offset++;
     }
 
-    uint8_t rec::uint8(struct decoder* d)
+    uint8_t rec::uint8(golang::binary::decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x;
     }
 
-    void rec::uint8(struct encoder* e, uint8_t x)
+    void rec::uint8(golang::binary::encoder* e, uint8_t x)
     {
         e->buf[e->offset] = x;
         e->offset++;
     }
 
-    uint16_t rec::uint16(struct decoder* d)
+    uint16_t rec::uint16(golang::binary::decoder* d)
     {
         auto x = rec::Uint16(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 2));
         d->offset += 2;
         return x;
     }
 
-    void rec::uint16(struct encoder* e, uint16_t x)
+    void rec::uint16(golang::binary::encoder* e, uint16_t x)
     {
         rec::PutUint16(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 2), x);
         e->offset += 2;
     }
 
-    uint32_t rec::uint32(struct decoder* d)
+    uint32_t rec::uint32(golang::binary::decoder* d)
     {
         auto x = rec::Uint32(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 4));
         d->offset += 4;
         return x;
     }
 
-    void rec::uint32(struct encoder* e, uint32_t x)
+    void rec::uint32(golang::binary::encoder* e, uint32_t x)
     {
         rec::PutUint32(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 4), x);
         e->offset += 4;
     }
 
-    uint64_t rec::uint64(struct decoder* d)
+    uint64_t rec::uint64(golang::binary::decoder* d)
     {
         auto x = rec::Uint64(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 8));
         d->offset += 8;
         return x;
     }
 
-    void rec::uint64(struct encoder* e, uint64_t x)
+    void rec::uint64(golang::binary::encoder* e, uint64_t x)
     {
         rec::PutUint64(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 8), x);
         e->offset += 8;
     }
 
-    int8_t rec::int8(struct decoder* d)
+    int8_t rec::int8(golang::binary::decoder* d)
     {
         return int8_t(rec::uint8_t(gocpp::recv(d)));
     }
 
-    void rec::int8(struct encoder* e, int8_t x)
+    void rec::int8(golang::binary::encoder* e, int8_t x)
     {
         rec::uint8_t(gocpp::recv(e), uint8_t(x));
     }
 
-    int16_t rec::int16(struct decoder* d)
+    int16_t rec::int16(golang::binary::decoder* d)
     {
         return int16_t(rec::uint16_t(gocpp::recv(d)));
     }
 
-    void rec::int16(struct encoder* e, int16_t x)
+    void rec::int16(golang::binary::encoder* e, int16_t x)
     {
         rec::uint16_t(gocpp::recv(e), uint16_t(x));
     }
 
-    int32_t rec::int32(struct decoder* d)
+    int32_t rec::int32(golang::binary::decoder* d)
     {
         return int32_t(rec::uint32_t(gocpp::recv(d)));
     }
 
-    void rec::int32(struct encoder* e, int32_t x)
+    void rec::int32(golang::binary::encoder* e, int32_t x)
     {
         rec::uint32_t(gocpp::recv(e), uint32_t(x));
     }
 
-    int64_t rec::int64(struct decoder* d)
+    int64_t rec::int64(golang::binary::decoder* d)
     {
         return int64_t(rec::uint64_t(gocpp::recv(d)));
     }
 
-    void rec::int64(struct encoder* e, int64_t x)
+    void rec::int64(golang::binary::encoder* e, int64_t x)
     {
         rec::uint64_t(gocpp::recv(e), uint64_t(x));
     }
 
-    void rec::value(struct decoder* d, struct reflect::Value v)
+    void rec::value(golang::binary::decoder* d, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1379,7 +1379,7 @@ namespace golang::binary
         }
     }
 
-    void rec::value(struct encoder* e, struct reflect::Value v)
+    void rec::value(golang::binary::encoder* e, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1545,12 +1545,12 @@ namespace golang::binary
         }
     }
 
-    void rec::skip(struct decoder* d, struct reflect::Value v)
+    void rec::skip(golang::binary::decoder* d, reflect::Value v)
     {
         d->offset += dataSize(v);
     }
 
-    void rec::skip(struct encoder* e, struct reflect::Value v)
+    void rec::skip(golang::binary::encoder* e, reflect::Value v)
     {
         auto n = dataSize(v);
         auto zero = e->buf.make_slice(e->offset, e->offset + n);

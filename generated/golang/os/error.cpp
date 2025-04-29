@@ -75,12 +75,12 @@ namespace golang::os
 
     namespace rec
     {
-        bool Timeout(const gocpp::PtrRecv<timeout, false>& self)
+        bool Timeout(const gocpp::PtrRecv<struct timeout, false>& self)
         {
             return self.ptr->value->vTimeout();
         }
 
-        bool Timeout(const gocpp::ObjRecv<timeout>& self)
+        bool Timeout(const gocpp::ObjRecv<struct timeout>& self)
         {
             return self.obj.value->vTimeout();
         }

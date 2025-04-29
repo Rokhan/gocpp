@@ -171,7 +171,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& finlock, getLockRank(& finlock));
     }
 
-    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, struct _type* fint, struct ptrtype* ot)
+    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
     {
         if(gcphase != _GCoff)
         {
@@ -213,7 +213,7 @@ namespace golang::runtime
         rec::Or(gocpp::recv(fingStatus), fingWake);
     }
 
-    void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, _type*, ptrtype*)> callback)
+    void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback)
     {
         for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
         {
@@ -311,7 +311,7 @@ namespace golang::runtime
                                 *(unsafe::Pointer*)(r) = f->arg;
                                 break;
                             case 1:
-                                auto ityp = (interfacetype*)(unsafe::Pointer(f->fint));
+                                auto ityp = (runtime::interfacetype*)(unsafe::Pointer(f->fint));
                                 (eface*)(r)->_type = & f->ot->Type;
                                 (eface*)(r)->data = f->arg;
                                 if(len(ityp->Methods) != 0)
@@ -392,7 +392,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: first argument is " + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer");
         }
-        auto ot = (ptrtype*)(unsafe::Pointer(etyp));
+        auto ot = (runtime::ptrtype*)(unsafe::Pointer(etyp));
         if(ot->Elem == nullptr)
         {
             go_throw("nil elem type!");
@@ -435,7 +435,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: second argument is " + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function");
         }
-        auto ft = (functype*)(unsafe::Pointer(ftyp));
+        auto ft = (runtime::functype*)(unsafe::Pointer(ftyp));
         if(rec::IsVariadic(gocpp::recv(ft)))
         {
             go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot");
@@ -457,13 +457,13 @@ namespace golang::runtime
                     goto okarg;
                     break;
                 case 1:
-                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (ptrtype*)(unsafe::Pointer(fint))->Elem == ot->Elem)
+                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (runtime::ptrtype*)(unsafe::Pointer(fint))->Elem == ot->Elem)
                     {
                         goto okarg;
                     }
                     break;
                 case 2:
-                    auto ityp = (interfacetype*)(unsafe::Pointer(fint));
+                    auto ityp = (runtime::interfacetype*)(unsafe::Pointer(fint));
                     if(len(ityp->Methods) == 0)
                     {
                         goto okarg;

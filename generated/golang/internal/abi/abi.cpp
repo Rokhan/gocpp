@@ -99,12 +99,12 @@ namespace golang::abi
         return unsafe::Pointer(uintptr_t(unsafe::Pointer(& r->Ints[reg])) + offset);
     }
 
-    void rec::Set(IntArgRegBitmap* b, int i)
+    void rec::Set(golang::abi::IntArgRegBitmap* b, int i)
     {
         b[i / 8] |= uint8_t(1) << (i % 8);
     }
 
-    bool rec::Get(IntArgRegBitmap* b, int i)
+    bool rec::Get(golang::abi::IntArgRegBitmap* b, int i)
     {
         return b[i / 8] & (uint8_t(1) << (i % 8)) != 0;
     }

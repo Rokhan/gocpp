@@ -49,7 +49,7 @@ namespace golang::runtime
     std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     bool reflect_verifyNotInHeapPtr(uintptr_t p);
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
-    void typeBitsBulkBarrier(struct _type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
+    void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
     uintptr_t readUintptr(unsigned char* p);
     struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);

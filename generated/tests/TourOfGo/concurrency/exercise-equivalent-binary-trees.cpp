@@ -23,12 +23,12 @@ namespace golang::main
         using namespace tree::rec;
     }
 
-    void Walk(struct tree::Tree* t, gocpp::channel<int> ch)
+    void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::panic("Not implemented");
     }
 
-    bool Same(struct tree::Tree* t1, struct tree::Tree* t2)
+    bool Same(tree::Tree* t1, tree::Tree* t2)
     {
         gocpp::panic("Not implemented");
     }

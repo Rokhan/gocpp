@@ -12,7 +12,7 @@
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/type.h"
 #include "golang/reflect/abi.h"
-// #include "golang/reflect/value.h"  [Ignored, known errors]
+#include "golang/reflect/value.h"
 #include "golang/sync/atomic/type.h"
 // #include "golang/sync/cond.h"  [Ignored, known errors]
 #include "golang/sync/map.h"
@@ -73,8 +73,8 @@ namespace golang::reflect
             virtual int vNumIn() = 0;
             virtual int vNumOut() = 0;
             virtual struct Type vOut(int i) = 0;
-            virtual struct abi::Type* vcommon() = 0;
-            virtual struct uncommonType* vuncommon() = 0;
+            virtual abi::Type* vcommon() = 0;
+            virtual reflect::uncommonType* vuncommon() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -143,9 +143,9 @@ namespace golang::reflect
 
             struct Type vOut(int i) override;
 
-            struct abi::Type* vcommon() override;
+            abi::Type* vcommon() override;
 
-            struct uncommonType* vuncommon() override;
+            reflect::uncommonType* vuncommon() override;
 
             StoreT value;
         };
@@ -155,98 +155,98 @@ namespace golang::reflect
 
     namespace rec
     {
-        int Align(const gocpp::PtrRecv<Type, false>& self);
-        int Align(const gocpp::ObjRecv<Type>& self);
+        int Align(const gocpp::PtrRecv<struct Type, false>& self);
+        int Align(const gocpp::ObjRecv<struct Type>& self);
 
-        int FieldAlign(const gocpp::PtrRecv<Type, false>& self);
-        int FieldAlign(const gocpp::ObjRecv<Type>& self);
+        int FieldAlign(const gocpp::PtrRecv<struct Type, false>& self);
+        int FieldAlign(const gocpp::ObjRecv<struct Type>& self);
 
-        struct Method Method(const gocpp::PtrRecv<Type, false>& self, int);
-        struct Method Method(const gocpp::ObjRecv<Type>& self, int);
+        struct Method Method(const gocpp::PtrRecv<struct Type, false>& self, int);
+        struct Method Method(const gocpp::ObjRecv<struct Type>& self, int);
 
-        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<Type, false>& self, std::string);
-        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<Type>& self, std::string);
+        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, std::string);
+        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, std::string);
 
-        int NumMethod(const gocpp::PtrRecv<Type, false>& self);
-        int NumMethod(const gocpp::ObjRecv<Type>& self);
+        int NumMethod(const gocpp::PtrRecv<struct Type, false>& self);
+        int NumMethod(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string Name(const gocpp::PtrRecv<Type, false>& self);
-        std::string Name(const gocpp::ObjRecv<Type>& self);
+        std::string Name(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string Name(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string PkgPath(const gocpp::PtrRecv<Type, false>& self);
-        std::string PkgPath(const gocpp::ObjRecv<Type>& self);
+        std::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string PkgPath(const gocpp::ObjRecv<struct Type>& self);
 
-        uintptr_t Size(const gocpp::PtrRecv<Type, false>& self);
-        uintptr_t Size(const gocpp::ObjRecv<Type>& self);
+        uintptr_t Size(const gocpp::PtrRecv<struct Type, false>& self);
+        uintptr_t Size(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string String(const gocpp::PtrRecv<Type, false>& self);
-        std::string String(const gocpp::ObjRecv<Type>& self);
+        std::string String(const gocpp::PtrRecv<struct Type, false>& self);
+        std::string String(const gocpp::ObjRecv<struct Type>& self);
 
-        reflect::Kind Kind(const gocpp::PtrRecv<Type, false>& self);
-        reflect::Kind Kind(const gocpp::ObjRecv<Type>& self);
+        reflect::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self);
+        reflect::Kind Kind(const gocpp::ObjRecv<struct Type>& self);
 
-        bool Implements(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-        bool Implements(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, struct Type u);
+        bool Implements(const gocpp::ObjRecv<struct Type>& self, struct Type u);
 
-        bool AssignableTo(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-        bool AssignableTo(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, struct Type u);
+        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, struct Type u);
 
-        bool ConvertibleTo(const gocpp::PtrRecv<Type, false>& self, struct Type u);
-        bool ConvertibleTo(const gocpp::ObjRecv<Type>& self, struct Type u);
+        bool ConvertibleTo(const gocpp::PtrRecv<struct Type, false>& self, struct Type u);
+        bool ConvertibleTo(const gocpp::ObjRecv<struct Type>& self, struct Type u);
 
-        bool Comparable(const gocpp::PtrRecv<Type, false>& self);
-        bool Comparable(const gocpp::ObjRecv<Type>& self);
+        bool Comparable(const gocpp::PtrRecv<struct Type, false>& self);
+        bool Comparable(const gocpp::ObjRecv<struct Type>& self);
 
-        int Bits(const gocpp::PtrRecv<Type, false>& self);
-        int Bits(const gocpp::ObjRecv<Type>& self);
+        int Bits(const gocpp::PtrRecv<struct Type, false>& self);
+        int Bits(const gocpp::ObjRecv<struct Type>& self);
 
-        reflect::ChanDir ChanDir(const gocpp::PtrRecv<Type, false>& self);
-        reflect::ChanDir ChanDir(const gocpp::ObjRecv<Type>& self);
+        reflect::ChanDir ChanDir(const gocpp::PtrRecv<struct Type, false>& self);
+        reflect::ChanDir ChanDir(const gocpp::ObjRecv<struct Type>& self);
 
-        bool IsVariadic(const gocpp::PtrRecv<Type, false>& self);
-        bool IsVariadic(const gocpp::ObjRecv<Type>& self);
+        bool IsVariadic(const gocpp::PtrRecv<struct Type, false>& self);
+        bool IsVariadic(const gocpp::ObjRecv<struct Type>& self);
 
-        struct Type Elem(const gocpp::PtrRecv<Type, false>& self);
-        struct Type Elem(const gocpp::ObjRecv<Type>& self);
+        struct Type Elem(const gocpp::PtrRecv<struct Type, false>& self);
+        struct Type Elem(const gocpp::ObjRecv<struct Type>& self);
 
-        struct StructField Field(const gocpp::PtrRecv<Type, false>& self, int i);
-        struct StructField Field(const gocpp::ObjRecv<Type>& self, int i);
+        struct StructField Field(const gocpp::PtrRecv<struct Type, false>& self, int i);
+        struct StructField Field(const gocpp::ObjRecv<struct Type>& self, int i);
 
-        struct StructField FieldByIndex(const gocpp::PtrRecv<Type, false>& self, gocpp::slice<int> index);
-        struct StructField FieldByIndex(const gocpp::ObjRecv<Type>& self, gocpp::slice<int> index);
+        struct StructField FieldByIndex(const gocpp::PtrRecv<struct Type, false>& self, gocpp::slice<int> index);
+        struct StructField FieldByIndex(const gocpp::ObjRecv<struct Type>& self, gocpp::slice<int> index);
 
-        std::tuple<struct StructField, bool> FieldByName(const gocpp::PtrRecv<Type, false>& self, std::string name);
-        std::tuple<struct StructField, bool> FieldByName(const gocpp::ObjRecv<Type>& self, std::string name);
+        std::tuple<struct StructField, bool> FieldByName(const gocpp::PtrRecv<struct Type, false>& self, std::string name);
+        std::tuple<struct StructField, bool> FieldByName(const gocpp::ObjRecv<struct Type>& self, std::string name);
 
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<Type, false>& self, std::function<bool (std::string)> match);
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<Type>& self, std::function<bool (std::string)> match);
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<struct Type, false>& self, std::function<bool (std::string)> match);
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<struct Type>& self, std::function<bool (std::string)> match);
 
-        struct Type In(const gocpp::PtrRecv<Type, false>& self, int i);
-        struct Type In(const gocpp::ObjRecv<Type>& self, int i);
+        struct Type In(const gocpp::PtrRecv<struct Type, false>& self, int i);
+        struct Type In(const gocpp::ObjRecv<struct Type>& self, int i);
 
-        struct Type Key(const gocpp::PtrRecv<Type, false>& self);
-        struct Type Key(const gocpp::ObjRecv<Type>& self);
+        struct Type Key(const gocpp::PtrRecv<struct Type, false>& self);
+        struct Type Key(const gocpp::ObjRecv<struct Type>& self);
 
-        int Len(const gocpp::PtrRecv<Type, false>& self);
-        int Len(const gocpp::ObjRecv<Type>& self);
+        int Len(const gocpp::PtrRecv<struct Type, false>& self);
+        int Len(const gocpp::ObjRecv<struct Type>& self);
 
-        int NumField(const gocpp::PtrRecv<Type, false>& self);
-        int NumField(const gocpp::ObjRecv<Type>& self);
+        int NumField(const gocpp::PtrRecv<struct Type, false>& self);
+        int NumField(const gocpp::ObjRecv<struct Type>& self);
 
-        int NumIn(const gocpp::PtrRecv<Type, false>& self);
-        int NumIn(const gocpp::ObjRecv<Type>& self);
+        int NumIn(const gocpp::PtrRecv<struct Type, false>& self);
+        int NumIn(const gocpp::ObjRecv<struct Type>& self);
 
-        int NumOut(const gocpp::PtrRecv<Type, false>& self);
-        int NumOut(const gocpp::ObjRecv<Type>& self);
+        int NumOut(const gocpp::PtrRecv<struct Type, false>& self);
+        int NumOut(const gocpp::ObjRecv<struct Type>& self);
 
-        struct Type Out(const gocpp::PtrRecv<Type, false>& self, int i);
-        struct Type Out(const gocpp::ObjRecv<Type>& self, int i);
+        struct Type Out(const gocpp::PtrRecv<struct Type, false>& self, int i);
+        struct Type Out(const gocpp::ObjRecv<struct Type>& self, int i);
 
-        struct abi::Type* common(const gocpp::PtrRecv<Type, false>& self);
-        struct abi::Type* common(const gocpp::ObjRecv<Type>& self);
+        abi::Type* common(const gocpp::PtrRecv<struct Type, false>& self);
+        abi::Type* common(const gocpp::ObjRecv<struct Type>& self);
 
-        struct uncommonType* uncommon(const gocpp::PtrRecv<Type, false>& self);
-        struct uncommonType* uncommon(const gocpp::ObjRecv<Type>& self);
+        reflect::uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self);
+        reflect::uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
@@ -296,8 +296,8 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interfaceType& value);
-    struct abi::Name nameOffFor(struct abi::Type* t, abi::aNameOff off);
-    struct abi::Type* typeOffFor(struct abi::Type* t, abi::aTypeOff off);
+    abi::Name nameOffFor(abi::Type* t, golang::reflect::aNameOff off);
+    abi::Type* typeOffFor(abi::Type* t, golang::reflect::aTypeOff off);
     struct mapType
     {
 
@@ -358,14 +358,14 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structType& value);
-    std::string pkgPath(struct abi::Name n);
-    struct abi::Name newName(std::string n, std::string tag, bool exported, bool embedded);
+    std::string pkgPath(abi::Name n);
+    abi::Name newName(std::string n, std::string tag, bool exported, bool embedded);
     struct Method
     {
         std::string Name;
         std::string PkgPath;
         Type Type;
-        Value Func;
+        /* Value Func; [Known incomplete type] */
         int Index;
 
         using isGoStruct = void;
@@ -385,21 +385,21 @@ namespace golang::reflect
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
     unsafe::Pointer resolveTextOff(unsafe::Pointer rtype, int32_t off);
     int32_t addReflectOff(unsafe::Pointer ptr);
-    abi::aNameOff resolveReflectName(struct abi::Name n);
-    abi::aTypeOff resolveReflectType(struct abi::Type* t);
-    abi::aTextOff resolveReflectText(unsafe::Pointer ptr);
-    unsafe::Pointer textOffFor(struct abi::Type* t, abi::aTextOff off);
-    std::string pkgPathFor(struct abi::Type* t);
-    std::string nameFor(struct abi::Type* t);
-    struct rtype* toRType(struct abi::Type* t);
-    struct abi::Type* elem(struct abi::Type* t);
+    reflect::aNameOff resolveReflectName(abi::Name n);
+    reflect::aTypeOff resolveReflectType(abi::Type* t);
+    reflect::aTextOff resolveReflectText(unsafe::Pointer ptr);
+    unsafe::Pointer textOffFor(abi::Type* t, golang::reflect::aTextOff off);
+    std::string pkgPathFor(abi::Type* t);
+    std::string nameFor(abi::Type* t);
+    struct rtype* toRType(abi::Type* t);
+    abi::Type* elem(abi::Type* t);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct StructField
     {
         std::string Name;
         std::string PkgPath;
         Type Type;
-        reflect::StructTag Tag;
+        golang::reflect::StructTag Tag;
         uintptr_t Offset;
         gocpp::slice<int> Index;
         bool Anonymous;
@@ -434,10 +434,10 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct fieldScan& value);
     struct Type TypeOf(go_any i);
-    struct abi::Type* rtypeOf(go_any i);
+    abi::Type* rtypeOf(go_any i);
     struct Type PtrTo(struct Type t);
     struct Type PointerTo(struct Type t);
-    struct abi::Type* ptrTo(struct abi::Type* t);
+    abi::Type* ptrTo(abi::Type* t);
     uint32_t fnv1(uint32_t x, gocpp::slice<unsigned char> list);
     
     template<typename... Args>
@@ -451,17 +451,17 @@ namespace golang::reflect
     {
         return fnv1(x, gocpp::ToSlice<unsigned char>(value, list...));
     }
-    bool implements(struct abi::Type* T, struct abi::Type* V);
-    bool specialChannelAssignability(struct abi::Type* T, struct abi::Type* V);
-    bool directlyAssignable(struct abi::Type* T, struct abi::Type* V);
-    bool haveIdenticalType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
-    bool haveIdenticalUnderlyingType(struct abi::Type* T, struct abi::Type* V, bool cmpTags);
+    bool implements(abi::Type* T, abi::Type* V);
+    bool specialChannelAssignability(abi::Type* T, abi::Type* V);
+    bool directlyAssignable(abi::Type* T, abi::Type* V);
+    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
+    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
-    struct abi::Type* rtypeOff(unsafe::Pointer section, int32_t off);
+    abi::Type* rtypeOff(unsafe::Pointer section, int32_t off);
     gocpp::slice<abi::Type*> typesByString(std::string s);
     struct cacheKey
     {
-        reflect::Kind kind;
+        golang::reflect::Kind kind;
         abi::Type* t1;
         abi::Type* t2;
         uintptr_t extra;
@@ -478,22 +478,22 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cacheKey& value);
-    struct Type ChanOf(reflect::ChanDir dir, struct Type t);
+    struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t);
     struct Type MapOf(struct Type key, struct Type elem);
     struct Type initFuncTypes(int n);
     struct Type FuncOf(gocpp::slice<Type> in, gocpp::slice<Type> out, bool variadic);
-    std::string stringFor(struct abi::Type* t);
-    std::string funcStr(struct funcType* ft);
-    bool isReflexive(struct abi::Type* t);
-    bool needKeyUpdate(struct abi::Type* t);
-    bool hashMightPanic(struct abi::Type* t);
-    struct abi::Type* bucketOf(struct abi::Type* ktyp, struct abi::Type* etyp);
-    void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, struct abi::Type* typ, uintptr_t n);
-    gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, struct abi::Type* typ);
+    std::string stringFor(abi::Type* t);
+    std::string funcStr(golang::reflect::funcType* ft);
+    bool isReflexive(abi::Type* t);
+    bool needKeyUpdate(abi::Type* t);
+    bool hashMightPanic(abi::Type* t);
+    abi::Type* bucketOf(abi::Type* ktyp, abi::Type* etyp);
+    void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);
+    gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ);
     struct Type SliceOf(struct Type t);
     struct structTypeUncommon
     {
-        uncommonType u;
+        golang::reflect::uncommonType u;
 
         using isGoStruct = void;
 
@@ -511,14 +511,14 @@ namespace golang::reflect
     bool isValidFieldName(std::string fieldName);
     struct Type StructOf(gocpp::slice<StructField> fields);
     void embeddedIfaceMethStub();
-    std::tuple<struct structField, std::string> runtimeStructField(struct StructField field);
-    uintptr_t typeptrdata(struct abi::Type* t);
+    std::tuple<reflect::structField, std::string> runtimeStructField(struct StructField field);
+    uintptr_t typeptrdata(abi::Type* t);
     struct Type ArrayOf(int length, struct Type elem);
     gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
-    struct Type toType(struct abi::Type* t);
+    struct Type toType(abi::Type* t);
     struct layoutKey
     {
-        funcType* ftyp;
+        golang::reflect::funcType* ftyp;
         abi::Type* rcvr;
 
         using isGoStruct = void;
@@ -551,8 +551,8 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct layoutType& value);
-    std::tuple<struct abi::Type*, struct sync::Pool*, struct abiDesc> funcLayout(struct funcType* t, struct abi::Type* rcvr);
-    bool ifaceIndir(struct abi::Type* t);
+    std::tuple<abi::Type*, sync::Pool*, struct abiDesc> funcLayout(golang::reflect::funcType* t, abi::Type* rcvr);
+    bool ifaceIndir(abi::Type* t);
     struct bitVector
     {
         uint32_t n;
@@ -570,22 +570,24 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitVector& value);
-    void addTypeBits(struct bitVector* bv, uintptr_t offset, struct abi::Type* t);
+    void addTypeBits(struct bitVector* bv, uintptr_t offset, abi::Type* t);
+    
+    template<typename T>
     struct Type TypeFor();
 
     namespace rec
     {
-        struct abi::Type* common(struct rtype* t);
-        struct abi::UncommonType* uncommon(struct rtype* t);
-        struct abi::Name nameOff(struct interfaceType* t, abi::aNameOff off);
-        struct abi::Type* typeOff(struct interfaceType* t, abi::aTypeOff off);
-        struct abi::Type* common(struct interfaceType* t);
-        struct abi::UncommonType* uncommon(struct interfaceType* t);
+        abi::Type* common(struct rtype* t);
+        abi::UncommonType* uncommon(struct rtype* t);
+        abi::Name nameOff(struct interfaceType* t, golang::reflect::aNameOff off);
+        abi::Type* typeOff(struct interfaceType* t, golang::reflect::aTypeOff off);
+        abi::Type* common(struct interfaceType* t);
+        abi::UncommonType* uncommon(struct interfaceType* t);
         bool IsExported(struct Method m);
-        std::string String(reflect::Kind k);
-        struct abi::Name nameOff(struct rtype* t, abi::aNameOff off);
-        struct abi::Type* typeOff(struct rtype* t, abi::aTypeOff off);
-        unsafe::Pointer textOff(struct rtype* t, abi::aTextOff off);
+        std::string String(golang::reflect::Kind k);
+        abi::Name nameOff(struct rtype* t, golang::reflect::aNameOff off);
+        abi::Type* typeOff(struct rtype* t, golang::reflect::aTypeOff off);
+        unsafe::Pointer textOff(struct rtype* t, golang::reflect::aTextOff off);
         std::string String(struct rtype* t);
         uintptr_t Size(struct rtype* t);
         int Bits(struct rtype* t);
@@ -612,18 +614,18 @@ namespace golang::reflect
         int NumOut(struct rtype* t);
         struct Type Out(struct rtype* t, int i);
         bool IsVariadic(struct rtype* t);
-        std::string String(reflect::ChanDir d);
+        std::string String(golang::reflect::ChanDir d);
         struct Method Method(struct interfaceType* t, int i);
         int NumMethod(struct interfaceType* t);
         std::tuple<struct Method, bool> MethodByName(struct interfaceType* t, std::string name);
         bool IsExported(struct StructField f);
-        std::string Get(reflect::StructTag tag, std::string key);
-        std::tuple<std::string, bool> Lookup(reflect::StructTag tag, std::string key);
+        std::string Get(golang::reflect::StructTag tag, std::string key);
+        std::tuple<std::string, bool> Lookup(golang::reflect::StructTag tag, std::string key);
         struct StructField Field(struct structType* t, int i);
         struct StructField FieldByIndex(struct structType* t, gocpp::slice<int> index);
         std::tuple<struct StructField, bool> FieldByNameFunc(struct structType* t, std::function<bool (std::string)> match);
         std::tuple<struct StructField, bool> FieldByName(struct structType* t, std::string name);
-        struct abi::Type* ptrTo(struct rtype* t);
+        abi::Type* ptrTo(struct rtype* t);
         bool Implements(struct rtype* t, struct Type u);
         bool AssignableTo(struct rtype* t, struct Type u);
         bool ConvertibleTo(struct rtype* t, struct Type u);

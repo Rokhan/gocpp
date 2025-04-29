@@ -46,7 +46,7 @@ namespace golang::runtime
         return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
     }
 
-    unsafe::Pointer rec::pointer(runtime::taggedPointer tp)
+    unsafe::Pointer rec::pointer(golang::runtime::taggedPointer tp)
     {
         if(GOARCH == "amd64")
         {
@@ -63,7 +63,7 @@ namespace golang::runtime
         return unsafe::Pointer(uintptr_t((tp >> tagBits) << 3));
     }
 
-    uintptr_t rec::tag(runtime::taggedPointer tp)
+    uintptr_t rec::tag(golang::runtime::taggedPointer tp)
     {
         return uintptr_t(tp & ((1 << taggedPointerBits) - 1));
     }

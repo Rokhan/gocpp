@@ -44,7 +44,7 @@ namespace golang::strings
         std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(struct Reader* r);
         struct gocpp::error UnreadRune(struct Reader* r);
         std::tuple<int64_t, struct gocpp::error> Seek(struct Reader* r, int64_t offset, int whence);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(struct Reader* r, struct io::Writer w);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(struct Reader* r, io::Writer w);
         void Reset(struct Reader* r, std::string s);
     }
 }

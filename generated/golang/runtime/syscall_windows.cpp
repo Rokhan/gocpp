@@ -261,7 +261,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::assignArg(struct abiDesc* p, struct _type* t)
+    void rec::assignArg(struct abiDesc* p, golang::runtime::_type* t)
     {
         if(t->Size_ > goarch::PtrSize)
         {
@@ -296,7 +296,7 @@ namespace golang::runtime
         p->srcStackSize += goarch::PtrSize;
     }
 
-    bool rec::tryRegAssignArg(struct abiDesc* p, struct _type* t, uintptr_t offset)
+    bool rec::tryRegAssignArg(struct abiDesc* p, golang::runtime::_type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -343,14 +343,14 @@ namespace golang::runtime
                     }
                     break;
                 case 14:
-                    auto at = (arraytype*)(unsafe::Pointer(t));
+                    auto at = (runtime::arraytype*)(unsafe::Pointer(t));
                     if(at->Len == 1)
                     {
                         return rec::tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
                 case 15:
-                    auto st = (structtype*)(unsafe::Pointer(t));
+                    auto st = (runtime::structtype*)(unsafe::Pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -454,7 +454,7 @@ namespace golang::runtime
             uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
-        auto ft = (functype*)(unsafe::Pointer(fn._type));
+        auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {

@@ -80,9 +80,9 @@ namespace golang::runtime
         atomic::Float64 assistWorkPerByte;
         atomic::Float64 assistBytesPerWork;
         double fractionalUtilizationGoal;
-        runtime::sysMemStat heapInUse;
-        runtime::sysMemStat heapReleased;
-        runtime::sysMemStat heapFree;
+        golang::runtime::sysMemStat heapInUse;
+        golang::runtime::sysMemStat heapReleased;
+        golang::runtime::sysMemStat heapFree;
         atomic::Uint64 totalAlloc;
         atomic::Uint64 totalFree;
         atomic::Uint64 mappedReady;
@@ -116,7 +116,7 @@ namespace golang::runtime
         void enlistWorker(struct gcControllerState* c);
         std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now);
         void resetLive(struct gcControllerState* c, uint64_t bytesMarked);
-        void markWorkerStop(struct gcControllerState* c, runtime::gcMarkWorkerMode mode, int64_t duration);
+        void markWorkerStop(struct gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration);
         void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
         void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount);
         void addGlobals(struct gcControllerState* c, int64_t amount);

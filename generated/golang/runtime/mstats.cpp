@@ -161,6 +161,42 @@ namespace golang::runtime
     mstats memstats;
     
     template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_0::operator T()
+    {
+        T result;
+        result.Size = this->Size;
+        result.Mallocs = this->Mallocs;
+        result.Frees = this->Frees;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_0::operator==(const T& ref) const
+    {
+        if (Size != ref.Size) return false;
+        if (Mallocs != ref.Mallocs) return false;
+        if (Frees != ref.Frees) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Size;
+        os << " " << Mallocs;
+        os << " " << Frees;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     MemStats::operator T()
     {
         T result;
@@ -517,12 +553,12 @@ namespace golang::runtime
         }
     }
 
-    uint64_t rec::load(runtime::sysMemStat* s)
+    uint64_t rec::load(golang::runtime::sysMemStat* s)
     {
         return atomic::Load64((uint64_t*)(s));
     }
 
-    void rec::add(runtime::sysMemStat* s, int64_t n)
+    void rec::add(golang::runtime::sysMemStat* s, int64_t n)
     {
         auto val = atomic::Xadd64((uint64_t*)(s), n);
         if((n > 0 && int64_t(val) < n) || (n < 0 && int64_t(val) + n < n))

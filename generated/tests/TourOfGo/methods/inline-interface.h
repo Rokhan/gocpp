@@ -74,8 +74,8 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<gocpp_id_0, false>& self);
-        double Abs(const gocpp::ObjRecv<gocpp_id_0>& self);
+        double Abs(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
+        double Abs(const gocpp::ObjRecv<struct gocpp_id_0>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
@@ -123,8 +123,8 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<gocpp_id_1, false>& self);
-        double Abs(const gocpp::ObjRecv<gocpp_id_1>& self);
+        double Abs(const gocpp::PtrRecv<struct gocpp_id_1, false>& self);
+        double Abs(const gocpp::ObjRecv<struct gocpp_id_1>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
@@ -132,8 +132,8 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(main::MyInt i);
-        double Abs(main::MyFloat f);
+        double Abs(golang::main::MyInt i);
+        double Abs(golang::main::MyFloat f);
         double Abs(struct Vertex v);
     }
 }

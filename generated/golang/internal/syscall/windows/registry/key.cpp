@@ -28,12 +28,12 @@ namespace golang::registry
         using namespace syscall::rec;
     }
 
-    struct gocpp::error rec::Close(registry::Key k)
+    struct gocpp::error rec::Close(golang::registry::Key k)
     {
         return syscall::RegCloseKey(syscall::Handle(k));
     }
 
-    std::tuple<registry::Key, struct gocpp::error> OpenKey(registry::Key k, std::string path, uint32_t access)
+    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, std::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -49,7 +49,7 @@ namespace golang::registry
         return {Key(subkey), nullptr};
     }
 
-    std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::ReadSubKeyNames(registry::Key k)
+    std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::ReadSubKeyNames(golang::registry::Key k)
     {
         gocpp::Defer defer;
         try
@@ -97,7 +97,7 @@ namespace golang::registry
         }
     }
 
-    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(registry::Key k, std::string path, uint32_t access)
+    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, std::string path, uint32_t access)
     {
         registry::Key newk;
         bool openedExisting;
@@ -115,7 +115,7 @@ namespace golang::registry
         return {Key(h), d == _REG_OPENED_EXISTING_KEY, nullptr};
     }
 
-    struct gocpp::error DeleteKey(registry::Key k, std::string path)
+    struct gocpp::error DeleteKey(golang::registry::Key k, std::string path)
     {
         return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
     }
@@ -164,7 +164,7 @@ namespace golang::registry
         return value.PrintTo(os);
     }
 
-    std::tuple<struct KeyInfo*, struct gocpp::error> rec::Stat(registry::Key k)
+    std::tuple<struct KeyInfo*, struct gocpp::error> rec::Stat(golang::registry::Key k)
     {
         KeyInfo ki = {};
         auto err = syscall::RegQueryInfoKey(syscall::Handle(k), nullptr, nullptr, nullptr, & ki.SubKeyCount, & ki.MaxSubKeyLen, nullptr, & ki.ValueCount, & ki.MaxValueNameLen, & ki.MaxValueLen, nullptr, & ki.lastWriteTime);

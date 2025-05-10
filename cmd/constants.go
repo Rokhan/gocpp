@@ -130,53 +130,7 @@ var stdFuncMapping = map[string]string{
 	"int64":      "int64_t",
 }
 
-var knownCompilationErrors = []*errorFilter{
-	{"abi", "internal/abi/symtab.go"},
-	{"bytealg", "internal/bytealg/bytealg.go"},
-	{"cpu", "internal/cpu/cpu.go"},
-	{"atomic", "sync/atomic/doc.go"},
-	{"fmtsort", "internal/fmtsort/sort.go"},
-	{"png", "image/png/writer.go"},
-	{"race", "internal/race/norace.go"},
-	{"runtime", "runtime/alg.go"},
-	{"runtime", "runtime/cgocall.go"},
-	{"runtime", "runtime/defs_windows.go"},
-	{"runtime", "runtime/lockrank.go"},
-	{"runtime", "runtime/lockrank_off.go"},
-	{"runtime", "runtime/lock_sema.go"},
-	{"runtime", "runtime/mbitmap_allocheaders.go"},
-	{"runtime", "runtime/metrics.go"},
-	{"runtime", "runtime/mgclimit.go"},
-	{"runtime", "runtime/mgcscavenge.go"},
-	{"runtime", "runtime/mgcpacer.go"},
-	{"runtime", "runtime/mgcsweep.go"},
-	{"runtime", "runtime/mcache.go"},
-	{"runtime", "runtime/netpoll.go"},
-	{"runtime", "runtime/netpoll_windows.go"},
-	{"runtime", "runtime/os_windows.go"},
-	{"runtime", "runtime/pagetrace_off.go"},
-	{"runtime", "runtime/preempt.go"},
-	{"runtime", "runtime/print.go"},
-	{"runtime", "runtime/rand.go"},
-	{"runtime", "runtime/runtime1.go"},
-	{"runtime", "runtime/sema.go"},
-	{"runtime", "runtime/sigqueue_note.go"},
-	{"runtime", "runtime/signal_windows.go"},
-	{"runtime", "runtime/stubs.go"},
-	{"runtime", "runtime/symtab.go"},
-	{"runtime", "runtime/symtabinl.go"},
-	{"runtime", "runtime/syscall_windows.go"},
-	{"runtime", "runtime/traceback.go"},
-	{"runtime", "runtime/trace2map.go"},
-	{"runtime", "runtime/trace2region.go"},
-	{"runtime", "runtime/trace2runtime.go"},
-	{"runtime", "runtime/time.go"},
-	{"runtime", "runtime/typekind.go"},
-	/**/ {"sync", "sync/cond.go"},
-	{"sync", "sync/runtime.go"},
-	{"sync", "sync/runtime2.go"},
-	{"time", "time/tick.go"},
-}
+var knownCompilationErrors = []*errorFilter{}
 
 var knownNameConflicts = []*errorFilter{
 	{"ArrayType", "internal/abi/type"},
@@ -215,13 +169,6 @@ var knownNameConflicts = []*errorFilter{
 	{"tryRecordGoroutineProfile", "runtime/mprof"},   // missing type from broken include
 	{"doRecordGoroutineProfile", "runtime/mprof"},    // missing type from broken include
 	{"saveg", "runtime/mprof"},                       // missing type from broken include
-
-	{"Hour", "time/time"},       // func vs constant
-	{"Minute", "time/time"},     // func vs constant
-	{"Second", "time/time"},     // func vs constant
-	{"Nanosecond", "time/time"}, // func vs constant
-	{"UTC", "time/time"},        // func vs global var
-	{"Local", "time/time"},      // func vs global var
 }
 
 var knownMissingDeps = []*errorFilter{
@@ -319,6 +266,7 @@ var knownIncomplete = []*errorFilter{
 	{"Uint64::_", "sync/atomic/type"},  // Declaration order problem
 	{"Uintptr::_", "sync/atomic/type"}, // Declaration order problem
 
+	{"Cond::noCopy", "sync/cond"}, // Declaration order problem
 	{"Pool::noCopy", "sync/pool"}, // Declaration order problem
 
 	{"Matcher::dedup", "internal/bisect/bisect"}, // Declaration order problem

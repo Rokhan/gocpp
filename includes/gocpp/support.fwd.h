@@ -15,7 +15,6 @@ namespace golang
 
         struct funcval;
         struct gobuf;
-        struct gclinkptr;
         struct mcache;
         struct adjustinfo;
         struct funcInfo;

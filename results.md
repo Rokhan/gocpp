@@ -435,7 +435,7 @@
 | $(ImportDir)/sync/oncefunc.go | ✔️ ([cpp](generated/golang/sync/oncefunc.cpp), [h](generated/golang/sync/oncefunc.h))| ❌ |
 | $(ImportDir)/sync/pool.go | ✔️ ([cpp](generated/golang/sync/pool.cpp), [h](generated/golang/sync/pool.h))| ❌ |
 | $(ImportDir)/sync/poolqueue.go | ✔️ ([cpp](generated/golang/sync/poolqueue.cpp), [h](generated/golang/sync/poolqueue.h))| ❌ |
-| $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ❌ |
+| $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ✔️ |
 | $(ImportDir)/sync/runtime2.go | ✔️ ([cpp](generated/golang/sync/runtime2.cpp), [h](generated/golang/sync/runtime2.h))| ✔️ |
 | $(ImportDir)/sync/rwmutex.go | ✔️ ([cpp](generated/golang/sync/rwmutex.cpp), [h](generated/golang/sync/rwmutex.h))| ❌ |
 | $(ImportDir)/syscall/asan0.go | ✔️ ([cpp](generated/golang/syscall/asan0.cpp), [h](generated/golang/syscall/asan0.h))| ❌ |

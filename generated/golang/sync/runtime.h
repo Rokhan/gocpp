@@ -9,7 +9,7 @@
 #include "golang/sync/runtime.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/runtime2.h"  [Ignored, known errors]
+#include "golang/sync/runtime2.h"
 
 namespace golang::sync
 {

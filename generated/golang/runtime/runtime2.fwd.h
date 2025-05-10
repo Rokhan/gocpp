@@ -91,36 +91,36 @@ namespace golang::runtime
     const waitReason waitReasonPageTraceFlush = 35;
     const waitReason waitReasonCoroutine = 36;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+#include "golang/internal/abi/symtab.fwd.h"
 #include "golang/internal/chacha8rand/chacha8.fwd.h"
 #include "golang/internal/goarch/goarch.fwd.h"
-// #include "golang/runtime/cgocall.fwd.h" [Ignored, known errors]
+#include "golang/runtime/cgocall.fwd.h"
 #include "golang/runtime/chan.fwd.h"
 #include "golang/runtime/coro.fwd.h"
 #include "golang/runtime/debuglog_off.fwd.h"
 #include "golang/runtime/histogram.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/lockrank.fwd.h"
+#include "golang/runtime/lockrank_off.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mcache.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mcache.fwd.h"
 #include "golang/runtime/mgc.fwd.h"
-// #include "golang/runtime/mgclimit.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mgclimit.fwd.h"
 #include "golang/runtime/mgcwork.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mpagecache.fwd.h"
 #include "golang/runtime/mprof.fwd.h"
 #include "golang/runtime/mwbbuf.fwd.h"
-// #include "golang/runtime/os_windows.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/pagetrace_off.fwd.h" [Ignored, known errors]
+#include "golang/runtime/os_windows.fwd.h"
+#include "golang/runtime/pagetrace_off.fwd.h"
 #include "golang/runtime/panic.fwd.h"
 #include "golang/runtime/pinner.fwd.h"
 #include "golang/runtime/proc.fwd.h"
-// #include "golang/runtime/signal_windows.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
+#include "golang/runtime/signal_windows.fwd.h"
+#include "golang/runtime/symtab.fwd.h"
+#include "golang/runtime/time.fwd.h"
+#include "golang/runtime/trace2runtime.fwd.h"
 #include "golang/runtime/type.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 

@@ -31,13 +31,13 @@ namespace golang::runtime
     const spanAllocType spanAllocPtrScalarBits = 2;
     const spanAllocType spanAllocWorkBuf = 3;
 }
-// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
+#include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mbitmap_allocheaders.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/mcache.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mbitmap_allocheaders.fwd.h"
+#include "golang/runtime/mcache.fwd.h"
 #include "golang/runtime/mcentral.fwd.h"
 #include "golang/runtime/mcheckmark.fwd.h"
 #include "golang/runtime/mfixalloc.fwd.h"

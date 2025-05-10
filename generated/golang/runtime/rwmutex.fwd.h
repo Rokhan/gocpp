@@ -9,7 +9,7 @@ namespace golang::runtime
     const int rwmutexMaxReaders = 1 << 30;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
-// #include "golang/runtime/lockrank.fwd.h" [Ignored, known errors]
+#include "golang/runtime/lockrank.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime

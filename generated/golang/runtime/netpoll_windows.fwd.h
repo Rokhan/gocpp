@@ -9,8 +9,8 @@ namespace golang::runtime
     const long _DWORD_MAX = 0xffffffff;
     const uintptr_t _INVALID_HANDLE_VALUE = ~ uintptr_t(0);
 }
-// #include "golang/runtime/defs_windows.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/netpoll.fwd.h" [Ignored, known errors]
+#include "golang/runtime/defs_windows.fwd.h"
+#include "golang/runtime/netpoll.fwd.h"
 
 namespace golang::runtime
 {

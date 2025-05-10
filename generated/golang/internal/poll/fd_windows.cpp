@@ -16,7 +16,7 @@
 #include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_posix.h"
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
+#include "golang/internal/race/norace.h"
 #include "golang/internal/syscall/windows/net_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"
 #include "golang/internal/syscall/windows/syscall_windows.h"
@@ -40,6 +40,7 @@ namespace golang::poll
         using namespace errors::rec;
         using namespace io::rec;
         using namespace poll::rec;
+        using namespace race::rec;
         using namespace sync::rec;
         using namespace syscall::rec;
         using namespace unsafe::rec;

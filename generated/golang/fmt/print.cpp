@@ -13,7 +13,7 @@
 
 #include "golang/fmt/format.h"
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/fmtsort/sort.h"  [Ignored, known errors]
+#include "golang/internal/fmtsort/sort.h"
 #include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_windows.h"
@@ -25,7 +25,7 @@
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 #include "golang/strconv/itoa.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"
 #include "golang/syscall/syscall_windows.h"
@@ -39,6 +39,7 @@ namespace golang::fmt
         using namespace mocklib::rec;
         using namespace abi::rec;
         using namespace fmt::rec;
+        using namespace fmtsort::rec;
         using namespace io::rec;
         using namespace os::rec;
         using namespace poll::rec;

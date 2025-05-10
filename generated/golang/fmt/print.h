@@ -13,7 +13,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/io/io.h"
 #include "golang/reflect/value.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
 namespace golang::fmt

@@ -10,13 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/sync/mutex.h"
-// #include "golang/sync/runtime2.h"  [Ignored, known errors]
+#include "golang/sync/runtime2.h"
 
 namespace golang::sync
 {
     struct Cond
     {
-        noCopy noCopy;
+        /* noCopy noCopy; [Known incomplete type] */
         Locker L;
         notifyList notify;
         golang::sync::copyChecker checker;

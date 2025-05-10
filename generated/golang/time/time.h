@@ -82,10 +82,10 @@ namespace golang::time
         time::Weekday Weekday(struct Time t);
         std::tuple<int, int> ISOWeek(struct Time t);
         std::tuple<int, int, int> Clock(struct Time t);
-        /* int Hour(struct Time t); [Ignored, known name conflict] */ 
-        /* int Minute(struct Time t); [Ignored, known name conflict] */ 
-        /* int Second(struct Time t); [Ignored, known name conflict] */ 
-        /* int Nanosecond(struct Time t); [Ignored, known name conflict] */ 
+        int Hour(struct Time t);
+        int Minute(struct Time t);
+        int Second(struct Time t);
+        int Nanosecond(struct Time t);
         int YearDay(struct Time t);
         std::string String(golang::time::Duration d);
         int format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf);
@@ -102,8 +102,8 @@ namespace golang::time
         time::Duration Sub(struct Time t, struct Time u);
         struct Time AddDate(struct Time t, int years, int months, int days);
         std::tuple<int, time::Month, int, int> date(struct Time t, bool full);
-        /* struct Time UTC(struct Time t); [Ignored, known name conflict] */ 
-        /* struct Time Local(struct Time t); [Ignored, known name conflict] */ 
+        struct Time UTC(struct Time t);
+        struct Time Local(struct Time t);
         struct Time In(struct Time t, struct Location* loc);
         struct Location* Location(struct Time t);
         std::tuple<std::string, int> Zone(struct Time t);

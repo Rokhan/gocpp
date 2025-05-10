@@ -10,7 +10,7 @@ namespace golang::runtime
     struct traceBufQueue;
 }
 #include "golang/runtime/internal/sys/nih.fwd.h"
-// #include "golang/runtime/trace2runtime.fwd.h" [Ignored, known errors]
+#include "golang/runtime/trace2runtime.fwd.h"
 #include "golang/runtime/trace2time.fwd.h"
 
 namespace golang::runtime

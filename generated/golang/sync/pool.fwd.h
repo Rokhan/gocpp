@@ -3,7 +3,7 @@
 
 #include "gocpp/support.fwd.h"
 
-// #include "golang/sync/cond.fwd.h" [Ignored, known errors]
+#include "golang/sync/cond.fwd.h"
 #include "golang/sync/poolqueue.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"
 

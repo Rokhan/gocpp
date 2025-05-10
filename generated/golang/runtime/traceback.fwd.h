@@ -17,7 +17,7 @@ namespace golang::runtime
     const unwindFlags unwindTrap = 1 << 2;
     const unwindFlags unwindJumpStack = 1 << 3;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+#include "golang/internal/abi/symtab.fwd.h"
 #include "golang/runtime/internal/sys/consts.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/stkframe.fwd.h"

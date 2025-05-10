@@ -11,20 +11,20 @@
 #include "golang/runtime/plugin.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/iface.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+#include "golang/runtime/symtab.h"
 #include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
+#include "golang/runtime/typekind.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime

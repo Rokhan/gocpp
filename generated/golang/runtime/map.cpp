@@ -15,7 +15,7 @@
 #include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
-// #include "golang/runtime/alg.h"  [Ignored, known errors]
+#include "golang/runtime/alg.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
@@ -27,10 +27,10 @@
 #include "golang/runtime/msize_allocheaders.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/race0.h"
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
+#include "golang/runtime/rand.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/slice.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 

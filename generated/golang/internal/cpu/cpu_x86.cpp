@@ -11,13 +11,14 @@
 #include "golang/internal/cpu/cpu_x86.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 
 namespace golang::cpu
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace cpu::rec;
     }
 
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg)

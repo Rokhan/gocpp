@@ -11,13 +11,14 @@
 #include "golang/runtime/defs_windows_amd64.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/print.h"
 
 namespace golang::runtime
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace runtime::rec;
     }
 
     

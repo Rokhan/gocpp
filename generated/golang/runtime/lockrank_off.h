@@ -9,7 +9,7 @@
 #include "golang/runtime/lockrank_off.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime

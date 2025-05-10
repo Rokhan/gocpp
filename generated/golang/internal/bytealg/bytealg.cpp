@@ -11,13 +11,14 @@
 #include "golang/internal/bytealg/bytealg.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 
 namespace golang::bytealg
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace cpu::rec;
     }
 
     int MaxLen;

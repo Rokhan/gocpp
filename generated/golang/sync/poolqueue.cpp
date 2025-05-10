@@ -11,7 +11,7 @@
 #include "golang/sync/poolqueue.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/doc.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/unsafe/unsafe.h"
 

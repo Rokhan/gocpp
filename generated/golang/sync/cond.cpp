@@ -11,10 +11,10 @@
 #include "golang/sync/cond.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
-// #include "golang/sync/runtime.h"  [Ignored, known errors]
-// #include "golang/sync/runtime2.h"  [Ignored, known errors]
+#include "golang/sync/runtime.h"
+#include "golang/sync/runtime2.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
@@ -22,6 +22,7 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace atomic::rec;
         using namespace sync::rec;
         using namespace unsafe::rec;
     }

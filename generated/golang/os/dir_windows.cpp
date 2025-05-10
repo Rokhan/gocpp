@@ -27,7 +27,7 @@
 #include "golang/os/types.h"
 #include "golang/os/types_windows.h"
 #include "golang/runtime/mfinal.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"
 #include "golang/syscall/exec_windows.h"

@@ -15,7 +15,7 @@ namespace golang::runtime
     struct gocpp_id_7;
 }
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time.fwd.h"
 
 namespace golang::runtime
 {

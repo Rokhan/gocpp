@@ -26,7 +26,7 @@ namespace golang::runtime
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time.fwd.h"
 
 namespace golang::runtime
 {

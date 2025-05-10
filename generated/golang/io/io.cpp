@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
 namespace golang::io

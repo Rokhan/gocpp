@@ -23,7 +23,7 @@
 #include "golang/image/color/color.h"
 #include "golang/image/geom.h"
 #include "golang/image/image.h"
-// #include "golang/image/png/writer.h"  [Ignored, known errors]
+#include "golang/image/png/writer.h"
 #include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_windows.h"
@@ -49,6 +49,7 @@ namespace golang::pic
         using namespace image::rec;
         using namespace io::rec;
         using namespace os::rec;
+        using namespace png::rec;
         using namespace poll::rec;
         using namespace sync::rec;
         using namespace syscall::rec;

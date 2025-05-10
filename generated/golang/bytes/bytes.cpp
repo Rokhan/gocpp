@@ -12,7 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.h"
-// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
+#include "golang/internal/bytealg/bytealg.h"
 #include "golang/internal/bytealg/compare_native.h"
 #include "golang/internal/bytealg/count_native.h"
 #include "golang/internal/bytealg/index_amd64.h"

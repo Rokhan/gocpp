@@ -13,7 +13,7 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-// #include "golang/runtime/metrics.h"  [Ignored, known errors]
+#include "golang/runtime/metrics.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -22,6 +22,7 @@ namespace golang::runtime
     {
         using namespace mocklib::rec;
         using namespace atomic::rec;
+        using namespace runtime::rec;
         using namespace sys::rec;
         using namespace unsafe::rec;
     }

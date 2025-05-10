@@ -14,7 +14,7 @@
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
-// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/cgocall.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/cputicks.h"
 #include "golang/runtime/debuglog_off.h"
@@ -24,25 +24,25 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lockrank.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbarrier.h"
 #include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mprof.h"
-// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+#include "golang/runtime/os_windows.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/signal_windows.h"
+#include "golang/runtime/stubs.h"
+#include "golang/runtime/symtab.h"
+#include "golang/runtime/time.h"
 #include "golang/runtime/trace2buf.h"
-// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2runtime.h"
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"

@@ -12,19 +12,19 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mcache.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mem.h"
 #include "golang/runtime/mfixalloc.h"
-// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc_64bit.h"
 #include "golang/runtime/mpallocbits.h"
@@ -32,9 +32,9 @@
 #include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -44,6 +44,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
         using namespace abi::rec;
         using namespace atomic::rec;
+        using namespace cpu::rec;
         using namespace runtime::rec;
         using namespace sys::rec;
         using namespace unsafe::rec;

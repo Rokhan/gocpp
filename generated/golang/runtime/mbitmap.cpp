@@ -13,9 +13,9 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 #include "golang/internal/goarch/goarch.h"
-// #include "golang/runtime/cgocall.h"  [Ignored, known errors]
+#include "golang/runtime/cgocall.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"
@@ -24,18 +24,18 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mcache.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mgc.h"
-// #include "golang/runtime/mgclimit.h"  [Ignored, known errors]
+#include "golang/runtime/mgclimit.h"
 #include "golang/runtime/mgcmark.h"
-// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
@@ -46,25 +46,25 @@
 #include "golang/runtime/mspanset.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/mwbbuf.h"
-// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
-// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
+#include "golang/runtime/os_windows.h"
+#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/pinner.h"
-// #include "golang/runtime/print.h"  [Ignored, known errors]
+#include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
-// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
+#include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/signal_windows.h"  [Ignored, known errors]
+#include "golang/runtime/signal_windows.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
+#include "golang/runtime/symtab.h"
+#include "golang/runtime/time.h"
 #include "golang/runtime/trace2buf.h"
-// #include "golang/runtime/trace2runtime.h"  [Ignored, known errors]
+#include "golang/runtime/trace2runtime.h"
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
-// #include "golang/runtime/typekind.h"  [Ignored, known errors]
+#include "golang/runtime/typekind.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -75,6 +75,7 @@ namespace golang::runtime
         using namespace abi::rec;
         using namespace atomic::rec;
         using namespace chacha8rand::rec;
+        using namespace cpu::rec;
         using namespace goarch::rec;
         using namespace runtime::rec;
         using namespace sys::rec;

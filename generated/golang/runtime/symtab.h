@@ -9,7 +9,7 @@
 #include "golang/runtime/symtab.fwd.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/plugin.h"

@@ -11,7 +11,7 @@
 #include "golang/sync/atomic/value.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/doc.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::atomic
@@ -19,6 +19,7 @@ namespace golang::atomic
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace atomic::rec;
         using namespace unsafe::rec;
     }
 

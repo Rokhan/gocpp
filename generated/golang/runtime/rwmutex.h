@@ -10,8 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lockrank.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank.h"
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime

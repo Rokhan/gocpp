@@ -16,7 +16,7 @@ namespace golang::runtime
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
-// #include "golang/runtime/mgcscavenge.fwd.h" [Ignored, known errors]
+#include "golang/runtime/mgcscavenge.fwd.h"
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 #include "golang/runtime/mpallocbits.fwd.h"
 #include "golang/runtime/mranges.fwd.h"

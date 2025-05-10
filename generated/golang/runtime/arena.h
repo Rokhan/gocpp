@@ -10,17 +10,17 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
-// #include "golang/runtime/mcache.h"  [Ignored, known errors]
+#include "golang/runtime/mbitmap_allocheaders.h"
+#include "golang/runtime/mcache.h"
 #include "golang/runtime/mcentral.h"
 #include "golang/runtime/mcheckmark.h"
 #include "golang/runtime/mfixalloc.h"
-// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpallocbits.h"

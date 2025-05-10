@@ -11,13 +11,14 @@
 #include "golang/sync/runtime.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/runtime2.h"  [Ignored, known errors]
+#include "golang/sync/runtime2.h"
 
 namespace golang::sync
 {
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace sync::rec;
     }
 
     void runtime_Semacquire(uint32_t* s)

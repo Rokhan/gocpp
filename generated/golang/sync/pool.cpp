@@ -11,11 +11,11 @@
 #include "golang/sync/pool.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
+#include "golang/internal/race/norace.h"
 #include "golang/runtime/debug.h"
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/doc.h"
 #include "golang/sync/atomic/type.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/poolqueue.h"
 #include "golang/unsafe/unsafe.h"
@@ -26,6 +26,7 @@ namespace golang::sync
     {
         using namespace mocklib::rec;
         using namespace atomic::rec;
+        using namespace race::rec;
         using namespace runtime::rec;
         using namespace sync::rec;
         using namespace unsafe::rec;

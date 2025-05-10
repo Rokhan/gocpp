@@ -11,9 +11,9 @@
 #include "golang/runtime/hash64.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/alg.h"  [Ignored, known errors]
+#include "golang/runtime/alg.h"
 #include "golang/runtime/internal/math/math.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
@@ -22,6 +22,7 @@ namespace golang::runtime
     {
         using namespace mocklib::rec;
         using namespace math::rec;
+        using namespace runtime::rec;
         using namespace unsafe::rec;
     }
 

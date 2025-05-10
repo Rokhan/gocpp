@@ -10,8 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-// #include "golang/runtime/mgcscavenge.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank_off.h"
+#include "golang/runtime/mgcscavenge.h"
 #include "golang/runtime/mpagealloc.h"
 #include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"

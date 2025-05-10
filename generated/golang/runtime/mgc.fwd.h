@@ -30,7 +30,7 @@ namespace golang::runtime
     const gcTriggerKind gcTriggerTime = 1;
     const gcTriggerKind gcTriggerCycle = 2;
 }
-// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
+#include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/lfstack.fwd.h"
 #include "golang/runtime/mheap.fwd.h"

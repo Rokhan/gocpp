@@ -21,7 +21,7 @@
 #include "golang/strconv/itoa.h"
 #include "golang/strconv/quote.h"
 #include "golang/sync/atomic/type.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"

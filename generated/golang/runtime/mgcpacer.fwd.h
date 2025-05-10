@@ -18,7 +18,7 @@ namespace golang::runtime
     const long maxTriggerRatioNum = 61;
     const double gcGoalUtilization = gcBackgroundUtilization;
 }
-// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
+#include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/mstats.fwd.h"

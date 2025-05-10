@@ -8,7 +8,7 @@ namespace golang::bytealg
 {
     const long PrimeRK = 16777619;
 }
-// #include "golang/internal/cpu/cpu.fwd.h" [Ignored, known errors]
+#include "golang/internal/cpu/cpu.fwd.h"
 
 namespace golang::bytealg
 {

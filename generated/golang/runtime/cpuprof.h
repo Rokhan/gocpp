@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
+#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime2.h"
 

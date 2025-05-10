@@ -11,7 +11,7 @@
 #include "golang/runtime/exithook.h"
 #include "gocpp/support.h"
 
-// #include "golang/runtime/pagetrace_off.h"  [Ignored, known errors]
+#include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
 
 namespace golang::runtime

@@ -14,7 +14,7 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
+#include "golang/runtime/symtab.h"
 
 namespace golang::runtime
 {

@@ -14,7 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/map.h"
-// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/itoa/itoa.h"
@@ -31,8 +31,8 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/runtime/symtab.h"
+#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
 

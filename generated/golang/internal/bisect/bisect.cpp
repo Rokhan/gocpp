@@ -11,7 +11,7 @@
 #include "golang/internal/bisect/bisect.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/abi/symtab.h"  [Ignored, known errors]
+#include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -19,8 +19,8 @@
 #include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-// #include "golang/runtime/symtab.h"  [Ignored, known errors]
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/runtime/symtab.h"
+#include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -30,6 +30,7 @@ namespace golang::bisect
     {
         using namespace mocklib::rec;
         using namespace abi::rec;
+        using namespace atomic::rec;
         using namespace runtime::rec;
         using namespace sync::rec;
         using namespace sys::rec;

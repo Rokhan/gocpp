@@ -11,9 +11,9 @@
 #include "golang/sync/mutex.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
-// #include "golang/sync/runtime.h"  [Ignored, known errors]
+#include "golang/internal/race/norace.h"
+#include "golang/sync/atomic/doc.h"
+#include "golang/sync/runtime.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
@@ -21,6 +21,9 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace atomic::rec;
+        using namespace race::rec;
+        using namespace sync::rec;
         using namespace unsafe::rec;
     }
 

@@ -14,7 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/itoa/itoa.h"
-// #include "golang/internal/race/norace.h"  [Ignored, known errors]
+#include "golang/internal/race/norace.h"
 #include "golang/runtime/extern.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
@@ -37,6 +37,7 @@ namespace golang::syscall
         using namespace bytealg::rec;
         using namespace errors::rec;
         using namespace itoa::rec;
+        using namespace race::rec;
         using namespace runtime::rec;
         using namespace sync::rec;
         using namespace syscall::rec;

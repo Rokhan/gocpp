@@ -13,7 +13,7 @@
 
 #include "golang/fmt/print.h"
 #include "golang/time/sleep.h"
-// #include "golang/time/tick.h"  [Ignored, known errors]
+#include "golang/time/tick.h"
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
 

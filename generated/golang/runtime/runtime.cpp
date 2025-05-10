@@ -14,14 +14,14 @@
 #include "golang/runtime/cputicks.h"
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/internal/atomic/types.h"
-// #include "golang/runtime/lock_sema.h"  [Ignored, known errors]
-// #include "golang/runtime/lockrank_off.h"  [Ignored, known errors]
-// #include "golang/runtime/os_windows.h"  [Ignored, known errors]
+#include "golang/runtime/lock_sema.h"
+#include "golang/runtime/lockrank_off.h"
+#include "golang/runtime/os_windows.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/race0.h"
-// #include "golang/runtime/runtime1.h"  [Ignored, known errors]
+#include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
-// #include "golang/runtime/time.h"  [Ignored, known errors]
+#include "golang/runtime/time.h"
 #include "golang/runtime/time_nofake.h"
 #include "golang/unsafe/unsafe.h"
 

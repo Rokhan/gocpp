@@ -27,7 +27,7 @@ namespace golang::runtime
 #include "golang/runtime/mpagealloc.fwd.h"
 #include "golang/runtime/mranges.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-// #include "golang/runtime/time.fwd.h" [Ignored, known errors]
+#include "golang/runtime/time.fwd.h"
 
 namespace golang::runtime
 {

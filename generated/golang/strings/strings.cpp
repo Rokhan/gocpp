@@ -11,7 +11,7 @@
 #include "golang/strings/strings.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
+#include "golang/internal/bytealg/bytealg.h"
 #include "golang/internal/bytealg/count_native.h"
 #include "golang/internal/bytealg/index_amd64.h"
 #include "golang/internal/bytealg/index_native.h"

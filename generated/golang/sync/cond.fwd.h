@@ -10,7 +10,7 @@ namespace golang::sync
     struct noCopy;
 }
 #include "golang/sync/mutex.fwd.h"
-// #include "golang/sync/runtime2.fwd.h" [Ignored, known errors]
+#include "golang/sync/runtime2.fwd.h"
 
 namespace golang::sync
 {

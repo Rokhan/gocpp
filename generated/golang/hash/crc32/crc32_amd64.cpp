@@ -13,7 +13,7 @@
 
 #include "golang/hash/crc32/crc32.h"
 #include "golang/hash/crc32/crc32_generic.h"
-// #include "golang/internal/cpu/cpu.h"  [Ignored, known errors]
+#include "golang/internal/cpu/cpu.h"
 #include "golang/unsafe/unsafe.h"
 
 namespace golang::crc32
@@ -21,6 +21,7 @@ namespace golang::crc32
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace cpu::rec;
         using namespace crc32::rec;
         using namespace unsafe::rec;
     }

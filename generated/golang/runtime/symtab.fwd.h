@@ -21,7 +21,7 @@ namespace golang::runtime
     struct stackmap;
     const int pcbucketsize = 256 * minfunc;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
+#include "golang/internal/abi/symtab.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/plugin.fwd.h"
 #include "golang/runtime/proc.fwd.h"

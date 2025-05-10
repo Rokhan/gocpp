@@ -17,7 +17,7 @@
 #include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-// #include "golang/sync/cond.h"  [Ignored, known errors]
+#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 #include "golang/unsafe/unsafe.h"
 

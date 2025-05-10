@@ -10,7 +10,7 @@ namespace golang::runtime
     const uintptr_t logicalStackSentinel = ~ uintptr_t(0);
     struct traceFrame;
 }
-// #include "golang/runtime/trace2map.fwd.h" [Ignored, known errors]
+#include "golang/runtime/trace2map.fwd.h"
 
 namespace golang::runtime
 {

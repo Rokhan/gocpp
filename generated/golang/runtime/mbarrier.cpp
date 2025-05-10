@@ -18,12 +18,12 @@
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
 #include "golang/runtime/asan0.h"
 #include "golang/runtime/cgocheck.h"
-// #include "golang/runtime/mbitmap_allocheaders.h"  [Ignored, known errors]
+#include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/msan0.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/slice.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 

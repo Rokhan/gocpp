@@ -11,7 +11,7 @@
 #include "golang/strings/builder.h"
 #include "gocpp/support.h"
 
-// #include "golang/internal/bytealg/bytealg.h"  [Ignored, known errors]
+#include "golang/internal/bytealg/bytealg.h"
 #include "golang/unicode/utf8/utf8.h"
 #include "golang/unsafe/unsafe.h"
 
@@ -20,6 +20,7 @@ namespace golang::strings
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace bytealg::rec;
         using namespace unsafe::rec;
         using namespace utf8::rec;
     }

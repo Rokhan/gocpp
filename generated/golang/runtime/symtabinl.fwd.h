@@ -8,8 +8,8 @@ namespace golang::runtime
 {
     struct inlineFrame;
 }
-// #include "golang/internal/abi/symtab.fwd.h" [Ignored, known errors]
-// #include "golang/runtime/symtab.fwd.h" [Ignored, known errors]
+#include "golang/internal/abi/symtab.fwd.h"
+#include "golang/runtime/symtab.fwd.h"
 
 namespace golang::runtime
 {

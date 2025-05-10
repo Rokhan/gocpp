@@ -20,9 +20,9 @@
 #include "golang/runtime/mbarrier.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/race0.h"
-// #include "golang/runtime/rand.h"  [Ignored, known errors]
+#include "golang/runtime/rand.h"
 #include "golang/runtime/string.h"
-// #include "golang/runtime/stubs.h"  [Ignored, known errors]
+#include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
 #include "golang/unsafe/unsafe.h"
 

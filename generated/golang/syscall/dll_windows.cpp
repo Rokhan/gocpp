@@ -11,7 +11,7 @@
 #include "golang/syscall/dll_windows.h"
 #include "gocpp/support.h"
 
-// #include "golang/sync/atomic/doc.h"  [Ignored, known errors]
+#include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
 #include "golang/syscall/syscall.h"
 #include "golang/syscall/syscall_windows.h"
@@ -23,6 +23,7 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
+        using namespace atomic::rec;
         using namespace sync::rec;
         using namespace syscall::rec;
         using namespace unsafe::rec;

@@ -10,7 +10,7 @@ namespace golang::runtime
 }
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/trace2buf.fwd.h"
-// #include "golang/runtime/trace2map.fwd.h" [Ignored, known errors]
+#include "golang/runtime/trace2map.fwd.h"
 
 namespace golang::runtime
 {

@@ -132,48 +132,9 @@ var stdFuncMapping = map[string]string{
 
 var knownCompilationErrors = []*errorFilter{}
 
-var knownNameConflicts = []*errorFilter{
-	{"ArrayType", "internal/abi/type"},
-	{"ChanDir", "internal/abi/type"},
-	{"FuncType", "internal/abi/type"},
-	{"InterfaceType", "internal/abi/type"},
-	{"Kind", "internal/abi/type"},
-	{"Name", "internal/abi/type"},
-	{"String", "internal/abi/type"},
-	{"StructType", "internal/abi/type"},
-	{"MapType", "internal/abi/type"},
-
-	{"name", "runtime/type"},
-	{"nameOff", "runtime/type"},
-	{"typeOff", "runtime/type"},
-	{"textOff", "runtime/type"},
-
-	{"slice", "runtime/mbarrier"},
-	{"slice", "runtime/arena"},
-
-	// missing included type def
-	{"typesEqual", "runtime/type"},
-	{"partialUnswept", "runtime/mcentral"},
-	{"partialSwept", "runtime/mcentral"},
-	{"fullUnswept", "runtime/mcentral"},
-	{"fullSwept", "runtime/mcentral"},
-
-	{"queuefinalizer", "runtime/mfinal"},
-	{"iterate_finq", "runtime/mfinal"},
-	{"finalizercommit", "runtime/mfinal"},
-	{"wakefing", "runtime/mfinal"},
-
-	{"recordUnlock", "runtime/mprof"},                // missing type from broken include
-	{"recordLock", "runtime/mprof"},                  // missing type from broken include
-	{"tryRecordGoroutineProfileWB", "runtime/mprof"}, // missing type from broken include
-	{"tryRecordGoroutineProfile", "runtime/mprof"},   // missing type from broken include
-	{"doRecordGoroutineProfile", "runtime/mprof"},    // missing type from broken include
-	{"saveg", "runtime/mprof"},                       // missing type from broken include
-}
+var knownNameConflicts = []*errorFilter{}
 
 var knownMissingDeps = []*errorFilter{
-	{"buckhashArray", "runtime/mprof"},
-	{"goroutineProfileStateHolder", "runtime/mprof"},
 	{"mProfCycleWrap", "runtime/mprof"}, // constant using incomplete type
 
 	{"pallocSumBytes", "runtime/mpagealloc"}, // constant using incomplete type
@@ -187,9 +148,9 @@ var knownMissingDeps = []*errorFilter{
 }
 
 var knownIncomplete = []*errorFilter{
-	{"InterfaceType::PkgPath", "internal/abi/type"},
-	{"StructField::Name", "internal/abi/type"},
-	{"StructType::PkgPath", "internal/abi/type"},
+	{"InterfaceType::PkgPath", "internal/abi/type"}, // Declaration order problem
+	{"StructField::Name", "internal/abi/type"},      // Declaration order problem
+	{"StructType::PkgPath", "internal/abi/type"},    // Declaration order problem
 
 	{"dlogger::w", "runtime/debuglog"},           // Declaration order problem
 	{"dlogger::owned", "runtime/debuglog"},       // Type not declared because of error in included files
@@ -208,13 +169,8 @@ var knownIncomplete = []*errorFilter{
 	{"finblock::fin", "runtime/mfinal"}, // Unknwon constants in type
 	{"finalizer::fn", "runtime/mfinal"}, // Unknwon constants in type
 
-	{"userArena::defunct", "runtime/arena"}, // Type not declared because of error in included files
-
 	{"hchan::recvq", "runtime/chan"}, // Declaration order problem
 	{"hchan::sendq", "runtime/chan"}, // Declaration order problem
-	{"hchan::lock", "runtime/chan"},  // Type not declared because of error in included files
-	{"waitq::first", "runtime/chan"}, // Type not declared because of error in included files
-	{"waitq::last", "runtime/chan"},  // Type not declared because of error in included files
 
 	{"mstats::heapStats", "runtime/mstats"}, // Declaration order problem
 
@@ -250,7 +206,7 @@ var knownIncomplete = []*errorFilter{
 	{"spanSet::spineLock", "runtime/mspanset"},       // Multi header Declaration order problem with runtime/malloc
 	{"spanSet::spine", "runtime/mspanset"},           // Declaration order problem
 	{"spanSet::index", "runtime/mspanset"},           // Declaration order problem
-	{"spanSetBlockAlloc::stack", "runtime/mspanset"}, // Type not declared, included files not generated
+	{"spanSetBlockAlloc::stack", "runtime/mspanset"}, // Declaration order problem
 
 	{"cpuProfile::lock", "runtime/cpuprof"}, // Multi header Declaration order problem with runtime/malloc
 

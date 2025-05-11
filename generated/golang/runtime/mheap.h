@@ -31,7 +31,7 @@
 
 namespace golang::runtime
 {
-    /* extern bool physPageAlignedStacks [known mising deps] */;
+    extern bool physPageAlignedStacks;
     struct gocpp_id_0
     {
         uintptr_t base;

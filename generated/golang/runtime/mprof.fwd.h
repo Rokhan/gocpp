@@ -33,9 +33,9 @@ namespace golang::runtime
 namespace golang::runtime
 {
     struct bucket;
-    /* using buckhashArray = gocpp::array<atomic::UnsafePointer, buckHashSize> */;
+    using buckhashArray = gocpp::array<atomic::UnsafePointer, buckHashSize>;
     struct mProfCycleHolder;
     struct lockTimer;
     struct mLockProfile;
-    /* using goroutineProfileStateHolder = atomic::Uint32 */;
+    using goroutineProfileStateHolder = atomic::Uint32;
 }

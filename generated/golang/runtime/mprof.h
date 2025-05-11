@@ -243,12 +243,12 @@ namespace golang::runtime
     std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     extern gocpp_id_0 goroutineProfile;
     std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
-    /* void tryRecordGoroutineProfileWB(struct g* gp1); [Ignored, known name conflict] */ 
-    /* void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield); [Ignored, known name conflict] */ 
-    /* void doRecordGoroutineProfile(struct g* gp1); [Ignored, known name conflict] */ 
+    void tryRecordGoroutineProfileWB(struct g* gp1);
+    void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield);
+    void doRecordGoroutineProfile(struct g* gp1);
     std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
-    /* void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r); [Ignored, known name conflict] */ 
+    void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r);
     int Stack(gocpp::slice<unsigned char> buf, bool all);
     void tracealloc(unsafe::Pointer p, uintptr_t size, golang::runtime::_type* typ);
     void tracefree(unsafe::Pointer p, uintptr_t size);
@@ -265,8 +265,8 @@ namespace golang::runtime
         struct blockRecord* bp(struct bucket* b);
         void begin(struct lockTimer* lt);
         void end(struct lockTimer* lt);
-        /* void recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l); [Ignored, known name conflict] */ 
-        /* void recordUnlock(struct mLockProfile* prof, struct mutex* l); [Ignored, known name conflict] */ 
+        void recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l);
+        void recordUnlock(struct mLockProfile* prof, struct mutex* l);
         void captureStack(struct mLockProfile* prof);
         void store(struct mLockProfile* prof);
         gocpp::slice<uintptr_t> Stack(struct StackRecord* r);

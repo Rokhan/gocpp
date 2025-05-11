@@ -44,10 +44,10 @@ namespace golang::runtime
     namespace rec
     {
         void init(struct mcentral* c, golang::runtime::spanClass spc);
-        /* struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-        /* struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-        /* struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
-        /* struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen); [Ignored, known name conflict] */ 
+        struct spanSet* partialUnswept(struct mcentral* c, uint32_t sweepgen);
+        struct spanSet* partialSwept(struct mcentral* c, uint32_t sweepgen);
+        struct spanSet* fullUnswept(struct mcentral* c, uint32_t sweepgen);
+        struct spanSet* fullSwept(struct mcentral* c, uint32_t sweepgen);
         struct mspan* cacheSpan(struct mcentral* c);
         void uncacheSpan(struct mcentral* c, struct mspan* s);
         struct mspan* grow(struct mcentral* c);

@@ -43,7 +43,7 @@ namespace golang::runtime
         mspan* fullList;
         mspan* active;
         gocpp::slice<unsafe::Pointer> refs;
-        /* atomic::Bool defunct; [Known incomplete type] */
+        atomic::Bool defunct;
 
         using isGoStruct = void;
 
@@ -82,7 +82,7 @@ namespace golang::runtime
     namespace rec
     {
         unsafe::Pointer go_new(struct userArena* a, golang::runtime::_type* typ);
-        /* void slice(struct userArena* a, go_any sl, int cap); [Ignored, known name conflict] */ 
+        void slice(struct userArena* a, go_any sl, int cap);
         void free(struct userArena* a);
         unsafe::Pointer alloc(struct userArena* a, golang::runtime::_type* typ, int cap);
         struct mspan* refill(struct userArena* a);

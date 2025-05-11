@@ -69,17 +69,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    /* bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen); [Ignored, known name conflict] */ 
+    bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen);
 
     namespace rec
     {
         std::string string(struct rtype t);
         runtime::uncommontype* uncommon(struct rtype t);
-        /* std::string name(struct rtype t); [Ignored, known name conflict] */ 
+        std::string name(struct rtype t);
         std::string pkgpath(struct rtype t);
-        /* runtime::name nameOff(struct rtype t, golang::runtime::nameOff off); [Ignored, known name conflict] */ 
-        /* runtime::_type* typeOff(struct rtype t, golang::runtime::typeOff off); [Ignored, known name conflict] */ 
-        /* unsafe::Pointer textOff(struct rtype t, golang::runtime::textOff off); [Ignored, known name conflict] */ 
+        runtime::name nameOff(struct rtype t, golang::runtime::nameOff off);
+        runtime::_type* typeOff(struct rtype t, golang::runtime::typeOff off);
+        unsafe::Pointer textOff(struct rtype t, golang::runtime::textOff off);
     }
 }
 

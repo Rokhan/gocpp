@@ -76,11 +76,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct finalizer& value);
     extern gocpp::array_base<unsigned char> finalizer1;
     void lockRankMayQueueFinalizer();
-    /* void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot); [Ignored, known name conflict] */ 
-    /* void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback); [Ignored, known name conflict] */ 
-    /* struct g* wakefing(); [Ignored, known name conflict] */ 
+    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
+    void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback);
+    struct g* wakefing();
     void createfing();
-    /* bool finalizercommit(struct g* gp, unsafe::Pointer lock); [Ignored, known name conflict] */ 
+    bool finalizercommit(struct g* gp, unsafe::Pointer lock);
     void runfinq();
     bool isGoPointerWithoutSpan(unsafe::Pointer p);
     bool blockUntilEmptyFinalizerQueue(int64_t timeout);

@@ -95,7 +95,7 @@ namespace golang::runtime
         using namespace unsafe::rec;
     }
 
-    /* bool physPageAlignedStacks = GOOS == "openbsd" [known mising deps] */;
+    bool physPageAlignedStacks = GOOS == "openbsd";
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()

@@ -44,7 +44,7 @@ namespace golang::runtime
         unsigned int recvx;
         /* waitq recvq; [Known incomplete type] */
         /* waitq sendq; [Known incomplete type] */
-        /* mutex lock; [Known incomplete type] */
+        mutex lock;
 
         using isGoStruct = void;
 
@@ -60,8 +60,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct hchan& value);
     struct waitq
     {
-        /* sudog* first; [Known incomplete type] */
-        /* sudog* last; [Known incomplete type] */
+        sudog* first;
+        sudog* last;
 
         using isGoStruct = void;
 

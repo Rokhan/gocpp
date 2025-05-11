@@ -292,8 +292,8 @@ namespace golang::abi
 
     namespace rec
     {
-        /* std::string String(golang::abi::Kind k); [Ignored, known name conflict] */ 
-        /* abi::Kind Kind(struct Type* t); [Ignored, known name conflict] */ 
+        std::string String(golang::abi::Kind k);
+        abi::Kind Kind(struct Type* t);
         bool HasName(struct Type* t);
         bool Pointers(struct Type* t);
         bool IfaceIndir(struct Type* t);
@@ -303,14 +303,14 @@ namespace golang::abi
         gocpp::slice<Method> ExportedMethods(struct UncommonType* t);
         int Len(struct Type* t);
         struct Type* Common(struct Type* t);
-        /* abi::ChanDir ChanDir(struct Type* t); [Ignored, known name conflict] */ 
+        abi::ChanDir ChanDir(struct Type* t);
         struct UncommonType* Uncommon(struct Type* t);
         struct Type* Elem(struct Type* t);
-        /* struct StructType* StructType(struct Type* t); [Ignored, known name conflict] */ 
-        /* struct MapType* MapType(struct Type* t); [Ignored, known name conflict] */ 
-        /* struct ArrayType* ArrayType(struct Type* t); [Ignored, known name conflict] */ 
-        /* struct FuncType* FuncType(struct Type* t); [Ignored, known name conflict] */ 
-        /* struct InterfaceType* InterfaceType(struct Type* t); [Ignored, known name conflict] */ 
+        struct StructType* StructType(struct Type* t);
+        struct MapType* MapType(struct Type* t);
+        struct ArrayType* ArrayType(struct Type* t);
+        struct FuncType* FuncType(struct Type* t);
+        struct InterfaceType* InterfaceType(struct Type* t);
         uintptr_t Size(struct Type* t);
         int Align(struct Type* t);
         int FieldAlign(struct Type* t);
@@ -338,7 +338,7 @@ namespace golang::abi
         bool IsEmbedded(struct Name n);
         std::tuple<int, int> ReadVarint(struct Name n, int off);
         bool IsBlank(struct Name n);
-        /* std::string Name(struct Name n); [Ignored, known name conflict] */ 
+        std::string Name(struct Name n);
         std::string Tag(struct Name n);
     }
 }

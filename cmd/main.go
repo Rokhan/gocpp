@@ -1022,14 +1022,37 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 		return
 	}
 
+	usedNames := make(map[string]bool)
+
 	for _, field := range fields.List {
 		var param typeName
 		for _, name := range field.Names {
-			param.names = append(param.names, GetCppName(name.Name))
+			cppName := GetCppName(name.Name)
+			usedNames[cppName] = true
+			param.names = append(param.names, cppName)
 		}
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		params = append(params, param)
 	}
+
+	counter := 1
+	for i := range params {
+		for j, cppName := range params[i].names {
+			if cppName != "_" {
+				continue
+			}
+			for {
+				newName := fmt.Sprintf("_%d", counter)
+				counter++
+				if !usedNames[newName] {
+					params[i].names[j] = newName
+					usedNames[newName] = true
+					break
+				}
+			}
+		}
+	}
+
 	return
 }
 

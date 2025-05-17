@@ -47,7 +47,6 @@ var cppKeyWordsMapping = map[string]string{
 	"do":        "go_do",        // keyword
 	"delete":    "go_delete",    // keyword
 	"enum":      "go_enum",      // keyword
-	"EOF":       "go_EOF",       // Macro of <cstdio>
 	"new":       "go_new",       // keyword
 	"private":   "go_private",   // keyword
 	"protected": "go_protected", // keyword
@@ -59,6 +58,22 @@ var cppKeyWordsMapping = map[string]string{
 	"typeid":    "go_typeid",    // keyword
 	"unsigned":  "go_unsigned",  // keyword
 	"while":     "go_while",     // keyword
+
+	"EOF":     "go_EOF",     // Macro of <cstdio>
+	"SIGHUP":  "go_SIGHUP",  // Unix Macro
+	"SIGINT":  "go_SIGINT",  // Unix Macro
+	"SIGQUIT": "go_SIGQUIT", // Unix Macro
+	"SIGILL":  "go_SIGILL",  // Unix Macro
+	"SIGTRAP": "go_SIGTRAP", // Unix Macro
+	"SIGABRT": "go_SIGABRT", // Unix Macro
+	"SIGBUS":  "go_SIGBUS",  // Unix Macro
+	"SIGFPE":  "go_SIGFPE",  // Unix Macro
+	"SIGKILL": "go_SIGKILL", // Unix Macro
+	"SIGSEGV": "go_SIGSEGV", // Unix Macro
+	"SIGPIPE": "go_SIGPIPE", // Unix Macro
+	"SIGALRM": "go_SIGALRM", // Unix Macro
+	"SIGTERM": "go_SIGTERM", // Unix Macro
+
 }
 
 var stdFuncMapping = map[string]string{
@@ -139,8 +154,7 @@ var knownMissingDeps = []*errorFilter{
 
 	{"pallocSumBytes", "runtime/mpagealloc"}, // constant using incomplete type
 
-	{"physPageAlignedStacks", "runtime/mheap"}, // constant using strings (GOOS == "openbsd")
-	{"gcBitsHeaderBytes", "runtime/mheap"},     // constant unsafe::Sizeof and incomplete type
+	{"gcBitsHeaderBytes", "runtime/mheap"}, // constant unsafe::Sizeof and incomplete type
 
 	{"pageCachePages", "runtime/mpagecache"}, // constant unsafe::Sizeof and incomplete type
 

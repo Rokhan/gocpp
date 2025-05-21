@@ -161,7 +161,7 @@ func (cv *cppConverter) includeFwdHeaderDependencies(pkgInfos []*pkgInfo, suffix
 		alreadyIncluded[pkgInfo.filePath] = true
 
 		order++
-		di := depInfo{nil, map[types.Type]bool{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, order, 0}
+		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, order, 0}
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
@@ -282,7 +282,11 @@ func printFwdIntro(cv *cppConverter /*, pkgInfos []*pkgInfo*/) {
 	cv.fwd.indent++
 }
 
-func printFwdOutro(cv *cppConverter) {
+func printFwdOutro(cv *cppConverter, inNamespace bool) {
+	//ensure namespace is closed at end
+	if inNamespace {
+		fmt.Fprintf(cv.fwd.out, "}\n")
+	}
 	// Close golang namespace
 	cv.fwd.indent--
 }
@@ -507,26 +511,30 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	printHppIntro(cv, usedPkgInfos)
 	printCppIntro(cv, usedPkgInfos)
 
+	var headerElts []*place
 	var fwdHeaderElts []*place
 	var headerEnds []string
-	initialOrder := 0
+	hdrInitialOrder := 0
+	fwdInitialOrder := 0
 	for i := 0; i < len(allOutPlaces); i++ {
 		for _, place := range allOutPlaces[i] {
 			if place.outline != nil {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *place.outline)
 			}
+			if place.header != nil {
+				hdrInitialOrder++
+				place.depInfo.initialOrder = hdrInitialOrder
+				headerElts = append(headerElts, &place)
+			}
 			if place.fwdHeader != nil {
-				initialOrder++
-				place.depInfo.initialOrder = initialOrder
+				fwdInitialOrder++
+				place.depInfo.initialOrder = fwdInitialOrder
 				fwdHeaderElts = append(fwdHeaderElts, &place)
 			}
 			if place.headerEnd != nil {
 				headerEnds = append(headerEnds, *place.headerEnd)
 			}
 
-			if place.header != nil {
-				cv.Panicf("BUG: place.header should always be nil at this point. position %s\n", cv.Position(place.node))
-			}
 			if place.inline != nil {
 				cv.Panicf("BUG: place.inline should always be nil at this point. position %s\n", cv.Position(place.node))
 			}
@@ -535,6 +543,23 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		fmt.Fprintf(cv.hpp.out, "%s", allHppOut[i])
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
+
+	// Try to compute dependencies for header to avoid to specify them at each "headerStr" call
+	for _, headerElt := range headerElts {
+		switch spec := headerElt.node.(type) {
+		case *ast.TypeSpec:
+			headerElt.depInfo = cv.getTypeDepInfo(spec)
+		case *ast.ValueSpec:
+			// TODO: manage all name declared, not just the first
+			headerElt.depInfo = cv.getValueDepInfo(spec, 0)
+		case *ast.StructType:
+			headerElt.depInfo = cv.getStructDepInfo(spec)
+		}
+	}
+
+	// TODO: change 'includeFwdHeaderDependencies' name as it is not only for fwd header
+	//headerElts = append(headerElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".h", hdrInitialOrder)...)
+	cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, true)
 
 	// nb, we want to have always a rec namespace even if empty
 	fmt.Fprintf(cv.hpp.out, "\n%snamespace %s\n", cv.hpp.Indent(), recNs)
@@ -546,59 +571,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.indent--
 	fmt.Fprintf(cv.hpp.out, "%s}\n", cv.hpp.Indent())
 
-	fwdHeaderElts = append(fwdHeaderElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".fwd.h", initialOrder)...)
-	inNamespace := false
-	indent := ""
-
-	if len(fwdHeaderElts) != 0 {
-		for _, place := range fwdHeaderElts {
-			di := &place.depInfo
-			di.ComputeDeps()
-			cv.Logf("Fwd header decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
-		}
-
-		cv.Logf("Fwd header decl: Sorting.\n")
-		cv.topoSort(fwdHeaderElts)
-
-		maxDecIndex := -1
-		for i, place := range fwdHeaderElts {
-			if !place.isInclude {
-				maxDecIndex = i
-			}
-		}
-
-		for i, place := range fwdHeaderElts {
-
-			// Skip includes not needed by any definitions
-			if i > maxDecIndex {
-				break
-			}
-
-			// Close namespace for includes
-			if place.isInclude && inNamespace {
-				fmt.Fprintf(cv.fwd.out, "}\n")
-				inNamespace = false
-				indent = ""
-			}
-
-			// Open namespace for declarartions
-			if !place.isInclude && !inNamespace {
-				fmt.Fprintf(cv.fwd.out, "\nnamespace golang::%v\n{\n", cv.namespace)
-				inNamespace = true
-				indent = cv.fwd.Indent()
-			}
-
-			fmt.Fprintf(cv.fwd.out, "%s%s", indent, *place.fwdHeader)
-
-			di := &place.depInfo
-			cv.Logf("Fwd header decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
-		}
-
-		//ensure namespace is closed at end
-		if inNamespace {
-			fmt.Fprintf(cv.fwd.out, "}\n")
-		}
-	}
+	fwdHeaderElts = append(fwdHeaderElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".fwd.h", fwdInitialOrder)...)
+	fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false)
 
 	if cv.genMakeFile {
 		fmt.Fprintf(cv.makeFile.out, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
@@ -606,7 +580,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	cv.endScope()
 
-	printFwdOutro(cv)
+	printFwdOutro(cv, fwdInNamespace)
 	printHppOutro(cv)
 	printCppOutro(cv)
 
@@ -622,39 +596,96 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	return
 }
 
-func (cv *cppConverter) ComparePlace(x *place, y *place) int {
-	_, ok := x.depInfo.dependencies[y.depInfo.decType]
-	xstr := strings.TrimSpace(*x.fwdHeader)
-	ystr := strings.TrimSpace(*y.fwdHeader)
+func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) string, dm depMode, outFile outFile, inNamespace bool) bool {
+	indent := ""
+	if inNamespace {
+		indent = outFile.Indent()
+	}
+
+	if len(headerElts) != 0 {
+		for _, place := range headerElts {
+			di := &place.depInfo
+			di.ComputeDeps(dm)
+			cv.Logf("'%s' decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+		}
+
+		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
+		cv.topoSort(headerElts, getter, outFile.name)
+
+		maxDecIndex := -1
+		for i, place := range headerElts {
+			if !place.isInclude {
+				maxDecIndex = i
+			}
+		}
+
+		for i, place := range headerElts {
+
+			// Skip includes not needed by any definitions
+			if i > maxDecIndex {
+				break
+			}
+
+			// Close namespace for includes
+			if place.isInclude && inNamespace {
+				fmt.Fprintf(outFile.out, "}\n")
+				inNamespace = false
+				indent = ""
+			}
+
+			// Open namespace for declarartions
+			if !place.isInclude && !inNamespace {
+				fmt.Fprintf(outFile.out, "\nnamespace golang::%v\n{\n", cv.namespace)
+				inNamespace = true
+				indent = outFile.Indent()
+			}
+
+			fmt.Fprintf(outFile.out, "%s%s", indent, getter(*place))
+
+			di := &place.depInfo
+			cv.Logf("'%s' decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+		}
+	}
+	return inNamespace
+}
+
+func (cv *cppConverter) ComparePlace(x *place, y *place, getter func(place) string, logPrefix string) int {
+	_, ok := x.depInfo.dependencies[y.DepInfoTypeStr()]
+	xstr := strings.TrimSpace(getter(*x))
+	ystr := strings.TrimSpace(getter(*y))
+
+	xstr = strings.SplitN(xstr, "\n", 2)[0]
+	ystr = strings.SplitN(ystr, "\n", 2)[0]
+
 	if ok {
-		cv.Logf("Fwd header sort type: '%v' use type '%v' .\n", xstr, y.depInfo.decType)
+		cv.Logf("'%s' sort type: '%v' use type '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decType, y.depInfo.rank)
 		return 1
 	}
-	_, ok = y.depInfo.dependencies[x.depInfo.decType]
+	_, ok = y.depInfo.dependencies[x.DepInfoTypeStr()]
 	if ok {
-		cv.Logf("Fwd header sort type: '%v' use type '%v' .\n", ystr, x.depInfo.decType)
+		cv.Logf("'%s' sort type: '%v' use type '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decType, x.depInfo.rank)
 		return -1
 	}
 
 	_, ok = x.depInfo.depIdents[y.depInfo.decIdent]
 	if ok {
-		cv.Logf("Fwd header sort ident: '%v' use ident '%v'.\n", xstr, y.depInfo.decIdent)
+		cv.Logf("'%s' sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decIdent, y.depInfo.rank)
 		return 1
 	}
 	_, ok = y.depInfo.depIdents[x.depInfo.decIdent]
 	if ok {
-		cv.Logf("Fwd header sort ident: '%v' use ident '%v'.\n", ystr, x.depInfo.decIdent)
+		cv.Logf("'%s' sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decIdent, x.depInfo.rank)
 		return -1
 	}
 
 	_, ok = x.depInfo.depPkgs[y.depInfo.decPkg]
 	if ok {
-		cv.Logf("Fwd header sort pkg: '%v' used by pkg '%v'.\n", xstr, y.depInfo.decPkg)
+		cv.Logf("'%s' sort pkg: '%v' used by pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
 		return 1
 	}
 	_, ok = y.depInfo.depPkgs[x.depInfo.decPkg]
 	if ok {
-		cv.Logf("Fwd header sort pkg: '%v' used by pkg '%v'.\n", ystr, x.depInfo.decPkg)
+		cv.Logf("'%s' sort pkg: '%v' used by pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
 		return -1
 	}
 
@@ -670,11 +701,11 @@ func (cv *cppConverter) ComparePlace(x *place, y *place) int {
 //	-> that preserve initial order if possible
 //	-> push import as late as possible
 //	-> push declaration as soon as possible
-func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
+func (cv *cppConverter) topoSort(headerElts []*place, getter func(place) string, logPrfix string) {
 	var maxIndex int = 0
 	elts := map[int]map[*place]bool{}
 	elts[maxIndex] = map[*place]bool{}
-	for _, elt := range fwdHeaderElts {
+	for _, elt := range headerElts {
 		elts[0][elt] = true
 	}
 
@@ -690,7 +721,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 					continue
 				}
 
-				switch cv.ComparePlace(elt1, elt2) {
+				switch cv.ComparePlace(elt1, elt2, getter, logPrfix) {
 				case 1:
 					delete(elts[curentIndex], elt1)
 					elts[maxIndex][elt1] = true
@@ -703,7 +734,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 					continue
 				}
 
-				switch cv.ComparePlace(elt1, elt2) {
+				switch cv.ComparePlace(elt1, elt2, getter, logPrfix) {
 				case -1:
 					delete(elts[curentIndex], elt2)
 					elts[maxIndex][elt2] = true
@@ -714,6 +745,11 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 					elt1.depInfo.rank = maxIndex
 				}
 			}
+		}
+
+		// TODO, find a better way to detect cycles
+		if maxIndex > 10000 {
+			Panicf("BUG: max index reached in topoSort, maxIndex: %d\n", maxIndex)
 		}
 	}
 
@@ -737,7 +773,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 			}
 			pushLater := true
 			for elt2 := range elts[i+1] {
-				if cv.ComparePlace(elt1, elt2) != 0 {
+				if cv.ComparePlace(elt1, elt2, getter, logPrfix) != 0 {
 					pushLater = false
 					break
 				}
@@ -759,7 +795,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 			}
 			pushSooner := true
 			for elt2 := range elts[i-1] {
-				if cv.ComparePlace(elt1, elt2) != 0 {
+				if cv.ComparePlace(elt1, elt2, getter, logPrfix) != 0 {
 					pushSooner = false
 					break
 				}
@@ -773,7 +809,7 @@ func (cv *cppConverter) topoSort(fwdHeaderElts []*place) {
 		}
 	}
 
-	slices.SortFunc(fwdHeaderElts, func(x *place, y *place) int {
+	slices.SortFunc(headerElts, func(x *place, y *place) int {
 		if x.depInfo.rank < y.depInfo.rank {
 			return -1
 		} else if x.depInfo.rank > y.depInfo.rank {
@@ -1082,15 +1118,11 @@ func (cv *cppConverter) printOrKeepPlace(place place, outPlaces *[]place, pkgInf
 	if place.inline != nil {
 		fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), *place.inline)
 	}
-	if place.header != nil {
-		fmt.Fprintf(cv.hpp.out, "%s%s", cv.hpp.Indent(), *place.header)
-	}
 
 	place.inline = nil
-	place.header = nil
 
-	//outline, headerEnd, fwdHeader and pkgInfo will be managed by caller
-	if place.headerEnd != nil || place.outline != nil || place.fwdHeader != nil {
+	//outline, header, headerEnd, fwdHeader and pkgInfo will be managed by caller
+	if place.header != nil || place.headerEnd != nil || place.outline != nil || place.fwdHeader != nil {
 		*outPlaces = append(*outPlaces, place)
 	}
 	if place.pkgInfo != nil {
@@ -2184,14 +2216,28 @@ func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
 
 func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
 	pkgs := cv.getAllUsedPackages(n.Type)
-	definedName := cv.typeInfo.Defs[n.Name].Type()
+	definedType := cv.typeInfo.Defs[n.Name].Type()
 	usedType := cv.typeInfo.Types[n.Type].Type
-	return depInfo{definedName, map[types.Type]bool{usedType: true}, n.Name.Name, map[string]bool{}, "", pkgs, 0, 0}
+	return depInfo{definedType, map[string]types.Type{usedType.String(): usedType}, n.Name.Name, map[string]bool{}, "", pkgs, 0, 0}
+}
+
+func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
+	pkgs := cv.getAllUsedPackages(n)
+	// Try to get the type for the struct, if possible
+	var structType types.Type
+	if n != nil {
+		structType = cv.typeInfo.Types[n].Type
+	}
+	deps := make(map[string]types.Type)
+	if structType != nil {
+		deps[structType.String()] = structType
+	}
+	return depInfo{structType, deps, "", map[string]bool{}, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	defType := cv.typeInfo.Defs[n.Names[i]].Type()
-	deps := map[types.Type]bool{defType: true}
+	deps := map[string]types.Type{defType.String(): defType}
 	pkgs := make(set[string])
 	names := make(set[string])
 	if n.Values != nil {
@@ -2203,7 +2249,7 @@ func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 		pkgs.append(cv.getAllUsedPackages(n.Type))
 		names.append(cv.getAllUsedNames(n.Type))
 		declType := cv.typeInfo.Types[n.Type].Type
-		deps[declType] = true
+		deps[declType.String()] = declType
 	}
 
 	return depInfo{nil, deps, n.Names[i].Name, names, "", pkgs, 0, 0}

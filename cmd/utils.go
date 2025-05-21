@@ -188,6 +188,7 @@ func JoinWithSuffix(elements []string, separator string) string {
 }
 
 type outFile struct {
+	name   string
 	file   *os.File
 	out    *bufio.Writer
 	indent int
@@ -233,7 +234,7 @@ func createOutput(outdir, name string) outFile {
 	}
 
 	writer := bufio.NewWriter(file)
-	return outFile{file, writer, 0}
+	return outFile{name, file, writer, 0}
 }
 
 func GetFileTimeStamp(filename string, defaultInFuture bool, ignoreEmpty bool) time.Time {
@@ -487,7 +488,7 @@ type pkgInfo struct {
 
 type depInfo struct {
 	decType      types.Type
-	dependencies map[types.Type]bool
+	dependencies map[string]types.Type
 
 	decIdent  string
 	depIdents map[string]bool
@@ -499,60 +500,90 @@ type depInfo struct {
 	rank         int
 }
 
-func (depInfo *depInfo) ComputeDeps() {
-	depInfo.dependencies = ComputeDeps(depInfo.dependencies)
+type depMode int
+
+const (
+	UnknwonMode depMode = 0
+	FwdDepend   depMode = 1
+	DecDepend   depMode = 2
+)
+
+func (depInfo *depInfo) ComputeDeps(dm depMode) {
+	depInfo.dependencies = ComputeDeps(depInfo.dependencies, dm)
+	if depInfo.decType != nil {
+		delete(depInfo.dependencies, depInfo.decType.String())
+	}
 }
 
-func ComputeDeps(toDo map[types.Type]bool) map[types.Type]bool {
-	done := map[types.Type]bool{}
+func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
+	done := map[string]types.Type{}
 	for len(toDo) != 0 {
-		for elt := range toDo {
-			if _, skip := done[elt]; skip {
-				delete(toDo, elt)
+		for key, elt := range toDo {
+			if _, skip := done[key]; skip {
+				delete(toDo, key)
 				continue
 			}
 
 			switch t := elt.(type) {
 			case *types.Array:
-				toDo[t.Elem()] = true
+				elem := t.Elem()
+				toDo[elem.String()] = elem
 
 			case *types.Chan:
-				toDo[t.Elem()] = true
+				elem := t.Elem()
+				toDo[elem.String()] = elem
 
 			case *types.Slice:
-				toDo[t.Elem()] = true
+				elem := t.Elem()
+				toDo[elem.String()] = elem
 
 			case *types.Map:
-				toDo[t.Elem()] = true
-				toDo[t.Key()] = true
+				elem := t.Elem()
+				keyType := t.Key()
+				toDo[elem.String()] = elem
+				toDo[keyType.String()] = keyType
 
 			case *types.Pointer:
-				toDo[t.Elem()] = true
+				if dm == FwdDepend {
+					elem := t.Elem()
+					toDo[elem.String()] = elem
+				}
 
 			case *types.Signature:
 				if t.Params() != nil {
 					for i := 0; i < t.Params().Len(); i++ {
-						toDo[t.Params().At(i).Type()] = true
+						paramType := t.Params().At(i).Type()
+						toDo[paramType.String()] = paramType
 					}
 				}
 				if t.Results() != nil {
 					for i := 0; i < t.Results().Len(); i++ {
-						toDo[t.Results().At(i).Type()] = true
+						resultType := t.Results().At(i).Type()
+						toDo[resultType.String()] = resultType
 					}
 				}
 				if t.Recv() != nil {
-					toDo[t.Recv().Type()] = true
+					recvType := t.Recv().Type()
+					toDo[recvType.String()] = recvType
 				}
 
-			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.Struct:
+			case *types.Struct:
+				if dm == DecDepend {
+					for i := 0; i < t.NumFields(); i++ {
+						fieldType := t.Field(i).Type()
+						toDo[fieldType.String()] = fieldType
+					}
+				}
+
+			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named:
 				// Nothing to do
 
 			default:
 				Panicf("ComputeDeps, unmanaged type %T", t)
 			}
 
-			done[elt] = true
-			delete(toDo, elt)
+			done[key] = elt
+			delete(toDo, key)
 		}
 	}
 
@@ -582,6 +613,21 @@ type place struct {
 
 	// source node, for debug message
 	node ast.Node
+}
+
+func (place place) DepInfoTypeStr() string {
+	if place.depInfo.decType != nil {
+		return place.depInfo.decType.String()
+	}
+	return ""
+}
+
+func getHeader(place place) string {
+	return *place.header
+}
+
+func getFwdHeader(place place) string {
+	return *place.fwdHeader
 }
 
 func inlineStr(str string, node ast.Node) place {

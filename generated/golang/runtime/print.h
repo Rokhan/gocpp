@@ -15,6 +15,7 @@
 
 namespace golang::runtime
 {
+    extern long minhexdigits;
     gocpp::slice<unsigned char> bytes(std::string s);
     void recordForPanic(gocpp::slice<unsigned char> b);
     void printlock();
@@ -27,7 +28,6 @@ namespace golang::runtime
     void printcomplex(struct gocpp::complex128 c);
     void printuint(uint64_t v);
     void printint(int64_t v);
-    extern long minhexdigits;
     void printhex(uint64_t v);
     void printpointer(unsafe::Pointer p);
     void printuintptr(uintptr_t p);

@@ -23,7 +23,7 @@ namespace golang::runtime
     struct inlinedCall
     {
         abi::FuncID funcID;
-        gocpp::array<unsigned char, 3> _;
+        gocpp::array<unsigned char, 3> _1;
         int32_t nameOff;
         int32_t parentPc;
         int32_t startLine;

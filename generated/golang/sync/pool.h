@@ -16,6 +16,23 @@
 
 namespace golang::sync
 {
+    struct poolLocalInternal
+    {
+        go_any go_private;
+        poolChain shared;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     struct Pool
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -37,23 +54,16 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Pool& value);
-    struct poolLocalInternal
-    {
-        go_any go_private;
-        poolChain shared;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
+    uint32_t runtime_randn(uint32_t n);
+    unsafe::Pointer poolRaceAddr(go_any x);
+    void poolCleanup();
+    void init();
+    struct poolLocal* indexLocal(unsafe::Pointer l, int i);
+    void runtime_registerPoolCleanup(std::function<void ()> cleanup);
+    int runtime_procPin();
+    void runtime_procUnpin();
+    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
+    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
     struct poolLocal
     {
         gocpp::array<unsigned char, 128 - gocpp::Sizeof<poolLocalInternal>() % 128> pad;
@@ -70,16 +80,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
-    uint32_t runtime_randn(uint32_t n);
-    unsafe::Pointer poolRaceAddr(go_any x);
-    void poolCleanup();
-    void init();
-    struct poolLocal* indexLocal(unsafe::Pointer l, int i);
-    void runtime_registerPoolCleanup(std::function<void ()> cleanup);
-    int runtime_procPin();
-    void runtime_procUnpin();
-    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
-    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
 
     namespace rec
     {

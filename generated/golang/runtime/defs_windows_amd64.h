@@ -29,6 +29,31 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct m128a& value);
+    struct _DISPATCHER_CONTEXT
+    {
+        uint64_t controlPc;
+        uint64_t imageBase;
+        uintptr_t functionEntry;
+        uint64_t establisherFrame;
+        uint64_t targetIp;
+        context* context;
+        uintptr_t languageHandler;
+        uintptr_t handlerData;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value);
+    void prepareContextForSigResume(struct context* c);
+    void dumpregs(struct context* r);
     struct context
     {
         uint64_t p1home;
@@ -90,31 +115,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct context& value);
-    void prepareContextForSigResume(struct context* c);
-    void dumpregs(struct context* r);
-    struct _DISPATCHER_CONTEXT
-    {
-        uint64_t controlPc;
-        uint64_t imageBase;
-        uintptr_t functionEntry;
-        uint64_t establisherFrame;
-        uint64_t targetIp;
-        context* context;
-        uintptr_t languageHandler;
-        uintptr_t handlerData;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value);
 
     namespace rec
     {

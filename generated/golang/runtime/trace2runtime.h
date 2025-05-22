@@ -97,12 +97,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
-    void traceLockInit();
-    void lockRankMayTraceFlush();
     extern gocpp::array_base<std::string> traceBlockReasonStrings;
     extern gocpp::array_base<std::string> traceGoStopReasonStrings;
-    bool traceEnabled();
-    bool traceShuttingDown();
     struct traceLocker
     {
         m* mp;
@@ -120,6 +116,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
+    void traceLockInit();
+    void lockRankMayTraceFlush();
+    bool traceEnabled();
+    bool traceShuttingDown();
     struct traceLocker traceAcquire();
     struct traceLocker traceAcquireEnabled();
     void traceRelease(struct traceLocker tl);
@@ -129,7 +129,7 @@ namespace golang::runtime
     void trace_userTaskEnd(uint64_t id);
     void trace_userRegion(uint64_t id, uint64_t mode, std::string name);
     void trace_userLog(uint64_t id, std::string category, std::string message);
-    void traceProcFree(struct p* _);
+    void traceProcFree(struct p* _1);
     void traceThreadDestroy(struct m* mp);
 
     namespace rec
@@ -163,10 +163,10 @@ namespace golang::runtime
         void GoSysBlock(struct traceLocker tl, struct p* pp);
         void HeapAlloc(struct traceLocker tl, uint64_t live);
         void HeapGoal(struct traceLocker tl);
-        void OneNewExtraM(struct traceLocker tl, struct g* _);
+        void OneNewExtraM(struct traceLocker tl, struct g* _1);
         void GoCreateSyscall(struct traceLocker tl, struct g* gp);
         void GoDestroySyscall(struct traceLocker tl);
-        void RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _);
+        void RecordSyscallExitedTime(struct traceLocker _1, struct g* _1, struct p* _2);
     }
 }
 

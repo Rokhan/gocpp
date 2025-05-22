@@ -63,7 +63,7 @@ namespace golang::runtime
     pollDesc::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.link = this->link;
         result.fd = this->fd;
         result.fdseq = this->fdseq;
@@ -86,7 +86,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool pollDesc::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (link != ref.link) return false;
         if (fd != ref.fd) return false;
         if (fdseq != ref.fdseq) return false;
@@ -109,7 +109,7 @@ namespace golang::runtime
     std::ostream& pollDesc::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << link;
         os << " " << fd;
         os << " " << fdseq;

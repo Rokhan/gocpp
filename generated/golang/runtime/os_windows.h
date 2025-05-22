@@ -37,8 +37,6 @@ namespace golang::runtime
     extern gocpp::array_base<uint16_t> powrprofdll;
     extern gocpp::array_base<uint16_t> winmmdll;
     extern gocpp::array_base<uint16_t> ws2_32dll;
-    void tstart_stdcall(struct m* newm);
-    void wintls();
     struct mOS
     {
         mutex threadLock;
@@ -60,9 +58,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
-    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
-    int32_t closefd(int32_t fd);
-    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n);
     struct sigset
     {
 
@@ -78,6 +73,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
+    extern bool haveHighResTimer;
+    void tstart_stdcall(struct m* newm);
+    void wintls();
+    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
+    int32_t closefd(int32_t fd);
+    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n);
     void asmstdcall(unsafe::Pointer fn);
     runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
     void initSysDirectory();
@@ -92,7 +93,6 @@ namespace golang::runtime
     uintptr_t getPageSize();
     uint32_t getlasterror();
     uint32_t osRelax(bool relax);
-    extern bool haveHighResTimer;
     uintptr_t createHighResTimer();
     void initHighResTimer();
     void initLongPathSupport();

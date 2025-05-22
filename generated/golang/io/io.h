@@ -14,8 +14,56 @@
 
 namespace golang::io
 {
-    extern gocpp::error ErrShortWrite;
-    extern gocpp::error errInvalidWrite;
+    struct RuneScanner : gocpp::Interface
+    {
+        RuneScanner(){}
+        RuneScanner(RuneScanner& i) = default;
+        RuneScanner(const RuneScanner& i) = default;
+        RuneScanner& operator=(RuneScanner& i) = default;
+        RuneScanner& operator=(const RuneScanner& i) = default;
+
+        template<typename T>
+        RuneScanner(T& ref);
+
+        template<typename T>
+        RuneScanner(const T& ref);
+
+        template<typename T>
+        RuneScanner(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IRuneScanner
+        {
+            virtual struct gocpp::error vUnreadRune() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct RuneScannerImpl : IRuneScanner
+        {
+            explicit RuneScannerImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            struct gocpp::error vUnreadRune() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IRuneScanner> value;
+    };
+
+    namespace rec
+    {
+        struct gocpp::error UnreadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self);
+        struct gocpp::error UnreadRune(const gocpp::ObjRecv<struct RuneScanner>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct RuneScanner& value);
+    extern gocpp::error errOffset;
     extern gocpp::error ErrShortBuffer;
     extern gocpp::error go_EOF;
     extern gocpp::error ErrUnexpectedEOF;
@@ -854,55 +902,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteScanner& value);
-    struct ByteWriter : gocpp::Interface
-    {
-        ByteWriter(){}
-        ByteWriter(ByteWriter& i) = default;
-        ByteWriter(const ByteWriter& i) = default;
-        ByteWriter& operator=(ByteWriter& i) = default;
-        ByteWriter& operator=(const ByteWriter& i) = default;
-
-        template<typename T>
-        ByteWriter(T& ref);
-
-        template<typename T>
-        ByteWriter(const T& ref);
-
-        template<typename T>
-        ByteWriter(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IByteWriter
-        {
-            virtual struct gocpp::error vWriteByte(unsigned char c) = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct ByteWriterImpl : IByteWriter
-        {
-            explicit ByteWriterImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            struct gocpp::error vWriteByte(unsigned char c) override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IByteWriter> value;
-    };
-
-    namespace rec
-    {
-        struct gocpp::error WriteByte(const gocpp::PtrRecv<struct ByteWriter, false>& self, unsigned char c);
-        struct gocpp::error WriteByte(const gocpp::ObjRecv<struct ByteWriter>& self, unsigned char c);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
+    extern gocpp::error ErrShortWrite;
     struct RuneReader : gocpp::Interface
     {
         RuneReader(){}
@@ -952,55 +952,55 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RuneReader& value);
-    struct RuneScanner : gocpp::Interface
+    struct ByteWriter : gocpp::Interface
     {
-        RuneScanner(){}
-        RuneScanner(RuneScanner& i) = default;
-        RuneScanner(const RuneScanner& i) = default;
-        RuneScanner& operator=(RuneScanner& i) = default;
-        RuneScanner& operator=(const RuneScanner& i) = default;
+        ByteWriter(){}
+        ByteWriter(ByteWriter& i) = default;
+        ByteWriter(const ByteWriter& i) = default;
+        ByteWriter& operator=(ByteWriter& i) = default;
+        ByteWriter& operator=(const ByteWriter& i) = default;
 
         template<typename T>
-        RuneScanner(T& ref);
+        ByteWriter(T& ref);
 
         template<typename T>
-        RuneScanner(const T& ref);
+        ByteWriter(const T& ref);
 
         template<typename T>
-        RuneScanner(T* ptr);
+        ByteWriter(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IRuneScanner
+        struct IByteWriter
         {
-            virtual struct gocpp::error vUnreadRune() = 0;
+            virtual struct gocpp::error vWriteByte(unsigned char c) = 0;
         };
 
         template<typename T, typename StoreT>
-        struct RuneScannerImpl : IRuneScanner
+        struct ByteWriterImpl : IByteWriter
         {
-            explicit RuneScannerImpl(T* ptr)
+            explicit ByteWriterImpl(T* ptr)
             {
                 value.reset(ptr);
             }
 
-            struct gocpp::error vUnreadRune() override;
+            struct gocpp::error vWriteByte(unsigned char c) override;
 
             StoreT value;
         };
 
-        std::shared_ptr<IRuneScanner> value;
+        std::shared_ptr<IByteWriter> value;
     };
 
     namespace rec
     {
-        struct gocpp::error UnreadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self);
-        struct gocpp::error UnreadRune(const gocpp::ObjRecv<struct RuneScanner>& self);
+        struct gocpp::error WriteByte(const gocpp::PtrRecv<struct ByteWriter, false>& self, unsigned char c);
+        struct gocpp::error WriteByte(const gocpp::ObjRecv<struct ByteWriter>& self, unsigned char c);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct RuneScanner& value);
+    std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
     struct StringWriter : gocpp::Interface
     {
         StringWriter(){}
@@ -1050,6 +1050,24 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct StringWriter& value);
+    extern sync::Pool blackHolePool;
+    struct discard
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct discard& value);
+    extern gocpp::error errInvalidWrite;
+    extern gocpp::error errWhence;
     std::tuple<int, struct gocpp::error> WriteString(struct Writer w, std::string s);
     std::tuple<int, struct gocpp::error> ReadAtLeast(struct Reader r, gocpp::slice<unsigned char> buf, int min);
     std::tuple<int, struct gocpp::error> ReadFull(struct Reader r, gocpp::slice<unsigned char> buf);
@@ -1058,6 +1076,29 @@ namespace golang::io
     std::tuple<int64_t, struct gocpp::error> CopyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf);
     std::tuple<int64_t, struct gocpp::error> copyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf);
     struct Reader LimitReader(struct Reader r, int64_t n);
+    struct SectionReader* NewSectionReader(struct ReaderAt r, int64_t off, int64_t n);
+    struct OffsetWriter* NewOffsetWriter(struct WriterAt w, int64_t off);
+    struct Reader TeeReader(struct Reader r, struct Writer w);
+    struct ReadCloser NopCloser(struct Reader r);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r);
+    extern Writer Discard;
+    struct teeReader
+    {
+        Reader r;
+        Writer w;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct teeReader& value);
     struct LimitedReader
     {
         Reader R;
@@ -1075,7 +1116,7 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LimitedReader& value);
-    struct SectionReader* NewSectionReader(struct ReaderAt r, int64_t off, int64_t n);
+    extern ReaderFrom _;
     struct SectionReader
     {
         ReaderAt r;
@@ -1096,64 +1137,6 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SectionReader& value);
-    extern gocpp::error errWhence;
-    extern gocpp::error errOffset;
-    struct OffsetWriter
-    {
-        WriterAt w;
-        int64_t base;
-        int64_t off;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct OffsetWriter& value);
-    struct OffsetWriter* NewOffsetWriter(struct WriterAt w, int64_t off);
-    struct Reader TeeReader(struct Reader r, struct Writer w);
-    struct teeReader
-    {
-        Reader r;
-        Writer w;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct teeReader& value);
-    extern Writer Discard;
-    struct discard
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct discard& value);
-    extern ReaderFrom _;
-    extern sync::Pool blackHolePool;
-    struct ReadCloser NopCloser(struct Reader r);
     struct nopCloser
     {
 
@@ -1184,7 +1167,24 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r);
+    struct OffsetWriter
+    {
+        WriterAt w;
+        int64_t base;
+        int64_t off;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct OffsetWriter& value);
 
     namespace rec
     {

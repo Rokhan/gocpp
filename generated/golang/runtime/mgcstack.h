@@ -16,26 +16,9 @@
 
 namespace golang::runtime
 {
-    struct stackWorkBuf
-    {
-        sys::NotInHeap _;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
     struct stackWorkBufHdr
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         stackWorkBuf* next;
 
         using isGoStruct = void;
@@ -50,26 +33,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackWorkBufHdr& value);
-    struct stackObjectBuf
-    {
-        sys::NotInHeap _;
-        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
     struct stackObjectBufHdr
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         stackObjectBuf* next;
 
         using isGoStruct = void;
@@ -84,10 +50,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBufHdr& value);
-    void init();
     struct stackObject
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         uint32_t off;
         uint32_t size;
         stackObjectRecord* r;
@@ -130,7 +95,42 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
+    void init();
     std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
+    struct stackWorkBuf
+    {
+        sys::NotInHeap _1;
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
+    struct stackObjectBuf
+    {
+        sys::NotInHeap _1;
+        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
 
     namespace rec
     {

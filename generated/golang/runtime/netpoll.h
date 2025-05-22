@@ -36,7 +36,7 @@ namespace golang::runtime
 {
     struct pollDesc
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         pollDesc* link;
         uintptr_t fd;
         atomic::Uintptr fdseq;

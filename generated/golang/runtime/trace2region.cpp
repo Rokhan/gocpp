@@ -72,7 +72,7 @@ namespace golang::runtime
     traceRegionAllocBlock::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         result.data = this->data;
         return result;
@@ -81,7 +81,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool traceRegionAllocBlock::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         if (data != ref.data) return false;
         return true;
@@ -90,7 +90,7 @@ namespace golang::runtime
     std::ostream& traceRegionAllocBlock::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << " " << data;
         os << '}';

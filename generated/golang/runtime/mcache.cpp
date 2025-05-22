@@ -81,7 +81,7 @@ namespace golang::runtime
     mcache::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.nextSample = this->nextSample;
         result.scanAlloc = this->scanAlloc;
         result.tiny = this->tiny;
@@ -96,7 +96,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mcache::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (nextSample != ref.nextSample) return false;
         if (scanAlloc != ref.scanAlloc) return false;
         if (tiny != ref.tiny) return false;
@@ -111,7 +111,7 @@ namespace golang::runtime
     std::ostream& mcache::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << nextSample;
         os << " " << scanAlloc;
         os << " " << tiny;

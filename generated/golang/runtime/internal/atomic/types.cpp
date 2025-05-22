@@ -87,7 +87,7 @@ namespace golang::atomic
     {
         T result;
         result.noCopy = this->noCopy;
-        result._ = this->_;
+        result._1 = this->_1;
         result.value = this->value;
         return result;
     }
@@ -96,7 +96,7 @@ namespace golang::atomic
     bool Int64::operator==(const T& ref) const
     {
         if (noCopy != ref.noCopy) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (value != ref.value) return false;
         return true;
     }
@@ -105,7 +105,7 @@ namespace golang::atomic
     {
         os << '{';
         os << "" << noCopy;
-        os << " " << _;
+        os << " " << _1;
         os << " " << value;
         os << '}';
         return os;
@@ -325,7 +325,7 @@ namespace golang::atomic
     {
         T result;
         result.noCopy = this->noCopy;
-        result._ = this->_;
+        result._1 = this->_1;
         result.value = this->value;
         return result;
     }
@@ -334,7 +334,7 @@ namespace golang::atomic
     bool Uint64::operator==(const T& ref) const
     {
         if (noCopy != ref.noCopy) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (value != ref.value) return false;
         return true;
     }
@@ -343,7 +343,7 @@ namespace golang::atomic
     {
         os << '{';
         os << "" << noCopy;
-        os << " " << _;
+        os << " " << _1;
         os << " " << value;
         os << '}';
         return os;

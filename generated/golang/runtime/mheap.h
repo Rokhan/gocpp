@@ -31,7 +31,25 @@
 
 namespace golang::runtime
 {
-    extern bool physPageAlignedStacks;
+    struct special
+    {
+        sys::NotInHeap _1;
+        special* next;
+        uint16_t offset;
+        unsigned char kind;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct special& value);
     struct gocpp_id_0
     {
         uintptr_t base;
@@ -66,11 +84,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_2
+    struct gcBitsHeader
     {
-        arenaHint* arenaHints;
-        mSpanList quarantineList;
-        mSpanList readyList;
+        uintptr_t free;
+        uintptr_t next;
 
         using isGoStruct = void;
 
@@ -83,42 +100,11 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    struct mheap
+    std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
+    struct gcBits
     {
-        /* sys::NotInHeap _; [Known incomplete type] */
-        mutex lock;
-        pageAlloc pages;
-        uint32_t sweepgen;
-        gocpp::slice<mspan*> allspans;
-        atomic::Uintptr pagesInUse;
-        atomic::Uint64 pagesSwept;
-        atomic::Uint64 pagesSweptBasis;
-        uint64_t sweepHeapLiveBasis;
-        double sweepPagesPerByte;
-        atomic::Uint64 reclaimIndex;
-        atomic::Uintptr reclaimCredit;
-        /* cpu::CacheLinePad _; [Known incomplete type] */
-        gocpp::array<gocpp::array<heapArena*, 1 << arenaL2Bits>*, 1 << arenaL1Bits> arenas;
-        bool arenasHugePages;
-        /* linearAlloc heapArenaAlloc; [Known incomplete type] */
-        arenaHint* arenaHints;
-        /* linearAlloc arena; [Known incomplete type] */
-        gocpp::slice<golang::runtime::arenaIdx> allArenas;
-        gocpp::slice<golang::runtime::arenaIdx> sweepArenas;
-        gocpp::slice<golang::runtime::arenaIdx> markArenas;
-        /* gocpp_id_0 curArena; [Known incomplete type] */
-        gocpp::array<gocpp_id_1, numSpanClasses> central;
-        fixalloc spanalloc;
-        fixalloc cachealloc;
-        fixalloc specialfinalizeralloc;
-        fixalloc specialprofilealloc;
-        fixalloc specialReachableAlloc;
-        fixalloc specialPinCounterAlloc;
-        mutex speciallock;
-        fixalloc arenaHintAlloc;
-        /* gocpp_id_2 userArena; [Known incomplete type] */
-        specialfinalizer* unused;
+        sys::NotInHeap _1;
+        uint8_t x;
 
         using isGoStruct = void;
 
@@ -131,10 +117,10 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct mheap& value);
+    std::ostream& operator<<(std::ostream& os, const struct gcBits& value);
     struct heapArena
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         gocpp::array<mspan*, pagesPerArena> spans;
         gocpp::array<uint8_t, pagesPerArena / 8> pageInUse;
         gocpp::array<uint8_t, pagesPerArena / 8> pageMarks;
@@ -156,7 +142,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct heapArena& value);
     struct arenaHint
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         uintptr_t addr;
         bool down;
         arenaHint* next;
@@ -192,7 +178,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mSpanStateBox& value);
     struct mSpanList
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         mspan* first;
         mspan* last;
 
@@ -208,9 +194,109 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mSpanList& value);
+    struct specialsIter
+    {
+        special** pprev;
+        special* s;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialsIter& value);
+    extern bool physPageAlignedStacks;
+    void recordspan(unsafe::Pointer vh, unsafe::Pointer p);
+    runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
+    runtime::arenaIdx arenaIndex(uintptr_t p);
+    uintptr_t arenaBase(golang::runtime::arenaIdx i);
+    bool inheap(uintptr_t b);
+    bool inHeapOrStack(uintptr_t b);
+    struct mspan* spanOf(uintptr_t p);
+    struct mspan* spanOfUnchecked(uintptr_t p);
+    struct mspan* spanOfHeap(uintptr_t p);
+    std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
+    void runtime_debug_freeOSMemory();
+    void spanHasSpecials(struct mspan* s);
+    void spanHasNoSpecials(struct mspan* s);
+    bool addspecial(unsafe::Pointer p, struct special* s);
+    struct special* removespecial(unsafe::Pointer p, uint8_t kind);
+    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
+    void removefinalizer(unsafe::Pointer p);
+    void setprofilebucket(unsafe::Pointer p, struct bucket* b);
+    struct specialsIter newSpecialsIter(struct mspan* span);
+    void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size);
+    struct gcBits* newMarkBits(uintptr_t nelems);
+    struct gcBits* newAllocBits(uintptr_t nelems);
+    void nextMarkBitArenaEpoch();
+    struct gcBitsArena* newArenaMayUnlock();
+    struct specialfinalizer
+    {
+        sys::NotInHeap _1;
+        special special;
+        funcval* fn;
+        uintptr_t nret;
+        golang::runtime::_type* fint;
+        golang::runtime::ptrtype* ot;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct specialfinalizer& value);
+    struct gocpp_id_2
+    {
+        arenaHint* arenaHints;
+        mSpanList quarantineList;
+        mSpanList readyList;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    struct gcBitsArena
+    {
+        sys::NotInHeap _1;
+        uintptr_t free;
+        gcBitsArena* next;
+        /* gocpp::array<gcBits, gcBitsChunkBytes - gcBitsHeaderBytes> bits; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBitsArena& value);
     struct mspan
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         mspan* next;
         mspan* prev;
         mSpanList* list;
@@ -251,48 +337,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mspan& value);
-    void recordspan(unsafe::Pointer vh, unsafe::Pointer p);
-    runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
-    runtime::arenaIdx arenaIndex(uintptr_t p);
-    uintptr_t arenaBase(golang::runtime::arenaIdx i);
-    bool inheap(uintptr_t b);
-    bool inHeapOrStack(uintptr_t b);
-    struct mspan* spanOf(uintptr_t p);
-    struct mspan* spanOfUnchecked(uintptr_t p);
-    struct mspan* spanOfHeap(uintptr_t p);
-    std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
-    void runtime_debug_freeOSMemory();
-    struct special
+    struct specialPinCounter
     {
-        sys::NotInHeap _;
-        special* next;
-        uint16_t offset;
-        unsigned char kind;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct special& value);
-    void spanHasSpecials(struct mspan* s);
-    void spanHasNoSpecials(struct mspan* s);
-    bool addspecial(unsafe::Pointer p, struct special* s);
-    struct special* removespecial(unsafe::Pointer p, uint8_t kind);
-    struct specialfinalizer
-    {
-        sys::NotInHeap _;
         special special;
-        funcval* fn;
-        uintptr_t nret;
-        golang::runtime::_type* fint;
-        golang::runtime::ptrtype* ot;
+        uintptr_t counter;
 
         using isGoStruct = void;
 
@@ -305,28 +353,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct specialfinalizer& value);
-    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
-    void removefinalizer(unsafe::Pointer p);
-    struct specialprofile
-    {
-        sys::NotInHeap _;
-        special special;
-        bucket* b;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct specialprofile& value);
-    void setprofilebucket(unsafe::Pointer p, struct bucket* b);
+    std::ostream& operator<<(std::ostream& os, const struct specialPinCounter& value);
     struct specialReachable
     {
         special special;
@@ -345,10 +372,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct specialReachable& value);
-    struct specialPinCounter
+    struct specialprofile
     {
+        sys::NotInHeap _1;
         special special;
-        uintptr_t counter;
+        bucket* b;
 
         using isGoStruct = void;
 
@@ -361,11 +389,42 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct specialPinCounter& value);
-    struct specialsIter
+    std::ostream& operator<<(std::ostream& os, const struct specialprofile& value);
+    struct mheap
     {
-        special** pprev;
-        special* s;
+        sys::NotInHeap _1;
+        mutex lock;
+        pageAlloc pages;
+        uint32_t sweepgen;
+        gocpp::slice<mspan*> allspans;
+        atomic::Uintptr pagesInUse;
+        atomic::Uint64 pagesSwept;
+        atomic::Uint64 pagesSweptBasis;
+        uint64_t sweepHeapLiveBasis;
+        double sweepPagesPerByte;
+        atomic::Uint64 reclaimIndex;
+        atomic::Uintptr reclaimCredit;
+        cpu::CacheLinePad _2;
+        gocpp::array<gocpp::array<heapArena*, 1 << arenaL2Bits>*, 1 << arenaL1Bits> arenas;
+        bool arenasHugePages;
+        /* linearAlloc heapArenaAlloc; [Known incomplete type] */
+        arenaHint* arenaHints;
+        /* linearAlloc arena; [Known incomplete type] */
+        gocpp::slice<golang::runtime::arenaIdx> allArenas;
+        gocpp::slice<golang::runtime::arenaIdx> sweepArenas;
+        gocpp::slice<golang::runtime::arenaIdx> markArenas;
+        /* gocpp_id_0 curArena; [Known incomplete type] */
+        gocpp::array<gocpp_id_1, numSpanClasses> central;
+        fixalloc spanalloc;
+        fixalloc cachealloc;
+        fixalloc specialfinalizeralloc;
+        fixalloc specialprofilealloc;
+        fixalloc specialReachableAlloc;
+        fixalloc specialPinCounterAlloc;
+        mutex speciallock;
+        fixalloc arenaHintAlloc;
+        /* gocpp_id_2 userArena; [Known incomplete type] */
+        specialfinalizer* unused;
 
         using isGoStruct = void;
 
@@ -378,66 +437,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct specialsIter& value);
-    struct specialsIter newSpecialsIter(struct mspan* span);
-    void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size);
-    struct gcBits
-    {
-        sys::NotInHeap _;
-        uint8_t x;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBits& value);
-    struct gcBitsHeader
-    {
-        uintptr_t free;
-        uintptr_t next;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
-    struct gcBitsArena
-    {
-        sys::NotInHeap _;
-        uintptr_t free;
-        gcBitsArena* next;
-        /* gocpp::array<gcBits, gcBitsChunkBytes - gcBitsHeaderBytes> bits; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBitsArena& value);
-    struct gcBits* newMarkBits(uintptr_t nelems);
-    struct gcBits* newAllocBits(uintptr_t nelems);
-    void nextMarkBitArenaEpoch();
-    struct gcBitsArena* newArenaMayUnlock();
+    std::ostream& operator<<(std::ostream& os, const struct mheap& value);
 
     namespace rec
     {

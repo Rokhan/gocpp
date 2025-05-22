@@ -27,9 +27,9 @@
 
 namespace golang::os
 {
-    extern File* Stdin;
-    extern File* Stdout;
+    extern bool checkWrapErr;
     extern File* Stderr;
+    extern File* Stdin;
     struct LinkError
     {
         std::string Op;
@@ -64,22 +64,8 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noReadFrom& value);
-    struct fileWithoutReadFrom
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
-    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
+    extern fs::FileInfo, gocpp::error> (std::string)> lstat;
+    extern File* Stdout;
     extern gocpp::error errWriteAtInAppendMode;
     struct noWriteTo
     {
@@ -96,6 +82,40 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noWriteTo& value);
+    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
+    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
+    struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm);
+    struct gocpp::error setStickyBit(std::string name);
+    struct gocpp::error Chdir(std::string dir);
+    std::tuple<struct File*, struct gocpp::error> Open(std::string name);
+    std::tuple<struct File*, struct gocpp::error> Create(std::string name);
+    std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm);
+    struct gocpp::error Rename(std::string oldpath, std::string newpath);
+    std::tuple<std::string, struct gocpp::error> Readlink(std::string name);
+    std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err);
+    std::string TempDir();
+    std::tuple<std::string, struct gocpp::error> UserCacheDir();
+    std::tuple<std::string, struct gocpp::error> UserConfigDir();
+    std::tuple<std::string, struct gocpp::error> UserHomeDir();
+    struct gocpp::error Chmod(std::string name, golang::os::FileMode mode);
+    fs::FS DirFS(std::string dir);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(std::string name);
+    struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
+    struct fileWithoutReadFrom
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
     struct fileWithoutWriteTo
     {
 
@@ -111,26 +131,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
-    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
-    struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm);
-    struct gocpp::error setStickyBit(std::string name);
-    struct gocpp::error Chdir(std::string dir);
-    std::tuple<struct File*, struct gocpp::error> Open(std::string name);
-    std::tuple<struct File*, struct gocpp::error> Create(std::string name);
-    std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm);
-    extern fs::FileInfo, gocpp::error> (std::string)> lstat;
-    struct gocpp::error Rename(std::string oldpath, std::string newpath);
-    std::tuple<std::string, struct gocpp::error> Readlink(std::string name);
-    std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err);
-    extern bool checkWrapErr;
-    std::string TempDir();
-    std::tuple<std::string, struct gocpp::error> UserCacheDir();
-    std::tuple<std::string, struct gocpp::error> UserConfigDir();
-    std::tuple<std::string, struct gocpp::error> UserHomeDir();
-    struct gocpp::error Chmod(std::string name, golang::os::FileMode mode);
-    fs::FS DirFS(std::string dir);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(std::string name);
-    struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
 
     namespace rec
     {

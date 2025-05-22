@@ -13,6 +13,8 @@
 
 namespace golang::time
 {
+    extern gocpp::array_base<int32_t> daysBefore;
+    extern int64_t startNano;
     struct Time
     {
         uint64_t wall;
@@ -40,12 +42,10 @@ namespace golang::time
     time::Duration Since(struct Time t);
     time::Duration Until(struct Time t);
     std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
-    extern gocpp::array_base<int32_t> daysBefore;
     int daysIn(golang::time::Month m, int year);
     uint64_t daysSinceEpoch(int year);
     std::tuple<int64_t, int32_t, int64_t> now();
     int64_t runtimeNano();
-    extern int64_t startNano;
     struct Time Now();
     struct Time unixTime(int64_t sec, int32_t nsec);
     struct Time Unix(int64_t sec, int64_t nsec);

@@ -18,17 +18,6 @@
 
 namespace golang::syscall
 {
-    std::string EscapeArg(std::string s);
-    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s);
-    std::string makeCmdLine(gocpp::slice<std::string> args);
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv);
-    void CloseOnExec(golang::syscall::Handle fd);
-    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
-    std::tuple<std::string, struct gocpp::error> FullPath(std::string name);
-    bool isSlash(uint8_t c);
-    std::tuple<std::string, struct gocpp::error> normalizeDir(std::string dir);
-    int volToUpper(int ch);
-    std::tuple<std::string, struct gocpp::error> joinExeDirAndFName(std::string dir, std::string p);
     struct ProcAttr
     {
         std::string Dir;
@@ -72,6 +61,17 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
+    std::string EscapeArg(std::string s);
+    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s);
+    std::string makeCmdLine(gocpp::slice<std::string> args);
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv);
+    void CloseOnExec(golang::syscall::Handle fd);
+    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
+    std::tuple<std::string, struct gocpp::error> FullPath(std::string name);
+    bool isSlash(uint8_t c);
+    std::tuple<std::string, struct gocpp::error> normalizeDir(std::string dir);
+    int volToUpper(int ch);
+    std::tuple<std::string, struct gocpp::error> joinExeDirAndFName(std::string dir, std::string p);
     std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(std::string argv0, gocpp::slice<std::string> argv, struct ProcAttr* attr);
     struct gocpp::error Exec(std::string argv0, gocpp::slice<std::string> argv, gocpp::slice<std::string> envv);
 

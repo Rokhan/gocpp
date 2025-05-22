@@ -138,7 +138,7 @@ namespace golang::runtime
     dlogger::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.w = this->w;
         result.allLink = this->allLink;
         result.owned = this->owned;
@@ -148,7 +148,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool dlogger::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (w != ref.w) return false;
         if (allLink != ref.allLink) return false;
         if (owned != ref.owned) return false;
@@ -158,7 +158,7 @@ namespace golang::runtime
     std::ostream& dlogger::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << w;
         os << " " << allLink;
         os << " " << owned;
@@ -394,7 +394,7 @@ namespace golang::runtime
     debugLogWriter::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.write = this->write;
         result.data = this->data;
         result.tick = this->tick;
@@ -407,7 +407,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool debugLogWriter::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (write != ref.write) return false;
         if (data != ref.data) return false;
         if (tick != ref.tick) return false;
@@ -420,7 +420,7 @@ namespace golang::runtime
     std::ostream& debugLogWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << write;
         os << " " << data;
         os << " " << tick;
@@ -441,7 +441,7 @@ namespace golang::runtime
     debugLogBuf::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.b = this->b;
         return result;
     }
@@ -449,7 +449,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool debugLogBuf::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (b != ref.b) return false;
         return true;
     }
@@ -457,7 +457,7 @@ namespace golang::runtime
     std::ostream& debugLogBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << b;
         os << '}';
         return os;

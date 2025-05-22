@@ -23,7 +23,7 @@ namespace golang::runtime
 {
     struct mcentral
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         golang::runtime::spanClass spanclass;
         /* gocpp::array<spanSet, 2> partial; [Known incomplete type] */
         /* gocpp::array<spanSet, 2> full; [Known incomplete type] */

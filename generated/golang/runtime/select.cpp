@@ -124,7 +124,7 @@ namespace golang::runtime
         }
     }
 
-    bool selparkcommit(struct g* gp, unsafe::Pointer _)
+    bool selparkcommit(struct g* gp, unsafe::Pointer _1)
     {
         gp->activeStackChans = true;
         rec::Store(gocpp::recv(gp->parkingOnChan), false);

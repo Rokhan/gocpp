@@ -43,9 +43,9 @@
 
 namespace golang::runtime
 {
+    extern gocpp::array_base<uint8_t> oneptrmask;
     void gcMarkRootPrepare();
     void gcMarkRootCheck();
-    extern gocpp::array_base<uint8_t> oneptrmask;
     int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit);
     int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard);
     void markrootFreeGStacks();

@@ -18,9 +18,6 @@
 
 namespace golang::runtime
 {
-    std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit();
-    void pluginftabverify(struct moduledata* md);
-    bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
     struct ptabEntry
     {
         golang::runtime::nameOff name;
@@ -38,6 +35,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ptabEntry& value);
+    std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit();
+    void pluginftabverify(struct moduledata* md);
+    bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
 
     namespace rec
     {

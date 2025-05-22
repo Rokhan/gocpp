@@ -47,26 +47,6 @@
 
 namespace golang::runtime
 {
-    struct sweepdata
-    {
-        mutex lock;
-        g* g;
-        bool parked;
-        activeSweep active;
-        golang::runtime::sweepClass centralIndex;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
     struct activeSweep
     {
         atomic::Uint32 state;
@@ -83,8 +63,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
-    void finishsweep_m();
-    void bgsweep(gocpp::channel<int> c);
     struct sweepLocker
     {
         uint32_t sweepGen;
@@ -117,11 +95,33 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
+    void finishsweep_m();
+    void bgsweep(gocpp::channel<int> c);
     uintptr_t sweepone();
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
     void clobberfree(unsafe::Pointer x, uintptr_t size);
     void gcPaceSweeper(uint64_t trigger);
+    struct sweepdata
+    {
+        mutex lock;
+        g* g;
+        bool parked;
+        activeSweep active;
+        golang::runtime::sweepClass centralIndex;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
 
     namespace rec
     {

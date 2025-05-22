@@ -611,7 +611,7 @@ namespace golang::runtime
         });
         if(park)
         {
-            gopark([=](struct g* gp, unsafe::Pointer _) mutable -> bool
+            gopark([=](struct g* gp, unsafe::Pointer _1) mutable -> bool
             {
                 if(! rec::CompareAndSwapNoWB(gocpp::recv(trace.reader), nullptr, gp))
                 {
@@ -1014,7 +1014,7 @@ namespace golang::runtime
         s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_6>>(), 1);
         s->timer = go_new(timer);
         s->timer->arg = s;
-        s->timer->f = [=](go_any s, uintptr_t _) mutable -> void
+        s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
             rec::wake(gocpp::recv(gocpp::getValue<wakeableSleep*>(s)));
         };

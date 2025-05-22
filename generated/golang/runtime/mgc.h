@@ -47,12 +47,25 @@
 
 namespace golang::runtime
 {
-    bool heapObjectsCanMove();
-    void gcinit();
-    void gcenable();
-    void setGCPhase(uint32_t x);
+    struct gcTrigger
+    {
+        golang::runtime::gcTriggerKind kind;
+        int64_t now;
+        uint32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
     extern gocpp::array_base<std::string> gcMarkWorkerModeStrings;
-    bool pollFractionalWorkerExit();
     struct gocpp_id_1
     {
         mutex lock;
@@ -105,14 +118,69 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
+    struct gcBgMarkWorkerNode
+    {
+        lfnode node;
+        golang::runtime::guintptr gp;
+        golang::runtime::muintptr m;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
+    bool heapObjectsCanMove();
+    void gcinit();
+    void gcenable();
+    void setGCPhase(uint32_t x);
+    bool pollFractionalWorkerExit();
+    void GC();
+    void gcWaitOnMark(uint32_t n);
+    void gcStart(struct gcTrigger trigger);
+    void gcMarkDone();
+    void gcMarkTermination(struct worldStop stw);
+    void gcBgMarkStartWorkers();
+    void gcBgMarkPrepare();
+    void gcBgMarkWorker();
+    bool gcMarkWorkAvailable(struct p* p);
+    void gcMark(int64_t startTime);
+    bool gcSweep(golang::runtime::gcMode mode);
+    void gcResetMarkState();
+    void sync_runtime_registerPoolCleanup(std::function<void ()> f);
+    void boring_registerCache(unsafe::Pointer p);
+    void clearpools();
+    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
+    gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
+    void gcTestMoveStackOnNextCall();
+    uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs);
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(ptrs...));
+    }
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(unsafe::Pointer value, Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(value, ptrs...));
+    }
+    std::string gcTestPointerClass(unsafe::Pointer p);
     struct workType
     {
         golang::runtime::lfstack full;
-        cpu::CacheLinePad _;
+        cpu::CacheLinePad _1;
         golang::runtime::lfstack empty;
-        cpu::CacheLinePad _;
+        cpu::CacheLinePad _2;
         gocpp_id_1 wbufSpans;
-        uint32_t _;
+        uint32_t _3;
         uint64_t bytesMarked;
         uint32_t markrootNext;
         uint32_t markrootJobs;
@@ -162,74 +230,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
-    void GC();
-    void gcWaitOnMark(uint32_t n);
-    struct gcTrigger
-    {
-        golang::runtime::gcTriggerKind kind;
-        int64_t now;
-        uint32_t n;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
-    void gcStart(struct gcTrigger trigger);
-    void gcMarkDone();
-    void gcMarkTermination(struct worldStop stw);
-    void gcBgMarkStartWorkers();
-    void gcBgMarkPrepare();
-    struct gcBgMarkWorkerNode
-    {
-        lfnode node;
-        golang::runtime::guintptr gp;
-        golang::runtime::muintptr m;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
-    void gcBgMarkWorker();
-    bool gcMarkWorkAvailable(struct p* p);
-    void gcMark(int64_t startTime);
-    bool gcSweep(golang::runtime::gcMode mode);
-    void gcResetMarkState();
-    void sync_runtime_registerPoolCleanup(std::function<void ()> f);
-    void boring_registerCache(unsafe::Pointer p);
-    void clearpools();
-    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
-    gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
-    void gcTestMoveStackOnNextCall();
-    uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs);
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(ptrs...));
-    }
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(unsafe::Pointer value, Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(value, ptrs...));
-    }
-    std::string gcTestPointerClass(unsafe::Pointer p);
 
     namespace rec
     {

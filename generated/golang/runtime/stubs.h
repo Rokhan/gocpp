@@ -34,6 +34,22 @@
 
 namespace golang::runtime
 {
+    extern int intArgRegs;
+    struct neverCallThisFunction
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct neverCallThisFunction& value);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x);
     struct g* getg();
     void mcall(std::function<void (g*)> fn);
@@ -55,21 +71,6 @@ namespace golang::runtime
     void breakpoint();
     void reflectcall(golang::runtime::_type* stackArgsType, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void procyield(uint32_t cycles);
-    struct neverCallThisFunction
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct neverCallThisFunction& value);
     void goexit(neverCallThisFunction);
     void publicationBarrier();
     uintptr_t getcallerpc();
@@ -127,7 +128,6 @@ namespace golang::runtime
     void duffcopy();
     void addmoduledata();
     void sigpanic0();
-    extern int intArgRegs;
 
     namespace rec
     {

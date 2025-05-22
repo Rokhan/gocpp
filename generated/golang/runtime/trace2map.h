@@ -38,7 +38,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceMap& value);
     struct traceMapNode
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         atomic::UnsafePointer link;
         uintptr_t hash;
         uint64_t id;

@@ -273,7 +273,7 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
-    int32_t sehhandler(struct exceptionrecord* _, uint64_t _, struct context* _, struct _DISPATCHER_CONTEXT* dctxt)
+    int32_t sehhandler(struct exceptionrecord* _1, uint64_t _2, struct context* _3, struct _DISPATCHER_CONTEXT* dctxt)
     {
         auto g0 = getg();
         if(g0 == nullptr || g0->m->curg == nullptr)

@@ -30,12 +30,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    void reflectOffsLock();
-    void reflectOffsUnlock();
-    runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off);
-    runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off);
-    std::string pkgPath(golang::runtime::name n);
-    void typelinksinit();
     struct _typePair
     {
         golang::runtime::_type* t1;
@@ -53,7 +47,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
-    struct rtype toRType(abi::Type* t);
     struct gocpp_id_2
     {
 
@@ -69,6 +62,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    void reflectOffsLock();
+    void reflectOffsUnlock();
+    runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off);
+    runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off);
+    std::string pkgPath(golang::runtime::name n);
+    void typelinksinit();
+    struct rtype toRType(abi::Type* t);
     bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen);
 
     namespace rec

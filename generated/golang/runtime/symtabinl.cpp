@@ -36,7 +36,7 @@ namespace golang::runtime
     {
         T result;
         result.funcID = this->funcID;
-        result._ = this->_;
+        result._1 = this->_1;
         result.nameOff = this->nameOff;
         result.parentPc = this->parentPc;
         result.startLine = this->startLine;
@@ -47,7 +47,7 @@ namespace golang::runtime
     bool inlinedCall::operator==(const T& ref) const
     {
         if (funcID != ref.funcID) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (nameOff != ref.nameOff) return false;
         if (parentPc != ref.parentPc) return false;
         if (startLine != ref.startLine) return false;
@@ -58,7 +58,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << funcID;
-        os << " " << _;
+        os << " " << _1;
         os << " " << nameOff;
         os << " " << parentPc;
         os << " " << startLine;

@@ -31,8 +31,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    go_any packEface(struct Value v);
-    struct Value unpackEface(go_any i);
     struct ValueError
     {
         std::string Method;
@@ -50,7 +48,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    std::string methodName();
     struct emptyInterface
     {
         abi::Type* typ;
@@ -68,6 +65,9 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
+    go_any packEface(struct Value v);
+    struct Value unpackEface(go_any i);
+    std::string methodName();
     struct gocpp_id_6 : gocpp::Interface
     {
         gocpp_id_6(){}

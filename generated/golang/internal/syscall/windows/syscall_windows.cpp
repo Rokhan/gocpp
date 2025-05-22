@@ -427,7 +427,7 @@ namespace golang::windows
         result.LastWriteTime = this->LastWriteTime;
         result.ChangedTime = this->ChangedTime;
         result.FileAttributes = this->FileAttributes;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
@@ -439,7 +439,7 @@ namespace golang::windows
         if (LastWriteTime != ref.LastWriteTime) return false;
         if (ChangedTime != ref.ChangedTime) return false;
         if (FileAttributes != ref.FileAttributes) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
@@ -451,7 +451,7 @@ namespace golang::windows
         os << " " << LastWriteTime;
         os << " " << ChangedTime;
         os << " " << FileAttributes;
-        os << " " << _;
+        os << " " << _1;
         os << '}';
         return os;
     }

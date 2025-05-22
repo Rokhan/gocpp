@@ -124,7 +124,7 @@ namespace golang::runtime
         result.totalFree = this->totalFree;
         result.mappedReady = this->mappedReady;
         result.test = this->test;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
@@ -169,7 +169,7 @@ namespace golang::runtime
         if (totalFree != ref.totalFree) return false;
         if (mappedReady != ref.mappedReady) return false;
         if (test != ref.test) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
@@ -214,7 +214,7 @@ namespace golang::runtime
         os << " " << totalFree;
         os << " " << mappedReady;
         os << " " << test;
-        os << " " << _;
+        os << " " << _1;
         os << '}';
         return os;
     }

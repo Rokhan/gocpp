@@ -91,7 +91,7 @@ namespace golang::runtime
     bucket::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         result.allnext = this->allnext;
         result.typ = this->typ;
@@ -104,7 +104,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool bucket::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         if (allnext != ref.allnext) return false;
         if (typ != ref.typ) return false;
@@ -117,7 +117,7 @@ namespace golang::runtime
     std::ostream& bucket::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << " " << allnext;
         os << " " << typ;

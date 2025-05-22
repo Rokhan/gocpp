@@ -33,27 +33,6 @@
 
 namespace golang::runtime
 {
-    struct finblock
-    {
-        /* sys::NotInHeap _; [Known incomplete type] */
-        finblock* alllink;
-        finblock* next;
-        uint32_t cnt;
-        /* int32_t _; [Known incomplete type] */
-        /* gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct finblock& value);
     struct finalizer
     {
         /* funcval* fn; [Known incomplete type] */
@@ -86,6 +65,27 @@ namespace golang::runtime
     bool blockUntilEmptyFinalizerQueue(int64_t timeout);
     void SetFinalizer(go_any obj, go_any finalizer);
     void KeepAlive(go_any x);
+    struct finblock
+    {
+        sys::NotInHeap _1;
+        finblock* alllink;
+        finblock* next;
+        uint32_t cnt;
+        int32_t _2;
+        /* gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct finblock& value);
 
     namespace rec
     {

@@ -281,7 +281,7 @@ namespace golang::runtime
     traceBuf::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.arr = this->arr;
         return result;
     }
@@ -289,7 +289,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool traceBuf::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (arr != ref.arr) return false;
         return true;
     }
@@ -297,7 +297,7 @@ namespace golang::runtime
     std::ostream& traceBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << arr;
         os << '}';
         return os;

@@ -41,7 +41,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct fixalloc& value);
     struct mlink
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         mlink* next;
 
         using isGoStruct = void;

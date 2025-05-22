@@ -22,16 +22,6 @@
 
 namespace golang::poll
 {
-    int64_t runtimeNano();
-    void runtime_pollServerInit();
-    std::tuple<uintptr_t, int> runtime_pollOpen(uintptr_t fd);
-    void runtime_pollClose(uintptr_t ctx);
-    int runtime_pollWait(uintptr_t ctx, int mode);
-    void runtime_pollWaitCanceled(uintptr_t ctx, int mode);
-    int runtime_pollReset(uintptr_t ctx, int mode);
-    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int mode);
-    void runtime_pollUnblock(uintptr_t ctx);
-    bool runtime_isPollServerDescriptor(uintptr_t fd);
     struct pollDesc
     {
         uintptr_t runtimeCtx;
@@ -48,6 +38,16 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
+    int64_t runtimeNano();
+    void runtime_pollServerInit();
+    std::tuple<uintptr_t, int> runtime_pollOpen(uintptr_t fd);
+    void runtime_pollClose(uintptr_t ctx);
+    int runtime_pollWait(uintptr_t ctx, int mode);
+    void runtime_pollWaitCanceled(uintptr_t ctx, int mode);
+    int runtime_pollReset(uintptr_t ctx, int mode);
+    void runtime_pollSetDeadline(uintptr_t ctx, int64_t d, int mode);
+    void runtime_pollUnblock(uintptr_t ctx);
+    bool runtime_isPollServerDescriptor(uintptr_t fd);
     struct gocpp::error convertErr(int res, bool isFile);
     struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode);
     bool IsPollDescriptor(uintptr_t fd);

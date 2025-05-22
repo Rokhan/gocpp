@@ -44,9 +44,6 @@
 
 namespace golang::runtime
 {
-    void pageTraceAlloc(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
-    void pageTraceFree(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
-    void pageTraceScav(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
     struct pageTraceBuf
     {
 
@@ -62,6 +59,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageTraceBuf& value);
+    void pageTraceAlloc(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
+    void pageTraceFree(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
+    void pageTraceScav(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
     void initPageTrace(std::string env);
     void finishPageTrace();
 

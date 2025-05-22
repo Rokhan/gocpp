@@ -40,10 +40,10 @@
 
 namespace golang::runtime
 {
-    extern long stackPoisonCopy;
+    extern uintptr_t maxstacksize;
     struct stackpoolItem
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         mutex mu;
         /* mSpanList span; [Known incomplete type] */
 
@@ -59,71 +59,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
-    void stackinit();
-    int stacklog2(uintptr_t n);
-    runtime::gclinkptr stackpoolalloc(uint8_t order);
-    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order);
-    void stackcacherefill(struct mcache* c, uint8_t order);
-    void stackcacherelease(struct mcache* c, uint8_t order);
-    void stackcache_clear(struct mcache* c);
-    struct stack stackalloc(uint32_t n);
-    void stackfree(struct stack stk);
-    extern uintptr_t maxstacksize;
-    extern uintptr_t maxstackceiling;
-    extern gocpp::slice<std::string> ptrnames;
-    struct adjustinfo
-    {
-        stack old;
-        uintptr_t delta;
-        uintptr_t sghi;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
-    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp);
-    struct bitvector
-    {
-        int32_t n;
-        uint8_t* bytedata;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct bitvector& value);
-    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
-    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
-    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo);
-    void fillstack(struct stack stk, unsigned char b);
-    uintptr_t findsghi(struct g* gp, struct stack stk);
-    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo);
-    void copystack(struct g* gp, uintptr_t newsize);
-    int32_t round2(int32_t x);
-    void newstack();
-    void nilfunc();
-    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv);
-    bool isShrinkStackSafe(struct g* gp);
-    void shrinkstack(struct g* gp);
-    void freeStackSpans();
     struct stackObjectRecord
     {
         int32_t off;
@@ -143,9 +78,74 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectRecord& value);
-    void morestackc();
+    extern long stackPoisonCopy;
+    struct bitvector
+    {
+        int32_t n;
+        uint8_t* bytedata;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct bitvector& value);
+    struct adjustinfo
+    {
+        stack old;
+        uintptr_t delta;
+        uintptr_t sghi;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
+    extern gocpp::slice<std::string> ptrnames;
     extern uint32_t startingStackSize;
+    void stackinit();
+    int stacklog2(uintptr_t n);
+    runtime::gclinkptr stackpoolalloc(uint8_t order);
+    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order);
+    void stackcacherefill(struct mcache* c, uint8_t order);
+    void stackcacherelease(struct mcache* c, uint8_t order);
+    void stackcache_clear(struct mcache* c);
+    struct stack stackalloc(uint32_t n);
+    void stackfree(struct stack stk);
+    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp);
+    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
+    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
+    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo);
+    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo);
+    void fillstack(struct stack stk, unsigned char b);
+    uintptr_t findsghi(struct g* gp, struct stack stk);
+    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo);
+    void copystack(struct g* gp, uintptr_t newsize);
+    int32_t round2(int32_t x);
+    void newstack();
+    void nilfunc();
+    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv);
+    bool isShrinkStackSafe(struct g* gp);
+    void shrinkstack(struct g* gp);
+    void freeStackSpans();
+    void morestackc();
     void gcComputeStartingStackSize();
+    extern uintptr_t maxstackceiling;
 
     namespace rec
     {

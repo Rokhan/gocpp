@@ -31,23 +31,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitch& value);
-    struct InterfaceSwitchCache
-    {
-        uintptr_t Mask;
-        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCache& value);
     struct InterfaceSwitchCacheEntry
     {
         uintptr_t Typ;
@@ -66,7 +49,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
-    bool UseInterfaceSwitchCache(std::string goarch);
     struct TypeAssert
     {
         TypeAssertCache* Cache;
@@ -85,23 +67,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssert& value);
-    struct TypeAssertCache
-    {
-        uintptr_t Mask;
-        gocpp::array<TypeAssertCacheEntry, 1> Entries;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TypeAssertCache& value);
     struct TypeAssertCacheEntry
     {
         uintptr_t Typ;
@@ -119,6 +84,41 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCacheEntry& value);
+    bool UseInterfaceSwitchCache(std::string goarch);
+    struct InterfaceSwitchCache
+    {
+        uintptr_t Mask;
+        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCache& value);
+    struct TypeAssertCache
+    {
+        uintptr_t Mask;
+        gocpp::array<TypeAssertCacheEntry, 1> Entries;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TypeAssertCache& value);
 
     namespace rec
     {

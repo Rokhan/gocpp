@@ -14,7 +14,7 @@ namespace golang::cpu
 {
     struct CacheLinePad
     {
-        gocpp::array<unsigned char, CacheLinePadSize> _;
+        gocpp::array<unsigned char, CacheLinePadSize> _1;
 
         using isGoStruct = void;
 
@@ -29,7 +29,6 @@ namespace golang::cpu
 
     std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
     extern uintptr_t CacheLineSize;
-    void Initialize(std::string env);
     struct option
     {
         std::string Name;
@@ -49,6 +48,7 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct option& value);
+    void Initialize(std::string env);
     void processOptions(std::string env);
     int indexByte(std::string s, unsigned char c);
 

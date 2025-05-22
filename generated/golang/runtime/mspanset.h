@@ -21,43 +21,6 @@
 
 namespace golang::runtime
 {
-    struct spanSet
-    {
-        /* mutex spineLock; [Known incomplete type] */
-        /* atomicSpanSetSpinePointer spine; [Known incomplete type] */
-        atomic::Uintptr spineLen;
-        uintptr_t spineCap;
-        /* atomicHeadTailIndex index; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct spanSet& value);
-    struct spanSetBlock
-    {
-        atomic::Uint32 popped;
-        gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct spanSetBlock& value);
     struct atomicSpanSetSpinePointer
     {
         atomic::UnsafePointer a;
@@ -106,7 +69,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
-    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     struct atomicHeadTailIndex
     {
         atomic::Uint64 u;
@@ -139,6 +101,44 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
+    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
+    struct spanSet
+    {
+        /* mutex spineLock; [Known incomplete type] */
+        /* atomicSpanSetSpinePointer spine; [Known incomplete type] */
+        atomic::Uintptr spineLen;
+        uintptr_t spineCap;
+        /* atomicHeadTailIndex index; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSet& value);
+    struct spanSetBlock
+    {
+        atomic::Uint32 popped;
+        gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSetBlock& value);
 
     namespace rec
     {

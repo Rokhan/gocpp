@@ -247,7 +247,7 @@ namespace golang::runtime
         s->g = getg();
         s->timer = go_new(timer);
         s->timer->arg = s;
-        s->timer->f = [=](go_any s, uintptr_t _) mutable -> void
+        s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
             rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };

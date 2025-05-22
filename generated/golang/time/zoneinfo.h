@@ -16,28 +16,6 @@
 
 namespace golang::time
 {
-    struct Location
-    {
-        std::string name;
-        gocpp::slice<zone> zone;
-        gocpp::slice<zoneTrans> tx;
-        std::string extend;
-        int64_t cacheStart;
-        int64_t cacheEnd;
-        /* zone* cacheZone; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Location& value);
     struct zone
     {
         std::string name;
@@ -75,14 +53,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
-    extern Location* UTC;
-    extern Location utcLoc;
-    extern Location* Local;
-    struct Location* FixedZone(std::string name, int offset);
-    struct Location* fixedZone(std::string name, int offset);
-    std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
-    std::tuple<std::string, std::string, bool> tzsetName(std::string s);
-    std::tuple<int, std::string, bool> tzsetOffset(std::string s);
+    extern gocpp::error errLocation;
     struct rule
     {
         golang::time::ruleKind kind;
@@ -103,12 +74,41 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
+    struct Location* FixedZone(std::string name, int offset);
+    struct Location* fixedZone(std::string name, int offset);
+    std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
+    std::tuple<std::string, std::string, bool> tzsetName(std::string s);
+    std::tuple<int, std::string, bool> tzsetOffset(std::string s);
     std::tuple<struct rule, std::string, bool> tzsetRule(std::string s);
     std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max);
     int tzruleTime(int year, struct rule r, int off);
-    extern gocpp::error errLocation;
     std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name);
     bool containsDotDot(std::string s);
+    struct Location
+    {
+        std::string name;
+        gocpp::slice<zone> zone;
+        gocpp::slice<zoneTrans> tx;
+        std::string extend;
+        int64_t cacheStart;
+        int64_t cacheEnd;
+        /* zone* cacheZone; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Location& value);
+    extern Location* Local;
+    extern Location utcLoc;
+    extern Location* UTC;
 
     namespace rec
     {

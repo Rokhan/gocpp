@@ -28,7 +28,7 @@ namespace golang::sys
     std::ostream& operator<<(std::ostream& os, const struct nih& value);
     struct NotInHeap
     {
-        nih _;
+        nih _1;
 
         using isGoStruct = void;
 

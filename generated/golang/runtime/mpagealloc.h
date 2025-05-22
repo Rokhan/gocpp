@@ -19,14 +19,6 @@
 
 namespace golang::runtime
 {
-    struct offAddr maxSearchAddr();
-    runtime::chunkIdx chunkIndex(uintptr_t p);
-    uintptr_t chunkBase(golang::runtime::chunkIdx ci);
-    unsigned int chunkPageIndex(uintptr_t p);
-    int offAddrToLevelIndex(int level, struct offAddr addr);
-    struct offAddr levelIndexToOffAddr(int level, int idx);
-    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
-    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
     struct gocpp_id_0
     {
         scavengeIndex index;
@@ -45,6 +37,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct offAddr maxSearchAddr();
+    runtime::chunkIdx chunkIndex(uintptr_t p);
+    uintptr_t chunkBase(golang::runtime::chunkIdx ci);
+    unsigned int chunkPageIndex(uintptr_t p);
+    int offAddrToLevelIndex(int level, struct offAddr addr);
+    struct offAddr levelIndexToOffAddr(int level, int idx);
+    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
+    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
+    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
+    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
     struct pageAlloc
     {
         gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary;
@@ -72,8 +74,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageAlloc& value);
-    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
 
     namespace rec
     {

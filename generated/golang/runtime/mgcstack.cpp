@@ -35,7 +35,7 @@ namespace golang::runtime
     stackWorkBuf::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.obj = this->obj;
         return result;
     }
@@ -43,7 +43,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackWorkBuf::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -51,7 +51,7 @@ namespace golang::runtime
     std::ostream& stackWorkBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << obj;
         os << '}';
         return os;
@@ -67,7 +67,7 @@ namespace golang::runtime
     stackWorkBufHdr::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         return result;
     }
@@ -75,7 +75,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackWorkBufHdr::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -83,7 +83,7 @@ namespace golang::runtime
     std::ostream& stackWorkBufHdr::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << '}';
         return os;
@@ -99,7 +99,7 @@ namespace golang::runtime
     stackObjectBuf::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.obj = this->obj;
         return result;
     }
@@ -107,7 +107,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackObjectBuf::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -115,7 +115,7 @@ namespace golang::runtime
     std::ostream& stackObjectBuf::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << obj;
         os << '}';
         return os;
@@ -131,7 +131,7 @@ namespace golang::runtime
     stackObjectBufHdr::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         return result;
     }
@@ -139,7 +139,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackObjectBufHdr::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -147,7 +147,7 @@ namespace golang::runtime
     std::ostream& stackObjectBufHdr::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << '}';
         return os;
@@ -175,7 +175,7 @@ namespace golang::runtime
     stackObject::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.off = this->off;
         result.size = this->size;
         result.r = this->r;
@@ -187,7 +187,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackObject::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (off != ref.off) return false;
         if (size != ref.size) return false;
         if (r != ref.r) return false;
@@ -199,7 +199,7 @@ namespace golang::runtime
     std::ostream& stackObject::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << off;
         os << " " << size;
         os << " " << r;

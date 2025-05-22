@@ -28,7 +28,7 @@ namespace golang::atomic
     Bool::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.v = this->v;
         return result;
     }
@@ -36,7 +36,7 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Bool::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -44,7 +44,7 @@ namespace golang::atomic
     std::ostream& Bool::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << v;
         os << '}';
         return os;
@@ -93,8 +93,8 @@ namespace golang::atomic
     Pointer<T>::operator U()
     {
         U result;
-        result._ = this->_;
-        result._ = this->_;
+        result._1 = this->_1;
+        result._2 = this->_2;
         result.v = this->v;
         return result;
     }
@@ -103,8 +103,8 @@ namespace golang::atomic
     template<typename U> requires gocpp::GoStruct<U>
     bool Pointer<T>::operator==(const U& ref) const
     {
-        if (_ != ref._) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
+        if (_2 != ref._2) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -113,8 +113,8 @@ namespace golang::atomic
     std::ostream& Pointer<T>::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
-        os << " " << _;
+        os << "" << _1;
+        os << " " << _2;
         os << " " << v;
         os << '}';
         return os;
@@ -161,7 +161,7 @@ namespace golang::atomic
     Int32::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.v = this->v;
         return result;
     }
@@ -169,7 +169,7 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Int32::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -177,7 +177,7 @@ namespace golang::atomic
     std::ostream& Int32::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << v;
         os << '}';
         return os;
@@ -221,8 +221,8 @@ namespace golang::atomic
     Int64::operator T()
     {
         T result;
-        result._ = this->_;
-        result._ = this->_;
+        result._1 = this->_1;
+        result._2 = this->_2;
         result.v = this->v;
         return result;
     }
@@ -230,8 +230,8 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Int64::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
+        if (_2 != ref._2) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -239,8 +239,8 @@ namespace golang::atomic
     std::ostream& Int64::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
-        os << " " << _;
+        os << "" << _1;
+        os << " " << _2;
         os << " " << v;
         os << '}';
         return os;
@@ -284,7 +284,7 @@ namespace golang::atomic
     Uint32::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.v = this->v;
         return result;
     }
@@ -292,7 +292,7 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Uint32::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -300,7 +300,7 @@ namespace golang::atomic
     std::ostream& Uint32::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << v;
         os << '}';
         return os;
@@ -344,8 +344,8 @@ namespace golang::atomic
     Uint64::operator T()
     {
         T result;
-        result._ = this->_;
-        result._ = this->_;
+        result._1 = this->_1;
+        result._2 = this->_2;
         result.v = this->v;
         return result;
     }
@@ -353,8 +353,8 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Uint64::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
+        if (_2 != ref._2) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -362,8 +362,8 @@ namespace golang::atomic
     std::ostream& Uint64::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
-        os << " " << _;
+        os << "" << _1;
+        os << " " << _2;
         os << " " << v;
         os << '}';
         return os;
@@ -407,7 +407,7 @@ namespace golang::atomic
     Uintptr::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.v = this->v;
         return result;
     }
@@ -415,7 +415,7 @@ namespace golang::atomic
     template<typename T> requires gocpp::GoStruct<T>
     bool Uintptr::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (v != ref.v) return false;
         return true;
     }
@@ -423,7 +423,7 @@ namespace golang::atomic
     std::ostream& Uintptr::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << v;
         os << '}';
         return os;

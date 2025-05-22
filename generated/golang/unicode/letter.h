@@ -12,11 +12,10 @@
 
 namespace golang::unicode
 {
-    struct RangeTable
+    struct foldPair
     {
-        gocpp::slice<Range16> R16;
-        gocpp::slice<Range32> R32;
-        int LatinOffset;
+        uint16_t From;
+        uint16_t To;
 
         using isGoStruct = void;
 
@@ -29,7 +28,7 @@ namespace golang::unicode
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
+    std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
     struct Range16
     {
         uint16_t Lo;
@@ -96,10 +95,12 @@ namespace golang::unicode
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::rune ToLower(gocpp::rune r);
     gocpp::rune ToTitle(gocpp::rune r);
-    struct foldPair
+    gocpp::rune SimpleFold(gocpp::rune r);
+    struct RangeTable
     {
-        uint16_t From;
-        uint16_t To;
+        gocpp::slice<Range16> R16;
+        gocpp::slice<Range32> R32;
+        int LatinOffset;
 
         using isGoStruct = void;
 
@@ -112,8 +113,7 @@ namespace golang::unicode
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
-    gocpp::rune SimpleFold(gocpp::rune r);
+    std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
 
     namespace rec
     {

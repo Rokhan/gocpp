@@ -33,6 +33,26 @@
 
 namespace golang::runtime
 {
+    struct notifyList
+    {
+        atomic::Uint32 wait;
+        uint32_t notify;
+        mutex lock;
+        sudog* head;
+        sudog* tail;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
     struct semaRoot
     {
         mutex lock;
@@ -64,26 +84,6 @@ namespace golang::runtime
     void semrelease(uint32_t* addr);
     void semrelease1(uint32_t* addr, bool handoff, int skipframes);
     bool cansemacquire(uint32_t* addr);
-    struct notifyList
-    {
-        atomic::Uint32 wait;
-        uint32_t notify;
-        mutex lock;
-        sudog* head;
-        sudog* tail;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
     bool less(uint32_t a, uint32_t b);
     uint32_t notifyListAdd(struct notifyList* l);
     void notifyListWait(struct notifyList* l, uint32_t t);

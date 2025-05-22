@@ -13,7 +13,6 @@
 
 namespace golang::time
 {
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f);
     struct dataIO
     {
         gocpp::slice<unsigned char> p;
@@ -31,8 +30,9 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dataIO& value);
-    std::string byteString(gocpp::slice<unsigned char> p);
     extern gocpp::error errBadData;
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f);
+    std::string byteString(gocpp::slice<unsigned char> p);
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data);
     int findZone(gocpp::slice<zone> zones, std::string name, int offset, bool isDST);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name);

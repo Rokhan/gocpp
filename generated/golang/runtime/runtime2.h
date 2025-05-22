@@ -47,9 +47,10 @@
 
 namespace golang::runtime
 {
-    struct mutex
+    struct gocpp_id_1
     {
-        uintptr_t key;
+        int len;
+        gocpp::array<mspan*, 128> buf;
 
         using isGoStruct = void;
 
@@ -62,10 +63,12 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct mutex& value);
-    struct note
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    struct ancestorInfo
     {
-        uintptr_t key;
+        gocpp::slice<uintptr_t> pcs;
+        uint64_t goid;
+        uintptr_t gopc;
 
         using isGoStruct = void;
 
@@ -78,7 +81,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct note& value);
+    std::ostream& operator<<(std::ostream& os, const struct ancestorInfo& value);
     struct funcval
     {
         uintptr_t fn;
@@ -129,9 +132,39 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
-    struct eface* efaceOf(go_any* ep);
-    void setGNoWB(struct g** gp, struct g* go_new);
-    void setMNoWB(struct m** mp, struct m* go_new);
+    extern gocpp::array_base<std::string> waitReasonStrings;
+    struct mutex
+    {
+        uintptr_t key;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mutex& value);
+    struct gocpp_id_0
+    {
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct gobuf
     {
         uintptr_t sp;
@@ -238,6 +271,298 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heldLockInfo& value);
+    struct savedOpenDeferState
+    {
+        uintptr_t retpc;
+        uintptr_t deferBitsOffset;
+        uintptr_t slotsOffset;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct savedOpenDeferState& value);
+    extern bool framepointer_enabled;
+    struct note
+    {
+        uintptr_t key;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct note& value);
+    struct _panic
+    {
+        unsafe::Pointer argp;
+        go_any arg;
+        _panic* link;
+        uintptr_t startPC;
+        unsafe::Pointer startSP;
+        unsafe::Pointer sp;
+        uintptr_t lr;
+        unsafe::Pointer fp;
+        uintptr_t retpc;
+        uint8_t* deferBitsPtr;
+        unsafe::Pointer slotsPtr;
+        bool recovered;
+        bool goexit;
+        bool deferreturn;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _panic& value);
+    struct _defer
+    {
+        bool heap;
+        bool rangefunc;
+        uintptr_t sp;
+        uintptr_t pc;
+        std::function<void ()> fn;
+        _defer* link;
+        atomic::Pointer<_defer>* head;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _defer& value);
+    struct gocpp_id_2
+    {
+        bool user;
+        gQueue runnable;
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    struct lfnode
+    {
+        uint64_t next;
+        uintptr_t pushcnt;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lfnode& value);
+    struct itab
+    {
+        golang::runtime::interfacetype* inter;
+        golang::runtime::_type* _type;
+        uint32_t hash;
+        gocpp::array<unsigned char, 4> _1;
+        gocpp::array<uintptr_t, 1> fun;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct itab& value);
+    struct _func
+    {
+        uint32_t entryOff;
+        int32_t nameOff;
+        int32_t args;
+        uint32_t deferreturn;
+        uint32_t pcsp;
+        uint32_t pcfile;
+        uint32_t pcln;
+        uint32_t npcdata;
+        uint32_t cuOffset;
+        int32_t startLine;
+        abi::FuncID funcID;
+        abi::FuncFlag flag;
+        gocpp::array<unsigned char, 1> _1;
+        uint8_t nfuncdata;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _func& value);
+    struct funcinl
+    {
+        uint32_t ones;
+        uintptr_t entry;
+        std::string name;
+        std::string file;
+        int32_t line;
+        int32_t startLine;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct funcinl& value);
+    struct eface* efaceOf(go_any* ep);
+    void setGNoWB(struct g** gp, struct g* go_new);
+    void setMNoWB(struct m** mp, struct m* go_new);
+    struct gocpp_id_3
+    {
+        mutex lock;
+        gList stack;
+        gList noStack;
+        int32_t n;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
+    struct forcegcstate
+    {
+        mutex lock;
+        g* g;
+        atomic::Bool idle;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
+    struct p
+    {
+        int32_t id;
+        uint32_t status;
+        golang::runtime::puintptr link;
+        uint32_t schedtick;
+        uint32_t syscalltick;
+        sysmontick sysmontick;
+        golang::runtime::muintptr m;
+        mcache* mcache;
+        pageCache pcache;
+        uintptr_t raceprocctx;
+        gocpp::slice<_defer*> deferpool;
+        gocpp::array<_defer*, 32> deferpoolbuf;
+        uint64_t goidcache;
+        uint64_t goidcacheend;
+        uint32_t runqhead;
+        uint32_t runqtail;
+        gocpp::array<golang::runtime::guintptr, 256> runq;
+        golang::runtime::guintptr runnext;
+        gocpp_id_0 gFree;
+        gocpp::slice<sudog*> sudogcache;
+        gocpp::array<sudog*, 128> sudogbuf;
+        gocpp_id_1 mspancache;
+        pinner* pinnerCache;
+        pTraceState trace;
+        persistentAlloc palloc;
+        atomic::Int64 timer0When;
+        atomic::Int64 timerModifiedEarliest;
+        int64_t gcAssistTime;
+        int64_t gcFractionalMarkTime;
+        limiterEvent limiterEvent;
+        golang::runtime::gcMarkWorkerMode gcMarkWorkerMode;
+        int64_t gcMarkWorkerStartTime;
+        gcWork gcw;
+        wbBuf wbBuf;
+        uint32_t runSafePointFn;
+        atomic::Uint32 statsSeq;
+        mutex timersLock;
+        gocpp::slice<timer*> timers;
+        atomic::Uint32 numTimers;
+        atomic::Uint32 deletedTimers;
+        uintptr_t timerRaceCtx;
+        int64_t maxStackScanDelta;
+        uint64_t scannedStackSize;
+        uint64_t scannedStacks;
+        bool preempt;
+        pageTraceBuf pageTraceBuf;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct p& value);
     struct g
     {
         stack stack;
@@ -312,7 +637,7 @@ namespace golang::runtime
         g* g0;
         gobuf morebuf;
         uint32_t divmod;
-        uint32_t _;
+        uint32_t _1;
         uint64_t procid;
         g* gsignal;
         gsignalStack goSigStack;
@@ -389,137 +714,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct m& value);
-    struct gocpp_id_0
-    {
-        int32_t n;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct gocpp_id_1
-    {
-        int len;
-        gocpp::array<mspan*, 128> buf;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct p
-    {
-        int32_t id;
-        uint32_t status;
-        golang::runtime::puintptr link;
-        uint32_t schedtick;
-        uint32_t syscalltick;
-        sysmontick sysmontick;
-        golang::runtime::muintptr m;
-        mcache* mcache;
-        pageCache pcache;
-        uintptr_t raceprocctx;
-        gocpp::slice<_defer*> deferpool;
-        gocpp::array<_defer*, 32> deferpoolbuf;
-        uint64_t goidcache;
-        uint64_t goidcacheend;
-        uint32_t runqhead;
-        uint32_t runqtail;
-        gocpp::array<golang::runtime::guintptr, 256> runq;
-        golang::runtime::guintptr runnext;
-        gocpp_id_0 gFree;
-        gocpp::slice<sudog*> sudogcache;
-        gocpp::array<sudog*, 128> sudogbuf;
-        gocpp_id_1 mspancache;
-        pinner* pinnerCache;
-        pTraceState trace;
-        persistentAlloc palloc;
-        atomic::Int64 timer0When;
-        atomic::Int64 timerModifiedEarliest;
-        int64_t gcAssistTime;
-        int64_t gcFractionalMarkTime;
-        limiterEvent limiterEvent;
-        golang::runtime::gcMarkWorkerMode gcMarkWorkerMode;
-        int64_t gcMarkWorkerStartTime;
-        gcWork gcw;
-        wbBuf wbBuf;
-        uint32_t runSafePointFn;
-        atomic::Uint32 statsSeq;
-        mutex timersLock;
-        gocpp::slice<timer*> timers;
-        atomic::Uint32 numTimers;
-        atomic::Uint32 deletedTimers;
-        uintptr_t timerRaceCtx;
-        int64_t maxStackScanDelta;
-        uint64_t scannedStackSize;
-        uint64_t scannedStacks;
-        bool preempt;
-        pageTraceBuf pageTraceBuf;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct p& value);
-    struct gocpp_id_2
-    {
-        bool user;
-        gQueue runnable;
-        int32_t n;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    struct gocpp_id_3
-    {
-        mutex lock;
-        gList stack;
-        gList noStack;
-        int32_t n;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     struct schedt
     {
         atomic::Uint64 goidgen;
@@ -580,200 +774,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct schedt& value);
-    struct _func
-    {
-        uint32_t entryOff;
-        int32_t nameOff;
-        int32_t args;
-        uint32_t deferreturn;
-        uint32_t pcsp;
-        uint32_t pcfile;
-        uint32_t pcln;
-        uint32_t npcdata;
-        uint32_t cuOffset;
-        int32_t startLine;
-        abi::FuncID funcID;
-        abi::FuncFlag flag;
-        gocpp::array<unsigned char, 1> _;
-        uint8_t nfuncdata;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _func& value);
-    struct funcinl
-    {
-        uint32_t ones;
-        uintptr_t entry;
-        std::string name;
-        std::string file;
-        int32_t line;
-        int32_t startLine;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct funcinl& value);
-    struct itab
-    {
-        golang::runtime::interfacetype* inter;
-        golang::runtime::_type* _type;
-        uint32_t hash;
-        gocpp::array<unsigned char, 4> _;
-        gocpp::array<uintptr_t, 1> fun;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct itab& value);
-    struct lfnode
-    {
-        uint64_t next;
-        uintptr_t pushcnt;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lfnode& value);
-    struct forcegcstate
-    {
-        mutex lock;
-        g* g;
-        atomic::Bool idle;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
-    struct _defer
-    {
-        bool heap;
-        bool rangefunc;
-        uintptr_t sp;
-        uintptr_t pc;
-        std::function<void ()> fn;
-        _defer* link;
-        atomic::Pointer<_defer>* head;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _defer& value);
-    struct _panic
-    {
-        unsafe::Pointer argp;
-        go_any arg;
-        _panic* link;
-        uintptr_t startPC;
-        unsafe::Pointer startSP;
-        unsafe::Pointer sp;
-        uintptr_t lr;
-        unsafe::Pointer fp;
-        uintptr_t retpc;
-        uint8_t* deferBitsPtr;
-        unsafe::Pointer slotsPtr;
-        bool recovered;
-        bool goexit;
-        bool deferreturn;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _panic& value);
-    struct savedOpenDeferState
-    {
-        uintptr_t retpc;
-        uintptr_t deferBitsOffset;
-        uintptr_t slotsOffset;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct savedOpenDeferState& value);
-    struct ancestorInfo
-    {
-        gocpp::slice<uintptr_t> pcs;
-        uint64_t goid;
-        uintptr_t gopc;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ancestorInfo& value);
-    extern gocpp::array_base<std::string> waitReasonStrings;
-    extern bool framepointer_enabled;
 
     namespace rec
     {

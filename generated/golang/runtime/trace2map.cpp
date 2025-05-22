@@ -77,7 +77,7 @@ namespace golang::runtime
     traceMapNode::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.link = this->link;
         result.hash = this->hash;
         result.id = this->id;
@@ -88,7 +88,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool traceMapNode::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (link != ref.link) return false;
         if (hash != ref.hash) return false;
         if (id != ref.id) return false;
@@ -99,7 +99,7 @@ namespace golang::runtime
     std::ostream& traceMapNode::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << link;
         os << " " << hash;
         os << " " << id;

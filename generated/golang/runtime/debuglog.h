@@ -14,51 +14,9 @@
 
 namespace golang::runtime
 {
-    struct dlogger* dlog();
-    struct dlogger
-    {
-        sys::NotInHeap _;
-        /* debugLogWriter w; [Known incomplete type] */
-        dlogger* allLink;
-        /* atomic::Uint32 owned; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
-    struct debugLogWriter
-    {
-        sys::NotInHeap _;
-        uint64_t write;
-        /* debugLogBuf data; [Known incomplete type] */
-        uint64_t tick;
-        uint64_t nano;
-        /* debugLogReader r; [Known incomplete type] */
-        gocpp::array<unsigned char, 10> buf;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct debugLogWriter& value);
     struct debugLogBuf
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         gocpp::array<unsigned char, debugLogBytes> b;
 
         using isGoStruct = void;
@@ -93,8 +51,50 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogReader& value);
+    struct dlogger* dlog();
     void printDebugLog();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
+    struct debugLogWriter
+    {
+        sys::NotInHeap _1;
+        uint64_t write;
+        /* debugLogBuf data; [Known incomplete type] */
+        uint64_t tick;
+        uint64_t nano;
+        /* debugLogReader r; [Known incomplete type] */
+        gocpp::array<unsigned char, 10> buf;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct debugLogWriter& value);
+    struct dlogger
+    {
+        sys::NotInHeap _1;
+        /* debugLogWriter w; [Known incomplete type] */
+        dlogger* allLink;
+        /* atomic::Uint32 owned; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
 
     namespace rec
     {

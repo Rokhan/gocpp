@@ -32,32 +32,6 @@
 
 namespace golang::runtime
 {
-    struct hchan
-    {
-        unsigned int qcount;
-        unsigned int dataqsiz;
-        unsafe::Pointer buf;
-        uint16_t elemsize;
-        uint32_t closed;
-        golang::runtime::_type* elemtype;
-        unsigned int sendx;
-        unsigned int recvx;
-        /* waitq recvq; [Known incomplete type] */
-        /* waitq sendq; [Known incomplete type] */
-        mutex lock;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct hchan& value);
     struct waitq
     {
         sudog* first;
@@ -102,6 +76,32 @@ namespace golang::runtime
     void reflect_chanclose(struct hchan* c);
     void racesync(struct hchan* c, struct sudog* sg);
     void racenotify(struct hchan* c, unsigned int idx, struct sudog* sg);
+    struct hchan
+    {
+        unsigned int qcount;
+        unsigned int dataqsiz;
+        unsafe::Pointer buf;
+        uint16_t elemsize;
+        uint32_t closed;
+        golang::runtime::_type* elemtype;
+        unsigned int sendx;
+        unsigned int recvx;
+        /* waitq recvq; [Known incomplete type] */
+        /* waitq sendq; [Known incomplete type] */
+        mutex lock;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct hchan& value);
 
     namespace rec
     {

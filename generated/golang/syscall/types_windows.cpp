@@ -498,7 +498,7 @@ namespace golang::syscall
     {
         T result;
         result.Cb = this->Cb;
-        result._ = this->_;
+        result._1 = this->_1;
         result.Desktop = this->Desktop;
         result.Title = this->Title;
         result.X = this->X;
@@ -510,8 +510,8 @@ namespace golang::syscall
         result.FillAttribute = this->FillAttribute;
         result.Flags = this->Flags;
         result.ShowWindow = this->ShowWindow;
-        result._ = this->_;
-        result._ = this->_;
+        result._2 = this->_2;
+        result._3 = this->_3;
         result.StdInput = this->StdInput;
         result.StdOutput = this->StdOutput;
         result.StdErr = this->StdErr;
@@ -522,7 +522,7 @@ namespace golang::syscall
     bool StartupInfo::operator==(const T& ref) const
     {
         if (Cb != ref.Cb) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (Desktop != ref.Desktop) return false;
         if (Title != ref.Title) return false;
         if (X != ref.X) return false;
@@ -534,8 +534,8 @@ namespace golang::syscall
         if (FillAttribute != ref.FillAttribute) return false;
         if (Flags != ref.Flags) return false;
         if (ShowWindow != ref.ShowWindow) return false;
-        if (_ != ref._) return false;
-        if (_ != ref._) return false;
+        if (_2 != ref._2) return false;
+        if (_3 != ref._3) return false;
         if (StdInput != ref.StdInput) return false;
         if (StdOutput != ref.StdOutput) return false;
         if (StdErr != ref.StdErr) return false;
@@ -546,7 +546,7 @@ namespace golang::syscall
     {
         os << '{';
         os << "" << Cb;
-        os << " " << _;
+        os << " " << _1;
         os << " " << Desktop;
         os << " " << Title;
         os << " " << X;
@@ -558,8 +558,8 @@ namespace golang::syscall
         os << " " << FillAttribute;
         os << " " << Flags;
         os << " " << ShowWindow;
-        os << " " << _;
-        os << " " << _;
+        os << " " << _2;
+        os << " " << _3;
         os << " " << StdInput;
         os << " " << StdOutput;
         os << " " << StdErr;
@@ -577,21 +577,21 @@ namespace golang::syscall
     _PROC_THREAD_ATTRIBUTE_LIST::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool _PROC_THREAD_ATTRIBUTE_LIST::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
     std::ostream& _PROC_THREAD_ATTRIBUTE_LIST::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << '}';
         return os;
     }

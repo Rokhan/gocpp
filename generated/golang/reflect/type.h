@@ -21,6 +21,201 @@
 
 namespace golang::reflect
 {
+    extern gocpp::slice<std::string> kindNames;
+    struct rtype
+    {
+        abi::Type t;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
+    struct fieldScan
+    {
+        structType* typ;
+        gocpp::slice<int> index;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fieldScan& value);
+    struct cacheKey
+    {
+        golang::reflect::Kind kind;
+        abi::Type* t1;
+        abi::Type* t2;
+        uintptr_t extra;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cacheKey& value);
+    struct mapType
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mapType& value);
+    struct ptrType
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ptrType& value);
+    struct sliceType
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sliceType& value);
+    struct structType
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct structType& value);
+    struct layoutKey
+    {
+        golang::reflect::funcType* ftyp;
+        abi::Type* rcvr;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct layoutKey& value);
+    struct common
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct common& value);
+    struct interfaceType
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct interfaceType& value);
+    struct layoutType
+    {
+        abi::Type* t;
+        sync::Pool* framePool;
+        abiDesc abid;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct layoutType& value);
+    struct bitVector
+    {
+        uint32_t n;
+        gocpp::slice<unsigned char> data;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct bitVector& value);
     struct Type : gocpp::Interface
     {
         Type(){}
@@ -250,137 +445,10 @@ namespace golang::reflect
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    struct common
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct common& value);
-    struct rtype
-    {
-        abi::Type t;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    struct interfaceType
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct interfaceType& value);
     abi::Name nameOffFor(abi::Type* t, golang::reflect::aNameOff off);
     abi::Type* typeOffFor(abi::Type* t, golang::reflect::aTypeOff off);
-    struct mapType
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mapType& value);
-    struct ptrType
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ptrType& value);
-    struct sliceType
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sliceType& value);
-    struct structType
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct structType& value);
     std::string pkgPath(abi::Name n);
     abi::Name newName(std::string n, std::string tag, bool exported, bool embedded);
-    struct Method
-    {
-        std::string Name;
-        std::string PkgPath;
-        Type Type;
-        /* Value Func; [Known incomplete type] */
-        int Index;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Method& value);
-    extern gocpp::slice<std::string> kindNames;
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
     unsafe::Pointer resolveTextOff(unsafe::Pointer rtype, int32_t off);
@@ -394,45 +462,6 @@ namespace golang::reflect
     struct rtype* toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
-    struct StructField
-    {
-        std::string Name;
-        std::string PkgPath;
-        Type Type;
-        golang::reflect::StructTag Tag;
-        uintptr_t Offset;
-        gocpp::slice<int> Index;
-        bool Anonymous;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct StructField& value);
-    struct fieldScan
-    {
-        structType* typ;
-        gocpp::slice<int> index;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct fieldScan& value);
     struct Type TypeOf(go_any i);
     abi::Type* rtypeOf(go_any i);
     struct Type PtrTo(struct Type t);
@@ -459,25 +488,6 @@ namespace golang::reflect
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
     abi::Type* rtypeOff(unsafe::Pointer section, int32_t off);
     gocpp::slice<abi::Type*> typesByString(std::string s);
-    struct cacheKey
-    {
-        golang::reflect::Kind kind;
-        abi::Type* t1;
-        abi::Type* t2;
-        uintptr_t extra;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cacheKey& value);
     struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t);
     struct Type MapOf(struct Type key, struct Type elem);
     struct Type initFuncTypes(int n);
@@ -491,6 +501,21 @@ namespace golang::reflect
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);
     gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ);
     struct Type SliceOf(struct Type t);
+    bool isLetter(gocpp::rune ch);
+    bool isValidFieldName(std::string fieldName);
+    struct Type StructOf(gocpp::slice<StructField> fields);
+    void embeddedIfaceMethStub();
+    std::tuple<reflect::structField, std::string> runtimeStructField(struct StructField field);
+    uintptr_t typeptrdata(abi::Type* t);
+    struct Type ArrayOf(int length, struct Type elem);
+    gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
+    struct Type toType(abi::Type* t);
+    std::tuple<abi::Type*, sync::Pool*, struct abiDesc> funcLayout(golang::reflect::funcType* t, abi::Type* rcvr);
+    bool ifaceIndir(abi::Type* t);
+    void addTypeBits(struct bitVector* bv, uintptr_t offset, abi::Type* t);
+    
+    template<typename T>
+    struct Type TypeFor();
     struct structTypeUncommon
     {
         golang::reflect::uncommonType u;
@@ -507,19 +532,15 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structTypeUncommon& value);
-    bool isLetter(gocpp::rune ch);
-    bool isValidFieldName(std::string fieldName);
-    struct Type StructOf(gocpp::slice<StructField> fields);
-    void embeddedIfaceMethStub();
-    std::tuple<reflect::structField, std::string> runtimeStructField(struct StructField field);
-    uintptr_t typeptrdata(abi::Type* t);
-    struct Type ArrayOf(int length, struct Type elem);
-    gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
-    struct Type toType(abi::Type* t);
-    struct layoutKey
+    struct StructField
     {
-        golang::reflect::funcType* ftyp;
-        abi::Type* rcvr;
+        std::string Name;
+        std::string PkgPath;
+        Type Type;
+        golang::reflect::StructTag Tag;
+        uintptr_t Offset;
+        gocpp::slice<int> Index;
+        bool Anonymous;
 
         using isGoStruct = void;
 
@@ -532,12 +553,14 @@ namespace golang::reflect
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct layoutKey& value);
-    struct layoutType
+    std::ostream& operator<<(std::ostream& os, const struct StructField& value);
+    struct Method
     {
-        abi::Type* t;
-        sync::Pool* framePool;
-        abiDesc abid;
+        std::string Name;
+        std::string PkgPath;
+        Type Type;
+        /* Value Func; [Known incomplete type] */
+        int Index;
 
         using isGoStruct = void;
 
@@ -550,30 +573,7 @@ namespace golang::reflect
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct layoutType& value);
-    std::tuple<abi::Type*, sync::Pool*, struct abiDesc> funcLayout(golang::reflect::funcType* t, abi::Type* rcvr);
-    bool ifaceIndir(abi::Type* t);
-    struct bitVector
-    {
-        uint32_t n;
-        gocpp::slice<unsigned char> data;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct bitVector& value);
-    void addTypeBits(struct bitVector* bv, uintptr_t offset, abi::Type* t);
-    
-    template<typename T>
-    struct Type TypeFor();
+    std::ostream& operator<<(std::ostream& os, const struct Method& value);
 
     namespace rec
     {

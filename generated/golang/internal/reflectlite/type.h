@@ -13,6 +13,21 @@
 
 namespace golang::reflectlite
 {
+    struct rtype
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct Type : gocpp::Interface
     {
         Type(){}
@@ -122,44 +137,6 @@ namespace golang::reflectlite
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    struct rtype
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    struct mapType
-    {
-        abi::Type* Key;
-        abi::Type* Elem;
-        abi::Type* Bucket;
-        std::function<uintptr_t (unsafe::Pointer, uintptr_t)> Hasher;
-        uint8_t KeySize;
-        uint8_t ValueSize;
-        uint16_t BucketSize;
-        uint32_t Flags;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mapType& value);
     struct name
     {
         unsigned char* bytes;
@@ -189,6 +166,29 @@ namespace golang::reflectlite
     bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
     struct Type toType(abi::Type* t);
     bool ifaceIndir(abi::Type* t);
+    struct mapType
+    {
+        abi::Type* Key;
+        abi::Type* Elem;
+        abi::Type* Bucket;
+        std::function<uintptr_t (unsafe::Pointer, uintptr_t)> Hasher;
+        uint8_t KeySize;
+        uint8_t ValueSize;
+        uint16_t BucketSize;
+        uint32_t Flags;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mapType& value);
 
     namespace rec
     {

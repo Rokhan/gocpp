@@ -104,7 +104,7 @@ namespace golang::runtime
     struct gocpp_id_0
     {
         stackpoolItem item;
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _;
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1;
 
         using isGoStruct = void;
 
@@ -113,7 +113,7 @@ namespace golang::runtime
         {
             T result;
             result.item = this->item;
-            result._ = this->_;
+            result._1 = this->_1;
             return result;
         }
 
@@ -121,7 +121,7 @@ namespace golang::runtime
         bool operator==(const T& ref) const
         {
             if (item != ref.item) return false;
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             return true;
         }
 
@@ -129,7 +129,7 @@ namespace golang::runtime
         {
             os << '{';
             os << "" << item;
-            os << " " << _;
+            os << " " << _1;
             os << '}';
             return os;
         }
@@ -147,7 +147,7 @@ namespace golang::runtime
     stackpoolItem::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.mu = this->mu;
         result.span = this->span;
         return result;
@@ -156,7 +156,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool stackpoolItem::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (mu != ref.mu) return false;
         if (span != ref.span) return false;
         return true;
@@ -165,7 +165,7 @@ namespace golang::runtime
     std::ostream& stackpoolItem::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << mu;
         os << " " << span;
         os << '}';

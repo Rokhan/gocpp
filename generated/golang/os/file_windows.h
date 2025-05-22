@@ -43,11 +43,11 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
+    extern std::string DevNull;
     struct File* newFile(syscall::Handle h, std::string name, std::string kind);
     struct File* newConsoleFile(syscall::Handle h, std::string name);
     struct File* NewFile(uintptr_t fd, std::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
-    extern std::string DevNull;
     std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm);
     struct gocpp::error Truncate(std::string name, int64_t size);
     struct gocpp::error Remove(std::string name);

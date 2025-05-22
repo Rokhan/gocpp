@@ -33,7 +33,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAlloc& value);
     struct traceRegionAllocBlock
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         traceRegionAllocBlock* next;
         gocpp::array<unsigned char, (64 << 10) - goarch::PtrSize> data;
 

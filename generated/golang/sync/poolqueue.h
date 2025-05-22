@@ -13,23 +13,6 @@
 
 namespace golang::sync
 {
-    struct poolDequeue
-    {
-        atomic::Uint64 headTail;
-        gocpp::slice<eface> vals;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
     struct eface
     {
         unsafe::Pointer typ;
@@ -64,6 +47,25 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
+    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
+    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
+    struct poolDequeue
+    {
+        atomic::Uint64 headTail;
+        gocpp::slice<eface> vals;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
     struct poolChainElt
     {
         poolChainElt* next;
@@ -81,8 +83,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
-    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
-    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
 
     namespace rec
     {

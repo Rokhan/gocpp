@@ -14,8 +14,40 @@
 namespace golang::runtime
 {
     extern uint32_t metricsSema;
-    extern bool metricsInit;
-    extern gocpp::map<std::string, metricData> metrics;
+    struct metricFloat64Histogram
+    {
+        gocpp::slice<uint64_t> counts;
+        gocpp::slice<double> buckets;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
+    struct metricName
+    {
+        std::string name;
+        golang::runtime::metricKind kind;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricName& value);
     extern gocpp::slice<double> sizeClassBuckets;
     extern gocpp::slice<double> timeHistBuckets;
     struct metricData
@@ -35,45 +67,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricData& value);
-    void metricsLock();
-    void metricsUnlock();
-    void initMetrics();
-    void compute0(struct statAggregate* _, struct metricValue* out);
-    void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
-    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
-    
-    template<typename... Args>
-    runtime::statDepSet makeStatDepSet(Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(deps...));
-    }
-    
-    template<typename... Args>
-    runtime::statDepSet makeStatDepSet(golang::runtime::statDep value, Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(value, deps...));
-    }
-    struct heapStatsAggregate
-    {
-        uint64_t inObjects;
-        uint64_t numObjects;
-        uint64_t totalAllocated;
-        uint64_t totalFreed;
-        uint64_t totalAllocs;
-        uint64_t totalFrees;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
+    extern bool metricsInit;
     struct sysStatsAggregate
     {
         uint64_t stacksSys;
@@ -115,6 +109,27 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
+    struct heapStatsAggregate
+    {
+        uint64_t inObjects;
+        uint64_t numObjects;
+        uint64_t totalAllocated;
+        uint64_t totalFreed;
+        uint64_t totalAllocs;
+        uint64_t totalFrees;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
     struct gcStatsAggregate
     {
         uint64_t heapScan;
@@ -134,7 +149,64 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcStatsAggregate& value);
+    struct metricValue
+    {
+        golang::runtime::metricKind kind;
+        uint64_t scalar;
+        unsafe::Pointer pointer;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
+    void metricsLock();
+    void metricsUnlock();
+    void initMetrics();
+    void compute0(struct statAggregate* _1, struct metricValue* out);
+    void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
+    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
+    
+    template<typename... Args>
+    runtime::statDepSet makeStatDepSet(Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(deps...));
+    }
+    
+    template<typename... Args>
+    runtime::statDepSet makeStatDepSet(golang::runtime::statDep value, Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(value, deps...));
+    }
     double nsToSec(int64_t ns);
+    gocpp::slice<std::string> readMetricNames();
+    void readMetrics(unsafe::Pointer samplesp, int len, int cap);
+    void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap);
+    struct metricSample
+    {
+        std::string name;
+        metricValue value;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+    extern gocpp::map<std::string, metricData> metrics;
     struct statAggregate
     {
         golang::runtime::statDepSet ensured;
@@ -155,82 +227,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
-    struct metricSample
-    {
-        std::string name;
-        metricValue value;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
-    struct metricValue
-    {
-        golang::runtime::metricKind kind;
-        uint64_t scalar;
-        unsafe::Pointer pointer;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
-    struct metricFloat64Histogram
-    {
-        gocpp::slice<uint64_t> counts;
-        gocpp::slice<double> buckets;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
-    struct metricName
-    {
-        std::string name;
-        golang::runtime::metricKind kind;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricName& value);
-    gocpp::slice<std::string> readMetricNames();
-    void readMetrics(unsafe::Pointer samplesp, int len, int cap);
-    void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap);
 
     namespace rec
     {
-        void compute(golang::runtime::metricReader f, struct statAggregate* _, struct metricValue* out);
+        void compute(golang::runtime::metricReader f, struct statAggregate* _1, struct metricValue* out);
         runtime::statDepSet difference(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
         runtime::statDepSet union(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
         bool empty(golang::runtime::statDepSet* s);

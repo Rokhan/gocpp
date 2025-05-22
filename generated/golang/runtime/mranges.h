@@ -14,26 +14,6 @@
 
 namespace golang::runtime
 {
-    struct addrRange
-    {
-        /* offAddr base; [Known incomplete type] */
-        /* offAddr limit; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
-    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
-    extern offAddr minOffAddr;
-    extern offAddr maxOffAddr;
     struct offAddr
     {
         uintptr_t a;
@@ -66,6 +46,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
+    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
+    struct addrRange
+    {
+        /* offAddr base; [Known incomplete type] */
+        /* offAddr limit; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
+    extern offAddr minOffAddr;
+    extern offAddr maxOffAddr;
     struct addrRanges
     {
         gocpp::slice<addrRange> ranges;

@@ -246,7 +246,6 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
-    std::string FormatString(struct State state, gocpp::rune verb);
     struct pp
     {
         golang::fmt::buffer buf;
@@ -272,7 +271,7 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pp& value);
-    extern sync::Pool ppFree;
+    std::string FormatString(struct State state, gocpp::rune verb);
     struct pp* newPrinter();
     std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a);
     
@@ -435,6 +434,7 @@ namespace golang::fmt
     std::tuple<int, bool, int> parsenum(std::string s, int start, int end);
     std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum);
     std::tuple<int, int, bool> parseArgNumber(std::string format);
+    extern sync::Pool ppFree;
 
     namespace rec
     {

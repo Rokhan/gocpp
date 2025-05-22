@@ -520,7 +520,7 @@ namespace golang::runtime
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapGoal, traceArg(heapGoal));
     }
 
-    void rec::OneNewExtraM(struct traceLocker tl, struct g* _)
+    void rec::OneNewExtraM(struct traceLocker tl, struct g* _1)
     {
     }
 
@@ -599,7 +599,7 @@ namespace golang::runtime
         traceRelease(tl);
     }
 
-    void traceProcFree(struct p* _)
+    void traceProcFree(struct p* _1)
     {
     }
 
@@ -632,7 +632,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::RecordSyscallExitedTime(struct traceLocker _, struct g* _, struct p* _)
+    void rec::RecordSyscallExitedTime(struct traceLocker _1, struct g* _1, struct p* _2)
     {
     }
 

@@ -34,32 +34,6 @@
 
 namespace golang::runtime
 {
-    void preventErrorDialogs();
-    void enableWER();
-    void exceptiontramp();
-    void firstcontinuetramp();
-    void lastcontinuetramp();
-    void sehtramp();
-    void sigresume();
-    void initExceptionHandler();
-    bool isAbort(struct context* r);
-    bool isgoexception(struct exceptionrecord* info, struct context* r);
-    struct g* sigFetchGSafe();
-    struct g* sigFetchG();
-    int32_t sigtrampgo(struct exceptionpointers* ep, int kind);
-    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    int32_t sehhandler(struct exceptionrecord* _, uint64_t _, struct context* _, struct _DISPATCHER_CONTEXT* dctxt);
-    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp);
-    void sigpanic();
-    void initsig(bool preinit);
-    void sigenable(uint32_t sig);
-    void sigdisable(uint32_t sig);
-    void sigignore(uint32_t sig);
-    std::string signame(uint32_t sig);
-    void crash();
-    void dieFromException(struct exceptionrecord* info, struct context* r);
     struct gsignalStack
     {
 
@@ -75,6 +49,32 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value);
+    void preventErrorDialogs();
+    void enableWER();
+    void exceptiontramp();
+    void firstcontinuetramp();
+    void lastcontinuetramp();
+    void sehtramp();
+    void sigresume();
+    void initExceptionHandler();
+    bool isAbort(struct context* r);
+    bool isgoexception(struct exceptionrecord* info, struct context* r);
+    struct g* sigFetchGSafe();
+    struct g* sigFetchG();
+    int32_t sigtrampgo(struct exceptionpointers* ep, int kind);
+    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    int32_t sehhandler(struct exceptionrecord* _1, uint64_t _2, struct context* _3, struct _DISPATCHER_CONTEXT* dctxt);
+    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
+    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp);
+    void sigpanic();
+    void initsig(bool preinit);
+    void sigenable(uint32_t sig);
+    void sigdisable(uint32_t sig);
+    void sigignore(uint32_t sig);
+    std::string signame(uint32_t sig);
+    void crash();
+    void dieFromException(struct exceptionrecord* info, struct context* r);
 
     namespace rec
     {

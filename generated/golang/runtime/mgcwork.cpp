@@ -356,7 +356,7 @@ namespace golang::runtime
     workbuf::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.obj = this->obj;
         return result;
     }
@@ -364,7 +364,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool workbuf::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -372,7 +372,7 @@ namespace golang::runtime
     std::ostream& workbuf::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << obj;
         os << '}';
         return os;

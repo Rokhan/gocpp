@@ -27,21 +27,21 @@ namespace golang::cpu
     CacheLinePad::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool CacheLinePad::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
     std::ostream& CacheLinePad::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << '}';
         return os;
     }
@@ -54,7 +54,7 @@ namespace golang::cpu
     uintptr_t CacheLineSize = CacheLinePadSize;
     struct gocpp_id_0
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasAES;
         bool HasADX;
         bool HasAVX;
@@ -75,7 +75,7 @@ namespace golang::cpu
         bool HasSSSE3;
         bool HasSSE41;
         bool HasSSE42;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -83,7 +83,7 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasAES = this->HasAES;
             result.HasADX = this->HasADX;
             result.HasAVX = this->HasAVX;
@@ -104,14 +104,14 @@ namespace golang::cpu
             result.HasSSSE3 = this->HasSSSE3;
             result.HasSSE41 = this->HasSSE41;
             result.HasSSE42 = this->HasSSE42;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasAES != ref.HasAES) return false;
             if (HasADX != ref.HasADX) return false;
             if (HasAVX != ref.HasAVX) return false;
@@ -132,14 +132,14 @@ namespace golang::cpu
             if (HasSSSE3 != ref.HasSSSE3) return false;
             if (HasSSE41 != ref.HasSSE41) return false;
             if (HasSSE42 != ref.HasSSE42) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasAES;
             os << " " << HasADX;
             os << " " << HasAVX;
@@ -160,7 +160,7 @@ namespace golang::cpu
             os << " " << HasSSSE3;
             os << " " << HasSSE41;
             os << " " << HasSSE42;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }
@@ -175,11 +175,11 @@ namespace golang::cpu
     gocpp_id_0 X86;
     struct gocpp_id_1
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasVFPv4;
         bool HasIDIVA;
         bool HasV7Atomics;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -187,33 +187,33 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasVFPv4 = this->HasVFPv4;
             result.HasIDIVA = this->HasIDIVA;
             result.HasV7Atomics = this->HasV7Atomics;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasVFPv4 != ref.HasVFPv4) return false;
             if (HasIDIVA != ref.HasIDIVA) return false;
             if (HasV7Atomics != ref.HasV7Atomics) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasVFPv4;
             os << " " << HasIDIVA;
             os << " " << HasV7Atomics;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }
@@ -228,7 +228,7 @@ namespace golang::cpu
     gocpp_id_1 ARM;
     struct gocpp_id_2
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasAES;
         bool HasPMULL;
         bool HasSHA1;
@@ -238,7 +238,7 @@ namespace golang::cpu
         bool HasATOMICS;
         bool HasCPUID;
         bool IsNeoverse;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -246,7 +246,7 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasAES = this->HasAES;
             result.HasPMULL = this->HasPMULL;
             result.HasSHA1 = this->HasSHA1;
@@ -256,14 +256,14 @@ namespace golang::cpu
             result.HasATOMICS = this->HasATOMICS;
             result.HasCPUID = this->HasCPUID;
             result.IsNeoverse = this->IsNeoverse;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasAES != ref.HasAES) return false;
             if (HasPMULL != ref.HasPMULL) return false;
             if (HasSHA1 != ref.HasSHA1) return false;
@@ -273,14 +273,14 @@ namespace golang::cpu
             if (HasATOMICS != ref.HasATOMICS) return false;
             if (HasCPUID != ref.HasCPUID) return false;
             if (IsNeoverse != ref.IsNeoverse) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasAES;
             os << " " << HasPMULL;
             os << " " << HasSHA1;
@@ -290,7 +290,7 @@ namespace golang::cpu
             os << " " << HasATOMICS;
             os << " " << HasCPUID;
             os << " " << IsNeoverse;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }
@@ -305,9 +305,9 @@ namespace golang::cpu
     gocpp_id_2 ARM64;
     struct gocpp_id_3
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasMSA;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -315,27 +315,27 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasMSA = this->HasMSA;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasMSA != ref.HasMSA) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasMSA;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }
@@ -350,13 +350,13 @@ namespace golang::cpu
     gocpp_id_3 MIPS64X;
     struct gocpp_id_4
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasDARN;
         bool HasSCV;
         bool IsPOWER8;
         bool IsPOWER9;
         bool IsPOWER10;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -364,39 +364,39 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasDARN = this->HasDARN;
             result.HasSCV = this->HasSCV;
             result.IsPOWER8 = this->IsPOWER8;
             result.IsPOWER9 = this->IsPOWER9;
             result.IsPOWER10 = this->IsPOWER10;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasDARN != ref.HasDARN) return false;
             if (HasSCV != ref.HasSCV) return false;
             if (IsPOWER8 != ref.IsPOWER8) return false;
             if (IsPOWER9 != ref.IsPOWER9) return false;
             if (IsPOWER10 != ref.IsPOWER10) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasDARN;
             os << " " << HasSCV;
             os << " " << IsPOWER8;
             os << " " << IsPOWER9;
             os << " " << IsPOWER10;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }
@@ -411,7 +411,7 @@ namespace golang::cpu
     gocpp_id_4 PPC64;
     struct gocpp_id_5
     {
-        CacheLinePad _;
+        CacheLinePad _1;
         bool HasZARCH;
         bool HasSTFLE;
         bool HasLDISP;
@@ -433,7 +433,7 @@ namespace golang::cpu
         bool HasKDSA;
         bool HasECDSA;
         bool HasEDDSA;
-        CacheLinePad _;
+        CacheLinePad _2;
 
         using isGoStruct = void;
 
@@ -441,7 +441,7 @@ namespace golang::cpu
         operator T()
         {
             T result;
-            result._ = this->_;
+            result._1 = this->_1;
             result.HasZARCH = this->HasZARCH;
             result.HasSTFLE = this->HasSTFLE;
             result.HasLDISP = this->HasLDISP;
@@ -463,14 +463,14 @@ namespace golang::cpu
             result.HasKDSA = this->HasKDSA;
             result.HasECDSA = this->HasECDSA;
             result.HasEDDSA = this->HasEDDSA;
-            result._ = this->_;
+            result._2 = this->_2;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
-            if (_ != ref._) return false;
+            if (_1 != ref._1) return false;
             if (HasZARCH != ref.HasZARCH) return false;
             if (HasSTFLE != ref.HasSTFLE) return false;
             if (HasLDISP != ref.HasLDISP) return false;
@@ -492,14 +492,14 @@ namespace golang::cpu
             if (HasKDSA != ref.HasKDSA) return false;
             if (HasECDSA != ref.HasECDSA) return false;
             if (HasEDDSA != ref.HasEDDSA) return false;
-            if (_ != ref._) return false;
+            if (_2 != ref._2) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << _;
+            os << "" << _1;
             os << " " << HasZARCH;
             os << " " << HasSTFLE;
             os << " " << HasLDISP;
@@ -521,7 +521,7 @@ namespace golang::cpu
             os << " " << HasKDSA;
             os << " " << HasECDSA;
             os << " " << HasEDDSA;
-            os << " " << _;
+            os << " " << _2;
             os << '}';
             return os;
         }

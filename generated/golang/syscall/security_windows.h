@@ -12,7 +12,6 @@
 
 namespace golang::syscall
 {
-    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
     struct UserInfo10
     {
         uint16_t* Name;
@@ -47,8 +46,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
-    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
     struct SIDAndAttributes
     {
         SID* Sid;
@@ -66,22 +63,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SIDAndAttributes& value);
-    struct Tokenuser
-    {
-        SIDAndAttributes User;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
     struct Tokenprimarygroup
     {
         SID* PrimaryGroup;
@@ -98,7 +79,26 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
+    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
+    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
+    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
     std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
+    struct Tokenuser
+    {
+        SIDAndAttributes User;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
 
     namespace rec
     {

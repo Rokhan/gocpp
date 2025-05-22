@@ -14,12 +14,12 @@
 
 namespace golang::time
 {
-    extern std::string Layout;
-    extern std::string ANSIC;
-    extern std::string UnixDate;
+    extern std::string DateTime;
     extern std::string RubyDate;
+    extern std::string UnixDate;
+    extern std::string DateOnly;
     extern std::string RFC822;
-    extern std::string RFC822Z;
+    extern std::string TimeOnly;
     extern std::string RFC850;
     extern std::string RFC1123;
     extern std::string RFC1123Z;
@@ -30,27 +30,15 @@ namespace golang::time
     extern std::string StampMilli;
     extern std::string StampMicro;
     extern std::string StampNano;
-    extern std::string DateTime;
-    extern std::string DateOnly;
-    extern std::string TimeOnly;
+    extern gocpp::map<std::string, uint64_t> unitMap;
+    extern std::string ANSIC;
+    extern std::string RFC822Z;
     extern gocpp::array_base<int> std0x;
-    bool startsWithLowerCase(std::string str);
-    std::tuple<std::string, int, std::string> nextStdChunk(std::string layout);
     extern gocpp::slice<std::string> longDayNames;
     extern gocpp::slice<std::string> shortDayNames;
     extern gocpp::slice<std::string> shortMonthNames;
     extern gocpp::slice<std::string> longMonthNames;
-    bool match(std::string s1, std::string s2);
-    std::tuple<int, std::string, struct gocpp::error> lookup(gocpp::slice<std::string> tab, std::string val);
-    gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
     extern gocpp::error errAtoi;
-    
-    template<typename bytes>
-    std::tuple<int, struct gocpp::error> atoi(bytes s);
-    int stdFracSecond(int code, int n, int c);
-    int digitsLen(int std);
-    unsigned char separator(int std);
-    gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std);
     extern gocpp::error errBad;
     struct ParseError
     {
@@ -72,9 +60,23 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
+    extern gocpp::error errLeadingInt;
+    extern std::string lowerhex;
+    extern std::string Layout;
+    bool startsWithLowerCase(std::string str);
+    std::tuple<std::string, int, std::string> nextStdChunk(std::string layout);
+    bool match(std::string s1, std::string s2);
+    std::tuple<int, std::string, struct gocpp::error> lookup(gocpp::slice<std::string> tab, std::string val);
+    gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
+    
+    template<typename bytes>
+    std::tuple<int, struct gocpp::error> atoi(bytes s);
+    int stdFracSecond(int code, int n, int c);
+    int digitsLen(int std);
+    unsigned char separator(int std);
+    gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std);
     struct ParseError* newParseError(std::string layout, std::string value, std::string layoutElem, std::string valueElem, std::string message);
     std::string cloneString(std::string s);
-    extern std::string lowerhex;
     std::string quote(std::string s);
     
     template<typename bytes>
@@ -93,12 +95,10 @@ namespace golang::time
     
     template<typename bytes>
     std::tuple<int, std::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes);
-    extern gocpp::error errLeadingInt;
     
     template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, std::string> leadingFraction(std::string s);
-    extern gocpp::map<std::string, uint64_t> unitMap;
     std::tuple<time::Duration, struct gocpp::error> ParseDuration(std::string s);
 
     namespace rec

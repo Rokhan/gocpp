@@ -37,64 +37,6 @@
 
 namespace golang::runtime
 {
-    uint64_t heapRetained();
-    void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
-    struct scavengerState
-    {
-        mutex lock;
-        g* g;
-        bool parked;
-        timer* timer;
-        atomic::Uint32 sysmonWake;
-        double targetCPUFraction;
-        double sleepRatio;
-        piController sleepController;
-        int64_t controllerCooldown;
-        bool printControllerReset;
-        std::function<int64_t (int64_t n)> sleepStub;
-        std::function<std::tuple<uintptr_t, int64_t> (uintptr_t n)> scavenge;
-        std::function<bool ()> shouldStop;
-        std::function<int32_t ()> gomaxprocs;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
-    void bgscavenge(gocpp::channel<int> c);
-    void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
-    uint64_t fillAligned(uint64_t x, unsigned int m);
-    struct scavengeIndex
-    {
-        gocpp::slice<atomicScavChunkData> chunks;
-        atomic::Uintptr min;
-        atomic::Uintptr max;
-        atomic::Uintptr minHeapIdx;
-        atomicOffAddr searchAddrBg;
-        atomicOffAddr searchAddrForce;
-        offAddr freeHWM;
-        uint32_t gen;
-        bool test;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
     struct atomicScavChunkData
     {
         atomic::Uint64 value;
@@ -129,7 +71,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
-    struct scavChunkData unpackScavChunkData(uint64_t sc);
     struct piController
     {
         double kp;
@@ -153,6 +94,65 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
+    uint64_t heapRetained();
+    void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
+    void bgscavenge(gocpp::channel<int> c);
+    void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
+    uint64_t fillAligned(uint64_t x, unsigned int m);
+    struct scavChunkData unpackScavChunkData(uint64_t sc);
+    struct scavengerState
+    {
+        mutex lock;
+        g* g;
+        bool parked;
+        timer* timer;
+        atomic::Uint32 sysmonWake;
+        double targetCPUFraction;
+        double sleepRatio;
+        piController sleepController;
+        int64_t controllerCooldown;
+        bool printControllerReset;
+        std::function<int64_t (int64_t n)> sleepStub;
+        std::function<std::tuple<uintptr_t, int64_t> (uintptr_t n)> scavenge;
+        std::function<bool ()> shouldStop;
+        std::function<int32_t ()> gomaxprocs;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
+    struct scavengeIndex
+    {
+        gocpp::slice<atomicScavChunkData> chunks;
+        atomic::Uintptr min;
+        atomic::Uintptr max;
+        atomic::Uintptr minHeapIdx;
+        atomicOffAddr searchAddrBg;
+        atomicOffAddr searchAddrForce;
+        offAddr freeHWM;
+        uint32_t gen;
+        bool test;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
 
     namespace rec
     {

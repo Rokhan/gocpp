@@ -691,7 +691,7 @@ namespace golang::runtime
         result.g0 = this->g0;
         result.morebuf = this->morebuf;
         result.divmod = this->divmod;
-        result._ = this->_;
+        result._1 = this->_1;
         result.procid = this->procid;
         result.gsignal = this->gsignal;
         result.goSigStack = this->goSigStack;
@@ -764,7 +764,7 @@ namespace golang::runtime
         if (g0 != ref.g0) return false;
         if (morebuf != ref.morebuf) return false;
         if (divmod != ref.divmod) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (procid != ref.procid) return false;
         if (gsignal != ref.gsignal) return false;
         if (goSigStack != ref.goSigStack) return false;
@@ -837,7 +837,7 @@ namespace golang::runtime
         os << "" << g0;
         os << " " << morebuf;
         os << " " << divmod;
-        os << " " << _;
+        os << " " << _1;
         os << " " << procid;
         os << " " << gsignal;
         os << " " << goSigStack;
@@ -1390,7 +1390,7 @@ namespace golang::runtime
         result.startLine = this->startLine;
         result.funcID = this->funcID;
         result.flag = this->flag;
-        result._ = this->_;
+        result._1 = this->_1;
         result.nfuncdata = this->nfuncdata;
         return result;
     }
@@ -1410,7 +1410,7 @@ namespace golang::runtime
         if (startLine != ref.startLine) return false;
         if (funcID != ref.funcID) return false;
         if (flag != ref.flag) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (nfuncdata != ref.nfuncdata) return false;
         return true;
     }
@@ -1430,7 +1430,7 @@ namespace golang::runtime
         os << " " << startLine;
         os << " " << funcID;
         os << " " << flag;
-        os << " " << _;
+        os << " " << _1;
         os << " " << nfuncdata;
         os << '}';
         return os;
@@ -1493,7 +1493,7 @@ namespace golang::runtime
         result.inter = this->inter;
         result._type = this->_type;
         result.hash = this->hash;
-        result._ = this->_;
+        result._1 = this->_1;
         result.fun = this->fun;
         return result;
     }
@@ -1504,7 +1504,7 @@ namespace golang::runtime
         if (inter != ref.inter) return false;
         if (_type != ref._type) return false;
         if (hash != ref.hash) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (fun != ref.fun) return false;
         return true;
     }
@@ -1515,7 +1515,7 @@ namespace golang::runtime
         os << "" << inter;
         os << " " << _type;
         os << " " << hash;
-        os << " " << _;
+        os << " " << _1;
         os << " " << fun;
         os << '}';
         return os;

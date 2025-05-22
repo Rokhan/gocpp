@@ -167,7 +167,7 @@ namespace golang::abi
         result.Mcount = this->Mcount;
         result.Xcount = this->Xcount;
         result.Moff = this->Moff;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
@@ -178,7 +178,7 @@ namespace golang::abi
         if (Mcount != ref.Mcount) return false;
         if (Xcount != ref.Xcount) return false;
         if (Moff != ref.Moff) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
@@ -189,7 +189,7 @@ namespace golang::abi
         os << " " << Mcount;
         os << " " << Xcount;
         os << " " << Moff;
-        os << " " << _;
+        os << " " << _1;
         os << '}';
         return os;
     }

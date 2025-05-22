@@ -33,15 +33,6 @@
 
 namespace golang::runtime
 {
-    extern uint32_t traceback_cache;
-    std::tuple<int32_t, bool, bool> gotraceback();
-    unsigned char* argv_index(unsigned char** argv, int32_t i);
-    void args(int32_t c, unsigned char** v);
-    void goargs();
-    void goenvs_unix();
-    gocpp::slice<std::string> environ();
-    void testAtomic64();
-    void check();
     struct dbgVar
     {
         std::string name;
@@ -61,7 +52,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
-    extern gocpp::slice<dbgVar*> dbgvars;
+    extern uint32_t traceback_cache;
+    std::tuple<int32_t, bool, bool> gotraceback();
+    unsigned char* argv_index(unsigned char** argv, int32_t i);
+    void args(int32_t c, unsigned char** v);
+    void goargs();
+    void goenvs_unix();
+    gocpp::slice<std::string> environ();
+    void testAtomic64();
+    void check();
     void parsedebugvars();
     void reparsedebugvars(std::string env);
     void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen);
@@ -76,6 +75,7 @@ namespace golang::runtime
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off);
     int32_t reflect_addReflectOff(unsafe::Pointer ptr);
+    extern gocpp::slice<dbgVar*> dbgvars;
 
     namespace rec
     {

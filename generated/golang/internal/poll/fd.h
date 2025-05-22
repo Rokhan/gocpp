@@ -27,11 +27,8 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errNetClosing& value);
-    extern errNetClosing ErrNetClosing;
     extern gocpp::error ErrFileClosing;
     extern gocpp::error ErrNoDeadline;
-    struct gocpp::error errClosing(bool isFile);
-    extern gocpp::error ErrDeadlineExceeded;
     struct DeadlineExceededError
     {
 
@@ -48,8 +45,11 @@ namespace golang::poll
 
     std::ostream& operator<<(std::ostream& os, const struct DeadlineExceededError& value);
     extern gocpp::error ErrNotPollable;
-    void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
     extern std::function<void (int)> TestHookDidWritev;
+    struct gocpp::error errClosing(bool isFile);
+    void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
+    extern errNetClosing ErrNetClosing;
+    extern gocpp::error ErrDeadlineExceeded;
 
     namespace rec
     {

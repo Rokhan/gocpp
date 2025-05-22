@@ -47,7 +47,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
-    struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf);
     struct traceBufQueue
     {
         traceBuf* head;
@@ -84,9 +83,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBufHeader& value);
+    struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf);
+    void traceBufFlush(struct traceBuf* buf, uintptr_t gen);
     struct traceBuf
     {
-        sys::NotInHeap _;
+        sys::NotInHeap _1;
         gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<traceBufHeader>()> arr;
 
         using isGoStruct = void;
@@ -101,7 +102,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBuf& value);
-    void traceBufFlush(struct traceBuf* buf, uintptr_t gen);
 
     namespace rec
     {

@@ -21,10 +21,6 @@
 
 namespace golang::runtime
 {
-    unsigned char* addb(unsigned char* p, uintptr_t n);
-    unsigned char* subtractb(unsigned char* p, uintptr_t n);
-    unsigned char* add1(unsigned char* p);
-    unsigned char* subtract1(unsigned char* p);
     struct markBits
     {
         uint8_t* bytep;
@@ -43,6 +39,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct markBits& value);
+    unsigned char* addb(unsigned char* p, uintptr_t n);
+    unsigned char* subtractb(unsigned char* p, uintptr_t n);
+    unsigned char* add1(unsigned char* p);
+    unsigned char* subtract1(unsigned char* p);
     struct markBits markBitsForAddr(uintptr_t p);
     struct markBits markBitsForSpan(uintptr_t base);
     void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);

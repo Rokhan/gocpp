@@ -13,7 +13,6 @@
 
 namespace golang::runtime
 {
-    unsigned int findBitRange64(uint64_t c, unsigned int n);
     struct pallocData
     {
         golang::runtime::pageBits scavenged;
@@ -30,6 +29,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pallocData& value);
+    unsigned int findBitRange64(uint64_t c, unsigned int n);
 
     namespace rec
     {

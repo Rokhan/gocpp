@@ -13,15 +13,30 @@
 
 namespace golang::os
 {
-    extern gocpp::error ErrInvalid;
+    struct SyscallError
+    {
+        std::string Syscall;
+        gocpp::error Err;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SyscallError& value);
     extern gocpp::error ErrPermission;
     extern gocpp::error ErrExist;
     extern gocpp::error ErrNotExist;
     extern gocpp::error ErrClosed;
     extern gocpp::error ErrNoDeadline;
     extern gocpp::error ErrDeadlineExceeded;
-    struct gocpp::error errNoDeadline();
-    struct gocpp::error errDeadlineExceeded();
+    extern gocpp::error ErrInvalid;
     struct timeout : gocpp::Interface
     {
         timeout(){}
@@ -71,23 +86,8 @@ namespace golang::os
     }
 
     std::ostream& operator<<(std::ostream& os, const struct timeout& value);
-    struct SyscallError
-    {
-        std::string Syscall;
-        gocpp::error Err;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SyscallError& value);
+    struct gocpp::error errNoDeadline();
+    struct gocpp::error errDeadlineExceeded();
     struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err);
     bool IsExist(struct gocpp::error err);
     bool IsNotExist(struct gocpp::error err);

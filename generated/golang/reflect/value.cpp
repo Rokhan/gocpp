@@ -276,7 +276,7 @@ namespace golang::reflect
         result.ityp = this->ityp;
         result.typ = this->typ;
         result.hash = this->hash;
-        result._ = this->_;
+        result._1 = this->_1;
         result.fun = this->fun;
         return result;
     }
@@ -287,7 +287,7 @@ namespace golang::reflect
         if (ityp != ref.ityp) return false;
         if (typ != ref.typ) return false;
         if (hash != ref.hash) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (fun != ref.fun) return false;
         return true;
     }
@@ -298,7 +298,7 @@ namespace golang::reflect
         os << "" << ityp;
         os << " " << typ;
         os << " " << hash;
-        os << " " << _;
+        os << " " << _1;
         os << " " << fun;
         os << '}';
         return os;

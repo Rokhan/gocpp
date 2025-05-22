@@ -19,11 +19,11 @@
 
 namespace golang::runtime
 {
-    struct Frames
+    struct textsect
     {
-        gocpp::slice<uintptr_t> callers;
-        gocpp::slice<Frame> frames;
-        gocpp::array<Frame, 2> frameStore;
+        uintptr_t vaddr;
+        uintptr_t end;
+        uintptr_t baseaddr;
 
         using isGoStruct = void;
 
@@ -36,17 +36,13 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Frames& value);
-    struct Frame
+    std::ostream& operator<<(std::ostream& os, const struct textsect& value);
+    struct srcFunc
     {
-        uintptr_t PC;
-        Func* Func;
-        std::string Function;
-        std::string File;
-        int Line;
-        int startLine;
-        uintptr_t Entry;
-        funcInfo funcInfo;
+        moduledata* datap;
+        int32_t nameOff;
+        int32_t startLine;
+        abi::FuncID funcID;
 
         using isGoStruct = void;
 
@@ -59,12 +55,75 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Frame& value);
-    struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
-    int runtime_FrameStartLine(struct Frame* f);
-    std::string runtime_FrameSymbolName(struct Frame* f);
-    gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
-    gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
+    struct findfuncbucket
+    {
+        uint32_t idx;
+        gocpp::array<unsigned char, 16> subbuckets;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value);
+    struct modulehash
+    {
+        std::string modulename;
+        std::string linktimehash;
+        std::string* runtimehash;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct modulehash& value);
+    struct funcInfo
+    {
+        moduledata* datap;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
+    struct functab
+    {
+        uint32_t entryoff;
+        uint32_t funcoff;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct functab& value);
     struct gocpp_id_0
     {
 
@@ -80,9 +139,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct Func
+    struct pcvalueCacheEnt
     {
-        gocpp_id_0 opaque;
+        uintptr_t targetpc;
+        uint32_t off;
+        int32_t val;
+        uintptr_t valPC;
 
         using isGoStruct = void;
 
@@ -95,7 +157,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Func& value);
+    std::ostream& operator<<(std::ostream& os, const struct pcvalueCacheEnt& value);
     struct pcHeader
     {
         uint32_t magic;
@@ -124,6 +186,53 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pcHeader& value);
+    struct stackmap
+    {
+        int32_t n;
+        int32_t nbit;
+        gocpp::array<unsigned char, 1> bytedata;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackmap& value);
+    struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
+    int runtime_FrameStartLine(struct Frame* f);
+    std::string runtime_FrameSymbolName(struct Frame* f);
+    gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
+    gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    gocpp::slice<moduledata*> activeModules();
+    void modulesinit();
+    void moduledataverify();
+    void moduledataverify1(struct moduledata* datap);
+    struct Func* FuncForPC(uintptr_t pc);
+    struct moduledata* findmoduledatap(uintptr_t pc);
+    struct funcInfo findfunc(uintptr_t pc);
+    uintptr_t pcvalueCacheKey(uintptr_t targetpc);
+    std::tuple<int32_t, uintptr_t> pcvalue(struct funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
+    std::string funcname(struct funcInfo f);
+    std::string funcpkgpath(struct funcInfo f);
+    std::string funcfile(struct funcInfo f, int32_t fileno);
+    std::tuple<std::string, int32_t> funcline1(struct funcInfo f, uintptr_t targetpc, bool strict);
+    std::tuple<std::string, int32_t> funcline(struct funcInfo f, uintptr_t targetpc);
+    int32_t funcspdelta(struct funcInfo f, uintptr_t targetpc);
+    int32_t funcMaxSPDelta(struct funcInfo f);
+    uint32_t pcdatastart(struct funcInfo f, uint32_t table);
+    int32_t pcdatavalue(struct funcInfo f, uint32_t table, uintptr_t targetpc);
+    int32_t pcdatavalue1(struct funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
+    std::tuple<int32_t, uintptr_t> pcdatavalue2(struct funcInfo f, uint32_t table, uintptr_t targetpc);
+    unsafe::Pointer funcdata(struct funcInfo f, uint8_t i);
+    std::tuple<gocpp::slice<unsigned char>, bool> step(gocpp::slice<unsigned char> p, uintptr_t* pc, int32_t* val, bool first);
+    std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p);
+    struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n);
     struct moduledata
     {
         pcHeader* pcHeader;
@@ -183,118 +292,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct moduledata& value);
-    struct modulehash
-    {
-        std::string modulename;
-        std::string linktimehash;
-        std::string* runtimehash;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct modulehash& value);
-    gocpp::slice<moduledata*> activeModules();
-    void modulesinit();
-    struct functab
-    {
-        uint32_t entryoff;
-        uint32_t funcoff;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct functab& value);
-    struct textsect
-    {
-        uintptr_t vaddr;
-        uintptr_t end;
-        uintptr_t baseaddr;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct textsect& value);
-    struct findfuncbucket
-    {
-        uint32_t idx;
-        gocpp::array<unsigned char, 16> subbuckets;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value);
-    void moduledataverify();
-    void moduledataverify1(struct moduledata* datap);
-    struct Func* FuncForPC(uintptr_t pc);
-    struct moduledata* findmoduledatap(uintptr_t pc);
-    struct funcInfo
-    {
-        moduledata* datap;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
-    struct funcInfo findfunc(uintptr_t pc);
-    struct srcFunc
-    {
-        moduledata* datap;
-        int32_t nameOff;
-        int32_t startLine;
-        abi::FuncID funcID;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
     struct pcvalueCache
     {
         gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries;
@@ -312,12 +309,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value);
-    struct pcvalueCacheEnt
+    struct Func
     {
-        uintptr_t targetpc;
-        uint32_t off;
-        int32_t val;
-        uintptr_t valPC;
+        gocpp_id_0 opaque;
 
         using isGoStruct = void;
 
@@ -330,28 +324,17 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct pcvalueCacheEnt& value);
-    uintptr_t pcvalueCacheKey(uintptr_t targetpc);
-    std::tuple<int32_t, uintptr_t> pcvalue(struct funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
-    std::string funcname(struct funcInfo f);
-    std::string funcpkgpath(struct funcInfo f);
-    std::string funcfile(struct funcInfo f, int32_t fileno);
-    std::tuple<std::string, int32_t> funcline1(struct funcInfo f, uintptr_t targetpc, bool strict);
-    std::tuple<std::string, int32_t> funcline(struct funcInfo f, uintptr_t targetpc);
-    int32_t funcspdelta(struct funcInfo f, uintptr_t targetpc);
-    int32_t funcMaxSPDelta(struct funcInfo f);
-    uint32_t pcdatastart(struct funcInfo f, uint32_t table);
-    int32_t pcdatavalue(struct funcInfo f, uint32_t table, uintptr_t targetpc);
-    int32_t pcdatavalue1(struct funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
-    std::tuple<int32_t, uintptr_t> pcdatavalue2(struct funcInfo f, uint32_t table, uintptr_t targetpc);
-    unsafe::Pointer funcdata(struct funcInfo f, uint8_t i);
-    std::tuple<gocpp::slice<unsigned char>, bool> step(gocpp::slice<unsigned char> p, uintptr_t* pc, int32_t* val, bool first);
-    std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p);
-    struct stackmap
+    std::ostream& operator<<(std::ostream& os, const struct Func& value);
+    struct Frame
     {
-        int32_t n;
-        int32_t nbit;
-        gocpp::array<unsigned char, 1> bytedata;
+        uintptr_t PC;
+        Func* Func;
+        std::string Function;
+        std::string File;
+        int Line;
+        int startLine;
+        uintptr_t Entry;
+        funcInfo funcInfo;
 
         using isGoStruct = void;
 
@@ -364,8 +347,25 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct stackmap& value);
-    struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n);
+    std::ostream& operator<<(std::ostream& os, const struct Frame& value);
+    struct Frames
+    {
+        gocpp::slice<uintptr_t> callers;
+        gocpp::slice<Frame> frames;
+        gocpp::array<Frame, 2> frameStore;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Frames& value);
 
     namespace rec
     {

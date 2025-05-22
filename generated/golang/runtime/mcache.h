@@ -35,30 +35,6 @@
 
 namespace golang::runtime
 {
-    struct mcache
-    {
-        sys::NotInHeap _;
-        uintptr_t nextSample;
-        uintptr_t scanAlloc;
-        uintptr_t tiny;
-        uintptr_t tinyoffset;
-        uintptr_t tinyAllocs;
-        gocpp::array<mspan*, numSpanClasses> alloc;
-        gocpp::array<stackfreelist, _NumStackOrders> stackcache;
-        atomic::Uint32 flushGen;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mcache& value);
     struct gclink
     {
         golang::runtime::gclinkptr next;
@@ -95,6 +71,30 @@ namespace golang::runtime
     struct mcache* allocmcache();
     void freemcache(struct mcache* c);
     struct mcache* getMCache(struct m* mp);
+    struct mcache
+    {
+        sys::NotInHeap _1;
+        uintptr_t nextSample;
+        uintptr_t scanAlloc;
+        uintptr_t tiny;
+        uintptr_t tinyoffset;
+        uintptr_t tinyAllocs;
+        gocpp::array<mspan*, numSpanClasses> alloc;
+        gocpp::array<stackfreelist, _NumStackOrders> stackcache;
+        atomic::Uint32 flushGen;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mcache& value);
 
     namespace rec
     {

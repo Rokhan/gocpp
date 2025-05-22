@@ -203,7 +203,7 @@ namespace golang::runtime
     mheap::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.lock = this->lock;
         result.pages = this->pages;
         result.sweepgen = this->sweepgen;
@@ -215,7 +215,7 @@ namespace golang::runtime
         result.sweepPagesPerByte = this->sweepPagesPerByte;
         result.reclaimIndex = this->reclaimIndex;
         result.reclaimCredit = this->reclaimCredit;
-        result._ = this->_;
+        result._2 = this->_2;
         result.arenas = this->arenas;
         result.arenasHugePages = this->arenasHugePages;
         result.heapArenaAlloc = this->heapArenaAlloc;
@@ -242,7 +242,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mheap::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (lock != ref.lock) return false;
         if (pages != ref.pages) return false;
         if (sweepgen != ref.sweepgen) return false;
@@ -254,7 +254,7 @@ namespace golang::runtime
         if (sweepPagesPerByte != ref.sweepPagesPerByte) return false;
         if (reclaimIndex != ref.reclaimIndex) return false;
         if (reclaimCredit != ref.reclaimCredit) return false;
-        if (_ != ref._) return false;
+        if (_2 != ref._2) return false;
         if (arenas != ref.arenas) return false;
         if (arenasHugePages != ref.arenasHugePages) return false;
         if (heapArenaAlloc != ref.heapArenaAlloc) return false;
@@ -281,7 +281,7 @@ namespace golang::runtime
     std::ostream& mheap::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << lock;
         os << " " << pages;
         os << " " << sweepgen;
@@ -293,7 +293,7 @@ namespace golang::runtime
         os << " " << sweepPagesPerByte;
         os << " " << reclaimIndex;
         os << " " << reclaimCredit;
-        os << " " << _;
+        os << " " << _2;
         os << " " << arenas;
         os << " " << arenasHugePages;
         os << " " << heapArenaAlloc;
@@ -329,7 +329,7 @@ namespace golang::runtime
     heapArena::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.spans = this->spans;
         result.pageInUse = this->pageInUse;
         result.pageMarks = this->pageMarks;
@@ -342,7 +342,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool heapArena::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (spans != ref.spans) return false;
         if (pageInUse != ref.pageInUse) return false;
         if (pageMarks != ref.pageMarks) return false;
@@ -355,7 +355,7 @@ namespace golang::runtime
     std::ostream& heapArena::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << spans;
         os << " " << pageInUse;
         os << " " << pageMarks;
@@ -376,7 +376,7 @@ namespace golang::runtime
     arenaHint::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.addr = this->addr;
         result.down = this->down;
         result.next = this->next;
@@ -386,7 +386,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool arenaHint::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (addr != ref.addr) return false;
         if (down != ref.down) return false;
         if (next != ref.next) return false;
@@ -396,7 +396,7 @@ namespace golang::runtime
     std::ostream& arenaHint::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << addr;
         os << " " << down;
         os << " " << next;
@@ -454,7 +454,7 @@ namespace golang::runtime
     mSpanList::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.first = this->first;
         result.last = this->last;
         return result;
@@ -463,7 +463,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mSpanList::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (first != ref.first) return false;
         if (last != ref.last) return false;
         return true;
@@ -472,7 +472,7 @@ namespace golang::runtime
     std::ostream& mSpanList::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << first;
         os << " " << last;
         os << '}';
@@ -489,7 +489,7 @@ namespace golang::runtime
     mspan::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         result.prev = this->prev;
         result.list = this->list;
@@ -523,7 +523,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mspan::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         if (prev != ref.prev) return false;
         if (list != ref.list) return false;
@@ -557,7 +557,7 @@ namespace golang::runtime
     std::ostream& mspan::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << " " << prev;
         os << " " << list;
@@ -1620,7 +1620,7 @@ namespace golang::runtime
     special::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         result.offset = this->offset;
         result.kind = this->kind;
@@ -1630,7 +1630,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool special::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         if (offset != ref.offset) return false;
         if (kind != ref.kind) return false;
@@ -1640,7 +1640,7 @@ namespace golang::runtime
     std::ostream& special::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << " " << offset;
         os << " " << kind;
@@ -1752,7 +1752,7 @@ namespace golang::runtime
     specialfinalizer::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.special = this->special;
         result.fn = this->fn;
         result.nret = this->nret;
@@ -1764,7 +1764,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool specialfinalizer::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (special != ref.special) return false;
         if (fn != ref.fn) return false;
         if (nret != ref.nret) return false;
@@ -1776,7 +1776,7 @@ namespace golang::runtime
     std::ostream& specialfinalizer::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << special;
         os << " " << fn;
         os << " " << nret;
@@ -1840,7 +1840,7 @@ namespace golang::runtime
     specialprofile::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.special = this->special;
         result.b = this->b;
         return result;
@@ -1849,7 +1849,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool specialprofile::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (special != ref.special) return false;
         if (b != ref.b) return false;
         return true;
@@ -1858,7 +1858,7 @@ namespace golang::runtime
     std::ostream& specialprofile::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << special;
         os << " " << b;
         os << '}';
@@ -2054,7 +2054,7 @@ namespace golang::runtime
     gcBits::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.x = this->x;
         return result;
     }
@@ -2062,7 +2062,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool gcBits::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (x != ref.x) return false;
         return true;
     }
@@ -2070,7 +2070,7 @@ namespace golang::runtime
     std::ostream& gcBits::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << x;
         os << '}';
         return os;
@@ -2130,7 +2130,7 @@ namespace golang::runtime
     gcBitsArena::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.free = this->free;
         result.next = this->next;
         result.bits = this->bits;
@@ -2140,7 +2140,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool gcBitsArena::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (free != ref.free) return false;
         if (next != ref.next) return false;
         if (bits != ref.bits) return false;
@@ -2150,7 +2150,7 @@ namespace golang::runtime
     std::ostream& gcBitsArena::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << free;
         os << " " << next;
         os << " " << bits;

@@ -87,7 +87,7 @@ namespace golang::runtime
         atomic::Uint64 totalFree;
         atomic::Uint64 mappedReady;
         bool test;
-        cpu::CacheLinePad _;
+        cpu::CacheLinePad _1;
 
         using isGoStruct = void;
 

@@ -12,6 +12,23 @@
 
 namespace golang::sort
 {
+    struct lessSwap
+    {
+        std::function<bool (int i, int j)> Less;
+        std::function<void (int i, int j)> Swap;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct Interface : gocpp::Interface
     {
         Interface(){}
@@ -75,23 +92,16 @@ namespace golang::sort
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void Sort(struct Interface data);
     unsigned int nextPowerOfTwo(int length);
-    struct lessSwap
-    {
-        std::function<bool (int i, int j)> Less;
-        std::function<void (int i, int j)> Swap;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
+    struct Interface Reverse(struct Interface data);
+    bool IsSorted(struct Interface data);
+    bool isNaN(double f);
+    void Ints(gocpp::slice<int> x);
+    void Float64s(gocpp::slice<double> x);
+    void Strings(gocpp::slice<std::string> x);
+    bool IntsAreSorted(gocpp::slice<int> x);
+    bool Float64sAreSorted(gocpp::slice<double> x);
+    bool StringsAreSorted(gocpp::slice<std::string> x);
+    void Stable(struct Interface data);
     struct reverse
     {
 
@@ -107,16 +117,6 @@ namespace golang::sort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
-    struct Interface Reverse(struct Interface data);
-    bool IsSorted(struct Interface data);
-    bool isNaN(double f);
-    void Ints(gocpp::slice<int> x);
-    void Float64s(gocpp::slice<double> x);
-    void Strings(gocpp::slice<std::string> x);
-    bool IntsAreSorted(gocpp::slice<int> x);
-    bool Float64sAreSorted(gocpp::slice<double> x);
-    bool StringsAreSorted(gocpp::slice<std::string> x);
-    void Stable(struct Interface data);
 
     namespace rec
     {

@@ -18,16 +18,9 @@ namespace golang::registry
 {
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
-    struct gocpp::error errnoErr(syscall::Errno e);
     extern syscall::LazyDLL* modadvapi32;
     extern syscall::LazyDLL* modkernel32;
-    extern syscall::LazyProc* procRegCreateKeyExW;
-    extern syscall::LazyProc* procRegDeleteKeyW;
-    extern syscall::LazyProc* procRegDeleteValueW;
-    extern syscall::LazyProc* procRegEnumValueW;
-    extern syscall::LazyProc* procRegLoadMUIStringW;
-    extern syscall::LazyProc* procRegSetValueExW;
-    extern syscall::LazyProc* procExpandEnvironmentStringsW;
+    struct gocpp::error errnoErr(syscall::Errno e);
     struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
     struct gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey);
     struct gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name);
@@ -35,6 +28,13 @@ namespace golang::registry
     struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir);
     struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize);
     std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
+    extern syscall::LazyProc* procRegLoadMUIStringW;
+    extern syscall::LazyProc* procRegCreateKeyExW;
+    extern syscall::LazyProc* procExpandEnvironmentStringsW;
+    extern syscall::LazyProc* procRegSetValueExW;
+    extern syscall::LazyProc* procRegDeleteKeyW;
+    extern syscall::LazyProc* procRegEnumValueW;
+    extern syscall::LazyProc* procRegDeleteValueW;
 
     namespace rec
     {

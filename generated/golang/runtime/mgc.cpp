@@ -295,11 +295,11 @@ namespace golang::runtime
     {
         T result;
         result.full = this->full;
-        result._ = this->_;
+        result._1 = this->_1;
         result.empty = this->empty;
-        result._ = this->_;
+        result._2 = this->_2;
         result.wbufSpans = this->wbufSpans;
-        result._ = this->_;
+        result._3 = this->_3;
         result.bytesMarked = this->bytesMarked;
         result.markrootNext = this->markrootNext;
         result.markrootJobs = this->markrootJobs;
@@ -343,11 +343,11 @@ namespace golang::runtime
     bool workType::operator==(const T& ref) const
     {
         if (full != ref.full) return false;
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (empty != ref.empty) return false;
-        if (_ != ref._) return false;
+        if (_2 != ref._2) return false;
         if (wbufSpans != ref.wbufSpans) return false;
-        if (_ != ref._) return false;
+        if (_3 != ref._3) return false;
         if (bytesMarked != ref.bytesMarked) return false;
         if (markrootNext != ref.markrootNext) return false;
         if (markrootJobs != ref.markrootJobs) return false;
@@ -391,11 +391,11 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << full;
-        os << " " << _;
+        os << " " << _1;
         os << " " << empty;
-        os << " " << _;
+        os << " " << _2;
         os << " " << wbufSpans;
-        os << " " << _;
+        os << " " << _3;
         os << " " << bytesMarked;
         os << " " << markrootNext;
         os << " " << markrootJobs;

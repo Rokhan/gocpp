@@ -45,6 +45,175 @@
 
 namespace golang::runtime
 {
+    extern bool casgstatusAlwaysTrack;
+    struct gList
+    {
+        golang::runtime::guintptr head;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gList& value);
+    extern uint32_t gcsema;
+    extern bool osHasLowResTimer;
+    extern int64_t forcegcperiod;
+    struct tracestat
+    {
+        bool active;
+        uint64_t id;
+        uint64_t allocs;
+        uint64_t bytes;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct tracestat& value);
+    struct worldStop
+    {
+        golang::runtime::stwReason reason;
+        int64_t start;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
+    struct initTask
+    {
+        uint32_t state;
+        uint32_t nfns;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct initTask& value);
+    struct randomEnum
+    {
+        uint32_t i;
+        uint32_t count;
+        uint32_t pos;
+        uint32_t inc;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct randomEnum& value);
+    extern std::string failthreadcreate;
+    struct randomOrder
+    {
+        uint32_t count;
+        gocpp::slice<uint32_t> coprimes;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct randomOrder& value);
+    struct gQueue
+    {
+        golang::runtime::guintptr head;
+        golang::runtime::guintptr tail;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
+    extern bool crashStackImplemented;
+    extern uint32_t worldsema;
+    struct cgothreadstart
+    {
+        golang::runtime::guintptr g;
+        uint64_t* tls;
+        unsafe::Pointer fn;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
+    extern std::string failallocatestack;
+    struct sysmontick
+    {
+        uint32_t schedtick;
+        int64_t schedwhen;
+        uint32_t syscalltick;
+        int64_t syscallwhen;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sysmontick& value);
+    extern gocpp::array_base<std::string> stwReasonStrings;
+    extern bool needSysmonWorkaround;
     void main_main();
     void main();
     void os_beforeExit(int exitCode);
@@ -65,7 +234,6 @@ namespace golang::runtime
     void badmorestackgsignal();
     void badctxt();
     void switchToCrashStack(std::function<void ()> fn);
-    extern bool crashStackImplemented;
     void switchToCrashStack0(std::function<void ()> fn);
     bool lockedOSThread();
     void allgadd(struct g* gp);
@@ -81,42 +249,20 @@ namespace golang::runtime
     void checkmcount();
     int64_t mReserveID();
     void mcommoninit(struct m* mp, int64_t id);
-    extern bool osHasLowResTimer;
     void ready(struct g* gp, int traceskip, bool next);
     void freezetheworld();
     uint32_t readgstatus(struct g* gp);
     void casfrom_Gscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
     bool castogscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
-    extern bool casgstatusAlwaysTrack;
     void casgstatus(struct g* gp, uint32_t oldval, uint32_t newval);
     void casGToWaiting(struct g* gp, uint32_t old, golang::runtime::waitReason reason);
     uint32_t casgcopystack(struct g* gp);
     void casGToPreemptScan(struct g* gp, uint32_t old, uint32_t go_new);
     bool casGFromPreempted(struct g* gp, uint32_t old, uint32_t go_new);
-    extern gocpp::array_base<std::string> stwReasonStrings;
-    struct worldStop
-    {
-        golang::runtime::stwReason reason;
-        int64_t start;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
     struct worldStop stopTheWorld(golang::runtime::stwReason reason);
     void startTheWorld(struct worldStop w);
     struct worldStop stopTheWorldGC(golang::runtime::stwReason reason);
     void startTheWorldGC(struct worldStop w);
-    extern uint32_t worldsema;
-    extern uint32_t gcsema;
     struct worldStop stopTheWorldWithSema(golang::runtime::stwReason reason);
     int64_t startTheWorldWithSema(int64_t now, struct worldStop w);
     bool usesLibcall();
@@ -130,24 +276,6 @@ namespace golang::runtime
     void forEachP(golang::runtime::waitReason reason, std::function<void (p*)> fn);
     void forEachPInternal(std::function<void (p*)> fn);
     void runSafePointFn();
-    struct cgothreadstart
-    {
-        golang::runtime::guintptr g;
-        uint64_t* tls;
-        unsafe::Pointer fn;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
     struct m* allocm(struct p* pp, std::function<void ()> fn, int64_t id);
     void needm(bool signal);
     void needAndBindM();
@@ -161,8 +289,6 @@ namespace golang::runtime
     std::tuple<struct m*, bool> getExtraM();
     void putExtraM(struct m* mp);
     void addExtraM(struct m* mp);
-    extern std::string failthreadcreate;
-    extern std::string failallocatestack;
     void newm(std::function<void ()> fn, struct p* pp, int64_t id);
     void newm1(struct m* mp);
     void startTemplateThread();
@@ -250,28 +376,7 @@ namespace golang::runtime
     struct p* releasepNoTrace();
     void incidlelocked(int32_t v);
     void checkdead();
-    extern int64_t forcegcperiod;
-    extern bool needSysmonWorkaround;
     void sysmon();
-    struct sysmontick
-    {
-        uint32_t schedtick;
-        int64_t schedwhen;
-        uint32_t syscalltick;
-        int64_t syscallwhen;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sysmontick& value);
     uint32_t retake(int64_t now);
     bool preemptall();
     bool preemptone(struct p* pp);
@@ -296,39 +401,6 @@ namespace golang::runtime
     std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
     uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
     struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
-    struct gQueue
-    {
-        golang::runtime::guintptr head;
-        golang::runtime::guintptr tail;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
-    struct gList
-    {
-        golang::runtime::guintptr head;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gList& value);
     int setMaxThreads(int in);
     int procPin();
     void procUnpin();
@@ -338,79 +410,7 @@ namespace golang::runtime
     void sync_atomic_runtime_procUnpin();
     bool sync_runtime_canSpin(int i);
     void sync_runtime_doSpin();
-    struct randomOrder
-    {
-        uint32_t count;
-        gocpp::slice<uint32_t> coprimes;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct randomOrder& value);
-    struct randomEnum
-    {
-        uint32_t i;
-        uint32_t count;
-        uint32_t pos;
-        uint32_t inc;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct randomEnum& value);
     uint32_t gcd(uint32_t a, uint32_t b);
-    struct initTask
-    {
-        uint32_t state;
-        uint32_t nfns;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct initTask& value);
-    struct tracestat
-    {
-        bool active;
-        uint64_t id;
-        uint64_t allocs;
-        uint64_t bytes;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct tracestat& value);
     void doInit(gocpp::slice<initTask*> ts);
     void doInit1(struct initTask* t);
 

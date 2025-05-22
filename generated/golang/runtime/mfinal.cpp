@@ -78,11 +78,11 @@ namespace golang::runtime
     finblock::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.alllink = this->alllink;
         result.next = this->next;
         result.cnt = this->cnt;
-        result._ = this->_;
+        result._2 = this->_2;
         result.fin = this->fin;
         return result;
     }
@@ -90,11 +90,11 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool finblock::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (alllink != ref.alllink) return false;
         if (next != ref.next) return false;
         if (cnt != ref.cnt) return false;
-        if (_ != ref._) return false;
+        if (_2 != ref._2) return false;
         if (fin != ref.fin) return false;
         return true;
     }
@@ -102,11 +102,11 @@ namespace golang::runtime
     std::ostream& finblock::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << alllink;
         os << " " << next;
         os << " " << cnt;
-        os << " " << _;
+        os << " " << _2;
         os << " " << fin;
         os << '}';
         return os;

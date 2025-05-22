@@ -15,6 +15,7 @@
 
 namespace golang::errors
 {
+    extern reflectlite::Type errorType;
     struct gocpp::error Unwrap(struct gocpp::error err);
     struct gocpp_id_0 : gocpp::Interface
     {
@@ -363,7 +364,6 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
-    extern reflectlite::Type errorType;
 
     namespace rec
     {

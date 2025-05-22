@@ -89,7 +89,7 @@ namespace golang::runtime
     mlink::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         result.next = this->next;
         return result;
     }
@@ -97,7 +97,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mlink::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -105,7 +105,7 @@ namespace golang::runtime
     std::ostream& mlink::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << " " << next;
         os << '}';
         return os;

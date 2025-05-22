@@ -21,7 +21,21 @@
 
 namespace golang::runtime
 {
-    bool heapBitsInSpan(uintptr_t userSize);
+    struct heapBits
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
     struct heapArenaPtrScalar
     {
 
@@ -56,9 +70,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct typePointers& value);
-    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
-    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
-    uintptr_t bswapIfBigEndian(uintptr_t x);
     struct writeUserArenaHeapBits
     {
         uintptr_t offset;
@@ -78,6 +89,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value);
+    bool heapBitsInSpan(uintptr_t userSize);
+    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    uintptr_t bswapIfBigEndian(uintptr_t x);
     gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize);
     void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ);
     uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span);
@@ -88,21 +103,6 @@ namespace golang::runtime
     gocpp::slice<unsigned char> getgcmask(go_any ep);
     void userArenaHeapBitsSetType(golang::runtime::_type* typ, unsafe::Pointer ptr, struct mspan* s);
     void writeHeapBitsForAddr();
-    struct heapBits
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
     struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size);
 
     namespace rec

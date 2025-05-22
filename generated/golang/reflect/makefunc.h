@@ -18,45 +18,6 @@
 
 namespace golang::reflect
 {
-    struct makeFuncImpl
-    {
-        golang::reflect::funcType* ftyp;
-        std::function<gocpp::slice<Value> (gocpp::slice<Value>)> fn;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct makeFuncImpl& value);
-    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
-    void makeFuncStub();
-    struct methodValue
-    {
-        int method;
-        /* Value rcvr; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct methodValue& value);
-    struct Value makeMethodValue(std::string op, struct Value v);
-    uintptr_t methodValueCallCodePtr();
-    void methodValueCall();
     struct makeFuncCtxt
     {
         uintptr_t fn;
@@ -76,7 +37,46 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncCtxt& value);
+    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
+    void makeFuncStub();
+    struct Value makeMethodValue(std::string op, struct Value v);
+    uintptr_t methodValueCallCodePtr();
+    void methodValueCall();
     void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args);
+    struct makeFuncImpl
+    {
+        golang::reflect::funcType* ftyp;
+        std::function<gocpp::slice<Value> (gocpp::slice<Value>)> fn;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct makeFuncImpl& value);
+    struct methodValue
+    {
+        int method;
+        /* Value rcvr; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct methodValue& value);
 
     namespace rec
     {

@@ -49,21 +49,21 @@ namespace golang::sys
     NotInHeap::operator T()
     {
         T result;
-        result._ = this->_;
+        result._1 = this->_1;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool NotInHeap::operator==(const T& ref) const
     {
-        if (_ != ref._) return false;
+        if (_1 != ref._1) return false;
         return true;
     }
 
     std::ostream& NotInHeap::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << _;
+        os << "" << _1;
         os << '}';
         return os;
     }

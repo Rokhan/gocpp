@@ -40,5 +40,11 @@ namespace gocpp
     struct Defer;
 
     using rune = int;
+
+    template<typename T> 
+    constexpr int Sizeof()
+    {
+        return sizeof(T);
+    }
 }
 

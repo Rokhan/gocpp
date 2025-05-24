@@ -650,13 +650,13 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 }
 
 func (cv *cppConverter) ComparePlace(x *place, y *place, getter func(place) string, logPrefix string) int {
-	_, ok := x.depInfo.dependencies[y.DepInfoTypeStr()]
 	xstr := strings.TrimSpace(getter(*x))
 	ystr := strings.TrimSpace(getter(*y))
 
 	xstr = strings.SplitN(xstr, "\n", 2)[0]
 	ystr = strings.SplitN(ystr, "\n", 2)[0]
 
+	_, ok := x.depInfo.dependencies[y.DepInfoTypeStr()]
 	if ok {
 		cv.Logf("'%s' sort type: '%v' use type '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decType, y.depInfo.rank)
 		return 1
@@ -1951,6 +1951,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 
 	cv.ResetIota()
 	var values []ast.Expr
+	var typeExpr ast.Expr
 
 	for _, spec := range specs {
 		switch s := spec.(type) {
@@ -1970,6 +1971,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 		case *ast.ValueSpec:
 			if len(s.Values) != 0 {
 				values = s.Values
+
+				// Keep type for iota sequence
+				if s.Type != nil {
+					typeExpr = s.Type
+				}
+
+			} else {
+				// Fix values here to avoid to have to add 'values' parameter to 'cv.getValueDepInfo(s, i)'
+				s.Values = values
+
+				// no value, no type => we are in a iota sequence,
+				if s.Type == nil {
+					s.Type = typeExpr
+				}
 			}
 
 			if isNamespace {

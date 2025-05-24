@@ -207,12 +207,12 @@
 | $(ImportDir)/internal/syscall/windows/net_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/net_windows.cpp), [h](generated/golang/internal/syscall/windows/net_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/psapi_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/psapi_windows.cpp), [h](generated/golang/internal/syscall/windows/psapi_windows.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/registry/key.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/key.cpp), [h](generated/golang/internal/syscall/windows/registry/key.h))| ❌ |
-| $(ImportDir)/internal/syscall/windows/registry/syscall.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/syscall.cpp), [h](generated/golang/internal/syscall/windows/registry/syscall.h))| ❌ |
+| $(ImportDir)/internal/syscall/windows/registry/syscall.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/syscall.cpp), [h](generated/golang/internal/syscall/windows/registry/syscall.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/registry/value.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/value.cpp), [h](generated/golang/internal/syscall/windows/registry/value.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/registry/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/registry/zsyscall_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/reparse_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/reparse_windows.cpp), [h](generated/golang/internal/syscall/windows/reparse_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/security_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/security_windows.cpp), [h](generated/golang/internal/syscall/windows/security_windows.h))| ❌ |
-| $(ImportDir)/internal/syscall/windows/symlink_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/symlink_windows.cpp), [h](generated/golang/internal/syscall/windows/symlink_windows.h))| ❌ |
+| $(ImportDir)/internal/syscall/windows/symlink_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/symlink_windows.cpp), [h](generated/golang/internal/syscall/windows/symlink_windows.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/syscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/syscall_windows.cpp), [h](generated/golang/internal/syscall/windows/syscall_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/sysdll/sysdll.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/sysdll/sysdll.cpp), [h](generated/golang/internal/syscall/windows/sysdll/sysdll.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/zsyscall_windows.h))| ❌ |
@@ -252,7 +252,7 @@
 | $(ImportDir)/os/dir_windows.go | ✔️ ([cpp](generated/golang/os/dir_windows.cpp), [h](generated/golang/os/dir_windows.h))| ❌ |
 | $(ImportDir)/os/env.go | ✔️ ([cpp](generated/golang/os/env.cpp), [h](generated/golang/os/env.h))| ❌ |
 | $(ImportDir)/os/error.go | ✔️ ([cpp](generated/golang/os/error.cpp), [h](generated/golang/os/error.h))| ❌ |
-| $(ImportDir)/os/error_errno.go | ✔️ ([cpp](generated/golang/os/error_errno.cpp), [h](generated/golang/os/error_errno.h))| ❌ |
+| $(ImportDir)/os/error_errno.go | ✔️ ([cpp](generated/golang/os/error_errno.cpp), [h](generated/golang/os/error_errno.h))| ✔️ |
 | $(ImportDir)/os/file.go | ✔️ ([cpp](generated/golang/os/file.cpp), [h](generated/golang/os/file.h))| ❌ |
 | $(ImportDir)/os/file_posix.go | ✔️ ([cpp](generated/golang/os/file_posix.cpp), [h](generated/golang/os/file_posix.h))| ❌ |
 | $(ImportDir)/os/file_windows.go | ✔️ ([cpp](generated/golang/os/file_windows.cpp), [h](generated/golang/os/file_windows.h))| ❌ |

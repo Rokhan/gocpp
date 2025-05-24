@@ -13,18 +13,18 @@ namespace golang::fs
     using FileMode = uint32_t;
     struct PathError;
     const fs::FileMode ModeDir = 1 << (32 - 1 - 0);
-    const FileMode ModeAppend = 1 << (32 - 1 - 1);
-    const FileMode ModeExclusive = 1 << (32 - 1 - 2);
-    const FileMode ModeTemporary = 1 << (32 - 1 - 3);
-    const FileMode ModeSymlink = 1 << (32 - 1 - 4);
-    const FileMode ModeDevice = 1 << (32 - 1 - 5);
-    const FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
-    const FileMode ModeSocket = 1 << (32 - 1 - 7);
-    const FileMode ModeSetuid = 1 << (32 - 1 - 8);
-    const FileMode ModeSetgid = 1 << (32 - 1 - 9);
-    const FileMode ModeCharDevice = 1 << (32 - 1 - 10);
-    const FileMode ModeSticky = 1 << (32 - 1 - 11);
-    const FileMode ModeIrregular = 1 << (32 - 1 - 12);
+    const fs::FileMode ModeAppend = 1 << (32 - 1 - 1);
+    const fs::FileMode ModeExclusive = 1 << (32 - 1 - 2);
+    const fs::FileMode ModeTemporary = 1 << (32 - 1 - 3);
+    const fs::FileMode ModeSymlink = 1 << (32 - 1 - 4);
+    const fs::FileMode ModeDevice = 1 << (32 - 1 - 5);
+    const fs::FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
+    const fs::FileMode ModeSocket = 1 << (32 - 1 - 7);
+    const fs::FileMode ModeSetuid = 1 << (32 - 1 - 8);
+    const fs::FileMode ModeSetgid = 1 << (32 - 1 - 9);
+    const fs::FileMode ModeCharDevice = 1 << (32 - 1 - 10);
+    const fs::FileMode ModeSticky = 1 << (32 - 1 - 11);
+    const fs::FileMode ModeIrregular = 1 << (32 - 1 - 12);
     const fs::FileMode ModePerm = 0777;
 }
 #include "golang/time/time.fwd.h"

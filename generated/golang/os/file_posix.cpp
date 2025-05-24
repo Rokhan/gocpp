@@ -283,7 +283,7 @@ namespace golang::os
         for(; ; )
         {
             auto err = fn();
-            if(err != syscall::EINTR)
+            if(err != syscall::go_EINTR)
             {
                 return err;
             }

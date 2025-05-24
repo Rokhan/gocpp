@@ -13,9 +13,9 @@ namespace golang::runtime
     struct cgoContextArg;
     struct cgoSymbolizerArg;
     const runtime::unwindFlags unwindPrintErrors = 1 << 0;
-    const unwindFlags unwindSilentErrors = 1 << 1;
-    const unwindFlags unwindTrap = 1 << 2;
-    const unwindFlags unwindJumpStack = 1 << 3;
+    const runtime::unwindFlags unwindSilentErrors = 1 << 1;
+    const runtime::unwindFlags unwindTrap = 1 << 2;
+    const runtime::unwindFlags unwindJumpStack = 1 << 3;
 }
 #include "golang/internal/abi/symtab.fwd.h"
 #include "golang/runtime/internal/sys/consts.fwd.h"

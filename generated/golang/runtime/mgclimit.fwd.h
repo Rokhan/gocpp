@@ -12,10 +12,10 @@ namespace golang::runtime
     const long limiterEventBits = 3;
     using limiterEventStamp = uint64_t;
     const runtime::limiterEventType limiterEventNone = 0;
-    const limiterEventType limiterEventIdleMarkWork = 1;
-    const limiterEventType limiterEventMarkAssist = 2;
-    const limiterEventType limiterEventScavengeAssist = 3;
-    const limiterEventType limiterEventIdle = 4;
+    const runtime::limiterEventType limiterEventIdleMarkWork = 1;
+    const runtime::limiterEventType limiterEventMarkAssist = 2;
+    const runtime::limiterEventType limiterEventScavengeAssist = 3;
+    const runtime::limiterEventType limiterEventIdle = 4;
     const uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
     const limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
 }

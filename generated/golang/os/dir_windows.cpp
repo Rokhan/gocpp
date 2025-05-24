@@ -225,7 +225,7 @@ namespace golang::os
                         gocpp::slice<os::DirEntry> dirents;
                         gocpp::slice<os::FileInfo> infos;
                         struct gocpp::error err;
-                        err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = file->name; x.Err = syscall::ENOTDIR; });
+                        err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = file->name; x.Err = syscall::go_ENOTDIR; });
                     }
                     else
                     {

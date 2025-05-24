@@ -129,7 +129,7 @@ namespace golang::windows
         {
             return err;
         }
-        if(err == syscall::EINVAL)
+        if(err == syscall::go_EINVAL)
         {
             return nullptr;
         }

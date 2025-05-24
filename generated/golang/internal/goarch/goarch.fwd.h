@@ -9,16 +9,16 @@ namespace golang::goarch
     using ArchFamilyType = int;
     const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
     const goarch::ArchFamilyType AMD64 = 0;
-    const ArchFamilyType ARM = 1;
-    const ArchFamilyType ARM64 = 2;
-    const ArchFamilyType I386 = 3;
-    const ArchFamilyType LOONG64 = 4;
-    const ArchFamilyType MIPS = 5;
-    const ArchFamilyType MIPS64 = 6;
-    const ArchFamilyType PPC64 = 7;
-    const ArchFamilyType RISCV64 = 8;
-    const ArchFamilyType S390X = 9;
-    const ArchFamilyType WASM = 10;
+    const goarch::ArchFamilyType ARM = 1;
+    const goarch::ArchFamilyType ARM64 = 2;
+    const goarch::ArchFamilyType I386 = 3;
+    const goarch::ArchFamilyType LOONG64 = 4;
+    const goarch::ArchFamilyType MIPS = 5;
+    const goarch::ArchFamilyType MIPS64 = 6;
+    const goarch::ArchFamilyType PPC64 = 7;
+    const goarch::ArchFamilyType RISCV64 = 8;
+    const goarch::ArchFamilyType S390X = 9;
+    const goarch::ArchFamilyType WASM = 10;
     const int Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"

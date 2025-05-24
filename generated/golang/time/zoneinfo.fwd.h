@@ -14,6 +14,6 @@ namespace golang::time
     using ruleKind = int;
     struct rule;
     const time::ruleKind ruleJulian = 0;
-    const ruleKind ruleDOY = 1;
-    const ruleKind ruleMonthWeekDay = 2;
+    const time::ruleKind ruleDOY = 1;
+    const time::ruleKind ruleMonthWeekDay = 2;
 }

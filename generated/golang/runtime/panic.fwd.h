@@ -9,6 +9,6 @@ namespace golang::runtime
     using throwType = uint32_t;
     struct PanicNilError;
     const runtime::throwType throwTypeNone = 0;
-    const throwType throwTypeUser = 1;
-    const throwType throwTypeRuntime = 2;
+    const runtime::throwType throwTypeUser = 1;
+    const runtime::throwType throwTypeRuntime = 2;
 }

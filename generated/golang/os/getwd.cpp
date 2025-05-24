@@ -126,7 +126,7 @@ namespace golang::os
                 std::string dir;
                 struct gocpp::error err;
                 std::tie(s, e) = syscall::Getwd();
-                if(e != syscall::EINTR)
+                if(e != syscall::go_EINTR)
                 {
                     std::string dir;
                     struct gocpp::error err;
@@ -173,7 +173,7 @@ namespace golang::os
             {
                 std::string dir;
                 struct gocpp::error err;
-                return {"", syscall::ENAMETOOLONG};
+                return {"", syscall::go_ENAMETOOLONG};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
             if(err != nullptr)

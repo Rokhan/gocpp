@@ -9,9 +9,9 @@ namespace golang::poll
     using fileKind = unsigned char;
     const int maxRW = 1 << 30;
     const poll::fileKind kindNet = 0;
-    const fileKind kindFile = 1;
-    const fileKind kindConsole = 2;
-    const fileKind kindPipe = 3;
+    const poll::fileKind kindFile = 1;
+    const poll::fileKind kindConsole = 2;
+    const poll::fileKind kindPipe = 3;
 }
 #include "golang/internal/poll/fd_mutex.fwd.h"
 #include "golang/internal/poll/fd_poll_runtime.fwd.h"

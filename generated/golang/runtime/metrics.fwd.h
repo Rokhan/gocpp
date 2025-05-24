@@ -18,14 +18,14 @@ namespace golang::runtime
     struct metricFloat64Histogram;
     struct metricName;
     const runtime::statDep heapStatsDep = 0;
-    const statDep sysStatsDep = 1;
-    const statDep cpuStatsDep = 2;
-    const statDep gcStatsDep = 3;
-    const statDep numStatsDeps = 4;
+    const runtime::statDep sysStatsDep = 1;
+    const runtime::statDep cpuStatsDep = 2;
+    const runtime::statDep gcStatsDep = 3;
+    const runtime::statDep numStatsDeps = 4;
     const runtime::metricKind metricKindBad = 0;
-    const metricKind metricKindUint64 = 1;
-    const metricKind metricKindFloat64 = 2;
-    const metricKind metricKindFloat64Histogram = 3;
+    const runtime::metricKind metricKindUint64 = 1;
+    const runtime::metricKind metricKindFloat64 = 2;
+    const runtime::metricKind metricKindFloat64Histogram = 3;
 }
 #include "golang/runtime/mstats.fwd.h"
 #include "golang/unsafe/unsafe.fwd.h"

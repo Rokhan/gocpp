@@ -39,7 +39,7 @@ namespace golang::syscall
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
-            return {nullptr, EINVAL};
+            return {nullptr, go_EINVAL};
         }
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s) + 1);
         copy(a, s);

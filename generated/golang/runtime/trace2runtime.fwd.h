@@ -10,23 +10,23 @@ namespace golang::runtime
     using traceGoStopReason = uint8_t;
     const bool debugTraceReentrancy = false;
     const runtime::traceBlockReason traceBlockGeneric = 0;
-    const traceBlockReason traceBlockForever = 1;
-    const traceBlockReason traceBlockNet = 2;
-    const traceBlockReason traceBlockSelect = 3;
-    const traceBlockReason traceBlockCondWait = 4;
-    const traceBlockReason traceBlockSync = 5;
-    const traceBlockReason traceBlockChanSend = 6;
-    const traceBlockReason traceBlockChanRecv = 7;
-    const traceBlockReason traceBlockGCMarkAssist = 8;
-    const traceBlockReason traceBlockGCSweep = 9;
-    const traceBlockReason traceBlockSystemGoroutine = 10;
-    const traceBlockReason traceBlockPreempted = 11;
-    const traceBlockReason traceBlockDebugCall = 12;
-    const traceBlockReason traceBlockUntilGCEnds = 13;
-    const traceBlockReason traceBlockSleep = 14;
+    const runtime::traceBlockReason traceBlockForever = 1;
+    const runtime::traceBlockReason traceBlockNet = 2;
+    const runtime::traceBlockReason traceBlockSelect = 3;
+    const runtime::traceBlockReason traceBlockCondWait = 4;
+    const runtime::traceBlockReason traceBlockSync = 5;
+    const runtime::traceBlockReason traceBlockChanSend = 6;
+    const runtime::traceBlockReason traceBlockChanRecv = 7;
+    const runtime::traceBlockReason traceBlockGCMarkAssist = 8;
+    const runtime::traceBlockReason traceBlockGCSweep = 9;
+    const runtime::traceBlockReason traceBlockSystemGoroutine = 10;
+    const runtime::traceBlockReason traceBlockPreempted = 11;
+    const runtime::traceBlockReason traceBlockDebugCall = 12;
+    const runtime::traceBlockReason traceBlockUntilGCEnds = 13;
+    const runtime::traceBlockReason traceBlockSleep = 14;
     const runtime::traceGoStopReason traceGoStopGeneric = 0;
-    const traceGoStopReason traceGoStopGoSched = 1;
-    const traceGoStopReason traceGoStopPreempted = 2;
+    const runtime::traceGoStopReason traceGoStopGoSched = 1;
+    const runtime::traceGoStopReason traceGoStopPreempted = 2;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

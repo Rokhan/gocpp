@@ -154,7 +154,7 @@ namespace golang::syscall
             std::string domain;
             uint32_t accType;
             struct gocpp::error err;
-            return {nullptr, "", 0, EINVAL};
+            return {nullptr, "", 0, go_EINVAL};
         }
         auto [acc, e] = UTF16PtrFromString(account);
         if(e != nullptr)

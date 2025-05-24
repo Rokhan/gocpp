@@ -422,7 +422,7 @@ namespace golang::os
         {
             int64_t ret;
             struct gocpp::error err;
-            e = syscall::EISDIR;
+            e = syscall::go_EISDIR;
         }
         if(e != nullptr)
         {

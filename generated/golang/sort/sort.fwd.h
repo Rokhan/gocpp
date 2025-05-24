@@ -15,6 +15,6 @@ namespace golang::sort
     using Float64Slice = gocpp::slice<double>;
     using StringSlice = gocpp::slice<std::string>;
     const sort::sortedHint unknownHint = 0;
-    const sortedHint increasingHint = 1;
-    const sortedHint decreasingHint = 2;
+    const sort::sortedHint increasingHint = 1;
+    const sort::sortedHint decreasingHint = 2;
 }

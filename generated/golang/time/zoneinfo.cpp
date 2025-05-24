@@ -1020,7 +1020,7 @@ namespace golang::time
                 firstErr = err;
             }
             else
-            if(err != syscall::ENOENT)
+            if(err != syscall::go_ENOENT)
             {
                 firstErr = err;
             }

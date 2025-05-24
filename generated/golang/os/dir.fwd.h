@@ -8,8 +8,8 @@ namespace golang::os
 {
     using readdirMode = int;
     const os::readdirMode readdirName = 0;
-    const readdirMode readdirDirEntry = 1;
-    const readdirMode readdirFileInfo = 2;
+    const os::readdirMode readdirDirEntry = 1;
+    const os::readdirMode readdirFileInfo = 2;
 }
 #include "golang/io/fs/fs.fwd.h"
 

@@ -20,15 +20,15 @@ namespace golang::runtime
     struct gcTrigger;
     using gcTriggerKind = int;
     const runtime::gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
-    const gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
-    const gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
-    const gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
+    const runtime::gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
+    const runtime::gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
+    const runtime::gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
     const runtime::gcMode gcBackgroundMode = 0;
-    const gcMode gcForceMode = 1;
-    const gcMode gcForceBlockMode = 2;
+    const runtime::gcMode gcForceMode = 1;
+    const runtime::gcMode gcForceBlockMode = 2;
     const runtime::gcTriggerKind gcTriggerHeap = 0;
-    const gcTriggerKind gcTriggerTime = 1;
-    const gcTriggerKind gcTriggerCycle = 2;
+    const runtime::gcTriggerKind gcTriggerTime = 1;
+    const runtime::gcTriggerKind gcTriggerCycle = 2;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"

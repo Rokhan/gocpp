@@ -24,12 +24,12 @@ namespace golang::runtime
     struct gcBitsHeader;
     struct gocpp_id_7;
     const runtime::mSpanState mSpanDead = 0;
-    const mSpanState mSpanInUse = 1;
-    const mSpanState mSpanManual = 2;
+    const runtime::mSpanState mSpanInUse = 1;
+    const runtime::mSpanState mSpanManual = 2;
     const runtime::spanAllocType spanAllocHeap = 0;
-    const spanAllocType spanAllocStack = 1;
-    const spanAllocType spanAllocPtrScalarBits = 2;
-    const spanAllocType spanAllocWorkBuf = 3;
+    const runtime::spanAllocType spanAllocStack = 1;
+    const runtime::spanAllocType spanAllocPtrScalarBits = 2;
+    const runtime::spanAllocType spanAllocWorkBuf = 3;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"

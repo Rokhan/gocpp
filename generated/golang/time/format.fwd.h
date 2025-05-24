@@ -6,24 +6,6 @@
 
 namespace golang::time
 {
-    const int stdMonth = 2 + stdNeedDate;
-    const int stdNumMonth = 3 + stdNeedDate;
-    const int stdZeroMonth = 4 + stdNeedDate;
-    const int stdLongWeekDay = 5 + stdNeedDate;
-    const int stdWeekDay = 6 + stdNeedDate;
-    const int stdDay = 7 + stdNeedDate;
-    const int stdUnderDay = 8 + stdNeedDate;
-    const int stdZeroDay = 9 + stdNeedDate;
-    const int stdUnderYearDay = 10 + stdNeedDate;
-    const int stdZeroYearDay = 11 + stdNeedDate;
-    const int stdHour12 = 13 + stdNeedClock;
-    const int stdZeroHour12 = 14 + stdNeedClock;
-    const int stdMinute = 15 + stdNeedClock;
-    const int stdZeroMinute = 16 + stdNeedClock;
-    const int stdSecond = 17 + stdNeedClock;
-    const int stdZeroSecond = 18 + stdNeedClock;
-    const int stdYear = 20 + stdNeedDate;
-    const int stdpm = 22 + stdNeedClock;
     const int stdTZ = 23;
     const int stdISO8601TZ = 24;
     const int stdISO8601SecondsTZ = 25;
@@ -45,8 +27,26 @@ namespace golang::time
     const long runeSelf = 0x80;
     const char runeError = '\uFFFD';
     const int stdLongMonth = 1 + stdNeedDate;
+    const int stdMonth = 2 + stdNeedDate;
+    const int stdNumMonth = 3 + stdNeedDate;
+    const int stdZeroMonth = 4 + stdNeedDate;
+    const int stdLongWeekDay = 5 + stdNeedDate;
+    const int stdWeekDay = 6 + stdNeedDate;
+    const int stdDay = 7 + stdNeedDate;
+    const int stdUnderDay = 8 + stdNeedDate;
+    const int stdZeroDay = 9 + stdNeedDate;
+    const int stdUnderYearDay = 10 + stdNeedDate;
+    const int stdZeroYearDay = 11 + stdNeedDate;
     const int stdHour = 12 + stdNeedClock;
+    const int stdHour12 = 13 + stdNeedClock;
+    const int stdZeroHour12 = 14 + stdNeedClock;
+    const int stdMinute = 15 + stdNeedClock;
+    const int stdZeroMinute = 16 + stdNeedClock;
+    const int stdSecond = 17 + stdNeedClock;
+    const int stdZeroSecond = 18 + stdNeedClock;
     const int stdLongYear = 19 + stdNeedDate;
+    const int stdYear = 20 + stdNeedDate;
     const int stdPM = 21 + stdNeedClock;
+    const int stdpm = 22 + stdNeedClock;
     const int stdMask = (1 << stdArgShift) - 1;
 }

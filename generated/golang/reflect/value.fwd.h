@@ -23,9 +23,9 @@ namespace golang::reflect
     const reflect::flag flagAddr = 1 << 8;
     const reflect::flag flagMethod = 1 << 9;
     const reflect::SelectDir _ = 0;
-    const SelectDir SelectSend = 1;
-    const SelectDir SelectRecv = 2;
-    const SelectDir SelectDefault = 3;
+    const reflect::SelectDir SelectSend = 1;
+    const reflect::SelectDir SelectRecv = 2;
+    const reflect::SelectDir SelectDefault = 3;
 }
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/reflect/type.fwd.h"

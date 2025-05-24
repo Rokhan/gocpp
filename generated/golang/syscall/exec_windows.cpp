@@ -181,7 +181,7 @@ namespace golang::syscall
         {
             if(bytealg::IndexByteString(s, 0) != - 1)
             {
-                return {nullptr, EINVAL};
+                return {nullptr, go_EINVAL};
             }
             length += len(s) + 1;
         }
@@ -263,7 +263,7 @@ namespace golang::syscall
         {
             std::string name;
             struct gocpp::error err;
-            return {"", EINVAL};
+            return {"", go_EINVAL};
         }
         return {ndir, nullptr};
     }
@@ -285,7 +285,7 @@ namespace golang::syscall
         {
             std::string name;
             struct gocpp::error err;
-            return {"", EINVAL};
+            return {"", go_EINVAL};
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
@@ -301,7 +301,7 @@ namespace golang::syscall
             {
                 std::string name;
                 struct gocpp::error err;
-                return {"", EINVAL};
+                return {"", go_EINVAL};
             }
             if(isSlash(p[2]))
             {
@@ -466,7 +466,7 @@ namespace golang::syscall
                 int pid;
                 uintptr_t handle;
                 struct gocpp::error err;
-                return {0, 0, EWINDOWS};
+                return {0, 0, go_EWINDOWS};
             }
             if(attr == nullptr)
             {
@@ -488,14 +488,14 @@ namespace golang::syscall
                 int pid;
                 uintptr_t handle;
                 struct gocpp::error err;
-                return {0, 0, EWINDOWS};
+                return {0, 0, go_EWINDOWS};
             }
             if(len(attr->Files) < 3)
             {
                 int pid;
                 uintptr_t handle;
                 struct gocpp::error err;
-                return {0, 0, EINVAL};
+                return {0, 0, go_EINVAL};
             }
             if(len(attr->Dir) != 0)
             {
@@ -711,7 +711,7 @@ namespace golang::syscall
     struct gocpp::error Exec(std::string argv0, gocpp::slice<std::string> argv, gocpp::slice<std::string> envv)
     {
         struct gocpp::error err;
-        return EWINDOWS;
+        return go_EWINDOWS;
     }
 
 }

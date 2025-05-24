@@ -148,7 +148,7 @@ namespace golang::os
     {
         if(name == "")
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = syscall::ENOENT; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = syscall::go_ENOENT; })};
         }
         auto path = fixLongPath(name);
         auto [r, e] = syscall::Open(path, flag | syscall::O_CLOEXEC, syscallMode(perm));
@@ -163,7 +163,7 @@ namespace golang::os
                     e1 = syscall::GetFileAttributesEx(pathp, syscall::GetFileExInfoStandard, (unsigned char*)(unsafe::Pointer(& fa)));
                     if(e1 == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
                     {
-                        e = syscall::EISDIR;
+                        e = syscall::go_EISDIR;
                     }
                 }
             }
@@ -182,7 +182,7 @@ namespace golang::os
     {
         if(file == nullptr)
         {
-            return syscall::EINVAL;
+            return syscall::go_EINVAL;
         }
         if(file->dirinfo != nullptr)
         {
@@ -541,7 +541,7 @@ namespace golang::os
                         return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME)))));
                         break;
                     default:
-                        return {"", syscall::ENOENT};
+                        return {"", syscall::go_ENOENT};
                         break;
                 }
             }

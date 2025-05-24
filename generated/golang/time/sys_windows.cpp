@@ -38,7 +38,7 @@ namespace golang::time
         {
             if(err == syscall::ERROR_PATH_NOT_FOUND)
             {
-                err = syscall::ENOENT;
+                err = syscall::go_ENOENT;
             }
             return {0, err};
         }

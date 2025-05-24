@@ -35,7 +35,7 @@ namespace golang::syscall
 
     unsafe::Pointer _;
     gocpp::error errERROR_IO_PENDING = Errno(errnoERROR_IO_PENDING);
-    gocpp::error errERROR_EINVAL = EINVAL;
+    gocpp::error errERROR_EINVAL = go_EINVAL;
     struct gocpp::error errnoErr(golang::syscall::Errno e)
     {
         //Go switch emulation

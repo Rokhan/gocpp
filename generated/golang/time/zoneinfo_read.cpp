@@ -481,7 +481,7 @@ namespace golang::time
                 }
                 return {buf, nullptr};
             }
-            return {nullptr, syscall::ENOENT};
+            return {nullptr, syscall::go_ENOENT};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -519,7 +519,7 @@ namespace golang::time
                     return {z, nullptr};
                 }
             }
-            if(firstErr == nullptr && err != syscall::ENOENT)
+            if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
                 struct Location* z;
                 struct gocpp::error firstErr;
@@ -542,7 +542,7 @@ namespace golang::time
                     return {z, nullptr};
                 }
             }
-            if(firstErr == nullptr && err != syscall::ENOENT)
+            if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
                 struct Location* z;
                 struct gocpp::error firstErr;
@@ -565,7 +565,7 @@ namespace golang::time
                     return {z, nullptr};
                 }
             }
-            if(firstErr == nullptr && err != syscall::ENOENT)
+            if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
                 struct Location* z;
                 struct gocpp::error firstErr;

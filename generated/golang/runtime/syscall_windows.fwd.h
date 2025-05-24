@@ -14,8 +14,8 @@ namespace golang::runtime
     struct gocpp_id_1;
     const long maxArgs = 42;
     const runtime::abiPartKind abiPartBad = 0;
-    const abiPartKind abiPartStack = 1;
-    const abiPartKind abiPartReg = 2;
+    const runtime::abiPartKind abiPartStack = 1;
+    const runtime::abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

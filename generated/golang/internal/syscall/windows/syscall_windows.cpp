@@ -658,7 +658,7 @@ namespace golang::windows
             }
             else
             {
-                err = syscall::EINVAL;
+                err = syscall::go_EINVAL;
             }
         }
         return err;
@@ -680,7 +680,7 @@ namespace golang::windows
             }
             else
             {
-                err = syscall::EINVAL;
+                err = syscall::go_EINVAL;
             }
         }
         return err;

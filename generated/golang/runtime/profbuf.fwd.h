@@ -12,7 +12,7 @@ namespace golang::runtime
     const runtime::profIndex profReaderSleeping = 1 << 32;
     const runtime::profIndex profWriteExtra = 1 << 33;
     const runtime::profBufReadMode profBufBlocking = 0;
-    const profBufReadMode profBufNonBlocking = 1;
+    const runtime::profBufReadMode profBufNonBlocking = 1;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

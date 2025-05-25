@@ -711,7 +711,7 @@ namespace gocpp
         {
             if(mArray)
             {
-                return {0 , mArray->begin()};
+                return {0, mArray->begin()};
             }
 
             return range_iterator();
@@ -731,7 +731,7 @@ namespace gocpp
         {
             if(mArray)
             {
-                return mArray->end();
+                return {mArray->size(), mArray->end()};
             }
 
             return range_iterator();

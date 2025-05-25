@@ -384,7 +384,7 @@ func (cv *cppConverter) IsLocalType(name string) bool {
 }
 
 func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
-	goType := cv.convertExprType(expr)
+	goType := cv.convertExprToType(expr)
 
 	switch goType.(type) {
 	case *types.Pointer:
@@ -398,7 +398,7 @@ func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
 }
 
 func (cv *cppConverter) IsExprMap(expr ast.Expr) bool {
-	goType := cv.convertExprType(expr)
+	goType := cv.convertExprToType(expr)
 	return cv.IsTypeMap(goType)
 }
 
@@ -2409,6 +2409,13 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	case *ast.ChanType:
 		return cv.convertChanTypeExpr(n, ctx)
 
+	case *ast.CompositeLit:
+		switch t := n.Type.(type) {
+		case *ast.ArrayType:
+			return cv.convertArrayTypeExpr(t, ctx)
+		}
+		return cv.convertTypeExpr(n.Type, ctx)
+
 	case *ast.FuncType:
 		return cv.convertFuncTypeExpr(n, ctx)
 
@@ -2531,7 +2538,9 @@ func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType, ctx ctContext)
 	case nil:
 		return ExprPrintf("gocpp::slice<%s>", elt).toCppType()
 	case *ast.Ellipsis:
-		return ExprPrintf("gocpp::array_base<%s>", elt).toCppType()
+		nodeType := cv.typeInfo.Types[node].Type
+		len := getArrayLen(nodeType, cv.Position(node))
+		return ExprPrintf("gocpp::array<%s, %d>", elt, len).toCppType()
 	default:
 		return ExprPrintf("gocpp::array<%s, %s>", elt, cv.convertExpr(node.Len)).toCppType()
 	}
@@ -3043,9 +3052,6 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		cppType.canFwd = canFwd
 		return cppType
 
-	case *ast.CompositeLit:
-		return cv.convertCompositeLitType(n, false)
-
 	case *ast.UnaryExpr:
 		switch n.Op {
 		case token.AND:
@@ -3069,12 +3075,13 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		// 	indexType := convertExprType(n.Index)
 		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 
-	case *ast.InterfaceType, *ast.StructType:
+	case *ast.CompositeLit, *ast.InterfaceType, *ast.StructType:
 		return cv.convertTypeExpr(n, ctContext{})
 	}
 
 	// Generic fallback to guess type
-	exprType := cv.convertExprType(node)
+	// NB, name are confusing (convertTypeExpr, convertExprToType, convertGoToCppType, etc ...)
+	exprType := cv.convertExprToType(node)
 	if exprType != nil {
 		typeStr := convertGoToCppType(exprType, cv.Position(node))
 		// Probably this steps should only be done for named types
@@ -3098,7 +3105,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	panic("convertExprCppType, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) convertExprType(node ast.Expr) types.Type {
+func (cv *cppConverter) convertExprToType(node ast.Expr) types.Type {
 	if node == nil {
 		return nil
 	}
@@ -3171,6 +3178,20 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	default:
 		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
 	}
+}
+
+func getArrayLen(goType types.Type, position token.Position) int64 {
+	if goType == nil {
+		panic("getArrayLen. Cannot convert nil type.")
+	}
+
+	switch subType := goType.(type) {
+	case *types.Array:
+		return subType.Len()
+	}
+
+	Panicf("getArrayLen. Unmanaged type, type [%v], position[%v]", reflect.TypeOf(goType), position)
+	return 0
 }
 
 func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
@@ -3433,24 +3454,12 @@ func (cv *cppConverter) isNameSpace(expr ast.Expr) bool {
 	return false
 }
 
-func (cv *cppConverter) convertCompositeLitType(n *ast.CompositeLit, addPtr bool) cppType {
-	if n.Type != nil {
-		result := cv.convertTypeExpr(n.Type, ctContext{})
-		if addPtr {
-			result.str += "*"
-		}
-		return result
-	}
-
-	panic("Undefined type: 'n.Type == nil'")
-}
-
 func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cppExpr {
 	// ignore 'n.Incomplete' at the moment
 	buf := mkCppBuffer()
 	var litType cppExpr
 	if n.Type != nil {
-		litType = cv.convertTypeExpr(n.Type, ctContext{}).cppExpr
+		litType = cv.convertTypeExpr(n, ctContext{}).cppExpr
 	}
 
 	var isKvInit bool
@@ -3463,14 +3472,23 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		if addPtr {
 			ptrSuffix = "Ptr"
 		}
-		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>([](%s& x) { ", ptrSuffix, litType, litType)
+		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>([](auto& x) {\n", ptrSuffix, litType)
 
-		for _, elt := range n.Elts {
-			kv := elt.(*ast.KeyValueExpr)
-			//goType := cv.convertExprType(expr)
-			cv.BuffExprPrintf(buf, "x.%s = %s; ", cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+		// Maybe we should use a special 'indent' token  that will be replaced later
+		// instead of using cv.cpp.Indent() whhereas we have no guarantee that
+		// the code will be generated in cpp file.
+		if isArrayType(n.Type) {
+			for _, elt := range n.Elts {
+				kv := elt.(*ast.KeyValueExpr)
+				cv.BuffExprPrintf(buf, "%s    x[%s] = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+			}
+		} else {
+			for _, elt := range n.Elts {
+				kv := elt.(*ast.KeyValueExpr)
+				cv.BuffExprPrintf(buf, "%s    x.%s = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+			}
 		}
-		cv.BuffExprPrintf(buf, "})")
+		cv.BuffExprPrintf(buf, "%s})", cv.cpp.Indent())
 	} else {
 		newPrefix := ""
 		if addPtr {

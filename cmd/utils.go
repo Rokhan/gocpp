@@ -813,9 +813,18 @@ func (target set[T]) has(value T) bool {
 }
 
 func isMapType(node ast.Expr) bool {
-	switch n := node.(type) {
+	switch node.(type) {
 	case *ast.MapType:
-		_ = n
+		return true
+
+	default:
+		return false
+	}
+}
+
+func isArrayType(node ast.Expr) bool {
+	switch node.(type) {
+	case *ast.ArrayType:
 		return true
 
 	default:

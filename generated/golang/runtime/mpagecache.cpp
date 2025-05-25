@@ -152,7 +152,11 @@ namespace golang::runtime
             {
                 go_throw("bad summary data");
             }
-            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize; x.cache = ~ rec::pages64(gocpp::recv(chunk), j); x.scav = rec::block64(gocpp::recv(chunk->scavenged), j); });
+            c = gocpp::Init<pageCache>([](auto& x) {
+                x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize;
+                x.cache = ~ rec::pages64(gocpp::recv(chunk), j);
+                x.scav = rec::block64(gocpp::recv(chunk->scavenged), j);
+            });
         }
         else
         {
@@ -164,7 +168,11 @@ namespace golang::runtime
             }
             ci = chunkIndex(addr);
             chunk = rec::chunkOf(gocpp::recv(p), ci);
-            c = gocpp::Init<pageCache>([](pageCache& x) { x.base = alignDown(addr, 64 * pageSize); x.cache = ~ rec::pages64(gocpp::recv(chunk), chunkPageIndex(addr)); x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr)); });
+            c = gocpp::Init<pageCache>([](auto& x) {
+                x.base = alignDown(addr, 64 * pageSize);
+                x.cache = ~ rec::pages64(gocpp::recv(chunk), chunkPageIndex(addr));
+                x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr));
+            });
         }
         auto cpi = chunkPageIndex(c->base);
         rec::allocPages64(gocpp::recv(chunk), cpi, c->cache);

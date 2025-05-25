@@ -16,7 +16,6 @@ namespace golang::runtime
     struct MemProfileRecord;
     struct BlockProfileRecord;
     struct gocpp_id_0;
-    struct gocpp_id_0;
     using goroutineProfileState = uint32_t;
     const runtime::bucketType memProfile = 1 + 0;
     const runtime::bucketType blockProfile = 1 + 1;

@@ -155,7 +155,7 @@ namespace golang::runtime
         });
     }
 
-    gocpp::array_base<uint8_t> oneptrmask = gocpp::array_base<uint8_t> {1};
+    gocpp::array<uint8_t, 1> oneptrmask = gocpp::array<uint8_t, 1> {1};
     int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit)
     {
         int64_t workDone = {};

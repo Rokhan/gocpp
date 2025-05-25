@@ -74,7 +74,16 @@ namespace golang::reflect
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
-        auto impl = gocpp::InitPtr<makeFuncImpl>([](makeFuncImpl& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.ftyp = ftyp; x.fn = fn; });
+        auto impl = gocpp::InitPtr<makeFuncImpl>([](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](auto& x) {
+            x.fn = code;
+            x.stack = abid.stackPtrs;
+            x.argLen = abid.stackCallArgsSize;
+            x.regPtrs = abid.inRegPtrs;
+        });
+            x.ftyp = ftyp;
+            x.fn = fn;
+        });
         return Value {t, unsafe::Pointer(impl), flag(Func)};
     }
 
@@ -125,7 +134,16 @@ namespace golang::reflect
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
         auto [gocpp_id_6, gocpp_id_7, abid] = funcLayout(ftyp, nullptr);
-        auto fv = gocpp::InitPtr<methodValue>([](methodValue& x) { x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](makeFuncCtxt& x) { x.fn = code; x.stack = abid.stackPtrs; x.argLen = abid.stackCallArgsSize; x.regPtrs = abid.inRegPtrs; }); x.method = int(v.flag) >> flagMethodShift; x.rcvr = rcvr; });
+        auto fv = gocpp::InitPtr<methodValue>([](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([](auto& x) {
+            x.fn = code;
+            x.stack = abid.stackPtrs;
+            x.argLen = abid.stackCallArgsSize;
+            x.regPtrs = abid.inRegPtrs;
+        });
+            x.method = int(v.flag) >> flagMethodShift;
+            x.rcvr = rcvr;
+        });
         methodReceiver(op, fv->rcvr, fv->method);
         return Value {rec::Common(gocpp::recv(ftyp)), unsafe::Pointer(fv), v.flag & flagRO | flag(Func)};
     }

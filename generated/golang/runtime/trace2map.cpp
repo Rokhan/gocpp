@@ -178,7 +178,11 @@ namespace golang::runtime
 
     struct traceMapNode* rec::newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
-        auto sl = gocpp::Init<notInHeapSlice>([](notInHeapSlice& x) { x.array = rec::alloc(gocpp::recv(tab->mem), size); x.len = int(size); x.cap = int(size); });
+        auto sl = gocpp::Init<notInHeapSlice>([](auto& x) {
+            x.array = rec::alloc(gocpp::recv(tab->mem), size);
+            x.len = int(size);
+            x.cap = int(size);
+        });
         memmove(unsafe::Pointer(sl.array), data, size);
         auto meta = (traceMapNode*)(unsafe::Pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
         *(notInHeapSlice*)(unsafe::Pointer(& meta->data)) = sl;

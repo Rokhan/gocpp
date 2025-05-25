@@ -65,7 +65,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
-    extern gocpp::array_base<std::string> gcMarkWorkerModeStrings;
+    extern gocpp::array<std::string, 4> gcMarkWorkerModeStrings;
     struct gocpp_id_1
     {
         mutex lock;

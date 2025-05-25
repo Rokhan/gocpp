@@ -274,8 +274,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::array_base<std::string> boundsErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x] with length %y"; x.boundsSliceAlen = "slice bounds out of range [:%x] with length %y"; x.boundsSliceAcap = "slice bounds out of range [:%x] with capacity %y"; x.boundsSliceB = "slice bounds out of range [%x:%y]"; x.boundsSlice3Alen = "slice bounds out of range [::%x] with length %y"; x.boundsSlice3Acap = "slice bounds out of range [::%x] with capacity %y"; x.boundsSlice3B = "slice bounds out of range [:%x:%y]"; x.boundsSlice3C = "slice bounds out of range [%x:%y:]"; x.boundsConvert = "cannot convert slice with length %y to array or pointer to array with length %x"; });
-    gocpp::array_base<std::string> boundsNegErrorFmts = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.boundsIndex = "index out of range [%x]"; x.boundsSliceAlen = "slice bounds out of range [:%x]"; x.boundsSliceAcap = "slice bounds out of range [:%x]"; x.boundsSliceB = "slice bounds out of range [%x:]"; x.boundsSlice3Alen = "slice bounds out of range [::%x]"; x.boundsSlice3Acap = "slice bounds out of range [::%x]"; x.boundsSlice3B = "slice bounds out of range [:%x:]"; x.boundsSlice3C = "slice bounds out of range [%x::]"; });
+    gocpp::array<std::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<std::string, 9>>([](auto& x) {
+        x[boundsIndex] = "index out of range [%x] with length %y";
+        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y";
+        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y";
+        x[boundsSliceB] = "slice bounds out of range [%x:%y]";
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y";
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y";
+        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]";
+        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]";
+        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x";
+    });
+    gocpp::array<std::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<std::string, 8>>([](auto& x) {
+        x[boundsIndex] = "index out of range [%x]";
+        x[boundsSliceAlen] = "slice bounds out of range [:%x]";
+        x[boundsSliceAcap] = "slice bounds out of range [:%x]";
+        x[boundsSliceB] = "slice bounds out of range [%x:]";
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x]";
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x]";
+        x[boundsSlice3B] = "slice bounds out of range [:%x:]";
+        x[boundsSlice3C] = "slice bounds out of range [%x::]";
+    });
     void rec::RuntimeError(struct boundsError e)
     {
     }

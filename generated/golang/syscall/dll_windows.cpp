@@ -155,9 +155,16 @@ namespace golang::syscall
         }
         if(e != 0)
         {
-            return {nullptr, gocpp::InitPtr<DLLError>([](DLLError& x) { x.Err = e; x.ObjName = name; x.Msg = "Failed to load " + name + ": " + rec::Error(gocpp::recv(e)); })};
+            return {nullptr, gocpp::InitPtr<DLLError>([](auto& x) {
+                x.Err = e;
+                x.ObjName = name;
+                x.Msg = "Failed to load " + name + ": " + rec::Error(gocpp::recv(e));
+            })};
         }
-        auto d = gocpp::InitPtr<DLL>([](DLL& x) { x.Name = name; x.Handle = Handle(h); });
+        auto d = gocpp::InitPtr<DLL>([](auto& x) {
+            x.Name = name;
+            x.Handle = Handle(h);
+        });
         return {d, nullptr};
     }
 
@@ -187,9 +194,17 @@ namespace golang::syscall
         {
             struct Proc* proc;
             struct gocpp::error err;
-            return {nullptr, gocpp::InitPtr<DLLError>([](DLLError& x) { x.Err = e; x.ObjName = name; x.Msg = "Failed to find " + name + " procedure in " + d->Name + ": " + rec::Error(gocpp::recv(e)); })};
+            return {nullptr, gocpp::InitPtr<DLLError>([](auto& x) {
+                x.Err = e;
+                x.ObjName = name;
+                x.Msg = "Failed to find " + name + " procedure in " + d->Name + ": " + rec::Error(gocpp::recv(e));
+            })};
         }
-        auto p = gocpp::InitPtr<Proc>([](Proc& x) { x.Dll = d; x.Name = name; x.addr = a; });
+        auto p = gocpp::InitPtr<Proc>([](auto& x) {
+            x.Dll = d;
+            x.Name = name;
+            x.addr = a;
+        });
         return {p, nullptr};
     }
 
@@ -333,12 +348,17 @@ namespace golang::syscall
 
     struct LazyProc* rec::NewProc(struct LazyDLL* d, std::string name)
     {
-        return gocpp::InitPtr<LazyProc>([](LazyProc& x) { x.l = d; x.Name = name; });
+        return gocpp::InitPtr<LazyProc>([](auto& x) {
+            x.l = d;
+            x.Name = name;
+        });
     }
 
     struct LazyDLL* NewLazyDLL(std::string name)
     {
-        return gocpp::InitPtr<LazyDLL>([](LazyDLL& x) { x.Name = name; });
+        return gocpp::InitPtr<LazyDLL>([](auto& x) {
+            x.Name = name;
+        });
     }
 
     

@@ -67,7 +67,9 @@ namespace golang::sync
 
     struct Cond* NewCond(struct Locker l)
     {
-        return gocpp::InitPtr<Cond>([](Cond& x) { x.L = l; });
+        return gocpp::InitPtr<Cond>([](auto& x) {
+            x.L = l;
+        });
     }
 
     void rec::Wait(struct Cond* c)

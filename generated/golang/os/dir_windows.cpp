@@ -95,11 +95,13 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    sync::Pool dirBufPool = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = []() mutable -> go_any
+    sync::Pool dirBufPool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), dirBufSize);
         return & buf;
-    }; });
+    };
+    });
     void rec::close(struct dirInfo* d)
     {
         if(d->buf != nullptr)
@@ -132,7 +134,11 @@ namespace golang::os
                 gocpp::slice<os::DirEntry> dirents;
                 gocpp::slice<os::FileInfo> infos;
                 struct gocpp::error err;
-                err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = file->name; x.Err = err; });
+                err = gocpp::InitPtr<os::PathError>([](auto& x) {
+                    x.Op = "readdir";
+                    x.Path = file->name;
+                    x.Err = err;
+                });
                 return {names, dirents, infos, err};
             }
             file->dirinfo = go_new(dirInfo);
@@ -167,7 +173,11 @@ namespace golang::os
                         gocpp::slice<os::DirEntry> dirents;
                         gocpp::slice<os::FileInfo> infos;
                         struct gocpp::error err;
-                        err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = file->name; x.Err = err; });
+                        err = gocpp::InitPtr<os::PathError>([](auto& x) {
+                            x.Op = "readdir";
+                            x.Path = file->name;
+                            x.Err = err;
+                        });
                         return {names, dirents, infos, err};
                     }
                 }
@@ -225,7 +235,11 @@ namespace golang::os
                         gocpp::slice<os::DirEntry> dirents;
                         gocpp::slice<os::FileInfo> infos;
                         struct gocpp::error err;
-                        err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readdir"; x.Path = file->name; x.Err = syscall::go_ENOTDIR; });
+                        err = gocpp::InitPtr<os::PathError>([](auto& x) {
+                            x.Op = "readdir";
+                            x.Path = file->name;
+                            x.Err = syscall::go_ENOTDIR;
+                        });
                     }
                     else
                     {
@@ -233,7 +247,11 @@ namespace golang::os
                         gocpp::slice<os::DirEntry> dirents;
                         gocpp::slice<os::FileInfo> infos;
                         struct gocpp::error err;
-                        err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "GetFileInformationByHandleEx"; x.Path = file->name; x.Err = err; });
+                        err = gocpp::InitPtr<os::PathError>([](auto& x) {
+                            x.Op = "GetFileInformationByHandleEx";
+                            x.Path = file->name;
+                            x.Err = err;
+                        });
                     }
                     return {names, dirents, infos, err};
                 }

@@ -182,7 +182,13 @@ namespace golang::runtime
             return;
         }
         frame.fn = f;
-        *u = gocpp::Init<unwinder>([](unwinder& x) { x.frame = frame; x.g = rec::guintptr(gocpp::recv(gp)); x.cgoCtxt = len(gp->cgoCtxt) - 1; x.calleeFuncID = abi::FuncIDNormal; x.flags = flags; });
+        *u = gocpp::Init<unwinder>([](auto& x) {
+            x.frame = frame;
+            x.g = rec::guintptr(gocpp::recv(gp));
+            x.cgoCtxt = len(gp->cgoCtxt) - 1;
+            x.calleeFuncID = abi::FuncIDNormal;
+            x.flags = flags;
+        });
         auto isSyscall = frame.pc == pc0 && frame.sp == sp0 && pc0 == gp->syscallpc && sp0 == gp->syscallsp;
         rec::resolveInternal(gocpp::recv(u), true, isSyscall);
     }
@@ -988,7 +994,16 @@ namespace golang::runtime
         return ! (id == abi::FuncID_gopanic || id == abi::FuncID_sigpanic || id == abi::FuncID_panicwrap);
     }
 
-    gocpp::array_base<std::string> gStatusStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x._Gidle = "idle"; x._Grunnable = "runnable"; x._Grunning = "running"; x._Gsyscall = "syscall"; x._Gwaiting = "waiting"; x._Gdead = "dead"; x._Gcopystack = "copystack"; x._Gpreempted = "preempted"; });
+    gocpp::array<std::string, 10> gStatusStrings = gocpp::Init<gocpp::array<std::string, 10>>([](auto& x) {
+        x[_Gidle] = "idle";
+        x[_Grunnable] = "runnable";
+        x[_Grunning] = "running";
+        x[_Gsyscall] = "syscall";
+        x[_Gwaiting] = "waiting";
+        x[_Gdead] = "dead";
+        x[_Gcopystack] = "copystack";
+        x[_Gpreempted] = "preempted";
+    });
     void goroutineheader(struct g* gp)
     {
         auto [level, gocpp_id_12, gocpp_id_13] = gotraceback();
@@ -1385,7 +1400,11 @@ namespace golang::runtime
         {
             call = asmcgocall;
         }
-        auto arg = gocpp::Init<cgoTracebackArg>([](cgoTracebackArg& x) { x.context = ctxt; x.buf = (uintptr_t*)(noescape(unsafe::Pointer(& buf[0]))); x.max = uintptr_t(len(buf)); });
+        auto arg = gocpp::Init<cgoTracebackArg>([](auto& x) {
+            x.context = ctxt;
+            x.buf = (uintptr_t*)(noescape(unsafe::Pointer(& buf[0])));
+            x.max = uintptr_t(len(buf));
+        });
         if(msanenabled)
         {
             msanwrite(unsafe::Pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());

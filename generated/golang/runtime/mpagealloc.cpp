@@ -482,51 +482,14 @@ namespace golang::runtime
         }
 
 
-    struct gocpp_id_1
-        {
-            offAddr base;
-            offAddr bound;
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                result.base = this->base;
-                result.bound = this->bound;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                if (base != ref.base) return false;
-                if (bound != ref.bound) return false;
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << "" << base;
-                os << " " << bound;
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
     std::tuple<uintptr_t, struct offAddr> rec::find(struct pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto i = 0;
-        auto firstFree = gocpp::Init<gocpp_id_1>([](gocpp_id_1& x) { x.base = minOffAddr; x.bound = maxOffAddr; });
+        auto firstFree = gocpp::Init<gocpp_id_1>([](auto& x) {
+            x.base = minOffAddr;
+            x.bound = maxOffAddr;
+        });
         auto foundFree = [=](struct offAddr addr, uintptr_t size) mutable -> void
         {
             if(rec::lessEqual(gocpp::recv(firstFree.base), addr) && rec::lessEqual(gocpp::recv(rec::add(gocpp::recv(addr), size - 1)), firstFree.bound))

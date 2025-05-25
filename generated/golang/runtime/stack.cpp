@@ -569,7 +569,10 @@ namespace golang::runtime
 
     uintptr_t maxstacksize = 1 << 20;
     uintptr_t maxstackceiling = maxstacksize;
-    gocpp::slice<std::string> ptrnames = gocpp::Init<gocpp::slice<std::string>>([](gocpp::slice<std::string>& x) { x.0 = "scalar"; x.1 = "ptr"; });
+    gocpp::slice<std::string> ptrnames = gocpp::Init<gocpp::slice<std::string>>([](auto& x) {
+        x[0] = "scalar";
+        x[1] = "ptr";
+    });
     
     template<typename T> requires gocpp::GoStruct<T>
     adjustinfo::operator T()

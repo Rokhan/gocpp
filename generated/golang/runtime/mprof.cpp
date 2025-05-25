@@ -821,7 +821,7 @@ namespace golang::runtime
         saveBlockEventStack(cycles, rate, prof->stack.make_slice(0, nstk), mutexProfile);
         if(lost > 0)
         {
-            auto lostStk = gocpp::array_base<uintptr_t> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
+            auto lostStk = gocpp::array<uintptr_t, 1> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
             saveBlockEventStack(lost, rate, lostStk.make_slice(0, ), mutexProfile);
         }
         prof->disabled = false;
@@ -1336,59 +1336,9 @@ namespace golang::runtime
     }
 
 
-    struct gocpp_id_0
-    {
-        uint32_t sema;
-        bool active;
-        atomic::Int64 offset;
-        gocpp::slice<StackRecord> records;
-        gocpp::slice<unsafe::Pointer> labels;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.sema = this->sema;
-            result.active = this->active;
-            result.offset = this->offset;
-            result.records = this->records;
-            result.labels = this->labels;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (sema != ref.sema) return false;
-            if (active != ref.active) return false;
-            if (offset != ref.offset) return false;
-            if (records != ref.records) return false;
-            if (labels != ref.labels) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << sema;
-            os << " " << active;
-            os << " " << offset;
-            os << " " << records;
-            os << " " << labels;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](gocpp_id_0& x) { x.sema = 1; });
+    gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](auto& x) {
+        x.sema = 1;
+    });
     runtime::goroutineProfileState rec::Load(golang::runtime::goroutineProfileStateHolder* p)
     {
         return goroutineProfileState(rec::Load(gocpp::recv((atomic::Uint32*)(p))));

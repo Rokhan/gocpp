@@ -348,7 +348,12 @@ namespace golang::reflect
             {
                 kind = abiStepPointer;
             }
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = kind; x.offset = offset + uintptr_t(i) * size; x.size = size; x.ireg = a->iregs; }));
+            a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+                x.kind = kind;
+                x.offset = offset + uintptr_t(i) * size;
+                x.size = size;
+                x.ireg = a->iregs;
+            }));
             a->iregs++;
         }
         return true;
@@ -366,7 +371,12 @@ namespace golang::reflect
         }
         for(auto i = 0; i < n; i++)
         {
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = abiStepFloatReg; x.offset = offset + uintptr_t(i) * size; x.size = size; x.freg = a->fregs; }));
+            a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+                x.kind = abiStepFloatReg;
+                x.offset = offset + uintptr_t(i) * size;
+                x.size = size;
+                x.freg = a->fregs;
+            }));
             a->fregs++;
         }
         return true;
@@ -375,7 +385,12 @@ namespace golang::reflect
     void rec::stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment)
     {
         a->stackBytes = align(a->stackBytes, alignment);
-        a->steps = append(a->steps, gocpp::Init<abiStep>([](abiStep& x) { x.kind = abiStepStack; x.offset = 0; x.size = size; x.stkOff = a->stackBytes; }));
+        a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+            x.kind = abiStepStack;
+            x.offset = 0;
+            x.size = size;
+            x.stkOff = a->stackBytes;
+        }));
         a->stackBytes += size;
     }
 

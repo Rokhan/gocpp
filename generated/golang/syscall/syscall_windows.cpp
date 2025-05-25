@@ -1879,7 +1879,10 @@ namespace golang::syscall
     struct gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int level, int opt, struct Linger* l)
     {
         struct gocpp::error err;
-        auto sys = gocpp::Init<sysLinger>([](sysLinger& x) { x.Onoff = uint16_t(l->Onoff); x.Linger = uint16_t(l->Linger); });
+        auto sys = gocpp::Init<sysLinger>([](auto& x) {
+            x.Onoff = uint16_t(l->Onoff);
+            x.Linger = uint16_t(l->Linger);
+        });
         return Setsockopt(fd, int32_t(level), int32_t(opt), (unsigned char*)(unsafe::Pointer(& sys)), int32_t(gocpp::Sizeof<sysLinger>()));
     }
 

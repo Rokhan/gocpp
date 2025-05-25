@@ -12,7 +12,7 @@
 
 namespace golang::strconv
 {
-    extern gocpp::array_base<gocpp::array<uint64_t, 2>> detailedPowersOfTen;
+    extern gocpp::array<gocpp::array<uint64_t, 2>, 696> detailedPowersOfTen;
     std::tuple<double, bool> eiselLemire64(uint64_t man, int exp10, bool neg);
     std::tuple<double, bool> eiselLemire32(uint64_t man, int exp10, bool neg);
 

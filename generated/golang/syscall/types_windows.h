@@ -728,7 +728,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
-    extern gocpp::array_base<std::string> signals;
+    extern gocpp::array<std::string, 16> signals;
     struct CertTrustListInfo
     {
 

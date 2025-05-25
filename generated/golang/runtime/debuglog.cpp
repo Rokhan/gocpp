@@ -806,7 +806,10 @@ namespace golang::runtime
                 case 8:
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
-                    auto str = gocpp::Init<stringStruct>([](stringStruct& x) { x.str = unsafe::Pointer(ptr); x.len = len; });
+                    auto str = gocpp::Init<stringStruct>([](auto& x) {
+                        x.str = unsafe::Pointer(ptr);
+                        x.len = len;
+                    });
                     auto s = *(std::string*)(unsafe::Pointer(& str));
                     print(s);
                     break;

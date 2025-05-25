@@ -45,7 +45,7 @@ namespace golang::time
     std::string DateOnly = "2006-01-02";
     std::string TimeOnly = "15:04:05";
     int gocpp_id_0 = 0;
-    gocpp::array_base<int> std0x = gocpp::array_base<int> {stdZeroMonth, stdZeroDay, stdZeroHour12, stdZeroMinute, stdZeroSecond, stdYear};
+    gocpp::array<int, 6> std0x = gocpp::array<int, 6> {stdZeroMonth, stdZeroDay, stdZeroHour12, stdZeroMinute, stdZeroSecond, stdYear};
     bool startsWithLowerCase(std::string str)
     {
         if(len(str) == 0)

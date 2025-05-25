@@ -172,7 +172,7 @@ namespace golang::runtime
         writeBarrier.enabled = gcphase == _GCmark || gcphase == _GCmarktermination;
     }
 
-    gocpp::array_base<std::string> gcMarkWorkerModeStrings = gocpp::array_base<std::string> {"Not worker", "GC (dedicated)", "GC (fractional)", "GC (idle)"};
+    gocpp::array<std::string, 4> gcMarkWorkerModeStrings = gocpp::array<std::string, 4> {"Not worker", "GC (dedicated)", "GC (fractional)", "GC (idle)"};
     bool pollFractionalWorkerExit()
     {
         auto now = nanotime();
@@ -445,7 +445,10 @@ namespace golang::runtime
     {
         auto n = rec::Load(gocpp::recv(work.cycles));
         gcWaitOnMark(n);
-        gcStart(gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerCycle; x.n = n + 1; }));
+        gcStart(gocpp::Init<gcTrigger>([](auto& x) {
+            x.kind = gcTriggerCycle;
+            x.n = n + 1;
+        }));
         gcWaitOnMark(n + 1);
         for(; rec::Load(gocpp::recv(work.cycles)) == n + 1 && sweepone() != ~ uintptr_t(0); )
         {

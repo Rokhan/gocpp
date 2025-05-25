@@ -156,7 +156,9 @@ namespace golang::runtime
 
     struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers)
     {
-        auto f = gocpp::InitPtr<Frames>([](Frames& x) { x.callers = callers; });
+        auto f = gocpp::InitPtr<Frames>([](auto& x) {
+            x.callers = callers;
+        });
         f->frames = f->frameStore.make_slice(0, 0);
         return f;
     }
@@ -206,7 +208,14 @@ namespace golang::runtime
                 bool more;
                 f = nullptr;
             }
-            ci->frames = append(ci->frames, gocpp::Init<Frame>([](Frame& x) { x.PC = pc; x.Func = f; x.Function = funcNameForPrint(rec::name(gocpp::recv(sf))); x.Entry = entry; x.startLine = int(sf.startLine); x.funcInfo = funcInfo; }));
+            ci->frames = append(ci->frames, gocpp::Init<Frame>([](auto& x) {
+                x.PC = pc;
+                x.Func = f;
+                x.Function = funcNameForPrint(rec::name(gocpp::recv(sf)));
+                x.Entry = entry;
+                x.startLine = int(sf.startLine);
+                x.funcInfo = funcInfo;
+            }));
         }
         //Go switch emulation
         {
@@ -301,7 +310,9 @@ namespace golang::runtime
 
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc)
     {
-        auto arg = gocpp::Init<cgoSymbolizerArg>([](cgoSymbolizerArg& x) { x.pc = pc; });
+        auto arg = gocpp::Init<cgoSymbolizerArg>([](auto& x) {
+            x.pc = pc;
+        });
         callCgoSymbolizer(& arg);
         if(arg.file == nullptr && arg.funcName == nullptr)
         {
@@ -310,7 +321,14 @@ namespace golang::runtime
         gocpp::slice<Frame> frames = {};
         for(; ; )
         {
-            frames = append(frames, gocpp::Init<Frame>([](Frame& x) { x.PC = pc; x.Func = nullptr; x.Function = gostring(arg.funcName); x.File = gostring(arg.file); x.Line = int(arg.lineno); x.Entry = arg.entry; }));
+            frames = append(frames, gocpp::Init<Frame>([](auto& x) {
+                x.PC = pc;
+                x.Func = nullptr;
+                x.Function = gostring(arg.funcName);
+                x.File = gostring(arg.file);
+                x.Line = int(arg.lineno);
+                x.Entry = arg.entry;
+            }));
             if(arg.more == 0)
             {
                 break;
@@ -939,7 +957,14 @@ namespace golang::runtime
         }
         auto sf = rec::srcFunc(gocpp::recv(u), uf);
         auto [file, line] = rec::fileLine(gocpp::recv(u), uf);
-        auto fi = gocpp::InitPtr<funcinl>([](funcinl& x) { x.ones = ~ uint32_t(0); x.entry = rec::entry(gocpp::recv(f)); x.name = rec::name(gocpp::recv(sf)); x.file = file; x.line = int32_t(line); x.startLine = sf.startLine; });
+        auto fi = gocpp::InitPtr<funcinl>([](auto& x) {
+            x.ones = ~ uint32_t(0);
+            x.entry = rec::entry(gocpp::recv(f));
+            x.name = rec::name(gocpp::recv(sf));
+            x.file = file;
+            x.line = int32_t(line);
+            x.startLine = sf.startLine;
+        });
         return (Func*)(unsafe::Pointer(fi));
     }
 
@@ -1300,7 +1325,12 @@ namespace golang::runtime
                         auto e = & cache->entries[ck];
                         auto ci = cheaprandn(uint32_t(len(cache->entries[ck])));
                         e[ci] = e[0];
-                        e[0] = gocpp::Init<pcvalueCacheEnt>([](pcvalueCacheEnt& x) { x.targetpc = targetpc; x.off = off; x.val = val; x.valPC = prevpc; });
+                        e[0] = gocpp::Init<pcvalueCacheEnt>([](auto& x) {
+                            x.targetpc = targetpc;
+                            x.off = off;
+                            x.val = val;
+                            x.valPC = prevpc;
+                        });
                     }
                     cache->inUse--;
                     releasem(mp);

@@ -186,12 +186,18 @@ namespace golang::poll
             }
             for(; len(b) > maxRW; )
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](syscall::WSABuf& x) { x.Len = maxRW; x.Buf = & b[0]; }));
+                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](auto& x) {
+                    x.Len = maxRW;
+                    x.Buf = & b[0];
+                }));
                 b = b.make_slice(maxRW);
             }
             if(len(b) > 0)
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](syscall::WSABuf& x) { x.Len = uint32_t(len(b)); x.Buf = & b[0]; }));
+                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](auto& x) {
+                    x.Len = uint32_t(len(b));
+                    x.Buf = & b[0];
+                }));
             }
         }
     }
@@ -735,7 +741,10 @@ namespace golang::poll
                 return {0, e};
             }
             defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
-            auto o = gocpp::Init<syscall::Overlapped>([](syscall::Overlapped& x) { x.OffsetHigh = uint32_t(off >> 32); x.Offset = uint32_t(off); });
+            auto o = gocpp::Init<syscall::Overlapped>([](auto& x) {
+                x.OffsetHigh = uint32_t(off >> 32);
+                x.Offset = uint32_t(off);
+            });
             uint32_t done = {};
             e = syscall::ReadFile(fd->Sysfd, b, & done, & o);
             if(e != nullptr)
@@ -1042,7 +1051,10 @@ namespace golang::poll
                     b = b.make_slice(0, maxRW);
                 }
                 uint32_t n = {};
-                auto o = gocpp::Init<syscall::Overlapped>([](syscall::Overlapped& x) { x.OffsetHigh = uint32_t(off >> 32); x.Offset = uint32_t(off); });
+                auto o = gocpp::Init<syscall::Overlapped>([](auto& x) {
+                    x.OffsetHigh = uint32_t(off >> 32);
+                    x.Offset = uint32_t(off);
+                });
                 e = syscall::WriteFile(fd->Sysfd, b, & n, & o);
                 ntotal += int(n);
                 if(e != nullptr)

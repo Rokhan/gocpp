@@ -140,11 +140,11 @@ namespace golang::runtime
     runtime::stdFunction _timeEndPeriod;
     runtime::stdFunction _WSAGetOverlappedResult;
     runtime::stdFunction _;
-    gocpp::array_base<uint16_t> bcryptprimitivesdll = gocpp::array_base<uint16_t> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
-    gocpp::array_base<uint16_t> ntdlldll = gocpp::array_base<uint16_t> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
-    gocpp::array_base<uint16_t> powrprofdll = gocpp::array_base<uint16_t> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
-    gocpp::array_base<uint16_t> winmmdll = gocpp::array_base<uint16_t> {'w', 'i', 'n', 'm', 'm', '.', 'd', 'l', 'l', 0};
-    gocpp::array_base<uint16_t> ws2_32dll = gocpp::array_base<uint16_t> {'w', 's', '2', '_', '3', '2', '.', 'd', 'l', 'l', 0};
+    gocpp::array<uint16_t, 21> bcryptprimitivesdll = gocpp::array<uint16_t, 21> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
+    gocpp::array<uint16_t, 10> ntdlldll = gocpp::array<uint16_t, 10> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
+    gocpp::array<uint16_t, 13> powrprofdll = gocpp::array<uint16_t, 13> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
+    gocpp::array<uint16_t, 10> winmmdll = gocpp::array<uint16_t, 10> {'w', 'i', 'n', 'm', 'm', '.', 'd', 'l', 'l', 0};
+    gocpp::array<uint16_t, 11> ws2_32dll = gocpp::array<uint16_t, 11> {'w', 's', '2', '_', '3', '2', '.', 'd', 'l', 'l', 0};
     void tstart_stdcall(struct m* newm)
     /* convertBlockStmt, nil block */;
 
@@ -370,7 +370,9 @@ namespace golang::runtime
             }
             return 0;
         };
-        auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([](_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS& x) { x.callback = compileCallback(*efaceOf(& fn), true); });
+        auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([](auto& x) {
+            x.callback = compileCallback(*efaceOf(& fn), true);
+        });
         auto handle = uintptr_t(0);
         stdcall3(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(unsafe::Pointer(& params)), uintptr_t(unsafe::Pointer(& handle)));
     }
@@ -912,7 +914,11 @@ namespace golang::runtime
 
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
-        auto libcall = gocpp::Init<libcall>([](libcall& x) { x.fn = uintptr_t(unsafe::Pointer(fn)); x.n = uintptr_t(n); x.args = args; });
+        auto libcall = gocpp::Init<libcall>([](auto& x) {
+            x.fn = uintptr_t(unsafe::Pointer(fn));
+            x.n = uintptr_t(n);
+            x.args = args;
+        });
         asmstdcall_trampoline(noescape(unsafe::Pointer(& libcall)));
         return libcall.r1;
     }
@@ -1026,7 +1032,7 @@ namespace golang::runtime
     void usleep_no_g(uint32_t us)
     {
         auto timeout = uintptr_t(us) / 1000;
-        auto args = gocpp::array_base<uintptr_t> {_INVALID_HANDLE_VALUE, timeout};
+        auto args = gocpp::array<uintptr_t, 2> {_INVALID_HANDLE_VALUE, timeout};
         stdcall_no_g(_WaitForSingleObject, len(args), uintptr_t(noescape(unsafe::Pointer(& args[0]))));
     }
 

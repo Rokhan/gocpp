@@ -43,7 +43,7 @@
 
 namespace golang::runtime
 {
-    extern gocpp::array_base<uint8_t> oneptrmask;
+    extern gocpp::array<uint8_t, 1> oneptrmask;
     void gcMarkRootPrepare();
     void gcMarkRootCheck();
     int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit);

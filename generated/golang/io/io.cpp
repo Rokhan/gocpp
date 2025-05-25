@@ -1551,11 +1551,13 @@ namespace golang::io
         return {len(s), nullptr};
     }
 
-    sync::Pool blackHolePool = gocpp::Init<sync::Pool>([](sync::Pool& x) { x.New = []() mutable -> go_any
+    sync::Pool blackHolePool = gocpp::Init<sync::Pool>([](auto& x) {
+        x.New = []() mutable -> go_any
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8192);
         return & b;
-    }; });
+    };
+    });
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(discard, struct Reader r)
     {
         int64_t n;

@@ -32,11 +32,11 @@
 
 namespace golang::runtime
 {
-    extern gocpp::array_base<uint16_t> bcryptprimitivesdll;
-    extern gocpp::array_base<uint16_t> ntdlldll;
-    extern gocpp::array_base<uint16_t> powrprofdll;
-    extern gocpp::array_base<uint16_t> winmmdll;
-    extern gocpp::array_base<uint16_t> ws2_32dll;
+    extern gocpp::array<uint16_t, 21> bcryptprimitivesdll;
+    extern gocpp::array<uint16_t, 10> ntdlldll;
+    extern gocpp::array<uint16_t, 13> powrprofdll;
+    extern gocpp::array<uint16_t, 10> winmmdll;
+    extern gocpp::array<uint16_t, 11> ws2_32dll;
     struct mOS
     {
         mutex threadLock;

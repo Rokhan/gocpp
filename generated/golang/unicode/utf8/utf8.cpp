@@ -51,7 +51,13 @@ namespace golang::utf8
         return value.PrintTo(os);
     }
 
-    gocpp::array<acceptRange, 16> acceptRanges = gocpp::Init<gocpp::array<acceptRange, 16>>([](gocpp::array<acceptRange, 16>& x) { x.0 =  {locb, hicb}; x.1 =  {0xA0, hicb}; x.2 =  {locb, 0x9F}; x.3 =  {0x90, hicb}; x.4 =  {locb, 0x8F}; });
+    gocpp::array<acceptRange, 16> acceptRanges = gocpp::Init<gocpp::array<acceptRange, 16>>([](auto& x) {
+        x[0] =  {locb, hicb};
+        x[1] =  {0xA0, hicb};
+        x[2] =  {locb, 0x9F};
+        x[3] =  {0x90, hicb};
+        x[4] =  {locb, 0x8F};
+    });
     bool FullRune(gocpp::slice<unsigned char> p)
     {
         auto n = len(p);

@@ -17,7 +17,7 @@
 namespace golang::runtime
 {
     extern go_any uint16Eface;
-    extern gocpp::array_base<uint64_t> staticuint64s;
+    extern gocpp::array<uint64_t, 256> staticuint64s;
     struct itabTableType
     {
         uintptr_t size;

@@ -33,7 +33,7 @@ namespace golang::time
     extern gocpp::map<std::string, uint64_t> unitMap;
     extern std::string ANSIC;
     extern std::string RFC822Z;
-    extern gocpp::array_base<int> std0x;
+    extern gocpp::array<int, 6> std0x;
     extern gocpp::slice<std::string> longDayNames;
     extern gocpp::slice<std::string> shortDayNames;
     extern gocpp::slice<std::string> shortMonthNames;

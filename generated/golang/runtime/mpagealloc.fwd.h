@@ -10,7 +10,6 @@ namespace golang::runtime
     const long summaryLevelBits = 3;
     using chunkIdx = unsigned int;
     struct gocpp_id_1;
-    struct gocpp_id_1;
     using pallocSum = uint64_t;
     const int pallocChunkPages = 1 << logPallocChunkPages;
 }

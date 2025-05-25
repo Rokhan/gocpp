@@ -195,8 +195,28 @@ namespace golang::runtime
         lockWithRankMayAcquire(& trace.lock, getLockRank(& trace.lock));
     }
 
-    gocpp::array_base<std::string> traceBlockReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.traceBlockGeneric = "unspecified"; x.traceBlockForever = "forever"; x.traceBlockNet = "network"; x.traceBlockSelect = "select"; x.traceBlockCondWait = "sync.(*Cond).Wait"; x.traceBlockSync = "sync"; x.traceBlockChanSend = "chan send"; x.traceBlockChanRecv = "chan receive"; x.traceBlockGCMarkAssist = "GC mark assist wait for work"; x.traceBlockGCSweep = "GC background sweeper wait"; x.traceBlockSystemGoroutine = "system goroutine wait"; x.traceBlockPreempted = "preempted"; x.traceBlockDebugCall = "wait for debug call"; x.traceBlockUntilGCEnds = "wait until GC ends"; x.traceBlockSleep = "sleep"; });
-    gocpp::array_base<std::string> traceGoStopReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.traceGoStopGeneric = "unspecified"; x.traceGoStopGoSched = "runtime.Gosched"; x.traceGoStopPreempted = "preempted"; });
+    gocpp::array<std::string, 15> traceBlockReasonStrings = gocpp::Init<gocpp::array<std::string, 15>>([](auto& x) {
+        x[traceBlockGeneric] = "unspecified";
+        x[traceBlockForever] = "forever";
+        x[traceBlockNet] = "network";
+        x[traceBlockSelect] = "select";
+        x[traceBlockCondWait] = "sync.(*Cond).Wait";
+        x[traceBlockSync] = "sync";
+        x[traceBlockChanSend] = "chan send";
+        x[traceBlockChanRecv] = "chan receive";
+        x[traceBlockGCMarkAssist] = "GC mark assist wait for work";
+        x[traceBlockGCSweep] = "GC background sweeper wait";
+        x[traceBlockSystemGoroutine] = "system goroutine wait";
+        x[traceBlockPreempted] = "preempted";
+        x[traceBlockDebugCall] = "wait for debug call";
+        x[traceBlockUntilGCEnds] = "wait until GC ends";
+        x[traceBlockSleep] = "sleep";
+    });
+    gocpp::array<std::string, 3> traceGoStopReasonStrings = gocpp::Init<gocpp::array<std::string, 3>>([](auto& x) {
+        x[traceGoStopGeneric] = "unspecified";
+        x[traceGoStopGoSched] = "runtime.Gosched";
+        x[traceGoStopPreempted] = "preempted";
+    });
     bool traceEnabled()
     {
         return rec::Load(gocpp::recv(trace.gen)) != 0;

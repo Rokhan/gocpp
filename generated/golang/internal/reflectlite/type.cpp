@@ -410,7 +410,9 @@ namespace golang::reflectlite
 
     abi::Name rec::nameOff(struct rtype t, golang::reflectlite::nameOff off)
     {
-        return gocpp::Init<abi::Name>([](abi::Name& x) { x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t.Type), int32_t(off))); });
+        return gocpp::Init<abi::Name>([](auto& x) {
+            x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t.Type), int32_t(off)));
+        });
     }
 
     abi::Type* rec::typeOff(struct rtype t, golang::reflectlite::typeOff off)

@@ -637,7 +637,10 @@ namespace golang::runtime
                         break;
                 }
             }
-            sel[j] = gocpp::Init<scase>([](scase& x) { x.c = rc.ch; x.elem = rc.val; });
+            sel[j] = gocpp::Init<scase>([](auto& x) {
+                x.c = rc.ch;
+                x.elem = rc.val;
+            });
             orig[j] = i;
         }
         if(nsends + nrecvs == 0)

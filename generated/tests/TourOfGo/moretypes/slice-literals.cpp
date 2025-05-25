@@ -21,6 +21,11 @@ namespace golang::main
         using namespace fmt::rec;
     }
 
+    gocpp::array<std::string, 6> errors = gocpp::Init<gocpp::array<std::string, 6>>([](auto& x) {
+        x[3] = "argument list too long";
+        x[5] = "permission denied";
+        x[1] = "address already in use";
+    });
     struct gocpp_id_0
         {
             int i;
@@ -69,6 +74,10 @@ namespace golang::main
         mocklib::Println(r);
         auto s = gocpp::slice<gocpp_id_0> { {2, true},  {3, false},  {5, true},  {7, true},  {11, false},  {13, true}};
         mocklib::Println(s);
+        for(auto [i, err] : errors)
+        {
+            mocklib::Println(i, err);
+        }
     }
 
 }

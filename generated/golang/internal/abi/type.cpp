@@ -89,7 +89,35 @@ namespace golang::abi
         return kindNames[0];
     }
 
-    gocpp::slice<std::string> kindNames = gocpp::Init<gocpp::slice<std::string>>([](gocpp::slice<std::string>& x) { x.Invalid = "invalid"; x.Bool = "bool"; x.Int = "int"; x.Int8 = "int8"; x.Int16 = "int16"; x.Int32 = "int32"; x.Int64 = "int64"; x.Uint = "uint"; x.Uint8 = "uint8"; x.Uint16 = "uint16"; x.Uint32 = "uint32"; x.Uint64 = "uint64"; x.Uintptr = "uintptr"; x.Float32 = "float32"; x.Float64 = "float64"; x.Complex64 = "complex64"; x.Complex128 = "complex128"; x.Array = "array"; x.Chan = "chan"; x.Func = "func"; x.Interface = "interface"; x.Map = "map"; x.Pointer = "ptr"; x.Slice = "slice"; x.String = "string"; x.Struct = "struct"; x.UnsafePointer = "unsafe.Pointer"; });
+    gocpp::slice<std::string> kindNames = gocpp::Init<gocpp::slice<std::string>>([](auto& x) {
+        x[Invalid] = "invalid";
+        x[Bool] = "bool";
+        x[Int] = "int";
+        x[Int8] = "int8";
+        x[Int16] = "int16";
+        x[Int32] = "int32";
+        x[Int64] = "int64";
+        x[Uint] = "uint";
+        x[Uint8] = "uint8";
+        x[Uint16] = "uint16";
+        x[Uint32] = "uint32";
+        x[Uint64] = "uint64";
+        x[Uintptr] = "uintptr";
+        x[Float32] = "float32";
+        x[Float64] = "float64";
+        x[Complex64] = "complex64";
+        x[Complex128] = "complex128";
+        x[Array] = "array";
+        x[Chan] = "chan";
+        x[Func] = "func";
+        x[Interface] = "interface";
+        x[Map] = "map";
+        x[Pointer] = "ptr";
+        x[Slice] = "slice";
+        x[String] = "string";
+        x[Struct] = "struct";
+        x[UnsafePointer] = "unsafe.Pointer";
+    });
     abi::Kind rec::Kind(struct Type* t)
     {
         return Kind(t->Kind_ & KindMask);
@@ -1265,7 +1293,9 @@ namespace golang::abi
             copy(tb, tagLen.make_slice(0, tagLenLen));
             copy(tb.make_slice(tagLenLen), tag);
         }
-        return gocpp::Init<Name>([](Name& x) { x.Bytes = & b[0]; });
+        return gocpp::Init<Name>([](auto& x) {
+            x.Bytes = & b[0];
+        });
     }
 
 }

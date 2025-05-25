@@ -180,7 +180,11 @@ namespace golang::runtime
         }
         if(heapBitsInSpan(span->elemsize))
         {
-            return gocpp::Init<typePointers>([](typePointers& x) { x.elem = addr; x.addr = addr; x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr); });
+            return gocpp::Init<typePointers>([](auto& x) {
+                x.elem = addr;
+                x.addr = addr;
+                x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr);
+            });
         }
         runtime::_type* typ = {};
         if(rec::sizeclass(gocpp::recv(spc)) != 0)
@@ -193,7 +197,12 @@ namespace golang::runtime
             typ = span->largeType;
         }
         auto gcdata = typ->GCData;
-        return gocpp::Init<typePointers>([](typePointers& x) { x.elem = addr; x.addr = addr; x.mask = readUintptr(gcdata); x.typ = typ; });
+        return gocpp::Init<typePointers>([](auto& x) {
+            x.elem = addr;
+            x.addr = addr;
+            x.mask = readUintptr(gcdata);
+            x.typ = typ;
+        });
     }
 
     struct typePointers rec::typePointersOfType(struct mspan* span, abi::Type* typ, uintptr_t addr)
@@ -208,7 +217,12 @@ namespace golang::runtime
             return typePointers {};
         }
         auto gcdata = typ->GCData;
-        return gocpp::Init<typePointers>([](typePointers& x) { x.elem = addr; x.addr = addr; x.mask = readUintptr(gcdata); x.typ = typ; });
+        return gocpp::Init<typePointers>([](auto& x) {
+            x.elem = addr;
+            x.addr = addr;
+            x.mask = readUintptr(gcdata);
+            x.typ = typ;
+        });
     }
 
     std::tuple<struct typePointers, uintptr_t> rec::nextFast(struct typePointers tp)

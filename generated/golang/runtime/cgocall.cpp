@@ -115,7 +115,9 @@ namespace golang::runtime
 
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args)
     {
-        auto as = gocpp::Init<argset>([](argset& x) { x.args = unsafe::Pointer(& args[0]); });
+        auto as = gocpp::Init<argset>([](auto& x) {
+            x.args = unsafe::Pointer(& args[0]);
+        });
         cgocall(fn, unsafe::Pointer(& as));
         return as.retval;
     }

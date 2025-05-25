@@ -2496,7 +2496,9 @@ namespace golang::reflect
         {
             rec::panicNotMap(gocpp::recv(v));
         }
-        return gocpp::InitPtr<MapIter>([](MapIter& x) { x.m = v; });
+        return gocpp::InitPtr<MapIter>([](auto& x) {
+            x.m = v;
+        });
     }
 
     void rec::panicNotMap(golang::reflect::flag f)
@@ -3136,7 +3138,10 @@ namespace golang::reflect
                     unsafeheader::String t = {};
                     if(i < s->Len)
                     {
-                        t = gocpp::Init<unsafeheader::String>([](unsafeheader::String& x) { x.Data = arrayAt(s->Data, i, 1, "i < s.Len"); x.Len = j - i; });
+                        t = gocpp::Init<unsafeheader::String>([](auto& x) {
+                            x.Data = arrayAt(s->Data, i, 1, "i < s.Len");
+                            x.Len = j - i;
+                        });
                     }
                     return Value {rec::typ(gocpp::recv(v)), unsafe::Pointer(& t), v.flag};
                     break;
@@ -3941,7 +3946,11 @@ namespace golang::reflect
         {
             gocpp::panic("reflect.MakeSlice: len > cap");
         }
-        auto s = gocpp::Init<unsafeheader::Slice>([](unsafeheader::Slice& x) { x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap); x.Len = len; x.Cap = cap; });
+        auto s = gocpp::Init<unsafeheader::Slice>([](auto& x) {
+            x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
+            x.Len = len;
+            x.Cap = cap;
+        });
         return Value {& gocpp::getValue<rtype*>(typ)->t, unsafe::Pointer(& s), flagIndir | flag(Slice)};
     }
 

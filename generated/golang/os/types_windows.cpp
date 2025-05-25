@@ -120,7 +120,11 @@ namespace golang::os
         {
             struct fileStat* fs;
             struct gocpp::error err;
-            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "GetFileInformationByHandle"; x.Path = path; x.Err = err; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "GetFileInformationByHandle";
+                x.Path = path;
+                x.Err = err;
+            })};
         }
         windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
         err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(unsafe::Pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
@@ -138,25 +142,66 @@ namespace golang::os
             {
                 struct fileStat* fs;
                 struct gocpp::error err;
-                return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "GetFileInformationByHandleEx"; x.Path = path; x.Err = err; })};
+                return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                    x.Op = "GetFileInformationByHandleEx";
+                    x.Path = path;
+                    x.Err = err;
+                })};
             }
         }
-        return {gocpp::InitPtr<fileStat>([](fileStat& x) { x.name = basename(path); x.FileAttributes = d.FileAttributes; x.CreationTime = d.CreationTime; x.LastAccessTime = d.LastAccessTime; x.LastWriteTime = d.LastWriteTime; x.FileSizeHigh = d.FileSizeHigh; x.FileSizeLow = d.FileSizeLow; x.vol = d.VolumeSerialNumber; x.idxhi = d.FileIndexHigh; x.idxlo = d.FileIndexLow; x.ReparseTag = ti.ReparseTag; }), nullptr};
+        return {gocpp::InitPtr<fileStat>([](auto& x) {
+            x.name = basename(path);
+            x.FileAttributes = d.FileAttributes;
+            x.CreationTime = d.CreationTime;
+            x.LastAccessTime = d.LastAccessTime;
+            x.LastWriteTime = d.LastWriteTime;
+            x.FileSizeHigh = d.FileSizeHigh;
+            x.FileSizeLow = d.FileSizeLow;
+            x.vol = d.VolumeSerialNumber;
+            x.idxhi = d.FileIndexHigh;
+            x.idxlo = d.FileIndexLow;
+            x.ReparseTag = ti.ReparseTag;
+        }), nullptr};
     }
 
     struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
-        return gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = uint32_t(d->EndOfFile >> 32); x.FileSizeLow = uint32_t(d->EndOfFile); x.ReparseTag = d->EaSize; x.idxhi = uint32_t(d->FileID >> 32); x.idxlo = uint32_t(d->FileID); });
+        return gocpp::InitPtr<fileStat>([](auto& x) {
+            x.FileAttributes = d->FileAttributes;
+            x.CreationTime = d->CreationTime;
+            x.LastAccessTime = d->LastAccessTime;
+            x.LastWriteTime = d->LastWriteTime;
+            x.FileSizeHigh = uint32_t(d->EndOfFile >> 32);
+            x.FileSizeLow = uint32_t(d->EndOfFile);
+            x.ReparseTag = d->EaSize;
+            x.idxhi = uint32_t(d->FileID >> 32);
+            x.idxlo = uint32_t(d->FileID);
+        });
     }
 
     struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
     {
-        return gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = uint32_t(d->EndOfFile >> 32); x.FileSizeLow = uint32_t(d->EndOfFile); x.ReparseTag = d->EaSize; });
+        return gocpp::InitPtr<fileStat>([](auto& x) {
+            x.FileAttributes = d->FileAttributes;
+            x.CreationTime = d->CreationTime;
+            x.LastAccessTime = d->LastAccessTime;
+            x.LastWriteTime = d->LastWriteTime;
+            x.FileSizeHigh = uint32_t(d->EndOfFile >> 32);
+            x.FileSizeLow = uint32_t(d->EndOfFile);
+            x.ReparseTag = d->EaSize;
+        });
     }
 
     struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
     {
-        auto fs = gocpp::InitPtr<fileStat>([](fileStat& x) { x.FileAttributes = d->FileAttributes; x.CreationTime = d->CreationTime; x.LastAccessTime = d->LastAccessTime; x.LastWriteTime = d->LastWriteTime; x.FileSizeHigh = d->FileSizeHigh; x.FileSizeLow = d->FileSizeLow; });
+        auto fs = gocpp::InitPtr<fileStat>([](auto& x) {
+            x.FileAttributes = d->FileAttributes;
+            x.CreationTime = d->CreationTime;
+            x.LastAccessTime = d->LastAccessTime;
+            x.LastWriteTime = d->LastWriteTime;
+            x.FileSizeHigh = d->FileSizeHigh;
+            x.FileSizeLow = d->FileSizeLow;
+        });
         if(d->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
         {
             fs->ReparseTag = d->Reserved0;
@@ -242,7 +287,14 @@ namespace golang::os
 
     go_any rec::Sys(struct fileStat* fs)
     {
-        return gocpp::InitPtr<syscall::Win32FileAttributeData>([](syscall::Win32FileAttributeData& x) { x.FileAttributes = fs->FileAttributes; x.CreationTime = fs->CreationTime; x.LastAccessTime = fs->LastAccessTime; x.LastWriteTime = fs->LastWriteTime; x.FileSizeHigh = fs->FileSizeHigh; x.FileSizeLow = fs->FileSizeLow; });
+        return gocpp::InitPtr<syscall::Win32FileAttributeData>([](auto& x) {
+            x.FileAttributes = fs->FileAttributes;
+            x.CreationTime = fs->CreationTime;
+            x.LastAccessTime = fs->LastAccessTime;
+            x.LastWriteTime = fs->LastWriteTime;
+            x.FileSizeHigh = fs->FileSizeHigh;
+            x.FileSizeLow = fs->FileSizeLow;
+        });
     }
 
     struct gocpp::error rec::loadFileId(struct fileStat* fs)
@@ -305,7 +357,11 @@ namespace golang::os
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
             if(err != nullptr)
             {
-                return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "FullPath"; x.Path = path; x.Err = err; });
+                return gocpp::InitPtr<os::PathError>([](auto& x) {
+                    x.Op = "FullPath";
+                    x.Path = path;
+                    x.Err = err;
+                });
             }
         }
         fs->name = basename(path);

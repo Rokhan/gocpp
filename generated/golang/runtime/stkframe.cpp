@@ -396,7 +396,12 @@ namespace golang::runtime
         {
             go_throw("methodValueCallFrameObjs is not in a module");
         }
-        methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([](stackObjectRecord& x) { x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8)); x.size = int32_t(abiRegArgsType->Size_); x._ptrdata = int32_t(abiRegArgsType->PtrBytes); x.gcdataoff = uint32_t(uintptr_t(unsafe::Pointer(abiRegArgsType->GCData)) - mod->rodata); });
+        methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([](auto& x) {
+            x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));
+            x.size = int32_t(abiRegArgsType->Size_);
+            x._ptrdata = int32_t(abiRegArgsType->PtrBytes);
+            x.gcdataoff = uint32_t(uintptr_t(unsafe::Pointer(abiRegArgsType->GCData)) - mod->rodata);
+        });
     }
 
 }

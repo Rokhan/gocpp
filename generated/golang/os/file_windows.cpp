@@ -118,7 +118,14 @@ namespace golang::os
                 kind = "pipe";
             }
         }
-        auto f = new File {gocpp::InitPtr<file>([](file& x) { x.pfd = gocpp::Init<poll::FD>([](poll::FD& x) { x.Sysfd = h; x.IsStream = true; x.ZeroReadIsEOF = true; }); x.name = name; })};
+        auto f = new File {gocpp::InitPtr<file>([](auto& x) {
+            x.pfd = gocpp::Init<poll::FD>([](auto& x) {
+            x.Sysfd = h;
+            x.IsStream = true;
+            x.ZeroReadIsEOF = true;
+        });
+            x.name = name;
+        })};
         runtime::SetFinalizer(f->file, (*file)->close);
         rec::Init(gocpp::recv(f->pfd), kind, false);
         return f;
@@ -148,7 +155,11 @@ namespace golang::os
     {
         if(name == "")
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = syscall::go_ENOENT; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "open";
+                x.Path = name;
+                x.Err = syscall::go_ENOENT;
+            })};
         }
         auto path = fixLongPath(name);
         auto [r, e] = syscall::Open(path, flag | syscall::O_CLOEXEC, syscallMode(perm));
@@ -167,13 +178,21 @@ namespace golang::os
                     }
                 }
             }
-            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = e; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "open";
+                x.Path = name;
+                x.Err = e;
+            })};
         }
         File* f;
         std::tie(f, e) = std::tuple{newFile(r, name, "file"), nullptr};
         if(e != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "open"; x.Path = name; x.Err = e; })};
+            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "open";
+                x.Path = name;
+                x.Err = e;
+            })};
         }
         return {f, nullptr};
     }
@@ -196,7 +215,11 @@ namespace golang::os
             {
                 e = ErrClosed;
             }
-            err = gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "close"; x.Path = file->name; x.Err = e; });
+            err = gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "close";
+                x.Path = file->name;
+                x.Err = e;
+            });
         }
         runtime::SetFinalizer(file, nullptr);
         return err;
@@ -247,7 +270,11 @@ namespace golang::os
         auto [p, e] = syscall::UTF16PtrFromString(fixLongPath(name));
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "remove"; x.Path = name; x.Err = e; });
+            return gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "remove";
+                x.Path = name;
+                x.Err = e;
+            });
         }
         e = syscall::DeleteFile(p);
         if(e == nullptr)
@@ -285,7 +312,11 @@ namespace golang::os
                 }
             }
         }
-        return gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "remove"; x.Path = name; x.Err = e; });
+        return gocpp::InitPtr<os::PathError>([](auto& x) {
+            x.Op = "remove";
+            x.Path = name;
+            x.Err = e;
+        });
     }
 
     struct gocpp::error rename(std::string oldname, std::string newname)
@@ -557,7 +588,11 @@ namespace golang::os
         auto [s, err] = readReparseLink(fixLongPath(name));
         if(err != nullptr)
         {
-            return {"", gocpp::InitPtr<os::PathError>([](os::PathError& x) { x.Op = "readlink"; x.Path = name; x.Err = err; })};
+            return {"", gocpp::InitPtr<os::PathError>([](auto& x) {
+                x.Op = "readlink";
+                x.Path = name;
+                x.Err = err;
+            })};
         }
         return {s, nullptr};
     }

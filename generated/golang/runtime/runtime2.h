@@ -132,7 +132,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
-    extern gocpp::array_base<std::string> waitReasonStrings;
+    extern gocpp::array<std::string, 37> waitReasonStrings;
     struct mutex
     {
         uintptr_t key;

@@ -336,9 +336,17 @@ namespace golang::time
         }
         if(len(tx) == 0)
         {
-            tx = append(tx, gocpp::Init<zoneTrans>([](zoneTrans& x) { x.when = alpha; x.index = 0; }));
+            tx = append(tx, gocpp::Init<zoneTrans>([](auto& x) {
+                x.when = alpha;
+                x.index = 0;
+            }));
         }
-        auto l = gocpp::InitPtr<Location>([](Location& x) { x.zone = zones; x.tx = tx; x.name = name; x.extend = extend; });
+        auto l = gocpp::InitPtr<Location>([](auto& x) {
+            x.zone = zones;
+            x.tx = tx;
+            x.name = name;
+            x.extend = extend;
+        });
         auto [sec, gocpp_id_2, gocpp_id_3] = now();
         for(auto [i, gocpp_ignored] : tx)
         {
@@ -364,7 +372,11 @@ namespace golang::time
                         }
                         else
                         {
-                            l->cacheZone = gocpp::InitPtr<zone>([](zone& x) { x.name = name; x.offset = offset; x.isDST = isDST; });
+                            l->cacheZone = gocpp::InitPtr<zone>([](auto& x) {
+                                x.name = name;
+                                x.offset = offset;
+                                x.isDST = isDST;
+                            });
                         }
                     }
                 }

@@ -118,103 +118,188 @@ namespace golang::runtime
     void goPanicIndex(int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsIndex; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsIndex;
+        }));
     }
 
     void goPanicIndexU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsIndex; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsIndex;
+        }));
     }
 
     void goPanicSliceAlen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSliceAlen; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSliceAlen;
+        }));
     }
 
     void goPanicSliceAlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSliceAlen; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSliceAlen;
+        }));
     }
 
     void goPanicSliceAcap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSliceAcap; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSliceAcap;
+        }));
     }
 
     void goPanicSliceAcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSliceAcap; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSliceAcap;
+        }));
     }
 
     void goPanicSliceB(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSliceB; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSliceB;
+        }));
     }
 
     void goPanicSliceBU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSliceB; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSliceB;
+        }));
     }
 
     void goPanicSlice3Alen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSlice3Alen; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSlice3Alen;
+        }));
     }
 
     void goPanicSlice3AlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSlice3Alen; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSlice3Alen;
+        }));
     }
 
     void goPanicSlice3Acap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSlice3Acap; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSlice3Acap;
+        }));
     }
 
     void goPanicSlice3AcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSlice3Acap; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSlice3Acap;
+        }));
     }
 
     void goPanicSlice3B(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSlice3B; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSlice3B;
+        }));
     }
 
     void goPanicSlice3BU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSlice3B; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSlice3B;
+        }));
     }
 
     void goPanicSlice3C(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsSlice3C; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsSlice3C;
+        }));
     }
 
     void goPanicSlice3CU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = false; x.y = y; x.code = boundsSlice3C; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = false;
+            x.y = y;
+            x.code = boundsSlice3C;
+        }));
     }
 
     void goPanicSliceConvert(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array");
-        gocpp::panic(gocpp::Init<boundsError>([](boundsError& x) { x.x = int64_t(x); x.go_signed = true; x.y = y; x.code = boundsConvert; }));
+        gocpp::panic(gocpp::Init<boundsError>([](auto& x) {
+            x.x = int64_t(x);
+            x.go_signed = true;
+            x.y = y;
+            x.code = boundsConvert;
+        }));
     }
 
     void panicIndex(int x, int y)
@@ -306,7 +391,10 @@ namespace golang::runtime
     void panicmemAddr(uintptr_t addr)
     {
         panicCheck2("invalid memory address or nil pointer dereference");
-        gocpp::panic(gocpp::Init<errorAddressString>([](errorAddressString& x) { x.msg = "invalid memory address or nil pointer dereference"; x.addr = addr; }));
+        gocpp::panic(gocpp::Init<errorAddressString>([](auto& x) {
+            x.msg = "invalid memory address or nil pointer dereference";
+            x.addr = addr;
+        }));
     }
 
     void deferproc(std::function<void ()> fn)
@@ -697,7 +785,9 @@ namespace golang::runtime
     {
     }
 
-    godebugInc* panicnil = gocpp::InitPtr<godebugInc>([](godebugInc& x) { x.name = "panicnil"; });
+    godebugInc* panicnil = gocpp::InitPtr<godebugInc>([](auto& x) {
+        x.name = "panicnil";
+    });
     void gopanic(go_any e)
     {
         if(e == nullptr)
@@ -975,7 +1065,11 @@ namespace golang::runtime
         }
         if(saveOpenDeferState)
         {
-            gp->param = unsafe::Pointer(gocpp::InitPtr<savedOpenDeferState>([](savedOpenDeferState& x) { x.retpc = p0->retpc; x.deferBitsOffset = uintptr_t(unsafe::Pointer(p0->deferBitsPtr)) - uintptr_t(p0->sp); x.slotsOffset = uintptr_t(p0->slotsPtr) - uintptr_t(p0->sp); }));
+            gp->param = unsafe::Pointer(gocpp::InitPtr<savedOpenDeferState>([](auto& x) {
+                x.retpc = p0->retpc;
+                x.deferBitsOffset = uintptr_t(unsafe::Pointer(p0->deferBitsPtr)) - uintptr_t(p0->sp);
+                x.slotsOffset = uintptr_t(p0->slotsPtr) - uintptr_t(p0->sp);
+            }));
         }
         if(sp != 0 && (sp < gp->stack.lo || gp->stack.hi < sp))
         {

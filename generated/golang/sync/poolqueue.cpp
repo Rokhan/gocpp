@@ -309,7 +309,9 @@ namespace golang::sync
         {
             newSize = dequeueLimit;
         }
-        auto d2 = gocpp::InitPtr<poolChainElt>([](poolChainElt& x) { x.prev = d; });
+        auto d2 = gocpp::InitPtr<poolChainElt>([](auto& x) {
+            x.prev = d;
+        });
         d2->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
         c->head = d2;
         storePoolChainElt(& d->next, d2);

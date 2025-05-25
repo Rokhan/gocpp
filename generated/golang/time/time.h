@@ -13,7 +13,7 @@
 
 namespace golang::time
 {
-    extern gocpp::array_base<int32_t> daysBefore;
+    extern gocpp::array<int32_t, 13> daysBefore;
     extern int64_t startNano;
     struct Time
     {

@@ -129,7 +129,7 @@ namespace golang::strconv
         d->dp -= q;
     }
 
-    gocpp::array_base<uint64_t> uint64pow10 = gocpp::array_base<uint64_t> {1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19};
+    gocpp::array<uint64_t, 20> uint64pow10 = gocpp::array<uint64_t, 20> {1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19};
     void formatDecimal(struct decimalSlice* d, uint64_t m, bool trunc, bool roundUp, int prec)
     {
         auto max = uint64pow10[prec];

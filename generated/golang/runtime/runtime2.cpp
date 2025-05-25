@@ -1778,7 +1778,45 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::array_base<std::string> waitReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.waitReasonZero = ""; x.waitReasonGCAssistMarking = "GC assist marking"; x.waitReasonIOWait = "IO wait"; x.waitReasonChanReceiveNilChan = "chan receive (nil chan)"; x.waitReasonChanSendNilChan = "chan send (nil chan)"; x.waitReasonDumpingHeap = "dumping heap"; x.waitReasonGarbageCollection = "garbage collection"; x.waitReasonGarbageCollectionScan = "garbage collection scan"; x.waitReasonPanicWait = "panicwait"; x.waitReasonSelect = "select"; x.waitReasonSelectNoCases = "select (no cases)"; x.waitReasonGCAssistWait = "GC assist wait"; x.waitReasonGCSweepWait = "GC sweep wait"; x.waitReasonGCScavengeWait = "GC scavenge wait"; x.waitReasonChanReceive = "chan receive"; x.waitReasonChanSend = "chan send"; x.waitReasonFinalizerWait = "finalizer wait"; x.waitReasonForceGCIdle = "force gc (idle)"; x.waitReasonSemacquire = "semacquire"; x.waitReasonSleep = "sleep"; x.waitReasonSyncCondWait = "sync.Cond.Wait"; x.waitReasonSyncMutexLock = "sync.Mutex.Lock"; x.waitReasonSyncRWMutexRLock = "sync.RWMutex.RLock"; x.waitReasonSyncRWMutexLock = "sync.RWMutex.Lock"; x.waitReasonTraceReaderBlocked = "trace reader (blocked)"; x.waitReasonWaitForGCCycle = "wait for GC cycle"; x.waitReasonGCWorkerIdle = "GC worker (idle)"; x.waitReasonGCWorkerActive = "GC worker (active)"; x.waitReasonPreempted = "preempted"; x.waitReasonDebugCall = "debug call"; x.waitReasonGCMarkTermination = "GC mark termination"; x.waitReasonStoppingTheWorld = "stopping the world"; x.waitReasonFlushProcCaches = "flushing proc caches"; x.waitReasonTraceGoroutineStatus = "trace goroutine status"; x.waitReasonTraceProcStatus = "trace proc status"; x.waitReasonPageTraceFlush = "page trace flush"; x.waitReasonCoroutine = "coroutine"; });
+    gocpp::array<std::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<std::string, 37>>([](auto& x) {
+        x[waitReasonZero] = "";
+        x[waitReasonGCAssistMarking] = "GC assist marking";
+        x[waitReasonIOWait] = "IO wait";
+        x[waitReasonChanReceiveNilChan] = "chan receive (nil chan)";
+        x[waitReasonChanSendNilChan] = "chan send (nil chan)";
+        x[waitReasonDumpingHeap] = "dumping heap";
+        x[waitReasonGarbageCollection] = "garbage collection";
+        x[waitReasonGarbageCollectionScan] = "garbage collection scan";
+        x[waitReasonPanicWait] = "panicwait";
+        x[waitReasonSelect] = "select";
+        x[waitReasonSelectNoCases] = "select (no cases)";
+        x[waitReasonGCAssistWait] = "GC assist wait";
+        x[waitReasonGCSweepWait] = "GC sweep wait";
+        x[waitReasonGCScavengeWait] = "GC scavenge wait";
+        x[waitReasonChanReceive] = "chan receive";
+        x[waitReasonChanSend] = "chan send";
+        x[waitReasonFinalizerWait] = "finalizer wait";
+        x[waitReasonForceGCIdle] = "force gc (idle)";
+        x[waitReasonSemacquire] = "semacquire";
+        x[waitReasonSleep] = "sleep";
+        x[waitReasonSyncCondWait] = "sync.Cond.Wait";
+        x[waitReasonSyncMutexLock] = "sync.Mutex.Lock";
+        x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock";
+        x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock";
+        x[waitReasonTraceReaderBlocked] = "trace reader (blocked)";
+        x[waitReasonWaitForGCCycle] = "wait for GC cycle";
+        x[waitReasonGCWorkerIdle] = "GC worker (idle)";
+        x[waitReasonGCWorkerActive] = "GC worker (active)";
+        x[waitReasonPreempted] = "preempted";
+        x[waitReasonDebugCall] = "debug call";
+        x[waitReasonGCMarkTermination] = "GC mark termination";
+        x[waitReasonStoppingTheWorld] = "stopping the world";
+        x[waitReasonFlushProcCaches] = "flushing proc caches";
+        x[waitReasonTraceGoroutineStatus] = "trace goroutine status";
+        x[waitReasonTraceProcStatus] = "trace proc status";
+        x[waitReasonPageTraceFlush] = "page trace flush";
+        x[waitReasonCoroutine] = "coroutine";
+    });
     std::string rec::String(golang::runtime::waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))

@@ -155,7 +155,9 @@ namespace golang::time
     }
 
     Location* UTC = & utcLoc;
-    Location utcLoc = gocpp::Init<Location>([](Location& x) { x.name = "UTC"; });
+    Location utcLoc = gocpp::Init<Location>([](auto& x) {
+        x.name = "UTC";
+    });
     Location* Local = & localLoc;
     Location localLoc;
     sync::Once localOnce;
@@ -201,7 +203,13 @@ namespace golang::time
 
     struct Location* fixedZone(std::string name, int offset)
     {
-        auto l = gocpp::InitPtr<Location>([](Location& x) { x.name = name; x.zone = gocpp::slice<zone> { {name, offset, false}}; x.tx = gocpp::slice<zoneTrans> { {alpha, 0, false, false}}; x.cacheStart = alpha; x.cacheEnd = omega; });
+        auto l = gocpp::InitPtr<Location>([](auto& x) {
+            x.name = name;
+            x.zone = gocpp::slice<zone> { {name, offset, false}};
+            x.tx = gocpp::slice<zoneTrans> { {alpha, 0, false, false}};
+            x.cacheStart = alpha;
+            x.cacheEnd = omega;
+        });
         l->cacheZone = & l->zone[0];
         return l;
     }

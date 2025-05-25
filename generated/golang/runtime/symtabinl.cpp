@@ -140,16 +140,27 @@ namespace golang::runtime
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
         {
-            return {gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; }), gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = - 1; })};
+            return {gocpp::Init<inlineUnwinder>([](auto& x) {
+                x.f = f;
+            }), gocpp::Init<inlineFrame>([](auto& x) {
+                x.pc = pc;
+                x.index = - 1;
+            })};
         }
         auto inlTree = (gocpp::array<inlinedCall, 1 << 20>*)(inldata);
-        auto u = gocpp::Init<inlineUnwinder>([](inlineUnwinder& x) { x.f = f; x.inlTree = inlTree; });
+        auto u = gocpp::Init<inlineUnwinder>([](auto& x) {
+            x.f = f;
+            x.inlTree = inlTree;
+        });
         return {u, rec::resolveInternal(gocpp::recv(u), pc)};
     }
 
     struct inlineFrame rec::resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
-        return gocpp::Init<inlineFrame>([](inlineFrame& x) { x.pc = pc; x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false); });
+        return gocpp::Init<inlineFrame>([](auto& x) {
+            x.pc = pc;
+            x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false);
+        });
     }
 
     bool rec::valid(struct inlineFrame uf)

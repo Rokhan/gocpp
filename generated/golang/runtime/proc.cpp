@@ -297,7 +297,10 @@ namespace golang::runtime
             {
                 println("GC forced");
             }
-            gcStart(gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerTime; x.now = nanotime(); }));
+            gcStart(gocpp::Init<gcTrigger>([](auto& x) {
+                x.kind = gcTriggerTime;
+                x.now = nanotime();
+            }));
         }
     }
 
@@ -1125,7 +1128,25 @@ namespace golang::runtime
         return r == stwGCMarkTerm || r == stwGCSweepTerm;
     }
 
-    gocpp::array_base<std::string> stwReasonStrings = gocpp::Init<gocpp::array_base<std::string>>([](gocpp::array_base<std::string>& x) { x.stwUnknown = "unknown"; x.stwGCMarkTerm = "GC mark termination"; x.stwGCSweepTerm = "GC sweep termination"; x.stwWriteHeapDump = "write heap dump"; x.stwGoroutineProfile = "goroutine profile"; x.stwGoroutineProfileCleanup = "goroutine profile cleanup"; x.stwAllGoroutinesStack = "all goroutines stack trace"; x.stwReadMemStats = "read mem stats"; x.stwAllThreadsSyscall = "AllThreadsSyscall"; x.stwGOMAXPROCS = "GOMAXPROCS"; x.stwStartTrace = "start trace"; x.stwStopTrace = "stop trace"; x.stwForTestCountPagesInUse = "CountPagesInUse (test)"; x.stwForTestReadMetricsSlow = "ReadMetricsSlow (test)"; x.stwForTestReadMemStatsSlow = "ReadMemStatsSlow (test)"; x.stwForTestPageCachePagesLeaked = "PageCachePagesLeaked (test)"; x.stwForTestResetDebugLog = "ResetDebugLog (test)"; });
+    gocpp::array<std::string, 17> stwReasonStrings = gocpp::Init<gocpp::array<std::string, 17>>([](auto& x) {
+        x[stwUnknown] = "unknown";
+        x[stwGCMarkTerm] = "GC mark termination";
+        x[stwGCSweepTerm] = "GC sweep termination";
+        x[stwWriteHeapDump] = "write heap dump";
+        x[stwGoroutineProfile] = "goroutine profile";
+        x[stwGoroutineProfileCleanup] = "goroutine profile cleanup";
+        x[stwAllGoroutinesStack] = "all goroutines stack trace";
+        x[stwReadMemStats] = "read mem stats";
+        x[stwAllThreadsSyscall] = "AllThreadsSyscall";
+        x[stwGOMAXPROCS] = "GOMAXPROCS";
+        x[stwStartTrace] = "start trace";
+        x[stwStopTrace] = "stop trace";
+        x[stwForTestCountPagesInUse] = "CountPagesInUse (test)";
+        x[stwForTestReadMetricsSlow] = "ReadMetricsSlow (test)";
+        x[stwForTestReadMemStatsSlow] = "ReadMemStatsSlow (test)";
+        x[stwForTestPageCachePagesLeaked] = "PageCachePagesLeaked (test)";
+        x[stwForTestResetDebugLog] = "ResetDebugLog (test)";
+    });
     
     template<typename T> requires gocpp::GoStruct<T>
     worldStop::operator T()
@@ -1297,7 +1318,10 @@ namespace golang::runtime
             go_throw(bad);
         }
         worldStopped();
-        return gocpp::Init<worldStop>([](worldStop& x) { x.reason = reason; x.start = start; });
+        return gocpp::Init<worldStop>([](auto& x) {
+            x.reason = reason;
+            x.start = start;
+        });
     }
 
     int64_t startTheWorldWithSema(int64_t now, struct worldStop w)
@@ -4194,7 +4218,11 @@ namespace golang::runtime
         auto npcs = gcallers(callergp, 0, pcs.make_slice(0, ));
         auto ipcs = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), npcs);
         copy(ipcs, pcs.make_slice(0, ));
-        ancestors[0] = gocpp::Init<ancestorInfo>([](ancestorInfo& x) { x.pcs = ipcs; x.goid = callergp->goid; x.gopc = callergp->gopc; });
+        ancestors[0] = gocpp::Init<ancestorInfo>([](auto& x) {
+            x.pcs = ipcs;
+            x.goid = callergp->goid;
+            x.gopc = callergp->gopc;
+        });
         auto ancestorsp = go_new(gocpp::Tag<gocpp::slice<ancestorInfo>>());
         *ancestorsp = ancestors;
         return ancestorsp;
@@ -5182,7 +5210,10 @@ namespace golang::runtime
             {
                 idle++;
             }
-            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerTime; x.now = now; })); rec::test(gocpp::recv(t)) && rec::Load(gocpp::recv(forcegc.idle)))
+            if(auto t = (gocpp::Init<gcTrigger>([](auto& x) {
+                x.kind = gcTriggerTime;
+                x.now = now;
+            })); rec::test(gocpp::recv(t)) && rec::Load(gocpp::recv(forcegc.idle)))
             {
                 lock(& forcegc.lock);
                 rec::Store(gocpp::recv(forcegc.idle), false);
@@ -6246,7 +6277,11 @@ namespace golang::runtime
 
     struct randomEnum rec::start(struct randomOrder* ord, uint32_t i)
     {
-        return gocpp::Init<randomEnum>([](randomEnum& x) { x.count = ord->count; x.pos = i % ord->count; x.inc = ord->coprimes[i / ord->count % uint32_t(len(ord->coprimes))]; });
+        return gocpp::Init<randomEnum>([](auto& x) {
+            x.count = ord->count;
+            x.pos = i % ord->count;
+            x.inc = ord->coprimes[i / ord->count % uint32_t(len(ord->coprimes))];
+        });
     }
 
     bool rec::done(struct randomEnum* go_enum)

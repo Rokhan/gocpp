@@ -83,12 +83,20 @@ namespace golang::runtime
 
     struct traceWriter rec::writer(struct traceLocker tl)
     {
-        return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = tl; x.traceBuf = tl.mp->trace.buf[tl.gen % 2]; });
+        return gocpp::Init<traceWriter>([](auto& x) {
+            x.traceLocker = tl;
+            x.traceBuf = tl.mp->trace.buf[tl.gen % 2];
+        });
     }
 
     struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf)
     {
-        return gocpp::Init<traceWriter>([](traceWriter& x) { x.traceLocker = gocpp::Init<traceLocker>([](traceLocker& x) { x.gen = gen; }); x.traceBuf = buf; });
+        return gocpp::Init<traceWriter>([](auto& x) {
+            x.traceLocker = gocpp::Init<traceLocker>([](auto& x) {
+            x.gen = gen;
+        });
+            x.traceBuf = buf;
+        });
     }
 
     void rec::end(struct traceWriter w)

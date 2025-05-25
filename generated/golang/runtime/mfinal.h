@@ -53,7 +53,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct finalizer& value);
-    extern gocpp::array_base<unsigned char> finalizer1;
+    extern gocpp::array<unsigned char, 5> finalizer1;
     void lockRankMayQueueFinalizer();
     void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
     void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback);

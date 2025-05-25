@@ -674,7 +674,10 @@ namespace golang::runtime
 
     std::string gostringnocopy(unsigned char* str)
     {
-        auto ss = gocpp::Init<stringStruct>([](stringStruct& x) { x.str = unsafe::Pointer(str); x.len = findnull(str); });
+        auto ss = gocpp::Init<stringStruct>([](auto& x) {
+            x.str = unsafe::Pointer(str);
+            x.len = findnull(str);
+        });
         auto s = *(std::string*)(unsafe::Pointer(& ss));
         return s;
     }

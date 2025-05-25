@@ -359,7 +359,10 @@ namespace golang::runtime
             {
                 return;
             }
-            auto ug = gocpp::Init<untracedG>([](untracedG& x) { x.gp = gp; x.mid = - 1; });
+            auto ug = gocpp::Init<untracedG>([](auto& x) {
+                x.gp = gp;
+                x.mid = - 1;
+            });
             systemstack([=]() mutable -> void
             {
                 auto me = getg()->m->curg;

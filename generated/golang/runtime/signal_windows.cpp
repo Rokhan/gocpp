@@ -454,13 +454,19 @@ namespace golang::runtime
             auto gp = getg();
             if(gp->sig != 0)
             {
-                info = gocpp::InitPtr<exceptionrecord>([](exceptionrecord& x) { x.exceptionaddress = gp->sigpc; x.exceptioncode = gp->sig; x.numberparameters = 2; });
+                info = gocpp::InitPtr<exceptionrecord>([](auto& x) {
+                    x.exceptionaddress = gp->sigpc;
+                    x.exceptioncode = gp->sig;
+                    x.numberparameters = 2;
+                });
                 info->exceptioninformation[0] = gp->sigcode0;
                 info->exceptioninformation[1] = gp->sigcode1;
             }
             else
             {
-                info = gocpp::InitPtr<exceptionrecord>([](exceptionrecord& x) { x.exceptioncode = 2; });
+                info = gocpp::InitPtr<exceptionrecord>([](auto& x) {
+                    x.exceptioncode = 2;
+                });
             }
         }
         auto FAIL_FAST_GENERATE_EXCEPTION_ADDRESS = 0x1;

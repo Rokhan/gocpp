@@ -102,7 +102,9 @@ namespace golang::os
 
     std::tuple<struct rawConn*, struct gocpp::error> newRawConn(struct File* file)
     {
-        return {gocpp::InitPtr<rawConn>([](rawConn& x) { x.file = file; }), nullptr};
+        return {gocpp::InitPtr<rawConn>([](auto& x) {
+            x.file = file;
+        }), nullptr};
     }
 
 }

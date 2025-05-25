@@ -935,7 +935,9 @@ namespace golang::runtime
         }
         if(shouldhelpgc)
         {
-            if(auto t = (gocpp::Init<gcTrigger>([](gcTrigger& x) { x.kind = gcTriggerHeap; })); rec::test(gocpp::recv(t)))
+            if(auto t = (gocpp::Init<gcTrigger>([](auto& x) {
+                x.kind = gcTriggerHeap;
+            })); rec::test(gocpp::recv(t)))
             {
                 gcStart(t);
             }

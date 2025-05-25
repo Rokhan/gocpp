@@ -517,8 +517,18 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    syscall::GUID WSAID_WSASENDMSG = gocpp::Init<syscall::GUID>([](syscall::GUID& x) { x.Data1 = 0xa441e712; x.Data2 = 0x754f; x.Data3 = 0x43ca; x.Data4 = gocpp::array<unsigned char, 8> {0x84, 0xa7, 0x0d, 0xee, 0x44, 0xcf, 0x60, 0x6d}; });
-    syscall::GUID WSAID_WSARECVMSG = gocpp::Init<syscall::GUID>([](syscall::GUID& x) { x.Data1 = 0xf689d7c8; x.Data2 = 0x6f1f; x.Data3 = 0x436b; x.Data4 = gocpp::array<unsigned char, 8> {0x8a, 0x53, 0xe5, 0x4f, 0xe3, 0x51, 0xc3, 0x22}; });
+    syscall::GUID WSAID_WSASENDMSG = gocpp::Init<syscall::GUID>([](auto& x) {
+        x.Data1 = 0xa441e712;
+        x.Data2 = 0x754f;
+        x.Data3 = 0x43ca;
+        x.Data4 = gocpp::array<unsigned char, 8> {0x84, 0xa7, 0x0d, 0xee, 0x44, 0xcf, 0x60, 0x6d};
+    });
+    syscall::GUID WSAID_WSARECVMSG = gocpp::Init<syscall::GUID>([](auto& x) {
+        x.Data1 = 0xf689d7c8;
+        x.Data2 = 0x6f1f;
+        x.Data3 = 0x436b;
+        x.Data4 = gocpp::array<unsigned char, 8> {0x8a, 0x53, 0xe5, 0x4f, 0xe3, 0x51, 0xc3, 0x22};
+    });
     struct gocpp_id_0
     {
         sync::Once once;

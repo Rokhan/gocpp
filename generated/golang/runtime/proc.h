@@ -212,7 +212,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sysmontick& value);
-    extern gocpp::array_base<std::string> stwReasonStrings;
+    extern gocpp::array<std::string, 17> stwReasonStrings;
     extern bool needSysmonWorkaround;
     void main_main();
     void main();

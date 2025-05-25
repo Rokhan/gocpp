@@ -250,7 +250,11 @@ namespace golang::strconv
         if(shortest)
         {
             roundShortest(d, mant, exp, flt);
-            digs = gocpp::Init<decimalSlice>([](decimalSlice& x) { x.d = d->d.make_slice(0, ); x.nd = d->nd; x.dp = d->dp; });
+            digs = gocpp::Init<decimalSlice>([](auto& x) {
+                x.d = d->d.make_slice(0, );
+                x.nd = d->nd;
+                x.dp = d->dp;
+            });
             //Go switch emulation
             {
                 auto condition = fmt;
@@ -306,7 +310,11 @@ namespace golang::strconv
                         break;
                 }
             }
-            digs = gocpp::Init<decimalSlice>([](decimalSlice& x) { x.d = d->d.make_slice(0, ); x.nd = d->nd; x.dp = d->dp; });
+            digs = gocpp::Init<decimalSlice>([](auto& x) {
+                x.d = d->d.make_slice(0, );
+                x.nd = d->nd;
+                x.dp = d->dp;
+            });
         }
         return formatDigits(dst, shortest, neg, digs, prec, fmt);
     }

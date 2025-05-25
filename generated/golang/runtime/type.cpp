@@ -223,7 +223,9 @@ namespace golang::runtime
                     println("runtime: nameOff", hex(off), "out of range", hex(md->types), "-", hex(md->etypes));
                     go_throw("runtime: name offset out of range");
                 }
-                return gocpp::Init<runtime::name>([](runtime::name& x) { x.Bytes = (unsigned char*)(unsafe::Pointer(res)); });
+                return gocpp::Init<runtime::name>([](auto& x) {
+                    x.Bytes = (unsigned char*)(unsafe::Pointer(res));
+                });
             }
         }
         reflectOffsLock();
@@ -238,7 +240,9 @@ namespace golang::runtime
             }
             go_throw("runtime: name offset base pointer out of range");
         }
-        return gocpp::Init<runtime::name>([](runtime::name& x) { x.Bytes = (unsigned char*)(res); });
+        return gocpp::Init<runtime::name>([](auto& x) {
+            x.Bytes = (unsigned char*)(res);
+        });
     }
 
     runtime::name rec::nameOff(struct rtype t, golang::runtime::nameOff off)

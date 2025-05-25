@@ -117,8 +117,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
-    extern gocpp::array_base<std::string> boundsErrorFmts;
-    extern gocpp::array_base<std::string> boundsNegErrorFmts;
+    extern gocpp::array<std::string, 9> boundsErrorFmts;
+    extern gocpp::array<std::string, 8> boundsNegErrorFmts;
     struct stringer : gocpp::Interface
     {
         stringer(){}

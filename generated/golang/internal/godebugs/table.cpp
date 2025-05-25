@@ -59,7 +59,102 @@ namespace golang::godebugs
         return value.PrintTo(os);
     }
 
-    gocpp::slice<Info> All = gocpp::slice<Info> {gocpp::Init<>([](& x) { x.Name = "execerrdot"; x.Package = "os/exec"; }), gocpp::Init<>([](& x) { x.Name = "gocachehash"; x.Package = "cmd/go"; }), gocpp::Init<>([](& x) { x.Name = "gocachetest"; x.Package = "cmd/go"; }), gocpp::Init<>([](& x) { x.Name = "gocacheverify"; x.Package = "cmd/go"; }), gocpp::Init<>([](& x) { x.Name = "gotypesalias"; x.Package = "go/types"; }), gocpp::Init<>([](& x) { x.Name = "http2client"; x.Package = "net/http"; }), gocpp::Init<>([](& x) { x.Name = "http2debug"; x.Package = "net/http"; x.Opaque = true; }), gocpp::Init<>([](& x) { x.Name = "http2server"; x.Package = "net/http"; }), gocpp::Init<>([](& x) { x.Name = "httplaxcontentlength"; x.Package = "net/http"; x.Changed = 22; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "httpmuxgo121"; x.Package = "net/http"; x.Changed = 22; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "installgoroot"; x.Package = "go/build"; }), gocpp::Init<>([](& x) { x.Name = "jstmpllitinterp"; x.Package = "html/template"; }), gocpp::Init<>([](& x) { x.Name = "multipartmaxheaders"; x.Package = "mime/multipart"; }), gocpp::Init<>([](& x) { x.Name = "multipartmaxparts"; x.Package = "mime/multipart"; }), gocpp::Init<>([](& x) { x.Name = "multipathtcp"; x.Package = "net"; }), gocpp::Init<>([](& x) { x.Name = "netdns"; x.Package = "net"; x.Opaque = true; }), gocpp::Init<>([](& x) { x.Name = "panicnil"; x.Package = "runtime"; x.Changed = 21; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "randautoseed"; x.Package = "math/rand"; }), gocpp::Init<>([](& x) { x.Name = "tarinsecurepath"; x.Package = "archive/tar"; }), gocpp::Init<>([](& x) { x.Name = "tls10server"; x.Package = "crypto/tls"; x.Changed = 22; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "tlsmaxrsasize"; x.Package = "crypto/tls"; }), gocpp::Init<>([](& x) { x.Name = "tlsrsakex"; x.Package = "crypto/tls"; x.Changed = 22; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "tlsunsafeekm"; x.Package = "crypto/tls"; x.Changed = 22; x.Old = "1"; }), gocpp::Init<>([](& x) { x.Name = "x509sha1"; x.Package = "crypto/x509"; }), gocpp::Init<>([](& x) { x.Name = "x509usefallbackroots"; x.Package = "crypto/x509"; }), gocpp::Init<>([](& x) { x.Name = "x509usepolicies"; x.Package = "crypto/x509"; }), gocpp::Init<>([](& x) { x.Name = "zipinsecurepath"; x.Package = "archive/zip"; })};
+    gocpp::slice<Info> All = gocpp::slice<Info> {gocpp::Init<>([](auto& x) {
+        x.Name = "execerrdot";
+        x.Package = "os/exec";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "gocachehash";
+        x.Package = "cmd/go";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "gocachetest";
+        x.Package = "cmd/go";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "gocacheverify";
+        x.Package = "cmd/go";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "gotypesalias";
+        x.Package = "go/types";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "http2client";
+        x.Package = "net/http";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "http2debug";
+        x.Package = "net/http";
+        x.Opaque = true;
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "http2server";
+        x.Package = "net/http";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "httplaxcontentlength";
+        x.Package = "net/http";
+        x.Changed = 22;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "httpmuxgo121";
+        x.Package = "net/http";
+        x.Changed = 22;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "installgoroot";
+        x.Package = "go/build";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "jstmpllitinterp";
+        x.Package = "html/template";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "multipartmaxheaders";
+        x.Package = "mime/multipart";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "multipartmaxparts";
+        x.Package = "mime/multipart";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "multipathtcp";
+        x.Package = "net";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "netdns";
+        x.Package = "net";
+        x.Opaque = true;
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "panicnil";
+        x.Package = "runtime";
+        x.Changed = 21;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "randautoseed";
+        x.Package = "math/rand";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "tarinsecurepath";
+        x.Package = "archive/tar";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "tls10server";
+        x.Package = "crypto/tls";
+        x.Changed = 22;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "tlsmaxrsasize";
+        x.Package = "crypto/tls";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "tlsrsakex";
+        x.Package = "crypto/tls";
+        x.Changed = 22;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "tlsunsafeekm";
+        x.Package = "crypto/tls";
+        x.Changed = 22;
+        x.Old = "1";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "x509sha1";
+        x.Package = "crypto/x509";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "x509usefallbackroots";
+        x.Package = "crypto/x509";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "x509usepolicies";
+        x.Package = "crypto/x509";
+    }), gocpp::Init<>([](auto& x) {
+        x.Name = "zipinsecurepath";
+        x.Package = "archive/zip";
+    })};
     struct Info* Lookup(std::string name)
     {
         auto lo = 0;

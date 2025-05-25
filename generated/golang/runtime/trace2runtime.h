@@ -97,8 +97,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
-    extern gocpp::array_base<std::string> traceBlockReasonStrings;
-    extern gocpp::array_base<std::string> traceGoStopReasonStrings;
+    extern gocpp::array<std::string, 15> traceBlockReasonStrings;
+    extern gocpp::array<std::string, 3> traceGoStopReasonStrings;
     struct traceLocker
     {
         m* mp;

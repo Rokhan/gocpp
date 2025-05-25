@@ -251,7 +251,13 @@ namespace golang::runtime
         {
             rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };
-        s->sleepController = gocpp::Init<piController>([](piController& x) { x.kp = 0.3375; x.ti = 3.2e6; x.tt = 1e9; x.min = 0.001; x.max = 1000.0; });
+        s->sleepController = gocpp::Init<piController>([](auto& x) {
+            x.kp = 0.3375;
+            x.ti = 3.2e6;
+            x.tt = 1e9;
+            x.min = 0.001;
+            x.max = 1000.0;
+        });
         s->sleepRatio = startingScavSleepRatio;
         if(s->scavenge == nullptr)
         {
@@ -897,7 +903,12 @@ namespace golang::runtime
 
     struct scavChunkData unpackScavChunkData(uint64_t sc)
     {
-        return gocpp::Init<scavChunkData>([](scavChunkData& x) { x.inUse = uint16_t(sc); x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask; x.gen = uint32_t(sc >> 32); x.scavChunkFlags = scavChunkFlags(uint8_t(sc >> (16 + logScavChunkInUseMax)) & scavChunkFlagsMask); });
+        return gocpp::Init<scavChunkData>([](auto& x) {
+            x.inUse = uint16_t(sc);
+            x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask;
+            x.gen = uint32_t(sc >> 32);
+            x.scavChunkFlags = scavChunkFlags(uint8_t(sc >> (16 + logScavChunkInUseMax)) & scavChunkFlagsMask);
+        });
     }
 
     uint64_t rec::pack(struct scavChunkData sc)

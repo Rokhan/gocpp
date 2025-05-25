@@ -270,7 +270,10 @@ namespace golang::sync
                 go_any actual;
                 bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](readOnly& x) { x.m = read.m; x.amended = true; }));
+                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+                    x.m = read.m;
+                    x.amended = true;
+                }));
             }
             m->dirty[key] = newEntry(value);
             std::tie(actual, loaded) = std::tuple{value, false};
@@ -471,7 +474,10 @@ namespace golang::sync
                 go_any previous;
                 bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](readOnly& x) { x.m = read.m; x.amended = true; }));
+                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+                    x.m = read.m;
+                    x.amended = true;
+                }));
             }
             m->dirty[key] = newEntry(value);
         }
@@ -562,7 +568,9 @@ namespace golang::sync
             read = rec::loadReadOnly(gocpp::recv(m));
             if(read.amended)
             {
-                read = gocpp::Init<readOnly>([](readOnly& x) { x.m = m->dirty; });
+                read = gocpp::Init<readOnly>([](auto& x) {
+                    x.m = m->dirty;
+                });
                 auto copyRead = read;
                 rec::Store(gocpp::recv(m->read), & copyRead);
                 m->dirty = nullptr;
@@ -591,7 +599,9 @@ namespace golang::sync
         {
             return;
         }
-        rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](readOnly& x) { x.m = m->dirty; }));
+        rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+            x.m = m->dirty;
+        }));
         m->dirty = nullptr;
         m->misses = 0;
     }

@@ -286,7 +286,12 @@ namespace golang::runtime
         {
             p->parts = oldParts;
             p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
-            auto part = gocpp::Init<abiPart>([](abiPart& x) { x.kind = abiPartStack; x.srcStackOffset = p->srcStackSize; x.dstStackOffset = p->dstStackSize; x.len = t->Size_; });
+            auto part = gocpp::Init<abiPart>([](auto& x) {
+                x.kind = abiPartStack;
+                x.srcStackOffset = p->srcStackSize;
+                x.dstStackOffset = p->dstStackSize;
+                x.len = t->Size_;
+            });
             if(len(p->parts) == 0 || ! rec::tryMerge(gocpp::recv(p->parts[len(p->parts) - 1]), part))
             {
                 p->parts = append(p->parts, part);
@@ -372,7 +377,12 @@ namespace golang::runtime
         {
             return false;
         }
-        p->parts = append(p->parts, gocpp::Init<abiPart>([](abiPart& x) { x.kind = abiPartReg; x.srcStackOffset = p->srcStackSize + offset; x.dstRegister = p->dstRegisters; x.len = size; }));
+        p->parts = append(p->parts, gocpp::Init<abiPart>([](auto& x) {
+            x.kind = abiPartReg;
+            x.srcStackOffset = p->srcStackSize + offset;
+            x.dstRegister = p->dstRegisters;
+            x.len = size;
+        }));
         p->dstRegisters++;
         return true;
     }

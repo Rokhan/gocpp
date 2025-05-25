@@ -38,7 +38,7 @@
 
 namespace golang::runtime
 {
-    extern gocpp::array_base<std::string> gStatusStrings;
+    extern gocpp::array<std::string, 10> gStatusStrings;
     struct unwinder
     {
         stkframe frame;

@@ -30,8 +30,7 @@ GOCPP_STRICT_MODE = false
 GOCPP_VERBOSE = false
 GOCPP_IGNORE_DEPENDENCIES = false
 
-GOCPP_PARAMETERS = -parseFmt=false
-GOCPP_PARAMETERS += -strictMode=$(GOCPP_STRICT_MODE)
+GOCPP_PARAMETERS = -strictMode=$(GOCPP_STRICT_MODE)
 GOCPP_PARAMETERS += -alwaysRegenerate=$(GOCPP_ALWAYS_REGENERATE)
 GOCPP_PARAMETERS += -ignoreDependencies=$(GOCPP_IGNORE_DEPENDENCIES)
 GOCPP_PARAMETERS += -verbose=$(GOCPP_VERBOSE)
@@ -100,6 +99,13 @@ interface: $(filter $(LOGDIR)/tests/TourOfGo/methods/interface%, $(OUT_EXE_TEST_
 
 gocpp.exe: cmd/main.go cmd/constants.go cmd/utils.go
 	go build -o gocpp.exe cmd/main.go cmd/constants.go cmd/utils.go
+
+
+CUSTOM_BUILD_INPUT = tests/HelloWorld.go
+
+custom-build: gocpp.exe
+	./gocpp.exe $(GOCPP_PARAMETERS) -input $(CUSTOM_BUILD_INPUT) > $(LOGDIR)/gocpp.log
+
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $<")

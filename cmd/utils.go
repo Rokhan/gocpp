@@ -8,7 +8,6 @@ import (
 	"go/token"
 	"go/types"
 	"io"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -187,6 +186,19 @@ func JoinWithSuffix(elements []string, separator string) string {
 	return strings.Join(elements, separator) + separator
 }
 
+// clean and join path function that keeps unix style paths on all platforms
+func CleanPath(path string) string {
+	path = filepath.Clean(path)
+	path = strings.ReplaceAll(path, "\\", "/") // convert to unix path
+	return path
+}
+
+func JoinPath(paths ...string) string {
+	path := filepath.Join(paths...)
+	path = strings.ReplaceAll(path, "\\", "/") // convert to unix path
+	return path
+}
+
 type outFile struct {
 	name   string
 	file   *os.File
@@ -219,18 +231,17 @@ func createOutputExt(outdir, name, ext string) outFile {
 }
 
 func createOutput(outdir, name string) outFile {
-	var outName = outdir + "/" + name
+	var outName = JoinPath(outdir, name)
 	var outDir = path.Dir(outName)
 
 	errDir := os.MkdirAll(outDir, os.ModePerm)
 	if errDir != nil {
-		log.Fatal(errDir)
+		panic(errDir)
 	}
 
 	file, err := os.Create(outName)
 	if err != nil {
-		log.Fatal(err)
-		panic("cannot create output file")
+		panic(err)
 	}
 
 	writer := bufio.NewWriter(file)

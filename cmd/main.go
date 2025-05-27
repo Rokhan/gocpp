@@ -12,9 +12,9 @@ import (
 	"go/token"
 	"go/types"
 	"io"
-	"log"
 	"os"
 	"reflect"
+	"runtime"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -319,8 +319,7 @@ func (cv *cppConverter) InitAndParse() {
 		parsedFile, err := parser.ParseFile(cv.shared.fileSet, cv.inputName, nil, parser.ParseComments)
 		cv.astFile = parsedFile
 		if err != nil {
-			fmt.Println(err)
-			return
+			panic(err)
 		}
 	}
 }
@@ -2092,7 +2091,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 				cv.Panicf("load: %v\n", err)
 			}
 			if packages.PrintErrors(pkgs) > 0 {
-				os.Exit(1)
+				panic("convertSpecs, packages.PrintErrors(pkgs) > 0")
 			}
 
 			// Print the names of the source files
@@ -3652,7 +3651,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 	for pkgName, files := range astFiles {
 		if err := parentCv.LoadAndCheckDefs(pkgName, shared.fileSet, files...); err != nil {
-			log.Fatal(err) // type error
+			panic(err) // type error
 		}
 
 		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgName)
@@ -3704,7 +3703,6 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 func main() {
 
 	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
-	parseFmtDir := flag.Bool("parseFmt", false, "temporary test parameter")
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
@@ -3716,26 +3714,11 @@ func main() {
 	flag.Parse()
 
 	fset := token.NewFileSet()
-
-	if *parseFmtDir {
-		pkgs, errPkg := parser.ParseDir(fset, "F:/Dev/Golang/src/fmt", nil, parser.ParseComments)
-		if errPkg != nil {
-			fmt.Println(errPkg)
-			return
-		}
-
-		for pkg, v := range pkgs {
-			for file := range v.Files {
-				fmt.Printf("%v -> %v\n", pkg, file)
-			}
-		}
-	}
-
 	exePath, _ := os.Executable()
 	fileInfo, _ := os.Stat(exePath)
 
 	shared := buildSharedData()
-	shared.globalSubDir = "golang/"
+	shared.globalSubDir = "golang/" // TODO, remove '/' and use JoinPath when using it
 	shared.fileSet = fset
 	shared.cppOutDir = *cppOutDir
 	shared.supportHeader = "gocpp/support"
@@ -3745,20 +3728,26 @@ func main() {
 	shared.alwaysRegenerate = *alwaysRegenerate
 	shared.ignoreDeps = *ignoreDeps
 
+	gorootSrc := JoinPath(CleanPath(runtime.GOROOT()), "src", "")
+
 	cv := new(cppConverter)
 	cv.shared = shared
 	cv.genMakeFile = *genMakeFile
 	cv.binOutDir = *binOutDir
-	cv.inputName = *inputName
+	cv.inputName = CleanPath(*inputName)
 	// No global subdir for main target at the moment
-	cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
+	if strings.HasPrefix(cv.inputName, gorootSrc) {
+		cv.baseName = JoinPath(shared.globalSubDir, strings.TrimPrefix(strings.TrimSuffix(cv.inputName, ".go"), gorootSrc))
+	} else {
+		cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
+	}
 	cv.srcBaseName = strings.TrimSuffix(cv.inputName, ".go")
 	cv.tryRecover = false
 
 	cv.InitAndParse()
 
 	if err := cv.LoadAndCheckDefs(cv.astFile.Name.Name, fset, cv.astFile); err != nil {
-		log.Fatal(err) // type error
+		panic(err) // type error
 	}
 
 	defer cv.PrintDefsUsage()

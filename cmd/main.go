@@ -226,7 +226,7 @@ func printCppOutro(cv *cppConverter) {
 		fmt.Fprintf(out, "{\n")
 		fmt.Fprintf(out, "    try\n")
 		fmt.Fprintf(out, "    {\n")
-		fmt.Fprintf(out, "        std::cout << std::boolalpha << std::fixed << std::setprecision(5);\n")
+		fmt.Fprintf(out, "        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;\n")
 		fmt.Fprintf(out, "        golang::%v::main();\n", cv.namespace)
 		fmt.Fprintf(out, "        return 0;\n")
 		fmt.Fprintf(out, "    }\n")
@@ -3296,10 +3296,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 			cv.DeclareVars(params)
 
-			var captureExpr = "[=]"
-			if cv.scopes.Len() <= 1 {
-				captureExpr = "[]" // global scope
-			}
+			captureExpr := cv.getCaptureExpr()
 
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
 
@@ -3367,7 +3364,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			if fun.Name == "recover" {
 				cv.BuffExprPrintf(buf, "gocpp::recover(")
 			} else {
-				cv.BuffExprPrintf(buf, "%v(", cv.convertExpr(fun))
+				cv.BuffExprPrintf(buf, "%v(", GetCppFunc(fun.Name))
 			}
 
 		default:
@@ -3393,7 +3390,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		if n.Name == "iota" {
 			return mkCppExpr(cv.Iota())
 		} else {
-			return mkCppExpr(GetCppFunc(n.Name))
+			return mkCppExpr(GetCppName(n.Name))
 		}
 
 	case *ast.IndexExpr:
@@ -3420,6 +3417,8 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	case *ast.SliceExpr:
 		if n.Slice3 {
 			return ExprPrintf("%s.make_slice(%s, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+		} else if n.Low == nil && n.High == nil {
+			return ExprPrintf("%s.make_slice(0)", cv.convertExpr(n.X))
 		} else if n.Low == nil {
 			return ExprPrintf("%s.make_slice(0, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High))
 		} else if n.High == nil {
@@ -3438,6 +3437,14 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
 	panic("convertExprType, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) getCaptureExpr() string {
+	var captureExpr = "[=]"
+	if cv.scopes.Len() <= 1 {
+		captureExpr = "[]" // global scope
+	}
+	return captureExpr
 }
 
 func (cv *cppConverter) isNameSpace(expr ast.Expr) bool {
@@ -3471,7 +3478,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		if addPtr {
 			ptrSuffix = "Ptr"
 		}
-		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>([](auto& x) {\n", ptrSuffix, litType)
+		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>(%s(auto& x) {\n", ptrSuffix, litType, cv.getCaptureExpr())
 
 		// Maybe we should use a special 'indent' token  that will be replaced later
 		// instead of using cv.cpp.Indent() whhereas we have no guarantee that
@@ -3479,12 +3486,16 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		if isArrayType(n.Type) {
 			for _, elt := range n.Elts {
 				kv := elt.(*ast.KeyValueExpr)
-				cv.BuffExprPrintf(buf, "%s    x[%s] = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.cpp.indent++
+				cv.BuffExprPrintf(buf, "%sx[%s] = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.cpp.indent--
 			}
 		} else {
 			for _, elt := range n.Elts {
 				kv := elt.(*ast.KeyValueExpr)
-				cv.BuffExprPrintf(buf, "%s    x.%s = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.cpp.indent++
+				cv.BuffExprPrintf(buf, "%sx.%s = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.cpp.indent--
 			}
 		}
 		cv.BuffExprPrintf(buf, "%s})", cv.cpp.Indent())

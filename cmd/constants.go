@@ -42,6 +42,10 @@ var stdTypeMapping = map[string]string{
 
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
+	// map go keywords to C++ keywords
+	"nil": "nullptr",
+
+	// avoid C++ keywords conflicts
 	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
 	"class":     "go_class",     // keyword
 	"do":        "go_do",        // keyword
@@ -253,12 +257,15 @@ var stdFuncMapping = map[string]string{
 	"wc::Test": "mocklib::wcTest",
 
 	// Predefined functions
+	"new":            "new",
 	"delete":         "remove",
+	"go_new":         "new",    // if already renamed by keyword mapping
 	"go_delete":      "remove", // if already renamed by keyword mapping
 	"make":           "gocpp::make",
+	"max":            "gocpp::max",
+	"min":            "gocpp::min",
 	"panic":          "gocpp::panic",
 	"recover":        "gocpp::recover",
-	"nil":            "nullptr",
 	"unsafe::Sizeof": "gocpp::Sizeof",
 
 	// type conversions

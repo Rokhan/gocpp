@@ -34,4 +34,14 @@ func main() {
 	fmt.Println("Pi:", Pi)
 	t := toto{}
 	fmt.Println("toto.Pi:", t.Pi())
+
+	new := "new"
+	fmt.Println("new:", new)
+
+	newFunction()
+}
+
+func newFunction() {
+	tt := new(toto)
+	fmt.Println("tt:", tt)
 }

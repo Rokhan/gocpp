@@ -226,6 +226,40 @@ namespace gocpp
         return input.length();
     }
 
+    template<typename T>
+    inline T max(T a)
+    {
+        return a;
+    }
+
+    template<typename T1, typename T2, typename... Ts>
+    inline std::common_type_t<T1, T2, Ts...> max(T1 a, T2 b, Ts... args)
+    {
+        return max((a > b ? a : b), args...);
+    }
+
+    template<typename T>
+    inline T min(T a)
+    {
+        return a;
+    }
+
+    template<typename T1, typename T2, typename... Ts>
+    inline std::common_type_t<T1, T2, Ts...> min(T1 a, T2 b, Ts... args)
+    {
+        return min((a < b ? a : b), args...);
+    }
+
+    inline complex64 complex(float r, float i)
+    {
+        return std::complex<float>(r, i);
+    }
+
+    inline complex128 complex(double r, double i)
+    {
+        return std::complex<double>(r, i);
+    }
+
     template<typename T> struct Tag {};
 
     template <typename T>
@@ -317,7 +351,7 @@ namespace gocpp
         }
     };
 
-    template <typename T>
+    template <typename T, typename Error>
     struct result_or_error : std::pair<T, bool>
     {
         result_or_error(const std::pair<T, bool>& src) : std::pair<T, bool>(src) {}
@@ -325,10 +359,15 @@ namespace gocpp
         operator const T() const 
         {
             if(!this->second)
-                panic("no value in channel");
+                panic(Error::error_message());
 
             return this->first;
         }
+    };
+
+    struct ErrNoValueInChannel
+    {
+        static std::string error_message() { return "no value in channel"; }
     };
 
     template <typename T>
@@ -408,7 +447,7 @@ namespace gocpp
             return optVal.hasValue;
         }
 
-        result_or_error<T> recv()
+        result_or_error<T, ErrNoValueInChannel> recv()
         {
             return mImpl->receive();
         }
@@ -562,16 +601,16 @@ namespace gocpp
     template<typename T>
     concept GoInterface = IsGoInterface<T>::value;
 
-    template<typename T>
-    T Init(void (init)(T&))
+    template<typename T, typename Func>
+    T Init(Func init)
     {
         T value;
         init(value);
         return value;
     }
 
-    template<typename T>
-    T* InitPtr(void (init)(T&))
+    template<typename T, typename Func>
+    T* InitPtr(Func init)
     {
         auto value = new T;
         init(*value);
@@ -596,6 +635,12 @@ namespace gocpp
     [[noreturn]] void panic(const std::string& message)
     {
         throw GoPanic(message);
+    }
+
+    template<typename ErrorType> requires IsError<ErrorType>    
+    [[noreturn]] void panic(const ErrorType& error)
+    {
+        throw GoPanic(Error(error));
     }
 
     go_any recover()
@@ -894,7 +939,22 @@ namespace gocpp
 
             panic("invalid slice");
         }
-        
+
+        friend inline int copy(slice<T> dst, slice<T> src)
+        {
+            if(!dst.mArray || !src.mArray)
+            {
+                return 0;
+            }
+
+            int  len = min(dst.mArray->size(), src.mArray->size());
+            for(size_t i = 0; i < len; i++)
+            {
+                dst[i] = src[i];
+            }
+            return len;
+        }
+
         friend inline size_t len(const slice<T>& input)
         {
             return input.mEnd - input.mStart;
@@ -1122,30 +1182,41 @@ namespace gocpp
     }
 
     template <typename T>
-    T getValue(std::any value)
+    struct ErrInvalidValueCast
+    {
+        static std::string error_message()
+        {
+            return std::string("invalid value cast to '") + typeid(T).name() + "'"; 
+            // TODO, find a way to get value in error message for debugging
+            //return std::string("invalid value cast to type '") + typeid(T).name() + "' from type '" + value.type().name() + "'" };
+        }
+    };
+
+    template <typename T>
+    result_or_error<T, ErrInvalidValueCast<T>> getValue(std::any value)
     {
         if(value.type() == typeid(T))
         {
-            return std::any_cast<T>(value);
+            return std::make_pair(std::any_cast<T>(value), true);
         }
 
-        panic(std::string("invalid value cast, ") + typeid(T).name() + ", " + value.type().name());
+        return std::make_pair(T{}, false);
     }
     
     template<>
-    std::string getValue(std::any value)
+    result_or_error<std::string, ErrInvalidValueCast<std::string>> getValue(std::any value)
     {
         if(value.type() == typeid(std::string))
         {
-            return std::any_cast<std::string>(value);
+            return std::make_pair(std::any_cast<std::string>(value), true);
         }
         
         if(value.type() == typeid(const char * const))
         {
-            return std::any_cast<const char * const>(value);
+            return std::make_pair(std::string(std::any_cast<const char * const>(value)), true);
         }
 
-        panic(std::string("invalid value cast, ") + typeid(std::string).name() + ", " + value.type().name());
+        return std::make_pair(std::string{}, false);
     }
 }
 
@@ -1442,8 +1513,8 @@ namespace mocklib
         std::cout << value;
     }
 
-    template<typename T>
-    void Print(const gocpp::result_or_error<T>& value)
+    template<typename T, typename E>
+    void Print(const gocpp::result_or_error<T, E>& value)
     {
         std::cout << value.first;
     }

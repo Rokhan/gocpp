@@ -586,7 +586,7 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 					}
 				}
 
-			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named:
+			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.TypeParam:
 				// Nothing to do
 
 			default:

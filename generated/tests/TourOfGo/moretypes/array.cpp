@@ -102,7 +102,7 @@ namespace golang::main
         mocklib::Println(a);
         auto primes = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};
         mocklib::Println(primes);
-        auto ints = gocpp::array_base<int> {1, 2, 3};
+        auto ints = gocpp::array<int, 3> {1, 2, 3};
         mocklib::Println(ints);
         auto st1 = main::semTable1 { {1},  {1}};
         mocklib::Println(st1);
@@ -116,7 +116,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

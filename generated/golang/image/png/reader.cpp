@@ -430,7 +430,7 @@ namespace golang::png
                         return err;
                     }
                     rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
-                    copy(d->transparent.make_slice(0, ), d->tmp.make_slice(0, length));
+                    copy(d->transparent.make_slice(0), d->tmp.make_slice(0, length));
                     //Go switch emulation
                     {
                         auto condition = d->cb;
@@ -465,7 +465,7 @@ namespace golang::png
                         return err;
                     }
                     rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, n));
-                    copy(d->transparent.make_slice(0, ), d->tmp.make_slice(0, length));
+                    copy(d->transparent.make_slice(0), d->tmp.make_slice(0, length));
                     d->useTransparent = true;
                     break;
                 case 7:
@@ -528,7 +528,7 @@ namespace golang::png
         {
             return {0, UnsupportedError("IDAT chunk length overflow")};
         }
-        auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, min(len(p), int(d->idatLength))));
+        auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, gocpp::min(len(p), int(d->idatLength))));
         rec::Write(gocpp::recv(d->crc), p.make_slice(0, n));
         d->idatLength -= uint32_t(n);
         return {n, err};
@@ -1360,7 +1360,7 @@ namespace golang::png
         gocpp::array<unsigned char, 4096> ignored = {};
         for(; length > 0; )
         {
-            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, min(len(ignored), int(length))));
+            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, gocpp::min(len(ignored), int(length))));
             if(err != nullptr)
             {
                 return err;
@@ -1400,7 +1400,10 @@ namespace golang::png
 
     std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r)
     {
-        auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
+            x.r = r;
+            x.crc = crc32::NewIEEE();
+        });
         if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)
         {
             if(err == io::go_EOF)
@@ -1425,7 +1428,10 @@ namespace golang::png
 
     std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r)
     {
-        auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.r = r; x.crc = crc32::NewIEEE(); });
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
+            x.r = r;
+            x.crc = crc32::NewIEEE();
+        });
         if(auto err = rec::checkHeader(gocpp::recv(d)); err != nullptr)
         {
             if(err == io::go_EOF)
@@ -1516,7 +1522,11 @@ namespace golang::png
                     break;
             }
         }
-        return {gocpp::Init<image::Config>([](image::Config& x) { x.ColorModel = cm; x.Width = d->width; x.Height = d->height; }), nullptr};
+        return {gocpp::Init<image::Config>([=](auto& x) {
+            x.ColorModel = cm;
+            x.Width = d->width;
+            x.Height = d->height;
+        }), nullptr};
     }
 
     void init()

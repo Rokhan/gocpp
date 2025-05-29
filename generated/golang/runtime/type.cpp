@@ -223,7 +223,7 @@ namespace golang::runtime
                     println("runtime: nameOff", hex(off), "out of range", hex(md->types), "-", hex(md->etypes));
                     go_throw("runtime: name offset out of range");
                 }
-                return gocpp::Init<runtime::name>([](auto& x) {
+                return gocpp::Init<runtime::name>([=](auto& x) {
                     x.Bytes = (unsigned char*)(unsafe::Pointer(res));
                 });
             }
@@ -240,7 +240,7 @@ namespace golang::runtime
             }
             go_throw("runtime: name offset base pointer out of range");
         }
-        return gocpp::Init<runtime::name>([](auto& x) {
+        return gocpp::Init<runtime::name>([=](auto& x) {
             x.Bytes = (unsigned char*)(res);
         });
     }
@@ -350,7 +350,7 @@ namespace golang::runtime
             off += i2 + l2;
         }
         runtime::nameOff nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0, ), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::Data(gocpp::recv(n), off))).make_slice(0, ));
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::Data(gocpp::recv(n), off))).make_slice(0));
         auto pkgPathName = resolveNameOff(unsafe::Pointer(n.Bytes), nameOff);
         return rec::Name(gocpp::recv(pkgPathName));
     }

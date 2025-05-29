@@ -141,7 +141,7 @@ namespace golang::runtime
                         go_throw("invalid g status");
                         break;
                     case 0:
-                        return gocpp::Init<suspendGState>([](auto& x) {
+                        return gocpp::Init<suspendGState>([=](auto& x) {
                             x.dead = true;
                         });
                         break;
@@ -164,7 +164,7 @@ namespace golang::runtime
                         gp->preemptStop = false;
                         gp->preempt = false;
                         gp->stackguard0 = gp->stack.lo + stackGuard;
-                        return gocpp::Init<suspendGState>([](auto& x) {
+                        return gocpp::Init<suspendGState>([=](auto& x) {
                             x.g = gp;
                             x.stopped = stopped;
                         });

@@ -1237,7 +1237,7 @@ namespace golang::syscall
             {
                 case 0:
                     auto pp = (RawSockaddrUnix*)(unsafe::Pointer(rsa));
-                    auto sa = go_new(SockaddrUnix);
+                    auto sa = new(SockaddrUnix);
                     if(pp->Path[0] == 0)
                     {
                         pp->Path[0] = '@';
@@ -1252,7 +1252,7 @@ namespace golang::syscall
                     break;
                 case 1:
                     auto pp = (RawSockaddrInet4*)(unsafe::Pointer(rsa));
-                    auto sa = go_new(SockaddrInet4);
+                    auto sa = new(SockaddrInet4);
                     auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& pp->Port));
                     sa->Port = (int(p[0]) << 8) + int(p[1]);
                     sa->Addr = pp->Addr;
@@ -1260,7 +1260,7 @@ namespace golang::syscall
                     break;
                 case 2:
                     auto pp = (RawSockaddrInet6*)(unsafe::Pointer(rsa));
-                    auto sa = go_new(SockaddrInet6);
+                    auto sa = new(SockaddrInet6);
                     auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& pp->Port));
                     sa->Port = (int(p[0]) << 8) + int(p[1]);
                     sa->ZoneId = pp->Scope_id;
@@ -1879,7 +1879,7 @@ namespace golang::syscall
     struct gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int level, int opt, struct Linger* l)
     {
         struct gocpp::error err;
-        auto sys = gocpp::Init<sysLinger>([](auto& x) {
+        auto sys = gocpp::Init<sysLinger>([=](auto& x) {
             x.Onoff = uint16_t(l->Onoff);
             x.Linger = uint16_t(l->Linger);
         });
@@ -2011,7 +2011,7 @@ namespace golang::syscall
     {
         struct gocpp::error err;
         gocpp::array<uint16_t, MAX_PATH + 1> buf = {};
-        auto [path, err] = fdpath(fd, buf.make_slice(0, ));
+        auto [path, err] = fdpath(fd, buf.make_slice(0));
         if(err != nullptr)
         {
             struct gocpp::error err;

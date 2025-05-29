@@ -783,8 +783,8 @@ namespace golang::reflect
             off += i2 + l2;
         }
         int32_t nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0, ), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"))).make_slice(0, ));
-        auto pkgPathName = gocpp::Init<abi::Name>([](auto& x) {
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"))).make_slice(0));
+        auto pkgPathName = gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveTypeOff(unsafe::Pointer(n->Bytes), nameOff));
         });
         return rec::Name(gocpp::recv(pkgPathName));
@@ -908,7 +908,7 @@ namespace golang::reflect
 
     abi::Name rec::nameOff(struct rtype* t, golang::reflect::aNameOff off)
     {
-        return gocpp::Init<abi::Name>([](auto& x) {
+        return gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t), int32_t(off)));
         });
     }
@@ -1595,7 +1595,7 @@ namespace golang::reflect
         struct StructField result;
         bool ok;
         auto current = gocpp::slice<fieldScan> {};
-        auto next = gocpp::slice<fieldScan> {gocpp::Init<>([](auto& x) {
+        auto next = gocpp::slice<fieldScan> {gocpp::Init<>([=](auto& x) {
             x.typ = t;
         })};
         gocpp::map<structType*, int> nextCount = {};
@@ -2359,10 +2359,10 @@ namespace golang::reflect
             {
                 return funcTypes[n];
             }
-            funcTypes[n] = StructOf(gocpp::slice<StructField> {gocpp::Init<>([](auto& x) {
+            funcTypes[n] = StructOf(gocpp::slice<StructField> {gocpp::Init<>([=](auto& x) {
                 x.Name = "FuncType";
                 x.Type = TypeOf(reflect::funcType {});
-            }), gocpp::Init<>([](auto& x) {
+            }), gocpp::Init<>([=](auto& x) {
                 x.Name = "Args";
                 x.Type = ArrayOf(n, TypeOf(new rtype {}));
             })});
@@ -2756,7 +2756,7 @@ namespace golang::reflect
                 gocpp::panic("reflect: bad layout computation in MapOf");
             }
         }
-        auto b = gocpp::InitPtr<abi::Type>([](auto& x) {
+        auto b = gocpp::InitPtr<abi::Type>([=](auto& x) {
             x.Align_ = goarch::PtrSize;
             x.Size_ = size;
             x.Kind_ = uint8_t(Struct);
@@ -3108,7 +3108,7 @@ namespace golang::reflect
                                         gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
                                     }
                                     auto fnStub = resolveReflectText(unsafe::Pointer(abi::FuncPCABIInternal(embeddedIfaceMethStub)));
-                                    methods = append(methods, gocpp::Init<abi::Method>([](auto& x) {
+                                    methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
                                         x.Name = resolveReflectName(rec::nameOff(gocpp::recv(ift), m.Name));
                                         x.Mtyp = resolveReflectType(rec::typeOff(gocpp::recv(ift), m.Typ));
                                         x.Ifn = fnStub;
@@ -3135,7 +3135,7 @@ namespace golang::reflect
                                         {
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
                                         }
-                                        methods = append(methods, gocpp::Init<abi::Method>([](auto& x) {
+                                        methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
                                             x.Name = resolveReflectName(mname);
                                             x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp));
                                             x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn));
@@ -3152,7 +3152,7 @@ namespace golang::reflect
                                         {
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
                                         }
-                                        methods = append(methods, gocpp::Init<abi::Method>([](auto& x) {
+                                        methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
                                             x.Name = resolveReflectName(mname);
                                             x.Mtyp = resolveReflectType(typeOffFor(ptr->Elem, m.Mtyp));
                                             x.Ifn = resolveReflectText(textOffFor(ptr->Elem, m.Ifn));
@@ -3179,7 +3179,7 @@ namespace golang::reflect
                                         {
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented");
                                         }
-                                        methods = append(methods, gocpp::Init<abi::Method>([](auto& x) {
+                                        methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
                                             x.Name = resolveReflectName(mname);
                                             x.Mtyp = resolveReflectType(typeOffFor(ft, m.Mtyp));
                                             x.Ifn = resolveReflectText(textOffFor(ft, m.Ifn));
@@ -3241,19 +3241,19 @@ namespace golang::reflect
             reflect::uncommonType* ut = {};
             if(len(methods) == 0)
             {
-                auto t = go_new(structTypeUncommon);
+                auto t = new(structTypeUncommon);
                 typ = & t->structType;
                 ut = & t->u;
             }
             else
             {
-                auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([](auto& x) {
+                auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([=](auto& x) {
                     x.Name = "S";
                     x.Type = TypeOf(structType {});
-                }), gocpp::Init<>([](auto& x) {
+                }), gocpp::Init<>([=](auto& x) {
                     x.Name = "U";
                     x.Type = TypeOf(reflect::uncommonType {});
-                }), gocpp::Init<>([](auto& x) {
+                }), gocpp::Init<>([=](auto& x) {
                     x.Name = "M";
                     x.Type = ArrayOf(len(methods), TypeOf(methods[0]));
                 })}));
@@ -3382,7 +3382,7 @@ namespace golang::reflect
             else
             {
                 typ->Kind_ &^= kindGCProg;
-                auto bv = go_new(bitVector);
+                auto bv = new(bitVector);
                 addTypeBits(bv, 0, & typ->Type);
                 if(len(bv->data) > 0)
                 {
@@ -3448,7 +3448,7 @@ namespace golang::reflect
             }
         }
         resolveReflectType(rec::common(gocpp::recv(field.Type)));
-        auto f = gocpp::Init<reflect::structField>([](auto& x) {
+        auto f = gocpp::Init<reflect::structField>([=](auto& x) {
             x.Name = newName(field.Name, string(field.Tag), rec::IsExported(gocpp::recv(field)), field.Anonymous);
             x.Typ = rec::common(gocpp::recv(field.Type));
             x.Offset = 0;
@@ -3751,7 +3751,7 @@ namespace golang::reflect
             return {lt.t, lt.framePool, lt.abid};
         }
         abid = newAbiDesc(t, rcvr);
-        auto x = gocpp::InitPtr<abi::Type>([](auto& x) {
+        auto x = gocpp::InitPtr<abi::Type>([=](auto& x) {
             x.Align_ = goarch::PtrSize;
             x.Size_ = align(abid.retOffset + abid.ret.stackBytes, goarch::PtrSize);
             x.PtrBytes = uintptr_t(abid.stackPtrs->n) * goarch::PtrSize;
@@ -3779,13 +3779,13 @@ namespace golang::reflect
             s = "funcargs(" + stringFor(& t->Type) + ")";
         }
         x->Str = resolveReflectName(newName(s, "", false, false));
-        framePool = gocpp::InitPtr<sync::Pool>([](auto& x) {
+        framePool = gocpp::InitPtr<sync::Pool>([=](auto& x) {
             x.New = [=]() mutable -> go_any
-        {
-            return unsafe_New(x);
-        };
+            {
+                return unsafe_New(x);
+            };
         });
-        auto [lti, gocpp_id_30] = rec::LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([](auto& x) {
+        auto [lti, gocpp_id_30] = rec::LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([=](auto& x) {
             x.t = x;
             x.framePool = framePool;
             x.abid = abid;

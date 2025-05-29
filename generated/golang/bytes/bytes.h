@@ -13,6 +13,7 @@
 
 namespace golang::bytes
 {
+    extern gocpp::array<uint8_t, 256> asciiSpace;
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     gocpp::slice<gocpp::slice<unsigned char>> explode(gocpp::slice<unsigned char> s, int n);
@@ -33,7 +34,6 @@ namespace golang::bytes
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfterN(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep, int n);
     gocpp::slice<gocpp::slice<unsigned char>> Split(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfter(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
-    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<gocpp::slice<unsigned char>> Fields(gocpp::slice<unsigned char> s);
     gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune)> f);
     gocpp::slice<unsigned char> Join(gocpp::slice<gocpp::slice<unsigned char>> s, gocpp::slice<unsigned char> sep);

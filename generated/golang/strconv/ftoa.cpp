@@ -66,7 +66,7 @@ namespace golang::strconv
     floatInfo float64info = floatInfo {52, 11, - 1023};
     std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize)
     {
-        return string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, max(prec + 4, 24)), f, fmt, prec, bitSize));
+        return string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, gocpp::max(prec + 4, 24)), f, fmt, prec, bitSize));
     }
 
     gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize)
@@ -159,7 +159,7 @@ namespace golang::strconv
         if(shortest)
         {
             gocpp::array<unsigned char, 32> buf = {};
-            digs.d = buf.make_slice(0, );
+            digs.d = buf.make_slice(0);
             ryuFtoaShortest(& digs, mant, exp - int(flt->mantbits), flt);
             ok = true;
             //Go switch emulation
@@ -175,10 +175,10 @@ namespace golang::strconv
                 {
                     case 0:
                     case 1:
-                        prec = max(digs.nd - 1, 0);
+                        prec = gocpp::max(digs.nd - 1, 0);
                         break;
                     case 2:
-                        prec = max(digs.nd - digs.dp, 0);
+                        prec = gocpp::max(digs.nd - digs.dp, 0);
                         break;
                     case 3:
                     case 4:
@@ -221,14 +221,14 @@ namespace golang::strconv
             gocpp::array<unsigned char, 24> buf = {};
             if(bitSize == 32 && digits <= 9)
             {
-                digs.d = buf.make_slice(0, );
+                digs.d = buf.make_slice(0);
                 ryuFtoaFixed32(& digs, uint32_t(mant), exp - int(flt->mantbits), digits);
                 ok = true;
             }
             else
             if(digits <= 18)
             {
-                digs.d = buf.make_slice(0, );
+                digs.d = buf.make_slice(0);
                 ryuFtoaFixed64(& digs, mant, exp - int(flt->mantbits), digits);
                 ok = true;
             }
@@ -242,7 +242,7 @@ namespace golang::strconv
 
     gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
-        auto d = go_new(decimal);
+        auto d = new(decimal);
         rec::Assign(gocpp::recv(d), mant);
         rec::Shift(gocpp::recv(d), exp - int(flt->mantbits));
         decimalSlice digs = {};
@@ -250,8 +250,8 @@ namespace golang::strconv
         if(shortest)
         {
             roundShortest(d, mant, exp, flt);
-            digs = gocpp::Init<decimalSlice>([](auto& x) {
-                x.d = d->d.make_slice(0, );
+            digs = gocpp::Init<decimalSlice>([=](auto& x) {
+                x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;
             });
@@ -271,7 +271,7 @@ namespace golang::strconv
                         prec = digs.nd - 1;
                         break;
                     case 2:
-                        prec = max(digs.nd - digs.dp, 0);
+                        prec = gocpp::max(digs.nd - digs.dp, 0);
                         break;
                     case 3:
                     case 4:
@@ -310,8 +310,8 @@ namespace golang::strconv
                         break;
                 }
             }
-            digs = gocpp::Init<decimalSlice>([](auto& x) {
-                x.d = d->d.make_slice(0, );
+            digs = gocpp::Init<decimalSlice>([=](auto& x) {
+                x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;
             });
@@ -363,7 +363,7 @@ namespace golang::strconv
                     {
                         prec = digs.nd;
                     }
-                    return fmtF(dst, neg, digs, max(prec - digs.dp, 0));
+                    return fmtF(dst, neg, digs, gocpp::max(prec - digs.dp, 0));
                     break;
             }
         }
@@ -382,7 +382,7 @@ namespace golang::strconv
         {
             return;
         }
-        auto upper = go_new(decimal);
+        auto upper = new(decimal);
         rec::Assign(gocpp::recv(upper), mant * 2 + 1);
         rec::Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
         uint64_t mantlo = {};
@@ -397,7 +397,7 @@ namespace golang::strconv
             mantlo = mant * 2 - 1;
             explo = exp - 1;
         }
-        auto lower = go_new(decimal);
+        auto lower = new(decimal);
         rec::Assign(gocpp::recv(lower), mantlo * 2 + 1);
         rec::Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
         auto inclusive = mant % 2 == 0;
@@ -522,7 +522,7 @@ namespace golang::strconv
         {
             dst = append(dst, '.');
             auto i = 1;
-            auto m = min(d.nd, prec + 1);
+            auto m = gocpp::min(d.nd, prec + 1);
             if(i < m)
             {
                 dst = append(dst, d.d.make_slice(i, m));
@@ -578,7 +578,7 @@ namespace golang::strconv
         }
         if(d.dp > 0)
         {
-            auto m = min(d.nd, d.dp);
+            auto m = gocpp::min(d.nd, d.dp);
             dst = append(dst, d.d.make_slice(0, m));
             for(; m < d.dp; m++)
             {

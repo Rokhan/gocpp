@@ -29,26 +29,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hcode& value);
-    struct huffmanEncoder
-    {
-        gocpp::slice<hcode> codes;
-        gocpp::slice<literalNode> freqcache;
-        gocpp::array<int32_t, 17> bitCount;
-        byLiteral lns;
-        byFreq lfs;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
     struct literalNode
     {
         uint16_t literal;
@@ -90,9 +70,29 @@ namespace golang::flate
     struct huffmanEncoder* newHuffmanEncoder(int size);
     struct huffmanEncoder* generateFixedLiteralEncoding();
     struct huffmanEncoder* generateFixedOffsetEncoding();
+    uint16_t reverseBits(uint16_t number, unsigned char bitLength);
+    struct huffmanEncoder
+    {
+        gocpp::slice<hcode> codes;
+        gocpp::slice<literalNode> freqcache;
+        gocpp::array<int32_t, 17> bitCount;
+        byLiteral lns;
+        byFreq lfs;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
     extern huffmanEncoder* fixedLiteralEncoding;
     extern huffmanEncoder* fixedOffsetEncoding;
-    uint16_t reverseBits(uint16_t number, unsigned char bitLength);
 
     namespace rec
     {

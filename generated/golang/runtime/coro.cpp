@@ -82,7 +82,7 @@ namespace golang::runtime
 
     struct coro* newcoro(std::function<void (coro*)> f)
     {
-        auto c = go_new(coro);
+        auto c = new(coro);
         c->f = f;
         auto pc = getcallerpc();
         auto gp = getg();

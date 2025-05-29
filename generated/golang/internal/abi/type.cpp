@@ -1266,8 +1266,8 @@ namespace golang::abi
         }
         gocpp::array<unsigned char, 10> nameLen = {};
         gocpp::array<unsigned char, 10> tagLen = {};
-        auto nameLenLen = writeVarint(nameLen.make_slice(0, ), len(n));
-        auto tagLenLen = writeVarint(tagLen.make_slice(0, ), len(tag));
+        auto nameLenLen = writeVarint(nameLen.make_slice(0), len(n));
+        auto tagLenLen = writeVarint(tagLen.make_slice(0), len(tag));
         unsigned char bits = {};
         auto l = 1 + nameLenLen + len(n);
         if(exported)
@@ -1293,7 +1293,7 @@ namespace golang::abi
             copy(tb, tagLen.make_slice(0, tagLenLen));
             copy(tb.make_slice(tagLenLen), tag);
         }
-        return gocpp::Init<Name>([](auto& x) {
+        return gocpp::Init<Name>([=](auto& x) {
             x.Bytes = & b[0];
         });
     }

@@ -18,10 +18,8 @@
 
 namespace golang::crc32
 {
-    void castagnoliInit();
+    extern std::string magic;
     extern Table* IEEETable;
-    void ieeeInit();
-    crc32::Table* MakeTable(uint32_t poly);
     struct digest
     {
         uint32_t crc;
@@ -39,9 +37,11 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
+    void castagnoliInit();
+    void ieeeInit();
+    crc32::Table* MakeTable(uint32_t poly);
     hash::Hash32 New(golang::crc32::Table* tab);
     hash::Hash32 NewIEEE();
-    extern std::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);

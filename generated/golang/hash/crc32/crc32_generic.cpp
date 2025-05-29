@@ -23,7 +23,7 @@ namespace golang::crc32
 
     Table* simpleMakeTable(uint32_t poly)
     {
-        auto t = go_new(Table);
+        auto t = new(Table);
         simplePopulateTable(poly, t);
         return t;
     }
@@ -60,7 +60,7 @@ namespace golang::crc32
 
     crc32::slicing8Table* slicingMakeTable(uint32_t poly)
     {
-        auto t = go_new(slicing8Table);
+        auto t = new(slicing8Table);
         simplePopulateTable(poly, & t[0]);
         for(auto i = 0; i < 256; i++)
         {

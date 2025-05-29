@@ -61,7 +61,6 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value);
-    void main();
     struct Vertex
     {
         double X;
@@ -79,6 +78,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    void main();
 
     namespace rec
     {

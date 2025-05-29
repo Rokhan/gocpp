@@ -29,8 +29,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    extern gocpp::map<std::string, Vertex> m;
     void main();
+    extern gocpp::map<std::string, Vertex> m;
 
     namespace rec
     {

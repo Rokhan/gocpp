@@ -29,6 +29,9 @@ namespace golang::main
     void main()
     {
         mocklib::Println(add(42, 13));
+        mocklib::Println(gocpp::max(42, 13, 17));
+        mocklib::Println(gocpp::max(42, 51.12345, 17));
+        mocklib::Println(gocpp::min(42, 13, 17));
     }
 
 }
@@ -37,7 +40,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

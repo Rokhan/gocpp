@@ -1553,10 +1553,10 @@ namespace golang::io
 
     sync::Pool blackHolePool = gocpp::Init<sync::Pool>([](auto& x) {
         x.New = []() mutable -> go_any
-    {
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8192);
-        return & b;
-    };
+        {
+            auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8192);
+            return & b;
+        };
     });
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(discard, struct Reader r)
     {

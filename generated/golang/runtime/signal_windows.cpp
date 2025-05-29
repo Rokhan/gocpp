@@ -454,7 +454,7 @@ namespace golang::runtime
             auto gp = getg();
             if(gp->sig != 0)
             {
-                info = gocpp::InitPtr<exceptionrecord>([](auto& x) {
+                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptionaddress = gp->sigpc;
                     x.exceptioncode = gp->sig;
                     x.numberparameters = 2;
@@ -464,7 +464,7 @@ namespace golang::runtime
             }
             else
             {
-                info = gocpp::InitPtr<exceptionrecord>([](auto& x) {
+                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptioncode = 2;
                 });
             }

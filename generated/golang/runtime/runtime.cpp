@@ -145,7 +145,7 @@ namespace golang::runtime
     atomic::Pointer<std::function<std::function<void ()> (std::string)>> godebugNewIncNonDefault;
     void godebug_setUpdate(std::function<void (std::string, std::string)> update)
     {
-        auto p = go_new(gocpp::Tag<std::function<void (std::string, std::string)>>());
+        auto p = new(gocpp::Tag<std::function<void (std::string, std::string)>>());
         *p = update;
         rec::Store(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
@@ -153,7 +153,7 @@ namespace golang::runtime
 
     void godebug_setNewIncNonDefault(std::function<std::function<void ()> (std::string)> newIncNonDefault)
     {
-        auto p = go_new(gocpp::Tag<std::function<std::function<void ()> (std::string)>>());
+        auto p = new(gocpp::Tag<std::function<std::function<void ()> (std::string)>>());
         *p = newIncNonDefault;
         rec::Store(gocpp::recv(godebugNewIncNonDefault), p);
     }
@@ -200,7 +200,7 @@ namespace golang::runtime
             {
                 return;
             }
-            inc = go_new(gocpp::Tag<std::function<void ()>>());
+            inc = new(gocpp::Tag<std::function<void ()>>());
             *inc = (runtime::newInc*)(g->name);
             if(raceenabled)
             {
@@ -241,7 +241,7 @@ namespace golang::runtime
         setenv_c(key, value);
         if(key == "GODEBUG")
         {
-            auto p = go_new(string);
+            auto p = new(string);
             *p = value;
             rec::Store(gocpp::recv(godebugEnv), p);
             godebugNotify(true);

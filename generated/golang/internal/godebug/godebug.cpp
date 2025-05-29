@@ -135,7 +135,9 @@ namespace golang::godebug
 
     struct Setting* New(std::string name)
     {
-        return gocpp::InitPtr<Setting>([](Setting& x) { x.name = name; });
+        return gocpp::InitPtr<Setting>([=](auto& x) {
+            x.name = name;
+        });
     }
 
     std::string rec::Name(struct Setting* s)
@@ -198,7 +200,7 @@ namespace golang::godebug
         {
             return gocpp::getValue<setting*>(v);
         }
-        auto s = go_new(setting);
+        auto s = new(setting);
         s->info = godebugs::Lookup(name);
         rec::Store(gocpp::recv(s->value), & empty);
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
@@ -270,7 +272,9 @@ namespace golang::godebug
                     if(! did[name])
                     {
                         did[name] = true;
-                        auto v = gocpp::InitPtr<value>([](value& x) { x.text = arg; });
+                        auto v = gocpp::InitPtr<value>([=](auto& x) {
+                            x.text = arg;
+                        });
                         for(auto j = 0; j < len(arg); j++)
                         {
                             if(arg[j] == '#')

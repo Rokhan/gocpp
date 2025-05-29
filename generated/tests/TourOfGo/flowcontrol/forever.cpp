@@ -31,7 +31,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

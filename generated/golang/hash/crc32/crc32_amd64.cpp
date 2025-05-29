@@ -48,8 +48,8 @@ namespace golang::crc32
         {
             gocpp::panic("arch-specific Castagnoli not available");
         }
-        castagnoliSSE42TableK1 = go_new(sse42Table);
-        castagnoliSSE42TableK2 = go_new(sse42Table);
+        castagnoliSSE42TableK1 = new(sse42Table);
+        castagnoliSSE42TableK2 = new(sse42Table);
         gocpp::array<unsigned char, castagnoliK2> tmp = {};
         for(auto b = 0; b < 4; b++)
         {
@@ -57,7 +57,7 @@ namespace golang::crc32
             {
                 auto val = uint32_t(i) << uint32_t(b * 8);
                 castagnoliSSE42TableK1[b][i] = castagnoliSSE42(val, tmp.make_slice(0, castagnoliK1));
-                castagnoliSSE42TableK2[b][i] = castagnoliSSE42(val, tmp.make_slice(0, ));
+                castagnoliSSE42TableK2[b][i] = castagnoliSSE42(val, tmp.make_slice(0));
             }
         }
     }

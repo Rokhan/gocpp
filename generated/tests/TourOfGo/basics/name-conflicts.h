@@ -28,6 +28,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct toto& value);
     void main();
+    void newFunction();
 
     namespace rec
     {

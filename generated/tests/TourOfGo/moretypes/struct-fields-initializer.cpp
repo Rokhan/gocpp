@@ -88,14 +88,35 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    Vertex v1 = Vertex {1, 2, 3};
-    Vertex v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
+    long one = 1;
+    Vertex v1 = Vertex {one, 2, 3};
+    Vertex v2 = gocpp::Init<Vertex>([](auto& x) {
+        x.X = one;
+    });
     Vertex v3 = Vertex {};
-    Vertex v4 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; });
-    Segment s1 = gocpp::Init<Segment>([](Segment& x) { x.Start = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; x.Z = 3; x.Y = 2; }); x.End = Vertex {1, 1, 1}; });
+    Vertex v4 = gocpp::Init<Vertex>([](auto& x) {
+        x.X = one;
+        x.Z = 3;
+    });
+    Segment s1 = gocpp::Init<Segment>([](auto& x) {
+        x.Start = gocpp::Init<Vertex>([](auto& x) {
+            x.X = 1;
+            x.Z = 3;
+            x.Y = 2;
+        });
+        x.End = Vertex {1, 1, 1};
+    });
     void main()
     {
-        mocklib::Println(v1, v2, v3, v4, s1);
+        auto s2 = gocpp::Init<Segment>([=](auto& x) {
+            x.Start = gocpp::Init<Vertex>([=](auto& x) {
+                x.X = one;
+                x.Z = 3;
+                x.Y = 2;
+            });
+            x.End = Vertex {1, one, 1};
+        });
+        mocklib::Println(v1, v2, v3, v4, s1, s2);
     }
 
 }
@@ -104,7 +125,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

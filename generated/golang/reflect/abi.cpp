@@ -348,7 +348,7 @@ namespace golang::reflect
             {
                 kind = abiStepPointer;
             }
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+            a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
                 x.kind = kind;
                 x.offset = offset + uintptr_t(i) * size;
                 x.size = size;
@@ -371,7 +371,7 @@ namespace golang::reflect
         }
         for(auto i = 0; i < n; i++)
         {
-            a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+            a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
                 x.kind = abiStepFloatReg;
                 x.offset = offset + uintptr_t(i) * size;
                 x.size = size;
@@ -385,7 +385,7 @@ namespace golang::reflect
     void rec::stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment)
     {
         a->stackBytes = align(a->stackBytes, alignment);
-        a->steps = append(a->steps, gocpp::Init<abiStep>([](auto& x) {
+        a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
             x.kind = abiStepStack;
             x.offset = 0;
             x.size = size;
@@ -478,7 +478,7 @@ namespace golang::reflect
     struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr)
     {
         auto spill = uintptr_t(0);
-        auto stackPtrs = go_new(bitVector);
+        auto stackPtrs = new(bitVector);
         auto inRegPtrs = abi::IntArgRegBitmap {};
         abiSeq in = {};
         if(rcvr != nullptr)

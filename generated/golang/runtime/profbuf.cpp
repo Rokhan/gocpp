@@ -199,7 +199,7 @@ namespace golang::runtime
         {
         }
         tags = i;
-        auto b = go_new(profBuf);
+        auto b = new(profBuf);
         b->hdrsize = uintptr_t(hdrsize);
         b->data = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), bufwords);
         b->tags = gocpp::make(gocpp::Tag<gocpp::slice<unsafe::Pointer>>(), tags);
@@ -269,7 +269,7 @@ namespace golang::runtime
             {
                 gocpp::array<uintptr_t, 1> stk = {};
                 stk[0] = uintptr_t(count);
-                rec::write(gocpp::recv(b), nullptr, int64_t(time), nullptr, stk.make_slice(0, ));
+                rec::write(gocpp::recv(b), nullptr, int64_t(time), nullptr, stk.make_slice(0));
             }
         }
         else

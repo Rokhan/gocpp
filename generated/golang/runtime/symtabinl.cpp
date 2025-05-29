@@ -140,15 +140,15 @@ namespace golang::runtime
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
         {
-            return {gocpp::Init<inlineUnwinder>([](auto& x) {
+            return {gocpp::Init<inlineUnwinder>([=](auto& x) {
                 x.f = f;
-            }), gocpp::Init<inlineFrame>([](auto& x) {
+            }), gocpp::Init<inlineFrame>([=](auto& x) {
                 x.pc = pc;
                 x.index = - 1;
             })};
         }
         auto inlTree = (gocpp::array<inlinedCall, 1 << 20>*)(inldata);
-        auto u = gocpp::Init<inlineUnwinder>([](auto& x) {
+        auto u = gocpp::Init<inlineUnwinder>([=](auto& x) {
             x.f = f;
             x.inlTree = inlTree;
         });
@@ -157,7 +157,7 @@ namespace golang::runtime
 
     struct inlineFrame rec::resolveInternal(struct inlineUnwinder* u, uintptr_t pc)
     {
-        return gocpp::Init<inlineFrame>([](auto& x) {
+        return gocpp::Init<inlineFrame>([=](auto& x) {
             x.pc = pc;
             x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false);
         });

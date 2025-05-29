@@ -182,7 +182,7 @@ namespace golang::runtime
             return;
         }
         frame.fn = f;
-        *u = gocpp::Init<unwinder>([](auto& x) {
+        *u = gocpp::Init<unwinder>([=](auto& x) {
             x.frame = frame;
             x.g = rec::guintptr(gocpp::recv(gp));
             x.cgoCtxt = len(gp->cgoCtxt) - 1;
@@ -438,7 +438,7 @@ namespace golang::runtime
         for(; n < len(pcBuf) && rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             auto f = u->frame.fn;
-            auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0, ));
+            auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0));
             for(auto [iu, uf] = newInlineUnwinder(f, rec::symPC(gocpp::recv(u))); n < len(pcBuf) && rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(iu), uf))
             {
                 auto sf = rec::srcFunc(gocpp::recv(iu), uf);
@@ -835,7 +835,7 @@ namespace golang::runtime
                 }
                 print("\n");
             }
-            if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0, )); cgoN > 0)
+            if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
                 int n;
                 int lastN;
@@ -1400,7 +1400,7 @@ namespace golang::runtime
         {
             call = asmcgocall;
         }
-        auto arg = gocpp::Init<cgoTracebackArg>([](auto& x) {
+        auto arg = gocpp::Init<cgoTracebackArg>([=](auto& x) {
             x.context = ctxt;
             x.buf = (uintptr_t*)(noescape(unsafe::Pointer(& buf[0])));
             x.max = uintptr_t(len(buf));

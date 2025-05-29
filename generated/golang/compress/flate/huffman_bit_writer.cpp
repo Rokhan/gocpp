@@ -98,7 +98,15 @@ namespace golang::flate
 
     struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w)
     {
-        return gocpp::InitPtr<huffmanBitWriter>([](huffmanBitWriter& x) { x.writer = w; x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit); x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount); x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1); x.literalEncoding = newHuffmanEncoder(maxNumLit); x.codegenEncoding = newHuffmanEncoder(codegenCodeCount); x.offsetEncoding = newHuffmanEncoder(offsetCodeCount); });
+        return gocpp::InitPtr<huffmanBitWriter>([=](auto& x) {
+            x.writer = w;
+            x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit);
+            x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount);
+            x.codegen = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), maxNumLit + offsetCodeCount + 1);
+            x.literalEncoding = newHuffmanEncoder(maxNumLit);
+            x.codegenEncoding = newHuffmanEncoder(codegenCodeCount);
+            x.offsetEncoding = newHuffmanEncoder(offsetCodeCount);
+        });
     }
 
     void rec::reset(struct huffmanBitWriter* w, io::Writer writer)
@@ -301,7 +309,7 @@ namespace golang::flate
             int numCodegens;
             numCodegens--;
         }
-        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, )) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
+        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0)) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
         size = header + rec::bitLength(gocpp::recv(litEnc), w->literalFreq) + rec::bitLength(gocpp::recv(offEnc), w->offsetFreq) + extraBits;
         return {size, numCodegens};
     }
@@ -468,7 +476,7 @@ namespace golang::flate
         auto size = rec::fixedSize(gocpp::recv(w), extraBits);
         int numCodegens = {};
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
-        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
         auto [dynamicSize, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
         if(dynamicSize < size)
         {
@@ -502,7 +510,7 @@ namespace golang::flate
         tokens = append(tokens, endBlockMarker);
         auto [numLiterals, numOffsets] = rec::indexTokens(gocpp::recv(w), tokens);
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
-        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
         auto [size, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, 0);
         if(auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
         {
@@ -633,7 +641,7 @@ namespace golang::flate
         rec::generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
         int numCodegens = {};
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, huffOffset);
-        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0, ), 7);
+        rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
         auto [size, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, huffOffset, 0);
         if(auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))
         {

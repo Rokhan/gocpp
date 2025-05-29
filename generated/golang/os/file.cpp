@@ -147,7 +147,7 @@ namespace golang::os
         {
             int n;
             struct gocpp::error err;
-            return {0, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readat";
                 x.Path = f->name;
                 x.Err = errors::New("negative offset");
@@ -251,7 +251,7 @@ namespace golang::os
 
     std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r)
     {
-        return io::Copy(gocpp::Init<fileWithoutReadFrom>([](auto& x) {
+        return io::Copy(gocpp::Init<fileWithoutReadFrom>([=](auto& x) {
             x.File = f;
         }), r);
     }
@@ -310,7 +310,7 @@ namespace golang::os
         {
             int n;
             struct gocpp::error err;
-            return {0, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "writeat";
                 x.Path = f->name;
                 x.Err = errors::New("negative offset");
@@ -414,7 +414,7 @@ namespace golang::os
 
     std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w)
     {
-        return io::Copy(w, gocpp::Init<fileWithoutWriteTo>([](auto& x) {
+        return io::Copy(w, gocpp::Init<fileWithoutWriteTo>([=](auto& x) {
             x.File = f;
         }));
     }
@@ -462,7 +462,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "mkdir";
                 x.Path = name;
                 x.Err = e;
@@ -495,7 +495,7 @@ namespace golang::os
         if(auto e = syscall::Chdir(dir); e != nullptr)
         {
             testlog::Open(dir);
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chdir";
                 x.Path = dir;
                 x.Err = e;
@@ -570,7 +570,7 @@ namespace golang::os
         {
             gocpp::panic("unexpected error wrapping poll.ErrFileClosing: " + rec::Error(gocpp::recv(err)));
         }
-        return gocpp::InitPtr<os::PathError>([](auto& x) {
+        return gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = op;
             x.Path = f->name;
             x.Err = err;
@@ -776,7 +776,7 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "open";
                 x.Path = name;
                 x.Err = err;
@@ -797,7 +797,7 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readfile";
                 x.Path = name;
                 x.Err = err;
@@ -821,7 +821,7 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readdir";
                 x.Path = name;
                 x.Err = err;
@@ -845,7 +845,7 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "stat";
                 x.Path = name;
                 x.Err = err;

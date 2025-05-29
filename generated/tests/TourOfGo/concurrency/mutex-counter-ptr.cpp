@@ -82,7 +82,9 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::InitPtr<SafeCounter>([](SafeCounter& x) { x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>()); });
+        auto c = gocpp::InitPtr<SafeCounter>([=](auto& x) {
+            x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
+        });
         for(auto i = 0; i < 1000; i++)
         {
             gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"); });
@@ -98,7 +100,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

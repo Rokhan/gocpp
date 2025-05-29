@@ -216,7 +216,7 @@ namespace golang::reflect
     std::string valueMethodName()
     {
         gocpp::array<uintptr_t, 5> pc = {};
-        auto n = runtime::Callers(1, pc.make_slice(0, ));
+        auto n = runtime::Callers(1, pc.make_slice(0));
         auto frames = runtime::CallersFrames(pc.make_slice(0, n));
         runtime::Frame frame = {};
         for(auto more = true; more; )
@@ -2496,7 +2496,7 @@ namespace golang::reflect
         {
             rec::panicNotMap(gocpp::recv(v));
         }
-        return gocpp::InitPtr<MapIter>([](auto& x) {
+        return gocpp::InitPtr<MapIter>([=](auto& x) {
             x.m = v;
         });
     }
@@ -3138,7 +3138,7 @@ namespace golang::reflect
                     unsafeheader::String t = {};
                     if(i < s->Len)
                     {
-                        t = gocpp::Init<unsafeheader::String>([](auto& x) {
+                        t = gocpp::Init<unsafeheader::String>([=](auto& x) {
                             x.Data = arrayAt(s->Data, i, 1, "i < s.Len");
                             x.Len = j - i;
                         });
@@ -3946,7 +3946,7 @@ namespace golang::reflect
         {
             gocpp::panic("reflect.MakeSlice: len > cap");
         }
-        auto s = gocpp::Init<unsafeheader::Slice>([](auto& x) {
+        auto s = gocpp::Init<unsafeheader::Slice>([=](auto& x) {
             x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
             x.Len = len;
             x.Cap = cap;

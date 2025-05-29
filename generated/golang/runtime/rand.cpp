@@ -124,14 +124,14 @@ namespace golang::runtime
         }
         else
         {
-            if(readRandom(seed.make_slice(0, )) != len(seed))
+            if(readRandom(seed.make_slice(0)) != len(seed))
             {
                 readRandomFailed = true;
-                readTimeRandom(seed.make_slice(0, ));
+                readTimeRandom(seed.make_slice(0));
             }
         }
         rec::Init(gocpp::recv(globalRand.state), *seed);
-        clear(seed.make_slice(0, ));
+        clear(seed.make_slice(0));
         globalRand.init = true;
         unlock(& globalRand.lock);
     }

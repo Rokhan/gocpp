@@ -61,7 +61,7 @@ namespace golang::os
         {
             if(len(name) == 0)
             {
-                return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = funcname;
                     x.Path = name;
                     x.Err = syscall::Errno(syscall::ERROR_PATH_NOT_FOUND);
@@ -70,7 +70,7 @@ namespace golang::os
             auto [namep, err] = syscall::UTF16PtrFromString(fixLongPath(name));
             if(err != nullptr)
             {
-                return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = funcname;
                     x.Path = name;
                     x.Err = err;
@@ -84,7 +84,7 @@ namespace golang::os
                 auto [sh, err] = syscall::FindFirstFile(namep, & fd);
                 if(err != nullptr)
                 {
-                    return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                    return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                         x.Op = "FindFirstFile";
                         x.Path = name;
                         x.Err = err;
@@ -103,7 +103,7 @@ namespace golang::os
             }
             if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
             {
-                auto fs = gocpp::InitPtr<fileStat>([](auto& x) {
+                auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
                     x.FileAttributes = fa.FileAttributes;
                     x.CreationTime = fa.CreationTime;
                     x.LastAccessTime = fa.LastAccessTime;
@@ -121,7 +121,7 @@ namespace golang::os
             std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT, 0);
             if(err != nullptr)
             {
-                return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "CreateFile";
                     x.Path = name;
                     x.Err = err;
@@ -135,7 +135,7 @@ namespace golang::os
                 std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS, 0);
                 if(err != nullptr)
                 {
-                    return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                    return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                         x.Op = "CreateFile";
                         x.Path = name;
                         x.Err = err;
@@ -157,7 +157,7 @@ namespace golang::os
         auto [ft, err] = syscall::GetFileType(h);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "GetFileType";
                 x.Path = name;
                 x.Err = err;
@@ -173,7 +173,7 @@ namespace golang::os
             {
                 case 0:
                 case 1:
-                    return {gocpp::InitPtr<fileStat>([](auto& x) {
+                    return {gocpp::InitPtr<fileStat>([=](auto& x) {
                         x.name = basename(name);
                         x.filetype = ft;
                     }), nullptr};

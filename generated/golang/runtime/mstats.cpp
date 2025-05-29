@@ -494,7 +494,7 @@ namespace golang::runtime
         stats->NumForcedGC = memstats.numforcedgc;
         stats->GCCPUFraction = memstats.gc_cpu_fraction;
         stats->EnableGC = true;
-        copy(stats->BySize.make_slice(0, ), bySize.make_slice(0, ));
+        copy(stats->BySize.make_slice(0), bySize.make_slice(0));
     }
 
     void readGCStats(gocpp::slice<uint64_t>* pauses)

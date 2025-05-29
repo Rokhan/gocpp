@@ -486,7 +486,7 @@ namespace golang::runtime
     {
         assertLockHeld(p->mheapLock);
         auto i = 0;
-        auto firstFree = gocpp::Init<gocpp_id_1>([](auto& x) {
+        auto firstFree = gocpp::Init<gocpp_id_1>([=](auto& x) {
             x.base = minOffAddr;
             x.bound = maxOffAddr;
         });
@@ -750,7 +750,7 @@ namespace golang::runtime
             {
                 start += si;
             }
-            most = max(most, end + si, mi);
+            most = gocpp::max(most, end + si, mi);
             if(ei == (1 << logMaxPagesPerSum))
             {
                 end += 1 << logMaxPagesPerSum;

@@ -295,7 +295,7 @@ namespace golang::sync
         if(d == nullptr)
         {
             auto initSize = 8;
-            d = go_new(poolChainElt);
+            d = new(poolChainElt);
             d->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;
             storePoolChainElt(& c->tail, d);
@@ -309,7 +309,7 @@ namespace golang::sync
         {
             newSize = dequeueLimit;
         }
-        auto d2 = gocpp::InitPtr<poolChainElt>([](auto& x) {
+        auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
             x.prev = d;
         });
         d2->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);

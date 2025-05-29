@@ -118,12 +118,12 @@ namespace golang::os
                 kind = "pipe";
             }
         }
-        auto f = new File {gocpp::InitPtr<file>([](auto& x) {
-            x.pfd = gocpp::Init<poll::FD>([](auto& x) {
-            x.Sysfd = h;
-            x.IsStream = true;
-            x.ZeroReadIsEOF = true;
-        });
+        auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
+            x.pfd = gocpp::Init<poll::FD>([=](auto& x) {
+                x.Sysfd = h;
+                x.IsStream = true;
+                x.ZeroReadIsEOF = true;
+            });
             x.name = name;
         })};
         runtime::SetFinalizer(f->file, (*file)->close);
@@ -155,7 +155,7 @@ namespace golang::os
     {
         if(name == "")
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "open";
                 x.Path = name;
                 x.Err = syscall::go_ENOENT;
@@ -178,7 +178,7 @@ namespace golang::os
                     }
                 }
             }
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "open";
                 x.Path = name;
                 x.Err = e;
@@ -188,7 +188,7 @@ namespace golang::os
         std::tie(f, e) = std::tuple{newFile(r, name, "file"), nullptr};
         if(e != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "open";
                 x.Path = name;
                 x.Err = e;
@@ -215,7 +215,7 @@ namespace golang::os
             {
                 e = ErrClosed;
             }
-            err = gocpp::InitPtr<os::PathError>([](auto& x) {
+            err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "close";
                 x.Path = file->name;
                 x.Err = e;
@@ -270,7 +270,7 @@ namespace golang::os
         auto [p, e] = syscall::UTF16PtrFromString(fixLongPath(name));
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "remove";
                 x.Path = name;
                 x.Err = e;
@@ -312,7 +312,7 @@ namespace golang::os
                 }
             }
         }
-        return gocpp::InitPtr<os::PathError>([](auto& x) {
+        return gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = "remove";
             x.Path = name;
             x.Err = e;
@@ -335,7 +335,7 @@ namespace golang::os
         struct File* w;
         struct gocpp::error err;
         gocpp::array<syscall::Handle, 2> p = {};
-        auto e = syscall::Pipe(p.make_slice(0, ));
+        auto e = syscall::Pipe(p.make_slice(0));
         if(e != nullptr)
         {
             struct File* r;
@@ -588,7 +588,7 @@ namespace golang::os
         auto [s, err] = readReparseLink(fixLongPath(name));
         if(err != nullptr)
         {
-            return {"", gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {"", gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readlink";
                 x.Path = name;
                 x.Err = err;

@@ -523,7 +523,7 @@ namespace golang::runtime
     void mProf_Malloc(unsafe::Pointer p, uintptr_t size)
     {
         gocpp::array<uintptr_t, maxStack> stk = {};
-        auto nstk = callers(4, stk.make_slice(0, ));
+        auto nstk = callers(4, stk.make_slice(0));
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 2) % uint32_t(len(memRecord {}.future));
         auto b = stkbucket(memProfile, size, stk.make_slice(0, nstk), true);
         auto mp = rec::mp(gocpp::recv(b));
@@ -602,11 +602,11 @@ namespace golang::runtime
         gocpp::array<uintptr_t, maxStack> stk = {};
         if(gp->m->curg == nullptr || gp->m->curg == gp)
         {
-            nstk = callers(skip, stk.make_slice(0, ));
+            nstk = callers(skip, stk.make_slice(0));
         }
         else
         {
-            nstk = gcallers(gp->m->curg, skip, stk.make_slice(0, ));
+            nstk = gcallers(gp->m->curg, skip, stk.make_slice(0));
         }
         saveBlockEventStack(cycles, rate, stk.make_slice(0, nstk), which);
     }
@@ -794,7 +794,7 @@ namespace golang::runtime
         {
             unwinder u = {};
             rec::initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors | unwindJumpStack);
-            nstk = tracebackPCs(& u, skip, prof->stack.make_slice(0, ));
+            nstk = tracebackPCs(& u, skip, prof->stack.make_slice(0));
         });
         if(nstk < len(prof->stack))
         {
@@ -822,7 +822,7 @@ namespace golang::runtime
         if(lost > 0)
         {
             auto lostStk = gocpp::array<uintptr_t, 1> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
-            saveBlockEventStack(lost, rate, lostStk.make_slice(0, ), mutexProfile);
+            saveBlockEventStack(lost, rate, lostStk.make_slice(0), mutexProfile);
         }
         prof->disabled = false;
         releasem(mp);
@@ -1083,7 +1083,7 @@ namespace golang::runtime
         {
             asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
-        copy(r->Stack0.make_slice(0, ), rec::stk(gocpp::recv(b)));
+        copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
         for(auto i = int(b->nstk); i < len(r->Stack0); i++)
         {
             r->Stack0[i] = 0;
@@ -1183,7 +1183,7 @@ namespace golang::runtime
                     bool ok;
                     asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
-                auto i = copy(r->Stack0.make_slice(0, ), rec::stk(gocpp::recv(b)));
+                auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
                 {
                     int n;
@@ -1222,7 +1222,7 @@ namespace golang::runtime
                 auto r = & p[0];
                 r->Count = int64_t(bp->count);
                 r->Cycles = bp->cycles;
-                auto i = copy(r->Stack0.make_slice(0, ), rec::stk(gocpp::recv(b)));
+                auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
                 {
                     int n;
@@ -1579,7 +1579,7 @@ namespace golang::runtime
     {
         unwinder u = {};
         rec::initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors);
-        auto n = tracebackPCs(& u, 0, r->Stack0.make_slice(0, ));
+        auto n = tracebackPCs(& u, 0, r->Stack0.make_slice(0));
         if(n < len(r->Stack0))
         {
             r->Stack0[n] = 0;

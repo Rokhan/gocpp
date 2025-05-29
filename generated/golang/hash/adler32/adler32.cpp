@@ -32,7 +32,7 @@ namespace golang::adler32
 
     hash::Hash32 New()
     {
-        auto d = go_new(digest);
+        auto d = new(digest);
         rec::Reset(gocpp::recv(d));
         return d;
     }

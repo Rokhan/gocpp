@@ -123,7 +123,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chmod";
                 x.Path = name;
                 x.Err = e;
@@ -153,7 +153,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chown";
                 x.Path = name;
                 x.Err = e;
@@ -170,7 +170,7 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "lchown";
                 x.Path = name;
                 x.Err = e;
@@ -225,7 +225,7 @@ namespace golang::os
         {
             if(rec::IsZero(gocpp::recv(t)))
             {
-                utimes[i] = gocpp::Init<syscall::Timespec>([](auto& x) {
+                utimes[i] = gocpp::Init<syscall::Timespec>([=](auto& x) {
                     x.Sec = _UTIME_OMIT;
                     x.Nsec = _UTIME_OMIT;
                 });
@@ -239,7 +239,7 @@ namespace golang::os
         set(1, mtime);
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([](auto& x) {
+            return gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chtimes";
                 x.Path = name;
                 x.Err = e;

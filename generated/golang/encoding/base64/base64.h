@@ -13,53 +13,6 @@
 
 namespace golang::base64
 {
-    struct Encoding
-    {
-        gocpp::array<unsigned char, 64> encode;
-        gocpp::array<uint8_t, 256> decodeMap;
-        gocpp::rune padChar;
-        bool strict;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
-    extern std::string decodeMapInitialize;
-    struct Encoding* NewEncoding(std::string encoder);
-    extern Encoding* StdEncoding;
-    extern Encoding* URLEncoding;
-    extern Encoding* RawStdEncoding;
-    extern Encoding* RawURLEncoding;
-    struct encoder
-    {
-        gocpp::error err;
-        Encoding* enc;
-        io::Writer w;
-        gocpp::array<unsigned char, 3> buf;
-        int nbuf;
-        gocpp::array<unsigned char, 1024> out;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct encoder& value);
-    io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w);
     struct decoder
     {
         gocpp::error err;
@@ -83,8 +36,27 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
-    std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
+    struct Encoding
+    {
+        gocpp::array<unsigned char, 64> encode;
+        gocpp::array<uint8_t, 256> decodeMap;
+        gocpp::rune padChar;
+        bool strict;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
+    extern Encoding* StdEncoding;
+    extern Encoding* URLEncoding;
     struct newlineFilteringReader
     {
         io::Reader wrapped;
@@ -101,8 +73,36 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct newlineFilteringReader& value);
+    extern std::string decodeMapInitialize;
+    struct encoder
+    {
+        gocpp::error err;
+        Encoding* enc;
+        io::Writer w;
+        gocpp::array<unsigned char, 3> buf;
+        int nbuf;
+        gocpp::array<unsigned char, 1024> out;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct encoder& value);
+    struct Encoding* NewEncoding(std::string encoder);
+    io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w);
+    std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
+    std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     io::Reader NewDecoder(struct Encoding* enc, io::Reader r);
     int decodedLen(int n, gocpp::rune padChar);
+    extern Encoding* RawURLEncoding;
+    extern Encoding* RawStdEncoding;
 
     namespace rec
     {

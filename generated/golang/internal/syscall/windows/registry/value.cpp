@@ -378,12 +378,12 @@ namespace golang::registry
 
     struct gocpp::error rec::SetDWordValue(golang::registry::Key k, std::string name, uint32_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, DWORD, (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& value)).make_slice(0, ));
+        return rec::setValue(gocpp::recv(k), name, DWORD, (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& value)).make_slice(0));
     }
 
     struct gocpp::error rec::SetQWordValue(golang::registry::Key k, std::string name, uint64_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, QWORD, (gocpp::array<unsigned char, 8>*)(unsafe::Pointer(& value)).make_slice(0, ));
+        return rec::setValue(gocpp::recv(k), name, QWORD, (gocpp::array<unsigned char, 8>*)(unsafe::Pointer(& value)).make_slice(0));
     }
 
     struct gocpp::error rec::setStringValue(golang::registry::Key k, std::string name, uint32_t valtype, std::string value)

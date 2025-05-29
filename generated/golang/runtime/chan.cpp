@@ -200,7 +200,7 @@ namespace golang::runtime
                     c->buf = add(unsafe::Pointer(c), hchanSize);
                     break;
                 default:
-                    c = go_new(hchan);
+                    c = new(hchan);
                     c->buf = mallocgc(mem, elem, true);
                     break;
             }

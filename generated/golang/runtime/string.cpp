@@ -263,7 +263,7 @@ namespace golang::runtime
         auto size1 = 0;
         for(auto [gocpp_ignored, r] : a)
         {
-            size1 += encoderune(dum.make_slice(0, ), r);
+            size1 += encoderune(dum.make_slice(0), r);
         }
         auto [s, b] = rawstringtmp(buf, size1 + 3);
         auto size2 = 0;
@@ -354,7 +354,7 @@ namespace golang::runtime
         if(buf != nullptr)
         {
             std::string s;
-            b = buf.make_slice(0, );
+            b = buf.make_slice(0);
             s = slicebytetostringtmp(& b[0], len(b));
         }
         else
@@ -674,7 +674,7 @@ namespace golang::runtime
 
     std::string gostringnocopy(unsigned char* str)
     {
-        auto ss = gocpp::Init<stringStruct>([](auto& x) {
+        auto ss = gocpp::Init<stringStruct>([=](auto& x) {
             x.str = unsafe::Pointer(str);
             x.len = findnull(str);
         });
@@ -689,7 +689,7 @@ namespace golang::runtime
         auto n1 = 0;
         for(auto i = 0; str[i] != 0; i++)
         {
-            n1 += encoderune(buf.make_slice(0, ), rune(str[i]));
+            n1 += encoderune(buf.make_slice(0), rune(str[i]));
         }
         auto [s, b] = rawstring(n1 + 4);
         auto n2 = 0;

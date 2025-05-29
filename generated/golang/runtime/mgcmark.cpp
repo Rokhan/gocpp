@@ -1072,7 +1072,7 @@ namespace golang::runtime
                 }
             }
             n = rec::base(gocpp::recv(s)) + s->elemsize - b;
-            n = min(n, maxObletBytes);
+            n = gocpp::min(n, maxObletBytes);
             if(goexperiment::AllocHeaders)
             {
                 tp = rec::typePointersOfUnchecked(gocpp::recv(s), rec::base(gocpp::recv(s)));

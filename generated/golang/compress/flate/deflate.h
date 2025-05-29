@@ -38,6 +38,28 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compressionLevel& value);
+    struct dictWriter
+    {
+        io::Writer w;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dictWriter& value);
+    extern gocpp::error errWriterClosed;
+    uint32_t hash4(gocpp::slice<unsigned char> b);
+    void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
+    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
+    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
     extern gocpp::slice<compressionLevel> levels;
     struct compressor
     {
@@ -75,28 +97,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compressor& value);
-    uint32_t hash4(gocpp::slice<unsigned char> b);
-    void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
-    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
-    struct dictWriter
-    {
-        io::Writer w;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dictWriter& value);
-    extern gocpp::error errWriterClosed;
     struct Writer
     {
         compressor d;

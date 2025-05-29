@@ -32,7 +32,7 @@ namespace golang::main
     const int bit3 = 1 << 3;
     const int mask3 = (1 << 3) - 1;
     const main::Kind Invalid = 0;
-    const Kind Bool = 1;
-    const Kind Int = 2;
-    const Kind Int8 = 3;
+    const main::Kind Bool = 1;
+    const main::Kind Int = 2;
+    const main::Kind Int8 = 3;
 }

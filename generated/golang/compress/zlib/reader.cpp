@@ -132,7 +132,7 @@ namespace golang::zlib
 
     std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        auto z = go_new(reader);
+        auto z = new(reader);
         auto err = rec::Reset(gocpp::recv(z), r, dict);
         if(err != nullptr)
         {
@@ -184,7 +184,9 @@ namespace golang::zlib
 
     struct gocpp::error rec::Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        *z = gocpp::Init<reader>([](reader& x) { x.decompressor = z->decompressor; });
+        *z = gocpp::Init<reader>([=](auto& x) {
+            x.decompressor = z->decompressor;
+        });
         if(auto [fr, ok] = gocpp::getValue<flate::Reader>(r); ok)
         {
             z->r = fr;

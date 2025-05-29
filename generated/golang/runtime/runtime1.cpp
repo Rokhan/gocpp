@@ -695,7 +695,7 @@ namespace golang::runtime
         }
         debug.traceadvanceperiod = defaultTraceAdvancePeriod;
         auto godebug = gogetenv("GODEBUG");
-        auto p = go_new(string);
+        auto p = new(string);
         *p = godebug;
         rec::Store(gocpp::recv(godebugEnv), p);
         for(auto [gocpp_ignored, v] : dbgvars)

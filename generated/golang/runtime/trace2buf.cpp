@@ -83,7 +83,7 @@ namespace golang::runtime
 
     struct traceWriter rec::writer(struct traceLocker tl)
     {
-        return gocpp::Init<traceWriter>([](auto& x) {
+        return gocpp::Init<traceWriter>([=](auto& x) {
             x.traceLocker = tl;
             x.traceBuf = tl.mp->trace.buf[tl.gen % 2];
         });
@@ -91,10 +91,10 @@ namespace golang::runtime
 
     struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf)
     {
-        return gocpp::Init<traceWriter>([](auto& x) {
-            x.traceLocker = gocpp::Init<traceLocker>([](auto& x) {
-            x.gen = gen;
-        });
+        return gocpp::Init<traceWriter>([=](auto& x) {
+            x.traceLocker = gocpp::Init<traceLocker>([=](auto& x) {
+                x.gen = gen;
+            });
             x.traceBuf = buf;
         });
     }
@@ -171,7 +171,7 @@ namespace golang::runtime
         {
             mID = uint64_t(w.mp->procid);
         }
-        rec::unsigned char(gocpp::recv(w), unsigned char(traceEvEventBatch));
+        rec::byte(gocpp::recv(w), unsigned char(traceEvEventBatch));
         rec::varint(gocpp::recv(w), uint64_t(w.gen));
         rec::varint(gocpp::recv(w), uint64_t(mID));
         rec::varint(gocpp::recv(w), uint64_t(ts));

@@ -351,7 +351,7 @@ namespace golang::runtime
             struct bitvector locals;
             struct bitvector args;
             gocpp::slice<stackObjectRecord> objs;
-            objs = methodValueCallFrameObjs.make_slice(0, );
+            objs = methodValueCallFrameObjs.make_slice(0);
         }
         else
         {
@@ -396,7 +396,7 @@ namespace golang::runtime
         {
             go_throw("methodValueCallFrameObjs is not in a module");
         }
-        methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([](auto& x) {
+        methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([=](auto& x) {
             x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));
             x.size = int32_t(abiRegArgsType->Size_);
             x._ptrdata = int32_t(abiRegArgsType->PtrBytes);

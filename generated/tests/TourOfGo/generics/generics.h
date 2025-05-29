@@ -12,9 +12,6 @@
 
 namespace golang::main
 {
-    
-    template<typename T>
-    std::tuple<uint32_t, uint32_t> HashStr(T sep);
     template<typename T> 
     struct Wrapper
     {
@@ -33,6 +30,9 @@ namespace golang::main
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Wrapper<T>& value);
+    
+    template<typename T>
+    std::tuple<uint32_t, uint32_t> HashStr(T sep);
     
     template<typename T>
     T Or(gocpp::slice<T> vals);

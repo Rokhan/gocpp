@@ -186,7 +186,9 @@ namespace golang::flate
 
     struct huffmanEncoder* newHuffmanEncoder(int size)
     {
-        return gocpp::InitPtr<huffmanEncoder>([](huffmanEncoder& x) { x.codes = gocpp::make(gocpp::Tag<gocpp::slice<hcode>>(), size); });
+        return gocpp::InitPtr<huffmanEncoder>([=](auto& x) {
+            x.codes = gocpp::make(gocpp::Tag<gocpp::slice<hcode>>(), size);
+        });
     }
 
     struct huffmanEncoder* generateFixedLiteralEncoding()
@@ -224,7 +226,10 @@ namespace golang::flate
                         break;
                 }
             }
-            codes[ch] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(bits, unsigned char(size)); x.len = size; });
+            codes[ch] = gocpp::Init<hcode>([=](auto& x) {
+                x.code = reverseBits(bits, unsigned char(size));
+                x.len = size;
+            });
         }
         return h;
     }
@@ -235,7 +240,10 @@ namespace golang::flate
         auto codes = h->codes;
         for(auto [ch, gocpp_ignored] : codes)
         {
-            codes[ch] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(uint16_t(ch), 5); x.len = 5; });
+            codes[ch] = gocpp::Init<hcode>([=](auto& x) {
+                x.code = reverseBits(uint16_t(ch), 5);
+                x.len = 5;
+            });
         }
         return h;
     }
@@ -272,7 +280,12 @@ namespace golang::flate
         gocpp::array<gocpp::array<int32_t, maxBitsLimit>, maxBitsLimit> leafCounts = {};
         for(auto level = int32_t(1); level <= maxBits; level++)
         {
-            levels[level] = gocpp::Init<levelInfo>([](levelInfo& x) { x.level = level; x.lastFreq = list[1].freq; x.nextCharFreq = list[2].freq; x.nextPairFreq = list[0].freq + list[1].freq; });
+            levels[level] = gocpp::Init<levelInfo>([=](auto& x) {
+                x.level = level;
+                x.lastFreq = list[1].freq;
+                x.nextCharFreq = list[2].freq;
+                x.nextPairFreq = list[0].freq + list[1].freq;
+            });
             leafCounts[level][level] = 2;
             if(level == 1)
             {
@@ -351,7 +364,10 @@ namespace golang::flate
             rec::sort(gocpp::recv(h->lns), chunk);
             for(auto [gocpp_ignored, node] : chunk)
             {
-                h->codes[node.literal] = gocpp::Init<hcode>([](hcode& x) { x.code = reverseBits(code, uint8_t(n)); x.len = uint16_t(n); });
+                h->codes[node.literal] = gocpp::Init<hcode>([=](auto& x) {
+                    x.code = reverseBits(code, uint8_t(n));
+                    x.len = uint16_t(n);
+                });
                 code++;
             }
             list = list.make_slice(0, len(list) - int(bits));

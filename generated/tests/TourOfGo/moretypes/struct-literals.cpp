@@ -54,7 +54,9 @@ namespace golang::main
     }
 
     Vertex v1 = Vertex {1, 2};
-    Vertex v2 = gocpp::Init<Vertex>([](Vertex& x) { x.X = 1; });
+    Vertex v2 = gocpp::Init<Vertex>([](auto& x) {
+        x.X = 1;
+    });
     Vertex v3 = Vertex {};
     Vertex* p = new Vertex {1, 2};
     void main()
@@ -68,7 +70,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

@@ -163,6 +163,11 @@ namespace golang::flate
     {    }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
+    extern gocpp::array<int, 19> codeOrder;
+    struct gocpp::error noEOF(struct gocpp::error e);
+    void fixedHuffmanDecoderInit();
+    io::ReadCloser NewReader(io::Reader r);
+    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
     struct decompressor
     {
         Reader r;
@@ -198,11 +203,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decompressor& value);
-    extern gocpp::array_base<int> codeOrder;
-    struct gocpp::error noEOF(struct gocpp::error e);
-    void fixedHuffmanDecoderInit();
-    io::ReadCloser NewReader(io::Reader r);
-    io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 
     namespace rec
     {

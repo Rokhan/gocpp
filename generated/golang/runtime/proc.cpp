@@ -297,7 +297,7 @@ namespace golang::runtime
             {
                 println("GC forced");
             }
-            gcStart(gocpp::Init<gcTrigger>([](auto& x) {
+            gcStart(gocpp::Init<gcTrigger>([=](auto& x) {
                 x.kind = gcTriggerTime;
                 x.now = nanotime();
             }));
@@ -377,7 +377,7 @@ namespace golang::runtime
             unlock(& sched.sudoglock);
             if(len(pp->sudogcache) == 0)
             {
-                pp->sudogcache = append(pp->sudogcache, go_new(sudog));
+                pp->sudogcache = append(pp->sudogcache, new(sudog));
             }
         }
         auto n = len(pp->sudogcache);
@@ -808,7 +808,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->g0)
         {
-            callers(1, mp->createstack.make_slice(0, ));
+            callers(1, mp->createstack.make_slice(0));
         }
         lock(& sched.lock);
         if(id >= 0)
@@ -830,7 +830,7 @@ namespace golang::runtime
         unlock(& sched.lock);
         if(iscgo || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows")
         {
-            mp->cgoCallers = go_new(cgoCallers);
+            mp->cgoCallers = new(cgoCallers);
         }
     }
 
@@ -1318,7 +1318,7 @@ namespace golang::runtime
             go_throw(bad);
         }
         worldStopped();
-        return gocpp::Init<worldStop>([](auto& x) {
+        return gocpp::Init<worldStop>([=](auto& x) {
             x.reason = reason;
             x.start = start;
         });
@@ -1772,7 +1772,7 @@ namespace golang::runtime
             sched.freem = newList;
             unlock(& sched.lock);
         }
-        auto mp = go_new(m);
+        auto mp = new(m);
         mp->mstartfn = fn;
         mcommoninit(mp, id);
         if(iscgo || mStackIsSystemAllocated())
@@ -4070,7 +4070,7 @@ namespace golang::runtime
 
     struct g* malg(int32_t stacksize)
     {
-        auto newg = go_new(g);
+        auto newg = new(g);
         if(stacksize >= 0)
         {
             stacksize = round2(stackSystem + stacksize);
@@ -4215,15 +4215,15 @@ namespace golang::runtime
         auto ancestors = gocpp::make(gocpp::Tag<gocpp::slice<ancestorInfo>>(), n);
         copy(ancestors.make_slice(1), callerAncestors);
         gocpp::array<uintptr_t, tracebackInnerFrames> pcs = {};
-        auto npcs = gcallers(callergp, 0, pcs.make_slice(0, ));
+        auto npcs = gcallers(callergp, 0, pcs.make_slice(0));
         auto ipcs = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), npcs);
-        copy(ipcs, pcs.make_slice(0, ));
-        ancestors[0] = gocpp::Init<ancestorInfo>([](auto& x) {
+        copy(ipcs, pcs.make_slice(0));
+        ancestors[0] = gocpp::Init<ancestorInfo>([=](auto& x) {
             x.pcs = ipcs;
             x.goid = callergp->goid;
             x.gopc = callergp->gopc;
         });
-        auto ancestorsp = go_new(gocpp::Tag<gocpp::slice<ancestorInfo>>());
+        auto ancestorsp = new(gocpp::Tag<gocpp::slice<ancestorInfo>>());
         *ancestorsp = ancestors;
         return ancestorsp;
     }
@@ -4577,7 +4577,7 @@ namespace golang::runtime
                 {
                     cgoOff++;
                 }
-                n += copy(stk.make_slice(0, ), mp->cgoCallers.make_slice(0, cgoOff));
+                n += copy(stk.make_slice(0), mp->cgoCallers.make_slice(0, cgoOff));
                 mp->cgoCallers[0] = 0;
             }
             rec::initAt(gocpp::recv(u), mp->curg->syscallpc, mp->curg->syscallsp, 0, mp->curg, unwindSilentErrors);
@@ -4845,7 +4845,7 @@ namespace golang::runtime
             auto pp = allp[i];
             if(pp == nullptr)
             {
-                pp = go_new(p);
+                pp = new(p);
             }
             rec::init(gocpp::recv(pp), i);
             atomicstorep(unsafe::Pointer(& allp[i]), unsafe::Pointer(pp));
@@ -5210,7 +5210,7 @@ namespace golang::runtime
             {
                 idle++;
             }
-            if(auto t = (gocpp::Init<gcTrigger>([](auto& x) {
+            if(auto t = (gocpp::Init<gcTrigger>([=](auto& x) {
                 x.kind = gcTriggerTime;
                 x.now = now;
             })); rec::test(gocpp::recv(t)) && rec::Load(gocpp::recv(forcegc.idle)))
@@ -6277,7 +6277,7 @@ namespace golang::runtime
 
     struct randomEnum rec::start(struct randomOrder* ord, uint32_t i)
     {
-        return gocpp::Init<randomEnum>([](auto& x) {
+        return gocpp::Init<randomEnum>([=](auto& x) {
             x.count = ord->count;
             x.pos = i % ord->count;
             x.inc = ord->coprimes[i / ord->count % uint32_t(len(ord->coprimes))];
@@ -6432,10 +6432,10 @@ namespace golang::runtime
                         auto pkg = funcpkgpath(findfunc(abi::FuncPCABIInternal(f)));
                         gocpp::array<unsigned char, 24> sbuf = {};
                         print("init ", pkg, " @");
-                        print(string(fmtNSAsMS(sbuf.make_slice(0, ), uint64_t(start - runtimeInitTime))), " ms, ");
-                        print(string(fmtNSAsMS(sbuf.make_slice(0, ), uint64_t(end - start))), " ms clock, ");
-                        print(string(itoa(sbuf.make_slice(0, ), after.bytes - before.bytes)), " bytes, ");
-                        print(string(itoa(sbuf.make_slice(0, ), after.allocs - before.allocs)), " allocs");
+                        print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(start - runtimeInitTime))), " ms, ");
+                        print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(end - start))), " ms clock, ");
+                        print(string(itoa(sbuf.make_slice(0), after.bytes - before.bytes)), " bytes, ");
+                        print(string(itoa(sbuf.make_slice(0), after.allocs - before.allocs)), " allocs");
                         print("\n");
                     }
                     t->state = 2;
@@ -6450,7 +6450,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5);
         golang::runtime::main();
         return 0;
     }

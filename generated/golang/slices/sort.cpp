@@ -88,7 +88,7 @@ namespace golang::slices
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)
         {
-            m = min(m, x[i]);
+            m = gocpp::min(m, x[i]);
         }
         return m;
     }
@@ -123,7 +123,7 @@ namespace golang::slices
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)
         {
-            m = max(m, x[i]);
+            m = gocpp::max(m, x[i]);
         }
         return m;
     }

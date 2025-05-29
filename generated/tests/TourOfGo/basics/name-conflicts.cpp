@@ -72,6 +72,15 @@ namespace golang::main
         mocklib::Println("Pi:", Pi);
         auto t = toto {};
         mocklib::Println("toto.Pi:", rec::Pi(gocpp::recv(t)));
+        auto go_new = "new";
+        mocklib::Println("new:", go_new);
+        newFunction();
+    }
+
+    void newFunction()
+    {
+        auto tt = new(toto);
+        mocklib::Println("tt:", tt);
     }
 
 }
@@ -80,7 +89,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::fixed << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::main::main();
         return 0;
     }

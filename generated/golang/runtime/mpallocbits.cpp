@@ -163,7 +163,7 @@ namespace golang::runtime
             {
                 start = cur;
             }
-            most = max(most, cur);
+            most = gocpp::max(most, cur);
             cur = l;
         }
         if(start == notSetYet)
@@ -171,7 +171,7 @@ namespace golang::runtime
             auto n = (unsigned int)(64 * len(b));
             return packPallocSum(n, n, n);
         }
-        most = max(most, cur);
+        most = gocpp::max(most, cur);
         if(most >= 64 - 2)
         {
             return packPallocSum(start, most, cur);

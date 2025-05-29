@@ -540,7 +540,7 @@ namespace golang::flate
         return f->err;
     }
 
-    gocpp::array_base<int> codeOrder = gocpp::array_base<int> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+    gocpp::array<int, 19> codeOrder = gocpp::array<int, 19> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     struct gocpp::error rec::readHuffman(struct decompressor* f)
     {
         for(; f->nb < 5 + 5 + 4; )
@@ -1025,13 +1025,19 @@ namespace golang::flate
             {
                 bits[i] = 8;
             }
-            rec::init(gocpp::recv(fixedHuffmanDecoder), bits.make_slice(0, ));
+            rec::init(gocpp::recv(fixedHuffmanDecoder), bits.make_slice(0));
         });
     }
 
     struct gocpp::error rec::Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        *f = gocpp::Init<decompressor>([](decompressor& x) { x.rBuf = f->rBuf; x.bits = f->bits; x.codebits = f->codebits; x.dict = f->dict; x.step = (*decompressor)->nextBlock; });
+        *f = gocpp::Init<decompressor>([=](auto& x) {
+            x.rBuf = f->rBuf;
+            x.bits = f->bits;
+            x.codebits = f->codebits;
+            x.dict = f->dict;
+            x.step = (*decompressor)->nextBlock;
+        });
         rec::makeReader(gocpp::recv(f), r);
         rec::init(gocpp::recv(f->dict), maxMatchOffset, dict);
         return nullptr;
@@ -1042,8 +1048,8 @@ namespace golang::flate
         fixedHuffmanDecoderInit();
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f->bits = go_new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
-        f->codebits = go_new(gocpp::Tag<gocpp::array<int, numCodes>>());
+        f->bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
+        f->codebits = new(gocpp::Tag<gocpp::array<int, numCodes>>());
         f->step = (*decompressor)->nextBlock;
         rec::init(gocpp::recv(f->dict), maxMatchOffset, nullptr);
         return & f;
@@ -1054,8 +1060,8 @@ namespace golang::flate
         fixedHuffmanDecoderInit();
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f->bits = go_new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
-        f->codebits = go_new(gocpp::Tag<gocpp::array<int, numCodes>>());
+        f->bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
+        f->codebits = new(gocpp::Tag<gocpp::array<int, numCodes>>());
         f->step = (*decompressor)->nextBlock;
         rec::init(gocpp::recv(f->dict), maxMatchOffset, dict);
         return & f;

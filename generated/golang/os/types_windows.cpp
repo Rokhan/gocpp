@@ -120,7 +120,7 @@ namespace golang::os
         {
             struct fileStat* fs;
             struct gocpp::error err;
-            return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "GetFileInformationByHandle";
                 x.Path = path;
                 x.Err = err;
@@ -142,14 +142,14 @@ namespace golang::os
             {
                 struct fileStat* fs;
                 struct gocpp::error err;
-                return {nullptr, gocpp::InitPtr<os::PathError>([](auto& x) {
+                return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "GetFileInformationByHandleEx";
                     x.Path = path;
                     x.Err = err;
                 })};
             }
         }
-        return {gocpp::InitPtr<fileStat>([](auto& x) {
+        return {gocpp::InitPtr<fileStat>([=](auto& x) {
             x.name = basename(path);
             x.FileAttributes = d.FileAttributes;
             x.CreationTime = d.CreationTime;
@@ -166,7 +166,7 @@ namespace golang::os
 
     struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
-        return gocpp::InitPtr<fileStat>([](auto& x) {
+        return gocpp::InitPtr<fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -181,7 +181,7 @@ namespace golang::os
 
     struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
     {
-        return gocpp::InitPtr<fileStat>([](auto& x) {
+        return gocpp::InitPtr<fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -194,7 +194,7 @@ namespace golang::os
 
     struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
     {
-        auto fs = gocpp::InitPtr<fileStat>([](auto& x) {
+        auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -287,7 +287,7 @@ namespace golang::os
 
     go_any rec::Sys(struct fileStat* fs)
     {
-        return gocpp::InitPtr<syscall::Win32FileAttributeData>([](auto& x) {
+        return gocpp::InitPtr<syscall::Win32FileAttributeData>([=](auto& x) {
             x.FileAttributes = fs->FileAttributes;
             x.CreationTime = fs->CreationTime;
             x.LastAccessTime = fs->LastAccessTime;
@@ -357,7 +357,7 @@ namespace golang::os
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
             if(err != nullptr)
             {
-                return gocpp::InitPtr<os::PathError>([](auto& x) {
+                return gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "FullPath";
                     x.Path = path;
                     x.Err = err;

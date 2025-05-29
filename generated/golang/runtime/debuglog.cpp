@@ -199,11 +199,11 @@ namespace golang::runtime
         }
         if(x)
         {
-            rec::unsigned char(gocpp::recv(l->w), debugLogBoolTrue);
+            rec::byte(gocpp::recv(l->w), debugLogBoolTrue);
         }
         else
         {
-            rec::unsigned char(gocpp::recv(l->w), debugLogBoolFalse);
+            rec::byte(gocpp::recv(l->w), debugLogBoolFalse);
         }
         return l;
     }
@@ -234,7 +234,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogInt);
+        rec::byte(gocpp::recv(l->w), debugLogInt);
         rec::varint(gocpp::recv(l->w), x);
         return l;
     }
@@ -270,7 +270,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogUint);
+        rec::byte(gocpp::recv(l->w), debugLogUint);
         rec::uvarint(gocpp::recv(l->w), x);
         return l;
     }
@@ -281,7 +281,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogHex);
+        rec::byte(gocpp::recv(l->w), debugLogHex);
         rec::uvarint(gocpp::recv(l->w), x);
         return l;
     }
@@ -292,7 +292,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogPtr);
+        rec::byte(gocpp::recv(l->w), debugLogPtr);
         if(x == nullptr)
         {
             rec::uvarint(gocpp::recv(l->w), 0);
@@ -337,13 +337,13 @@ namespace golang::runtime
         auto datap = & firstmoduledata;
         if(len(x) > 4 && datap->etext <= uintptr_t(unsafe::Pointer(strData)) && uintptr_t(unsafe::Pointer(strData)) < datap->end)
         {
-            rec::unsigned char(gocpp::recv(l->w), debugLogConstString);
+            rec::byte(gocpp::recv(l->w), debugLogConstString);
             rec::uvarint(gocpp::recv(l->w), uint64_t(len(x)));
             rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(unsafe::Pointer(strData)) - datap->etext));
         }
         else
         {
-            rec::unsigned char(gocpp::recv(l->w), debugLogString);
+            rec::byte(gocpp::recv(l->w), debugLogString);
             gocpp::slice<unsigned char> b = {};
             auto bb = (slice*)(unsafe::Pointer(& b));
             bb->array = unsafe::Pointer(strData);
@@ -356,7 +356,7 @@ namespace golang::runtime
             rec::bytes(gocpp::recv(l->w), b);
             if(len(b) != len(x))
             {
-                rec::unsigned char(gocpp::recv(l->w), debugLogStringOverflow);
+                rec::byte(gocpp::recv(l->w), debugLogStringOverflow);
                 rec::uvarint(gocpp::recv(l->w), uint64_t(len(x) - len(b)));
             }
         }
@@ -369,7 +369,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogPC);
+        rec::byte(gocpp::recv(l->w), debugLogPC);
         rec::uvarint(gocpp::recv(l->w), uint64_t(x));
         return l;
     }
@@ -380,7 +380,7 @@ namespace golang::runtime
         {
             return l;
         }
-        rec::unsigned char(gocpp::recv(l->w), debugLogTraceback);
+        rec::byte(gocpp::recv(l->w), debugLogTraceback);
         rec::uvarint(gocpp::recv(l->w), uint64_t(len(x)));
         for(auto [gocpp_ignored, pc] : x)
         {
@@ -508,7 +508,7 @@ namespace golang::runtime
         b[5] = unsigned char(x >> 40);
         b[6] = unsigned char(x >> 48);
         b[7] = unsigned char(x >> 56);
-        rec::bytes(gocpp::recv(l), b.make_slice(0, ));
+        rec::bytes(gocpp::recv(l), b.make_slice(0));
     }
 
     void rec::byte(struct debugLogWriter* l, unsigned char x)
@@ -806,7 +806,7 @@ namespace golang::runtime
                 case 8:
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
-                    auto str = gocpp::Init<stringStruct>([](auto& x) {
+                    auto str = gocpp::Init<stringStruct>([=](auto& x) {
                         x.str = unsafe::Pointer(ptr);
                         x.len = len;
                     });
@@ -983,7 +983,7 @@ namespace golang::runtime
             {
                 pnano = 0;
             }
-            auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0, ), uint64_t(pnano), 9);
+            auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
             print(slicebytetostringtmp((unsigned char*)(noescape(unsafe::Pointer(& pnanoBytes[0]))), len(pnanoBytes)));
             print(" P ", p, "] ");
             for(auto i = 0; s->begin < s->end; i++)

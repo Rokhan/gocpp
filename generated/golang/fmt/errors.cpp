@@ -49,7 +49,9 @@ namespace golang::fmt
                     err = errors::New(s);
                     break;
                 case 1:
-                    auto w = gocpp::InitPtr<wrapError>([](wrapError& x) { x.msg = s; });
+                    auto w = gocpp::InitPtr<wrapError>([=](auto& x) {
+                        x.msg = s;
+                    });
                     std::tie(w->err, gocpp_id_0) = gocpp::getValue<gocpp::error>(a[p->wrappedErrs[0]]);
                     err = w;
                     break;

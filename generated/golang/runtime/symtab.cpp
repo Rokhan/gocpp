@@ -156,7 +156,7 @@ namespace golang::runtime
 
     struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers)
     {
-        auto f = gocpp::InitPtr<Frames>([](auto& x) {
+        auto f = gocpp::InitPtr<Frames>([=](auto& x) {
             x.callers = callers;
         });
         f->frames = f->frameStore.make_slice(0, 0);
@@ -208,7 +208,7 @@ namespace golang::runtime
                 bool more;
                 f = nullptr;
             }
-            ci->frames = append(ci->frames, gocpp::Init<Frame>([](auto& x) {
+            ci->frames = append(ci->frames, gocpp::Init<Frame>([=](auto& x) {
                 x.PC = pc;
                 x.Func = f;
                 x.Function = funcNameForPrint(rec::name(gocpp::recv(sf)));
@@ -310,7 +310,7 @@ namespace golang::runtime
 
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc)
     {
-        auto arg = gocpp::Init<cgoSymbolizerArg>([](auto& x) {
+        auto arg = gocpp::Init<cgoSymbolizerArg>([=](auto& x) {
             x.pc = pc;
         });
         callCgoSymbolizer(& arg);
@@ -321,7 +321,7 @@ namespace golang::runtime
         gocpp::slice<Frame> frames = {};
         for(; ; )
         {
-            frames = append(frames, gocpp::Init<Frame>([](auto& x) {
+            frames = append(frames, gocpp::Init<Frame>([=](auto& x) {
                 x.PC = pc;
                 x.Func = nullptr;
                 x.Function = gostring(arg.funcName);
@@ -700,7 +700,7 @@ namespace golang::runtime
 
     void modulesinit()
     {
-        auto modules = go_new(gocpp::Tag<gocpp::slice<moduledata*>>());
+        auto modules = new(gocpp::Tag<gocpp::slice<moduledata*>>());
         for(auto md = & firstmoduledata; md != nullptr; md = md->next)
         {
             if(md->bad)
@@ -957,7 +957,7 @@ namespace golang::runtime
         }
         auto sf = rec::srcFunc(gocpp::recv(u), uf);
         auto [file, line] = rec::fileLine(gocpp::recv(u), uf);
-        auto fi = gocpp::InitPtr<funcinl>([](auto& x) {
+        auto fi = gocpp::InitPtr<funcinl>([=](auto& x) {
             x.ones = ~ uint32_t(0);
             x.entry = rec::entry(gocpp::recv(f));
             x.name = rec::name(gocpp::recv(sf));
@@ -1325,7 +1325,7 @@ namespace golang::runtime
                         auto e = & cache->entries[ck];
                         auto ci = cheaprandn(uint32_t(len(cache->entries[ck])));
                         e[ci] = e[0];
-                        e[0] = gocpp::Init<pcvalueCacheEnt>([](auto& x) {
+                        e[0] = gocpp::Init<pcvalueCacheEnt>([=](auto& x) {
                             x.targetpc = targetpc;
                             x.off = off;
                             x.val = val;
@@ -1461,7 +1461,7 @@ namespace golang::runtime
             {
                 return most;
             }
-            most = max(most, val);
+            most = gocpp::max(most, val);
         }
     }
 

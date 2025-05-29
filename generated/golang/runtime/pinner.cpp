@@ -120,7 +120,7 @@ namespace golang::runtime
             releasem(mp);
             if(p->pinner == nullptr)
             {
-                p->pinner = go_new(pinner);
+                p->pinner = new(pinner);
                 p->refs = p->refStore.make_slice(0, 0);
                 SetFinalizer(p->pinner, [=](struct pinner* i) mutable -> void
                 {

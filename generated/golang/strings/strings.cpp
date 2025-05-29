@@ -353,7 +353,14 @@ namespace golang::strings
         return genSplit(s, sep, len(sep), - 1);
     }
 
-    gocpp::array<uint8_t, 256> asciiSpace = gocpp::Init<gocpp::array<uint8_t, 256>>([](gocpp::array<uint8_t, 256>& x) { x.'\t' = 1; x.'\n' = 1; x.'\v' = 1; x.'\f' = 1; x.'\r' = 1; x.' ' = 1; });
+    gocpp::array<uint8_t, 256> asciiSpace = gocpp::Init<gocpp::array<uint8_t, 256>>([](auto& x) {
+        x['\t'] = 1;
+        x['\n'] = 1;
+        x['\v'] = 1;
+        x['\f'] = 1;
+        x['\r'] = 1;
+        x[' '] = 1;
+    });
     gocpp::slice<std::string> Fields(std::string s)
     {
         auto n = 0;

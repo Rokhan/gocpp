@@ -765,7 +765,7 @@ namespace golang::png
                                     else
                                     if(s[3] == 0xff)
                                     {
-                                        copy(d.make_slice(0, ), s.make_slice(0, ));
+                                        copy(d.make_slice(0), s.make_slice(0));
                                     }
                                     else
                                     {

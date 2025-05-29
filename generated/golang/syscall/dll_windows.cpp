@@ -155,13 +155,13 @@ namespace golang::syscall
         }
         if(e != 0)
         {
-            return {nullptr, gocpp::InitPtr<DLLError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
                 x.Msg = "Failed to load " + name + ": " + rec::Error(gocpp::recv(e));
             })};
         }
-        auto d = gocpp::InitPtr<DLL>([](auto& x) {
+        auto d = gocpp::InitPtr<DLL>([=](auto& x) {
             x.Name = name;
             x.Handle = Handle(h);
         });
@@ -194,13 +194,13 @@ namespace golang::syscall
         {
             struct Proc* proc;
             struct gocpp::error err;
-            return {nullptr, gocpp::InitPtr<DLLError>([](auto& x) {
+            return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
                 x.Msg = "Failed to find " + name + " procedure in " + d->Name + ": " + rec::Error(gocpp::recv(e));
             })};
         }
-        auto p = gocpp::InitPtr<Proc>([](auto& x) {
+        auto p = gocpp::InitPtr<Proc>([=](auto& x) {
             x.Dll = d;
             x.Name = name;
             x.addr = a;
@@ -348,7 +348,7 @@ namespace golang::syscall
 
     struct LazyProc* rec::NewProc(struct LazyDLL* d, std::string name)
     {
-        return gocpp::InitPtr<LazyProc>([](auto& x) {
+        return gocpp::InitPtr<LazyProc>([=](auto& x) {
             x.l = d;
             x.Name = name;
         });
@@ -356,7 +356,7 @@ namespace golang::syscall
 
     struct LazyDLL* NewLazyDLL(std::string name)
     {
-        return gocpp::InitPtr<LazyDLL>([](auto& x) {
+        return gocpp::InitPtr<LazyDLL>([=](auto& x) {
             x.Name = name;
         });
     }

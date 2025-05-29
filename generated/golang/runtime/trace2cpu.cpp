@@ -236,10 +236,10 @@ namespace golang::runtime
             std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
             if(flushed)
             {
-                rec::unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSamples));
+                rec::byte(gocpp::recv(w), unsigned char(traceEvCPUSamples));
             }
             auto stackID = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
-            rec::unsigned char(gocpp::recv(w), unsigned char(traceEvCPUSample));
+            rec::byte(gocpp::recv(w), unsigned char(traceEvCPUSample));
             rec::varint(gocpp::recv(w), timestamp);
             rec::varint(gocpp::recv(w), mpid);
             rec::varint(gocpp::recv(w), ppid);
@@ -310,7 +310,7 @@ namespace golang::runtime
         }
         if(auto log = rec::Load(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
         {
-            rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0, ), stk);
+            rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0), stk);
         }
         rec::Store(gocpp::recv(trace.signalLock), 0);
         if(locked)

@@ -187,7 +187,7 @@ namespace golang::flate
                 auto delta = d->hashOffset - 1;
                 d->hashOffset -= delta;
                 d->chainHead -= delta;
-                for(auto [i, v] : d->hashPrev.make_slice(0, ))
+                for(auto [i, v] : d->hashPrev.make_slice(0))
                 {
                     if(int(v) > delta)
                     {
@@ -198,7 +198,7 @@ namespace golang::flate
                         d->hashPrev[i] = 0;
                     }
                 }
-                for(auto [i, v] : d->hashHead.make_slice(0, ))
+                for(auto [i, v] : d->hashHead.make_slice(0))
                 {
                     if(int(v) > delta)
                     {

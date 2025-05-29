@@ -263,7 +263,11 @@ namespace golang::color
             b = (b * 0xffff) / a;
         }
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return NYCbCrA {gocpp::Init<YCbCr>([](YCbCr& x) { x.Y = y; x.Cb = u; x.Cr = v; }), uint8_t(a >> 8)};
+        return NYCbCrA {gocpp::Init<YCbCr>([=](auto& x) {
+            x.Y = y;
+            x.Cb = u;
+            x.Cr = v;
+        }), uint8_t(a >> 8)};
     }
 
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b)

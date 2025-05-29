@@ -203,7 +203,7 @@ namespace golang::time
 
     struct Location* fixedZone(std::string name, int offset)
     {
-        auto l = gocpp::InitPtr<Location>([](auto& x) {
+        auto l = gocpp::InitPtr<Location>([=](auto& x) {
             x.name = name;
             x.zone = gocpp::slice<zone> { {name, offset, false}};
             x.tx = gocpp::slice<zoneTrans> { {alpha, 0, false, false}};

@@ -87,7 +87,9 @@ namespace golang::pic
             defer.push_back([=]{ rec::Flush(gocpp::recv(w)); });
             io::WriteString(w, "IMAGE:");
             auto b64 = base64::NewEncoder(base64::StdEncoding, w);
-            auto err = rec::Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([](png::Encoder& x) { x.CompressionLevel = png::BestCompression; }))), b64, m);
+            auto err = rec::Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([=](auto& x) {
+                x.CompressionLevel = png::BestCompression;
+            }))), b64, m);
             if(err != nullptr)
             {
                 gocpp::panic(err);

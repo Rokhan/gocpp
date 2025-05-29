@@ -87,8 +87,8 @@ namespace golang::bufio
         {
             return b;
         }
-        auto r = go_new(Reader);
-        rec::reset(gocpp::recv(r), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), max(size, minReadBufferSize)), rd);
+        auto r = new(Reader);
+        rec::reset(gocpp::recv(r), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), gocpp::max(size, minReadBufferSize)), rd);
         return r;
     }
 
@@ -117,7 +117,12 @@ namespace golang::bufio
 
     void rec::reset(struct Reader* b, gocpp::slice<unsigned char> buf, io::Reader r)
     {
-        *b = gocpp::Init<Reader>([](Reader& x) { x.buf = buf; x.rd = r; x.lastByte = - 1; x.lastRuneSize = - 1; });
+        *b = gocpp::Init<Reader>([=](auto& x) {
+            x.buf = buf;
+            x.rd = r;
+            x.lastByte = - 1;
+            x.lastRuneSize = - 1;
+        });
     }
 
     gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read");
@@ -698,7 +703,10 @@ namespace golang::bufio
         {
             size = defaultBufSize;
         }
-        return gocpp::InitPtr<Writer>([](Writer& x) { x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size); x.wr = w; });
+        return gocpp::InitPtr<Writer>([=](auto& x) {
+            x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
+            x.wr = w;
+        });
     }
 
     struct Writer* NewWriter(io::Writer w)

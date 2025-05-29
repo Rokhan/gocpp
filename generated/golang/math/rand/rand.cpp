@@ -198,7 +198,10 @@ namespace golang::rand
     struct Rand* New(struct Source src)
     {
         auto [s64, gocpp_id_1] = gocpp::getValue<Source64>(src);
-        return gocpp::InitPtr<Rand>([](Rand& x) { x.src = src; x.s64 = s64; });
+        return gocpp::InitPtr<Rand>([=](auto& x) {
+            x.src = src;
+            x.s64 = s64;
+        });
     }
 
     void rec::Seed(struct Rand* r, int64_t seed)
@@ -445,12 +448,15 @@ namespace golang::rand
         if(rec::Value(gocpp::recv(randautoseed)) == "0")
         {
             rec::IncNonDefault(gocpp::recv(randautoseed));
-            r = New(go_new(lockedSource));
+            r = New(new(lockedSource));
             rec::Seed(gocpp::recv(r), 1);
         }
         else
         {
-            r = gocpp::InitPtr<Rand>([](Rand& x) { x.src = new runtimeSource {}; x.s64 = new runtimeSource {}; });
+            r = gocpp::InitPtr<Rand>([=](auto& x) {
+                x.src = new runtimeSource {};
+                x.s64 = new runtimeSource {};
+            });
         }
         if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), nullptr, r))
         {
@@ -527,7 +533,7 @@ namespace golang::rand
                 return;
             }
         }
-        auto r = New(go_new(lockedSource));
+        auto r = New(new(lockedSource));
         rec::Seed(gocpp::recv(r), seed);
         if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), orig, r))
         {

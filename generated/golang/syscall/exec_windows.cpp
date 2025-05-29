@@ -596,7 +596,7 @@ namespace golang::syscall
                     defer.push_back([=]{ DuplicateHandle(parentProcess, fd[i], 0, nullptr, 0, false, DUPLICATE_CLOSE_SOURCE); });
                 }
             }
-            auto si = go_new(_STARTUPINFOEXW);
+            auto si = new(_STARTUPINFOEXW);
             std::tie(si->ProcThreadAttributeList, err) = newProcThreadAttributeList(2);
             if(err != nullptr)
             {
@@ -674,7 +674,7 @@ namespace golang::syscall
                 struct gocpp::error err;
                 return {0, 0, err};
             }
-            auto pi = go_new(ProcessInformation);
+            auto pi = new(ProcessInformation);
             auto flags = sys->CreationFlags | CREATE_UNICODE_ENVIRONMENT | _EXTENDED_STARTUPINFO_PRESENT;
             if(sys->Token != 0)
             {

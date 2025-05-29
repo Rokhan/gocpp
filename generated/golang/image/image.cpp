@@ -375,7 +375,11 @@ namespace golang::image
             return new RGBA {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<RGBA>([](RGBA& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<RGBA>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct RGBA* p)
@@ -402,7 +406,11 @@ namespace golang::image
 
     struct RGBA* NewRGBA(struct Rectangle r)
     {
-        return gocpp::InitPtr<RGBA>([](RGBA& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "RGBA")); x.Stride = 4 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<RGBA>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "RGBA"));
+            x.Stride = 4 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -516,7 +524,11 @@ namespace golang::image
             return new RGBA64 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<RGBA64>([](RGBA64& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<RGBA64>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct RGBA64* p)
@@ -543,7 +555,11 @@ namespace golang::image
 
     struct RGBA64* NewRGBA64(struct Rectangle r)
     {
-        return gocpp::InitPtr<RGBA64>([](RGBA64& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "RGBA64")); x.Stride = 8 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<RGBA64>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "RGBA64"));
+            x.Stride = 8 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -676,7 +692,11 @@ namespace golang::image
             return new NRGBA {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<NRGBA>([](NRGBA& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<NRGBA>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct NRGBA* p)
@@ -703,7 +723,11 @@ namespace golang::image
 
     struct NRGBA* NewNRGBA(struct Rectangle r)
     {
-        return gocpp::InitPtr<NRGBA>([](NRGBA& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "NRGBA")); x.Stride = 4 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<NRGBA>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "NRGBA"));
+            x.Stride = 4 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -848,7 +872,11 @@ namespace golang::image
             return new NRGBA64 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<NRGBA64>([](NRGBA64& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<NRGBA64>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct NRGBA64* p)
@@ -875,7 +903,11 @@ namespace golang::image
 
     struct NRGBA64* NewNRGBA64(struct Rectangle r)
     {
-        return gocpp::InitPtr<NRGBA64>([](NRGBA64& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "NRGBA64")); x.Stride = 8 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<NRGBA64>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(8, r, "NRGBA64"));
+            x.Stride = 8 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -988,7 +1020,11 @@ namespace golang::image
             return new Alpha {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<Alpha>([](Alpha& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<Alpha>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct Alpha* p)
@@ -1015,7 +1051,11 @@ namespace golang::image
 
     struct Alpha* NewAlpha(struct Rectangle r)
     {
-        return gocpp::InitPtr<Alpha>([](Alpha& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Alpha")); x.Stride = 1 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<Alpha>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Alpha"));
+            x.Stride = 1 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -1131,7 +1171,11 @@ namespace golang::image
             return new Alpha16 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<Alpha16>([](Alpha16& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<Alpha16>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct Alpha16* p)
@@ -1158,7 +1202,11 @@ namespace golang::image
 
     struct Alpha16* NewAlpha16(struct Rectangle r)
     {
-        return gocpp::InitPtr<Alpha16>([](Alpha16& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Alpha16")); x.Stride = 2 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<Alpha16>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Alpha16"));
+            x.Stride = 2 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -1272,7 +1320,11 @@ namespace golang::image
             return new Gray {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<Gray>([](Gray& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<Gray>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct Gray* p)
@@ -1282,7 +1334,11 @@ namespace golang::image
 
     struct Gray* NewGray(struct Rectangle r)
     {
-        return gocpp::InitPtr<Gray>([](Gray& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Gray")); x.Stride = 1 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<Gray>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Gray"));
+            x.Stride = 1 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -1399,7 +1455,11 @@ namespace golang::image
             return new Gray16 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<Gray16>([](Gray16& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<Gray16>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct Gray16* p)
@@ -1409,7 +1469,11 @@ namespace golang::image
 
     struct Gray16* NewGray16(struct Rectangle r)
     {
-        return gocpp::InitPtr<Gray16>([](Gray16& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Gray16")); x.Stride = 2 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<Gray16>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(2, r, "Gray16"));
+            x.Stride = 2 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -1536,7 +1600,11 @@ namespace golang::image
             return new CMYK {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<CMYK>([](CMYK& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = r; });
+        return gocpp::InitPtr<CMYK>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = r;
+        });
     }
 
     bool rec::Opaque(struct CMYK* p)
@@ -1546,7 +1614,11 @@ namespace golang::image
 
     struct CMYK* NewCMYK(struct Rectangle r)
     {
-        return gocpp::InitPtr<CMYK>([](CMYK& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "CMYK")); x.Stride = 4 * rec::Dx(gocpp::recv(r)); x.Rect = r; });
+        return gocpp::InitPtr<CMYK>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(4, r, "CMYK"));
+            x.Stride = 4 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+        });
     }
 
     
@@ -1681,10 +1753,17 @@ namespace golang::image
         r = rec::Intersect(gocpp::recv(r), p->Rect);
         if(rec::Empty(gocpp::recv(r)))
         {
-            return gocpp::InitPtr<Paletted>([](Paletted& x) { x.Palette = p->Palette; });
+            return gocpp::InitPtr<Paletted>([=](auto& x) {
+                x.Palette = p->Palette;
+            });
         }
         auto i = rec::PixOffset(gocpp::recv(p), r.Min.X, r.Min.Y);
-        return gocpp::InitPtr<Paletted>([](Paletted& x) { x.Pix = p->Pix.make_slice(i); x.Stride = p->Stride; x.Rect = rec::Intersect(gocpp::recv(p->Rect), r); x.Palette = p->Palette; });
+        return gocpp::InitPtr<Paletted>([=](auto& x) {
+            x.Pix = p->Pix.make_slice(i);
+            x.Stride = p->Stride;
+            x.Rect = rec::Intersect(gocpp::recv(p->Rect), r);
+            x.Palette = p->Palette;
+        });
     }
 
     bool rec::Opaque(struct Paletted* p)
@@ -1717,7 +1796,12 @@ namespace golang::image
 
     struct Paletted* NewPaletted(struct Rectangle r, color::Palette p)
     {
-        return gocpp::InitPtr<Paletted>([](Paletted& x) { x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Paletted")); x.Stride = 1 * rec::Dx(gocpp::recv(r)); x.Rect = r; x.Palette = p; });
+        return gocpp::InitPtr<Paletted>([=](auto& x) {
+            x.Pix = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), pixelBufferLength(1, r, "Paletted"));
+            x.Stride = 1 * rec::Dx(gocpp::recv(r));
+            x.Rect = r;
+            x.Palette = p;
+        });
     }
 
 }

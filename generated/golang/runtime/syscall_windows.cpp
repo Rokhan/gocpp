@@ -286,7 +286,7 @@ namespace golang::runtime
         {
             p->parts = oldParts;
             p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
-            auto part = gocpp::Init<abiPart>([](auto& x) {
+            auto part = gocpp::Init<abiPart>([=](auto& x) {
                 x.kind = abiPartStack;
                 x.srcStackOffset = p->srcStackSize;
                 x.dstStackOffset = p->dstStackSize;
@@ -377,7 +377,7 @@ namespace golang::runtime
         {
             return false;
         }
-        p->parts = append(p->parts, gocpp::Init<abiPart>([](auto& x) {
+        p->parts = append(p->parts, gocpp::Init<abiPart>([=](auto& x) {
             x.kind = abiPartReg;
             x.srcStackOffset = p->srcStackSize + offset;
             x.dstRegister = p->dstRegisters;
@@ -812,8 +812,8 @@ namespace golang::runtime
                     uintptr_t r2;
                     uintptr_t err;
                     case 0:
-                        copy(tmp.make_slice(0, ), args);
-                        args = tmp.make_slice(0, );
+                        copy(tmp.make_slice(0), args);
+                        args = tmp.make_slice(0);
                         break;
                     case 1:
                         gocpp::panic("runtime: SyscallN has too many arguments");

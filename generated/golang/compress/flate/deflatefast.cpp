@@ -110,7 +110,10 @@ namespace golang::flate
 
     struct deflateFast* newDeflateFast()
     {
-        return gocpp::InitPtr<deflateFast>([](deflateFast& x) { x.cur = maxStoreBlockSize; x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize); });
+        return gocpp::InitPtr<deflateFast>([=](auto& x) {
+            x.cur = maxStoreBlockSize;
+            x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize);
+        });
     }
 
     gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
@@ -147,7 +150,10 @@ namespace golang::flate
                 }
                 candidate = e->table[nextHash & tableMask];
                 auto now = load32(src, nextS);
-                e->table[nextHash & tableMask] = gocpp::Init<tableEntry>([](tableEntry& x) { x.offset = s + e->cur; x.val = cv; });
+                e->table[nextHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
+                    x.offset = s + e->cur;
+                    x.val = cv;
+                });
                 nextHash = hash(now);
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || cv != candidate.val)
@@ -172,11 +178,17 @@ namespace golang::flate
                 }
                 auto x = load64(src, s - 1);
                 auto prevHash = hash(uint32_t(x));
-                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([](tableEntry& x) { x.offset = e->cur + s - 1; x.val = uint32_t(x); });
+                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
+                    x.offset = e->cur + s - 1;
+                    x.val = uint32_t(x);
+                });
                 x >>= 8;
                 auto currHash = hash(uint32_t(x));
                 candidate = e->table[currHash & tableMask];
-                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([](tableEntry& x) { x.offset = e->cur + s; x.val = uint32_t(x); });
+                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
+                    x.offset = e->cur + s;
+                    x.val = uint32_t(x);
+                });
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || uint32_t(x) != candidate.val)
                 {
@@ -278,14 +290,14 @@ namespace golang::flate
     {
         if(len(e->prev) == 0)
         {
-            for(auto [i, gocpp_ignored] : e->table.make_slice(0, ))
+            for(auto [i, gocpp_ignored] : e->table.make_slice(0))
             {
                 e->table[i] = tableEntry {};
             }
             e->cur = maxMatchOffset + 1;
             return;
         }
-        for(auto [i, gocpp_ignored] : e->table.make_slice(0, ))
+        for(auto [i, gocpp_ignored] : e->table.make_slice(0))
         {
             auto v = e->table[i].offset - e->cur + maxMatchOffset + 1;
             if(v < 0)

@@ -18,10 +18,8 @@
 
 namespace golang::godebug
 {
-    struct Setting
+    struct runtimeStderr
     {
-        std::string name;
-        sync::Once once;
 
         using isGoStruct = void;
 
@@ -34,7 +32,7 @@ namespace golang::godebug
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Setting& value);
+    std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
     struct setting
     {
         atomic::Pointer<value> value;
@@ -71,17 +69,10 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct value& value);
-    struct Setting* New(std::string name);
-    struct setting* lookup(std::string name);
-    void setUpdate(std::function<void (std::string, std::string)> update);
-    void registerMetric(std::string name, std::function<uint64_t ()> read);
-    void setNewIncNonDefault(std::function<std::function<void ()> (std::string)> newIncNonDefault);
-    void init();
-    std::function<void ()> newIncNonDefault(std::string name);
-    void update(std::string def, std::string env);
-    void parse(gocpp::map<std::string, bool> did, std::string s);
-    struct runtimeStderr
+    struct Setting
     {
+        std::string name;
+        sync::Once once;
 
         using isGoStruct = void;
 
@@ -94,7 +85,16 @@ namespace golang::godebug
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
+    std::ostream& operator<<(std::ostream& os, const struct Setting& value);
+    struct Setting* New(std::string name);
+    struct setting* lookup(std::string name);
+    void setUpdate(std::function<void (std::string, std::string)> update);
+    void registerMetric(std::string name, std::function<uint64_t ()> read);
+    void setNewIncNonDefault(std::function<std::function<void ()> (std::string)> newIncNonDefault);
+    void init();
+    std::function<void ()> newIncNonDefault(std::string name);
+    void update(std::string def, std::string env);
+    void parse(gocpp::map<std::string, bool> did, std::string s);
     int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
 
     namespace rec

@@ -275,12 +275,12 @@ namespace golang::time
             }
             zones[i].offset = int(int32_t(n));
             unsigned char b = {};
-            if(std::tie(b, ok) = rec::unsigned char(gocpp::recv(zonedata)); ! ok)
+            if(std::tie(b, ok) = rec::byte(gocpp::recv(zonedata)); ! ok)
             {
                 return {nullptr, errBadData};
             }
             zones[i].isDST = b != 0;
-            if(std::tie(b, ok) = rec::unsigned char(gocpp::recv(zonedata)); ! ok || int(b) >= len(abbrev))
+            if(std::tie(b, ok) = rec::byte(gocpp::recv(zonedata)); ! ok || int(b) >= len(abbrev))
             {
                 return {nullptr, errBadData};
             }
@@ -336,12 +336,12 @@ namespace golang::time
         }
         if(len(tx) == 0)
         {
-            tx = append(tx, gocpp::Init<zoneTrans>([](auto& x) {
+            tx = append(tx, gocpp::Init<zoneTrans>([=](auto& x) {
                 x.when = alpha;
                 x.index = 0;
             }));
         }
-        auto l = gocpp::InitPtr<Location>([](auto& x) {
+        auto l = gocpp::InitPtr<Location>([=](auto& x) {
             x.zone = zones;
             x.tx = tx;
             x.name = name;
@@ -372,7 +372,7 @@ namespace golang::time
                         }
                         else
                         {
-                            l->cacheZone = gocpp::InitPtr<zone>([](auto& x) {
+                            l->cacheZone = gocpp::InitPtr<zone>([=](auto& x) {
                                 x.name = name;
                                 x.offset = offset;
                                 x.isDST = isDST;
@@ -609,7 +609,7 @@ namespace golang::time
             int n = {};
             for(; ; )
             {
-                std::tie(n, err) = read(f, buf.make_slice(0, ));
+                std::tie(n, err) = read(f, buf.make_slice(0));
                 if(n > 0)
                 {
                     ret = append(ret, buf.make_slice(0, n));

@@ -134,7 +134,7 @@ namespace golang::runtime
         }
         auto tsDiff = uint64_t(ts - w.traceBuf->lastTime);
         w.traceBuf->lastTime = ts;
-        rec::unsigned char(gocpp::recv(w), unsigned char(ev));
+        rec::byte(gocpp::recv(w), unsigned char(ev));
         rec::varint(gocpp::recv(w), tsDiff);
         for(auto [gocpp_ignored, arg] : args)
         {

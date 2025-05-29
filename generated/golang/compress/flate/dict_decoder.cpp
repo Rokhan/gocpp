@@ -58,7 +58,9 @@ namespace golang::flate
 
     void rec::init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
     {
-        *dd = gocpp::Init<dictDecoder>([](dictDecoder& x) { x.hist = dd->hist; });
+        *dd = gocpp::Init<dictDecoder>([=](auto& x) {
+            x.hist = dd->hist;
+        });
         if(cap(dd->hist) < size)
         {
             dd->hist = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);

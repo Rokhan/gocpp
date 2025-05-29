@@ -637,7 +637,7 @@ namespace golang::runtime
                         break;
                 }
             }
-            sel[j] = gocpp::Init<scase>([](auto& x) {
+            sel[j] = gocpp::Init<scase>([=](auto& x) {
                 x.c = rc.ch;
                 x.elem = rc.val;
             });

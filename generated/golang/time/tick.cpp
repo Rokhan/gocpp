@@ -62,7 +62,15 @@ namespace golang::time
             gocpp::panic("non-positive interval for NewTicker");
         }
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
-        auto t = gocpp::InitPtr<Ticker>([](Ticker& x) { x.C = c; x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.period = int64_t(d); x.f = sendTime; x.arg = c; }); });
+        auto t = gocpp::InitPtr<Ticker>([=](auto& x) {
+            x.C = c;
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
+                x.when = when(d);
+                x.period = int64_t(d);
+                x.f = sendTime;
+                x.arg = c;
+            });
+        });
         startTimer(& t->r);
         return t;
     }

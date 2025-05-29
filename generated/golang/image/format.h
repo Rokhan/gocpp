@@ -38,7 +38,6 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct format& value);
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig);
     struct reader : gocpp::Interface
     {
         reader(){}
@@ -88,6 +87,7 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
+    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig);
     struct reader asReader(io::Reader r);
     bool match(std::string magic, gocpp::slice<unsigned char> b);
     struct format sniff(struct reader r);

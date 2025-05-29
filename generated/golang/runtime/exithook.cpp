@@ -24,7 +24,7 @@ namespace golang::runtime
 
     void addExitHook(std::function<void ()> f, bool runOnNonZeroExit)
     {
-        exitHooks.hooks = append(exitHooks.hooks, gocpp::Init<exitHook>([](auto& x) {
+        exitHooks.hooks = append(exitHooks.hooks, gocpp::Init<exitHook>([=](auto& x) {
             x.f = f;
             x.runOnNonZeroExit = runOnNonZeroExit;
         }));

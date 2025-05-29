@@ -13,6 +13,7 @@
 
 namespace golang::strings
 {
+    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<std::string> explode(std::string s, int n);
     int Count(std::string s, std::string substr);
     bool Contains(std::string s, std::string substr);
@@ -30,7 +31,6 @@ namespace golang::strings
     gocpp::slice<std::string> SplitAfterN(std::string s, std::string sep, int n);
     gocpp::slice<std::string> Split(std::string s, std::string sep);
     gocpp::slice<std::string> SplitAfter(std::string s, std::string sep);
-    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<std::string> Fields(std::string s);
     gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f);
     std::string Join(gocpp::slice<std::string> elems, std::string sep);

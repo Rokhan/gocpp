@@ -372,7 +372,7 @@ namespace golang::runtime
                 c->consMark = c->lastConsMark[i];
             }
         }
-        copy(c->lastConsMark.make_slice(0, ), c->lastConsMark.make_slice(1));
+        copy(c->lastConsMark.make_slice(0), c->lastConsMark.make_slice(1));
         c->lastConsMark[len(c->lastConsMark) - 1] = currentConsMark;
         if(debug.gcpacertrace > 0)
         {
@@ -689,7 +689,7 @@ namespace golang::runtime
         {
             maxTrigger = goal - defaultHeapMinimum;
         }
-        maxTrigger = max(maxTrigger, minTrigger);
+        maxTrigger = gocpp::max(maxTrigger, minTrigger);
         uint64_t trigger = {};
         auto runway = rec::Load(gocpp::recv(c->runway));
         if(runway > goal)
@@ -700,8 +700,8 @@ namespace golang::runtime
         {
             trigger = goal - runway;
         }
-        trigger = max(trigger, minTrigger);
-        trigger = min(trigger, maxTrigger);
+        trigger = gocpp::max(trigger, minTrigger);
+        trigger = gocpp::min(trigger, maxTrigger);
         if(trigger > goal)
         {
             print("trigger=", trigger, " heapGoal=", goal, "\n");

@@ -397,7 +397,7 @@ namespace golang::reflectlite
             off += i2 + l2;
         }
         int32_t nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0, ), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"))).make_slice(0, ));
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"))).make_slice(0));
         auto pkgPathName = name {(unsigned char*)(resolveTypeOff(unsafe::Pointer(n->Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
@@ -410,7 +410,7 @@ namespace golang::reflectlite
 
     abi::Name rec::nameOff(struct rtype t, golang::reflectlite::nameOff off)
     {
-        return gocpp::Init<abi::Name>([](auto& x) {
+        return gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t.Type), int32_t(off)));
         });
     }

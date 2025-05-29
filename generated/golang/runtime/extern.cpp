@@ -43,7 +43,7 @@ namespace golang::runtime
         int line;
         bool ok;
         auto rpc = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 1);
-        auto n = callers(skip + 1, rpc.make_slice(0, ));
+        auto n = callers(skip + 1, rpc.make_slice(0));
         if(n < 1)
         {
             uintptr_t pc;

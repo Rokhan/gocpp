@@ -232,7 +232,7 @@ namespace golang::runtime
         buf[n + 4] = unsigned char(e / 100) + '0';
         buf[n + 5] = unsigned char(e / 10) % 10 + '0';
         buf[n + 6] = unsigned char(e % 10) + '0';
-        gwrite(buf.make_slice(0, ));
+        gwrite(buf.make_slice(0));
     }
 
     void printcomplex(struct gocpp::complex128 c)
@@ -344,7 +344,7 @@ namespace golang::runtime
                     markbuf[0] = ' ';
                 }
             }
-            gwrite(markbuf.make_slice(0, ));
+            gwrite(markbuf.make_slice(0));
             auto val = *(uintptr_t*)(unsafe::Pointer(p + i));
             print(hex(val));
             print(" ");

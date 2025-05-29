@@ -31,6 +31,9 @@ namespace golang::image
 
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
     struct Point Pt(int X, int Y);
+    struct Rectangle Rect(int x0, int y0, int x1, int y1);
+    int mul3NonNeg(int x, int y, int z);
+    int add2NonNeg(int x, int y);
     struct Rectangle
     {
         Point Min;
@@ -48,9 +51,6 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rectangle& value);
-    struct Rectangle Rect(int x0, int y0, int x1, int y1);
-    int mul3NonNeg(int x, int y, int z);
-    int add2NonNeg(int x, int y);
 
     namespace rec
     {

@@ -75,7 +75,7 @@ namespace golang::runtime
             return;
         }
         semacreate(gp->m);
-        auto timer = gocpp::InitPtr<lockTimer>([](auto& x) {
+        auto timer = gocpp::InitPtr<lockTimer>([=](auto& x) {
             x.lock = l;
         });
         rec::begin(gocpp::recv(timer));

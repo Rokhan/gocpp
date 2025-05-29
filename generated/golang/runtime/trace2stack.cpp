@@ -164,9 +164,9 @@ namespace golang::runtime
                 std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 1 + maxBytes);
                 if(flushed)
                 {
-                    rec::unsigned char(gocpp::recv(w), unsigned char(traceEvStacks));
+                    rec::byte(gocpp::recv(w), unsigned char(traceEvStacks));
                 }
-                rec::unsigned char(gocpp::recv(w), unsigned char(traceEvStack));
+                rec::byte(gocpp::recv(w), unsigned char(traceEvStack));
                 rec::varint(gocpp::recv(w), uint64_t(stk->id));
                 rec::varint(gocpp::recv(w), uint64_t(len(frames)));
                 for(auto [gocpp_ignored, frame] : frames)

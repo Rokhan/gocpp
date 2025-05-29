@@ -404,9 +404,9 @@ namespace golang::fmt
 
     sync::Pool ppFree = gocpp::Init<sync::Pool>([](auto& x) {
         x.New = []() mutable -> go_any
-    {
-        return go_new(pp);
-    };
+        {
+            return new(pp);
+        };
     });
     struct pp* newPrinter()
     {

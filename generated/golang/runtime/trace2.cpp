@@ -359,7 +359,7 @@ namespace golang::runtime
             {
                 return;
             }
-            auto ug = gocpp::Init<untracedG>([](auto& x) {
+            auto ug = gocpp::Init<untracedG>([=](auto& x) {
                 x.gp = gp;
                 x.mid = - 1;
             });
@@ -589,15 +589,15 @@ namespace golang::runtime
 
     void traceRegisterLabelsAndReasons(uintptr_t gen)
     {
-        for(auto [i, label] : gcMarkWorkerModeStrings.make_slice(0, ))
+        for(auto [i, label] : gcMarkWorkerModeStrings.make_slice(0))
         {
             trace.markWorkerLabels[gen % 2][i] = traceArg(rec::put(gocpp::recv(trace.stringTab[gen % 2]), gen, label));
         }
-        for(auto [i, str] : traceBlockReasonStrings.make_slice(0, ))
+        for(auto [i, str] : traceBlockReasonStrings.make_slice(0))
         {
             trace.goBlockReasons[gen % 2][i] = traceArg(rec::put(gocpp::recv(trace.stringTab[gen % 2]), gen, str));
         }
-        for(auto [i, str] : traceGoStopReasonStrings.make_slice(0, ))
+        for(auto [i, str] : traceGoStopReasonStrings.make_slice(0))
         {
             trace.goStopReasons[gen % 2][i] = traceArg(rec::put(gocpp::recv(trace.stringTab[gen % 2]), gen, str));
         }
@@ -1012,10 +1012,10 @@ namespace golang::runtime
 
     struct wakeableSleep* newWakeableSleep()
     {
-        auto s = go_new(wakeableSleep);
+        auto s = new(wakeableSleep);
         lockInit(& s->lock, lockRankWakeableSleep);
         s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_6>>(), 1);
-        s->timer = go_new(timer);
+        s->timer = new(timer);
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {

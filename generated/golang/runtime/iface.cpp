@@ -158,7 +158,7 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        gocpp::panic(gocpp::InitPtr<TypeAssertionError>([](auto& x) {
+        gocpp::panic(gocpp::InitPtr<TypeAssertionError>([=](auto& x) {
             x.concrete = typ;
             x.asserted = & inter->Type;
             x.missingMethod = rec::init(gocpp::recv(m));

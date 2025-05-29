@@ -180,7 +180,7 @@ namespace golang::runtime
         }
         if(heapBitsInSpan(span->elemsize))
         {
-            return gocpp::Init<typePointers>([](auto& x) {
+            return gocpp::Init<typePointers>([=](auto& x) {
                 x.elem = addr;
                 x.addr = addr;
                 x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr);
@@ -197,7 +197,7 @@ namespace golang::runtime
             typ = span->largeType;
         }
         auto gcdata = typ->GCData;
-        return gocpp::Init<typePointers>([](auto& x) {
+        return gocpp::Init<typePointers>([=](auto& x) {
             x.elem = addr;
             x.addr = addr;
             x.mask = readUintptr(gcdata);
@@ -217,7 +217,7 @@ namespace golang::runtime
             return typePointers {};
         }
         auto gcdata = typ->GCData;
-        return gocpp::Init<typePointers>([](auto& x) {
+        return gocpp::Init<typePointers>([=](auto& x) {
             x.elem = addr;
             x.addr = addr;
             x.mask = readUintptr(gcdata);

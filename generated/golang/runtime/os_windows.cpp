@@ -278,20 +278,20 @@ namespace golang::runtime
 
     void loadOptionalSyscalls()
     {
-        auto bcryptPrimitives = windowsLoadSystemLib(bcryptprimitivesdll.make_slice(0, ));
+        auto bcryptPrimitives = windowsLoadSystemLib(bcryptprimitivesdll.make_slice(0));
         if(bcryptPrimitives == 0)
         {
             go_throw("bcryptprimitives.dll not found");
         }
         _ProcessPrng = windowsFindfunc(bcryptPrimitives, gocpp::Tag<gocpp::slice<unsigned char>>()("ProcessPrng\000"));
-        auto n32 = windowsLoadSystemLib(ntdlldll.make_slice(0, ));
+        auto n32 = windowsLoadSystemLib(ntdlldll.make_slice(0));
         if(n32 == 0)
         {
             go_throw("ntdll.dll not found");
         }
         _RtlGetCurrentPeb = windowsFindfunc(n32, gocpp::Tag<gocpp::slice<unsigned char>>()("RtlGetCurrentPeb\000"));
         _RtlGetNtVersionNumbers = windowsFindfunc(n32, gocpp::Tag<gocpp::slice<unsigned char>>()("RtlGetNtVersionNumbers\000"));
-        auto m32 = windowsLoadSystemLib(winmmdll.make_slice(0, ));
+        auto m32 = windowsLoadSystemLib(winmmdll.make_slice(0));
         if(m32 == 0)
         {
             go_throw("winmm.dll not found");
@@ -302,7 +302,7 @@ namespace golang::runtime
         {
             go_throw("timeBegin/EndPeriod not found");
         }
-        auto ws232 = windowsLoadSystemLib(ws2_32dll.make_slice(0, ));
+        auto ws232 = windowsLoadSystemLib(ws2_32dll.make_slice(0));
         if(ws232 == 0)
         {
             go_throw("ws2_32.dll not found");
@@ -349,7 +349,7 @@ namespace golang::runtime
             return value.PrintTo(os);
         }
 
-        auto powrprof = windowsLoadSystemLib(powrprofdll.make_slice(0, ));
+        auto powrprof = windowsLoadSystemLib(powrprofdll.make_slice(0));
         if(powrprof == 0)
         {
             return;
@@ -370,7 +370,7 @@ namespace golang::runtime
             }
             return 0;
         };
-        auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([](auto& x) {
+        auto params = gocpp::Init<_DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>([=](auto& x) {
             x.callback = compileCallback(*efaceOf(& fn), true);
         });
         auto handle = uintptr_t(0);
@@ -489,7 +489,7 @@ namespace golang::runtime
         {
             readTimeRandom(targ);
         }
-        auto start = copy(longFileName.make_slice(0, ), sysDirectory.make_slice(0, sysDirectoryLen));
+        auto start = copy(longFileName.make_slice(0), sysDirectory.make_slice(0, sysDirectoryLen));
         auto dig = "0123456789abcdef";
         for(auto i = 0; i < 32; i++)
         {
@@ -539,7 +539,7 @@ namespace golang::runtime
     void goenvs()
     {
         auto strings = unsafe::Pointer(stdcall0(_GetEnvironmentStringsW));
-        auto p = (gocpp::array<uint16_t, 1 << 24>*)(strings).make_slice(0, );
+        auto p = (gocpp::array<uint16_t, 1 << 24>*)(strings).make_slice(0);
         auto n = 0;
         for(auto [from, i] = std::tuple{0, 0}; true; i++)
         {
@@ -634,7 +634,7 @@ namespace golang::runtime
         lock(& utf16ConsoleBackLock);
         auto b = (gocpp::array<unsigned char, 1 << 30>*)(buf).make_slice(0, bufLen);
         auto s = *(std::string*)(unsafe::Pointer(& b));
-        auto utf16tmp = utf16ConsoleBack.make_slice(0, );
+        auto utf16tmp = utf16ConsoleBack.make_slice(0);
         auto total = len(s);
         auto w = 0;
         for(auto [gocpp_ignored, r] : s)
@@ -914,7 +914,7 @@ namespace golang::runtime
 
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
-        auto libcall = gocpp::Init<libcall>([](auto& x) {
+        auto libcall = gocpp::Init<libcall>([=](auto& x) {
             x.fn = uintptr_t(unsafe::Pointer(fn));
             x.n = uintptr_t(n);
             x.args = args;

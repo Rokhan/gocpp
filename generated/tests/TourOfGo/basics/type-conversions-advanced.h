@@ -12,8 +12,6 @@
 
 namespace golang::main
 {
-    void toto();
-    int totoInt();
     struct III : gocpp::Interface
     {
         III(){}
@@ -95,6 +93,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    void toto();
+    int totoInt();
     void main();
 
     namespace rec

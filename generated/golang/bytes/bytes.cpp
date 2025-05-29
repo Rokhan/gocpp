@@ -198,7 +198,7 @@ namespace golang::bytes
                     break;
                 default:
                     gocpp::array<unsigned char, utf8::UTFMax> b = {};
-                    auto n = utf8::EncodeRune(b.make_slice(0, ), r);
+                    auto n = utf8::EncodeRune(b.make_slice(0), r);
                     return Index(s, b.make_slice(0, n));
                     break;
             }
@@ -457,7 +457,14 @@ namespace golang::bytes
         return genSplit(s, sep, len(sep), - 1);
     }
 
-    gocpp::array<uint8_t, 256> asciiSpace = gocpp::Init<gocpp::array<uint8_t, 256>>([](gocpp::array<uint8_t, 256>& x) { x.'\t' = 1; x.'\n' = 1; x.'\v' = 1; x.'\f' = 1; x.'\r' = 1; x.' ' = 1; });
+    gocpp::array<uint8_t, 256> asciiSpace = gocpp::Init<gocpp::array<uint8_t, 256>>([](auto& x) {
+        x['\t'] = 1;
+        x['\n'] = 1;
+        x['\v'] = 1;
+        x['\f'] = 1;
+        x['\r'] = 1;
+        x[' '] = 1;
+    });
     gocpp::slice<gocpp::slice<unsigned char>> Fields(gocpp::slice<unsigned char> s)
     {
         auto n = 0;

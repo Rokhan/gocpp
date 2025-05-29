@@ -171,7 +171,7 @@ namespace golang::runtime
                 case 1:
                     auto len = (slice*)(e->data)->len;
                     auto et = (runtime::slicetype*)(unsafe::Pointer(t))->Elem;
-                    auto sl = go_new(slice);
+                    auto sl = new(slice);
                     *sl = slice {makeslicecopy(et, len, len, (slice*)(e->data)->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
@@ -266,7 +266,7 @@ namespace golang::runtime
 
     struct userArena* newUserArena()
     {
-        auto a = go_new(userArena);
+        auto a = new(userArena);
         SetFinalizer(a, [=](struct userArena* a) mutable -> void
         {
             rec::free(gocpp::recv(a));
@@ -643,7 +643,7 @@ namespace golang::runtime
         }
         mp->mallocing = 0;
         releasem(mp);
-        if(auto t = (gocpp::Init<gcTrigger>([](auto& x) {
+        if(auto t = (gocpp::Init<gcTrigger>([=](auto& x) {
             x.kind = gcTriggerHeap;
         })); rec::test(gocpp::recv(t)))
         {

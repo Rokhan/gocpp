@@ -245,13 +245,13 @@ namespace golang::runtime
         }
         lockInit(& s->lock, lockRankScavenge);
         s->g = getg();
-        s->timer = go_new(timer);
+        s->timer = new(timer);
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
             rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };
-        s->sleepController = gocpp::Init<piController>([](auto& x) {
+        s->sleepController = gocpp::Init<piController>([=](auto& x) {
             x.kp = 0.3375;
             x.ti = 3.2e6;
             x.tt = 1e9;
@@ -654,7 +654,7 @@ namespace golang::runtime
                 }
             }
         }
-        auto size = min(run, (unsigned int)(max));
+        auto size = gocpp::min(run, (unsigned int)(max));
         auto start = end - size;
         if(physHugePageSize > pageSize && physHugePageSize > physPageSize)
         {
@@ -903,7 +903,7 @@ namespace golang::runtime
 
     struct scavChunkData unpackScavChunkData(uint64_t sc)
     {
-        return gocpp::Init<scavChunkData>([](auto& x) {
+        return gocpp::Init<scavChunkData>([=](auto& x) {
             x.inUse = uint16_t(sc);
             x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask;
             x.gen = uint32_t(sc >> 32);

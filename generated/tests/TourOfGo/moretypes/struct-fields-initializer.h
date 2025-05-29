@@ -30,6 +30,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    extern long one;
+    void main();
     struct Segment
     {
         Vertex Start;
@@ -52,7 +54,6 @@ namespace golang::main
     extern Vertex v3;
     extern Vertex v4;
     extern Segment s1;
-    void main();
 
     namespace rec
     {

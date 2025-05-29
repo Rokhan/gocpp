@@ -89,7 +89,7 @@ namespace golang::fmtsort
             key = append(key, rec::Key(gocpp::recv(iter)));
             value = append(value, rec::Value(gocpp::recv(iter)));
         }
-        auto sorted = gocpp::InitPtr<SortedMap>([](auto& x) {
+        auto sorted = gocpp::InitPtr<SortedMap>([=](auto& x) {
             x.Key = key;
             x.Value = value;
         });

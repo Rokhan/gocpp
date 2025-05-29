@@ -145,7 +145,14 @@ namespace golang::time
     struct Timer* NewTimer(golang::time::Duration d)
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
-        auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.C = c; x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = sendTime; x.arg = c; }); });
+        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
+            x.C = c;
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
+                x.when = when(d);
+                x.f = sendTime;
+                x.arg = c;
+            });
+        });
         startTimer(& t->r);
         return t;
     }
@@ -184,7 +191,13 @@ namespace golang::time
 
     struct Timer* AfterFunc(golang::time::Duration d, std::function<void ()> f)
     {
-        auto t = gocpp::InitPtr<Timer>([](Timer& x) { x.r = gocpp::Init<runtimeTimer>([](runtimeTimer& x) { x.when = when(d); x.f = goFunc; x.arg = f; }); });
+        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
+                x.when = when(d);
+                x.f = goFunc;
+                x.arg = f;
+            });
+        });
         startTimer(& t->r);
         return t;
     }

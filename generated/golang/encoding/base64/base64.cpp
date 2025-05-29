@@ -73,10 +73,10 @@ namespace golang::base64
         {
             gocpp::panic("encoding alphabet is not 64-bytes long");
         }
-        auto e = go_new(Encoding);
+        auto e = new(Encoding);
         e->padChar = StdPadding;
-        copy(e->encode.make_slice(0, ), encoder);
-        copy(e->decodeMap.make_slice(0, ), decodeMapInitialize);
+        copy(e->encode.make_slice(0), encoder);
+        copy(e->decodeMap.make_slice(0), decodeMapInitialize);
         for(auto i = 0; i < len(encoder); i++)
         {
             //Go switch emulation
@@ -276,7 +276,7 @@ namespace golang::base64
                 struct gocpp::error err;
                 return {n, err};
             }
-            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), e->buf.make_slice(0, ));
+            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), e->buf.make_slice(0));
             if(std::tie(gocpp_id_0, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
             {
                 int n;
@@ -297,7 +297,7 @@ namespace golang::base64
                 nn = len(p);
                 nn -= nn % 3;
             }
-            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), p.make_slice(0, nn));
+            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), p.make_slice(0, nn));
             if(std::tie(gocpp_id_1, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
             {
                 int n;
@@ -307,7 +307,7 @@ namespace golang::base64
             n += nn;
             p = p.make_slice(nn);
         }
-        copy(e->buf.make_slice(0, ), p);
+        copy(e->buf.make_slice(0), p);
         e->nbuf = len(p);
         n += len(p);
         return {n, err};
@@ -317,7 +317,7 @@ namespace golang::base64
     {
         if(e->err == nullptr && e->nbuf > 0)
         {
-            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0, ), e->buf.make_slice(0, e->nbuf));
+            rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), e->buf.make_slice(0, e->nbuf));
             std::tie(gocpp_id_2, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, rec::EncodedLen(gocpp::recv(e->enc), e->nbuf)));
             e->nbuf = 0;
         }
@@ -326,7 +326,10 @@ namespace golang::base64
 
     io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w)
     {
-        return gocpp::InitPtr<encoder>([](encoder& x) { x.enc = enc; x.w = w; });
+        return gocpp::InitPtr<encoder>([=](auto& x) {
+            x.enc = enc;
+            x.w = w;
+        });
     }
 
     int rec::EncodedLen(struct Encoding* enc, int n)
@@ -629,7 +632,7 @@ namespace golang::base64
                 int n;
                 struct gocpp::error err;
                 int nw = {};
-                std::tie(nw, d->err) = rec::Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0, ), d->buf.make_slice(0, d->nbuf));
+                std::tie(nw, d->err) = rec::Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0), d->buf.make_slice(0, d->nbuf));
                 d->nbuf = 0;
                 d->out = d->outbuf.make_slice(0, nw);
                 n = copy(p, d->out);
@@ -662,7 +665,7 @@ namespace golang::base64
         {
             int n;
             struct gocpp::error err;
-            std::tie(nw, d->err) = rec::Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0, ), d->buf.make_slice(0, nr));
+            std::tie(nw, d->err) = rec::Decode(gocpp::recv(d->enc), d->outbuf.make_slice(0), d->buf.make_slice(0, nr));
             d->out = d->outbuf.make_slice(0, nw);
             n = copy(p, d->out);
             d->out = d->out.make_slice(n);
@@ -846,7 +849,10 @@ namespace golang::base64
 
     io::Reader NewDecoder(struct Encoding* enc, io::Reader r)
     {
-        return gocpp::InitPtr<decoder>([](decoder& x) { x.enc = enc; x.r = new newlineFilteringReader {r}; });
+        return gocpp::InitPtr<decoder>([=](auto& x) {
+            x.enc = enc;
+            x.r = new newlineFilteringReader {r};
+        });
     }
 
     int rec::DecodedLen(struct Encoding* enc, int n)

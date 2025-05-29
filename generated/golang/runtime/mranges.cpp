@@ -183,14 +183,14 @@ namespace golang::runtime
 
     struct offAddr rec::add(struct offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<offAddr>([](auto& x) {
+        return gocpp::Init<offAddr>([=](auto& x) {
             x.a = l.a + bytes;
         });
     }
 
     struct offAddr rec::sub(struct offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<offAddr>([](auto& x) {
+        return gocpp::Init<offAddr>([=](auto& x) {
             x.a = l.a - bytes;
         });
     }

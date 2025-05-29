@@ -19,6 +19,88 @@
 
 namespace golang::rand
 {
+    struct runtimeSource
+    {
+        mocklib::Mutex mu;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct runtimeSource& value);
+    struct Source64 : gocpp::Interface
+    {
+        Source64(){}
+        Source64(Source64& i) = default;
+        Source64(const Source64& i) = default;
+        Source64& operator=(Source64& i) = default;
+        Source64& operator=(const Source64& i) = default;
+
+        template<typename T>
+        Source64(T& ref);
+
+        template<typename T>
+        Source64(const T& ref);
+
+        template<typename T>
+        Source64(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct ISource64
+        {
+            virtual uint64_t vUint64() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct Source64Impl : ISource64
+        {
+            explicit Source64Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            uint64_t vUint64() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<ISource64> value;
+    };
+
+    namespace rec
+    {
+        uint64_t Uint64(const gocpp::PtrRecv<struct Source64, false>& self);
+        uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Source64& value);
+    struct lockedSource
+    {
+        mocklib::Mutex lk;
+        rngSource* s;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
     struct Source : gocpp::Interface
     {
         Source(){}
@@ -74,57 +156,29 @@ namespace golang::rand
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value);
-    struct Source64 : gocpp::Interface
-    {
-        Source64(){}
-        Source64(Source64& i) = default;
-        Source64(const Source64& i) = default;
-        Source64& operator=(Source64& i) = default;
-        Source64& operator=(const Source64& i) = default;
-
-        template<typename T>
-        Source64(T& ref);
-
-        template<typename T>
-        Source64(const T& ref);
-
-        template<typename T>
-        Source64(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct ISource64
-        {
-            virtual uint64_t vUint64() = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct Source64Impl : ISource64
-        {
-            explicit Source64Impl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            uint64_t vUint64() override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<ISource64> value;
-    };
-
-    namespace rec
-    {
-        uint64_t Uint64(const gocpp::PtrRecv<struct Source64, false>& self);
-        uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Source64& value);
+    extern godebug::Setting* randautoseed;
     struct Source NewSource(int64_t seed);
     struct rngSource* newSource(int64_t seed);
+    struct Rand* New(struct Source src);
+    std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
+    struct Rand* globalRand();
+    uint64_t runtime_rand();
+    void Seed(int64_t seed);
+    int64_t Int63();
+    uint32_t Uint32();
+    uint64_t Uint64();
+    int32_t Int31();
+    int Int();
+    int64_t Int63n(int64_t n);
+    int32_t Int31n(int32_t n);
+    int Intn(int n);
+    double Float64();
+    double Float32();
+    gocpp::slice<int> Perm(int n);
+    void Shuffle(int n, std::function<void (int i, int j)> swap);
+    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p);
+    double NormFloat64();
+    double ExpFloat64();
     struct Rand
     {
         Source src;
@@ -144,60 +198,6 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rand& value);
-    struct Rand* New(struct Source src);
-    std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
-    extern godebug::Setting* randautoseed;
-    struct Rand* globalRand();
-    uint64_t runtime_rand();
-    struct runtimeSource
-    {
-        mocklib::Mutex mu;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct runtimeSource& value);
-    void Seed(int64_t seed);
-    int64_t Int63();
-    uint32_t Uint32();
-    uint64_t Uint64();
-    int32_t Int31();
-    int Int();
-    int64_t Int63n(int64_t n);
-    int32_t Int31n(int32_t n);
-    int Intn(int n);
-    double Float64();
-    double Float32();
-    gocpp::slice<int> Perm(int n);
-    void Shuffle(int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p);
-    double NormFloat64();
-    double ExpFloat64();
-    struct lockedSource
-    {
-        mocklib::Mutex lk;
-        rngSource* s;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
 
     namespace rec
     {

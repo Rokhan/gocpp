@@ -711,7 +711,10 @@ namespace golang::binary
         {
             return errors::New("binary.Read: invalid type " + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
-        auto d = gocpp::InitPtr<decoder>([](decoder& x) { x.order = order; x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size); });
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
+            x.order = order;
+            x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
+        });
         if(auto [gocpp_id_4, err] = io::ReadFull(r, d->buf); err != nullptr)
         {
             return err;
@@ -1025,7 +1028,10 @@ namespace golang::binary
             return errors::New("binary.Write: some values are not fixed-sized in type " + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
-        auto e = gocpp::InitPtr<encoder>([](encoder& x) { x.order = order; x.buf = buf; });
+        auto e = gocpp::InitPtr<encoder>([=](auto& x) {
+            x.order = order;
+            x.buf = buf;
+        });
         rec::value(gocpp::recv(e), v);
         auto [gocpp_id_9, err] = rec::Write(gocpp::recv(w), buf);
         return err;
@@ -1245,42 +1251,42 @@ namespace golang::binary
 
     int8_t rec::int8(golang::binary::decoder* d)
     {
-        return int8_t(rec::uint8_t(gocpp::recv(d)));
+        return int8_t(rec::uint8(gocpp::recv(d)));
     }
 
     void rec::int8(golang::binary::encoder* e, int8_t x)
     {
-        rec::uint8_t(gocpp::recv(e), uint8_t(x));
+        rec::uint8(gocpp::recv(e), uint8_t(x));
     }
 
     int16_t rec::int16(golang::binary::decoder* d)
     {
-        return int16_t(rec::uint16_t(gocpp::recv(d)));
+        return int16_t(rec::uint16(gocpp::recv(d)));
     }
 
     void rec::int16(golang::binary::encoder* e, int16_t x)
     {
-        rec::uint16_t(gocpp::recv(e), uint16_t(x));
+        rec::uint16(gocpp::recv(e), uint16_t(x));
     }
 
     int32_t rec::int32(golang::binary::decoder* d)
     {
-        return int32_t(rec::uint32_t(gocpp::recv(d)));
+        return int32_t(rec::uint32(gocpp::recv(d)));
     }
 
     void rec::int32(golang::binary::encoder* e, int32_t x)
     {
-        rec::uint32_t(gocpp::recv(e), uint32_t(x));
+        rec::uint32(gocpp::recv(e), uint32_t(x));
     }
 
     int64_t rec::int64(golang::binary::decoder* d)
     {
-        return int64_t(rec::uint64_t(gocpp::recv(d)));
+        return int64_t(rec::uint64(gocpp::recv(d)));
     }
 
     void rec::int64(golang::binary::encoder* e, int64_t x)
     {
-        rec::uint64_t(gocpp::recv(e), uint64_t(x));
+        rec::uint64(gocpp::recv(e), uint64_t(x));
     }
 
     void rec::value(golang::binary::decoder* d, reflect::Value v)
@@ -1340,40 +1346,40 @@ namespace golang::binary
                     rec::SetBool(gocpp::recv(v), rec::bool(gocpp::recv(d)));
                     break;
                 case 4:
-                    rec::SetInt(gocpp::recv(v), int64_t(rec::int8_t(gocpp::recv(d))));
+                    rec::SetInt(gocpp::recv(v), int64_t(rec::int8(gocpp::recv(d))));
                     break;
                 case 5:
-                    rec::SetInt(gocpp::recv(v), int64_t(rec::int16_t(gocpp::recv(d))));
+                    rec::SetInt(gocpp::recv(v), int64_t(rec::int16(gocpp::recv(d))));
                     break;
                 case 6:
-                    rec::SetInt(gocpp::recv(v), int64_t(rec::int32_t(gocpp::recv(d))));
+                    rec::SetInt(gocpp::recv(v), int64_t(rec::int32(gocpp::recv(d))));
                     break;
                 case 7:
-                    rec::SetInt(gocpp::recv(v), rec::int64_t(gocpp::recv(d)));
+                    rec::SetInt(gocpp::recv(v), rec::int64(gocpp::recv(d)));
                     break;
                 case 8:
-                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint8_t(gocpp::recv(d))));
+                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint8(gocpp::recv(d))));
                     break;
                 case 9:
-                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint16_t(gocpp::recv(d))));
+                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint16(gocpp::recv(d))));
                     break;
                 case 10:
-                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint32_t(gocpp::recv(d))));
+                    rec::SetUint(gocpp::recv(v), uint64_t(rec::uint32(gocpp::recv(d))));
                     break;
                 case 11:
-                    rec::SetUint(gocpp::recv(v), rec::uint64_t(gocpp::recv(d)));
+                    rec::SetUint(gocpp::recv(v), rec::uint64(gocpp::recv(d)));
                     break;
                 case 12:
-                    rec::SetFloat(gocpp::recv(v), double(math::Float32frombits(rec::uint32_t(gocpp::recv(d)))));
+                    rec::SetFloat(gocpp::recv(v), double(math::Float32frombits(rec::uint32(gocpp::recv(d)))));
                     break;
                 case 13:
-                    rec::SetFloat(gocpp::recv(v), math::Float64frombits(rec::uint64_t(gocpp::recv(d))));
+                    rec::SetFloat(gocpp::recv(v), math::Float64frombits(rec::uint64(gocpp::recv(d))));
                     break;
                 case 14:
-                    rec::SetComplex(gocpp::recv(v), complex(double(math::Float32frombits(rec::uint32_t(gocpp::recv(d)))), double(math::Float32frombits(rec::uint32_t(gocpp::recv(d))))));
+                    rec::SetComplex(gocpp::recv(v), complex(double(math::Float32frombits(rec::uint32(gocpp::recv(d)))), double(math::Float32frombits(rec::uint32(gocpp::recv(d))))));
                     break;
                 case 15:
-                    rec::SetComplex(gocpp::recv(v), complex(math::Float64frombits(rec::uint64_t(gocpp::recv(d))), math::Float64frombits(rec::uint64_t(gocpp::recv(d)))));
+                    rec::SetComplex(gocpp::recv(v), complex(math::Float64frombits(rec::uint64(gocpp::recv(d))), math::Float64frombits(rec::uint64(gocpp::recv(d)))));
                     break;
             }
         }
@@ -1454,16 +1460,16 @@ namespace golang::binary
                         switch(conditionId)
                         {
                             case 0:
-                                rec::int8_t(gocpp::recv(e), int8_t(rec::Int(gocpp::recv(v))));
+                                rec::int8(gocpp::recv(e), int8_t(rec::Int(gocpp::recv(v))));
                                 break;
                             case 1:
-                                rec::int16_t(gocpp::recv(e), int16_t(rec::Int(gocpp::recv(v))));
+                                rec::int16(gocpp::recv(e), int16_t(rec::Int(gocpp::recv(v))));
                                 break;
                             case 2:
-                                rec::int32_t(gocpp::recv(e), int32_t(rec::Int(gocpp::recv(v))));
+                                rec::int32(gocpp::recv(e), int32_t(rec::Int(gocpp::recv(v))));
                                 break;
                             case 3:
-                                rec::int64_t(gocpp::recv(e), rec::Int(gocpp::recv(v)));
+                                rec::int64(gocpp::recv(e), rec::Int(gocpp::recv(v)));
                                 break;
                         }
                     }
@@ -1485,16 +1491,16 @@ namespace golang::binary
                         switch(conditionId)
                         {
                             case 0:
-                                rec::uint8_t(gocpp::recv(e), uint8_t(rec::Uint(gocpp::recv(v))));
+                                rec::uint8(gocpp::recv(e), uint8_t(rec::Uint(gocpp::recv(v))));
                                 break;
                             case 1:
-                                rec::uint16_t(gocpp::recv(e), uint16_t(rec::Uint(gocpp::recv(v))));
+                                rec::uint16(gocpp::recv(e), uint16_t(rec::Uint(gocpp::recv(v))));
                                 break;
                             case 2:
-                                rec::uint32_t(gocpp::recv(e), uint32_t(rec::Uint(gocpp::recv(v))));
+                                rec::uint32(gocpp::recv(e), uint32_t(rec::Uint(gocpp::recv(v))));
                                 break;
                             case 3:
-                                rec::uint64_t(gocpp::recv(e), rec::Uint(gocpp::recv(v)));
+                                rec::uint64(gocpp::recv(e), rec::Uint(gocpp::recv(v)));
                                 break;
                         }
                     }
@@ -1510,10 +1516,10 @@ namespace golang::binary
                         switch(conditionId)
                         {
                             case 0:
-                                rec::uint32_t(gocpp::recv(e), math::Float32bits(float(rec::Float(gocpp::recv(v)))));
+                                rec::uint32(gocpp::recv(e), math::Float32bits(float(rec::Float(gocpp::recv(v)))));
                                 break;
                             case 1:
-                                rec::uint64_t(gocpp::recv(e), math::Float64bits(rec::Float(gocpp::recv(v))));
+                                rec::uint64(gocpp::recv(e), math::Float64bits(rec::Float(gocpp::recv(v))));
                                 break;
                         }
                     }
@@ -1530,13 +1536,13 @@ namespace golang::binary
                         {
                             case 0:
                                 auto x = rec::Complex(gocpp::recv(v));
-                                rec::uint32_t(gocpp::recv(e), math::Float32bits(float(real(x))));
-                                rec::uint32_t(gocpp::recv(e), math::Float32bits(float(imag(x))));
+                                rec::uint32(gocpp::recv(e), math::Float32bits(float(real(x))));
+                                rec::uint32(gocpp::recv(e), math::Float32bits(float(imag(x))));
                                 break;
                             case 1:
                                 auto x = rec::Complex(gocpp::recv(v));
-                                rec::uint64_t(gocpp::recv(e), math::Float64bits(real(x)));
-                                rec::uint64_t(gocpp::recv(e), math::Float64bits(imag(x)));
+                                rec::uint64(gocpp::recv(e), math::Float64bits(real(x)));
+                                rec::uint64(gocpp::recv(e), math::Float64bits(imag(x)));
                                 break;
                         }
                     }

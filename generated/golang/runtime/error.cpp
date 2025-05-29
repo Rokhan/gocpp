@@ -307,7 +307,7 @@ namespace golang::runtime
             v = - v;
         }
         gocpp::array<unsigned char, 20> buf = {};
-        b = append(b, itoa(buf.make_slice(0, ), uint64_t(v)));
+        b = append(b, itoa(buf.make_slice(0), uint64_t(v)));
         return b;
     }
 

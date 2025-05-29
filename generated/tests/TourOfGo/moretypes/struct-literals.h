@@ -29,11 +29,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    void main();
     extern Vertex v1;
     extern Vertex v2;
     extern Vertex v3;
     extern Vertex* p;
-    void main();
 
     namespace rec
     {

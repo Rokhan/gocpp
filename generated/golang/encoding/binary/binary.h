@@ -207,6 +207,7 @@ namespace golang::binary
     int Size(go_any v);
     int dataSize(reflect::Value v);
     int sizeof(reflect::Type t);
+    int intDataSize(go_any data);
     struct coder
     {
         ByteOrder order;
@@ -225,7 +226,6 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coder& value);
-    int intDataSize(go_any data);
 
     namespace rec
     {

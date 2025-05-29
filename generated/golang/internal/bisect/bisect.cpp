@@ -43,7 +43,7 @@ namespace golang::bisect
         {
             return {nullptr, nullptr};
         }
-        auto m = go_new(Matcher);
+        auto m = new(Matcher);
         auto p = pattern;
         if(len(p) > 0 && p[0] == 'q')
         {
@@ -436,7 +436,7 @@ namespace golang::bisect
     {
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
-        auto n = runtime::Callers(2, stk.make_slice(0, ));
+        auto n = runtime::Callers(2, stk.make_slice(0));
         if(n <= 1)
         {
             return false;
@@ -457,7 +457,7 @@ namespace golang::bisect
                 {
                     break;
                 }
-                d = go_new(dedup);
+                d = new(dedup);
                 if(rec::CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
                 {
                     break;
@@ -578,14 +578,14 @@ namespace golang::bisect
     {
         auto prefix = "[bisect-match 0x";
         gocpp::array<unsigned char, len(prefix) + 16 + 1> buf = {};
-        copy(buf.make_slice(0, ), prefix);
+        copy(buf.make_slice(0), prefix);
         for(auto i = 0; i < 16; i++)
         {
             buf[len(prefix) + i] = "0123456789abcdef"[id >> 60];
             id <<= 4;
         }
         buf[len(prefix) + 16] = ']';
-        return append(dst, buf.make_slice(0, ));
+        return append(dst, buf.make_slice(0));
     }
 
     std::tuple<std::string, uint64_t, bool> CutMarker(std::string line)

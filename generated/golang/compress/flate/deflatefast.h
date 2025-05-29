@@ -13,9 +13,6 @@
 
 namespace golang::flate
 {
-    uint32_t load32(gocpp::slice<unsigned char> b, int32_t i);
-    uint64_t load64(gocpp::slice<unsigned char> b, int32_t i);
-    uint32_t hash(uint32_t u);
     struct tableEntry
     {
         uint32_t val;
@@ -33,6 +30,11 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntry& value);
+    uint32_t load32(gocpp::slice<unsigned char> b, int32_t i);
+    uint64_t load64(gocpp::slice<unsigned char> b, int32_t i);
+    uint32_t hash(uint32_t u);
+    struct deflateFast* newDeflateFast();
+    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
     struct deflateFast
     {
         gocpp::array<tableEntry, tableSize> table;
@@ -51,8 +53,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct deflateFast& value);
-    struct deflateFast* newDeflateFast();
-    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
 
     namespace rec
     {

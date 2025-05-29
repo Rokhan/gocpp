@@ -174,12 +174,12 @@ namespace golang::chacha8rand
     {
         if(len(data) != 6 * 8 || string(data.make_slice(0, 8)) != "chacha8:")
         {
-            return go_new(errUnmarshalChaCha8);
+            return new(errUnmarshalChaCha8);
         }
         auto used = beUint64(data.make_slice(1 * 8));
         if(used > (ctrMax / ctrInc) * chunk - reseed)
         {
-            return go_new(errUnmarshalChaCha8);
+            return new(errUnmarshalChaCha8);
         }
         for(auto [i, gocpp_ignored] : s->seed)
         {

@@ -17,8 +17,6 @@
 
 namespace golang::png
 {
-    bool cbPaletted(int cb);
-    bool cbTrueColor(int cb);
     struct interlaceScan
     {
         int xFactor;
@@ -38,7 +36,6 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
-    extern gocpp::slice<interlaceScan> interlacing;
     extern std::string pngHeader;
     struct decoder
     {
@@ -70,9 +67,12 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
     extern FormatError chunkOrderError;
+    bool cbPaletted(int cb);
+    bool cbTrueColor(int cb);
     std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r);
     std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r);
     void init();
+    extern gocpp::slice<interlaceScan> interlacing;
 
     namespace rec
     {

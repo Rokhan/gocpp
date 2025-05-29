@@ -369,11 +369,11 @@ namespace golang::runtime
     {
         if(h->extra == nullptr)
         {
-            h->extra = go_new(mapextra);
+            h->extra = new(mapextra);
         }
         if(h->extra->overflow == nullptr)
         {
-            h->extra->overflow = go_new(gocpp::Tag<gocpp::slice<bmap*>>());
+            h->extra->overflow = new(gocpp::Tag<gocpp::slice<bmap*>>());
         }
     }
 
@@ -388,7 +388,7 @@ namespace golang::runtime
 
     struct hmap* makemap_small()
     {
-        auto h = go_new(hmap);
+        auto h = new(hmap);
         h->hash0 = uint32_t(rand());
         return h;
     }
@@ -402,7 +402,7 @@ namespace golang::runtime
         }
         if(h == nullptr)
         {
-            h = go_new(hmap);
+            h = new(hmap);
         }
         h->hash0 = uint32_t(rand());
         auto B = uint8_t(0);
@@ -417,7 +417,7 @@ namespace golang::runtime
             std::tie(h->buckets, nextOverflow) = makeBucketArray(t, h->B, nullptr);
             if(nextOverflow != nullptr)
             {
-                h->extra = go_new(mapextra);
+                h->extra = new(mapextra);
                 h->extra->nextOverflow = nextOverflow;
             }
         }
@@ -1246,7 +1246,7 @@ namespace golang::runtime
         {
             if(h->extra == nullptr)
             {
-                h->extra = go_new(mapextra);
+                h->extra = new(mapextra);
             }
             h->extra->nextOverflow = nextOverflow;
         }

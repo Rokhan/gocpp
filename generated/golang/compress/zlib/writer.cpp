@@ -102,7 +102,11 @@ namespace golang::zlib
         {
             return {nullptr, mocklib::Errorf("zlib: invalid compression level: %d", level)};
         }
-        return {gocpp::InitPtr<Writer>([](Writer& x) { x.w = w; x.level = level; x.dict = dict; }), nullptr};
+        return {gocpp::InitPtr<Writer>([=](auto& x) {
+            x.w = w;
+            x.level = level;
+            x.dict = dict;
+        }), nullptr};
     }
 
     void rec::Reset(struct Writer* z, io::Writer w)
@@ -184,7 +188,7 @@ namespace golang::zlib
         if(z->dict != nullptr)
         {
             struct gocpp::error err;
-            rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), adler32::Checksum(z->dict));
+            rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), adler32::Checksum(z->dict));
             if(std::tie(gocpp_id_3, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
                 struct gocpp::error err;
@@ -269,7 +273,7 @@ namespace golang::zlib
             return z->err;
         }
         auto checksum = rec::Sum32(gocpp::recv(z->digest));
-        rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, ), checksum);
+        rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), checksum);
         std::tie(gocpp_id_4, z->err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
         return z->err;
     }

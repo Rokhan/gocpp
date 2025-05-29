@@ -144,13 +144,13 @@ namespace golang::time
     {
         std::string std;
         std::string dst;
-        auto stdName = syscall::UTF16ToString(z->StandardName.make_slice(0, ));
+        auto stdName = syscall::UTF16ToString(z->StandardName.make_slice(0));
         auto [a, ok] = abbrs[stdName];
         if(! ok)
         {
             std::string std;
             std::string dst;
-            auto dstName = syscall::UTF16ToString(z->DaylightName.make_slice(0, ));
+            auto dstName = syscall::UTF16ToString(z->DaylightName.make_slice(0));
             auto [englishName, err] = toEnglishName(stdName, dstName);
             if(err == nullptr)
             {
@@ -253,32 +253,32 @@ namespace golang::time
         x.Bias = 8 * 60;
         x.StandardName = gocpp::array<uint16_t, 32> {'P', 'a', 'c', 'i', 'f', 'i', 'c', ' ', 'S', 't', 'a', 'n', 'd', 'a', 'r', 'd', ' ', 'T', 'i', 'm', 'e'};
         x.StandardDate = gocpp::Init<syscall::Systemtime>([](auto& x) {
-        x.Month = 11;
-        x.Day = 1;
-        x.Hour = 2;
-    });
+            x.Month = 11;
+            x.Day = 1;
+            x.Hour = 2;
+        });
         x.DaylightName = gocpp::array<uint16_t, 32> {'P', 'a', 'c', 'i', 'f', 'i', 'c', ' ', 'D', 'a', 'y', 'l', 'i', 'g', 'h', 't', ' ', 'T', 'i', 'm', 'e'};
         x.DaylightDate = gocpp::Init<syscall::Systemtime>([](auto& x) {
-        x.Month = 3;
-        x.Day = 2;
-        x.Hour = 2;
-    });
+            x.Month = 3;
+            x.Day = 2;
+            x.Hour = 2;
+        });
         x.DaylightBias = - 60;
     });
     syscall::Timezoneinformation aus = gocpp::Init<syscall::Timezoneinformation>([](auto& x) {
         x.Bias = - 10 * 60;
         x.StandardName = gocpp::array<uint16_t, 32> {'A', 'U', 'S', ' ', 'E', 'a', 's', 't', 'e', 'r', 'n', ' ', 'S', 't', 'a', 'n', 'd', 'a', 'r', 'd', ' ', 'T', 'i', 'm', 'e'};
         x.StandardDate = gocpp::Init<syscall::Systemtime>([](auto& x) {
-        x.Month = 4;
-        x.Day = 1;
-        x.Hour = 3;
-    });
+            x.Month = 4;
+            x.Day = 1;
+            x.Hour = 3;
+        });
         x.DaylightName = gocpp::array<uint16_t, 32> {'A', 'U', 'S', ' ', 'E', 'a', 's', 't', 'e', 'r', 'n', ' ', 'D', 'a', 'y', 'l', 'i', 'g', 'h', 't', ' ', 'T', 'i', 'm', 'e'};
         x.DaylightDate = gocpp::Init<syscall::Systemtime>([](auto& x) {
-        x.Month = 10;
-        x.Day = 1;
-        x.Hour = 2;
-    });
+            x.Month = 10;
+            x.Day = 1;
+            x.Hour = 2;
+        });
         x.DaylightBias = - 60;
     });
     void initLocal()

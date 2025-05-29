@@ -24,23 +24,6 @@
 
 namespace golang::png
 {
-    struct Encoder
-    {
-        golang::png::CompressionLevel CompressionLevel;
-        EncoderBufferPool BufferPool;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
     struct EncoderBufferPool : gocpp::Interface
     {
         EncoderBufferPool(){}
@@ -179,6 +162,23 @@ namespace golang::png
     void zeroMemory(gocpp::slice<uint8_t> v);
     int levelToZlib(golang::png::CompressionLevel l);
     struct gocpp::error Encode(io::Writer w, image::Image m);
+    struct Encoder
+    {
+        golang::png::CompressionLevel CompressionLevel;
+        EncoderBufferPool BufferPool;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
 
     namespace rec
     {

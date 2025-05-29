@@ -186,7 +186,7 @@ namespace golang::poll
             }
             for(; len(b) > maxRW; )
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](auto& x) {
+                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([=](auto& x) {
                     x.Len = maxRW;
                     x.Buf = & b[0];
                 }));
@@ -194,7 +194,7 @@ namespace golang::poll
             }
             if(len(b) > 0)
             {
-                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([](auto& x) {
+                o->bufs = append(o->bufs, gocpp::Init<syscall::WSABuf>([=](auto& x) {
                     x.Len = uint32_t(len(b));
                     x.Buf = & b[0];
                 }));
@@ -741,7 +741,7 @@ namespace golang::poll
                 return {0, e};
             }
             defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
-            auto o = gocpp::Init<syscall::Overlapped>([](auto& x) {
+            auto o = gocpp::Init<syscall::Overlapped>([=](auto& x) {
                 x.OffsetHigh = uint32_t(off >> 32);
                 x.Offset = uint32_t(off);
             });
@@ -791,7 +791,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = go_new(syscall::RawSockaddrAny);
+                    o->rsa = new(syscall::RawSockaddrAny);
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -834,7 +834,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = go_new(syscall::RawSockaddrAny);
+                    o->rsa = new(syscall::RawSockaddrAny);
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -877,7 +877,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = go_new(syscall::RawSockaddrAny);
+                    o->rsa = new(syscall::RawSockaddrAny);
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -1051,7 +1051,7 @@ namespace golang::poll
                     b = b.make_slice(0, maxRW);
                 }
                 uint32_t n = {};
-                auto o = gocpp::Init<syscall::Overlapped>([](auto& x) {
+                auto o = gocpp::Init<syscall::Overlapped>([=](auto& x) {
                     x.OffsetHigh = uint32_t(off >> 32);
                     x.Offset = uint32_t(off);
                 });
@@ -1309,10 +1309,10 @@ namespace golang::poll
                     return {syscall::InvalidHandle, nullptr, 0, "", err};
                 }
                 std::string errcall;
-                std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0, ), o);
+                std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0), o);
                 if(err == nullptr)
                 {
-                    return {s, rawsa.make_slice(0, ), uint32_t(o->rsan), "", nullptr};
+                    return {s, rawsa.make_slice(0), uint32_t(o->rsan), "", nullptr};
                 }
                 auto [errno, ok] = gocpp::getValue<syscall::Errno>(err);
                 if(! ok)
@@ -1617,7 +1617,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = go_new(syscall::RawSockaddrAny);
+                o->rsa = new(syscall::RawSockaddrAny);
             }
             o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1658,7 +1658,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = go_new(syscall::RawSockaddrAny);
+                o->rsa = new(syscall::RawSockaddrAny);
             }
             o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1698,7 +1698,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = go_new(syscall::RawSockaddrAny);
+                o->rsa = new(syscall::RawSockaddrAny);
             }
             o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1740,7 +1740,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = go_new(syscall::RawSockaddrAny);
+                    o->rsa = new(syscall::RawSockaddrAny);
                 }
                 auto [len, err] = sockaddrToRaw(o->rsa, sa);
                 if(err != nullptr)
@@ -1780,7 +1780,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = go_new(syscall::RawSockaddrAny);
+                o->rsa = new(syscall::RawSockaddrAny);
             }
             auto len = sockaddrInet4ToRaw(o->rsa, sa);
             o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
@@ -1815,7 +1815,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = go_new(syscall::RawSockaddrAny);
+                o->rsa = new(syscall::RawSockaddrAny);
             }
             auto len = sockaddrInet6ToRaw(o->rsa, sa);
             o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));

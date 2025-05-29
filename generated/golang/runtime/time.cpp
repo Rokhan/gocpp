@@ -126,7 +126,7 @@ namespace golang::runtime
         auto t = gp->timer;
         if(t == nullptr)
         {
-            t = go_new(timer);
+            t = new(timer);
             gp->timer = t;
         }
         t->f = goroutineReady;

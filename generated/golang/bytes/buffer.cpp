@@ -497,12 +497,16 @@ namespace golang::bytes
 
     struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf)
     {
-        return gocpp::InitPtr<Buffer>([](Buffer& x) { x.buf = buf; });
+        return gocpp::InitPtr<Buffer>([=](auto& x) {
+            x.buf = buf;
+        });
     }
 
     struct Buffer* NewBufferString(std::string s)
     {
-        return gocpp::InitPtr<Buffer>([](Buffer& x) { x.buf = gocpp::Tag<gocpp::slice<unsigned char>>()(s); });
+        return gocpp::InitPtr<Buffer>([=](auto& x) {
+            x.buf = gocpp::Tag<gocpp::slice<unsigned char>>()(s);
+        });
     }
 
 }

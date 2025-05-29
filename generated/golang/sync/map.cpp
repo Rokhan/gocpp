@@ -93,7 +93,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    go_any* expunged = go_new(go_any);
+    go_any* expunged = new(go_any);
     
     template<typename T> requires gocpp::GoStruct<T>
     entry::operator T()
@@ -270,7 +270,7 @@ namespace golang::sync
                 go_any actual;
                 bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -360,7 +360,7 @@ namespace golang::sync
         {
             go_any value;
             bool loaded;
-            return rec::remove(gocpp::recv(e));
+            return rec::go_delete(gocpp::recv(e));
         }
         return {nullptr, false};
     }
@@ -474,7 +474,7 @@ namespace golang::sync
                 go_any previous;
                 bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -568,7 +568,7 @@ namespace golang::sync
             read = rec::loadReadOnly(gocpp::recv(m));
             if(read.amended)
             {
-                read = gocpp::Init<readOnly>([](auto& x) {
+                read = gocpp::Init<readOnly>([=](auto& x) {
                     x.m = m->dirty;
                 });
                 auto copyRead = read;
@@ -599,7 +599,7 @@ namespace golang::sync
         {
             return;
         }
-        rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([](auto& x) {
+        rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
             x.m = m->dirty;
         }));
         m->dirty = nullptr;

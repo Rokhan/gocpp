@@ -13,63 +13,6 @@
 
 namespace golang::bisect
 {
-    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern);
-    struct Matcher
-    {
-        bool verbose;
-        bool quiet;
-        bool enable;
-        gocpp::slice<cond> list;
-        /* atomicPointerDedup dedup; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Matcher& value);
-    struct atomicPointerDedup
-    {
-        unsafe::Pointer p;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value);
-    struct cond
-    {
-        uint64_t mask;
-        uint64_t bits;
-        bool result;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line);
-    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
     struct Writer : gocpp::Interface
     {
         Writer(){}
@@ -119,27 +62,9 @@ namespace golang::bisect
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
-    struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
-    std::string Marker(uint64_t id);
-    gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
-    std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);
-    uint64_t Hash(gocpp::slice<go_any> data);
-    
-    template<typename... Args>
-    uint64_t Hash(Args... data)
+    struct atomicPointerDedup
     {
-        return Hash(gocpp::ToSlice<go_any>(data...));
-    }
-    
-    template<typename... Args>
-    uint64_t Hash(go_any value, Args... data)
-    {
-        return Hash(gocpp::ToSlice<go_any>(value, data...));
-    }
-    struct parseError
-    {
-        std::string text;
+        unsafe::Pointer p;
 
         using isGoStruct = void;
 
@@ -152,11 +77,25 @@ namespace golang::bisect
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct parseError& value);
-    uint64_t fnv(uint64_t h, unsigned char x);
-    uint64_t fnvString(uint64_t h, std::string x);
-    uint64_t fnvUint64(uint64_t h, uint64_t x);
-    uint64_t fnvUint32(uint64_t h, uint32_t x);
+    std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value);
+    struct cond
+    {
+        uint64_t mask;
+        uint64_t bits;
+        bool result;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cond& value);
     struct dedup
     {
         gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
@@ -175,6 +114,67 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dedup& value);
+    struct parseError
+    {
+        std::string text;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct parseError& value);
+    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern);
+    struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line);
+    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
+    struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
+    struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
+    std::string Marker(uint64_t id);
+    gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
+    std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);
+    uint64_t Hash(gocpp::slice<go_any> data);
+    
+    template<typename... Args>
+    uint64_t Hash(Args... data)
+    {
+        return Hash(gocpp::ToSlice<go_any>(data...));
+    }
+    
+    template<typename... Args>
+    uint64_t Hash(go_any value, Args... data)
+    {
+        return Hash(gocpp::ToSlice<go_any>(value, data...));
+    }
+    uint64_t fnv(uint64_t h, unsigned char x);
+    uint64_t fnvString(uint64_t h, std::string x);
+    uint64_t fnvUint64(uint64_t h, uint64_t x);
+    uint64_t fnvUint32(uint64_t h, uint32_t x);
+    struct Matcher
+    {
+        bool verbose;
+        bool quiet;
+        bool enable;
+        gocpp::slice<cond> list;
+        /* atomicPointerDedup dedup; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Matcher& value);
 
     namespace rec
     {

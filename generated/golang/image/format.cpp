@@ -25,13 +25,10 @@ namespace golang::image
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bufio::rec;
-        using namespace color::rec;
-        using namespace errors::rec;
-        using namespace image::rec;
-        using namespace io::rec;
-        using namespace sync::rec;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     gocpp::error ErrFormat = errors::New("image: unknown format");

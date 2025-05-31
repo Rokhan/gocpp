@@ -18,7 +18,6 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace sync::rec;
     }
 
     void runtime_Semacquire(uint32_t* s)

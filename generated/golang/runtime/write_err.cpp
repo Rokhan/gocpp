@@ -19,8 +19,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
     }
 
     void writeErr(gocpp::slice<unsigned char> b)

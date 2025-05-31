@@ -29,13 +29,7 @@ namespace golang::reader
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
+        using io::rec::Read;
     }
 
     void Validate(io::Reader r)

@@ -21,10 +21,8 @@ namespace golang::bytes
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytes::rec;
-        using namespace errors::rec;
-        using namespace io::rec;
-        using namespace utf8::rec;
+        using io::rec::Read;
+        using io::rec::Write;
     }
 
     
@@ -80,7 +78,7 @@ namespace golang::bytes
         {
             return "<nil>";
         }
-        return string(b->buf.make_slice(b->off));
+        return std::string(b->buf.make_slice(b->off));
     }
 
     bool rec::empty(struct Buffer* b)
@@ -422,7 +420,7 @@ namespace golang::bytes
             struct gocpp::error err;
             b->off++;
             b->lastRead = opReadRune1;
-            return {rune(c), 1, nullptr};
+            return {gocpp::rune(c), 1, nullptr};
         }
         auto [r, n] = utf8::DecodeRune(b->buf.make_slice(b->off));
         b->off += n;
@@ -492,7 +490,7 @@ namespace golang::bytes
         std::string line;
         struct gocpp::error err;
         auto [slice, err] = rec::readSlice(gocpp::recv(b), delim);
-        return {string(slice), err};
+        return {std::string(slice), err};
     }
 
     struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf)

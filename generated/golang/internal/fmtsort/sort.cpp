@@ -21,9 +21,25 @@ namespace golang::fmtsort
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace reflect::rec;
-        using namespace sort::rec;
+        using reflect::rec::Bool;
+        using reflect::rec::Complex;
+        using reflect::rec::Elem;
+        using reflect::rec::Field;
+        using reflect::rec::Float;
+        using reflect::rec::Index;
+        using reflect::rec::Int;
+        using reflect::rec::IsNil;
+        using reflect::rec::Key;
+        using reflect::rec::Kind;
+        using reflect::rec::Len;
+        using reflect::rec::MapRange;
+        using reflect::rec::Next;
+        using reflect::rec::NumField;
+        using reflect::rec::Pointer;
+        using reflect::rec::String;
+        using reflect::rec::Type;
+        using reflect::rec::Uint;
+        using reflect::rec::Value;
     }
 
     

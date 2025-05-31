@@ -23,11 +23,8 @@ namespace golang::reflectlite
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace reflectlite::rec;
-        using namespace unsafe::rec;
-        using namespace unsafeheader::rec;
+        using abi::rec::Kind;
+        using abi::rec::Size;
     }
 
     std::function<void (int i, int j)> Swapper(go_any slice)

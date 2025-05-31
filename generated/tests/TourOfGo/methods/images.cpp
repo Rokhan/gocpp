@@ -21,9 +21,9 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace color::rec;
-        using namespace fmt::rec;
-        using namespace image::rec;
+        using color::rec::RGBA;
+        using image::rec::At;
+        using image::rec::Bounds;
     }
 
     void main()

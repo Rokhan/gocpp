@@ -18,7 +18,6 @@ namespace golang::sort
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace sort::rec;
     }
 
     void insertionSort(struct Interface data, int a, int b)

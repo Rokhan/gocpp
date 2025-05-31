@@ -21,9 +21,6 @@ namespace golang::slices
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bits::rec;
-        using namespace cmp::rec;
-        using namespace slices::rec;
     }
 
 

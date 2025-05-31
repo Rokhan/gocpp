@@ -29,13 +29,7 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace strings::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
+        using io::rec::Read;
     }
 
     

@@ -24,11 +24,16 @@ namespace golang::godebug
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bisect::rec;
-        using namespace godebugs::rec;
-        using namespace sync::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
+        using bisect::rec::Stack;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using sync::rec::Do;
+        using sync::rec::Load;
+        using sync::rec::LoadOrStore;
+        using sync::rec::Range;
     }
 
     

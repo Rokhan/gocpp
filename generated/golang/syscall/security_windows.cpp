@@ -22,8 +22,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
     }
 
     std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)

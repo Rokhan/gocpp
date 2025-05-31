@@ -19,7 +19,6 @@ namespace golang::unicode
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unicode::rec;
     }
 
     std::string Version = "15.0.0";

@@ -19,8 +19,6 @@ namespace golang::tree
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
-        using namespace rand::rec;
     }
 
     

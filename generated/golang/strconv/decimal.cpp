@@ -103,7 +103,7 @@ namespace golang::strconv
                     break;
             }
         }
-        return string(buf.make_slice(0, w));
+        return std::string(buf.make_slice(0, w));
     }
 
     int digitZero(gocpp::slice<unsigned char> dst)

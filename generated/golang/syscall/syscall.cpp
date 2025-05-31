@@ -21,8 +21,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytealg::rec;
-        using namespace syscall::rec;
     }
 
     gocpp::slice<unsigned char> StringByteSlice(std::string s)

@@ -22,8 +22,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
     }
 
     std::tuple<std::string, bool> Getenv(std::string key)

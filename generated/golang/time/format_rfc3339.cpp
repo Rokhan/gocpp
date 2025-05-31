@@ -21,8 +21,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace time::rec;
     }
 
     gocpp::slice<unsigned char> rec::appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos)
@@ -184,7 +182,7 @@ namespace golang::time
         auto [t, ok] = parseRFC3339(b, Local);
         if(! ok)
         {
-            auto [t, err] = Parse(RFC3339, string(b));
+            auto [t, err] = Parse(RFC3339, std::string(b));
             if(err != nullptr)
             {
                 return {Time {}, err};
@@ -206,10 +204,10 @@ namespace golang::time
                         return {t, nullptr};
                         break;
                     case 1:
-                        return {Time {}, new ParseError {RFC3339, string(b), "15", string(b.make_slice(len("2006-01-02T")).make_slice(0, 1)), ""}};
+                        return {Time {}, new ParseError {RFC3339, std::string(b), "15", std::string(b.make_slice(len("2006-01-02T")).make_slice(0, 1)), ""}};
                         break;
                     case 2:
-                        return {Time {}, new ParseError {RFC3339, string(b), ".", ",", ""}};
+                        return {Time {}, new ParseError {RFC3339, std::string(b), ".", ",", ""}};
                         break;
                     case 3:
                         //Go switch emulation
@@ -220,16 +218,16 @@ namespace golang::time
                             switch(conditionId)
                             {
                                 case 0:
-                                    return {Time {}, new ParseError {RFC3339, string(b), "Z07:00", string(b.make_slice(len(b) - len("Z07:00"))), ": timezone hour out of range"}};
+                                    return {Time {}, new ParseError {RFC3339, std::string(b), "Z07:00", std::string(b.make_slice(len(b) - len("Z07:00"))), ": timezone hour out of range"}};
                                     break;
                                 case 1:
-                                    return {Time {}, new ParseError {RFC3339, string(b), "Z07:00", string(b.make_slice(len(b) - len("Z07:00"))), ": timezone minute out of range"}};
+                                    return {Time {}, new ParseError {RFC3339, std::string(b), "Z07:00", std::string(b.make_slice(len(b) - len("Z07:00"))), ": timezone minute out of range"}};
                                     break;
                             }
                         }
                         break;
                     default:
-                        return {Time {}, new ParseError {RFC3339, string(b), RFC3339, string(b), ""}};
+                        return {Time {}, new ParseError {RFC3339, std::string(b), RFC3339, std::string(b), ""}};
                         break;
                 }
             }

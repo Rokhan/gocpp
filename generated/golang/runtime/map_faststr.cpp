@@ -31,10 +31,7 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Hasher;
     }
 
     unsafe::Pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)

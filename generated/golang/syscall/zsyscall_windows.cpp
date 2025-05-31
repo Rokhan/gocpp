@@ -27,10 +27,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace sysdll::rec;
-        using namespace unsafe::rec;
     }
 
     unsafe::Pointer _;

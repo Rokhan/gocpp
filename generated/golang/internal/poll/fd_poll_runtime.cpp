@@ -30,13 +30,8 @@ namespace golang::poll
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace errors::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace windows::rec;
+        using sync::rec::Do;
+        using time::rec::IsZero;
     }
 
     int64_t runtimeNano()

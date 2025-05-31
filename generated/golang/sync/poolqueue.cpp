@@ -20,8 +20,9 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
     }
 
     

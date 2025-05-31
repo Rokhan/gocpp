@@ -20,7 +20,6 @@ namespace golang::math
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace math::rec;
     }
 
     std::tuple<double, int> Frexp(double f)

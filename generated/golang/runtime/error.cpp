@@ -31,10 +31,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace bytealg::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
     }
 
     
@@ -178,7 +174,7 @@ namespace golang::runtime
 
     std::string rec::Error(golang::runtime::errorString e)
     {
-        return "runtime error: " + string(e);
+        return "runtime error: " + std::string(e);
     }
 
     
@@ -233,7 +229,7 @@ namespace golang::runtime
 
     std::string rec::Error(golang::runtime::plainError e)
     {
-        return string(e);
+        return std::string(e);
     }
 
     
@@ -346,7 +342,7 @@ namespace golang::runtime
                 }
             }
         }
-        return string(b);
+        return std::string(b);
     }
 
     

@@ -25,12 +25,9 @@ namespace golang::crc32
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace crc32::rec;
-        using namespace errors::rec;
-        using namespace hash::rec;
-        using namespace io::rec;
-        using namespace sync::rec;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
+        using sync::rec::Do;
     }
 
     crc32::Table* castagnoliTable;
@@ -176,7 +173,7 @@ namespace golang::crc32
 
     struct gocpp::error rec::UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
-        if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
+        if(len(b) < len(magic) || std::string(b.make_slice(0, len(magic))) != magic)
         {
             return errors::New("hash/crc32: invalid hash state identifier");
         }

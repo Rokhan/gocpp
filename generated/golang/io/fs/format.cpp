@@ -21,8 +21,7 @@ namespace golang::fs
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace time::rec;
+        using time::rec::Format;
     }
 
     std::string FormatFileInfo(struct FileInfo info)
@@ -61,7 +60,7 @@ namespace golang::fs
         {
             b = append(b, '/');
         }
-        return string(b);
+        return std::string(b);
     }
 
     std::string FormatDirEntry(struct DirEntry dir)
@@ -77,7 +76,7 @@ namespace golang::fs
         {
             b = append(b, '/');
         }
-        return string(b);
+        return std::string(b);
     }
 
 }

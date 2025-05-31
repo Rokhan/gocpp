@@ -31,13 +31,7 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace windows::rec;
+        using fs::rec::IsDir;
     }
 
     int Getpagesize()

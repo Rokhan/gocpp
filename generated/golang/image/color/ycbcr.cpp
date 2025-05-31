@@ -18,7 +18,6 @@ namespace golang::color
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace color::rec;
     }
 
     std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b)

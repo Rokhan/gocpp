@@ -42,12 +42,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace cpu::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
     }
 
     struct offAddr maxSearchAddr()

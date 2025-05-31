@@ -21,8 +21,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace time::rec;
     }
 
     std::string Layout = "01/02 03:04:05PM '06 -0700";
@@ -555,7 +553,7 @@ namespace golang::time
             buf = appendInt(buf, int(m1), wid);
             buf = append(buf, '.');
             buf = appendInt(buf, int(m2), 9);
-            s += string(buf);
+            s += std::string(buf);
         }
         return s;
     }
@@ -613,7 +611,7 @@ namespace golang::time
             }
         }
         buf = append(buf, ')');
-        return string(buf);
+        return std::string(buf);
     }
 
     std::string rec::Format(struct Time t, std::string layout)
@@ -631,7 +629,7 @@ namespace golang::time
             b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, max);
         }
         b = rec::AppendFormat(gocpp::recv(t), b, layout);
-        return string(b);
+        return std::string(b);
     }
 
     gocpp::slice<unsigned char> rec::AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
@@ -963,7 +961,7 @@ namespace golang::time
 
     std::string cloneString(std::string s)
     {
-        return string(gocpp::Tag<gocpp::slice<unsigned char>>()(s));
+        return std::string(gocpp::Tag<gocpp::slice<unsigned char>>()(s));
     }
 
     std::string lowerhex = "0123456789abcdef";
@@ -979,14 +977,14 @@ namespace golang::time
                 if(c == runeError)
                 {
                     width = 1;
-                    if(i + 2 < len(s) && s.make_slice(i, i + 3) == string(runeError))
+                    if(i + 2 < len(s) && s.make_slice(i, i + 3) == std::string(runeError))
                     {
                         width = 3;
                     }
                 }
                 else
                 {
-                    width = len(string(c));
+                    width = len(std::string(c));
                 }
                 for(auto j = 0; j < width; j++)
                 {
@@ -1001,11 +999,11 @@ namespace golang::time
                 {
                     buf = append(buf, '\\');
                 }
-                buf = append(buf, string(c));
+                buf = append(buf, std::string(c));
             }
         }
         buf = append(buf, '"');
-        return string(buf);
+        return std::string(buf);
     }
 
     std::string rec::Error(struct ParseError* e)

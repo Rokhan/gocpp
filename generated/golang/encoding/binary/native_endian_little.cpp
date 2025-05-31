@@ -18,7 +18,6 @@ namespace golang::binary
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace binary::rec;
     }
 
     

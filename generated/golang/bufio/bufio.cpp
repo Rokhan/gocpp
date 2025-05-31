@@ -22,11 +22,14 @@ namespace golang::bufio
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytes::rec;
-        using namespace errors::rec;
-        using namespace io::rec;
-        using namespace strings::rec;
-        using namespace utf8::rec;
+        using io::rec::Read;
+        using io::rec::ReadFrom;
+        using io::rec::Write;
+        using io::rec::WriteString;
+        using io::rec::WriteTo;
+        using strings::rec::Grow;
+        using strings::rec::String;
+        using strings::rec::Write;
     }
 
     gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte");
@@ -377,7 +380,7 @@ namespace golang::bufio
             struct gocpp::error err;
             return {0, 0, rec::readErr(gocpp::recv(b))};
         }
-        std::tie(r, size) = std::tuple{rune(b->buf[b->r]), 1};
+        std::tie(r, size) = std::tuple{gocpp::rune(b->buf[b->r]), 1};
         if(r >= utf8::RuneSelf)
         {
             gocpp::rune r;
@@ -870,7 +873,7 @@ namespace golang::bufio
             {
                 int size;
                 struct gocpp::error err;
-                return rec::WriteString(gocpp::recv(b), string(r));
+                return rec::WriteString(gocpp::recv(b), std::string(r));
             }
         }
         size = utf8::EncodeRune(b->buf.make_slice(b->n), r);

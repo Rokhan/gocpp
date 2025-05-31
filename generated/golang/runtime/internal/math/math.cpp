@@ -18,7 +18,6 @@ namespace golang::math
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace goarch::rec;
     }
 
     std::tuple<uintptr_t, bool> MulUintptr(uintptr_t a, uintptr_t b)

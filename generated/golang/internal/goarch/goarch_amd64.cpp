@@ -18,7 +18,6 @@ namespace golang::goarch
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace goarch::rec;
     }
 
 }

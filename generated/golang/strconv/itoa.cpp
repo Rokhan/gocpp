@@ -18,7 +18,6 @@ namespace golang::strconv
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bits::rec;
     }
 
     std::string FormatUint(uint64_t i, int base)
@@ -196,7 +195,7 @@ namespace golang::strconv
             d = append(dst, a.make_slice(i));
             return {d, s};
         }
-        s = string(a.make_slice(i));
+        s = std::string(a.make_slice(i));
         return {d, s};
     }
 

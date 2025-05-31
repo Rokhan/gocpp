@@ -22,8 +22,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
     }
 
     std::string gogetenv(std::string key)

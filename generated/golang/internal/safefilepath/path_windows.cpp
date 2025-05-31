@@ -19,8 +19,6 @@ namespace golang::safefilepath
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace syscall::rec;
-        using namespace utf8::rec;
     }
 
     std::tuple<std::string, struct gocpp::error> fromFS(std::string path)
@@ -82,7 +80,7 @@ namespace golang::safefilepath
                     buf[i] = '\\';
                 }
             }
-            path = string(buf);
+            path = std::string(buf);
         }
         return {path, nullptr};
     }
@@ -132,7 +130,7 @@ namespace golang::safefilepath
         {
             //Go switch emulation
             {
-                auto condition = string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
+                auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
                 if(condition == "CON") { conditionId = 0; }
                 if(condition == "PRN") { conditionId = 1; }
@@ -153,7 +151,7 @@ namespace golang::safefilepath
         {
             //Go switch emulation
             {
-                auto condition = string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
+                auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
                 if(condition == "COM") { conditionId = 0; }
                 if(condition == "LPT") { conditionId = 1; }

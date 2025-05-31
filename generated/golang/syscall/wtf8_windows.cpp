@@ -19,8 +19,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace utf16::rec;
-        using namespace utf8::rec;
     }
 
     gocpp::slice<uint16_t> encodeWTF16(std::string s, gocpp::slice<uint16_t> buf)
@@ -32,7 +30,7 @@ namespace golang::syscall
             {
                 if(auto sc = s.make_slice(i); len(sc) >= 3 && sc[0] == 0xED && 0xA0 <= sc[1] && sc[1] <= 0xBF && 0x80 <= sc[2] && sc[2] <= 0xBF)
                 {
-                    r = (rune(sc[0] & mask3) << 12) + (rune(sc[1] & maskx) << 6) + rune(sc[2] & maskx);
+                    r = (gocpp::rune(sc[0] & mask3) << 12) + (gocpp::rune(sc[1] & maskx) << 6) + gocpp::rune(sc[2] & maskx);
                     buf = append(buf, uint16_t(r));
                     i += 3;
                     continue;
@@ -60,14 +58,14 @@ namespace golang::syscall
                 {
                     case 0:
                     case 1:
-                        ar = rune(r);
+                        ar = gocpp::rune(r);
                         break;
                     case 2:
-                        ar = utf16::DecodeRune(rune(r), rune(s[i + 1]));
+                        ar = utf16::DecodeRune(gocpp::rune(r), gocpp::rune(s[i + 1]));
                         i++;
                         break;
                     default:
-                        ar = rune(r);
+                        ar = gocpp::rune(r);
                         if(ar > utf8::MaxRune)
                         {
                             ar = utf8::RuneError;

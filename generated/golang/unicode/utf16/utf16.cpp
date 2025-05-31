@@ -134,10 +134,10 @@ namespace golang::utf16
                 {
                     case 0:
                     case 1:
-                        ar = rune(r);
+                        ar = gocpp::rune(r);
                         break;
                     case 2:
-                        ar = DecodeRune(rune(r), rune(s[i + 1]));
+                        ar = DecodeRune(gocpp::rune(r), gocpp::rune(s[i + 1]));
                         i++;
                         break;
                     default:

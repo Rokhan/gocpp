@@ -20,9 +20,34 @@ namespace golang::reflectlite
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace reflectlite::rec;
-        using namespace unsafe::rec;
+        using abi::rec::ArrayType;
+        using abi::rec::ChanDir;
+        using abi::rec::DataChecked;
+        using abi::rec::Elem;
+        using abi::rec::Embedded;
+        using abi::rec::ExportedMethods;
+        using abi::rec::FuncType;
+        using abi::rec::HasName;
+        using abi::rec::HasTag;
+        using abi::rec::In;
+        using abi::rec::InSlice;
+        using abi::rec::InterfaceType;
+        using abi::rec::IsExported;
+        using abi::rec::Key;
+        using abi::rec::Kind;
+        using abi::rec::Len;
+        using abi::rec::MapType;
+        using abi::rec::Methods;
+        using abi::rec::Name;
+        using abi::rec::NumIn;
+        using abi::rec::NumMethod;
+        using abi::rec::NumOut;
+        using abi::rec::Out;
+        using abi::rec::OutSlice;
+        using abi::rec::ReadVarint;
+        using abi::rec::StructType;
+        using abi::rec::Tag;
+        using abi::rec::Uncommon;
     }
 
     

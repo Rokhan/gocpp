@@ -18,7 +18,6 @@ namespace golang::cpu
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace cpu::rec;
     }
 
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg)
@@ -190,7 +189,7 @@ namespace golang::cpu
                 break;
             }
         }
-        return string(data);
+        return std::string(data);
     }
 
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args)

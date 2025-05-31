@@ -22,9 +22,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
     }
 
     void interrupt()

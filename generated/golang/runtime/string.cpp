@@ -52,14 +52,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace bytealg::rec;
-        using namespace chacha8rand::rec;
-        using namespace goarch::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
     }
 
     std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a)
@@ -362,12 +354,12 @@ namespace golang::runtime
             std::string s;
             std::tie(s, b) = rawstring(4);
         }
-        if(int64_t(rune(v)) != v)
+        if(int64_t(gocpp::rune(v)) != v)
         {
             std::string s;
             v = runeError;
         }
-        auto n = encoderune(b, rune(v));
+        auto n = encoderune(b, gocpp::rune(v));
         return s.make_slice(0, n);
     }
 
@@ -689,7 +681,7 @@ namespace golang::runtime
         auto n1 = 0;
         for(auto i = 0; str[i] != 0; i++)
         {
-            n1 += encoderune(buf.make_slice(0), rune(str[i]));
+            n1 += encoderune(buf.make_slice(0), gocpp::rune(str[i]));
         }
         auto [s, b] = rawstring(n1 + 4);
         auto n2 = 0;
@@ -699,7 +691,7 @@ namespace golang::runtime
             {
                 break;
             }
-            n2 += encoderune(b.make_slice(n2), rune(str[i]));
+            n2 += encoderune(b.make_slice(n2), gocpp::rune(str[i]));
         }
         b[n2] = 0;
         return s.make_slice(0, n2);

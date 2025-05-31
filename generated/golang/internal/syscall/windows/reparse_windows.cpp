@@ -19,8 +19,6 @@ namespace golang::windows
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
     }
 
     

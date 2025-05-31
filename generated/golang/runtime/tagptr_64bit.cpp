@@ -23,10 +23,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace goarch::rec;
-        using namespace goos::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
     }
 
     runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)

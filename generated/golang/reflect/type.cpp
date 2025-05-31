@@ -35,15 +35,40 @@ namespace golang::reflect
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace goarch::rec;
-        using namespace reflect::rec;
-        using namespace strconv::rec;
-        using namespace sync::rec;
-        using namespace unicode::rec;
-        using namespace unsafe::rec;
-        using namespace utf8::rec;
+        using abi::rec::Align;
+        using abi::rec::ChanDir;
+        using abi::rec::DataChecked;
+        using abi::rec::Elem;
+        using abi::rec::Embedded;
+        using abi::rec::Equal;
+        using abi::rec::ExportedMethods;
+        using abi::rec::FieldAlign;
+        using abi::rec::GcSlice;
+        using abi::rec::HasName;
+        using abi::rec::HasTag;
+        using abi::rec::In;
+        using abi::rec::InSlice;
+        using abi::rec::IsExported;
+        using abi::rec::IsVariadic;
+        using abi::rec::Key;
+        using abi::rec::Kind;
+        using abi::rec::Len;
+        using abi::rec::Methods;
+        using abi::rec::Name;
+        using abi::rec::NumIn;
+        using abi::rec::NumOut;
+        using abi::rec::Out;
+        using abi::rec::OutSlice;
+        using abi::rec::Pointers;
+        using abi::rec::ReadVarint;
+        using abi::rec::Size;
+        using abi::rec::Tag;
+        using abi::rec::Uncommon;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using sync::rec::Load;
+        using sync::rec::LoadOrStore;
+        using sync::rec::Store;
     }
 
     
@@ -1468,7 +1493,7 @@ namespace golang::reflect
                 bool ok;
                 break;
             }
-            auto name = string(tag.make_slice(0, i));
+            auto name = std::string(tag.make_slice(0, i));
             tag = tag.make_slice(i + 1);
             i = 1;
             for(; i < len(tag) && tag[i] != '"'; )
@@ -1489,7 +1514,7 @@ namespace golang::reflect
                 bool ok;
                 break;
             }
-            auto qvalue = string(tag.make_slice(0, i + 1));
+            auto qvalue = std::string(tag.make_slice(0, i + 1));
             tag = tag.make_slice(i + 1);
             if(key == name)
             {
@@ -2518,7 +2543,7 @@ namespace golang::reflect
         {
             repr = append(repr, ')');
         }
-        return string(repr);
+        return std::string(repr);
     }
 
     bool isReflexive(abi::Type* t)
@@ -3270,7 +3295,7 @@ namespace golang::reflect
             }
             repr = append(repr, '}');
             hash = fnv1(hash, '}');
-            auto str = string(repr);
+            auto str = std::string(repr);
             auto s = align(size, uintptr_t(typalign));
             if(s < size)
             {
@@ -3449,7 +3474,7 @@ namespace golang::reflect
         }
         resolveReflectType(rec::common(gocpp::recv(field.Type)));
         auto f = gocpp::Init<reflect::structField>([=](auto& x) {
-            x.Name = newName(field.Name, string(field.Tag), rec::IsExported(gocpp::recv(field)), field.Anonymous);
+            x.Name = newName(field.Name, std::string(field.Tag), rec::IsExported(gocpp::recv(field)), field.Anonymous);
             x.Typ = rec::common(gocpp::recv(field.Type));
             x.Offset = 0;
         });

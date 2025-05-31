@@ -30,9 +30,9 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     ticksType ticks;

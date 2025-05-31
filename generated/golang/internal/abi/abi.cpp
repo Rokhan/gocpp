@@ -20,9 +20,6 @@ namespace golang::abi
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace unsafe::rec;
     }
 
     

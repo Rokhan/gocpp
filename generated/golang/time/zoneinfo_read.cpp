@@ -25,10 +25,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace runtime::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
     }
 
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f)
@@ -39,7 +35,7 @@ namespace golang::time
     std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
     std::string rec::Error(golang::time::fileSizeError f)
     {
-        return "time: file " + string(f) + " is too large";
+        return "time: file " + std::string(f) + " is too large";
     }
 
     
@@ -146,17 +142,17 @@ namespace golang::time
         {
             if(p[i] == 0)
             {
-                return string(p.make_slice(0, i));
+                return std::string(p.make_slice(0, i));
             }
         }
-        return string(p);
+        return std::string(p);
     }
 
     gocpp::error errBadData = errors::New("malformed time zone information");
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
-        if(auto magic = rec::read(gocpp::recv(d), 4); string(magic) != "TZif")
+        if(auto magic = rec::read(gocpp::recv(d), 4); std::string(magic) != "TZif")
         {
             return {nullptr, errBadData};
         }
@@ -253,7 +249,7 @@ namespace golang::time
         auto rest = rec::rest(gocpp::recv(d));
         if(len(rest) > 2 && rest[0] == '\n' && rest[len(rest) - 1] == '\n')
         {
-            extend = string(rest.make_slice(1, len(rest) - 1));
+            extend = std::string(rest.make_slice(1, len(rest) - 1));
         }
         auto nzone = n[NZone];
         if(nzone == 0)
@@ -472,7 +468,7 @@ namespace golang::time
                 auto off = get4(buf.make_slice(42));
                 auto zname = buf.make_slice(46, 46 + namelen);
                 buf = buf.make_slice(46 + namelen + xlen + fclen);
-                if(string(zname) != name)
+                if(std::string(zname) != name)
                 {
                     continue;
                 }
@@ -481,7 +477,7 @@ namespace golang::time
                     return {nullptr, errors::New("unsupported compression for " + name + " in " + zipfile)};
                 }
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
-                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || string(buf.make_slice(30, 30 + namelen)) != name)
+                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || std::string(buf.make_slice(30, 30 + namelen)) != name)
                 {
                     return {nullptr, errors::New("corrupt zip file " + zipfile)};
                 }

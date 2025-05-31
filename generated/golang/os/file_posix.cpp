@@ -37,14 +37,21 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace windows::rec;
+        using fs::rec::Perm;
+        using poll::rec::Fchdir;
+        using poll::rec::Fchmod;
+        using poll::rec::Fchown;
+        using poll::rec::Fsync;
+        using poll::rec::Ftruncate;
+        using poll::rec::Pread;
+        using poll::rec::Pwrite;
+        using poll::rec::Read;
+        using poll::rec::SetDeadline;
+        using poll::rec::SetReadDeadline;
+        using poll::rec::SetWriteDeadline;
+        using poll::rec::Write;
+        using time::rec::IsZero;
+        using time::rec::UnixNano;
     }
 
     struct gocpp::error rec::Close(struct File* f)

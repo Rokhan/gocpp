@@ -19,8 +19,6 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace cmplx::rec;
-        using namespace fmt::rec;
     }
 
     bool ToBe = false;

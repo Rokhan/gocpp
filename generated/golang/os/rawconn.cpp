@@ -30,12 +30,9 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
+        using poll::rec::RawControl;
+        using poll::rec::RawRead;
+        using poll::rec::RawWrite;
     }
 
     

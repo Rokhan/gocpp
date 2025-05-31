@@ -20,8 +20,8 @@ namespace golang::io
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace sync::rec;
+        using sync::rec::Get;
+        using sync::rec::Put;
     }
 
     gocpp::error ErrShortWrite = errors::New("short write");

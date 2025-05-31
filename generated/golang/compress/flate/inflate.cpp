@@ -27,13 +27,9 @@ namespace golang::flate
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bits::rec;
-        using namespace bufio::rec;
-        using namespace flate::rec;
-        using namespace io::rec;
-        using namespace strconv::rec;
-        using namespace sync::rec;
+        using bufio::rec::Reset;
+        using io::rec::ReadByte;
+        using sync::rec::Do;
     }
 
     sync::Once fixedOnce;
@@ -45,7 +41,7 @@ namespace golang::flate
 
     std::string rec::Error(golang::flate::InternalError e)
     {
-        return "flate: internal error: " + string(e);
+        return "flate: internal error: " + std::string(e);
     }
 
     

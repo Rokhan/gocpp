@@ -20,9 +20,6 @@ namespace golang::adler32
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace hash::rec;
-        using namespace io::rec;
     }
 
     void rec::Reset(golang::adler32::digest* d)
@@ -58,7 +55,7 @@ namespace golang::adler32
 
     struct gocpp::error rec::UnmarshalBinary(golang::adler32::digest* d, gocpp::slice<unsigned char> b)
     {
-        if(len(b) < len(magic) || string(b.make_slice(0, len(magic))) != magic)
+        if(len(b) < len(magic) || std::string(b.make_slice(0, len(magic))) != magic)
         {
             return errors::New("hash/adler32: invalid hash state identifier");
         }

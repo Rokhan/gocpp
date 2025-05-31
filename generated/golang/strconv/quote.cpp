@@ -19,8 +19,6 @@ namespace golang::strconv
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace strconv::rec;
-        using namespace utf8::rec;
     }
 
     std::string lowerhex = "0123456789abcdef";
@@ -32,12 +30,12 @@ namespace golang::strconv
 
     std::string quoteWith(std::string s, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
-        return string(appendQuotedWith(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * len(s) / 2), s, quote, ASCIIonly, graphicOnly));
+        return std::string(appendQuotedWith(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * len(s) / 2), s, quote, ASCIIonly, graphicOnly));
     }
 
     std::string quoteRuneWith(gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
-        return string(appendQuotedRuneWith(nullptr, r, quote, ASCIIonly, graphicOnly));
+        return std::string(appendQuotedRuneWith(nullptr, r, quote, ASCIIonly, graphicOnly));
     }
 
     gocpp::slice<unsigned char> appendQuotedWith(gocpp::slice<unsigned char> buf, std::string s, unsigned char quote, bool ASCIIonly, bool graphicOnly)
@@ -51,7 +49,7 @@ namespace golang::strconv
         buf = append(buf, quote);
         for(auto width = 0; len(s) > 0; s = s.make_slice(width))
         {
-            auto r = rune(s[0]);
+            auto r = gocpp::rune(s[0]);
             width = 1;
             if(r >= utf8::RuneSelf)
             {
@@ -84,7 +82,7 @@ namespace golang::strconv
 
     gocpp::slice<unsigned char> appendEscapedRune(gocpp::slice<unsigned char> buf, gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
-        if(r == rune(quote) || r == '\\')
+        if(r == gocpp::rune(quote) || r == '\\')
         {
             buf = append(buf, '\\');
             buf = append(buf, unsigned char(r));
@@ -265,7 +263,7 @@ namespace golang::strconv
     {
         gocpp::rune v;
         bool ok;
-        auto c = rune(b);
+        auto c = gocpp::rune(b);
         //Go switch emulation
         {
             int conditionId = -1;
@@ -327,7 +325,7 @@ namespace golang::strconv
                     return {r, true, s.make_slice(size), nullptr};
                     break;
                 case 2:
-                    return {rune(s[0]), false, s.make_slice(1), nullptr};
+                    return {gocpp::rune(s[0]), false, s.make_slice(1), nullptr};
                     break;
             }
         }
@@ -480,7 +478,7 @@ namespace golang::strconv
                 case 15:
                 case 16:
                 case 17:
-                    auto v = rune(c) - '0';
+                    auto v = gocpp::rune(c) - '0';
                     if(len(s) < 2)
                     {
                         gocpp::rune value;
@@ -496,7 +494,7 @@ namespace golang::strconv
                         bool multibyte;
                         std::string tail;
                         struct gocpp::error err;
-                        auto x = rune(s[j]) - '0';
+                        auto x = gocpp::rune(s[j]) - '0';
                         if(x < 0 || x > 7)
                         {
                             gocpp::rune value;
@@ -534,7 +532,7 @@ namespace golang::strconv
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
-                    value = rune(c);
+                    value = gocpp::rune(c);
                     break;
                 default:
                     err = ErrSyntax;
@@ -628,7 +626,7 @@ namespace golang::strconv
                                         buf = append(buf, in[i]);
                                     }
                                 }
-                                out = string(buf);
+                                out = std::string(buf);
                                 break;
                         }
                     }
@@ -743,7 +741,7 @@ namespace golang::strconv
                         std::string out;
                         std::string rem;
                         struct gocpp::error err;
-                        return {string(buf), in, nullptr};
+                        return {std::string(buf), in, nullptr};
                     }
                     return {in0.make_slice(0, len(in0) - len(in)), in, nullptr};
                     break;

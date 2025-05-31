@@ -23,11 +23,6 @@ namespace golang::fmt
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace errors::rec;
-        using namespace fmt::rec;
-        using namespace reflect::rec;
-        using namespace sort::rec;
     }
 
     struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
@@ -35,7 +30,7 @@ namespace golang::fmt
         auto p = newPrinter();
         p->wrapErrs = true;
         rec::doPrintf(gocpp::recv(p), format, a);
-        auto s = string(p->buf);
+        auto s = std::string(p->buf);
         gocpp::error err = {};
         //Go switch emulation
         {

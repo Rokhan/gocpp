@@ -172,7 +172,7 @@ namespace golang::chacha8rand
 
     struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data)
     {
-        if(len(data) != 6 * 8 || string(data.make_slice(0, 8)) != "chacha8:")
+        if(len(data) != 6 * 8 || std::string(data.make_slice(0, 8)) != "chacha8:")
         {
             return new(errUnmarshalChaCha8);
         }

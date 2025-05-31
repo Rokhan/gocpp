@@ -29,13 +29,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bytealg::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
-        using namespace utf16::rec;
     }
 
     sync::RWMutex ForkLock;
@@ -63,7 +56,7 @@ namespace golang::syscall
                     case 3:
                         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + 2);
                         b = appendEscapeArg(b, s);
-                        return string(b);
+                        return std::string(b);
                         break;
                 }
             }
@@ -167,7 +160,7 @@ namespace golang::syscall
             }
             b = appendEscapeArg(b, v);
         }
-        return string(b);
+        return std::string(b);
     }
 
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv)

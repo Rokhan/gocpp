@@ -28,10 +28,6 @@ namespace golang::strings
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytealg::rec;
-        using namespace strings::rec;
-        using namespace unicode::rec;
-        using namespace utf8::rec;
     }
 
     gocpp::slice<std::string> explode(std::string s, int n)
@@ -184,7 +180,7 @@ namespace golang::strings
                     return - 1;
                     break;
                 default:
-                    return Index(s, string(r));
+                    return Index(s, std::string(r));
                     break;
             }
         }
@@ -198,7 +194,7 @@ namespace golang::strings
         }
         if(len(chars) == 1)
         {
-            auto r = rune(chars[0]);
+            auto r = gocpp::rune(chars[0]);
             if(r >= utf8::RuneSelf)
             {
                 r = utf8::RuneError;
@@ -237,7 +233,7 @@ namespace golang::strings
         }
         if(len(s) == 1)
         {
-            auto rc = rune(s[0]);
+            auto rc = gocpp::rune(s[0]);
             if(rc >= utf8::RuneSelf)
             {
                 rc = utf8::RuneError;
@@ -264,7 +260,7 @@ namespace golang::strings
         }
         if(len(chars) == 1)
         {
-            auto rc = rune(chars[0]);
+            auto rc = gocpp::rune(chars[0]);
             if(rc >= utf8::RuneSelf)
             {
                 rc = utf8::RuneError;
@@ -1009,7 +1005,7 @@ namespace golang::strings
     {
         for(; len(s) > 0; )
         {
-            auto [r, n] = std::tuple{rune(s[0]), 1};
+            auto [r, n] = std::tuple{gocpp::rune(s[0]), 1};
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, n) = utf8::DecodeRuneInString(s);
@@ -1066,7 +1062,7 @@ namespace golang::strings
     {
         for(; len(s) > 0; )
         {
-            auto [r, n] = std::tuple{rune(s[len(s) - 1]), 1};
+            auto [r, n] = std::tuple{gocpp::rune(s[len(s) - 1]), 1};
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, n) = utf8::DecodeLastRuneInString(s);
@@ -1213,7 +1209,7 @@ namespace golang::strings
             gocpp::rune tr = {};
             if(t[0] < utf8::RuneSelf)
             {
-                std::tie(tr, t) = std::tuple{rune(t[0]), t.make_slice(1)};
+                std::tie(tr, t) = std::tuple{gocpp::rune(t[0]), t.make_slice(1)};
             }
             else
             {

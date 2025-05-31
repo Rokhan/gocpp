@@ -21,7 +21,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
     }
 
     uintptr_t roundupsize(uintptr_t size, bool noscan)

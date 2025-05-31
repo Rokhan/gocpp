@@ -19,8 +19,6 @@ namespace golang::atomic
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace unsafe::rec;
     }
 
     

@@ -33,10 +33,14 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Data;
+        using abi::rec::InSlice;
+        using abi::rec::IsEmbedded;
+        using abi::rec::Name;
+        using abi::rec::OutSlice;
+        using abi::rec::ReadVarint;
+        using abi::rec::Tag;
+        using abi::rec::Uncommon;
     }
 
     

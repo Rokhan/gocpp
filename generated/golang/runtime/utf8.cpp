@@ -55,7 +55,7 @@ namespace golang::runtime
                     {
                         gocpp::rune r;
                         int pos;
-                        r = (rune(s[0] & mask2) << 6) | rune(s[1] & maskx);
+                        r = (gocpp::rune(s[0] & mask2) << 6) | gocpp::rune(s[1] & maskx);
                         pos += 2;
                         if(rune1Max < r)
                         {
@@ -70,7 +70,7 @@ namespace golang::runtime
                     {
                         gocpp::rune r;
                         int pos;
-                        r = (rune(s[0] & mask3) << 12) | (rune(s[1] & maskx) << 6) | rune(s[2] & maskx);
+                        r = (gocpp::rune(s[0] & mask3) << 12) | (gocpp::rune(s[1] & maskx) << 6) | gocpp::rune(s[2] & maskx);
                         pos += 3;
                         if(rune2Max < r && ! (surrogateMin <= r && r <= surrogateMax))
                         {
@@ -85,7 +85,7 @@ namespace golang::runtime
                     {
                         gocpp::rune r;
                         int pos;
-                        r = (rune(s[0] & mask4) << 18) | (rune(s[1] & maskx) << 12) | (rune(s[2] & maskx) << 6) | rune(s[3] & maskx);
+                        r = (gocpp::rune(s[0] & mask4) << 18) | (gocpp::rune(s[1] & maskx) << 12) | (gocpp::rune(s[2] & maskx) << 6) | gocpp::rune(s[3] & maskx);
                         pos += 4;
                         if(rune3Max < r && r <= maxRune)
                         {

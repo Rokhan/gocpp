@@ -51,11 +51,9 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace chacha8rand::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     struct traceWriter rec::writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist)

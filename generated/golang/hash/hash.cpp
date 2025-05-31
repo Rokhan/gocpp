@@ -18,7 +18,6 @@ namespace golang::hash
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace io::rec;
     }
 
     

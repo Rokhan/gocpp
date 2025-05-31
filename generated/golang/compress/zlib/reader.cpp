@@ -24,13 +24,13 @@ namespace golang::zlib
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace adler32::rec;
-        using namespace binary::rec;
-        using namespace bufio::rec;
-        using namespace errors::rec;
-        using namespace flate::rec;
-        using namespace hash::rec;
-        using namespace io::rec;
+        using binary::rec::Uint16;
+        using binary::rec::Uint32;
+        using flate::rec::Reset;
+        using hash::rec::Sum32;
+        using io::rec::Close;
+        using io::rec::Read;
+        using io::rec::Write;
     }
 
     gocpp::error ErrChecksum = errors::New("zlib: invalid checksum");

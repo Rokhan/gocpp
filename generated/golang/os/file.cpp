@@ -49,18 +49,9 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace fs::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace runtime::rec;
-        using namespace safefilepath::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace testlog::rec;
-        using namespace time::rec;
-        using namespace windows::rec;
+        using fs::rec::Mode;
+        using fs::rec::Size;
+        using testlog::rec::Chdir;
     }
 
     std::string rec::Name(struct File* f)
@@ -878,9 +869,9 @@ namespace golang::os
         }
         if(IsPathSeparator(dir[len(dir) - 1]))
         {
-            return {string(dir) + name, nullptr};
+            return {std::string(dir) + name, nullptr};
         }
-        return {string(dir) + string(PathSeparator) + name, nullptr};
+        return {std::string(dir) + std::string(PathSeparator) + name, nullptr};
     }
 
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(std::string name)

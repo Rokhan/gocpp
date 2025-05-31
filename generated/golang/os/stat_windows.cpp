@@ -35,14 +35,6 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace unsafe::rec;
-        using namespace windows::rec;
     }
 
     std::tuple<os::FileInfo, struct gocpp::error> rec::Stat(struct File* file)

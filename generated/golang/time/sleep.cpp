@@ -19,7 +19,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace time::rec;
     }
 
     void Sleep(golang::time::Duration d)

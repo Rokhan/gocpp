@@ -21,8 +21,6 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace time::rec;
     }
 
     
@@ -223,7 +221,7 @@ namespace golang::time
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 20);
         auto n = fmtInt(buf, uint64_t(m));
-        return "%!Month(" + string(buf.make_slice(n)) + ")";
+        return "%!Month(" + std::string(buf.make_slice(n)) + ")";
     }
 
     std::string rec::String(golang::time::Weekday d)
@@ -234,7 +232,7 @@ namespace golang::time
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 20);
         auto n = fmtInt(buf, uint64_t(d));
-        return "%!Weekday(" + string(buf.make_slice(n)) + ")";
+        return "%!Weekday(" + std::string(buf.make_slice(n)) + ")";
     }
 
     bool rec::IsZero(struct Time t)
@@ -418,7 +416,7 @@ namespace golang::time
     {
         gocpp::array<unsigned char, 32> arr = {};
         auto n = rec::format(gocpp::recv(d), & arr);
-        return string(arr.make_slice(n));
+        return std::string(arr.make_slice(n));
     }
 
     int rec::format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf)
@@ -1084,7 +1082,7 @@ namespace golang::time
 
     struct gocpp::error rec::UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
     {
-        if(string(data) == "null")
+        if(std::string(data) == "null")
         {
             return nullptr;
         }

@@ -140,7 +140,7 @@ namespace golang::os
             return path;
         }
         copy(pathbuf.make_slice(lastSlash), path.make_slice(lastSlash));
-        return string(pathbuf);
+        return std::string(pathbuf);
     }
 
     std::string dirname(std::string path)
@@ -224,7 +224,7 @@ namespace golang::os
             pathbuf[w] = '\\';
             w++;
         }
-        return string(pathbuf.make_slice(0, w));
+        return std::string(pathbuf.make_slice(0, w));
     }
 
 }

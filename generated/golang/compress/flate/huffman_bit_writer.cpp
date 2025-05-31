@@ -22,8 +22,7 @@ namespace golang::flate
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace flate::rec;
-        using namespace io::rec;
+        using io::rec::Write;
     }
 
     gocpp::slice<int8_t> lengthExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};

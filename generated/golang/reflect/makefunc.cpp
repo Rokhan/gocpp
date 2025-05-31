@@ -26,10 +26,9 @@ namespace golang::reflect
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace reflect::rec;
-        using namespace sync::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Common;
+        using abi::rec::Get;
+        using abi::rec::Kind;
     }
 
     

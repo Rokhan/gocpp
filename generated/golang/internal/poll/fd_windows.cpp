@@ -37,16 +37,9 @@ namespace golang::poll
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace io::rec;
-        using namespace poll::rec;
-        using namespace race::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
-        using namespace utf16::rec;
-        using namespace utf8::rec;
-        using namespace windows::rec;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using syscall::rec::Sockaddr;
     }
 
     gocpp::error initErr;
@@ -665,7 +658,7 @@ namespace golang::poll
             auto buf = fd->readbyte.make_slice(0, 0);
             for(auto i = 0; i < len(uint16s); i++)
             {
-                auto r = rune(uint16s[i]);
+                auto r = gocpp::rune(uint16s[i]);
                 if(utf16::IsSurrogate(r))
                 {
                     if(i + 1 == len(uint16s))
@@ -680,7 +673,7 @@ namespace golang::poll
                     }
                     else
                     {
-                        r = utf16::DecodeRune(r, rune(uint16s[i + 1]));
+                        r = utf16::DecodeRune(r, gocpp::rune(uint16s[i + 1]));
                         if(r != utf8::RuneError)
                         {
                             i++;

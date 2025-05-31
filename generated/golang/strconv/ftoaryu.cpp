@@ -21,8 +21,6 @@ namespace golang::strconv
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bits::rec;
-        using namespace strconv::rec;
     }
 
     void ryuFtoaFixed32(struct decimalSlice* d, uint32_t mant, int exp, int prec)

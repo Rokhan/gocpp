@@ -20,9 +20,6 @@ namespace golang::sys
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace goarch::rec;
-        using namespace goos::rec;
-        using namespace sys::rec;
     }
 
 }

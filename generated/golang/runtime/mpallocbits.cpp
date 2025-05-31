@@ -19,8 +19,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
     }
 
     unsigned int rec::get(golang::runtime::pageBits* b, unsigned int i)

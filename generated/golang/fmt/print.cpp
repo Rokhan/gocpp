@@ -37,18 +37,29 @@ namespace golang::fmt
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace fmt::rec;
-        using namespace fmtsort::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace reflect::rec;
-        using namespace strconv::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace utf8::rec;
-        using namespace windows::rec;
+        using io::rec::Write;
+        using reflect::rec::Bool;
+        using reflect::rec::Bytes;
+        using reflect::rec::CanAddr;
+        using reflect::rec::CanInterface;
+        using reflect::rec::Complex;
+        using reflect::rec::Elem;
+        using reflect::rec::Field;
+        using reflect::rec::Float;
+        using reflect::rec::Index;
+        using reflect::rec::Int;
+        using reflect::rec::Interface;
+        using reflect::rec::IsNil;
+        using reflect::rec::IsValid;
+        using reflect::rec::Kind;
+        using reflect::rec::Len;
+        using reflect::rec::NumField;
+        using reflect::rec::String;
+        using reflect::rec::Type;
+        using reflect::rec::Uint;
+        using reflect::rec::UnsafePointer;
+        using sync::rec::Get;
+        using sync::rec::Put;
     }
 
     std::string commaSpaceString = ", ";
@@ -323,7 +334,7 @@ namespace golang::fmt
             b = strconv::AppendInt(b, int64_t(p), 10);
         }
         b = utf8::AppendRune(b, verb);
-        return string(b);
+        return std::string(b);
     }
 
     void rec::write(golang::fmt::buffer* b, gocpp::slice<unsigned char> p)
@@ -523,7 +534,7 @@ namespace golang::fmt
     {
         auto p = newPrinter();
         rec::doPrintf(gocpp::recv(p), format, a);
-        auto s = string(p->buf);
+        auto s = std::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
@@ -559,7 +570,7 @@ namespace golang::fmt
     {
         auto p = newPrinter();
         rec::doPrint(gocpp::recv(p), a);
-        auto s = string(p->buf);
+        auto s = std::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
@@ -595,7 +606,7 @@ namespace golang::fmt
     {
         auto p = newPrinter();
         rec::doPrintln(gocpp::recv(p), a);
-        auto s = string(p->buf);
+        auto s = std::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
@@ -975,7 +986,7 @@ namespace golang::fmt
                     rec::fmtBx(gocpp::recv(p->fmt), v, udigits);
                     break;
                 case 5:
-                    rec::fmtQ(gocpp::recv(p->fmt), string(v));
+                    rec::fmtQ(gocpp::recv(p->fmt), std::string(v));
                     break;
                 default:
                     rec::printValue(gocpp::recv(p), reflect::ValueOf(v), verb, 0);
@@ -1948,7 +1959,7 @@ namespace golang::fmt
                                             break;
                                     }
                                 }
-                                rec::printArg(gocpp::recv(p), a[argNum], rune(c));
+                                rec::printArg(gocpp::recv(p), a[argNum], gocpp::rune(c));
                                 argNum++;
                                 i++;
                                 goto formatLoop_continue;
@@ -2031,7 +2042,7 @@ namespace golang::fmt
                 rec::writeString(gocpp::recv(p->buf), noVerbString);
                 break;
             }
-            auto [verb, size] = std::tuple{rune(format[i]), 1};
+            auto [verb, size] = std::tuple{gocpp::rune(format[i]), 1};
             if(verb >= utf8::RuneSelf)
             {
                 std::tie(verb, size) = utf8::DecodeRuneInString(format.make_slice(i));

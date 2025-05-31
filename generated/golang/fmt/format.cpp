@@ -21,9 +21,6 @@ namespace golang::fmt
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
-        using namespace strconv::rec;
-        using namespace utf8::rec;
     }
 
     std::string ldigits = "0123456789abcdefx";
@@ -223,12 +220,12 @@ namespace golang::fmt
             }
         }
         auto i = len(buf);
-        if(f->sharp && u <= utf8::MaxRune && strconv::IsPrint(rune(u)))
+        if(f->sharp && u <= utf8::MaxRune && strconv::IsPrint(gocpp::rune(u)))
         {
             i--;
             buf[i] = '\'';
-            i -= utf8::RuneLen(rune(u));
-            utf8::EncodeRune(buf.make_slice(i), rune(u));
+            i -= utf8::RuneLen(gocpp::rune(u));
+            utf8::EncodeRune(buf.make_slice(i), gocpp::rune(u));
             i--;
             buf[i] = '\'';
             i--;
@@ -573,7 +570,7 @@ namespace golang::fmt
 
     void rec::fmtC(struct fmt* f, uint64_t c)
     {
-        auto r = rune(c);
+        auto r = gocpp::rune(c);
         if(c > utf8::MaxRune)
         {
             r = utf8::RuneError;
@@ -584,7 +581,7 @@ namespace golang::fmt
 
     void rec::fmtQc(struct fmt* f, uint64_t c)
     {
-        auto r = rune(c);
+        auto r = gocpp::rune(c);
         if(c > utf8::MaxRune)
         {
             r = utf8::RuneError;

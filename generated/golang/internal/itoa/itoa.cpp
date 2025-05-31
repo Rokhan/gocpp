@@ -43,7 +43,7 @@ namespace golang::itoa
             val = q;
         }
         buf[i] = unsigned char('0' + val);
-        return string(buf.make_slice(i));
+        return std::string(buf.make_slice(i));
     }
 
     std::string hex = "0123456789abcdef";
@@ -67,7 +67,7 @@ namespace golang::itoa
         buf[i] = 'x';
         i--;
         buf[i] = '0';
-        return string(buf.make_slice(i));
+        return std::string(buf.make_slice(i));
     }
 
 }

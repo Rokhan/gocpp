@@ -80,13 +80,9 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace chacha8rand::rec;
-        using namespace cpu::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     bool heapObjectsCanMove()
@@ -841,7 +837,7 @@ namespace golang::runtime
             auto util = int(memstats.gc_cpu_fraction * 100);
             gocpp::array<unsigned char, 24> sbuf = {};
             printlock();
-            print("gc ", memstats.numgc, " @", string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1e6, 3)), "s ", util, "%: ");
+            print("gc ", memstats.numgc, " @", std::string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1e6, 3)), "s ", util, "%: ");
             auto prev = work.tSweepTerm;
             for(auto [i, ns] : gocpp::slice<int64_t> {work.tMark, work.tMarkTerm, work.tEnd})
             {
@@ -849,7 +845,7 @@ namespace golang::runtime
                 {
                     print("+");
                 }
-                print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns - prev))));
+                print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns - prev))));
                 prev = ns;
             }
             print(" ms clock, ");
@@ -864,7 +860,7 @@ namespace golang::runtime
                 {
                     print("+");
                 }
-                print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns))));
+                print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns))));
             }
             print(" ms cpu, ", work.heap0 >> 20, "->", work.heap1 >> 20, "->", work.heap2 >> 20, " MB, ", gcController.lastHeapGoal >> 20, " MB goal, ", rec::Load(gocpp::recv(gcController.lastStackScan)) >> 20, " MB stacks, ", rec::Load(gocpp::recv(gcController.globalsScan)) >> 20, " MB globals, ", work.maxprocs, " P");
             if(work.userForced)

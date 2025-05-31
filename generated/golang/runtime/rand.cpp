@@ -44,14 +44,11 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace chacha8rand::rec;
-        using namespace goarch::rec;
-        using namespace math::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using chacha8rand::rec::Init;
+        using chacha8rand::rec::Init64;
+        using chacha8rand::rec::Next;
+        using chacha8rand::rec::Refill;
+        using chacha8rand::rec::Reseed;
     }
 
     gocpp::slice<unsigned char> startupRand;

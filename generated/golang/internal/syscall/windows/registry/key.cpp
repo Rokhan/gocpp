@@ -23,9 +23,6 @@ namespace golang::registry
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace registry::rec;
-        using namespace runtime::rec;
-        using namespace syscall::rec;
     }
 
     struct gocpp::error rec::Close(golang::registry::Key k)

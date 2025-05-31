@@ -27,11 +27,7 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace errors::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
+        using sync::rec::Do;
     }
 
     

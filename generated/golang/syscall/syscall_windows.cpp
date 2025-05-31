@@ -33,15 +33,7 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bytealg::rec;
-        using namespace errors::rec;
-        using namespace itoa::rec;
-        using namespace race::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
+        using sync::rec::Do;
     }
 
     gocpp::slice<uint16_t> StringToUTF16(std::string s)
@@ -1247,7 +1239,7 @@ namespace golang::syscall
                     {
                         n++;
                     }
-                    sa->Name = string(unsafe::Slice((unsigned char*)(unsafe::Pointer(& pp->Path[0])), n));
+                    sa->Name = std::string(unsafe::Slice((unsigned char*)(unsafe::Pointer(& pp->Path[0])), n));
                     return {sa, nullptr};
                     break;
                 case 1:

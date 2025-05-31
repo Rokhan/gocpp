@@ -58,14 +58,8 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace bytealg::rec;
-        using namespace chacha8rand::rec;
-        using namespace goarch::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     

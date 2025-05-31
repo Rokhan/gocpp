@@ -20,8 +20,6 @@ namespace golang::sort
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bits::rec;
-        using namespace sort::rec;
     }
 
     

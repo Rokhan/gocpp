@@ -18,7 +18,6 @@ namespace golang::math
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     uint32_t Float32bits(double f)

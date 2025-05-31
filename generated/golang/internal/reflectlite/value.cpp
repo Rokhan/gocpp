@@ -24,12 +24,12 @@ namespace golang::reflectlite
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace reflectlite::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
-        using namespace unsafeheader::rec;
+        using abi::rec::Kind;
+        using abi::rec::NumMethod;
+        using abi::rec::Pointers;
+        using abi::rec::Size;
+        using abi::rec::String;
+        using runtime::rec::Name;
     }
 
     

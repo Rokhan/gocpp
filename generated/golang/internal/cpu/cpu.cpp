@@ -18,7 +18,6 @@ namespace golang::cpu
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace cpu::rec;
     }
 
     bool DebugOptions;

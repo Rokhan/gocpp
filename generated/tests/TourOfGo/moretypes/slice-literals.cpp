@@ -18,7 +18,6 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
     }
 
     gocpp::array<std::string, 6> errors = gocpp::Init<gocpp::array<std::string, 6>>([](auto& x) {

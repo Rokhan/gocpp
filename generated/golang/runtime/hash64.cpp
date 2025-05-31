@@ -21,9 +21,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace math::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
     }
 
     uintptr_t memhashFallback(unsafe::Pointer p, uintptr_t seed, uintptr_t s)

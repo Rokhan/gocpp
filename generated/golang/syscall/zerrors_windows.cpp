@@ -19,7 +19,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace syscall::rec;
     }
 
     gocpp::array<std::string, 131> errors = gocpp::Init<gocpp::array<std::string, 131>>([](auto& x) {

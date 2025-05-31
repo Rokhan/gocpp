@@ -20,8 +20,6 @@ namespace golang::strconv
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace strconv::rec;
     }
 
     unsigned char lower(unsigned char c)
@@ -78,7 +76,7 @@ namespace golang::strconv
 
     std::string cloneString(std::string x)
     {
-        return string(gocpp::Tag<gocpp::slice<unsigned char>>()(x));
+        return std::string(gocpp::Tag<gocpp::slice<unsigned char>>()(x));
     }
 
     struct NumError* syntaxError(std::string fn, std::string str)

@@ -20,8 +20,6 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace sync::rec;
     }
 
     std::function<void ()> OnceFunc(std::function<void ()> f)

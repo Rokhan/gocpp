@@ -28,12 +28,6 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
     }
 
     std::tuple<int64_t, bool, struct gocpp::error> rec::writeTo(struct File* f, io::Writer w)

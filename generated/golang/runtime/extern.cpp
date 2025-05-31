@@ -29,11 +29,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace goos::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
     }
 
     std::tuple<uintptr_t, std::string, int, bool> Caller(int skip)

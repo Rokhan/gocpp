@@ -27,14 +27,30 @@ namespace golang::binary
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace binary::rec;
-        using namespace errors::rec;
-        using namespace io::rec;
-        using namespace math::rec;
-        using namespace reflect::rec;
-        using namespace sync::rec;
+        using io::rec::Write;
+        using reflect::rec::Bool;
+        using reflect::rec::CanSet;
+        using reflect::rec::Complex;
+        using reflect::rec::Elem;
+        using reflect::rec::Field;
+        using reflect::rec::Float;
+        using reflect::rec::Index;
+        using reflect::rec::Int;
+        using reflect::rec::IsValid;
+        using reflect::rec::Kind;
+        using reflect::rec::Len;
+        using reflect::rec::NumField;
+        using reflect::rec::SetBool;
+        using reflect::rec::SetComplex;
+        using reflect::rec::SetFloat;
+        using reflect::rec::SetInt;
+        using reflect::rec::SetUint;
+        using reflect::rec::Size;
+        using reflect::rec::String;
+        using reflect::rec::Type;
+        using reflect::rec::Uint;
+        using sync::rec::Load;
+        using sync::rec::Store;
     }
 
     

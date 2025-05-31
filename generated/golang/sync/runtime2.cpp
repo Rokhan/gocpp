@@ -18,7 +18,6 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     

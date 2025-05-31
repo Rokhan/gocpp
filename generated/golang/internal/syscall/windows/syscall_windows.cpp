@@ -27,11 +27,8 @@ namespace golang::windows
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
-        using namespace windows::rec;
+        using sync::rec::Do;
+        using syscall::rec::Find;
     }
 
     std::string UTF16PtrToString(uint16_t* p)

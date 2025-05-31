@@ -25,11 +25,6 @@ namespace golang::poll
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
     }
 
     

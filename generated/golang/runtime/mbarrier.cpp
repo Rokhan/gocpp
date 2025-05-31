@@ -32,11 +32,7 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace goexperiment::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Get;
     }
 
     void typedmemmove(abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src)

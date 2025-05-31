@@ -20,9 +20,6 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace os::rec;
-        using namespace syscall::rec;
-        using namespace testlog::rec;
     }
 
     std::string Expand(std::string s, std::function<std::string (std::string)> mapping)
@@ -59,7 +56,7 @@ namespace golang::os
         {
             return s;
         }
-        return string(buf) + s.make_slice(i);
+        return std::string(buf) + s.make_slice(i);
     }
 
     std::string ExpandEnv(std::string s)

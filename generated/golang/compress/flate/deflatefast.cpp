@@ -20,8 +20,6 @@ namespace golang::flate
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace flate::rec;
-        using namespace math::rec;
     }
 
     uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)

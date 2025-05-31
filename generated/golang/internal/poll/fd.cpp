@@ -18,7 +18,6 @@ namespace golang::poll
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
     }
 
     

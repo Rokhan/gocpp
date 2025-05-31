@@ -20,9 +20,6 @@ namespace golang::strings
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytealg::rec;
-        using namespace unsafe::rec;
-        using namespace utf8::rec;
     }
 
     

@@ -20,8 +20,7 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
-        using namespace time::rec;
+        using mocklib::rec::Weekday;
     }
 
     void main()

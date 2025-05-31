@@ -109,16 +109,12 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace chacha8rand::rec;
-        using namespace cpu::rec;
-        using namespace goarch::rec;
-        using namespace goexperiment::rec;
-        using namespace goos::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::CompareAndSwapNoWB;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
+        using atomic::rec::Swap;
     }
 
     std::string modinfo;
@@ -6432,10 +6428,10 @@ namespace golang::runtime
                         auto pkg = funcpkgpath(findfunc(abi::FuncPCABIInternal(f)));
                         gocpp::array<unsigned char, 24> sbuf = {};
                         print("init ", pkg, " @");
-                        print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(start - runtimeInitTime))), " ms, ");
-                        print(string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(end - start))), " ms clock, ");
-                        print(string(itoa(sbuf.make_slice(0), after.bytes - before.bytes)), " bytes, ");
-                        print(string(itoa(sbuf.make_slice(0), after.allocs - before.allocs)), " allocs");
+                        print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(start - runtimeInitTime))), " ms, ");
+                        print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(end - start))), " ms clock, ");
+                        print(std::string(itoa(sbuf.make_slice(0), after.bytes - before.bytes)), " bytes, ");
+                        print(std::string(itoa(sbuf.make_slice(0), after.allocs - before.allocs)), " allocs");
                         print("\n");
                     }
                     t->state = 2;
@@ -6450,7 +6446,7 @@ int main()
 {
     try
     {
-        std::cout << std::boolalpha << std::setprecision(5);
+        std::cout << std::boolalpha << std::setprecision(5) << std::fixed;
         golang::runtime::main();
         return 0;
     }

@@ -20,9 +20,6 @@ namespace golang::strings
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace io::rec;
-        using namespace utf8::rec;
     }
 
     
@@ -159,7 +156,7 @@ namespace golang::strings
             int size;
             struct gocpp::error err;
             r->i++;
-            return {rune(c), 1, nullptr};
+            return {gocpp::rune(c), 1, nullptr};
         }
         std::tie(ch, size) = utf8::DecodeRuneInString(r->s.make_slice(r->i));
         r->i += int64_t(size);

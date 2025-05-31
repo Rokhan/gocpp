@@ -31,11 +31,8 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace cpu::rec;
-        using namespace goarch::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
+        using abi::rec::HashMightPanic;
+        using abi::rec::IsBlank;
     }
 
     uintptr_t memhash0(unsafe::Pointer p, uintptr_t h)

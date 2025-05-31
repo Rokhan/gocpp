@@ -44,17 +44,12 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace errors::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace unsafe::rec;
-        using namespace windows::rec;
+        using fs::rec::IsDir;
+        using poll::rec::Close;
+        using poll::rec::Init;
+        using poll::rec::Seek;
+        using sync::rec::Do;
+        using windows::rec::Path;
     }
 
     

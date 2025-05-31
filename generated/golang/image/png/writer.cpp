@@ -34,17 +34,23 @@ namespace golang::png
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace binary::rec;
-        using namespace bufio::rec;
-        using namespace color::rec;
-        using namespace crc32::rec;
-        using namespace flate::rec;
-        using namespace hash::rec;
-        using namespace image::rec;
-        using namespace io::rec;
-        using namespace png::rec;
-        using namespace strconv::rec;
-        using namespace zlib::rec;
+        using binary::rec::PutUint32;
+        using bufio::rec::Flush;
+        using bufio::rec::Reset;
+        using color::rec::Convert;
+        using color::rec::RGBA;
+        using hash::rec::Sum32;
+        using image::rec::At;
+        using image::rec::Bounds;
+        using image::rec::ColorIndexAt;
+        using image::rec::ColorModel;
+        using image::rec::Dx;
+        using image::rec::Dy;
+        using image::rec::PixOffset;
+        using io::rec::Write;
+        using zlib::rec::Close;
+        using zlib::rec::Reset;
+        using zlib::rec::Write;
     }
 
     

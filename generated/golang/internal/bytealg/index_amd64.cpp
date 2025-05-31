@@ -18,7 +18,6 @@ namespace golang::bytealg
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace cpu::rec;
     }
 
     void init()

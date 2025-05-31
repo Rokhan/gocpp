@@ -20,8 +20,9 @@ namespace golang::image
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace color::rec;
-        using namespace image::rec;
+        using color::rec::Convert;
+        using color::rec::Index;
+        using color::rec::RGBA;
     }
 
     

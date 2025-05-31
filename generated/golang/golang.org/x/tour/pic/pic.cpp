@@ -41,20 +41,9 @@ namespace golang::pic
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace base64::rec;
-        using namespace bufio::rec;
-        using namespace color::rec;
-        using namespace flate::rec;
-        using namespace hash::rec;
-        using namespace image::rec;
-        using namespace io::rec;
-        using namespace os::rec;
-        using namespace png::rec;
-        using namespace poll::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace windows::rec;
-        using namespace zlib::rec;
+        using bufio::rec::Flush;
+        using io::rec::Close;
+        using png::rec::Encode;
     }
 
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f)

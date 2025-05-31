@@ -26,12 +26,12 @@ namespace golang::rand
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace bisect::rec;
-        using namespace godebug::rec;
-        using namespace godebugs::rec;
-        using namespace rand::rec;
-        using namespace sync::rec;
+        using atomic::rec::CompareAndSwap;
+        using atomic::rec::Load;
+        using godebug::rec::IncNonDefault;
+        using godebug::rec::Value;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     

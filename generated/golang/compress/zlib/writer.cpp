@@ -27,12 +27,15 @@ namespace golang::zlib
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace adler32::rec;
-        using namespace binary::rec;
-        using namespace flate::rec;
-        using namespace fmt::rec;
-        using namespace hash::rec;
-        using namespace io::rec;
+        using binary::rec::PutUint32;
+        using binary::rec::Uint16;
+        using flate::rec::Close;
+        using flate::rec::Flush;
+        using flate::rec::Reset;
+        using flate::rec::Write;
+        using hash::rec::Reset;
+        using hash::rec::Sum32;
+        using io::rec::Write;
     }
 
     

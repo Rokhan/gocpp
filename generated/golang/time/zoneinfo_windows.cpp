@@ -26,10 +26,10 @@ namespace golang::time
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace registry::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
+        using registry::rec::Close;
+        using registry::rec::GetMUIStringValue;
+        using registry::rec::GetStringValue;
+        using registry::rec::ReadSubKeyNames;
     }
 
     gocpp::slice<std::string> platformZoneSources;
@@ -137,7 +137,7 @@ namespace golang::time
                 short = append(short, c);
             }
         }
-        return string(short);
+        return std::string(short);
     }
 
     std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z)

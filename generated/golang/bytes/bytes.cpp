@@ -29,15 +29,11 @@ namespace golang::bytes
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bytealg::rec;
-        using namespace bytes::rec;
-        using namespace unicode::rec;
-        using namespace utf8::rec;
     }
 
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
-        return string(a) == string(b);
+        return std::string(a) == std::string(b);
     }
 
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
@@ -213,7 +209,7 @@ namespace golang::bytes
         }
         if(len(s) == 1)
         {
-            auto r = rune(s[0]);
+            auto r = gocpp::rune(s[0]);
             if(r >= utf8::RuneSelf)
             {
                 for(std::tie(std::ignored, r) : chars)
@@ -233,7 +229,7 @@ namespace golang::bytes
         }
         if(len(chars) == 1)
         {
-            auto r = rune(chars[0]);
+            auto r = gocpp::rune(chars[0]);
             if(r >= utf8::RuneSelf)
             {
                 r = utf8::RuneError;
@@ -257,7 +253,7 @@ namespace golang::bytes
         int width = {};
         for(auto i = 0; i < len(s); i += width)
         {
-            auto r = rune(s[i]);
+            auto r = gocpp::rune(s[i]);
             if(r < utf8::RuneSelf)
             {
                 if(bytealg::IndexByteString(chars, s[i]) >= 0)
@@ -272,7 +268,7 @@ namespace golang::bytes
             {
                 if(len(chars) == width)
                 {
-                    if(chars == string(r))
+                    if(chars == std::string(r))
                     {
                         return i;
                     }
@@ -280,7 +276,7 @@ namespace golang::bytes
                 }
                 if(bytealg::MaxLen >= width)
                 {
-                    if(bytealg::IndexString(chars, string(r)) >= 0)
+                    if(bytealg::IndexString(chars, std::string(r)) >= 0)
                     {
                         return i;
                     }
@@ -320,7 +316,7 @@ namespace golang::bytes
         }
         if(len(s) == 1)
         {
-            auto r = rune(s[0]);
+            auto r = gocpp::rune(s[0]);
             if(r >= utf8::RuneSelf)
             {
                 for(std::tie(std::ignored, r) : chars)
@@ -340,7 +336,7 @@ namespace golang::bytes
         }
         if(len(chars) == 1)
         {
-            auto cr = rune(chars[0]);
+            auto cr = gocpp::rune(chars[0]);
             if(cr >= utf8::RuneSelf)
             {
                 cr = utf8::RuneError;
@@ -358,7 +354,7 @@ namespace golang::bytes
         }
         for(auto i = len(s); i > 0; )
         {
-            auto r = rune(s[i - 1]);
+            auto r = gocpp::rune(s[i - 1]);
             if(r < utf8::RuneSelf)
             {
                 if(bytealg::IndexByteString(chars, s[i - 1]) >= 0)
@@ -375,7 +371,7 @@ namespace golang::bytes
             {
                 if(len(chars) == size)
                 {
-                    if(chars == string(r))
+                    if(chars == std::string(r))
                     {
                         return i;
                     }
@@ -383,7 +379,7 @@ namespace golang::bytes
                 }
                 if(bytealg::MaxLen >= size)
                 {
-                    if(bytealg::IndexString(chars, string(r)) >= 0)
+                    if(bytealg::IndexString(chars, std::string(r)) >= 0)
                     {
                         return i;
                     }
@@ -553,7 +549,7 @@ namespace golang::bytes
         for(auto i = 0; i < len(s); )
         {
             auto size = 1;
-            auto r = rune(s[i]);
+            auto r = gocpp::rune(s[i]);
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, size) = utf8::DecodeRune(s.make_slice(i));
@@ -640,7 +636,7 @@ namespace golang::bytes
         for(auto i = 0; i < len(s); )
         {
             auto wid = 1;
-            auto r = rune(s[i]);
+            auto r = gocpp::rune(s[i]);
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, wid) = utf8::DecodeRune(s.make_slice(i));
@@ -933,7 +929,7 @@ namespace golang::bytes
         for(; start < len(s); )
         {
             auto wid = 1;
-            auto r = rune(s[start]);
+            auto r = gocpp::rune(s[start]);
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, wid) = utf8::DecodeRune(s.make_slice(start));
@@ -951,7 +947,7 @@ namespace golang::bytes
     {
         for(auto i = len(s); i > 0; )
         {
-            auto [r, size] = std::tuple{rune(s[i - 1]), 1};
+            auto [r, size] = std::tuple{gocpp::rune(s[i - 1]), 1};
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, size) = utf8::DecodeLastRune(s.make_slice(0, i));
@@ -1078,7 +1074,7 @@ namespace golang::bytes
     {
         for(; len(s) > 0; )
         {
-            auto [r, n] = std::tuple{rune(s[0]), 1};
+            auto [r, n] = std::tuple{gocpp::rune(s[0]), 1};
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, n) = utf8::DecodeRune(s);
@@ -1139,7 +1135,7 @@ namespace golang::bytes
     {
         for(; len(s) > 0; )
         {
-            auto [r, n] = std::tuple{rune(s[len(s) - 1]), 1};
+            auto [r, n] = std::tuple{gocpp::rune(s[len(s) - 1]), 1};
             if(r >= utf8::RuneSelf)
             {
                 std::tie(r, n) = utf8::DecodeLastRune(s);
@@ -1283,7 +1279,7 @@ namespace golang::bytes
             gocpp::rune tr = {};
             if(s[0] < utf8::RuneSelf)
             {
-                std::tie(sr, s) = std::tuple{rune(s[0]), s.make_slice(1)};
+                std::tie(sr, s) = std::tuple{gocpp::rune(s[0]), s.make_slice(1)};
             }
             else
             {
@@ -1292,7 +1288,7 @@ namespace golang::bytes
             }
             if(t[0] < utf8::RuneSelf)
             {
-                std::tie(tr, t) = std::tuple{rune(t[0]), t.make_slice(1)};
+                std::tie(tr, t) = std::tuple{gocpp::rune(t[0]), t.make_slice(1)};
             }
             else
             {

@@ -18,7 +18,6 @@ namespace golang::unicode
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unicode::rec;
     }
 
     bool IsDigit(gocpp::rune r)

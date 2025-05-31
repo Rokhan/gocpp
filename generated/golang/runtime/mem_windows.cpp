@@ -21,8 +21,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
     }
 
     unsafe::Pointer sysAllocOS(uintptr_t n)

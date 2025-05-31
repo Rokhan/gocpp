@@ -22,10 +22,10 @@ namespace golang::base64
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace binary::rec;
-        using namespace io::rec;
-        using namespace slices::rec;
-        using namespace strconv::rec;
+        using binary::rec::PutUint32;
+        using binary::rec::PutUint64;
+        using io::rec::Read;
+        using io::rec::Write;
     }
 
     
@@ -199,7 +199,7 @@ namespace golang::base64
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::EncodedLen(gocpp::recv(enc), len(src)));
         rec::Encode(gocpp::recv(enc), buf, src);
-        return string(buf);
+        return std::string(buf);
     }
 
     
@@ -406,7 +406,7 @@ namespace golang::base64
                 j--;
                 continue;
             }
-            if(rune(in) != enc->padChar)
+            if(gocpp::rune(in) != enc->padChar)
             {
                 int nsi;
                 int n;
@@ -444,7 +444,7 @@ namespace golang::base64
                             struct gocpp::error err;
                             return {si, 0, CorruptInputError(len(src))};
                         }
-                        if(rune(src[si]) != enc->padChar)
+                        if(gocpp::rune(src[si]) != enc->padChar)
                         {
                             int nsi;
                             int n;
@@ -517,7 +517,7 @@ namespace golang::base64
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::AppendDecode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = len(src);
-        for(; n > 0 && rune(src[n - 1]) == enc->padChar; )
+        for(; n > 0 && gocpp::rune(src[n - 1]) == enc->padChar; )
         {
             n--;
         }

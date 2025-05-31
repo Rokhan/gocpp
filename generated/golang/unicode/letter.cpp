@@ -18,7 +18,6 @@ namespace golang::unicode
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unicode::rec;
     }
 
     
@@ -250,7 +249,7 @@ namespace golang::unicode
             return is16(r16, uint16_t(r));
         }
         auto r32 = rangeTab->R32;
-        if(len(r32) > 0 && r >= rune(r32[0].Lo))
+        if(len(r32) > 0 && r >= gocpp::rune(r32[0].Lo))
         {
             return is32(r32, uint32_t(r));
         }
@@ -265,7 +264,7 @@ namespace golang::unicode
             return is16(r16.make_slice(off), uint16_t(r));
         }
         auto r32 = rangeTab->R32;
-        if(len(r32) > 0 && r >= rune(r32[0].Lo))
+        if(len(r32) > 0 && r >= gocpp::rune(r32[0].Lo))
         {
             return is32(r32, uint32_t(r));
         }
@@ -317,7 +316,7 @@ namespace golang::unicode
             bool foundMapping;
             auto m = int((unsigned int)(lo + hi) >> 1);
             auto cr = caseRange[m];
-            if(rune(cr.Lo) <= r && r <= rune(cr.Hi))
+            if(gocpp::rune(cr.Lo) <= r && r <= gocpp::rune(cr.Hi))
             {
                 gocpp::rune mappedRune;
                 bool foundMapping;
@@ -326,11 +325,11 @@ namespace golang::unicode
                 {
                     gocpp::rune mappedRune;
                     bool foundMapping;
-                    return {rune(cr.Lo) + ((r - rune(cr.Lo)) &^ 1 | rune(_case & 1)), true};
+                    return {gocpp::rune(cr.Lo) + ((r - gocpp::rune(cr.Lo)) &^ 1 | gocpp::rune(_case & 1)), true};
                 }
                 return {r + delta, true};
             }
-            if(r < rune(cr.Lo))
+            if(r < gocpp::rune(cr.Lo))
             {
                 gocpp::rune mappedRune;
                 bool foundMapping;
@@ -461,14 +460,14 @@ namespace golang::unicode
         }
         if(int(r) < len(asciiFold))
         {
-            return rune(asciiFold[r]);
+            return gocpp::rune(asciiFold[r]);
         }
         auto lo = 0;
         auto hi = len(caseOrbit);
         for(; lo < hi; )
         {
             auto m = int((unsigned int)(lo + hi) >> 1);
-            if(rune(caseOrbit[m].From) < r)
+            if(gocpp::rune(caseOrbit[m].From) < r)
             {
                 lo = m + 1;
             }
@@ -477,9 +476,9 @@ namespace golang::unicode
                 hi = m;
             }
         }
-        if(lo < len(caseOrbit) && rune(caseOrbit[lo].From) == r)
+        if(lo < len(caseOrbit) && gocpp::rune(caseOrbit[lo].From) == r)
         {
-            return rune(caseOrbit[lo].To);
+            return gocpp::rune(caseOrbit[lo].To);
         }
         if(auto l = ToLower(r); l != r)
         {

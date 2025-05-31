@@ -18,7 +18,6 @@ namespace golang::atomic
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     int32_t SwapInt32(int32_t* addr, int32_t go_new)

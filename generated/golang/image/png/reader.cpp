@@ -28,15 +28,19 @@ namespace golang::png
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace binary::rec;
-        using namespace color::rec;
-        using namespace crc32::rec;
-        using namespace fmt::rec;
-        using namespace hash::rec;
-        using namespace image::rec;
-        using namespace io::rec;
-        using namespace png::rec;
-        using namespace zlib::rec;
+        using binary::rec::Uint32;
+        using hash::rec::Reset;
+        using hash::rec::Sum32;
+        using image::rec::Bounds;
+        using image::rec::SetColorIndex;
+        using image::rec::SetGray;
+        using image::rec::SetGray16;
+        using image::rec::SetNRGBA;
+        using image::rec::SetNRGBA64;
+        using image::rec::SetRGBA64;
+        using io::rec::Close;
+        using io::rec::Read;
+        using io::rec::Write;
     }
 
     bool cbPaletted(int cb)
@@ -159,13 +163,13 @@ namespace golang::png
 
     std::string rec::Error(golang::png::FormatError e)
     {
-        return "png: invalid format: " + string(e);
+        return "png: invalid format: " + std::string(e);
     }
 
     FormatError chunkOrderError = FormatError("chunk out of order");
     std::string rec::Error(golang::png::UnsupportedError e)
     {
-        return "png: unsupported feature: " + string(e);
+        return "png: unsupported feature: " + std::string(e);
     }
 
     struct gocpp::error rec::parseIHDR(struct decoder* d, uint32_t length)
@@ -517,7 +521,7 @@ namespace golang::png
                 return {0, err};
             }
             d->idatLength = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
-            if(string(d->tmp.make_slice(4, 8)) != "IDAT")
+            if(std::string(d->tmp.make_slice(4, 8)) != "IDAT")
             {
                 return {0, FormatError("not enough pixel data")};
             }
@@ -1277,7 +1281,7 @@ namespace golang::png
         rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         //Go switch emulation
         {
-            auto condition = string(d->tmp.make_slice(4, 8));
+            auto condition = std::string(d->tmp.make_slice(4, 8));
             int conditionId = -1;
             if(condition == "IHDR") { conditionId = 0; }
             else if(condition == "PLTE") { conditionId = 1; }
@@ -1391,7 +1395,7 @@ namespace golang::png
         {
             return err;
         }
-        if(string(d->tmp.make_slice(0, len(pngHeader))) != pngHeader)
+        if(std::string(d->tmp.make_slice(0, len(pngHeader))) != pngHeader)
         {
             return FormatError("not a PNG file");
         }

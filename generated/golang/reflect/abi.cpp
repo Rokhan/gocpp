@@ -25,10 +25,15 @@ namespace golang::reflect
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace goarch::rec;
-        using namespace reflect::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Align;
+        using abi::rec::Get;
+        using abi::rec::InSlice;
+        using abi::rec::IntRegArgAddr;
+        using abi::rec::Kind;
+        using abi::rec::OutSlice;
+        using abi::rec::Pointers;
+        using abi::rec::Set;
+        using abi::rec::Size;
     }
 
     int intArgRegs = abi::IntArgRegs;

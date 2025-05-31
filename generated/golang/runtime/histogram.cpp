@@ -21,10 +21,8 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::Load;
     }
 
     

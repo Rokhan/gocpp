@@ -18,7 +18,6 @@ namespace golang::crc32
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace crc32::rec;
     }
 
     Table* simpleMakeTable(uint32_t poly)

@@ -19,8 +19,6 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace strings::rec;
-        using namespace wc::rec;
     }
 
     gocpp::map<std::string, int> WordCount(std::string s)

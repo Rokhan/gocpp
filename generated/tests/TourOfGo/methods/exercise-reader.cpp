@@ -19,8 +19,6 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace io::rec;
-        using namespace reader::rec;
     }
 
     

@@ -20,8 +20,6 @@ namespace golang::fs
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace time::rec;
-        using namespace utf8::rec;
     }
 
     
@@ -505,7 +503,7 @@ namespace golang::fs
             }
             w++;
         }
-        return string(buf.make_slice(0, w));
+        return std::string(buf.make_slice(0, w));
     }
 
     bool rec::IsDir(golang::fs::FileMode m)

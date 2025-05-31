@@ -26,11 +26,6 @@ namespace golang::registry
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace registry::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
-        using namespace utf16::rec;
     }
 
     syscall::Errno ErrShortBuffer = syscall::ERROR_MORE_DATA;

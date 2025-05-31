@@ -18,7 +18,6 @@ namespace golang::main
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fmt::rec;
     }
 
     std::function<int ()> fibonacci()

@@ -33,13 +33,10 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace unsafe::rec;
-        using namespace windows::rec;
+        using fs::rec::Sys;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using syscall::rec::Nanoseconds;
     }
 
     

@@ -39,12 +39,13 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace goarch::rec;
-        using namespace math::rec;
-        using namespace runtime::rec;
-        using namespace unsafe::rec;
+        using abi::rec::Equal;
+        using abi::rec::Hasher;
+        using abi::rec::IndirectElem;
+        using abi::rec::IndirectKey;
+        using abi::rec::NeedKeyUpdate;
+        using abi::rec::ReflexiveKey;
+        using abi::rec::Size;
     }
 
     struct gocpp_id_0

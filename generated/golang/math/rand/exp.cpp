@@ -20,8 +20,6 @@ namespace golang::rand
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace math::rec;
-        using namespace rand::rec;
     }
 
     double rec::ExpFloat64(struct Rand* r)

@@ -24,10 +24,8 @@ namespace golang::registry
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace sysdll::rec;
-        using namespace unsafe::rec;
+        using syscall::rec::Addr;
+        using syscall::rec::NewProc;
     }
 
     unsafe::Pointer _;

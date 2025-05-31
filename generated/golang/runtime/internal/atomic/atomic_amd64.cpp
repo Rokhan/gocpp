@@ -18,7 +18,6 @@ namespace golang::atomic
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     uint32_t Load(uint32_t* ptr)

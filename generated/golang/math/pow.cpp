@@ -27,7 +27,6 @@ namespace golang::math
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace math::rec;
     }
 
     bool isOddInt(double x)

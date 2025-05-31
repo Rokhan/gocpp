@@ -18,7 +18,6 @@ namespace golang::bytealg
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace cpu::rec;
     }
 
     int MaxLen;
@@ -77,7 +76,7 @@ namespace golang::bytealg
         {
             h = h * PrimeRK + uint32_t(s[i]);
         }
-        if(h == hashss && string(s.make_slice(0, n)) == string(sep))
+        if(h == hashss && std::string(s.make_slice(0, n)) == std::string(sep))
         {
             return 0;
         }
@@ -87,7 +86,7 @@ namespace golang::bytealg
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i - n]);
             i++;
-            if(h == hashss && string(s.make_slice(i - n, i)) == string(sep))
+            if(h == hashss && std::string(s.make_slice(i - n, i)) == std::string(sep))
             {
                 return i - n;
             }
@@ -107,7 +106,7 @@ namespace golang::bytealg
         {
             h = h * PrimeRK + uint32_t(s[i]);
         }
-        if(h == hashss && string(s.make_slice(last)) == string(sep))
+        if(h == hashss && std::string(s.make_slice(last)) == std::string(sep))
         {
             return last;
         }
@@ -116,7 +115,7 @@ namespace golang::bytealg
             h *= PrimeRK;
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i + n]);
-            if(h == hashss && string(s.make_slice(i, i + n)) == string(sep))
+            if(h == hashss && std::string(s.make_slice(i, i + n)) == std::string(sep))
             {
                 return i;
             }

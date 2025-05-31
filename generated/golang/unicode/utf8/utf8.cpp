@@ -125,8 +125,8 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            auto mask = (rune(x) << 31) >> 31;
-            return {rune(p[0]) &^ mask | RuneError & mask, 1};
+            auto mask = (gocpp::rune(x) << 31) >> 31;
+            return {gocpp::rune(p[0]) &^ mask | RuneError & mask, 1};
         }
         auto sz = int(x & 7);
         auto accept = acceptRanges[x >> 4];
@@ -147,7 +147,7 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            return {(rune(p0 & mask2) << 6) | rune(b1 & maskx), 2};
+            return {(gocpp::rune(p0 & mask2) << 6) | gocpp::rune(b1 & maskx), 2};
         }
         auto b2 = p[2];
         if(b2 < locb || hicb < b2)
@@ -160,7 +160,7 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            return {(rune(p0 & mask3) << 12) | (rune(b1 & maskx) << 6) | rune(b2 & maskx), 3};
+            return {(gocpp::rune(p0 & mask3) << 12) | (gocpp::rune(b1 & maskx) << 6) | gocpp::rune(b2 & maskx), 3};
         }
         auto b3 = p[3];
         if(b3 < locb || hicb < b3)
@@ -169,7 +169,7 @@ namespace golang::utf8
             int size;
             return {RuneError, 1};
         }
-        return {(rune(p0 & mask4) << 18) | (rune(b1 & maskx) << 12) | (rune(b2 & maskx) << 6) | rune(b3 & maskx), 4};
+        return {(gocpp::rune(p0 & mask4) << 18) | (gocpp::rune(b1 & maskx) << 12) | (gocpp::rune(b2 & maskx) << 6) | gocpp::rune(b3 & maskx), 4};
     }
 
     std::tuple<gocpp::rune, int> DecodeRuneInString(std::string s)
@@ -189,8 +189,8 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            auto mask = (rune(x) << 31) >> 31;
-            return {rune(s[0]) &^ mask | RuneError & mask, 1};
+            auto mask = (gocpp::rune(x) << 31) >> 31;
+            return {gocpp::rune(s[0]) &^ mask | RuneError & mask, 1};
         }
         auto sz = int(x & 7);
         auto accept = acceptRanges[x >> 4];
@@ -211,7 +211,7 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            return {(rune(s0 & mask2) << 6) | rune(s1 & maskx), 2};
+            return {(gocpp::rune(s0 & mask2) << 6) | gocpp::rune(s1 & maskx), 2};
         }
         auto s2 = s[2];
         if(s2 < locb || hicb < s2)
@@ -224,7 +224,7 @@ namespace golang::utf8
         {
             gocpp::rune r;
             int size;
-            return {(rune(s0 & mask3) << 12) | (rune(s1 & maskx) << 6) | rune(s2 & maskx), 3};
+            return {(gocpp::rune(s0 & mask3) << 12) | (gocpp::rune(s1 & maskx) << 6) | gocpp::rune(s2 & maskx), 3};
         }
         auto s3 = s[3];
         if(s3 < locb || hicb < s3)
@@ -233,7 +233,7 @@ namespace golang::utf8
             int size;
             return {RuneError, 1};
         }
-        return {(rune(s0 & mask4) << 18) | (rune(s1 & maskx) << 12) | (rune(s2 & maskx) << 6) | rune(s3 & maskx), 4};
+        return {(gocpp::rune(s0 & mask4) << 18) | (gocpp::rune(s1 & maskx) << 12) | (gocpp::rune(s2 & maskx) << 6) | gocpp::rune(s3 & maskx), 4};
     }
 
     std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p)
@@ -248,7 +248,7 @@ namespace golang::utf8
             return {RuneError, 0};
         }
         auto start = end - 1;
-        r = rune(p[start]);
+        r = gocpp::rune(p[start]);
         if(r < RuneSelf)
         {
             gocpp::rune r;
@@ -301,7 +301,7 @@ namespace golang::utf8
             return {RuneError, 0};
         }
         auto start = end - 1;
-        r = rune(s[start]);
+        r = gocpp::rune(s[start]);
         if(r < RuneSelf)
         {
             gocpp::rune r;

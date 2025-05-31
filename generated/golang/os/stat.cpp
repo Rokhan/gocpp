@@ -23,10 +23,6 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace testlog::rec;
-        using namespace time::rec;
     }
 
     std::tuple<os::FileInfo, struct gocpp::error> Stat(std::string name)

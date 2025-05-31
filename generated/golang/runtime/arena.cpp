@@ -76,16 +76,9 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace chacha8rand::rec;
-        using namespace cpu::rec;
-        using namespace goarch::rec;
-        using namespace goexperiment::rec;
-        using namespace math::rec;
-        using namespace runtime::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using atomic::rec::Add;
+        using atomic::rec::Load;
+        using atomic::rec::Store;
     }
 
     unsafe::Pointer arena_newArena()

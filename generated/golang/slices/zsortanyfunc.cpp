@@ -18,7 +18,6 @@ namespace golang::slices
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace slices::rec;
     }
 
 

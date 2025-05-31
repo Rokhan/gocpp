@@ -18,7 +18,6 @@ namespace golang::race
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     void Acquire(unsafe::Pointer addr)

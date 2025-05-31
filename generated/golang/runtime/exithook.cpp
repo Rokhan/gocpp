@@ -19,7 +19,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace runtime::rec;
     }
 
     void addExitHook(std::function<void ()> f, bool runOnNonZeroExit)

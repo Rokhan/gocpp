@@ -20,8 +20,6 @@ namespace golang::windows
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
     }
 
     struct gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine)

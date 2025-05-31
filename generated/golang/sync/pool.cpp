@@ -25,11 +25,6 @@ namespace golang::sync
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace race::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace unsafe::rec;
     }
 
     

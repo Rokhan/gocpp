@@ -23,8 +23,6 @@ namespace golang::strconv
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace math::rec;
-        using namespace strconv::rec;
     }
 
     
@@ -66,7 +64,7 @@ namespace golang::strconv
     floatInfo float64info = floatInfo {52, 11, - 1023};
     std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize)
     {
-        return string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, gocpp::max(prec + 4, 24)), f, fmt, prec, bitSize));
+        return std::string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, gocpp::max(prec + 4, 24)), f, fmt, prec, bitSize));
     }
 
     gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize)

@@ -25,11 +25,7 @@ namespace golang::flate
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace errors::rec;
-        using namespace flate::rec;
-        using namespace fmt::rec;
-        using namespace io::rec;
-        using namespace math::rec;
+        using io::rec::Write;
     }
 
     

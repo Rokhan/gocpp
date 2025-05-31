@@ -38,14 +38,8 @@ namespace golang::os
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace fs::rec;
-        using namespace os::rec;
-        using namespace poll::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace time::rec;
-        using namespace windows::rec;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     struct gocpp_id_0

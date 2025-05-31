@@ -29,12 +29,10 @@ namespace golang::bisect
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace atomic::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
+        using runtime::rec::Name;
+        using runtime::rec::Next;
     }
 
     std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern)
@@ -571,7 +569,7 @@ namespace golang::bisect
 
     std::string Marker(uint64_t id)
     {
-        return string(AppendMarker(nullptr, id));
+        return std::string(AppendMarker(nullptr, id));
     }
 
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id)

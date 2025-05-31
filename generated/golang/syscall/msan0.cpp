@@ -18,7 +18,6 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace unsafe::rec;
     }
 
     void msanRead(unsafe::Pointer addr, int len)

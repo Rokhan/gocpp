@@ -41,17 +41,30 @@ namespace golang::reflect
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace errors::rec;
-        using namespace goarch::rec;
-        using namespace itoa::rec;
-        using namespace math::rec;
-        using namespace reflect::rec;
-        using namespace runtime::rec;
-        using namespace sync::rec;
-        using namespace sys::rec;
-        using namespace unsafe::rec;
-        using namespace unsafeheader::rec;
+        using abi::rec::Common;
+        using abi::rec::Dump;
+        using abi::rec::Elem;
+        using abi::rec::Embedded;
+        using abi::rec::Equal;
+        using abi::rec::ExportedMethods;
+        using abi::rec::IfaceIndir;
+        using abi::rec::In;
+        using abi::rec::InSlice;
+        using abi::rec::IsExported;
+        using abi::rec::IsVariadic;
+        using abi::rec::Kind;
+        using abi::rec::Len;
+        using abi::rec::NumIn;
+        using abi::rec::NumMethod;
+        using abi::rec::NumOut;
+        using abi::rec::Out;
+        using abi::rec::OutSlice;
+        using abi::rec::Pointers;
+        using abi::rec::Size;
+        using runtime::rec::Name;
+        using runtime::rec::Next;
+        using sync::rec::Get;
+        using sync::rec::Put;
     }
 
     
@@ -4749,9 +4762,9 @@ namespace golang::reflect
     struct Value cvtIntString(struct Value v, struct Type t)
     {
         auto s = "\uFFFD";
-        if(auto x = rec::Int(gocpp::recv(v)); int64_t(rune(x)) == x)
+        if(auto x = rec::Int(gocpp::recv(v)); int64_t(gocpp::rune(x)) == x)
         {
-            s = string(rune(x));
+            s = std::string(gocpp::rune(x));
         }
         return makeString(rec::ro(gocpp::recv(v.flag)), s, t);
     }
@@ -4759,16 +4772,16 @@ namespace golang::reflect
     struct Value cvtUintString(struct Value v, struct Type t)
     {
         auto s = "\uFFFD";
-        if(auto x = rec::Uint(gocpp::recv(v)); uint64_t(rune(x)) == x)
+        if(auto x = rec::Uint(gocpp::recv(v)); uint64_t(gocpp::rune(x)) == x)
         {
-            s = string(rune(x));
+            s = std::string(gocpp::rune(x));
         }
         return makeString(rec::ro(gocpp::recv(v.flag)), s, t);
     }
 
     struct Value cvtBytesString(struct Value v, struct Type t)
     {
-        return makeString(rec::ro(gocpp::recv(v.flag)), string(rec::Bytes(gocpp::recv(v))), t);
+        return makeString(rec::ro(gocpp::recv(v.flag)), std::string(rec::Bytes(gocpp::recv(v))), t);
     }
 
     struct Value cvtStringBytes(struct Value v, struct Type t)
@@ -4778,7 +4791,7 @@ namespace golang::reflect
 
     struct Value cvtRunesString(struct Value v, struct Type t)
     {
-        return makeString(rec::ro(gocpp::recv(v.flag)), string(rec::runes(gocpp::recv(v))), t);
+        return makeString(rec::ro(gocpp::recv(v.flag)), std::string(rec::runes(gocpp::recv(v))), t);
     }
 
     struct Value cvtStringRunes(struct Value v, struct Type t)

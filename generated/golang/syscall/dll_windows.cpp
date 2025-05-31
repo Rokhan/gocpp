@@ -23,10 +23,8 @@ namespace golang::syscall
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace atomic::rec;
-        using namespace sync::rec;
-        using namespace syscall::rec;
-        using namespace unsafe::rec;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     

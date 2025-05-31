@@ -23,10 +23,7 @@ namespace golang::sort
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace abi::rec;
-        using namespace bits::rec;
-        using namespace reflectlite::rec;
-        using namespace sort::rec;
+        using reflectlite::rec::Len;
     }
 
     void Slice(go_any x, std::function<bool (int i, int j)> less)

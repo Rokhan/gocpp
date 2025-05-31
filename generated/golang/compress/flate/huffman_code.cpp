@@ -21,10 +21,6 @@ namespace golang::flate
     namespace rec
     {
         using namespace mocklib::rec;
-        using namespace bits::rec;
-        using namespace flate::rec;
-        using namespace math::rec;
-        using namespace sort::rec;
     }
 
     

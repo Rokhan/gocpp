@@ -239,28 +239,35 @@ var stdFuncMapping = map[string]string{
 	"pic::Show":      "mocklib::picShow",
 	"pic::ShowImage": "mocklib::picShowImage",
 	// time
-	"time::Time":        "mocklib::Date",
-	"time::After":       "mocklib::After",
-	"time::Tick":        "mocklib::Tick",
-	"time::Now":         "mocklib::Date::Now",
-	"time::Saturday":    "mocklib::Date::Saturday",
-	"time::Sleep":       "mocklib::Sleep",
-	"time::Second":      "mocklib::Second",
-	"time::Millisecond": "mocklib::Millisecond",
+	"time::Time":         "mocklib::Date",
+	"time::After":        "mocklib::After",
+	"time::Tick":         "mocklib::Tick",
+	"time::Now":          "mocklib::Date::Now",
+	"time::Saturday":     "mocklib::Date::Saturday",
+	"time::Sleep":        "mocklib::Sleep",
+	"time::Second":       "mocklib::Second",
+	"time::Millisecond":  "mocklib::Millisecond",
+	"time::rec::Weekday": "mocklib::rec::Weekday",
+	"time::rec::Hour":    "mocklib::rec::Hour",
 	// strings
 	"strings::Join":   "mocklib::StringsJoin",
 	"strings::Fields": "mocklib::StringsFields",
+
 	// sync
-	"sync::Mutex": "mocklib::Mutex",
+	"sync::Mutex":       "mocklib::Mutex",
+	"sync::rec::Lock":   "mocklib::rec::Lock",
+	"sync::rec::Unlock": "mocklib::rec::Unlock",
 
 	// wc
 	"wc::Test": "mocklib::wcTest",
 
+	// new/delete keywords
+	"new":       "new",
+	"delete":    "remove",
+	"go_new":    "new",    // if already renamed by keyword mapping
+	"go_delete": "remove", // if already renamed by keyword mapping
+
 	// Predefined functions
-	"new":            "new",
-	"delete":         "remove",
-	"go_new":         "new",    // if already renamed by keyword mapping
-	"go_delete":      "remove", // if already renamed by keyword mapping
 	"make":           "gocpp::make",
 	"max":            "gocpp::max",
 	"min":            "gocpp::min",
@@ -275,16 +282,18 @@ var stdFuncMapping = map[string]string{
 	"float":      "double",
 	"float32":    "float",
 	"float64":    "double",
+	"int8":       "int8_t",
+	"int16":      "int16_t",
+	"int32":      "int32_t",
+	"int64":      "int64_t",
+	"rune":       "gocpp::rune",
+	"string":     "std::string",
 	"uint":       "(unsigned int)",
 	"uint8":      "uint8_t",
 	"uint16":     "uint16_t",
 	"uint32":     "uint32_t",
 	"uint64":     "uint64_t",
 	"uintptr":    "uintptr_t",
-	"int8":       "int8_t",
-	"int16":      "int16_t",
-	"int32":      "int32_t",
-	"int64":      "int64_t",
 }
 
 var knownCompilationErrors = []*errorFilter{}

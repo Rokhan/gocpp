@@ -576,6 +576,15 @@ namespace gocpp
         }
     };
 
+    std::string Error(const error& e)
+    {
+        if(e.has_value())
+        {
+            return e.value();
+        }
+        return "Undefined error";
+    }
+
     template<typename T>
     struct CheckType
     {
@@ -948,6 +957,21 @@ namespace gocpp
             }
 
             int  len = min(dst.mArray->size(), src.mArray->size());
+            for(size_t i = 0; i < len; i++)
+            {
+                dst[i] = src[i];
+            }
+            return len;
+        }
+
+        friend inline int copy(slice<T> dst, std::string src)
+        {
+            if(!dst.mArray)
+            {
+                return 0;
+            }
+
+            int  len = min(dst.mArray->size(), src.size());
             for(size_t i = 0; i < len; i++)
             {
                 dst[i] = src[i];

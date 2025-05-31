@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -383,12 +384,8 @@ type blockEnv struct {
 	typeSwitchVarName string
 }
 
-func boolPtr(b bool) *bool {
-	return &b
-}
-
 func makeBlockEnv(env stmtEnv, isFunc bool) blockEnv {
-	return blockEnv{env, isFunc, boolPtr(false), false, "", ""}
+	return blockEnv{env, isFunc, Ptr(false), false, "", ""}
 }
 
 func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
@@ -624,6 +621,9 @@ type place struct {
 
 	// source node, for debug message
 	node ast.Node
+
+	// used receivers
+	receivers *ast.SelectorExpr
 }
 
 func (place place) DepInfoTypeStr() string {
@@ -642,31 +642,35 @@ func getFwdHeader(place place) string {
 }
 
 func inlineStr(str string, node ast.Node) place {
-	return place{&str, nil, nil, nil, nil, false, depInfo{}, nil, node}
+	return place{&str, nil, nil, nil, nil, false, depInfo{}, nil, node, nil}
+}
+
+func receiver(rec *ast.SelectorExpr) place {
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, rec}
 }
 
 func outlineStr(str string, node ast.Node) place {
-	return place{nil, &str, nil, nil, nil, false, depInfo{}, nil, node}
+	return place{nil, &str, nil, nil, nil, false, depInfo{}, nil, node, nil}
 }
 
 func headerStr(str string, node ast.Node) place {
-	return place{nil, nil, &str, nil, nil, false, depInfo{}, nil, node}
+	return place{nil, nil, &str, nil, nil, false, depInfo{}, nil, node, nil}
 }
 
 func headerEndStr(str string) place {
-	return place{nil, nil, nil, &str, nil, false, depInfo{}, nil, nil}
+	return place{nil, nil, nil, &str, nil, false, depInfo{}, nil, nil, nil}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, &str, false, depInfo, nil, node}
+	return place{nil, nil, nil, nil, &str, false, depInfo, nil, node, nil}
 }
 
 func includeStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, &str, true, depInfo, nil, nil}
+	return place{nil, nil, nil, nil, &str, true, depInfo, nil, nil, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node}
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node, nil}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {
@@ -812,6 +816,13 @@ func (target set[T]) add(elt T) {
 	target[elt] = true
 }
 
+func (target set[T]) addOpt(elt *T) {
+	if elt == nil {
+		return
+	}
+	target[*elt] = true
+}
+
 func (target set[T]) append(src map[T]bool) {
 	for k, v := range src {
 		target[k] = v
@@ -821,6 +832,14 @@ func (target set[T]) append(src map[T]bool) {
 func (target set[T]) has(value T) bool {
 	v, ok := target[value]
 	return ok && v
+}
+
+func toSortedList(nsSet set[string]) []string {
+	var nsList = maps.Keys(nsSet)
+	slices.SortFunc(nsList, func(x, y string) int {
+		return strings.Compare(x, y)
+	})
+	return nsList
 }
 
 func isMapType(node ast.Expr) bool {

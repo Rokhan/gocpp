@@ -276,7 +276,7 @@ var stdFuncMapping = map[string]string{
 	"unsafe::Sizeof": "gocpp::Sizeof",
 
 	// type conversions
-	"byte":       "unsigned char",
+	"byte":       "(unsigned char)",
 	"complex64":  "gocpp::complex64",
 	"complex128": "gocpp::complex128",
 	"float":      "double",

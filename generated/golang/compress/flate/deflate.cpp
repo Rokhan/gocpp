@@ -280,27 +280,18 @@ namespace golang::flate
         auto minMatchLook = maxMatchLength;
         if(lookahead < minMatchLook)
         {
-            int length;
-            int offset;
-            bool ok;
             minMatchLook = lookahead;
         }
         auto win = d->window.make_slice(0, pos + minMatchLook);
         auto nice = len(win) - pos;
         if(d->nice < nice)
         {
-            int length;
-            int offset;
-            bool ok;
             nice = d->nice;
         }
         auto tries = d->chain;
         length = prevLength;
         if(length >= d->good)
         {
-            int length;
-            int offset;
-            bool ok;
             tries >>= 2;
         }
         auto wEnd = win[pos + length];
@@ -308,28 +299,16 @@ namespace golang::flate
         auto minIndex = pos - windowSize;
         for(auto i = prevHead; tries > 0; tries--)
         {
-            int length;
-            int offset;
-            bool ok;
             if(wEnd == win[i + length])
             {
-                int length;
-                int offset;
-                bool ok;
                 auto n = matchLen(win.make_slice(i), wPos, minMatchLook);
                 if(n > length && (n > minMatchLength || pos - i <= 4096))
                 {
-                    int length;
-                    int offset;
-                    bool ok;
                     length = n;
                     offset = pos - i;
                     ok = true;
                     if(n >= nice)
                     {
-                        int length;
-                        int offset;
-                        bool ok;
                         break;
                     }
                     wEnd = win[pos + n];
@@ -337,17 +316,11 @@ namespace golang::flate
             }
             if(i == minIndex)
             {
-                int length;
-                int offset;
-                bool ok;
                 break;
             }
             i = int(d->hashPrev[i & windowMask]) - d->hashOffset;
             if(i < minIndex || i < 0)
             {
-                int length;
-                int offset;
-                bool ok;
                 break;
             }
         }
@@ -646,21 +619,15 @@ namespace golang::flate
         struct gocpp::error err;
         if(d->err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, d->err};
         }
         n = len(b);
         for(; len(b) > 0; )
         {
-            int n;
-            struct gocpp::error err;
             rec::step(gocpp::recv(d), d);
             b = b.make_slice(rec::fill(gocpp::recv(d), d, b));
             if(d->err != nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 return {0, d->err};
             }
         }
@@ -699,7 +666,6 @@ namespace golang::flate
             else if(2 <= level && level <= 9) { conditionId = 4; }
             switch(conditionId)
             {
-                struct gocpp::error err;
                 case 0:
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
                     d->fill = (*compressor)->fillStore;

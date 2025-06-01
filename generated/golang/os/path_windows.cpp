@@ -56,13 +56,11 @@ namespace golang::os
         auto v = volumeName(path);
         if(v == "")
         {
-            bool b;
             return false;
         }
         path = path.make_slice(len(v));
         if(path == "")
         {
-            bool b;
             return false;
         }
         return IsPathSeparator(path[0]);
@@ -73,39 +71,30 @@ namespace golang::os
         std::string v;
         if(len(path) < 2)
         {
-            std::string v;
             return "";
         }
         auto c = path[0];
         if(path[1] == ':' && ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z'))
         {
-            std::string v;
             return path.make_slice(0, 2);
         }
         if(auto l = len(path); l >= 5 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]) && ! IsPathSeparator(path[2]) && path[2] != '.')
         {
-            std::string v;
             for(auto n = 3; n < l - 1; n++)
             {
-                std::string v;
                 if(IsPathSeparator(path[n]))
                 {
-                    std::string v;
                     n++;
                     if(! IsPathSeparator(path[n]))
                     {
-                        std::string v;
                         if(path[n] == '.')
                         {
-                            std::string v;
                             break;
                         }
                         for(; n < l; n++)
                         {
-                            std::string v;
                             if(IsPathSeparator(path[n]))
                             {
-                                std::string v;
                                 break;
                             }
                         }

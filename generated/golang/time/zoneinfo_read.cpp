@@ -90,8 +90,6 @@ namespace golang::time
         auto p = rec::read(gocpp::recv(d), 4);
         if(len(p) < 4)
         {
-            uint32_t n;
-            bool ok;
             d->error = true;
             return {0, false};
         }
@@ -106,8 +104,6 @@ namespace golang::time
         auto [n2, ok2] = rec::big4(gocpp::recv(d));
         if(! ok1 || ! ok2)
         {
-            uint64_t n;
-            bool ok;
             d->error = true;
             return {0, false};
         }
@@ -121,8 +117,6 @@ namespace golang::time
         auto p = rec::read(gocpp::recv(d), 1);
         if(len(p) < 1)
         {
-            unsigned char n;
-            bool ok;
             d->error = true;
             return {0, false};
         }
@@ -513,77 +507,51 @@ namespace golang::time
         struct gocpp::error firstErr;
         for(auto [gocpp_ignored, source] : sources)
         {
-            struct Location* z;
-            struct gocpp::error firstErr;
             auto [zoneData, err] = loadTzinfo(name, source);
             if(err == nullptr)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, zoneData); err == nullptr)
                 {
-                    struct Location* z;
-                    struct gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(loadFromEmbeddedTZData != nullptr)
         {
-            struct Location* z;
-            struct gocpp::error firstErr;
             auto [zoneData, err] = loadFromEmbeddedTZData(name);
             if(err == nullptr)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, gocpp::Tag<gocpp::slice<unsigned char>>()(zoneData)); err == nullptr)
                 {
-                    struct Location* z;
-                    struct gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(auto [source, ok] = gorootZoneSource(runtime::GOROOT()); ok)
         {
-            struct Location* z;
-            struct gocpp::error firstErr;
             auto [zoneData, err] = loadTzinfo(name, source);
             if(err == nullptr)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 if(std::tie(z, err) = LoadLocationFromTZData(name, zoneData); err == nullptr)
                 {
-                    struct Location* z;
-                    struct gocpp::error firstErr;
                     return {z, nullptr};
                 }
             }
             if(firstErr == nullptr && err != syscall::go_ENOENT)
             {
-                struct Location* z;
-                struct gocpp::error firstErr;
                 firstErr = err;
             }
         }
         if(firstErr != nullptr)
         {
-            struct Location* z;
-            struct gocpp::error firstErr;
             return {nullptr, firstErr};
         }
         return {nullptr, errors::New("unknown time zone " + name)};

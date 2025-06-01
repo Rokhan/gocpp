@@ -43,8 +43,6 @@ namespace golang::time
             auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
             if(err != nullptr)
             {
-                bool matched;
-                struct gocpp::error err2;
                 return {false, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
@@ -53,37 +51,25 @@ namespace golang::time
             std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std");
             if(err == nullptr)
             {
-                bool matched;
-                struct gocpp::error err2;
                 std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
             }
             if(err != nullptr)
             {
-                bool matched;
-                struct gocpp::error err2;
                 if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
                 {
-                    bool matched;
-                    struct gocpp::error err2;
                     return {false, err};
                 }
                 if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
                 {
-                    bool matched;
-                    struct gocpp::error err2;
                     return {false, err};
                 }
             }
             if(std != stdname)
             {
-                bool matched;
-                struct gocpp::error err2;
                 return {false, nullptr};
             }
             if(dlt != dstname && dstname != stdname)
             {
-                bool matched;
-                struct gocpp::error err2;
                 return {false, nullptr};
             }
             return {true, nullptr};
@@ -148,19 +134,13 @@ namespace golang::time
         auto [a, ok] = abbrs[stdName];
         if(! ok)
         {
-            std::string std;
-            std::string dst;
             auto dstName = syscall::UTF16ToString(z->DaylightName.make_slice(0));
             auto [englishName, err] = toEnglishName(stdName, dstName);
             if(err == nullptr)
             {
-                std::string std;
-                std::string dst;
                 std::tie(a, ok) = abbrs[englishName];
                 if(ok)
                 {
-                    std::string std;
-                    std::string dst;
                     return {a.std, a.dst};
                 }
             }

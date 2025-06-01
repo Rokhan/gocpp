@@ -151,20 +151,14 @@ namespace golang::slices
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; i <= j && cmp::Less(data[i], data[a]); )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             i++;
         }
         for(; i <= j && ! cmp::Less(data[j], data[a]); )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             j--;
         }
         if(i > j)
         {
-            int newpivot;
-            bool alreadyPartitioned;
             std::tie(data[j], data[a]) = std::tuple{data[a], data[j]};
             return {j, true};
         }
@@ -173,24 +167,16 @@ namespace golang::slices
         j--;
         for(; ; )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             for(; i <= j && cmp::Less(data[i], data[a]); )
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 i++;
             }
             for(; i <= j && ! cmp::Less(data[j], data[a]); )
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 j--;
             }
             if(i > j)
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 break;
             }
             std::tie(data[i], data[j]) = std::tuple{data[j], data[i]};
@@ -210,20 +196,16 @@ namespace golang::slices
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
-            int newpivot;
             for(; i <= j && ! cmp::Less(data[a], data[i]); )
             {
-                int newpivot;
                 i++;
             }
             for(; i <= j && cmp::Less(data[a], data[j]); )
             {
-                int newpivot;
                 j--;
             }
             if(i > j)
             {
-                int newpivot;
                 break;
             }
             std::tie(data[i], data[j]) = std::tuple{data[j], data[i]};
@@ -317,12 +299,8 @@ namespace golang::slices
         auto k = a + l / 4 * 3;
         if(l >= 8)
         {
-            int pivot;
-            slices::sortedHint hint;
             if(l >= shortestNinther)
             {
-                int pivot;
-                slices::sortedHint hint;
                 i = medianAdjacentOrdered(data, i, & swaps);
                 j = medianAdjacentOrdered(data, j, & swaps);
                 k = medianAdjacentOrdered(data, k, & swaps);
@@ -337,8 +315,6 @@ namespace golang::slices
             else if(condition == maxSwaps) { conditionId = 1; }
             switch(conditionId)
             {
-                int pivot;
-                slices::sortedHint hint;
                 case 0:
                     return {j, increasingHint};
                     break;

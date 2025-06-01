@@ -17,6 +17,9 @@ namespace golang::fs
     extern gocpp::error ErrNotExist;
     struct File : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         File(){}
         File(File& i) = default;
         File(const File& i) = default;
@@ -79,6 +82,9 @@ namespace golang::fs
     extern gocpp::error ErrClosed;
     struct FS : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         FS(){}
         FS(FS& i) = default;
         FS(const FS& i) = default;
@@ -128,6 +134,9 @@ namespace golang::fs
     std::ostream& operator<<(std::ostream& os, const struct FS& value);
     struct ReadDirFile : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadDirFile(){}
         ReadDirFile(ReadDirFile& i) = default;
         ReadDirFile(const ReadDirFile& i) = default;
@@ -198,6 +207,9 @@ namespace golang::fs
     std::ostream& operator<<(std::ostream& os, const struct PathError& value);
     struct FileInfo : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         FileInfo(){}
         FileInfo(FileInfo& i) = default;
         FileInfo(const FileInfo& i) = default;
@@ -277,6 +289,9 @@ namespace golang::fs
     std::ostream& operator<<(std::ostream& os, const struct FileInfo& value);
     struct DirEntry : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         DirEntry(){}
         DirEntry(DirEntry& i) = default;
         DirEntry(const DirEntry& i) = default;
@@ -350,6 +365,9 @@ namespace golang::fs
     struct gocpp::error errClosed();
     struct gocpp_id_0 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_0(){}
         gocpp_id_0(gocpp_id_0& i) = default;
         gocpp_id_0(const gocpp_id_0& i) = default;

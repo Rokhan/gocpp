@@ -15,6 +15,9 @@ namespace golang::bisect
 {
     struct Writer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Writer(){}
         Writer(Writer& i) = default;
         Writer(const Writer& i) = default;

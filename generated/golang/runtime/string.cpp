@@ -164,15 +164,11 @@ namespace golang::runtime
         gocpp::slice<unsigned char> b;
         if(buf != nullptr && l <= len(buf))
         {
-            std::string s;
-            gocpp::slice<unsigned char> b;
             b = buf.make_slice(0, l);
             s = slicebytetostringtmp(& b[0], len(b));
         }
         else
         {
-            std::string s;
-            gocpp::slice<unsigned char> b;
             std::tie(s, b) = rawstring(l);
         }
         return {s, b};
@@ -345,18 +341,15 @@ namespace golang::runtime
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr)
         {
-            std::string s;
             b = buf.make_slice(0);
             s = slicebytetostringtmp(& b[0], len(b));
         }
         else
         {
-            std::string s;
             std::tie(s, b) = rawstring(4);
         }
         if(int64_t(gocpp::rune(v)) != v)
         {
-            std::string s;
             v = runeError;
         }
         auto n = encoderune(b, gocpp::rune(v));
@@ -378,7 +371,6 @@ namespace golang::runtime
         auto p = mallocgc(cap, nullptr, false);
         if(cap != uintptr_t(size))
         {
-            gocpp::slice<unsigned char> b;
             memclrNoHeapPointers(add(p, uintptr_t(size)), cap - uintptr_t(size));
         }
         *(slice*)(unsafe::Pointer(& b)) = slice {p, size, int(cap)};
@@ -390,14 +382,12 @@ namespace golang::runtime
         gocpp::slice<gocpp::rune> b;
         if(uintptr_t(size) > maxAlloc / 4)
         {
-            gocpp::slice<gocpp::rune> b;
             go_throw("out of memory");
         }
         auto mem = roundupsize(uintptr_t(size) * 4, true);
         auto p = mallocgc(mem, nullptr, false);
         if(mem != uintptr_t(size) * 4)
         {
-            gocpp::slice<gocpp::rune> b;
             memclrNoHeapPointers(add(p, uintptr_t(size) * 4), mem - uintptr_t(size) * 4);
         }
         *(slice*)(unsafe::Pointer(& b)) = slice {p, size, int(mem / 4)};
@@ -409,12 +399,10 @@ namespace golang::runtime
         gocpp::slice<unsigned char> b;
         if(n == 0)
         {
-            gocpp::slice<unsigned char> b;
             return gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0);
         }
         if(n < 0 || uintptr_t(n) > maxAlloc)
         {
-            gocpp::slice<unsigned char> b;
             gocpp::panic(errorString("gobytes: length out of range"));
         }
         auto bp = mallocgc(uintptr_t(n), nullptr, false);

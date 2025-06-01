@@ -54,6 +54,9 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     struct RGBA64Image : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         RGBA64Image(){}
         RGBA64Image(RGBA64Image& i) = default;
         RGBA64Image(const RGBA64Image& i) = default;
@@ -103,6 +106,9 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct RGBA64Image& value);
     struct PalettedImage : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         PalettedImage(){}
         PalettedImage(PalettedImage& i) = default;
         PalettedImage(const PalettedImage& i) = default;
@@ -188,6 +194,9 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
     struct Image : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Image(){}
         Image(Image& i) = default;
         Image(const Image& i) = default;

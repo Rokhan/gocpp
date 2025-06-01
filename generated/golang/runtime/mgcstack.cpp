@@ -313,23 +313,15 @@ namespace golang::runtime
         bool conservative;
         for(auto [gocpp_ignored, head] : gocpp::slice<stackWorkBuf**> {& s->buf, & s->cbuf})
         {
-            uintptr_t p;
-            bool conservative;
             auto buf = *head;
             if(buf == nullptr)
             {
-                uintptr_t p;
-                bool conservative;
                 continue;
             }
             if(buf->nobj == 0)
             {
-                uintptr_t p;
-                bool conservative;
                 if(s->freeBuf != nullptr)
                 {
-                    uintptr_t p;
-                    bool conservative;
                     putempty((workbuf*)(unsafe::Pointer(s->freeBuf)));
                 }
                 s->freeBuf = buf;
@@ -337,8 +329,6 @@ namespace golang::runtime
                 *head = buf;
                 if(buf == nullptr)
                 {
-                    uintptr_t p;
-                    bool conservative;
                     continue;
                 }
             }
@@ -347,8 +337,6 @@ namespace golang::runtime
         }
         if(s->freeBuf != nullptr)
         {
-            uintptr_t p;
-            bool conservative;
             putempty((workbuf*)(unsafe::Pointer(s->freeBuf)));
             s->freeBuf = nullptr;
         }
@@ -397,9 +385,6 @@ namespace golang::runtime
         int restIdx;
         if(n == 0)
         {
-            struct stackObject* root;
-            struct stackObjectBuf* restBuf;
-            int restIdx;
             return {nullptr, x, idx};
         }
         stackObject* left = {};
@@ -409,9 +394,6 @@ namespace golang::runtime
         idx++;
         if(idx == len(x->obj))
         {
-            struct stackObject* root;
-            struct stackObjectBuf* restBuf;
-            int restIdx;
             x = x->next;
             idx = 0;
         }

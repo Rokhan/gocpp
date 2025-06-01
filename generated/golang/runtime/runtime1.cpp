@@ -69,24 +69,15 @@ namespace golang::runtime
         all = gp->m->throwing >= throwTypeUser || t & tracebackAll != 0;
         if(gp->m->traceback != 0)
         {
-            int32_t level;
-            bool all;
-            bool crash;
             level = int32_t(gp->m->traceback);
         }
         else
         if(gp->m->throwing >= throwTypeRuntime)
         {
-            int32_t level;
-            bool all;
-            bool crash;
             level = 2;
         }
         else
         {
-            int32_t level;
-            bool all;
-            bool crash;
             level = int32_t(t >> tracebackShift);
         }
         return {level, all, crash};

@@ -37,6 +37,9 @@ namespace golang::rand
     std::ostream& operator<<(std::ostream& os, const struct runtimeSource& value);
     struct Source64 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Source64(){}
         Source64(Source64& i) = default;
         Source64(const Source64& i) = default;
@@ -103,6 +106,9 @@ namespace golang::rand
     std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
     struct Source : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Source(){}
         Source(Source& i) = default;
         Source(const Source& i) = default;

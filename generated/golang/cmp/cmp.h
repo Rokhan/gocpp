@@ -13,6 +13,9 @@ namespace golang::cmp
 {
     struct Ordered : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Ordered(){}
         Ordered(Ordered& i) = default;
         Ordered(const Ordered& i) = default;

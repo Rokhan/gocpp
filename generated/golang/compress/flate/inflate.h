@@ -54,6 +54,9 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct WriteError& value);
     struct Resetter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Resetter(){}
         Resetter(Resetter& i) = default;
         Resetter(const Resetter& i) = default;
@@ -122,6 +125,9 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
     struct Reader : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Reader(){}
         Reader(Reader& i) = default;
         Reader(const Reader& i) = default;

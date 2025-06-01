@@ -124,7 +124,7 @@ namespace golang::flate
         auto n = w->nbytes;
         for(; w->nbits != 0; )
         {
-            w->bytes[n] = unsigned char(w->bits);
+            w->bytes[n] = (unsigned char)(w->bits);
             w->bits >>= 8;
             if(w->nbits > 8)
             {
@@ -165,12 +165,12 @@ namespace golang::flate
             w->nbits -= 48;
             auto n = w->nbytes;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = unsigned char(bits);
-            bytes[1] = unsigned char(bits >> 8);
-            bytes[2] = unsigned char(bits >> 16);
-            bytes[3] = unsigned char(bits >> 24);
-            bytes[4] = unsigned char(bits >> 32);
-            bytes[5] = unsigned char(bits >> 40);
+            bytes[0] = (unsigned char)(bits);
+            bytes[1] = (unsigned char)(bits >> 8);
+            bytes[2] = (unsigned char)(bits >> 16);
+            bytes[3] = (unsigned char)(bits >> 24);
+            bytes[4] = (unsigned char)(bits >> 32);
+            bytes[5] = (unsigned char)(bits >> 40);
             n += 6;
             if(n >= bufferFlushSize)
             {
@@ -195,7 +195,7 @@ namespace golang::flate
         }
         for(; w->nbits != 0; )
         {
-            w->bytes[n] = unsigned char(w->bits);
+            w->bytes[n] = (unsigned char)(w->bits);
             w->bits >>= 8;
             w->nbits -= 8;
             n++;
@@ -304,8 +304,6 @@ namespace golang::flate
         numCodegens = len(w->codegenFreq);
         for(; numCodegens > 4 && w->codegenFreq[codegenOrder[numCodegens - 1]] == 0; )
         {
-            int size;
-            int numCodegens;
             numCodegens--;
         }
         auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0)) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
@@ -346,12 +344,12 @@ namespace golang::flate
             w->nbits -= 48;
             auto n = w->nbytes;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = unsigned char(bits);
-            bytes[1] = unsigned char(bits >> 8);
-            bytes[2] = unsigned char(bits >> 16);
-            bytes[3] = unsigned char(bits >> 24);
-            bytes[4] = unsigned char(bits >> 32);
-            bytes[5] = unsigned char(bits >> 40);
+            bytes[0] = (unsigned char)(bits);
+            bytes[1] = (unsigned char)(bits >> 8);
+            bytes[2] = (unsigned char)(bits >> 16);
+            bytes[3] = (unsigned char)(bits >> 24);
+            bytes[4] = (unsigned char)(bits >> 32);
+            bytes[5] = (unsigned char)(bits >> 40);
             n += 6;
             if(n >= bufferFlushSize)
             {
@@ -527,24 +525,16 @@ namespace golang::flate
         int numOffsets;
         for(auto [i, gocpp_ignored] : w->literalFreq)
         {
-            int numLiterals;
-            int numOffsets;
             w->literalFreq[i] = 0;
         }
         for(auto [i, gocpp_ignored] : w->offsetFreq)
         {
-            int numLiterals;
-            int numOffsets;
             w->offsetFreq[i] = 0;
         }
         for(auto [gocpp_ignored, t] : tokens)
         {
-            int numLiterals;
-            int numOffsets;
             if(t < matchType)
             {
-                int numLiterals;
-                int numOffsets;
                 w->literalFreq[rec::literal(gocpp::recv(t))]++;
                 continue;
             }
@@ -556,21 +546,15 @@ namespace golang::flate
         numLiterals = len(w->literalFreq);
         for(; w->literalFreq[numLiterals - 1] == 0; )
         {
-            int numLiterals;
-            int numOffsets;
             numLiterals--;
         }
         numOffsets = len(w->offsetFreq);
         for(; numOffsets > 0 && w->offsetFreq[numOffsets - 1] == 0; )
         {
-            int numLiterals;
-            int numOffsets;
             numOffsets--;
         }
         if(numOffsets == 0)
         {
-            int numLiterals;
-            int numOffsets;
             w->offsetFreq[0] = 1;
             numOffsets = 1;
         }
@@ -664,12 +648,12 @@ namespace golang::flate
             w->bits >>= 48;
             w->nbits -= 48;
             auto bytes = w->bytes.make_slice(n, n + 6);
-            bytes[0] = unsigned char(bits);
-            bytes[1] = unsigned char(bits >> 8);
-            bytes[2] = unsigned char(bits >> 16);
-            bytes[3] = unsigned char(bits >> 24);
-            bytes[4] = unsigned char(bits >> 32);
-            bytes[5] = unsigned char(bits >> 40);
+            bytes[0] = (unsigned char)(bits);
+            bytes[1] = (unsigned char)(bits >> 8);
+            bytes[2] = (unsigned char)(bits >> 16);
+            bytes[3] = (unsigned char)(bits >> 24);
+            bytes[4] = (unsigned char)(bits >> 32);
+            bytes[5] = (unsigned char)(bits >> 40);
             n += 6;
             if(n < bufferFlushSize)
             {

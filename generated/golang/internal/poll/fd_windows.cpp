@@ -1522,8 +1522,8 @@ namespace golang::poll
         auto raw = (syscall::RawSockaddrInet4*)(unsafe::Pointer(rsa));
         raw->Family = syscall::AF_INET;
         auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& raw->Port));
-        p[0] = unsigned char(sa->Port >> 8);
-        p[1] = unsigned char(sa->Port);
+        p[0] = (unsigned char)(sa->Port >> 8);
+        p[1] = (unsigned char)(sa->Port);
         raw->Addr = sa->Addr;
         return int32_t(gocpp::Sizeof<syscall::RawSockaddrInet4>());
     }
@@ -1534,8 +1534,8 @@ namespace golang::poll
         auto raw = (syscall::RawSockaddrInet6*)(unsafe::Pointer(rsa));
         raw->Family = syscall::AF_INET6;
         auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& raw->Port));
-        p[0] = unsigned char(sa->Port >> 8);
-        p[1] = unsigned char(sa->Port);
+        p[0] = (unsigned char)(sa->Port >> 8);
+        p[1] = (unsigned char)(sa->Port);
         raw->Scope_id = sa->ZoneId;
         raw->Addr = sa->Addr;
         return int32_t(gocpp::Sizeof<syscall::RawSockaddrInet6>());

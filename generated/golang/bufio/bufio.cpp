@@ -204,14 +204,10 @@ namespace golang::bufio
         struct gocpp::error err;
         if(n < 0)
         {
-            int discarded;
-            struct gocpp::error err;
             return {0, ErrNegativeCount};
         }
         if(n == 0)
         {
-            int discarded;
-            struct gocpp::error err;
             return {discarded, err};
         }
         b->lastByte = - 1;
@@ -219,34 +215,24 @@ namespace golang::bufio
         auto remain = n;
         for(; ; )
         {
-            int discarded;
-            struct gocpp::error err;
             auto skip = rec::Buffered(gocpp::recv(b));
             if(skip == 0)
             {
-                int discarded;
-                struct gocpp::error err;
                 rec::fill(gocpp::recv(b));
                 skip = rec::Buffered(gocpp::recv(b));
             }
             if(skip > remain)
             {
-                int discarded;
-                struct gocpp::error err;
                 skip = remain;
             }
             b->r += skip;
             remain -= skip;
             if(remain == 0)
             {
-                int discarded;
-                struct gocpp::error err;
                 return {n, nullptr};
             }
             if(b->err != nullptr)
             {
-                int discarded;
-                struct gocpp::error err;
                 return {n - remain, rec::readErr(gocpp::recv(b))};
             }
         }
@@ -259,41 +245,27 @@ namespace golang::bufio
         n = len(p);
         if(n == 0)
         {
-            int n;
-            struct gocpp::error err;
             if(rec::Buffered(gocpp::recv(b)) > 0)
             {
-                int n;
-                struct gocpp::error err;
                 return {0, nullptr};
             }
             return {0, rec::readErr(gocpp::recv(b))};
         }
         if(b->r == b->w)
         {
-            int n;
-            struct gocpp::error err;
             if(b->err != nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 return {0, rec::readErr(gocpp::recv(b))};
             }
             if(len(p) >= len(b->buf))
             {
-                int n;
-                struct gocpp::error err;
                 std::tie(n, b->err) = rec::Read(gocpp::recv(b->rd), p);
                 if(n < 0)
                 {
-                    int n;
-                    struct gocpp::error err;
                     gocpp::panic(errNegativeRead);
                 }
                 if(n > 0)
                 {
-                    int n;
-                    struct gocpp::error err;
                     b->lastByte = int(p[n - 1]);
                     b->lastRuneSize = - 1;
                 }
@@ -304,14 +276,10 @@ namespace golang::bufio
             std::tie(n, b->err) = rec::Read(gocpp::recv(b->rd), b->buf);
             if(n < 0)
             {
-                int n;
-                struct gocpp::error err;
                 gocpp::panic(errNegativeRead);
             }
             if(n == 0)
             {
-                int n;
-                struct gocpp::error err;
                 return {0, rec::readErr(gocpp::recv(b))};
             }
             b->w += n;
@@ -354,7 +322,7 @@ namespace golang::bufio
         {
             b->w = 1;
         }
-        b->buf[b->r] = unsigned char(b->lastByte);
+        b->buf[b->r] = (unsigned char)(b->lastByte);
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
         return nullptr;
@@ -367,25 +335,16 @@ namespace golang::bufio
         struct gocpp::error err;
         for(; b->r + utf8::UTFMax > b->w && ! utf8::FullRune(b->buf.make_slice(b->r, b->w)) && b->err == nullptr && b->w - b->r < len(b->buf); )
         {
-            gocpp::rune r;
-            int size;
-            struct gocpp::error err;
             rec::fill(gocpp::recv(b));
         }
         b->lastRuneSize = - 1;
         if(b->r == b->w)
         {
-            gocpp::rune r;
-            int size;
-            struct gocpp::error err;
             return {0, 0, rec::readErr(gocpp::recv(b))};
         }
         std::tie(r, size) = std::tuple{gocpp::rune(b->buf[b->r]), 1};
         if(r >= utf8::RuneSelf)
         {
-            gocpp::rune r;
-            int size;
-            struct gocpp::error err;
             std::tie(r, size) = utf8::DecodeRune(b->buf.make_slice(b->r, b->w));
         }
         b->r += size;
@@ -418,12 +377,8 @@ namespace golang::bufio
         auto s = 0;
         for(; ; )
         {
-            gocpp::slice<unsigned char> line;
-            struct gocpp::error err;
             if(auto i = bytes::IndexByte(b->buf.make_slice(b->r + s, b->w), delim); i >= 0)
             {
-                gocpp::slice<unsigned char> line;
-                struct gocpp::error err;
                 i += s;
                 line = b->buf.make_slice(b->r, b->r + i + 1);
                 b->r += i + 1;
@@ -431,8 +386,6 @@ namespace golang::bufio
             }
             if(b->err != nullptr)
             {
-                gocpp::slice<unsigned char> line;
-                struct gocpp::error err;
                 line = b->buf.make_slice(b->r, b->w);
                 b->r = b->w;
                 err = rec::readErr(gocpp::recv(b));
@@ -440,8 +393,6 @@ namespace golang::bufio
             }
             if(rec::Buffered(gocpp::recv(b)) >= len(b->buf))
             {
-                gocpp::slice<unsigned char> line;
-                struct gocpp::error err;
                 b->r = b->w;
                 line = b->buf;
                 err = ErrBufferFull;
@@ -452,8 +403,6 @@ namespace golang::bufio
         }
         if(auto i = len(line) - 1; i >= 0)
         {
-            gocpp::slice<unsigned char> line;
-            struct gocpp::error err;
             b->lastByte = int(line[i]);
             b->lastRuneSize = - 1;
         }
@@ -468,19 +417,10 @@ namespace golang::bufio
         std::tie(line, err) = rec::ReadSlice(gocpp::recv(b), '\n');
         if(err == ErrBufferFull)
         {
-            gocpp::slice<unsigned char> line;
-            bool isPrefix;
-            struct gocpp::error err;
             if(len(line) > 0 && line[len(line) - 1] == '\r')
             {
-                gocpp::slice<unsigned char> line;
-                bool isPrefix;
-                struct gocpp::error err;
                 if(b->r == 0)
                 {
-                    gocpp::slice<unsigned char> line;
-                    bool isPrefix;
-                    struct gocpp::error err;
                     gocpp::panic("bufio: tried to rewind past start of buffer");
                 }
                 b->r--;
@@ -490,14 +430,8 @@ namespace golang::bufio
         }
         if(len(line) == 0)
         {
-            gocpp::slice<unsigned char> line;
-            bool isPrefix;
-            struct gocpp::error err;
             if(err != nullptr)
             {
-                gocpp::slice<unsigned char> line;
-                bool isPrefix;
-                struct gocpp::error err;
                 line = nullptr;
             }
             return {line, isPrefix, err};
@@ -505,15 +439,9 @@ namespace golang::bufio
         err = nullptr;
         if(line[len(line) - 1] == '\n')
         {
-            gocpp::slice<unsigned char> line;
-            bool isPrefix;
-            struct gocpp::error err;
             auto drop = 1;
             if(len(line) > 1 && line[len(line) - 2] == '\r')
             {
-                gocpp::slice<unsigned char> line;
-                bool isPrefix;
-                struct gocpp::error err;
                 drop = 2;
             }
             line = line.make_slice(0, len(line) - drop);
@@ -530,26 +458,14 @@ namespace golang::bufio
         gocpp::slice<unsigned char> frag = {};
         for(; ; )
         {
-            gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
-            gocpp::slice<unsigned char> finalFragment;
-            int totalLen;
-            struct gocpp::error err;
             gocpp::error e = {};
             std::tie(frag, e) = rec::ReadSlice(gocpp::recv(b), delim);
             if(e == nullptr)
             {
-                gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
-                gocpp::slice<unsigned char> finalFragment;
-                int totalLen;
-                struct gocpp::error err;
                 break;
             }
             if(e != ErrBufferFull)
             {
-                gocpp::slice<gocpp::slice<unsigned char>> fullBuffers;
-                gocpp::slice<unsigned char> finalFragment;
-                int totalLen;
-                struct gocpp::error err;
                 err = e;
                 break;
             }
@@ -596,50 +512,36 @@ namespace golang::bufio
         std::tie(n, err) = rec::writeBuf(gocpp::recv(b), w);
         if(err != nullptr)
         {
-            int64_t n;
-            struct gocpp::error err;
             return {n, err};
         }
         if(auto [r, ok] = gocpp::getValue<io::WriterTo>(b->rd); ok)
         {
-            int64_t n;
-            struct gocpp::error err;
             auto [m, err] = rec::WriteTo(gocpp::recv(r), w);
             n += m;
             return {n, err};
         }
         if(auto [w, ok] = gocpp::getValue<io::ReaderFrom>(w); ok)
         {
-            int64_t n;
-            struct gocpp::error err;
             auto [m, err] = rec::ReadFrom(gocpp::recv(w), b->rd);
             n += m;
             return {n, err};
         }
         if(b->w - b->r < len(b->buf))
         {
-            int64_t n;
-            struct gocpp::error err;
             rec::fill(gocpp::recv(b));
         }
         for(; b->r < b->w; )
         {
-            int64_t n;
-            struct gocpp::error err;
             auto [m, err] = rec::writeBuf(gocpp::recv(b), w);
             n += m;
             if(err != nullptr)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, err};
             }
             rec::fill(gocpp::recv(b));
         }
         if(b->err == io::go_EOF)
         {
-            int64_t n;
-            struct gocpp::error err;
             b->err = nullptr;
         }
         return {n, rec::readErr(gocpp::recv(b))};
@@ -787,19 +689,13 @@ namespace golang::bufio
         struct gocpp::error err;
         for(; len(p) > rec::Available(gocpp::recv(b)) && b->err == nullptr; )
         {
-            int nn;
-            struct gocpp::error err;
             int n = {};
             if(rec::Buffered(gocpp::recv(b)) == 0)
             {
-                int nn;
-                struct gocpp::error err;
                 std::tie(n, b->err) = rec::Write(gocpp::recv(b->wr), p);
             }
             else
             {
-                int nn;
-                struct gocpp::error err;
                 n = copy(b->buf.make_slice(b->n), p);
                 b->n += n;
                 rec::Flush(gocpp::recv(b));
@@ -809,8 +705,6 @@ namespace golang::bufio
         }
         if(b->err != nullptr)
         {
-            int nn;
-            struct gocpp::error err;
             return {nn, b->err};
         }
         auto n = copy(b->buf.make_slice(b->n), p);
@@ -840,39 +734,27 @@ namespace golang::bufio
         struct gocpp::error err;
         if(uint32_t(r) < utf8::RuneSelf)
         {
-            int size;
-            struct gocpp::error err;
-            err = rec::WriteByte(gocpp::recv(b), unsigned char(r));
+            err = rec::WriteByte(gocpp::recv(b), (unsigned char)(r));
             if(err != nullptr)
             {
-                int size;
-                struct gocpp::error err;
                 return {0, err};
             }
             return {1, nullptr};
         }
         if(b->err != nullptr)
         {
-            int size;
-            struct gocpp::error err;
             return {0, b->err};
         }
         auto n = rec::Available(gocpp::recv(b));
         if(n < utf8::UTFMax)
         {
-            int size;
-            struct gocpp::error err;
             if(rec::Flush(gocpp::recv(b)); b->err != nullptr)
             {
-                int size;
-                struct gocpp::error err;
                 return {0, b->err};
             }
             n = rec::Available(gocpp::recv(b));
             if(n < utf8::UTFMax)
             {
-                int size;
-                struct gocpp::error err;
                 return rec::WriteString(gocpp::recv(b), std::string(r));
             }
         }
@@ -922,31 +804,21 @@ namespace golang::bufio
         struct gocpp::error err;
         if(b->err != nullptr)
         {
-            int64_t n;
-            struct gocpp::error err;
             return {0, b->err};
         }
         auto [readerFrom, readerFromOK] = gocpp::getValue<io::ReaderFrom>(b->wr);
         int m = {};
         for(; ; )
         {
-            int64_t n;
-            struct gocpp::error err;
             if(rec::Available(gocpp::recv(b)) == 0)
             {
-                int64_t n;
-                struct gocpp::error err;
                 if(auto err1 = rec::Flush(gocpp::recv(b)); err1 != nullptr)
                 {
-                    int64_t n;
-                    struct gocpp::error err;
                     return {n, err1};
                 }
             }
             if(readerFromOK && rec::Buffered(gocpp::recv(b)) == 0)
             {
-                int64_t n;
-                struct gocpp::error err;
                 auto [nn, err] = rec::ReadFrom(gocpp::recv(readerFrom), r);
                 b->err = err;
                 n += nn;
@@ -955,46 +827,32 @@ namespace golang::bufio
             auto nr = 0;
             for(; nr < maxConsecutiveEmptyReads; )
             {
-                int64_t n;
-                struct gocpp::error err;
                 std::tie(m, err) = rec::Read(gocpp::recv(r), b->buf.make_slice(b->n));
                 if(m != 0 || err != nullptr)
                 {
-                    int64_t n;
-                    struct gocpp::error err;
                     break;
                 }
                 nr++;
             }
             if(nr == maxConsecutiveEmptyReads)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, io::ErrNoProgress};
             }
             b->n += m;
             n += int64_t(m);
             if(err != nullptr)
             {
-                int64_t n;
-                struct gocpp::error err;
                 break;
             }
         }
         if(err == io::go_EOF)
         {
-            int64_t n;
-            struct gocpp::error err;
             if(rec::Available(gocpp::recv(b)) == 0)
             {
-                int64_t n;
-                struct gocpp::error err;
                 err = rec::Flush(gocpp::recv(b));
             }
             else
             {
-                int64_t n;
-                struct gocpp::error err;
                 err = nullptr;
             }
         }

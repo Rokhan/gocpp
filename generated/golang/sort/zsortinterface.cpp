@@ -140,20 +140,14 @@ namespace golang::sort
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             i++;
         }
         for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             j--;
         }
         if(i > j)
         {
-            int newpivot;
-            bool alreadyPartitioned;
             rec::Swap(gocpp::recv(data), j, a);
             return {j, true};
         }
@@ -162,24 +156,16 @@ namespace golang::sort
         j--;
         for(; ; )
         {
-            int newpivot;
-            bool alreadyPartitioned;
             for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 i++;
             }
             for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 j--;
             }
             if(i > j)
             {
-                int newpivot;
-                bool alreadyPartitioned;
                 break;
             }
             rec::Swap(gocpp::recv(data), i, j);
@@ -197,20 +183,16 @@ namespace golang::sort
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
-            int newpivot;
             for(; i <= j && ! rec::Less(gocpp::recv(data), a, i); )
             {
-                int newpivot;
                 i++;
             }
             for(; i <= j && rec::Less(gocpp::recv(data), a, j); )
             {
-                int newpivot;
                 j--;
             }
             if(i > j)
             {
-                int newpivot;
                 break;
             }
             rec::Swap(gocpp::recv(data), i, j);
@@ -298,12 +280,8 @@ namespace golang::sort
         auto k = a + l / 4 * 3;
         if(l >= 8)
         {
-            int pivot;
-            sort::sortedHint hint;
             if(l >= shortestNinther)
             {
-                int pivot;
-                sort::sortedHint hint;
                 i = medianAdjacent(data, i, & swaps);
                 j = medianAdjacent(data, j, & swaps);
                 k = medianAdjacent(data, k, & swaps);
@@ -318,8 +296,6 @@ namespace golang::sort
             else if(condition == maxSwaps) { conditionId = 1; }
             switch(conditionId)
             {
-                int pivot;
-                sort::sortedHint hint;
                 case 0:
                     return {j, increasingHint};
                     break;

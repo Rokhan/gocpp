@@ -50,19 +50,16 @@ namespace golang::sys
         int n;
         if(x >= (1 << 32))
         {
-            int n;
             x >>= 32;
             n = 32;
         }
         if(x >= (1 << 16))
         {
-            int n;
             x >>= 16;
             n += 16;
         }
         if(x >= (1 << 8))
         {
-            int n;
             x >>= 8;
             n += 8;
         }

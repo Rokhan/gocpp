@@ -31,27 +31,19 @@ namespace golang::syscall
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)
         {
-            std::string value;
-            bool found;
             return {"", false};
         }
         auto n = uint32_t(100);
         for(; ; )
         {
-            std::string value;
-            bool found;
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
             std::tie(n, err) = GetEnvironmentVariable(keyp, & b[0], uint32_t(len(b)));
             if(n == 0 && err == ERROR_ENVVAR_NOT_FOUND)
             {
-                std::string value;
-                bool found;
                 return {"", false};
             }
             if(n <= uint32_t(len(b)))
             {
-                std::string value;
-                bool found;
                 return {UTF16ToString(b.make_slice(0, n)), true};
             }
         }

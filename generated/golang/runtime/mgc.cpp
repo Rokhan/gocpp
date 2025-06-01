@@ -1261,7 +1261,7 @@ namespace golang::runtime
         auto idec = i - dec;
         for(; val >= 10 || i >= idec; )
         {
-            buf[i] = unsigned char(val % 10 + '0');
+            buf[i] = (unsigned char)(val % 10 + '0');
             i--;
             if(i == idec)
             {
@@ -1270,7 +1270,7 @@ namespace golang::runtime
             }
             val /= 10;
         }
-        buf[i] = unsigned char(val + '0');
+        buf[i] = (unsigned char)(val + '0');
         return buf.make_slice(i);
     }
 
@@ -1306,21 +1306,18 @@ namespace golang::runtime
         uint64_t mask;
         if(len(ptrs) > 64)
         {
-            uint64_t mask;
             gocpp::panic("too many pointers for uint64 mask");
         }
         semacquire(& gcsema);
         auto specials = gocpp::make(gocpp::Tag<gocpp::slice<specialReachable*>>(), len(ptrs));
         for(auto [i, p] : ptrs)
         {
-            uint64_t mask;
             lock(& mheap_.speciallock);
             auto s = (specialReachable*)(rec::alloc(gocpp::recv(mheap_.specialReachableAlloc)));
             unlock(& mheap_.speciallock);
             s->special.kind = _KindSpecialReachable;
             if(! addspecial(p, & s->special))
             {
-                uint64_t mask;
                 go_throw("already have a reachable special (duplicate pointer?)");
             }
             specials[i] = s;
@@ -1330,17 +1327,14 @@ namespace golang::runtime
         GC();
         for(auto [i, s] : specials)
         {
-            uint64_t mask;
             if(! s->done)
             {
-                uint64_t mask;
                 printlock();
                 println("runtime: object", i, "was not swept");
                 go_throw("IsReachable failed");
             }
             if(s->reachable)
             {
-                uint64_t mask;
                 mask |= 1 << i;
             }
             lock(& mheap_.speciallock);

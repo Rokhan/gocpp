@@ -481,7 +481,7 @@ namespace golang::fs
         {
             if(m & (1 << (unsigned int)(32 - 1 - i)) != 0)
             {
-                buf[w] = unsigned char(c);
+                buf[w] = (unsigned char)(c);
                 w++;
             }
         }
@@ -495,7 +495,7 @@ namespace golang::fs
         {
             if(m & (1 << (unsigned int)(9 - 1 - i)) != 0)
             {
-                buf[w] = unsigned char(c);
+                buf[w] = (unsigned char)(c);
             }
             else
             {

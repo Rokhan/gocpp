@@ -77,8 +77,6 @@ namespace golang::strings
         struct gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
-            int n;
-            struct gocpp::error err;
             return {0, io::go_EOF};
         }
         r->prevRune = - 1;
@@ -93,21 +91,15 @@ namespace golang::strings
         struct gocpp::error err;
         if(off < 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, errors::New("strings.Reader.ReadAt: negative offset")};
         }
         if(off >= int64_t(len(r->s)))
         {
-            int n;
-            struct gocpp::error err;
             return {0, io::go_EOF};
         }
         n = copy(b, r->s.make_slice(off));
         if(n < len(b))
         {
-            int n;
-            struct gocpp::error err;
             err = io::go_EOF;
         }
         return {n, err};
@@ -143,18 +135,12 @@ namespace golang::strings
         struct gocpp::error err;
         if(r->i >= int64_t(len(r->s)))
         {
-            gocpp::rune ch;
-            int size;
-            struct gocpp::error err;
             r->prevRune = - 1;
             return {0, 0, io::go_EOF};
         }
         r->prevRune = int(r->i);
         if(auto c = r->s[r->i]; c < utf8::RuneSelf)
         {
-            gocpp::rune ch;
-            int size;
-            struct gocpp::error err;
             r->i++;
             return {gocpp::rune(c), 1, nullptr};
         }
@@ -220,24 +206,18 @@ namespace golang::strings
         r->prevRune = - 1;
         if(r->i >= int64_t(len(r->s)))
         {
-            int64_t n;
-            struct gocpp::error err;
             return {0, nullptr};
         }
         auto s = r->s.make_slice(r->i);
         auto [m, err] = io::WriteString(w, s);
         if(m > len(s))
         {
-            int64_t n;
-            struct gocpp::error err;
             gocpp::panic("strings.Reader.WriteTo: invalid WriteString count");
         }
         r->i += int64_t(m);
         n = int64_t(m);
         if(m != len(s) && err == nullptr)
         {
-            int64_t n;
-            struct gocpp::error err;
             err = io::ErrShortWrite;
         }
         return {n, err};

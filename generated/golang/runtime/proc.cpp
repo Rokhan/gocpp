@@ -2477,38 +2477,23 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(mp->p));
         if(rec::Load(gocpp::recv(sched.gcwaiting)))
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             gcstopm();
             goto top;
         }
         if(pp->runSafePointFn != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             runSafePointFn();
         }
         auto [now, pollUntil, gocpp_id_6] = checkTimers(pp, 0);
         if(traceEnabled() || traceShuttingDown())
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto gp = traceReader();
             if(gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
                 if(rec::ok(gocpp::recv(trace)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
@@ -2517,88 +2502,52 @@ namespace golang::runtime
         }
         if(gcBlackenEnabled != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto [gp, tnow] = rec::findRunnableGCWorker(gocpp::recv(gcController), pp, now);
             if(gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 return {gp, false, true};
             }
             now = tnow;
         }
         if(pp->schedtick % 61 == 0 && sched.runqsize > 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             lock(& sched.lock);
             auto gp = globrunqget(pp, 1);
             unlock(& sched.lock);
             if(gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 return {gp, false, false};
             }
         }
         if(rec::Load(gocpp::recv(fingStatus)) & (fingWait | fingWake) == fingWait | fingWake)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             if(auto gp = wakefing(); gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 ready(gp, 0, true);
             }
         }
         if(*cgo_yield != nullptr)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             asmcgocall(*cgo_yield, nullptr);
         }
         if(auto [gp, inheritTime] = runqget(pp); gp != nullptr)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             return {gp, inheritTime, false};
         }
         if(sched.runqsize != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             lock(& sched.lock);
             auto gp = globrunqget(pp, 0);
             unlock(& sched.lock);
             if(gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 return {gp, false, false};
             }
         }
         if(netpollinited() && netpollAnyWaiters() && rec::Load(gocpp::recv(sched.lastpoll)) != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             if(auto [list, delta] = netpoll(0); ! rec::empty(gocpp::recv(list)))
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 auto gp = rec::pop(gocpp::recv(list));
                 injectglist(& list);
                 netpollAdjustWaiters(delta);
@@ -2606,9 +2555,6 @@ namespace golang::runtime
                 casgstatus(gp, _Gwaiting, _Grunnable);
                 if(rec::ok(gocpp::recv(trace)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
@@ -2617,60 +2563,36 @@ namespace golang::runtime
         }
         if(mp->spinning || 2 * rec::Load(gocpp::recv(sched.nmspinning)) < gomaxprocs - rec::Load(gocpp::recv(sched.npidle)))
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             if(! mp->spinning)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 rec::becomeSpinning(gocpp::recv(mp));
             }
             auto [gp, inheritTime, tnow, w, newWork] = stealWork(now);
             if(gp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 return {gp, inheritTime, false};
             }
             if(newWork)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 goto top;
             }
             now = tnow;
             if(w != 0 && (pollUntil == 0 || w < pollUntil))
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 pollUntil = w;
             }
         }
         if(gcBlackenEnabled != 0 && gcMarkWorkAvailable(pp) && rec::addIdleMarkWorker(gocpp::recv(gcController)))
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
             if(node != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 pp->gcMarkWorkerMode = gcMarkWorkerIdleMode;
                 auto gp = rec::ptr(gocpp::recv(node->gp));
                 auto trace = traceAcquire();
                 casgstatus(gp, _Gwaiting, _Grunnable);
                 if(rec::ok(gocpp::recv(trace)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
@@ -2681,16 +2603,10 @@ namespace golang::runtime
         auto [gp, otherReady] = beforeIdle(now, pollUntil);
         if(gp != nullptr)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto trace = traceAcquire();
             casgstatus(gp, _Gwaiting, _Grunnable);
             if(rec::ok(gocpp::recv(trace)))
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 rec::GoUnpark(gocpp::recv(trace), gp, 0);
                 traceRelease(trace);
             }
@@ -2698,9 +2614,6 @@ namespace golang::runtime
         }
         if(otherReady)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             goto top;
         }
         auto allpSnapshot = allp;
@@ -2709,35 +2622,23 @@ namespace golang::runtime
         lock(& sched.lock);
         if(rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             unlock(& sched.lock);
             goto top;
         }
         if(sched.runqsize != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto gp = globrunqget(pp, 0);
             unlock(& sched.lock);
             return {gp, false, false};
         }
         if(! mp->spinning && rec::Load(gocpp::recv(sched.needspinning)) == 1)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             rec::becomeSpinning(gocpp::recv(mp));
             unlock(& sched.lock);
             goto top;
         }
         if(releasep() != pp)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             go_throw("findrunnable: wrong p");
         }
         now = pidleput(pp, now);
@@ -2745,35 +2646,20 @@ namespace golang::runtime
         auto wasSpinning = mp->spinning;
         if(mp->spinning)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             mp->spinning = false;
             if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 go_throw("findrunnable: negative nmspinning");
             }
             lock(& sched.lock);
             if(sched.runqsize != 0)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 auto [pp, gocpp_id_8] = pidlegetSpinning(0);
                 if(pp != nullptr)
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     auto gp = globrunqget(pp, 0);
                     if(gp == nullptr)
                     {
-                        struct g* gp;
-                        bool inheritTime;
-                        bool tryWakeP;
                         go_throw("global runq empty with non-zero runqsize");
                     }
                     unlock(& sched.lock);
@@ -2786,9 +2672,6 @@ namespace golang::runtime
             auto pp = checkRunqsNoP(allpSnapshot, idlepMaskSnapshot);
             if(pp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 acquirep(pp);
                 rec::becomeSpinning(gocpp::recv(mp));
                 goto top;
@@ -2797,9 +2680,6 @@ namespace golang::runtime
             std::tie(pp, gp) = checkIdleGCNoP();
             if(pp != nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 acquirep(pp);
                 rec::becomeSpinning(gocpp::recv(mp));
                 pp->gcMarkWorkerMode = gcMarkWorkerIdleMode;
@@ -2807,9 +2687,6 @@ namespace golang::runtime
                 casgstatus(gp, _Gwaiting, _Grunnable);
                 if(rec::ok(gocpp::recv(trace)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     rec::GoUnpark(gocpp::recv(trace), gp, 0);
                     traceRelease(trace);
                 }
@@ -2819,51 +2696,30 @@ namespace golang::runtime
         }
         if(netpollinited() && (netpollAnyWaiters() || pollUntil != 0) && rec::Swap(gocpp::recv(sched.lastpoll), 0) != 0)
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             rec::Store(gocpp::recv(sched.pollUntil), pollUntil);
             if(mp->p != 0)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 go_throw("findrunnable: netpoll with p");
             }
             if(mp->spinning)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 go_throw("findrunnable: netpoll with spinning");
             }
             auto delay = int64_t(- 1);
             if(pollUntil != 0)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 if(now == 0)
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     now = nanotime();
                 }
                 delay = pollUntil - now;
                 if(delay < 0)
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     delay = 0;
                 }
             }
             if(faketime != 0)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 delay = 0;
             }
             auto [list, delta] = netpoll(delay);
@@ -2872,9 +2728,6 @@ namespace golang::runtime
             rec::Store(gocpp::recv(sched.lastpoll), now);
             if(faketime != 0 && rec::empty(gocpp::recv(list)))
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 stopm();
                 goto top;
             }
@@ -2883,23 +2736,14 @@ namespace golang::runtime
             unlock(& sched.lock);
             if(pp == nullptr)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 injectglist(& list);
                 netpollAdjustWaiters(delta);
             }
             else
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 acquirep(pp);
                 if(! rec::empty(gocpp::recv(list)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     auto gp = rec::pop(gocpp::recv(list));
                     injectglist(& list);
                     netpollAdjustWaiters(delta);
@@ -2907,9 +2751,6 @@ namespace golang::runtime
                     casgstatus(gp, _Gwaiting, _Grunnable);
                     if(rec::ok(gocpp::recv(trace)))
                     {
-                        struct g* gp;
-                        bool inheritTime;
-                        bool tryWakeP;
                         rec::GoUnpark(gocpp::recv(trace), gp, 0);
                         traceRelease(trace);
                     }
@@ -2917,9 +2758,6 @@ namespace golang::runtime
                 }
                 if(wasSpinning)
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    bool tryWakeP;
                     rec::becomeSpinning(gocpp::recv(mp));
                 }
                 goto top;
@@ -2928,15 +2766,9 @@ namespace golang::runtime
         else
         if(pollUntil != 0 && netpollinited())
         {
-            struct g* gp;
-            bool inheritTime;
-            bool tryWakeP;
             auto pollerPollUntil = rec::Load(gocpp::recv(sched.pollUntil));
             if(pollerPollUntil == 0 || pollerPollUntil > pollUntil)
             {
-                struct g* gp;
-                bool inheritTime;
-                bool tryWakeP;
                 netpollBreak();
             }
         }
@@ -2979,70 +2811,30 @@ namespace golang::runtime
         auto stealTries = 4;
         for(auto i = 0; i < stealTries; i++)
         {
-            struct g* gp;
-            bool inheritTime;
-            int64_t rnow;
-            int64_t pollUntil;
-            bool newWork;
             auto stealTimersOrRunNextG = i == stealTries - 1;
             for(auto go_enum = rec::start(gocpp::recv(stealOrder), cheaprand()); ! rec::done(gocpp::recv(go_enum)); rec::next(gocpp::recv(go_enum)))
             {
-                struct g* gp;
-                bool inheritTime;
-                int64_t rnow;
-                int64_t pollUntil;
-                bool newWork;
                 if(rec::Load(gocpp::recv(sched.gcwaiting)))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    int64_t rnow;
-                    int64_t pollUntil;
-                    bool newWork;
                     return {nullptr, false, now, pollUntil, true};
                 }
                 auto p2 = allp[rec::position(gocpp::recv(go_enum))];
                 if(pp == p2)
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    int64_t rnow;
-                    int64_t pollUntil;
-                    bool newWork;
                     continue;
                 }
                 if(stealTimersOrRunNextG && rec::read(gocpp::recv(timerpMask), rec::position(gocpp::recv(go_enum))))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    int64_t rnow;
-                    int64_t pollUntil;
-                    bool newWork;
                     auto [tnow, w, ran] = checkTimers(p2, now);
                     now = tnow;
                     if(w != 0 && (pollUntil == 0 || w < pollUntil))
                     {
-                        struct g* gp;
-                        bool inheritTime;
-                        int64_t rnow;
-                        int64_t pollUntil;
-                        bool newWork;
                         pollUntil = w;
                     }
                     if(ran)
                     {
-                        struct g* gp;
-                        bool inheritTime;
-                        int64_t rnow;
-                        int64_t pollUntil;
-                        bool newWork;
                         if(auto [gp, inheritTime] = runqget(pp); gp != nullptr)
                         {
-                            struct g* gp;
-                            bool inheritTime;
-                            int64_t rnow;
-                            int64_t pollUntil;
-                            bool newWork;
                             return {gp, inheritTime, now, pollUntil, ranTimer};
                         }
                         ranTimer = true;
@@ -3050,18 +2842,8 @@ namespace golang::runtime
                 }
                 if(! rec::read(gocpp::recv(idlepMask), rec::position(gocpp::recv(go_enum))))
                 {
-                    struct g* gp;
-                    bool inheritTime;
-                    int64_t rnow;
-                    int64_t pollUntil;
-                    bool newWork;
                     if(auto gp = runqsteal(pp, p2, stealTimersOrRunNextG); gp != nullptr)
                     {
-                        struct g* gp;
-                        bool inheritTime;
-                        int64_t rnow;
-                        int64_t pollUntil;
-                        bool newWork;
                         return {gp, false, now, pollUntil, ranTimer};
                     }
                 }
@@ -3329,60 +3111,33 @@ namespace golang::runtime
         auto nextAdj = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
         if(next == 0 || (nextAdj != 0 && nextAdj < next))
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             next = nextAdj;
         }
         if(next == 0)
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             return {now, 0, false};
         }
         if(now == 0)
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             now = nanotime();
         }
         if(now < next)
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             if(pp != rec::ptr(gocpp::recv(getg()->m->p)) || int(rec::Load(gocpp::recv(pp->deletedTimers))) <= int(rec::Load(gocpp::recv(pp->numTimers)) / 4))
             {
-                int64_t rnow;
-                int64_t pollUntil;
-                bool ran;
                 return {now, next, false};
             }
         }
         lock(& pp->timersLock);
         if(len(pp->timers) > 0)
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             adjusttimers(pp, now);
             for(; len(pp->timers) > 0; )
             {
-                int64_t rnow;
-                int64_t pollUntil;
-                bool ran;
                 if(auto tw = runtimer(pp, now); tw != 0)
                 {
-                    int64_t rnow;
-                    int64_t pollUntil;
-                    bool ran;
                     if(tw > 0)
                     {
-                        int64_t rnow;
-                        int64_t pollUntil;
-                        bool ran;
                         pollUntil = tw;
                     }
                     break;
@@ -3392,9 +3147,6 @@ namespace golang::runtime
         }
         if(pp == rec::ptr(gocpp::recv(getg()->m->p)) && int(rec::Load(gocpp::recv(pp->deletedTimers))) > len(pp->timers) / 4)
         {
-            int64_t rnow;
-            int64_t pollUntil;
-            bool ran;
             clearDeletedTimers(pp);
         }
         unlock(& pp->timersLock);
@@ -5811,27 +5563,19 @@ namespace golang::runtime
         auto next = pp->runnext;
         if(next != 0 && rec::cas(gocpp::recv(pp->runnext), next, 0))
         {
-            struct g* gp;
-            bool inheritTime;
             return {rec::ptr(gocpp::recv(next)), true};
         }
         for(; ; )
         {
-            struct g* gp;
-            bool inheritTime;
             auto h = atomic::LoadAcq(& pp->runqhead);
             auto t = pp->runqtail;
             if(t == h)
             {
-                struct g* gp;
-                bool inheritTime;
                 return {nullptr, false};
             }
             auto gp = rec::ptr(gocpp::recv(pp->runq[h % uint32_t(len(pp->runq))]));
             if(atomic::CasRel(& pp->runqhead, h, h + 1))
             {
-                struct g* gp;
-                bool inheritTime;
                 return {gp, false};
             }
         }
@@ -5844,8 +5588,6 @@ namespace golang::runtime
         auto oldNext = pp->runnext;
         if(oldNext != 0 && rec::cas(gocpp::recv(pp->runnext), oldNext, 0))
         {
-            struct gQueue drainQ;
-            uint32_t n;
             rec::pushBack(gocpp::recv(drainQ), rec::ptr(gocpp::recv(oldNext)));
             n++;
         }
@@ -5855,26 +5597,18 @@ namespace golang::runtime
         auto qn = t - h;
         if(qn == 0)
         {
-            struct gQueue drainQ;
-            uint32_t n;
             return {drainQ, n};
         }
         if(qn > uint32_t(len(pp->runq)))
         {
-            struct gQueue drainQ;
-            uint32_t n;
             goto retry;
         }
         if(! atomic::CasRel(& pp->runqhead, h, h + qn))
         {
-            struct gQueue drainQ;
-            uint32_t n;
             goto retry;
         }
         for(auto i = uint32_t(0); i < qn; i++)
         {
-            struct gQueue drainQ;
-            uint32_t n;
             auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
             rec::pushBack(gocpp::recv(drainQ), gp);
             n++;
@@ -6122,12 +5856,10 @@ namespace golang::runtime
         out = int(sched.maxmcount);
         if(in > 0x7fffffff)
         {
-            int out;
             sched.maxmcount = 0x7fffffff;
         }
         else
         {
-            int out;
             sched.maxmcount = int32_t(in);
         }
         checkmcount();

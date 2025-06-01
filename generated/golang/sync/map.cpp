@@ -149,15 +149,11 @@ namespace golang::sync
         auto [e, ok] = read.m[key];
         if(! ok && read.amended)
         {
-            go_any value;
-            bool ok;
             rec::Lock(gocpp::recv(m->mu));
             read = rec::loadReadOnly(gocpp::recv(m));
             std::tie(e, ok) = read.m[key];
             if(! ok && read.amended)
             {
-                go_any value;
-                bool ok;
                 std::tie(e, ok) = m->dirty[key];
                 rec::missLocked(gocpp::recv(m));
             }
@@ -165,8 +161,6 @@ namespace golang::sync
         }
         if(! ok)
         {
-            go_any value;
-            bool ok;
             return {nullptr, false};
         }
         return rec::load(gocpp::recv(e));
@@ -179,8 +173,6 @@ namespace golang::sync
         auto p = rec::Load(gocpp::recv(e->p));
         if(p == nullptr || p == expunged)
         {
-            go_any value;
-            bool ok;
             return {nullptr, false};
         }
         return {*p, true};
@@ -231,13 +223,9 @@ namespace golang::sync
         auto read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
         {
-            go_any actual;
-            bool loaded;
             auto [actual, loaded, ok] = rec::tryLoadOrStore(gocpp::recv(e), value);
             if(ok)
             {
-                go_any actual;
-                bool loaded;
                 return {actual, loaded};
             }
         }
@@ -245,12 +233,8 @@ namespace golang::sync
         read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
         {
-            go_any actual;
-            bool loaded;
             if(rec::unexpungeLocked(gocpp::recv(e)))
             {
-                go_any actual;
-                bool loaded;
                 m->dirty[key] = e;
             }
             std::tie(actual, loaded, gocpp_id_2) = rec::tryLoadOrStore(gocpp::recv(e), value);
@@ -258,19 +242,13 @@ namespace golang::sync
         else
         if(auto [e, ok] = m->dirty[key]; ok)
         {
-            go_any actual;
-            bool loaded;
             std::tie(actual, loaded, gocpp_id_3) = rec::tryLoadOrStore(gocpp::recv(e), value);
             rec::missLocked(gocpp::recv(m));
         }
         else
         {
-            go_any actual;
-            bool loaded;
             if(! read.amended)
             {
-                go_any actual;
-                bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
                 rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
@@ -292,44 +270,26 @@ namespace golang::sync
         auto p = rec::Load(gocpp::recv(e->p));
         if(p == expunged)
         {
-            go_any actual;
-            bool loaded;
-            bool ok;
             return {nullptr, false, false};
         }
         if(p != nullptr)
         {
-            go_any actual;
-            bool loaded;
-            bool ok;
             return {*p, true, true};
         }
         auto ic = i;
         for(; ; )
         {
-            go_any actual;
-            bool loaded;
-            bool ok;
             if(rec::CompareAndSwap(gocpp::recv(e->p), nullptr, & ic))
             {
-                go_any actual;
-                bool loaded;
-                bool ok;
                 return {i, false, true};
             }
             p = rec::Load(gocpp::recv(e->p));
             if(p == expunged)
             {
-                go_any actual;
-                bool loaded;
-                bool ok;
                 return {nullptr, false, false};
             }
             if(p != nullptr)
             {
-                go_any actual;
-                bool loaded;
-                bool ok;
                 return {*p, true, true};
             }
         }
@@ -343,15 +303,11 @@ namespace golang::sync
         auto [e, ok] = read.m[key];
         if(! ok && read.amended)
         {
-            go_any value;
-            bool loaded;
             rec::Lock(gocpp::recv(m->mu));
             read = rec::loadReadOnly(gocpp::recv(m));
             std::tie(e, ok) = read.m[key];
             if(! ok && read.amended)
             {
-                go_any value;
-                bool loaded;
                 std::tie(e, ok) = m->dirty[key];
                 remove(m->dirty, key);
                 rec::missLocked(gocpp::recv(m));
@@ -360,8 +316,6 @@ namespace golang::sync
         }
         if(ok)
         {
-            go_any value;
-            bool loaded;
             return rec::go_delete(gocpp::recv(e));
         }
         return {nullptr, false};
@@ -378,19 +332,13 @@ namespace golang::sync
         bool ok;
         for(; ; )
         {
-            go_any value;
-            bool ok;
             auto p = rec::Load(gocpp::recv(e->p));
             if(p == nullptr || p == expunged)
             {
-                go_any value;
-                bool ok;
                 return {nullptr, false};
             }
             if(rec::CompareAndSwap(gocpp::recv(e->p), p, nullptr))
             {
-                go_any value;
-                bool ok;
                 return {*p, true};
             }
         }
@@ -419,16 +367,10 @@ namespace golang::sync
         auto read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
         {
-            go_any previous;
-            bool loaded;
             if(auto [v, ok] = rec::trySwap(gocpp::recv(e), & value); ok)
             {
-                go_any previous;
-                bool loaded;
                 if(v == nullptr)
                 {
-                    go_any previous;
-                    bool loaded;
                     return {nullptr, false};
                 }
                 return {*v, true};
@@ -438,18 +380,12 @@ namespace golang::sync
         read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
         {
-            go_any previous;
-            bool loaded;
             if(rec::unexpungeLocked(gocpp::recv(e)))
             {
-                go_any previous;
-                bool loaded;
                 m->dirty[key] = e;
             }
             if(auto v = rec::swapLocked(gocpp::recv(e), & value); v != nullptr)
             {
-                go_any previous;
-                bool loaded;
                 loaded = true;
                 previous = *v;
             }
@@ -457,24 +393,16 @@ namespace golang::sync
         else
         if(auto [e, ok] = m->dirty[key]; ok)
         {
-            go_any previous;
-            bool loaded;
             if(auto v = rec::swapLocked(gocpp::recv(e), & value); v != nullptr)
             {
-                go_any previous;
-                bool loaded;
                 loaded = true;
                 previous = *v;
             }
         }
         else
         {
-            go_any previous;
-            bool loaded;
             if(! read.amended)
             {
-                go_any previous;
-                bool loaded;
                 rec::dirtyLocked(gocpp::recv(m));
                 rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
@@ -531,13 +459,11 @@ namespace golang::sync
         auto [e, ok] = read.m[key];
         if(! ok && read.amended)
         {
-            bool deleted;
             rec::Lock(gocpp::recv(m->mu));
             read = rec::loadReadOnly(gocpp::recv(m));
             std::tie(e, ok) = read.m[key];
             if(! ok && read.amended)
             {
-                bool deleted;
                 std::tie(e, ok) = m->dirty[key];
                 rec::missLocked(gocpp::recv(m));
             }
@@ -545,16 +471,13 @@ namespace golang::sync
         }
         for(; ok; )
         {
-            bool deleted;
             auto p = rec::Load(gocpp::recv(e->p));
             if(p == nullptr || p == expunged || *p != old)
             {
-                bool deleted;
                 return false;
             }
             if(rec::CompareAndSwap(gocpp::recv(e->p), p, nullptr))
             {
-                bool deleted;
                 return true;
             }
         }
@@ -631,10 +554,8 @@ namespace golang::sync
         auto p = rec::Load(gocpp::recv(e->p));
         for(; p == nullptr; )
         {
-            bool isExpunged;
             if(rec::CompareAndSwap(gocpp::recv(e->p), nullptr, expunged))
             {
-                bool isExpunged;
                 return true;
             }
             p = rec::Load(gocpp::recv(e->p));

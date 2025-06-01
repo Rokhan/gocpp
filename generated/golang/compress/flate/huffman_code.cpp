@@ -223,7 +223,7 @@ namespace golang::flate
                 }
             }
             codes[ch] = gocpp::Init<hcode>([=](auto& x) {
-                x.code = reverseBits(bits, unsigned char(size));
+                x.code = reverseBits(bits, (unsigned char)(size));
                 x.len = size;
             });
         }

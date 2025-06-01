@@ -141,10 +141,10 @@ namespace golang::fmt
             buf = gocpp::make(buffer, cap(buf) * 2 + n);
             copy(buf, *f->buf);
         }
-        auto padByte = unsigned char(' ');
+        auto padByte = (unsigned char)(' ');
         if(f->zero)
         {
-            padByte = unsigned char('0');
+            padByte = (unsigned char)('0');
         }
         auto padding = buf.make_slice(oldLen, newLen);
         for(auto [i, gocpp_ignored] : padding)
@@ -311,7 +311,7 @@ namespace golang::fmt
                     {
                         i--;
                         auto next = u / 10;
-                        buf[i] = unsigned char('0' + u - next * 10);
+                        buf[i] = (unsigned char)('0' + u - next * 10);
                         u = next;
                     }
                     break;
@@ -327,7 +327,7 @@ namespace golang::fmt
                     for(; u >= 8; )
                     {
                         i--;
-                        buf[i] = unsigned char('0' + u & 7);
+                        buf[i] = (unsigned char)('0' + u & 7);
                         u >>= 3;
                     }
                     break;
@@ -335,7 +335,7 @@ namespace golang::fmt
                     for(; u >= 2; )
                     {
                         i--;
-                        buf[i] = unsigned char('0' + u & 1);
+                        buf[i] = (unsigned char)('0' + u & 1);
                         u >>= 1;
                     }
                     break;
@@ -603,7 +603,7 @@ namespace golang::fmt
         {
             prec = f->prec;
         }
-        auto num = strconv::AppendFloat(f->intbuf.make_slice(0, 1), v, unsigned char(verb), prec, size);
+        auto num = strconv::AppendFloat(f->intbuf.make_slice(0, 1), v, (unsigned char)(verb), prec, size);
         if(num[1] == '-' || num[1] == '+')
         {
             num = num.make_slice(1);

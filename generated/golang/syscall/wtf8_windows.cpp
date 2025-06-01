@@ -70,7 +70,7 @@ namespace golang::syscall
                         {
                             ar = utf8::RuneError;
                         }
-                        buf = append(buf, t3 | unsigned char(ar >> 12), tx | unsigned char(ar >> 6) & maskx, tx | unsigned char(ar) & maskx);
+                        buf = append(buf, t3 | (unsigned char)(ar >> 12), tx | (unsigned char)(ar >> 6) & maskx, tx | (unsigned char)(ar) & maskx);
                         continue;
                         break;
                 }

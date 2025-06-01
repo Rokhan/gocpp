@@ -136,20 +136,14 @@ namespace golang::runtime
         time = rec::Load(gocpp::recv(b->overflowTime));
         for(; ; )
         {
-            uint32_t count;
-            uint64_t time;
             count = uint32_t(overflow);
             if(count == 0)
             {
-                uint32_t count;
-                uint64_t time;
                 time = 0;
                 break;
             }
             if(rec::CompareAndSwap(gocpp::recv(b->overflow), overflow, ((overflow >> 32) + 1) << 32))
             {
-                uint32_t count;
-                uint64_t time;
                 break;
             }
             overflow = rec::Load(gocpp::recv(b->overflow));
@@ -360,31 +354,19 @@ namespace golang::runtime
         bool eof;
         if(b == nullptr)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             return {nullptr, nullptr, true};
         }
         auto br = b->rNext;
         auto rPrev = rec::load(gocpp::recv(b->r));
         if(rPrev != br)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             auto ntag = countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(rPrev)));
             auto ti = int(rec::tagCount(gocpp::recv(rPrev)) % uint32_t(len(b->tags)));
             for(auto i = 0; i < ntag; i++)
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 b->tags[ti] = nullptr;
                 if(ti++; ti == len(b->tags))
                 {
-                    gocpp::slice<uint64_t> data;
-                    gocpp::slice<unsafe::Pointer> tags;
-                    bool eof;
                     ti = 0;
                 }
             }
@@ -395,20 +377,11 @@ namespace golang::runtime
         auto numData = countSub(rec::dataCount(gocpp::recv(bw)), rec::dataCount(gocpp::recv(br)));
         if(numData == 0)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             if(rec::hasOverflow(gocpp::recv(b)))
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 auto [count, time] = rec::takeOverflow(gocpp::recv(b));
                 if(count == 0)
                 {
-                    gocpp::slice<uint64_t> data;
-                    gocpp::slice<unsafe::Pointer> tags;
-                    bool eof;
                     goto Read;
                 }
                 auto dst = b->overflowBuf;
@@ -416,9 +389,6 @@ namespace golang::runtime
                 dst[1] = time;
                 for(auto i = uintptr_t(0); i < b->hdrsize; i++)
                 {
-                    gocpp::slice<uint64_t> data;
-                    gocpp::slice<unsafe::Pointer> tags;
-                    bool eof;
                     dst[2 + i] = 0;
                 }
                 dst[2 + b->hdrsize] = uint64_t(count);
@@ -426,31 +396,19 @@ namespace golang::runtime
             }
             if(rec::Load(gocpp::recv(b->eof)) > 0)
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 return {nullptr, nullptr, true};
             }
             if(bw & profWriteExtra != 0)
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 rec::cas(gocpp::recv(b->w), bw, bw &^ profWriteExtra);
                 goto Read;
             }
             if(mode == profBufNonBlocking)
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 return {nullptr, nullptr, false};
             }
             if(! rec::cas(gocpp::recv(b->w), bw, bw | profReaderSleeping))
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 goto Read;
             }
             notetsleepg(& b->wait, - 1);
@@ -460,62 +418,38 @@ namespace golang::runtime
         data = b->data.make_slice(rec::dataCount(gocpp::recv(br)) % uint32_t(len(b->data)));
         if(len(data) > numData)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             data = data.make_slice(0, numData);
         }
         else
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             numData -= len(data);
         }
         auto skip = 0;
         if(data[0] == 0)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             skip = len(data);
             data = b->data;
             if(len(data) > numData)
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 data = data.make_slice(0, numData);
             }
         }
         auto ntag = countSub(rec::tagCount(gocpp::recv(bw)), rec::tagCount(gocpp::recv(br)));
         if(ntag == 0)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             go_throw("runtime: malformed profBuf buffer - tag and data out of sync");
         }
         tags = b->tags.make_slice(rec::tagCount(gocpp::recv(br)) % uint32_t(len(b->tags)));
         if(len(tags) > ntag)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             tags = tags.make_slice(0, ntag);
         }
         auto di = 0;
         auto ti = 0;
         for(; di < len(data) && data[di] != 0 && ti < len(tags); )
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             if(uintptr_t(di) + uintptr_t(data[di]) > uintptr_t(len(data)))
             {
-                gocpp::slice<uint64_t> data;
-                gocpp::slice<unsafe::Pointer> tags;
-                bool eof;
                 go_throw("runtime: malformed profBuf buffer - invalid size");
             }
             di += int(data[di]);
@@ -524,9 +458,6 @@ namespace golang::runtime
         b->rNext = rec::addCountsAndClearFlags(gocpp::recv(br), skip + di, ti);
         if(raceenabled)
         {
-            gocpp::slice<uint64_t> data;
-            gocpp::slice<unsafe::Pointer> tags;
-            bool eof;
             raceacquire(unsafe::Pointer(& labelSync));
         }
         return {data.make_slice(0, di), tags.make_slice(0, ti), false};

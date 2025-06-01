@@ -497,14 +497,14 @@ namespace golang::runtime
     void rec::writeUint64LE(struct debugLogWriter* l, uint64_t x)
     {
         gocpp::array<unsigned char, 8> b = {};
-        b[0] = unsigned char(x);
-        b[1] = unsigned char(x >> 8);
-        b[2] = unsigned char(x >> 16);
-        b[3] = unsigned char(x >> 24);
-        b[4] = unsigned char(x >> 32);
-        b[5] = unsigned char(x >> 40);
-        b[6] = unsigned char(x >> 48);
-        b[7] = unsigned char(x >> 56);
+        b[0] = (unsigned char)(x);
+        b[1] = (unsigned char)(x >> 8);
+        b[2] = (unsigned char)(x >> 16);
+        b[3] = (unsigned char)(x >> 24);
+        b[4] = (unsigned char)(x >> 32);
+        b[5] = (unsigned char)(x >> 40);
+        b[6] = (unsigned char)(x >> 48);
+        b[7] = (unsigned char)(x >> 56);
         rec::bytes(gocpp::recv(l), b.make_slice(0));
     }
 
@@ -548,11 +548,11 @@ namespace golang::runtime
         auto i = 0;
         for(; u >= 0x80; )
         {
-            l->buf[i] = unsigned char(u) | 0x80;
+            l->buf[i] = (unsigned char)(u) | 0x80;
             u >>= 7;
             i++;
         }
-        l->buf[i] = unsigned char(u);
+        l->buf[i] = (unsigned char)(u);
         i++;
         rec::bytes(gocpp::recv(l), l->buf.make_slice(0, i));
     }
@@ -641,21 +641,17 @@ namespace golang::runtime
         auto size = uint64_t(0);
         for(; size == 0; )
         {
-            uint64_t tick;
             if(r->begin + debugLogHeaderSize > r->end)
             {
-                uint64_t tick;
                 return ~ uint64_t(0);
             }
             size = uint64_t(rec::readUint16LEAt(gocpp::recv(r), r->begin));
             if(size != 0)
             {
-                uint64_t tick;
                 break;
             }
             if(r->begin + debugLogSyncSize > r->end)
             {
-                uint64_t tick;
                 return ~ uint64_t(0);
             }
             r->tick = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize);
@@ -664,26 +660,22 @@ namespace golang::runtime
         }
         if(r->begin + size > r->end)
         {
-            uint64_t tick;
             return ~ uint64_t(0);
         }
         auto pos = r->begin + debugLogHeaderSize;
         uint64_t u = {};
         for(auto i = (unsigned int)(0); ; i += 7)
         {
-            uint64_t tick;
             auto b = r->data->b[pos % uint64_t(len(r->data->b))];
             pos++;
             u |= uint64_t(b &^ 0x80) << i;
             if(b & 0x80 == 0)
             {
-                uint64_t tick;
                 break;
             }
         }
         if(pos > r->begin + size)
         {
-            uint64_t tick;
             return ~ uint64_t(0);
         }
         return r->tick + u;

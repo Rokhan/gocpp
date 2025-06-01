@@ -1221,7 +1221,7 @@ namespace golang::abi
     {
         for(auto i = 0; ; i++)
         {
-            auto b = unsigned char(n & 0x7f);
+            auto b = (unsigned char)(n & 0x7f);
             n >>= 7;
             if(n == 0)
             {

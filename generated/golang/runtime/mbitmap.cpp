@@ -265,7 +265,6 @@ namespace golang::runtime
         mbits = markBitsForAddr(base);
         if(mbits.mask != 1)
         {
-            struct markBits mbits;
             go_throw("markBitsForSpan: unaligned start");
         }
         return mbits;
@@ -320,35 +319,20 @@ namespace golang::runtime
         s = spanOf(p);
         if(s == nullptr)
         {
-            uintptr_t base;
-            struct mspan* s;
-            uintptr_t objIndex;
             if((GOARCH == "amd64" || GOARCH == "arm64") && p == clobberdeadPtr && debug.invalidptr != 0)
             {
-                uintptr_t base;
-                struct mspan* s;
-                uintptr_t objIndex;
                 badPointer(s, p, refBase, refOff);
             }
             return {base, s, objIndex};
         }
         if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse || p < rec::base(gocpp::recv(s)) || p >= s->limit)
         {
-            uintptr_t base;
-            struct mspan* s;
-            uintptr_t objIndex;
             if(state == mSpanManual)
             {
-                uintptr_t base;
-                struct mspan* s;
-                uintptr_t objIndex;
                 return {base, s, objIndex};
             }
             if(debug.invalidptr != 0)
             {
-                uintptr_t base;
-                struct mspan* s;
-                uintptr_t objIndex;
                 badPointer(s, p, refBase, refOff);
             }
             return {base, s, objIndex};

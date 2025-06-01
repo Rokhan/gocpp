@@ -35,8 +35,6 @@ namespace golang::runtime
         pos = k;
         if(k >= len(s))
         {
-            gocpp::rune r;
-            int pos;
             return {runeError, k + 1};
         }
         s = s.make_slice(k);
@@ -48,19 +46,13 @@ namespace golang::runtime
             else if(t4 <= s[0] && s[0] < t5) { conditionId = 2; }
             switch(conditionId)
             {
-                gocpp::rune r;
-                int pos;
                 case 0:
                     if(len(s) > 1 && (locb <= s[1] && s[1] <= hicb))
                     {
-                        gocpp::rune r;
-                        int pos;
                         r = (gocpp::rune(s[0] & mask2) << 6) | gocpp::rune(s[1] & maskx);
                         pos += 2;
                         if(rune1Max < r)
                         {
-                            gocpp::rune r;
-                            int pos;
                             return {r, pos};
                         }
                     }
@@ -68,14 +60,10 @@ namespace golang::runtime
                 case 1:
                     if(len(s) > 2 && (locb <= s[1] && s[1] <= hicb) && (locb <= s[2] && s[2] <= hicb))
                     {
-                        gocpp::rune r;
-                        int pos;
                         r = (gocpp::rune(s[0] & mask3) << 12) | (gocpp::rune(s[1] & maskx) << 6) | gocpp::rune(s[2] & maskx);
                         pos += 3;
                         if(rune2Max < r && ! (surrogateMin <= r && r <= surrogateMax))
                         {
-                            gocpp::rune r;
-                            int pos;
                             return {r, pos};
                         }
                     }
@@ -83,14 +71,10 @@ namespace golang::runtime
                 case 2:
                     if(len(s) > 3 && (locb <= s[1] && s[1] <= hicb) && (locb <= s[2] && s[2] <= hicb) && (locb <= s[3] && s[3] <= hicb))
                     {
-                        gocpp::rune r;
-                        int pos;
                         r = (gocpp::rune(s[0] & mask4) << 18) | (gocpp::rune(s[1] & maskx) << 12) | (gocpp::rune(s[2] & maskx) << 6) | gocpp::rune(s[3] & maskx);
                         pos += 4;
                         if(rune3Max < r && r <= maxRune)
                         {
-                            gocpp::rune r;
-                            int pos;
                             return {r, pos};
                         }
                     }
@@ -114,13 +98,13 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    p[0] = unsigned char(r);
+                    p[0] = (unsigned char)(r);
                     return 1;
                     break;
                 case 1:
                     _ = p[1];
-                    p[0] = t2 | unsigned char(r >> 6);
-                    p[1] = tx | unsigned char(r) & maskx;
+                    p[0] = t2 | (unsigned char)(r >> 6);
+                    p[1] = tx | (unsigned char)(r) & maskx;
                     return 2;
                     break;
                 case 2:
@@ -128,17 +112,17 @@ namespace golang::runtime
                     r = runeError;
                 case 4:
                     _ = p[2];
-                    p[0] = t3 | unsigned char(r >> 12);
-                    p[1] = tx | unsigned char(r >> 6) & maskx;
-                    p[2] = tx | unsigned char(r) & maskx;
+                    p[0] = t3 | (unsigned char)(r >> 12);
+                    p[1] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[2] = tx | (unsigned char)(r) & maskx;
                     return 3;
                     break;
                 default:
                     _ = p[3];
-                    p[0] = t4 | unsigned char(r >> 18);
-                    p[1] = tx | unsigned char(r >> 12) & maskx;
-                    p[2] = tx | unsigned char(r >> 6) & maskx;
-                    p[3] = tx | unsigned char(r) & maskx;
+                    p[0] = t4 | (unsigned char)(r >> 18);
+                    p[1] = tx | (unsigned char)(r >> 12) & maskx;
+                    p[2] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[3] = tx | (unsigned char)(r) & maskx;
                     return 4;
                     break;
             }

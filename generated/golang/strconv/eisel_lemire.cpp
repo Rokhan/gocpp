@@ -27,20 +27,14 @@ namespace golang::strconv
         bool ok;
         if(man == 0)
         {
-            double f;
-            bool ok;
             if(neg)
             {
-                double f;
-                bool ok;
                 f = math::Float64frombits(0x8000000000000000);
             }
             return {f, true};
         }
         if(exp10 < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < exp10)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         auto clz = bits::LeadingZeros64(man);
@@ -50,20 +44,14 @@ namespace golang::strconv
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
         if(xHi & 0x1FF == 0x1FF && xLo + man < man)
         {
-            double f;
-            bool ok;
             auto [yHi, yLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][0]);
             auto [mergedHi, mergedLo] = std::tuple{xHi, xLo + yHi};
             if(mergedLo < xLo)
             {
-                double f;
-                bool ok;
                 mergedHi++;
             }
             if(mergedHi & 0x1FF == 0x1FF && mergedLo + 1 == 0 && yLo + man < man)
             {
-                double f;
-                bool ok;
                 return {0, false};
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
@@ -73,30 +61,22 @@ namespace golang::strconv
         retExp2 -= 1 ^ msb;
         if(xLo == 0 && xHi & 0x1FF == 0 && retMantissa & 3 == 1)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;
         if((retMantissa >> 53) > 0)
         {
-            double f;
-            bool ok;
             retMantissa >>= 1;
             retExp2 += 1;
         }
         if(retExp2 - 1 >= 0x7FF - 1)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         auto retBits = (retExp2 << 52) | retMantissa & 0x000FFFFFFFFFFFFF;
         if(neg)
         {
-            double f;
-            bool ok;
             retBits |= 0x8000000000000000;
         }
         return {math::Float64frombits(retBits), true};
@@ -108,20 +88,14 @@ namespace golang::strconv
         bool ok;
         if(man == 0)
         {
-            double f;
-            bool ok;
             if(neg)
             {
-                double f;
-                bool ok;
                 f = math::Float32frombits(0x80000000);
             }
             return {f, true};
         }
         if(exp10 < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < exp10)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         auto clz = bits::LeadingZeros64(man);
@@ -131,20 +105,14 @@ namespace golang::strconv
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
         if(xHi & 0x3FFFFFFFFF == 0x3FFFFFFFFF && xLo + man < man)
         {
-            double f;
-            bool ok;
             auto [yHi, yLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][0]);
             auto [mergedHi, mergedLo] = std::tuple{xHi, xLo + yHi};
             if(mergedLo < xLo)
             {
-                double f;
-                bool ok;
                 mergedHi++;
             }
             if(mergedHi & 0x3FFFFFFFFF == 0x3FFFFFFFFF && mergedLo + 1 == 0 && yLo + man < man)
             {
-                double f;
-                bool ok;
                 return {0, false};
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
@@ -154,30 +122,22 @@ namespace golang::strconv
         retExp2 -= 1 ^ msb;
         if(xLo == 0 && xHi & 0x3FFFFFFFFF == 0 && retMantissa & 3 == 1)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;
         if((retMantissa >> 24) > 0)
         {
-            double f;
-            bool ok;
             retMantissa >>= 1;
             retExp2 += 1;
         }
         if(retExp2 - 1 >= 0xFF - 1)
         {
-            double f;
-            bool ok;
             return {0, false};
         }
         auto retBits = (retExp2 << 23) | retMantissa & 0x007FFFFF;
         if(neg)
         {
-            double f;
-            bool ok;
             retBits |= 0x80000000;
         }
         return {math::Float32frombits(uint32_t(retBits)), true};

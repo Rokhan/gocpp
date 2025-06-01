@@ -32,6 +32,9 @@ namespace golang::main
     void main();
     struct gocpp_id_0 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_0(){}
         gocpp_id_0(gocpp_id_0& i) = default;
         gocpp_id_0(const gocpp_id_0& i) = default;
@@ -81,6 +84,9 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct gocpp_id_1 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_1(){}
         gocpp_id_1(gocpp_id_1& i) = default;
         gocpp_id_1(const gocpp_id_1& i) = default;

@@ -603,9 +603,6 @@ namespace golang::runtime
         size = s->elemsize;
         if(size > 0)
         {
-            uintptr_t size;
-            uintptr_t n;
-            uintptr_t total;
             n = total / size;
         }
         return {size, n, total};
@@ -781,7 +778,7 @@ namespace golang::runtime
         auto ai = arenaIndex(p);
         arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         pageIdx = ((p / pageSize) / 8) % uintptr_t(len(arena->pageInUse));
-        pageMask = unsigned char(1 << ((p / pageSize) % 8));
+        pageMask = (unsigned char)(1 << ((p / pageSize) % 8));
         return {arena, pageIdx, pageMask};
     }
 
@@ -983,34 +980,28 @@ namespace golang::runtime
         bool needZero;
         for(; npage > 0; )
         {
-            bool needZero;
             auto ai = arenaIndex(base);
             auto ha = h->arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             auto zeroedBase = atomic::Loaduintptr(& ha->zeroedBase);
             auto arenaBase = base % heapArenaBytes;
             if(arenaBase < zeroedBase)
             {
-                bool needZero;
                 needZero = true;
             }
             auto arenaLimit = arenaBase + npage * pageSize;
             if(arenaLimit > heapArenaBytes)
             {
-                bool needZero;
                 arenaLimit = heapArenaBytes;
             }
             for(; arenaLimit > zeroedBase; )
             {
-                bool needZero;
                 if(atomic::Casuintptr(& ha->zeroedBase, zeroedBase, arenaLimit))
                 {
-                    bool needZero;
                     break;
                 }
                 zeroedBase = atomic::Loaduintptr(& ha->zeroedBase);
                 if(zeroedBase <= arenaLimit && zeroedBase > arenaBase)
                 {
-                    bool needZero;
                     go_throw("potentially overlapping in-use allocations detected");
                 }
             }
@@ -1077,11 +1068,9 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
         if(! needPhysPageAlign && pp != nullptr && npages < pageCachePages / 4)
         {
-            struct mspan* s;
             auto c = & pp->pcache;
             if(rec::empty(gocpp::recv(c)))
             {
-                struct mspan* s;
                 lock(& h->lock);
                 *c = rec::allocToCache(gocpp::recv(h->pages));
                 unlock(& h->lock);
@@ -1089,11 +1078,9 @@ namespace golang::runtime
             std::tie(base, scav) = rec::alloc(gocpp::recv(c), npages);
             if(base != 0)
             {
-                struct mspan* s;
                 s = rec::tryAllocMSpan(gocpp::recv(h));
                 if(s != nullptr)
                 {
-                    struct mspan* s;
                     goto HaveSpan;
                 }
             }
@@ -1101,24 +1088,20 @@ namespace golang::runtime
         lock(& h->lock);
         if(needPhysPageAlign)
         {
-            struct mspan* s;
             auto extraPages = physPageSize / pageSize;
             std::tie(base, gocpp_id_3) = rec::find(gocpp::recv(h->pages), npages + extraPages);
             if(base == 0)
             {
-                struct mspan* s;
                 bool ok = {};
                 std::tie(growth, ok) = rec::grow(gocpp::recv(h), npages + extraPages);
                 if(! ok)
                 {
-                    struct mspan* s;
                     unlock(& h->lock);
                     return nullptr;
                 }
                 std::tie(base, gocpp_id_4) = rec::find(gocpp::recv(h->pages), npages + extraPages);
                 if(base == 0)
                 {
-                    struct mspan* s;
                     go_throw("grew heap, but no adequate free space found");
                 }
             }
@@ -1127,30 +1110,25 @@ namespace golang::runtime
         }
         if(base == 0)
         {
-            struct mspan* s;
             std::tie(base, scav) = rec::alloc(gocpp::recv(h->pages), npages);
             if(base == 0)
             {
-                struct mspan* s;
                 bool ok = {};
                 std::tie(growth, ok) = rec::grow(gocpp::recv(h), npages);
                 if(! ok)
                 {
-                    struct mspan* s;
                     unlock(& h->lock);
                     return nullptr;
                 }
                 std::tie(base, scav) = rec::alloc(gocpp::recv(h->pages), npages);
                 if(base == 0)
                 {
-                    struct mspan* s;
                     go_throw("grew heap, but no adequate free space found");
                 }
             }
         }
         if(s == nullptr)
         {
-            struct mspan* s;
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
         unlock(& h->lock);
@@ -1159,30 +1137,24 @@ namespace golang::runtime
         auto forceScavenge = false;
         if(auto limit = rec::Load(gocpp::recv(gcController.memoryLimit)); ! rec::limiting(gocpp::recv(gcCPULimiter)))
         {
-            struct mspan* s;
             auto inuse = rec::Load(gocpp::recv(gcController.mappedReady));
             if(uint64_t(scav) + inuse > uint64_t(limit))
             {
-                struct mspan* s;
                 bytesToScavenge = uintptr_t(uint64_t(scav) + inuse - uint64_t(limit));
                 forceScavenge = true;
             }
         }
         if(auto goal = rec::Load(gocpp::recv(scavenge.gcPercentGoal)); goal != ~ uint64_t(0) && growth > 0)
         {
-            struct mspan* s;
             if(auto retained = heapRetained(); retained + uint64_t(growth) > goal)
             {
-                struct mspan* s;
                 auto todo = growth;
                 if(auto overage = uintptr_t(retained + uint64_t(growth) - goal); todo > overage)
                 {
-                    struct mspan* s;
                     todo = overage;
                 }
                 if(todo > bytesToScavenge)
                 {
-                    struct mspan* s;
                     bytesToScavenge = todo;
                 }
             }
@@ -1190,7 +1162,6 @@ namespace golang::runtime
         int64_t now = {};
         if(pp != nullptr && bytesToScavenge > 0)
         {
-            struct mspan* s;
             auto start = nanotime();
             auto track = rec::start(gocpp::recv(pp->limiterEvent), limiterEventScavengeAssist, start);
             auto released = rec::scavenge(gocpp::recv(h->pages), bytesToScavenge, [=]() mutable -> bool
@@ -1201,7 +1172,6 @@ namespace golang::runtime
             now = nanotime();
             if(track)
             {
-                struct mspan* s;
                 rec::stop(gocpp::recv(pp->limiterEvent), limiterEventScavengeAssist, now);
             }
             rec::Add(gocpp::recv(scavenge.assistTime), now - start);
@@ -1210,14 +1180,12 @@ namespace golang::runtime
         auto nbytes = npages * pageSize;
         if(scav != 0)
         {
-            struct mspan* s;
             sysUsed(unsafe::Pointer(base), nbytes, scav);
             rec::add(gocpp::recv(gcController.heapReleased), - int64_t(scav));
         }
         rec::add(gocpp::recv(gcController.heapFree), - int64_t(nbytes - scav));
         if(typ == spanAllocHeap)
         {
-            struct mspan* s;
             rec::add(gocpp::recv(gcController.heapInUse), int64_t(nbytes));
         }
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
@@ -1233,7 +1201,6 @@ namespace golang::runtime
             else if(condition == spanAllocWorkBuf) { conditionId = 3; }
             switch(conditionId)
             {
-                struct mspan* s;
                 case 0:
                     atomic::Xaddint64(& stats->inHeap, int64_t(nbytes));
                     break;

@@ -147,7 +147,7 @@ namespace golang::runtime
             }
             for(auto i = 0; i < size; i++)
             {
-                r[i] ^= unsigned char(v >> (8 * i));
+                r[i] ^= (unsigned char)(v >> (8 * i));
             }
             r = r.make_slice(size);
             v = (v >> 32) | (v << 32);

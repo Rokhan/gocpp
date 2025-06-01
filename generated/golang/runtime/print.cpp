@@ -210,7 +210,7 @@ namespace golang::runtime
         for(auto i = 0; i < n; i++)
         {
             auto s = int(v);
-            buf[i + 2] = unsigned char(s + '0');
+            buf[i + 2] = (unsigned char)(s + '0');
             v -= double(s);
             v *= 10;
         }
@@ -223,9 +223,9 @@ namespace golang::runtime
             e = - e;
             buf[n + 3] = '-';
         }
-        buf[n + 4] = unsigned char(e / 100) + '0';
-        buf[n + 5] = unsigned char(e / 10) % 10 + '0';
-        buf[n + 6] = unsigned char(e % 10) + '0';
+        buf[n + 4] = (unsigned char)(e / 100) + '0';
+        buf[n + 5] = (unsigned char)(e / 10) % 10 + '0';
+        buf[n + 6] = (unsigned char)(e % 10) + '0';
         gwrite(buf.make_slice(0));
     }
 
@@ -240,7 +240,7 @@ namespace golang::runtime
         auto i = len(buf);
         for(i--; i > 0; i--)
         {
-            buf[i] = unsigned char(v % 10 + '0');
+            buf[i] = (unsigned char)(v % 10 + '0');
             if(v < 10)
             {
                 break;

@@ -39,26 +39,17 @@ namespace golang::registry
         auto [pname, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            int n;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {0, 0, err};
         }
         unsigned char* pbuf = {};
         if(len(buf) > 0)
         {
-            int n;
-            uint32_t valtype;
-            struct gocpp::error err;
             pbuf = (unsigned char*)(unsafe::Pointer(& buf[0]));
         }
         auto l = uint32_t(len(buf));
         err = syscall::RegQueryValueEx(syscall::Handle(k), pname, nullptr, & valtype, pbuf, & l);
         if(err != nullptr)
         {
-            int n;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {int(l), valtype, err};
         }
         return {int(l), valtype, nullptr};
@@ -72,38 +63,23 @@ namespace golang::registry
         auto [p, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            gocpp::slice<unsigned char> date;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, 0, err};
         }
         uint32_t t = {};
         auto n = uint32_t(len(buf));
         for(; ; )
         {
-            gocpp::slice<unsigned char> date;
-            uint32_t valtype;
-            struct gocpp::error err;
             err = syscall::RegQueryValueEx(syscall::Handle(k), p, nullptr, & t, (unsigned char*)(unsafe::Pointer(& buf[0])), & n);
             if(err == nullptr)
             {
-                gocpp::slice<unsigned char> date;
-                uint32_t valtype;
-                struct gocpp::error err;
                 return {buf.make_slice(0, n), t, nullptr};
             }
             if(err != syscall::ERROR_MORE_DATA)
             {
-                gocpp::slice<unsigned char> date;
-                uint32_t valtype;
-                struct gocpp::error err;
                 return {nullptr, 0, err};
             }
             if(n <= uint32_t(len(buf)))
             {
-                gocpp::slice<unsigned char> date;
-                uint32_t valtype;
-                struct gocpp::error err;
                 return {nullptr, 0, err};
             }
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
@@ -118,9 +94,6 @@ namespace golang::registry
         auto [data, typ, err2] = rec::getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
-            std::string val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {"", typ, err2};
         }
         //Go switch emulation
@@ -131,9 +104,6 @@ namespace golang::registry
             if(condition == EXPAND_SZ) { conditionId = 1; }
             switch(conditionId)
             {
-                std::string val;
-                uint32_t valtype;
-                struct gocpp::error err;
                 case 0:
                 case 1:
                     break;
@@ -144,9 +114,6 @@ namespace golang::registry
         }
         if(len(data) == 0)
         {
-            std::string val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {"", typ, nullptr};
         }
         auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
@@ -230,52 +197,31 @@ namespace golang::registry
         auto [data, typ, err2] = rec::getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, err2};
         }
         if(typ != MULTI_SZ)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, ErrUnexpectedType};
         }
         if(len(data) == 0)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, nullptr};
         }
         auto p = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
         if(len(p) == 0)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, nullptr};
         }
         if(p[len(p) - 1] == 0)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             p = p.make_slice(0, len(p) - 1);
         }
         val = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 5);
         auto from = 0;
         for(auto [i, c] : p)
         {
-            gocpp::slice<std::string> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             if(c == 0)
             {
-                gocpp::slice<std::string> val;
-                uint32_t valtype;
-                struct gocpp::error err;
                 val = append(val, syscall::UTF16ToString(p.make_slice(from, i)));
                 from = i + 1;
             }
@@ -291,9 +237,6 @@ namespace golang::registry
         auto [data, typ, err2] = rec::getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8));
         if(err2 != nullptr)
         {
-            uint64_t val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {0, typ, err2};
         }
         //Go switch emulation
@@ -304,15 +247,9 @@ namespace golang::registry
             else if(condition == QWORD) { conditionId = 1; }
             switch(conditionId)
             {
-                uint64_t val;
-                uint32_t valtype;
-                struct gocpp::error err;
                 case 0:
                     if(len(data) != 4)
                     {
-                        uint64_t val;
-                        uint32_t valtype;
-                        struct gocpp::error err;
                         return {0, typ, errors::New("DWORD value is not 4 bytes long")};
                     }
                     return {uint64_t(*(uint32_t*)(unsafe::Pointer(& data[0]))), DWORD, nullptr};
@@ -320,9 +257,6 @@ namespace golang::registry
                 case 1:
                     if(len(data) != 8)
                     {
-                        uint64_t val;
-                        uint32_t valtype;
-                        struct gocpp::error err;
                         return {0, typ, errors::New("QWORD value is not 8 bytes long")};
                     }
                     return {*(uint64_t*)(unsafe::Pointer(& data[0])), QWORD, nullptr};
@@ -342,16 +276,10 @@ namespace golang::registry
         auto [data, typ, err2] = rec::getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
-            gocpp::slice<unsigned char> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, err2};
         }
         if(typ != BINARY)
         {
-            gocpp::slice<unsigned char> val;
-            uint32_t valtype;
-            struct gocpp::error err;
             return {nullptr, typ, ErrUnexpectedType};
         }
         return {data, typ, nullptr};

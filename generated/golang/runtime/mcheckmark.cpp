@@ -151,7 +151,7 @@ namespace golang::runtime
         auto ai = arenaIndex(obj);
         auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         auto arenaWord = (obj / heapArenaBytes / 8) % uintptr_t(len(arena->checkmarks->b));
-        auto mask = unsigned char(1 << ((obj / heapArenaBytes) % 8));
+        auto mask = (unsigned char)(1 << ((obj / heapArenaBytes) % 8));
         auto bytep = & arena->checkmarks->b[arenaWord];
         if(atomic::Load8(bytep) & mask != 0)
         {

@@ -31,6 +31,9 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct Mutex& value);
     struct Locker : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Locker(){}
         Locker(Locker& i) = default;
         Locker(const Locker& i) = default;

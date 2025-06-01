@@ -644,12 +644,8 @@ namespace golang::runtime
             bool park;
             if(raceenabled)
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 if(getg()->racectx != 0)
                 {
-                    gocpp::slice<unsigned char> buf;
-                    bool park;
                     go_throw("expected racectx == 0");
                 }
                 getg()->racectx = getg()->m->curg->racectx;
@@ -661,60 +657,42 @@ namespace golang::runtime
             lock(& trace.lock);
             if(rec::Load(gocpp::recv(trace.reader)) != nullptr)
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 unlock(& trace.lock);
                 println("runtime: ReadTrace called from multiple goroutines simultaneously");
                 return {nullptr, false};
             }
             if(auto buf = trace.reading; buf != nullptr)
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 buf->link = trace.empty;
                 trace.empty = buf;
                 trace.reading = nullptr;
             }
             if(! trace.headerWritten)
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 trace.headerWritten = true;
                 unlock(& trace.lock);
                 return {gocpp::Tag<gocpp::slice<unsigned char>>()("go 1.22 trace\x00\x00\x00"), false};
             }
             if(rec::Load(gocpp::recv(trace.readerGen)) == 0)
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 rec::Store(gocpp::recv(trace.readerGen), 1);
             }
             uintptr_t gen = {};
             for(; ; )
             {
-                gocpp::slice<unsigned char> buf;
-                bool park;
                 assertLockHeld(& trace.lock);
                 gen = rec::Load(gocpp::recv(trace.readerGen));
                 if(! rec::empty(gocpp::recv(trace.full[gen % 2])))
                 {
-                    gocpp::slice<unsigned char> buf;
-                    bool park;
                     break;
                 }
                 if(rec::Load(gocpp::recv(trace.flushedGen)) == gen)
                 {
-                    gocpp::slice<unsigned char> buf;
-                    bool park;
                     if(rec::Load(gocpp::recv(trace.shutdown)))
                     {
-                        gocpp::slice<unsigned char> buf;
-                        bool park;
                         unlock(& trace.lock);
                         if(raceenabled)
                         {
-                            gocpp::slice<unsigned char> buf;
-                            bool park;
                             racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
                         }
                         semrelease(& trace.doneSema[gen % 2]);
@@ -724,8 +702,6 @@ namespace golang::runtime
                     unlock(& trace.lock);
                     if(raceenabled)
                     {
-                        gocpp::slice<unsigned char> buf;
-                        bool park;
                         racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
                     }
                     semrelease(& trace.doneSema[gen % 2]);

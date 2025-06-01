@@ -56,15 +56,11 @@ namespace golang::os
         struct gocpp::error err;
         if(f == nullptr)
         {
-            gocpp::slice<std::string> names;
-            struct gocpp::error err;
             return {nullptr, ErrInvalid};
         }
         std::tie(names, gocpp_id_4, gocpp_id_5, err) = rec::readdir(gocpp::recv(f), n, readdirName);
         if(names == nullptr)
         {
-            gocpp::slice<std::string> names;
-            struct gocpp::error err;
             names = gocpp::slice<std::string> {};
         }
         return {names, err};

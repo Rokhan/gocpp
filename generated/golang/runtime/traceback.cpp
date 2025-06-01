@@ -740,16 +740,12 @@ namespace golang::runtime
             bool stop;
             if(skip == 0 && max == 0)
             {
-                bool pr;
-                bool stop;
                 return {false, true};
             }
             n++;
             lastN++;
             if(skip > 0)
             {
-                bool pr;
-                bool stop;
                 skip--;
                 return {false, false};
             }
@@ -761,34 +757,24 @@ namespace golang::runtime
         gocpp::array<uintptr_t, 32> cgoBuf = {};
         for(; rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
-            int n;
-            int lastN;
             lastN = 0;
             auto f = u->frame.fn;
             for(auto [iu, uf] = newInlineUnwinder(f, rec::symPC(gocpp::recv(u))); rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(iu), uf))
             {
-                int n;
-                int lastN;
                 auto sf = rec::srcFunc(gocpp::recv(iu), uf);
                 auto callee = u->calleeFuncID;
                 u->calleeFuncID = sf.funcID;
                 if(! (showRuntime || showframe(sf, gp, n == 0, callee)))
                 {
-                    int n;
-                    int lastN;
                     continue;
                 }
                 if(auto [pr, stop] = commitFrame(); stop)
                 {
-                    int n;
-                    int lastN;
                     return {n, lastN};
                 }
                 else
                 if(! pr)
                 {
-                    int n;
-                    int lastN;
                     continue;
                 }
                 auto name = rec::name(gocpp::recv(sf));
@@ -797,14 +783,10 @@ namespace golang::runtime
                 print("(");
                 if(rec::isInlined(gocpp::recv(iu), uf))
                 {
-                    int n;
-                    int lastN;
                     print("...");
                 }
                 else
                 {
-                    int n;
-                    int lastN;
                     auto argp = unsafe::Pointer(u->frame.argp);
                     printArgs(f, argp, rec::symPC(gocpp::recv(u)));
                 }
@@ -812,18 +794,12 @@ namespace golang::runtime
                 print("\t", file, ":", line);
                 if(! rec::isInlined(gocpp::recv(iu), uf))
                 {
-                    int n;
-                    int lastN;
                     if(u->frame.pc > rec::entry(gocpp::recv(f)))
                     {
-                        int n;
-                        int lastN;
                         print(" +", hex(u->frame.pc - rec::entry(gocpp::recv(f))));
                     }
                     if(gp->m != nullptr && gp->m->throwing >= throwTypeRuntime && gp == gp->m->curg || level >= 2)
                     {
-                        int n;
-                        int lastN;
                         print(" fp=", hex(u->frame.fp), " sp=", hex(u->frame.sp), " pc=", hex(u->frame.pc));
                     }
                 }
@@ -831,58 +807,40 @@ namespace golang::runtime
             }
             if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
-                int n;
-                int lastN;
                 cgoSymbolizerArg arg = {};
                 auto anySymbolized = false;
                 auto stop = false;
                 for(auto [gocpp_ignored, pc] : cgoBuf.make_slice(0, cgoN))
                 {
-                    int n;
-                    int lastN;
                     if(cgoSymbolizer == nullptr)
                     {
-                        int n;
-                        int lastN;
                         if(auto [pr, stop] = commitFrame(); stop)
                         {
-                            int n;
-                            int lastN;
                             break;
                         }
                         else
                         if(pr)
                         {
-                            int n;
-                            int lastN;
                             print("non-Go function at pc=", hex(pc), "\n");
                         }
                     }
                     else
                     {
-                        int n;
-                        int lastN;
                         stop = printOneCgoTraceback(pc, commitFrame, & arg);
                         anySymbolized = true;
                         if(stop)
                         {
-                            int n;
-                            int lastN;
                             break;
                         }
                     }
                 }
                 if(anySymbolized)
                 {
-                    int n;
-                    int lastN;
                     arg.pc = 0;
                     callCgoSymbolizer(& arg);
                 }
                 if(stop)
                 {
-                    int n;
-                    int lastN;
                     return {n, lastN};
                 }
             }

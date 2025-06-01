@@ -168,7 +168,7 @@ namespace golang::runtime
         {
             mID = uint64_t(w.mp->procid);
         }
-        rec::byte(gocpp::recv(w), unsigned char(traceEvEventBatch));
+        rec::byte(gocpp::recv(w), (unsigned char)(traceEvEventBatch));
         rec::varint(gocpp::recv(w), uint64_t(w.gen));
         rec::varint(gocpp::recv(w), uint64_t(mID));
         rec::varint(gocpp::recv(w), uint64_t(ts));
@@ -328,10 +328,10 @@ namespace golang::runtime
             if(v < 0x80)
             {
                 pos += i + 1;
-                arr[i] = unsigned char(v);
+                arr[i] = (unsigned char)(v);
                 break;
             }
-            arr[i] = 0x80 | unsigned char(v);
+            arr[i] = 0x80 | (unsigned char)(v);
             v >>= 7;
         }
         buf->pos = pos;
@@ -360,11 +360,11 @@ namespace golang::runtime
         {
             if(i < traceBytesPerNumber - 1)
             {
-                buf->arr[pos] = 0x80 | unsigned char(v);
+                buf->arr[pos] = 0x80 | (unsigned char)(v);
             }
             else
             {
-                buf->arr[pos] = unsigned char(v);
+                buf->arr[pos] = (unsigned char)(v);
             }
             v >>= 7;
             pos++;

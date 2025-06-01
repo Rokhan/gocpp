@@ -55,6 +55,9 @@ namespace golang::syscall
     extern Handle Stderr;
     struct Sockaddr : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Sockaddr(){}
         Sockaddr(Sockaddr& i) = default;
         Sockaddr(const Sockaddr& i) = default;

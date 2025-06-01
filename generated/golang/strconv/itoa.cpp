@@ -82,36 +82,24 @@ namespace golang::strconv
         std::string s;
         if(base < 2 || base > len(digits))
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             gocpp::panic("strconv: illegal AppendInt/FormatInt base");
         }
         gocpp::array<unsigned char, 64 + 1> a = {};
         auto i = len(a);
         if(neg)
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             u = - u;
         }
         if(base == 10)
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             if(host32bit)
             {
-                gocpp::slice<unsigned char> d;
-                std::string s;
                 for(; u >= 1e9; )
                 {
-                    gocpp::slice<unsigned char> d;
-                    std::string s;
                     auto q = u / 1e9;
                     auto us = (unsigned int)(u - q * 1e9);
                     for(auto j = 4; j > 0; j--)
                     {
-                        gocpp::slice<unsigned char> d;
-                        std::string s;
                         auto is = us % 100 * 2;
                         us /= 100;
                         i -= 2;
@@ -126,8 +114,6 @@ namespace golang::strconv
             auto us = (unsigned int)(u);
             for(; us >= 100; )
             {
-                gocpp::slice<unsigned char> d;
-                std::string s;
                 auto is = us % 100 * 2;
                 us /= 100;
                 i -= 2;
@@ -139,8 +125,6 @@ namespace golang::strconv
             a[i] = smallsString[is + 1];
             if(us >= 10)
             {
-                gocpp::slice<unsigned char> d;
-                std::string s;
                 i--;
                 a[i] = smallsString[is];
             }
@@ -148,15 +132,11 @@ namespace golang::strconv
         else
         if(isPowerOfTwo(base))
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(base))) & 7;
             auto b = uint64_t(base);
             auto m = (unsigned int)(base) - 1;
             for(; u >= b; )
             {
-                gocpp::slice<unsigned char> d;
-                std::string s;
                 i--;
                 a[i] = digits[(unsigned int)(u) & m];
                 u >>= shift;
@@ -166,13 +146,9 @@ namespace golang::strconv
         }
         else
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             auto b = uint64_t(base);
             for(; u >= b; )
             {
-                gocpp::slice<unsigned char> d;
-                std::string s;
                 i--;
                 auto q = u / b;
                 a[i] = digits[(unsigned int)(u - q * b)];
@@ -183,15 +159,11 @@ namespace golang::strconv
         }
         if(neg)
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             i--;
             a[i] = '-';
         }
         if(append_)
         {
-            gocpp::slice<unsigned char> d;
-            std::string s;
             d = append(dst, a.make_slice(i));
             return {d, s};
         }

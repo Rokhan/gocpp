@@ -59,8 +59,6 @@ namespace golang::math
         auto SmallestNormal = 2.2250738585072014e-308;
         if(Abs(x) < SmallestNormal)
         {
-            double y;
-            int exp;
             return {x * (1 << 52), - 52};
         }
         return {x, 0};

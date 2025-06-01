@@ -196,7 +196,7 @@ namespace golang::cpu
     {
         for(auto [gocpp_ignored, arg] : args)
         {
-            b = append(b, unsigned char((arg >> 0)), unsigned char((arg >> 8)), unsigned char((arg >> 16)), unsigned char((arg >> 24)));
+            b = append(b, (unsigned char)((arg >> 0)), (unsigned char)((arg >> 8)), (unsigned char)((arg >> 16)), (unsigned char)((arg >> 24)));
         }
         return b;
     }

@@ -68,6 +68,24 @@ namespace golang::main
         std::string s = {};
         std::tie(ii, s) = funcVar3(3);
         mocklib::Println(ii, s);
+        withNamedResults();
+    }
+
+    std::tuple<int, std::string> withNamedResults()
+    {
+        int i;
+        std::string s;
+        i = 3;
+        s = "hello";
+        {
+            auto j = i;
+            auto i = 10;
+            auto k = i;
+            auto s = "world";
+            mocklib::Println("withNamedResults:", i, s, j, k);
+        }
+        mocklib::Println("withNamedResults:", i, s);
+        return {i, s};
     }
 
     void dummy_vars()

@@ -118,21 +118,18 @@ namespace golang::runtime
         unsigned int s;
         if(n == 1)
         {
-            unsigned int s;
             return (unsigned int)((b[i / 64] >> (i % 64)) & 1);
         }
         _ = b[i / 64];
         auto j = i + n - 1;
         if(i / 64 == j / 64)
         {
-            unsigned int s;
             return (unsigned int)(sys::OnesCount64((b[i / 64] >> (i % 64)) & ((1 << n) - 1)));
         }
         _ = b[j / 64];
         s += (unsigned int)(sys::OnesCount64(b[i / 64] >> (i % 64)));
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
-            unsigned int s;
             s += (unsigned int)(sys::OnesCount64(b[k]));
         }
         s += (unsigned int)(sys::OnesCount64(b[j / 64] & ((1 << (j % 64 + 1)) - 1)));

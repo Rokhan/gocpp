@@ -40,6 +40,9 @@ namespace golang::zlib
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
     struct Resetter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Resetter(){}
         Resetter(Resetter& i) = default;
         Resetter(const Resetter& i) = default;

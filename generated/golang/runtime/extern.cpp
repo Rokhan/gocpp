@@ -41,10 +41,6 @@ namespace golang::runtime
         auto n = callers(skip + 1, rpc.make_slice(0));
         if(n < 1)
         {
-            uintptr_t pc;
-            std::string file;
-            int line;
-            bool ok;
             return {pc, file, line, ok};
         }
         auto [frame, gocpp_id_1] = rec::Next(gocpp::recv(CallersFrames(rpc)));

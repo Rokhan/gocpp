@@ -61,9 +61,6 @@ namespace golang::time
         std::string suffix;
         for(auto i = 0; i < len(layout); i++)
         {
-            std::string prefix;
-            int std;
-            std::string suffix;
             //Go switch emulation
             {
                 auto c = int(layout[i]);
@@ -86,27 +83,15 @@ namespace golang::time
                 else if(condition == ',') { conditionId = 14; }
                 switch(conditionId)
                 {
-                    std::string prefix;
-                    int std;
-                    std::string suffix;
                     case 0:
                         if(len(layout) >= i + 3 && layout.make_slice(i, i + 3) == "Jan")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             if(len(layout) >= i + 7 && layout.make_slice(i, i + 7) == "January")
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 return {layout.make_slice(0, i), stdLongMonth, layout.make_slice(i + 7)};
                             }
                             if(! startsWithLowerCase(layout.make_slice(i + 3)))
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 return {layout.make_slice(0, i), stdMonth, layout.make_slice(i + 3)};
                             }
                         }
@@ -114,34 +99,19 @@ namespace golang::time
                     case 1:
                         if(len(layout) >= i + 3)
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             if(layout.make_slice(i, i + 3) == "Mon")
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 if(len(layout) >= i + 6 && layout.make_slice(i, i + 6) == "Monday")
                                 {
-                                    std::string prefix;
-                                    int std;
-                                    std::string suffix;
                                     return {layout.make_slice(0, i), stdLongWeekDay, layout.make_slice(i + 6)};
                                 }
                                 if(! startsWithLowerCase(layout.make_slice(i + 3)))
                                 {
-                                    std::string prefix;
-                                    int std;
-                                    std::string suffix;
                                     return {layout.make_slice(0, i), stdWeekDay, layout.make_slice(i + 3)};
                                 }
                             }
                             if(layout.make_slice(i, i + 3) == "MST")
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 return {layout.make_slice(0, i), stdTZ, layout.make_slice(i + 3)};
                             }
                         }
@@ -149,25 +119,16 @@ namespace golang::time
                     case 2:
                         if(len(layout) >= i + 2 && '1' <= layout[i + 1] && layout[i + 1] <= '6')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), std0x[layout[i + 1] - '1'], layout.make_slice(i + 2)};
                         }
                         if(len(layout) >= i + 3 && layout[i + 1] == '0' && layout[i + 2] == '2')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdZeroYearDay, layout.make_slice(i + 3)};
                         }
                         break;
                     case 3:
                         if(len(layout) >= i + 2 && layout[i + 1] == '5')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdHour, layout.make_slice(i + 2)};
                         }
                         return {layout.make_slice(0, i), stdNumMonth, layout.make_slice(i + 1)};
@@ -175,9 +136,6 @@ namespace golang::time
                     case 4:
                         if(len(layout) >= i + 4 && layout.make_slice(i, i + 4) == "2006")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdLongYear, layout.make_slice(i + 4)};
                         }
                         return {layout.make_slice(0, i), stdDay, layout.make_slice(i + 1)};
@@ -185,23 +143,14 @@ namespace golang::time
                     case 5:
                         if(len(layout) >= i + 2 && layout[i + 1] == '2')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             if(len(layout) >= i + 5 && layout.make_slice(i + 1, i + 5) == "2006")
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 return {layout.make_slice(0, i + 1), stdLongYear, layout.make_slice(i + 5)};
                             }
                             return {layout.make_slice(0, i), stdUnderDay, layout.make_slice(i + 2)};
                         }
                         if(len(layout) >= i + 3 && layout[i + 1] == '_' && layout[i + 2] == '2')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdUnderYearDay, layout.make_slice(i + 3)};
                         }
                         break;
@@ -217,92 +166,56 @@ namespace golang::time
                     case 9:
                         if(len(layout) >= i + 2 && layout[i + 1] == 'M')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdPM, layout.make_slice(i + 2)};
                         }
                         break;
                     case 10:
                         if(len(layout) >= i + 2 && layout[i + 1] == 'm')
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdpm, layout.make_slice(i + 2)};
                         }
                         break;
                     case 11:
                         if(len(layout) >= i + 7 && layout.make_slice(i, i + 7) == "-070000")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdNumSecondsTz, layout.make_slice(i + 7)};
                         }
                         if(len(layout) >= i + 9 && layout.make_slice(i, i + 9) == "-07:00:00")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdNumColonSecondsTZ, layout.make_slice(i + 9)};
                         }
                         if(len(layout) >= i + 5 && layout.make_slice(i, i + 5) == "-0700")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdNumTZ, layout.make_slice(i + 5)};
                         }
                         if(len(layout) >= i + 6 && layout.make_slice(i, i + 6) == "-07:00")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdNumColonTZ, layout.make_slice(i + 6)};
                         }
                         if(len(layout) >= i + 3 && layout.make_slice(i, i + 3) == "-07")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdNumShortTZ, layout.make_slice(i + 3)};
                         }
                         break;
                     case 12:
                         if(len(layout) >= i + 7 && layout.make_slice(i, i + 7) == "Z070000")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdISO8601SecondsTZ, layout.make_slice(i + 7)};
                         }
                         if(len(layout) >= i + 9 && layout.make_slice(i, i + 9) == "Z07:00:00")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdISO8601ColonSecondsTZ, layout.make_slice(i + 9)};
                         }
                         if(len(layout) >= i + 5 && layout.make_slice(i, i + 5) == "Z0700")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdISO8601TZ, layout.make_slice(i + 5)};
                         }
                         if(len(layout) >= i + 6 && layout.make_slice(i, i + 6) == "Z07:00")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdISO8601ColonTZ, layout.make_slice(i + 6)};
                         }
                         if(len(layout) >= i + 3 && layout.make_slice(i, i + 3) == "Z07")
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             return {layout.make_slice(0, i), stdISO8601ShortTZ, layout.make_slice(i + 3)};
                         }
                         break;
@@ -310,29 +223,17 @@ namespace golang::time
                     case 14:
                         if(i + 1 < len(layout) && (layout[i + 1] == '0' || layout[i + 1] == '9'))
                         {
-                            std::string prefix;
-                            int std;
-                            std::string suffix;
                             auto ch = layout[i + 1];
                             auto j = i + 1;
                             for(; j < len(layout) && layout[j] == ch; )
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 j++;
                             }
                             if(! isDigit(layout, j))
                             {
-                                std::string prefix;
-                                int std;
-                                std::string suffix;
                                 auto code = stdFracSecond0;
                                 if(layout[i + 1] == '9')
                                 {
-                                    std::string prefix;
-                                    int std;
-                                    std::string suffix;
                                     code = stdFracSecond9;
                                 }
                                 auto std = stdFracSecond(code, j - (i + 1), c);
@@ -391,7 +292,7 @@ namespace golang::time
         }
         auto utod = [=](unsigned int u) mutable -> unsigned char
         {
-            return '0' + unsigned char(u);
+            return '0' + (unsigned char)(u);
         };
         //Go switch emulation
         {
@@ -451,8 +352,6 @@ namespace golang::time
         auto neg = false;
         if(len(s) > 0 && (s[0] == '-' || s[0] == '+'))
         {
-            int x;
-            struct gocpp::error err;
             neg = s[0] == '-';
             s = s.make_slice(1);
         }
@@ -460,14 +359,10 @@ namespace golang::time
         x = int(q);
         if(err != nullptr || len(rem) > 0)
         {
-            int x;
-            struct gocpp::error err;
             return {0, errAtoi};
         }
         if(neg)
         {
-            int x;
-            struct gocpp::error err;
             x = - x;
         }
         return {x, nullptr};
@@ -531,7 +426,7 @@ namespace golang::time
         if(t.wall & hasMonotonic != 0)
         {
             auto m2 = uint64_t(t.ext);
-            auto sign = unsigned char('+');
+            auto sign = (unsigned char)('+');
             if(t.ext < 0)
             {
                 sign = '-';
@@ -1642,27 +1537,19 @@ namespace golang::time
         bool ok;
         if(len(value) < 3)
         {
-            int length;
-            bool ok;
             return {0, false};
         }
         if(len(value) >= 4 && (value.make_slice(0, 4) == "ChST" || value.make_slice(0, 4) == "MeST"))
         {
-            int length;
-            bool ok;
             return {4, true};
         }
         if(value.make_slice(0, 3) == "GMT")
         {
-            int length;
-            bool ok;
             length = parseGMT(value);
             return {length, true};
         }
         if(value[0] == '+' || value[0] == '-')
         {
-            int length;
-            bool ok;
             length = parseSignedOffset(value);
             auto ok = length > 0;
             return {length, ok};
@@ -1670,18 +1557,12 @@ namespace golang::time
         int nUpper = {};
         for(nUpper = 0; nUpper < 6; nUpper++)
         {
-            int length;
-            bool ok;
             if(nUpper >= len(value))
             {
-                int length;
-                bool ok;
                 break;
             }
             if(auto c = value[nUpper]; c < 'A' || 'Z' < c)
             {
-                int length;
-                bool ok;
                 break;
             }
         }
@@ -1698,8 +1579,6 @@ namespace golang::time
             else if(condition == 3) { conditionId = 6; }
             switch(conditionId)
             {
-                int length;
-                bool ok;
                 case 0:
                 case 1:
                 case 2:
@@ -1709,16 +1588,12 @@ namespace golang::time
                 case 4:
                     if(value[4] == 'T')
                     {
-                        int length;
-                        bool ok;
                         return {5, true};
                     }
                     break;
                 case 5:
                     if(value[3] == 'T' || value.make_slice(0, 4) == "WITA")
                     {
-                        int length;
-                        bool ok;
                         return {4, true};
                     }
                     break;
@@ -1773,41 +1648,26 @@ namespace golang::time
         struct gocpp::error err;
         if(! commaOrPeriod(value[0]))
         {
-            int ns;
-            std::string rangeErrString;
-            struct gocpp::error err;
             err = errBad;
             return {ns, rangeErrString, err};
         }
         if(nbytes > 10)
         {
-            int ns;
-            std::string rangeErrString;
-            struct gocpp::error err;
             value = value.make_slice(0, 10);
             nbytes = 10;
         }
         if(std::tie(ns, err) = atoi(value.make_slice(1, nbytes)); err != nullptr)
         {
-            int ns;
-            std::string rangeErrString;
-            struct gocpp::error err;
             return {ns, rangeErrString, err};
         }
         if(ns < 0)
         {
-            int ns;
-            std::string rangeErrString;
-            struct gocpp::error err;
             rangeErrString = "fractional second";
             return {ns, rangeErrString, err};
         }
         auto scaleDigits = 10 - nbytes;
         for(auto i = 0; i < scaleDigits; i++)
         {
-            int ns;
-            std::string rangeErrString;
-            struct gocpp::error err;
             ns *= 10;
         }
         return {ns, rangeErrString, err};
@@ -1824,30 +1684,18 @@ namespace golang::time
         auto i = 0;
         for(; i < len(s); i++)
         {
-            uint64_t x;
-            bytes rem;
-            struct gocpp::error err;
             auto c = s[i];
             if(c < '0' || c > '9')
             {
-                uint64_t x;
-                bytes rem;
-                struct gocpp::error err;
                 break;
             }
             if(x > (1 << 63) / 10)
             {
-                uint64_t x;
-                bytes rem;
-                struct gocpp::error err;
                 return {0, rem, errLeadingInt};
             }
             x = x * 10 + uint64_t(c) - '0';
             if(x > (1 << 63))
             {
-                uint64_t x;
-                bytes rem;
-                struct gocpp::error err;
                 return {0, rem, errLeadingInt};
             }
         }
@@ -1864,38 +1712,23 @@ namespace golang::time
         auto overflow = false;
         for(; i < len(s); i++)
         {
-            uint64_t x;
-            double scale;
-            std::string rem;
             auto c = s[i];
             if(c < '0' || c > '9')
             {
-                uint64_t x;
-                double scale;
-                std::string rem;
                 break;
             }
             if(overflow)
             {
-                uint64_t x;
-                double scale;
-                std::string rem;
                 continue;
             }
             if(x > ((1 << 63) - 1) / 10)
             {
-                uint64_t x;
-                double scale;
-                std::string rem;
                 overflow = true;
                 continue;
             }
             auto y = x * 10 + uint64_t(c) - '0';
             if(y > (1 << 63))
             {
-                uint64_t x;
-                double scale;
-                std::string rem;
                 overflow = true;
                 continue;
             }

@@ -379,8 +379,6 @@ namespace golang::rand
             else if(gocpp_id_2 == typeid(runtimeSource*)) { conditionId = 1; }
             switch(conditionId)
             {
-                int n;
-                struct gocpp::error err;
                 case 0:
                 {
                     lockedSource* src = gocpp::any_cast<lockedSource*>(r->src);
@@ -407,27 +405,19 @@ namespace golang::rand
         auto [rng, gocpp_id_4] = gocpp::getValue<rngSource*>(src);
         for(n = 0; n < len(p); n++)
         {
-            int n;
-            struct gocpp::error err;
             if(pos == 0)
             {
-                int n;
-                struct gocpp::error err;
                 if(rng != nullptr)
                 {
-                    int n;
-                    struct gocpp::error err;
                     val = rec::Int63(gocpp::recv(rng));
                 }
                 else
                 {
-                    int n;
-                    struct gocpp::error err;
                     val = rec::Int63(gocpp::recv(src));
                 }
                 pos = 7;
             }
-            p[n] = unsigned char(val);
+            p[n] = (unsigned char)(val);
             val >>= 8;
             pos--;
         }

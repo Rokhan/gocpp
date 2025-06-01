@@ -26,6 +26,9 @@ namespace golang::png
 {
     struct EncoderBufferPool : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         EncoderBufferPool(){}
         EncoderBufferPool(EncoderBufferPool& i) = default;
         EncoderBufferPool(const EncoderBufferPool& i) = default;
@@ -109,6 +112,9 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
     struct opaquer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         opaquer(){}
         opaquer(opaquer& i) = default;
         opaquer(const opaquer& i) = default;

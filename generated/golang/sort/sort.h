@@ -31,6 +31,9 @@ namespace golang::sort
     std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct Interface : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Interface(){}
         Interface(Interface& i) = default;
         Interface(const Interface& i) = default;

@@ -115,20 +115,12 @@ namespace golang::os
         struct gocpp::error err;
         if(file->dirinfo == nullptr)
         {
-            gocpp::slice<std::string> names;
-            gocpp::slice<os::DirEntry> dirents;
-            gocpp::slice<os::FileInfo> infos;
-            struct gocpp::error err;
             uint32_t vol = {};
             uint32_t flags = {};
             err = windows::GetVolumeInformationByHandle(file->pfd.Sysfd, nullptr, 0, & vol, nullptr, & flags, nullptr, 0);
             runtime::KeepAlive(file);
             if(err != nullptr)
             {
-                gocpp::slice<std::string> names;
-                gocpp::slice<os::DirEntry> dirents;
-                gocpp::slice<os::FileInfo> infos;
-                struct gocpp::error err;
                 err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "readdir";
                     x.Path = file->name;
@@ -141,33 +133,17 @@ namespace golang::os
             file->dirinfo->vol = vol;
             if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)
             {
-                gocpp::slice<std::string> names;
-                gocpp::slice<os::DirEntry> dirents;
-                gocpp::slice<os::FileInfo> infos;
-                struct gocpp::error err;
                 file->dirinfo->go_class = windows::FileIdBothDirectoryRestartInfo;
             }
             else
             {
-                gocpp::slice<std::string> names;
-                gocpp::slice<os::DirEntry> dirents;
-                gocpp::slice<os::FileInfo> infos;
-                struct gocpp::error err;
                 file->dirinfo->go_class = windows::FileFullDirectoryRestartInfo;
                 file->dirinfo->path = file->name;
                 if(! isAbs(file->dirinfo->path))
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     std::tie(file->dirinfo->path, err) = syscall::FullPath(file->dirinfo->path);
                     if(err != nullptr)
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "readdir";
                             x.Path = file->name;
@@ -182,54 +158,26 @@ namespace golang::os
         auto wantAll = n <= 0;
         if(wantAll)
         {
-            gocpp::slice<std::string> names;
-            gocpp::slice<os::DirEntry> dirents;
-            gocpp::slice<os::FileInfo> infos;
-            struct gocpp::error err;
             n = - 1;
         }
         for(; n != 0; )
         {
-            gocpp::slice<std::string> names;
-            gocpp::slice<os::DirEntry> dirents;
-            gocpp::slice<os::FileInfo> infos;
-            struct gocpp::error err;
             if(d->bufp == 0)
             {
-                gocpp::slice<std::string> names;
-                gocpp::slice<os::DirEntry> dirents;
-                gocpp::slice<os::FileInfo> infos;
-                struct gocpp::error err;
                 err = windows::GetFileInformationByHandleEx(file->pfd.Sysfd, d->go_class, (unsigned char*)(unsafe::Pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
                 runtime::KeepAlive(file);
                 if(err != nullptr)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     if(err == syscall::ERROR_NO_MORE_FILES)
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         break;
                     }
                     if(err == syscall::ERROR_FILE_NOT_FOUND && (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         break;
                     }
                     if(auto [s, gocpp_id_1] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "readdir";
                             x.Path = file->name;
@@ -238,10 +186,6 @@ namespace golang::os
                     }
                     else
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "GetFileInformationByHandleEx";
                             x.Path = file->name;
@@ -252,48 +196,28 @@ namespace golang::os
                 }
                 if(d->go_class == windows::FileIdBothDirectoryRestartInfo)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     d->go_class = windows::FileIdBothDirectoryInfo;
                 }
                 else
                 if(d->go_class == windows::FileFullDirectoryRestartInfo)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     d->go_class = windows::FileFullDirectoryInfo;
                 }
             }
             bool islast = {};
             for(; n != 0 && ! islast; )
             {
-                gocpp::slice<std::string> names;
-                gocpp::slice<os::DirEntry> dirents;
-                gocpp::slice<os::FileInfo> infos;
-                struct gocpp::error err;
                 uint32_t nextEntryOffset = {};
                 gocpp::slice<uint16_t> nameslice = {};
                 auto entry = unsafe::Pointer(& (*d->buf)[d->bufp]);
                 if(d->go_class == windows::FileIdBothDirectoryInfo)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     auto info = (windows::FILE_ID_BOTH_DIR_INFO*)(entry);
                     nextEntryOffset = info->NextEntryOffset;
                     nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
                 }
                 else
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     auto info = (windows::FILE_FULL_DIR_INFO*)(entry);
                     nextEntryOffset = info->NextEntryOffset;
                     nameslice = unsafe::Slice(& info->FileName[0], info->FileNameLength / 2);
@@ -302,50 +226,26 @@ namespace golang::os
                 islast = nextEntryOffset == 0;
                 if(islast)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     d->bufp = 0;
                 }
                 if((len(nameslice) == 1 && nameslice[0] == '.') || (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     continue;
                 }
                 auto name = syscall::UTF16ToString(nameslice);
                 if(mode == readdirName)
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     names = append(names, name);
                 }
                 else
                 {
-                    gocpp::slice<std::string> names;
-                    gocpp::slice<os::DirEntry> dirents;
-                    gocpp::slice<os::FileInfo> infos;
-                    struct gocpp::error err;
                     fileStat* f = {};
                     if(d->go_class == windows::FileIdBothDirectoryInfo)
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         f = newFileStatFromFileIDBothDirInfo((windows::FILE_ID_BOTH_DIR_INFO*)(entry));
                     }
                     else
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         f = newFileStatFromFileFullDirInfo((windows::FILE_FULL_DIR_INFO*)(entry));
                         f->appendNameToPath = true;
                         f->path = d->path;
@@ -354,18 +254,10 @@ namespace golang::os
                     f->vol = d->vol;
                     if(mode == readdirDirEntry)
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         dirents = append(dirents, dirEntry {f});
                     }
                     else
                     {
-                        gocpp::slice<std::string> names;
-                        gocpp::slice<os::DirEntry> dirents;
-                        gocpp::slice<os::FileInfo> infos;
-                        struct gocpp::error err;
                         infos = append(infos, f);
                     }
                 }
@@ -374,10 +266,6 @@ namespace golang::os
         }
         if(! wantAll && len(names) + len(dirents) + len(infos) == 0)
         {
-            gocpp::slice<std::string> names;
-            gocpp::slice<os::DirEntry> dirents;
-            gocpp::slice<os::FileInfo> infos;
-            struct gocpp::error err;
             return {nullptr, nullptr, nullptr, io::go_EOF};
         }
         return {names, dirents, infos, nullptr};

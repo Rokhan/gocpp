@@ -120,9 +120,9 @@ namespace golang::runtime
         std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
         if(flushed)
         {
-            rec::byte(gocpp::recv(w), unsigned char(traceEvStrings));
+            rec::byte(gocpp::recv(w), (unsigned char)(traceEvStrings));
         }
-        rec::byte(gocpp::recv(w), unsigned char(traceEvString));
+        rec::byte(gocpp::recv(w), (unsigned char)(traceEvString));
         rec::varint(gocpp::recv(w), id);
         rec::varint(gocpp::recv(w), uint64_t(len(s)));
         rec::stringData(gocpp::recv(w), s);

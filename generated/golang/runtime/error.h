@@ -15,6 +15,9 @@ namespace golang::runtime
 {
     struct Error : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Error(){}
         Error(Error& i) = default;
         Error(const Error& i) = default;
@@ -121,6 +124,9 @@ namespace golang::runtime
     extern gocpp::array<std::string, 8> boundsNegErrorFmts;
     struct stringer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         stringer(){}
         stringer(stringer& i) = default;
         stringer(const stringer& i) = default;

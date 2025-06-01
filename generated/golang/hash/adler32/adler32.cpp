@@ -69,7 +69,7 @@ namespace golang::adler32
 
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
     {
-        return append(b, unsigned char(x >> 24), unsigned char(x >> 16), unsigned char(x >> 8), unsigned char(x));
+        return append(b, (unsigned char)(x >> 24), (unsigned char)(x >> 16), (unsigned char)(x >> 8), (unsigned char)(x));
     }
 
     uint32_t readUint32(gocpp::slice<unsigned char> b)
@@ -128,7 +128,7 @@ namespace golang::adler32
     gocpp::slice<unsigned char> rec::Sum(golang::adler32::digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = uint32_t(*d);
-        return append(in, unsigned char(s >> 24), unsigned char(s >> 16), unsigned char(s >> 8), unsigned char(s));
+        return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));
     }
 
     uint32_t Checksum(gocpp::slice<unsigned char> data)

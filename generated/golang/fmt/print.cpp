@@ -321,7 +321,7 @@ namespace golang::fmt
         {
             if(rec::Flag(gocpp::recv(state), int(c)))
             {
-                b = append(b, unsigned char(c));
+                b = append(b, (unsigned char)(c));
             }
         }
         if(auto [w, ok] = rec::Width(gocpp::recv(state)); ok)
@@ -643,21 +643,12 @@ namespace golang::fmt
         int newi;
         if(start >= end)
         {
-            int num;
-            bool isnum;
-            int newi;
             return {0, false, end};
         }
         for(newi = start; newi < end && '0' <= s[newi] && s[newi] <= '9'; newi++)
         {
-            int num;
-            bool isnum;
-            int newi;
             if(tooLarge(num))
             {
-                int num;
-                bool isnum;
-                int newi;
                 return {0, false, end};
             }
             num = num * 10 + int(s[newi] - '0');
@@ -1118,16 +1109,13 @@ namespace golang::fmt
             bool handled;
             if(p->erroring)
             {
-                bool handled;
                 return handled;
             }
             if(verb == 'w')
             {
-                bool handled;
                 auto [gocpp_id_1, ok] = gocpp::getValue<gocpp::error>(p->arg);
                 if(! ok || ! p->wrapErrs)
                 {
-                    bool handled;
                     rec::badVerb(gocpp::recv(p), verb);
                     return true;
                 }
@@ -1135,7 +1123,6 @@ namespace golang::fmt
             }
             if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
             {
-                bool handled;
                 handled = true;
                 defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Format"); });
                 rec::Format(gocpp::recv(formatter), p, verb);
@@ -1143,10 +1130,8 @@ namespace golang::fmt
             }
             if(p->fmt.sharpV)
             {
-                bool handled;
                 if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
                 {
-                    bool handled;
                     handled = true;
                     defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"); });
                     rec::fmtS(gocpp::recv(p->fmt), rec::GoString(gocpp::recv(stringer)));
@@ -1155,7 +1140,6 @@ namespace golang::fmt
             }
             else
             {
-                bool handled;
                 //Go switch emulation
                 {
                     auto condition = verb;
@@ -1167,7 +1151,6 @@ namespace golang::fmt
                     if(condition == 'q') { conditionId = 4; }
                     switch(conditionId)
                     {
-                        bool handled;
                         case 0:
                         case 1:
                         case 2:
@@ -1181,7 +1164,6 @@ namespace golang::fmt
                                 else if(gocpp_id_2 == typeid(Stringer)) { conditionId = 1; }
                                 switch(conditionId)
                                 {
-                                    bool handled;
                                     case 0:
                                     {
                                         gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
@@ -1641,7 +1623,7 @@ namespace golang::fmt
                                         bytes = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(f)));
                                         for(auto [i, gocpp_ignored] : bytes)
                                         {
-                                            bytes[i] = unsigned char(rec::Uint(gocpp::recv(rec::Index(gocpp::recv(f), i))));
+                                            bytes[i] = (unsigned char)(rec::Uint(gocpp::recv(rec::Index(gocpp::recv(f), i))));
                                         }
                                     }
                                     rec::fmtBytes(gocpp::recv(p), bytes, verb, rec::String(gocpp::recv(t)));
@@ -1728,15 +1710,9 @@ namespace golang::fmt
         newArgNum = argNum;
         if(argNum < len(a))
         {
-            int num;
-            bool isInt;
-            int newArgNum;
             std::tie(num, isInt) = gocpp::getValue<int>(a[argNum]);
             if(! isInt)
             {
-                int num;
-                bool isInt;
-                int newArgNum;
                 //Go switch emulation
                 {
                     auto v = reflect::ValueOf(a[argNum]);
@@ -1755,9 +1731,6 @@ namespace golang::fmt
                     else if(condition == reflect::Uintptr) { conditionId = 10; }
                     switch(conditionId)
                     {
-                        int num;
-                        bool isInt;
-                        int newArgNum;
                         case 0:
                         case 1:
                         case 2:
@@ -1766,9 +1739,6 @@ namespace golang::fmt
                             auto n = rec::Int(gocpp::recv(v));
                             if(int64_t(int(n)) == n)
                             {
-                                int num;
-                                bool isInt;
-                                int newArgNum;
                                 num = int(n);
                                 isInt = true;
                             }
@@ -1782,9 +1752,6 @@ namespace golang::fmt
                             auto n = rec::Uint(gocpp::recv(v));
                             if(int64_t(n) >= 0 && uint64_t(int(n)) == n)
                             {
-                                int num;
-                                bool isInt;
-                                int newArgNum;
                                 num = int(n);
                                 isInt = true;
                             }
@@ -1797,9 +1764,6 @@ namespace golang::fmt
             newArgNum = argNum + 1;
             if(tooLarge(num))
             {
-                int num;
-                bool isInt;
-                int newArgNum;
                 num = 0;
                 isInt = false;
             }
@@ -1814,27 +1778,15 @@ namespace golang::fmt
         bool ok;
         if(len(format) < 3)
         {
-            int index;
-            int wid;
-            bool ok;
             return {0, 1, false};
         }
         for(auto i = 1; i < len(format); i++)
         {
-            int index;
-            int wid;
-            bool ok;
             if(format[i] == ']')
             {
-                int index;
-                int wid;
-                bool ok;
                 auto [width, ok, newi] = parsenum(format, 1, i);
                 if(! ok || newi != i)
                 {
-                    int index;
-                    int wid;
-                    bool ok;
                     return {0, i + 1, false};
                 }
                 return {width - 1, i + 1, true};
@@ -1850,18 +1802,12 @@ namespace golang::fmt
         bool found;
         if(len(format) <= i || format[i] != '[')
         {
-            int newArgNum;
-            int newi;
-            bool found;
             return {argNum, i, false};
         }
         p->reordered = true;
         auto [index, wid, ok] = parseArgNumber(format.make_slice(i));
         if(ok && 0 <= index && index < numArgs)
         {
-            int newArgNum;
-            int newi;
-            bool found;
             return {index, i + wid, true};
         }
         p->goodArgNum = false;

@@ -135,7 +135,7 @@ namespace golang::strconv
         {
             auto v1 = v / 10;
             v -= 10 * v1;
-            buf[n] = unsigned char(v + '0');
+            buf[n] = (unsigned char)(v + '0');
             n++;
             v = v1;
         }
@@ -180,7 +180,7 @@ namespace golang::strconv
             auto c = (unsigned int)(a->d[r]);
             auto dig = n >> k;
             n &= mask;
-            a->d[w] = unsigned char(dig + '0');
+            a->d[w] = (unsigned char)(dig + '0');
             w++;
             n = n * 10 + c - '0';
         }
@@ -190,7 +190,7 @@ namespace golang::strconv
             n &= mask;
             if(w < len(a->d))
             {
-                a->d[w] = unsigned char(dig + '0');
+                a->d[w] = (unsigned char)(dig + '0');
                 w++;
             }
             else
@@ -271,7 +271,7 @@ namespace golang::strconv
             w--;
             if(w < len(a->d))
             {
-                a->d[w] = unsigned char(rem + '0');
+                a->d[w] = (unsigned char)(rem + '0');
             }
             else
             if(rem != 0)
@@ -287,7 +287,7 @@ namespace golang::strconv
             w--;
             if(w < len(a->d))
             {
-                a->d[w] = unsigned char(rem + '0');
+                a->d[w] = (unsigned char)(rem + '0');
             }
             else
             if(rem != 0)

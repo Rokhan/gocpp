@@ -451,73 +451,61 @@ namespace golang::runtime
         uintptr_t code;
         if(GOARCH != "386")
         {
-            uintptr_t code;
             cdecl = false;
         }
         if(fn._type == nullptr || (fn._type->Kind_ & kindMask) != kindFunc)
         {
-            uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
         auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {
-            uintptr_t code;
             rec::assignArg(gocpp::recv(abiMap), t);
         }
         abiMap.dstStackSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         abiMap.retOffset = abiMap.dstStackSize;
         if(len(rec::OutSlice(gocpp::recv(ft))) != 1)
         {
-            uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
         if(rec::OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
         {
-            uintptr_t code;
             gocpp::panic("compileCallback: expected function with one uintptr-sized result");
         }
         if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
         {
-            uintptr_t code;
             gocpp::panic("compileCallback: float results not supported");
         }
         if(intArgRegs == 0)
         {
-            uintptr_t code;
             abiMap.dstStackSize += goarch::PtrSize;
         }
         auto frameSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         frameSize += abiMap.dstSpill;
         if(frameSize > callbackMaxFrame)
         {
-            uintptr_t code;
             gocpp::panic("compileCallback: function argument frame too large");
         }
         uintptr_t retPop = {};
         if(cdecl)
         {
-            uintptr_t code;
             retPop = abiMap.srcStackSize;
         }
         auto key = winCallbackKey {(funcval*)(fn.data), cdecl};
         cbsLock();
         if(auto [n, ok] = cbs.index[key]; ok)
         {
-            uintptr_t code;
             cbsUnlock();
             return callbackasmAddr(n);
         }
         if(cbs.index == nullptr)
         {
-            uintptr_t code;
             cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int>>());
         }
         auto n = cbs.n;
         if(n >= len(cbs.ctxt))
         {
-            uintptr_t code;
             cbsUnlock();
             go_throw("too many callback functions");
         }
@@ -670,8 +658,6 @@ namespace golang::runtime
         handle = c->r1;
         if(handle == 0)
         {
-            uintptr_t handle;
-            uintptr_t err;
             err = c->err;
         }
         unlockOSThread();
@@ -696,8 +682,6 @@ namespace golang::runtime
             handle = c->r1;
             if(handle == 0)
             {
-                uintptr_t handle;
-                uintptr_t err;
                 err = c->err;
             }
             return {handle, err};
@@ -726,8 +710,6 @@ namespace golang::runtime
             outhandle = c->r1;
             if(outhandle == 0)
             {
-                uintptr_t outhandle;
-                uintptr_t err;
                 err = c->err;
             }
             return {outhandle, err};
@@ -803,9 +785,6 @@ namespace golang::runtime
                 else if(nargs > maxArgs) { conditionId = 1; }
                 switch(conditionId)
                 {
-                    uintptr_t r1;
-                    uintptr_t r2;
-                    uintptr_t err;
                     case 0:
                         copy(tmp.make_slice(0), args);
                         args = tmp.make_slice(0);

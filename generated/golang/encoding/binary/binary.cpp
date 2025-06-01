@@ -321,13 +321,13 @@ namespace golang::binary
     void rec::PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         _ = b[1];
-        b[0] = unsigned char(v);
-        b[1] = unsigned char(v >> 8);
+        b[0] = (unsigned char)(v);
+        b[1] = (unsigned char)(v >> 8);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
-        return append(b, unsigned char(v), unsigned char(v >> 8));
+        return append(b, (unsigned char)(v), (unsigned char)(v >> 8));
     }
 
     uint32_t rec::Uint32(littleEndian, gocpp::slice<unsigned char> b)
@@ -339,15 +339,15 @@ namespace golang::binary
     void rec::PutUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         _ = b[3];
-        b[0] = unsigned char(v);
-        b[1] = unsigned char(v >> 8);
-        b[2] = unsigned char(v >> 16);
-        b[3] = unsigned char(v >> 24);
+        b[0] = (unsigned char)(v);
+        b[1] = (unsigned char)(v >> 8);
+        b[2] = (unsigned char)(v >> 16);
+        b[3] = (unsigned char)(v >> 24);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
-        return append(b, unsigned char(v), unsigned char(v >> 8), unsigned char(v >> 16), unsigned char(v >> 24));
+        return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24));
     }
 
     uint64_t rec::Uint64(littleEndian, gocpp::slice<unsigned char> b)
@@ -359,19 +359,19 @@ namespace golang::binary
     void rec::PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = unsigned char(v);
-        b[1] = unsigned char(v >> 8);
-        b[2] = unsigned char(v >> 16);
-        b[3] = unsigned char(v >> 24);
-        b[4] = unsigned char(v >> 32);
-        b[5] = unsigned char(v >> 40);
-        b[6] = unsigned char(v >> 48);
-        b[7] = unsigned char(v >> 56);
+        b[0] = (unsigned char)(v);
+        b[1] = (unsigned char)(v >> 8);
+        b[2] = (unsigned char)(v >> 16);
+        b[3] = (unsigned char)(v >> 24);
+        b[4] = (unsigned char)(v >> 32);
+        b[5] = (unsigned char)(v >> 40);
+        b[6] = (unsigned char)(v >> 48);
+        b[7] = (unsigned char)(v >> 56);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
-        return append(b, unsigned char(v), unsigned char(v >> 8), unsigned char(v >> 16), unsigned char(v >> 24), unsigned char(v >> 32), unsigned char(v >> 40), unsigned char(v >> 48), unsigned char(v >> 56));
+        return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24), (unsigned char)(v >> 32), (unsigned char)(v >> 40), (unsigned char)(v >> 48), (unsigned char)(v >> 56));
     }
 
     std::string rec::String(littleEndian)
@@ -419,13 +419,13 @@ namespace golang::binary
     void rec::PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         _ = b[1];
-        b[0] = unsigned char(v >> 8);
-        b[1] = unsigned char(v);
+        b[0] = (unsigned char)(v >> 8);
+        b[1] = (unsigned char)(v);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
-        return append(b, unsigned char(v >> 8), unsigned char(v));
+        return append(b, (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
     uint32_t rec::Uint32(bigEndian, gocpp::slice<unsigned char> b)
@@ -437,15 +437,15 @@ namespace golang::binary
     void rec::PutUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         _ = b[3];
-        b[0] = unsigned char(v >> 24);
-        b[1] = unsigned char(v >> 16);
-        b[2] = unsigned char(v >> 8);
-        b[3] = unsigned char(v);
+        b[0] = (unsigned char)(v >> 24);
+        b[1] = (unsigned char)(v >> 16);
+        b[2] = (unsigned char)(v >> 8);
+        b[3] = (unsigned char)(v);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
-        return append(b, unsigned char(v >> 24), unsigned char(v >> 16), unsigned char(v >> 8), unsigned char(v));
+        return append(b, (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
     uint64_t rec::Uint64(bigEndian, gocpp::slice<unsigned char> b)
@@ -457,19 +457,19 @@ namespace golang::binary
     void rec::PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
-        b[0] = unsigned char(v >> 56);
-        b[1] = unsigned char(v >> 48);
-        b[2] = unsigned char(v >> 40);
-        b[3] = unsigned char(v >> 32);
-        b[4] = unsigned char(v >> 24);
-        b[5] = unsigned char(v >> 16);
-        b[6] = unsigned char(v >> 8);
-        b[7] = unsigned char(v);
+        b[0] = (unsigned char)(v >> 56);
+        b[1] = (unsigned char)(v >> 48);
+        b[2] = (unsigned char)(v >> 40);
+        b[3] = (unsigned char)(v >> 32);
+        b[4] = (unsigned char)(v >> 24);
+        b[5] = (unsigned char)(v >> 16);
+        b[6] = (unsigned char)(v >> 8);
+        b[7] = (unsigned char)(v);
     }
 
     gocpp::slice<unsigned char> rec::AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
-        return append(b, unsigned char(v >> 56), unsigned char(v >> 48), unsigned char(v >> 40), unsigned char(v >> 32), unsigned char(v >> 24), unsigned char(v >> 16), unsigned char(v >> 8), unsigned char(v));
+        return append(b, (unsigned char)(v >> 56), (unsigned char)(v >> 48), (unsigned char)(v >> 40), (unsigned char)(v >> 32), (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
     std::string rec::String(bigEndian)
@@ -828,13 +828,13 @@ namespace golang::binary
                     case 3:
                     {
                         int8_t* v = gocpp::any_cast<int8_t*>(data);
-                        bs[0] = unsigned char(*v);
+                        bs[0] = (unsigned char)(*v);
                         break;
                     }
                     case 4:
                     {
                         int8_t v = gocpp::any_cast<int8_t>(data);
-                        bs[0] = unsigned char(v);
+                        bs[0] = (unsigned char)(v);
                         break;
                     }
                     case 5:
@@ -842,7 +842,7 @@ namespace golang::binary
                         gocpp::slice<int8_t> v = gocpp::any_cast<gocpp::slice<int8_t>>(data);
                         for(auto [i, x] : v)
                         {
-                            bs[i] = unsigned char(x);
+                            bs[i] = (unsigned char)(x);
                         }
                         break;
                     }

@@ -38,11 +38,11 @@ namespace golang::itoa
         for(; val >= 10; )
         {
             auto q = val / 10;
-            buf[i] = unsigned char('0' + val - q * 10);
+            buf[i] = (unsigned char)('0' + val - q * 10);
             i--;
             val = q;
         }
-        buf[i] = unsigned char('0' + val);
+        buf[i] = (unsigned char)('0' + val);
         return std::string(buf.make_slice(i));
     }
 

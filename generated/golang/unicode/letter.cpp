@@ -304,41 +304,29 @@ namespace golang::unicode
         bool foundMapping;
         if(_case < 0 || MaxCase <= _case)
         {
-            gocpp::rune mappedRune;
-            bool foundMapping;
             return {ReplacementChar, false};
         }
         auto lo = 0;
         auto hi = len(caseRange);
         for(; lo < hi; )
         {
-            gocpp::rune mappedRune;
-            bool foundMapping;
             auto m = int((unsigned int)(lo + hi) >> 1);
             auto cr = caseRange[m];
             if(gocpp::rune(cr.Lo) <= r && r <= gocpp::rune(cr.Hi))
             {
-                gocpp::rune mappedRune;
-                bool foundMapping;
                 auto delta = cr.Delta[_case];
                 if(delta > MaxRune)
                 {
-                    gocpp::rune mappedRune;
-                    bool foundMapping;
                     return {gocpp::rune(cr.Lo) + ((r - gocpp::rune(cr.Lo)) &^ 1 | gocpp::rune(_case & 1)), true};
                 }
                 return {r + delta, true};
             }
             if(r < gocpp::rune(cr.Lo))
             {
-                gocpp::rune mappedRune;
-                bool foundMapping;
                 hi = m;
             }
             else
             {
-                gocpp::rune mappedRune;
-                bool foundMapping;
                 lo = m + 1;
             }
         }

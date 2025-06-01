@@ -153,6 +153,9 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Gray& value);
     struct Color : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Color(){}
         Color(Color& i) = default;
         Color(const Color& i) = default;
@@ -202,6 +205,9 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Color& value);
     struct Model : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Model(){}
         Model(Model& i) = default;
         Model(const Model& i) = default;

@@ -13,6 +13,9 @@ namespace golang::syscall
 {
     struct RawConn : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         RawConn(){}
         RawConn(RawConn& i) = default;
         RawConn(const RawConn& i) = default;
@@ -74,6 +77,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct RawConn& value);
     struct Conn : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Conn(){}
         Conn(Conn& i) = default;
         Conn(const Conn& i) = default;

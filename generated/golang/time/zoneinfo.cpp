@@ -220,11 +220,6 @@ namespace golang::time
         l = rec::get(gocpp::recv(l));
         if(len(l->zone) == 0)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
             name = "UTC";
             offset = 0;
             start = alpha;
@@ -234,11 +229,6 @@ namespace golang::time
         }
         if(auto zone = l->cacheZone; zone != nullptr && l->cacheStart <= sec && sec < l->cacheEnd)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
             name = zone->name;
             offset = zone->offset;
             start = l->cacheStart;
@@ -248,31 +238,16 @@ namespace golang::time
         }
         if(len(l->tx) == 0 || sec < l->tx[0].when)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
             auto zone = & l->zone[rec::lookupFirstZone(gocpp::recv(l))];
             name = zone->name;
             offset = zone->offset;
             start = alpha;
             if(len(l->tx) > 0)
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
                 end = l->tx[0].when;
             }
             else
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
                 end = omega;
             }
             isDST = zone->isDST;
@@ -284,30 +259,15 @@ namespace golang::time
         auto hi = len(tx);
         for(; hi - lo > 1; )
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
             auto m = int((unsigned int)(lo + hi) >> 1);
             auto lim = tx[m].when;
             if(sec < lim)
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
                 end = lim;
                 hi = m;
             }
             else
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
                 lo = m;
             }
         }
@@ -318,18 +278,8 @@ namespace golang::time
         isDST = zone->isDST;
         if(lo == len(tx) - 1 && l->extend != "")
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
             if(auto [ename, eoffset, estart, eend, eisDST, ok] = tzset(l->extend, start, sec); ok)
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
                 return {ename, eoffset, estart, eend, eisDST};
             }
         }
@@ -389,94 +339,40 @@ namespace golang::time
         std::tie(stdName, s, ok) = tzsetName(s);
         if(ok)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             std::tie(stdOffset, s, ok) = tzsetOffset(s);
         }
         if(! ok)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {"", 0, 0, 0, false, false};
         }
         stdOffset = - stdOffset;
         if(len(s) == 0 || s[0] == ',')
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {stdName, stdOffset, lastTxSec, omega, false, true};
         }
         std::tie(dstName, s, ok) = tzsetName(s);
         if(ok)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             if(len(s) == 0 || s[0] == ',')
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
-                bool ok;
                 dstOffset = stdOffset + secondsPerHour;
             }
             else
             {
-                std::string name;
-                int offset;
-                int64_t start;
-                int64_t end;
-                bool isDST;
-                bool ok;
                 std::tie(dstOffset, s, ok) = tzsetOffset(s);
                 dstOffset = - dstOffset;
             }
         }
         if(! ok)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {"", 0, 0, 0, false, false};
         }
         if(len(s) == 0)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             s = ",M3.2.0,M11.1.0";
         }
         if(s[0] != ',' && s[0] != ';')
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {"", 0, 0, 0, false, false};
         }
         s = s.make_slice(1);
@@ -485,24 +381,12 @@ namespace golang::time
         std::tie(startRule, s, ok) = tzsetRule(s);
         if(! ok || len(s) == 0 || s[0] != ',')
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {"", 0, 0, 0, false, false};
         }
         s = s.make_slice(1);
         std::tie(endRule, s, ok) = tzsetRule(s);
         if(! ok || len(s) > 0)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {"", 0, 0, 0, false, false};
         }
         auto [year, gocpp_id_2, gocpp_id_3, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
@@ -515,12 +399,6 @@ namespace golang::time
         auto [dstIsDST, stdIsDST] = std::tuple{true, false};
         if(endSec < startSec)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             std::tie(startSec, endSec) = std::tuple{endSec, startSec};
             std::tie(stdName, dstName) = std::tuple{dstName, stdName};
             std::tie(stdOffset, dstOffset) = std::tuple{dstOffset, stdOffset};
@@ -528,33 +406,15 @@ namespace golang::time
         }
         if(ysec < startSec)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {stdName, stdOffset, abs, startSec + abs, stdIsDST, true};
         }
         else
         if(ysec >= endSec)
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {stdName, stdOffset, endSec + abs, abs + 365 * secondsPerDay, stdIsDST, true};
         }
         else
         {
-            std::string name;
-            int offset;
-            int64_t start;
-            int64_t end;
-            bool isDST;
-            bool ok;
             return {dstName, dstOffset, startSec + abs, endSec + abs, dstIsDST, true};
         }
     }
@@ -636,25 +496,16 @@ namespace golang::time
         bool ok;
         if(len(s) == 0)
         {
-            int offset;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         auto neg = false;
         if(s[0] == '+')
         {
-            int offset;
-            std::string rest;
-            bool ok;
             s = s.make_slice(1);
         }
         else
         if(s[0] == '-')
         {
-            int offset;
-            std::string rest;
-            bool ok;
             s = s.make_slice(1);
             neg = true;
         }
@@ -662,22 +513,13 @@ namespace golang::time
         std::tie(hours, s, ok) = tzsetNum(s, 0, 24 * 7);
         if(! ok)
         {
-            int offset;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         auto off = hours * secondsPerHour;
         if(len(s) == 0 || s[0] != ':')
         {
-            int offset;
-            std::string rest;
-            bool ok;
             if(neg)
             {
-                int offset;
-                std::string rest;
-                bool ok;
                 off = - off;
             }
             return {off, s, true};
@@ -686,22 +528,13 @@ namespace golang::time
         std::tie(mins, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
-            int offset;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         off += mins * secondsPerMinute;
         if(len(s) == 0 || s[0] != ':')
         {
-            int offset;
-            std::string rest;
-            bool ok;
             if(neg)
             {
-                int offset;
-                std::string rest;
-                bool ok;
                 off = - off;
             }
             return {off, s, true};
@@ -710,17 +543,11 @@ namespace golang::time
         std::tie(secs, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
-            int offset;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         off += secs;
         if(neg)
         {
-            int offset;
-            std::string rest;
-            bool ok;
             off = - off;
         }
         return {off, s, true};
@@ -846,27 +673,15 @@ namespace golang::time
         bool ok;
         if(len(s) == 0)
         {
-            int num;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         num = 0;
         for(auto [i, r] : s)
         {
-            int num;
-            std::string rest;
-            bool ok;
             if(r < '0' || r > '9')
             {
-                int num;
-                std::string rest;
-                bool ok;
                 if(i == 0 || num < min)
                 {
-                    int num;
-                    std::string rest;
-                    bool ok;
                     return {0, "", false};
                 }
                 return {num, s.make_slice(i), true};
@@ -875,17 +690,11 @@ namespace golang::time
             num += int(r) - '0';
             if(num > max)
             {
-                int num;
-                std::string rest;
-                bool ok;
                 return {0, "", false};
             }
         }
         if(num < min)
         {
-            int num;
-            std::string rest;
-            bool ok;
             return {0, "", false};
         }
         return {num, "", true};
@@ -959,31 +768,21 @@ namespace golang::time
         l = rec::get(gocpp::recv(l));
         for(auto [i, gocpp_ignored] : l->zone)
         {
-            int offset;
-            bool ok;
             auto zone = & l->zone[i];
             if(zone->name == name)
             {
-                int offset;
-                bool ok;
                 auto [nam, offset, gocpp_id_7, gocpp_id_8, gocpp_id_9] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
                 if(nam == zone->name)
                 {
-                    int offset;
-                    bool ok;
                     return {offset, true};
                 }
             }
         }
         for(auto [i, gocpp_ignored] : l->zone)
         {
-            int offset;
-            bool ok;
             auto zone = & l->zone[i];
             if(zone->name == name)
             {
-                int offset;
-                bool ok;
                 return {zone->offset, true};
             }
         }

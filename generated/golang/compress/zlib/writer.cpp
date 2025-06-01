@@ -151,7 +151,6 @@ namespace golang::zlib
             else if(condition == 9) { conditionId = 11; }
             switch(conditionId)
             {
-                struct gocpp::error err;
                 case 0:
                 case 1:
                 case 2:
@@ -179,32 +178,26 @@ namespace golang::zlib
         }
         if(z->dict != nullptr)
         {
-            struct gocpp::error err;
             z->scratch[1] |= 1 << 5;
         }
         z->scratch[1] += uint8_t(31 - rec::Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
         if(std::tie(gocpp_id_2, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
         {
-            struct gocpp::error err;
             return err;
         }
         if(z->dict != nullptr)
         {
-            struct gocpp::error err;
             rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), adler32::Checksum(z->dict));
             if(std::tie(gocpp_id_3, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
-                struct gocpp::error err;
                 return err;
             }
         }
         if(z->compressor == nullptr)
         {
-            struct gocpp::error err;
             std::tie(z->compressor, err) = flate::NewWriterDict(z->w, z->level, z->dict);
             if(err != nullptr)
             {
-                struct gocpp::error err;
                 return err;
             }
             z->digest = adler32::New();
@@ -218,27 +211,19 @@ namespace golang::zlib
         struct gocpp::error err;
         if(! z->wroteHeader)
         {
-            int n;
-            struct gocpp::error err;
             z->err = rec::writeHeader(gocpp::recv(z));
         }
         if(z->err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, z->err};
         }
         if(len(p) == 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, nullptr};
         }
         std::tie(n, err) = rec::Write(gocpp::recv(z->compressor), p);
         if(err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             z->err = err;
             return {n, err};
         }

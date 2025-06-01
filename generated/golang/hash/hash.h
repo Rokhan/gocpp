@@ -15,6 +15,9 @@ namespace golang::hash
 {
     struct Hash : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Hash(){}
         Hash(Hash& i) = default;
         Hash(const Hash& i) = default;
@@ -82,6 +85,9 @@ namespace golang::hash
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
     struct Hash32 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Hash32(){}
         Hash32(Hash32& i) = default;
         Hash32(const Hash32& i) = default;
@@ -131,6 +137,9 @@ namespace golang::hash
     std::ostream& operator<<(std::ostream& os, const struct Hash32& value);
     struct Hash64 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Hash64(){}
         Hash64(Hash64& i) = default;
         Hash64(const Hash64& i) = default;

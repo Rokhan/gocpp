@@ -287,56 +287,38 @@ namespace golang::runtime
         n = alignUp(n, heapArenaBytes);
         if(hintList == & h->arenaHints)
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             v = rec::alloc(gocpp::recv(h->arena), n, heapArenaBytes, & gcController.heapReleased);
             if(v != nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 size = n;
                 goto mapped;
             }
         }
         for(; *hintList != nullptr; )
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             auto hint = *hintList;
             auto p = hint->addr;
             if(hint->down)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 p -= n;
             }
             if(p + n < p)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 v = nullptr;
             }
             else
             if(arenaIndex(p + n - 1) >= (1 << arenaBits))
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 v = nullptr;
             }
             else
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 v = sysReserve(unsafe::Pointer(p), n);
             }
             if(p == uintptr_t(v))
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 if(! hint->down)
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     p += n;
                 }
                 hint->addr = p;
@@ -345,8 +327,6 @@ namespace golang::runtime
             }
             if(v != nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 sysFreeOS(v, n);
             }
             *hintList = hint->next;
@@ -354,19 +334,13 @@ namespace golang::runtime
         }
         if(size == 0)
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             if(raceenabled)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 go_throw("too many address space collisions for -race mode");
             }
             std::tie(v, size) = sysReserveAligned(nullptr, n, heapArenaBytes);
             if(v == nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 return {nullptr, 0};
             }
             auto hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
@@ -377,115 +351,79 @@ namespace golang::runtime
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
         }
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             std::string bad = {};
             auto p = uintptr_t(v);
             if(p + size < p)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 bad = "region exceeds uintptr range";
             }
             else
             if(arenaIndex(p) >= (1 << arenaBits))
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 bad = "base outside usable address space";
             }
             else
             if(arenaIndex(p + size - 1) >= (1 << arenaBits))
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 bad = "end outside usable address space";
             }
             if(bad != "")
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 print("runtime: memory allocated by OS [", hex(p), ", ", hex(p + size), ") not in usable address space: ", bad, "\n");
                 go_throw("memory reservation exceeds address space limit");
             }
         }
         if(uintptr_t(v) & (heapArenaBytes - 1) != 0)
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             go_throw("misrounded allocation in sysAlloc");
         }
         mapped:
         for(auto ri = arenaIndex(uintptr_t(v)); ri <= arenaIndex(uintptr_t(v) + size - 1); ri++)
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             auto l2 = h->arenas[rec::l1(gocpp::recv(ri))];
             if(l2 == nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 l2 = (gocpp::array<heapArena*, 1 << arenaL2Bits>*)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
                 if(l2 == nullptr)
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     go_throw("out of memory allocating heap arena map");
                 }
                 if(h->arenasHugePages)
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     sysHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
                 }
                 else
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     sysNoHugePage(unsafe::Pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
                 }
                 atomic::StorepNoWB(unsafe::Pointer(& h->arenas[rec::l1(gocpp::recv(ri))]), unsafe::Pointer(l2));
             }
             if(l2[rec::l2(gocpp::recv(ri))] != nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 go_throw("arena already initialized");
             }
             heapArena* r = {};
             r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
             if(r == nullptr)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
                 if(r == nullptr)
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     go_throw("out of memory allocating heap arena metadata");
                 }
             }
             if(go_register)
             {
-                unsafe::Pointer v;
-                uintptr_t size;
                 if(len(h->allArenas) == cap(h->allArenas))
                 {
-                    unsafe::Pointer v;
-                    uintptr_t size;
                     auto size = 2 * uintptr_t(cap(h->allArenas)) * goarch::PtrSize;
                     if(size == 0)
                     {
-                        unsafe::Pointer v;
-                        uintptr_t size;
                         size = physPageSize;
                     }
                     auto newArray = (notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
                     if(newArray == nullptr)
                     {
-                        unsafe::Pointer v;
-                        uintptr_t size;
                         go_throw("out of memory allocating allArenas");
                     }
                     auto oldSlice = h->allArenas;
@@ -505,8 +443,6 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            unsafe::Pointer v;
-            uintptr_t size;
             racemapshadow(v, size);
         }
         return {v, size};
@@ -616,14 +552,8 @@ namespace golang::runtime
         auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
         if(freeIndex == s->nelems)
         {
-            runtime::gclinkptr v;
-            struct mspan* s;
-            bool shouldhelpgc;
             if(s->allocCount != s->nelems)
             {
-                runtime::gclinkptr v;
-                struct mspan* s;
-                bool shouldhelpgc;
                 println("runtime: s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
                 go_throw("s.allocCount != s.nelems && freeIndex == s.nelems");
             }
@@ -634,18 +564,12 @@ namespace golang::runtime
         }
         if(freeIndex >= s->nelems)
         {
-            runtime::gclinkptr v;
-            struct mspan* s;
-            bool shouldhelpgc;
             go_throw("freeIndex is not valid");
         }
         v = gclinkptr(uintptr_t(freeIndex) * s->elemsize + rec::base(gocpp::recv(s)));
         s->allocCount++;
         if(s->allocCount > s->nelems)
         {
-            runtime::gclinkptr v;
-            struct mspan* s;
-            bool shouldhelpgc;
             println("s.allocCount=", s->allocCount, "s.nelems=", s->nelems);
             go_throw("s.allocCount > s.nelems");
         }

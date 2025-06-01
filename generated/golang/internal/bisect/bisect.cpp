@@ -83,7 +83,7 @@ namespace golang::bisect
         auto wid = 1;
         for(auto i = 0; i <= len(p); i++)
         {
-            auto c = unsigned char('-');
+            auto c = (unsigned char)('-');
             if(i < len(p))
             {
                 c = p[i];
@@ -414,7 +414,7 @@ namespace golang::bisect
         for(; i == len(buf) || u > 0; )
         {
             i--;
-            buf[i] = '0' + unsigned char(u % 10);
+            buf[i] = '0' + (unsigned char)(u % 10);
             u /= 10;
         }
         dst = append(dst, buf.make_slice(i));
@@ -595,57 +595,33 @@ namespace golang::bisect
         auto i = 0;
         for(; ; i++)
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             if(i >= len(line) - len(prefix))
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 return {line, 0, false};
             }
             if(line[i] == '[' && line.make_slice(i, i + len(prefix)) == prefix)
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 break;
             }
         }
         auto j = i + len(prefix);
         for(; j < len(line) && line[j] != ']'; )
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             j++;
         }
         if(j >= len(line))
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             return {line, 0, false};
         }
         auto idstr = line.make_slice(i + len(prefix), j);
         if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x")
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             if(len(idstr) > 2 + 16)
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 return {line, 0, false};
             }
             for(auto i = 2; i < len(idstr); i++)
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 id <<= 4;
                 //Go switch emulation
                 {
@@ -656,9 +632,6 @@ namespace golang::bisect
                     else if('A' <= c && c <= 'F') { conditionId = 2; }
                     switch(conditionId)
                     {
-                        std::string short;
-                        uint64_t id;
-                        bool ok;
                         case 0:
                             id |= uint64_t(c - '0');
                             break;
@@ -674,21 +647,12 @@ namespace golang::bisect
         }
         else
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             if(idstr == "" || len(idstr) > 64)
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 return {line, 0, false};
             }
             for(auto i = 0; i < len(idstr); i++)
             {
-                std::string short;
-                uint64_t id;
-                bool ok;
                 id <<= 1;
                 //Go switch emulation
                 {
@@ -699,9 +663,6 @@ namespace golang::bisect
                     else if(condition == '1') { conditionId = 1; }
                     switch(conditionId)
                     {
-                        std::string short;
-                        uint64_t id;
-                        bool ok;
                         default:
                             return {line, 0, false};
                             break;
@@ -716,17 +677,11 @@ namespace golang::bisect
         j++;
         if(i > 0 && line[i - 1] == ' ')
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             i--;
         }
         else
         if(j < len(line) && line[j] == ' ')
         {
-            std::string short;
-            uint64_t id;
-            bool ok;
             j++;
         }
         short = line.make_slice(0, i) + line.make_slice(j);

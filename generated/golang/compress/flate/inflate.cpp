@@ -707,7 +707,7 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     case 0:
-                        rec::writeByte(gocpp::recv(f->dict), unsigned char(v));
+                        rec::writeByte(gocpp::recv(f->dict), (unsigned char)(v));
                         if(rec::availWrite(gocpp::recv(f->dict)) == 0)
                         {
                             f->toRead = rec::readFlush(gocpp::recv(f->dict));

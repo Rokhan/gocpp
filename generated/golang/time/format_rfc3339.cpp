@@ -104,10 +104,8 @@ namespace golang::time
             int x;
             for(auto [gocpp_ignored, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
             {
-                int x;
                 if(c < '0' || '9' < c)
                 {
-                    int x;
                     ok = false;
                     return min;
                 }
@@ -115,7 +113,6 @@ namespace golang::time
             }
             if(x < min || max < x)
             {
-                int x;
                 ok = false;
                 return min;
             }

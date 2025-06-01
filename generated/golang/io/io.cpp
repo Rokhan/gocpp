@@ -972,8 +972,6 @@ namespace golang::io
         struct gocpp::error err;
         if(auto [sw, ok] = gocpp::getValue<StringWriter>(w); ok)
         {
-            int n;
-            struct gocpp::error err;
             return rec::WriteString(gocpp::recv(sw), s);
         }
         return rec::Write(gocpp::recv(w), gocpp::Tag<gocpp::slice<unsigned char>>()(s));
@@ -985,29 +983,21 @@ namespace golang::io
         struct gocpp::error err;
         if(len(buf) < min)
         {
-            int n;
-            struct gocpp::error err;
             return {0, ErrShortBuffer};
         }
         for(; n < min && err == nullptr; )
         {
-            int n;
-            struct gocpp::error err;
             int nn = {};
             std::tie(nn, err) = rec::Read(gocpp::recv(r), buf.make_slice(n));
             n += nn;
         }
         if(n >= min)
         {
-            int n;
-            struct gocpp::error err;
             err = nullptr;
         }
         else
         if(n > 0 && err == go_EOF)
         {
-            int n;
-            struct gocpp::error err;
             err = ErrUnexpectedEOF;
         }
         return {n, err};
@@ -1027,14 +1017,10 @@ namespace golang::io
         std::tie(written, err) = Copy(dst, LimitReader(src, n));
         if(written == n)
         {
-            int64_t written;
-            struct gocpp::error err;
             return {n, nullptr};
         }
         if(written < n && err == nullptr)
         {
-            int64_t written;
-            struct gocpp::error err;
             err = go_EOF;
         }
         return {written, err};
@@ -1053,8 +1039,6 @@ namespace golang::io
         struct gocpp::error err;
         if(buf != nullptr && len(buf) == 0)
         {
-            int64_t written;
-            struct gocpp::error err;
             gocpp::panic("empty buffer in CopyBuffer");
         }
         return copyBuffer(dst, src, buf);
@@ -1066,35 +1050,23 @@ namespace golang::io
         struct gocpp::error err;
         if(auto [wt, ok] = gocpp::getValue<WriterTo>(src); ok)
         {
-            int64_t written;
-            struct gocpp::error err;
             return rec::WriteTo(gocpp::recv(wt), dst);
         }
         if(auto [rt, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
         {
-            int64_t written;
-            struct gocpp::error err;
             return rec::ReadFrom(gocpp::recv(rt), src);
         }
         if(buf == nullptr)
         {
-            int64_t written;
-            struct gocpp::error err;
             auto size = 32 * 1024;
             if(auto [l, ok] = gocpp::getValue<LimitedReader*>(src); ok && int64_t(size) > l->N)
             {
-                int64_t written;
-                struct gocpp::error err;
                 if(l->N < 1)
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     size = 1;
                 }
                 else
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     size = int(l->N);
                 }
             }
@@ -1102,50 +1074,34 @@ namespace golang::io
         }
         for(; ; )
         {
-            int64_t written;
-            struct gocpp::error err;
             auto [nr, er] = rec::Read(gocpp::recv(src), buf);
             if(nr > 0)
             {
-                int64_t written;
-                struct gocpp::error err;
                 auto [nw, ew] = rec::Write(gocpp::recv(dst), buf.make_slice(0, nr));
                 if(nw < 0 || nr < nw)
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     nw = 0;
                     if(ew == nullptr)
                     {
-                        int64_t written;
-                        struct gocpp::error err;
                         ew = errInvalidWrite;
                     }
                 }
                 written += int64_t(nw);
                 if(ew != nullptr)
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     err = ew;
                     break;
                 }
                 if(nr != nw)
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     err = ErrShortWrite;
                     break;
                 }
             }
             if(er != nullptr)
             {
-                int64_t written;
-                struct gocpp::error err;
                 if(er != go_EOF)
                 {
-                    int64_t written;
-                    struct gocpp::error err;
                     err = er;
                 }
                 break;
@@ -1197,14 +1153,10 @@ namespace golang::io
         struct gocpp::error err;
         if(l->N <= 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, go_EOF};
         }
         if(int64_t(len(p)) > l->N)
         {
-            int n;
-            struct gocpp::error err;
             p = p.make_slice(0, l->N);
         }
         std::tie(n, err) = rec::Read(gocpp::recv(l->R), p);
@@ -1274,14 +1226,10 @@ namespace golang::io
         struct gocpp::error err;
         if(s->off >= s->limit)
         {
-            int n;
-            struct gocpp::error err;
             return {0, go_EOF};
         }
         if(auto max = s->limit - s->off; int64_t(len(p)) > max)
         {
-            int n;
-            struct gocpp::error err;
             p = p.make_slice(0, max);
         }
         std::tie(n, err) = rec::ReadAt(gocpp::recv(s->r), p, s->off);
@@ -1330,21 +1278,15 @@ namespace golang::io
         struct gocpp::error err;
         if(off < 0 || off >= rec::Size(gocpp::recv(s)))
         {
-            int n;
-            struct gocpp::error err;
             return {0, go_EOF};
         }
         off += s->base;
         if(auto max = s->limit - off; int64_t(len(p)) > max)
         {
-            int n;
-            struct gocpp::error err;
             p = p.make_slice(0, max);
             std::tie(n, err) = rec::ReadAt(gocpp::recv(s->r), p, off);
             if(err == nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 err = go_EOF;
             }
             return {n, err};
@@ -1420,8 +1362,6 @@ namespace golang::io
         struct gocpp::error err;
         if(off < 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, errOffset};
         }
         off += o->base;
@@ -1501,12 +1441,8 @@ namespace golang::io
         std::tie(n, err) = rec::Read(gocpp::recv(t->r), p);
         if(n > 0)
         {
-            int n;
-            struct gocpp::error err;
             if(auto [n, err] = rec::Write(gocpp::recv(t->w), p.make_slice(0, n)); err != nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 return {n, err};
             }
         }
@@ -1566,19 +1502,13 @@ namespace golang::io
         auto readSize = 0;
         for(; ; )
         {
-            int64_t n;
-            struct gocpp::error err;
             std::tie(readSize, err) = rec::Read(gocpp::recv(r), *bufp);
             n += int64_t(readSize);
             if(err != nullptr)
             {
-                int64_t n;
-                struct gocpp::error err;
                 rec::Put(gocpp::recv(blackHolePool), bufp);
                 if(err == go_EOF)
                 {
-                    int64_t n;
-                    struct gocpp::error err;
                     return {n, nullptr};
                 }
                 return {n, err};

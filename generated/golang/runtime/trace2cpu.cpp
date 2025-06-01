@@ -235,10 +235,10 @@ namespace golang::runtime
             std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
             if(flushed)
             {
-                rec::byte(gocpp::recv(w), unsigned char(traceEvCPUSamples));
+                rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSamples));
             }
             auto stackID = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
-            rec::byte(gocpp::recv(w), unsigned char(traceEvCPUSample));
+            rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSample));
             rec::varint(gocpp::recv(w), timestamp);
             rec::varint(gocpp::recv(w), mpid);
             rec::varint(gocpp::recv(w), ppid);

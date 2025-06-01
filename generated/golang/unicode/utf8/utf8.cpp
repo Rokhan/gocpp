@@ -115,16 +115,12 @@ namespace golang::utf8
         auto n = len(p);
         if(n < 1)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 0};
         }
         auto p0 = p[0];
         auto x = first[p0];
         if(x >= as)
         {
-            gocpp::rune r;
-            int size;
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(p[0]) &^ mask | RuneError & mask, 1};
         }
@@ -132,41 +128,29 @@ namespace golang::utf8
         auto accept = acceptRanges[x >> 4];
         if(n < sz)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         auto b1 = p[1];
         if(b1 < accept.lo || accept.hi < b1)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         if(sz <= 2)
         {
-            gocpp::rune r;
-            int size;
             return {(gocpp::rune(p0 & mask2) << 6) | gocpp::rune(b1 & maskx), 2};
         }
         auto b2 = p[2];
         if(b2 < locb || hicb < b2)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         if(sz <= 3)
         {
-            gocpp::rune r;
-            int size;
             return {(gocpp::rune(p0 & mask3) << 12) | (gocpp::rune(b1 & maskx) << 6) | gocpp::rune(b2 & maskx), 3};
         }
         auto b3 = p[3];
         if(b3 < locb || hicb < b3)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         return {(gocpp::rune(p0 & mask4) << 18) | (gocpp::rune(b1 & maskx) << 12) | (gocpp::rune(b2 & maskx) << 6) | gocpp::rune(b3 & maskx), 4};
@@ -179,16 +163,12 @@ namespace golang::utf8
         auto n = len(s);
         if(n < 1)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 0};
         }
         auto s0 = s[0];
         auto x = first[s0];
         if(x >= as)
         {
-            gocpp::rune r;
-            int size;
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(s[0]) &^ mask | RuneError & mask, 1};
         }
@@ -196,41 +176,29 @@ namespace golang::utf8
         auto accept = acceptRanges[x >> 4];
         if(n < sz)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         auto s1 = s[1];
         if(s1 < accept.lo || accept.hi < s1)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         if(sz <= 2)
         {
-            gocpp::rune r;
-            int size;
             return {(gocpp::rune(s0 & mask2) << 6) | gocpp::rune(s1 & maskx), 2};
         }
         auto s2 = s[2];
         if(s2 < locb || hicb < s2)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         if(sz <= 3)
         {
-            gocpp::rune r;
-            int size;
             return {(gocpp::rune(s0 & mask3) << 12) | (gocpp::rune(s1 & maskx) << 6) | gocpp::rune(s2 & maskx), 3};
         }
         auto s3 = s[3];
         if(s3 < locb || hicb < s3)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         return {(gocpp::rune(s0 & mask4) << 18) | (gocpp::rune(s1 & maskx) << 12) | (gocpp::rune(s2 & maskx) << 6) | gocpp::rune(s3 & maskx), 4};
@@ -243,47 +211,33 @@ namespace golang::utf8
         auto end = len(p);
         if(end == 0)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 0};
         }
         auto start = end - 1;
         r = gocpp::rune(p[start]);
         if(r < RuneSelf)
         {
-            gocpp::rune r;
-            int size;
             return {r, 1};
         }
         auto lim = end - UTFMax;
         if(lim < 0)
         {
-            gocpp::rune r;
-            int size;
             lim = 0;
         }
         for(start--; start >= lim; start--)
         {
-            gocpp::rune r;
-            int size;
             if(RuneStart(p[start]))
             {
-                gocpp::rune r;
-                int size;
                 break;
             }
         }
         if(start < 0)
         {
-            gocpp::rune r;
-            int size;
             start = 0;
         }
         std::tie(r, size) = DecodeRune(p.make_slice(start, end));
         if(start + size != end)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         return {r, size};
@@ -296,47 +250,33 @@ namespace golang::utf8
         auto end = len(s);
         if(end == 0)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 0};
         }
         auto start = end - 1;
         r = gocpp::rune(s[start]);
         if(r < RuneSelf)
         {
-            gocpp::rune r;
-            int size;
             return {r, 1};
         }
         auto lim = end - UTFMax;
         if(lim < 0)
         {
-            gocpp::rune r;
-            int size;
             lim = 0;
         }
         for(start--; start >= lim; start--)
         {
-            gocpp::rune r;
-            int size;
             if(RuneStart(s[start]))
             {
-                gocpp::rune r;
-                int size;
                 break;
             }
         }
         if(start < 0)
         {
-            gocpp::rune r;
-            int size;
             start = 0;
         }
         std::tie(r, size) = DecodeRuneInString(s.make_slice(start, end));
         if(start + size != end)
         {
-            gocpp::rune r;
-            int size;
             return {RuneError, 1};
         }
         return {r, size};
@@ -392,13 +332,13 @@ namespace golang::utf8
             switch(conditionId)
             {
                 case 0:
-                    p[0] = unsigned char(r);
+                    p[0] = (unsigned char)(r);
                     return 1;
                     break;
                 case 1:
                     _ = p[1];
-                    p[0] = t2 | unsigned char(r >> 6);
-                    p[1] = tx | unsigned char(r) & maskx;
+                    p[0] = t2 | (unsigned char)(r >> 6);
+                    p[1] = tx | (unsigned char)(r) & maskx;
                     return 2;
                     break;
                 case 2:
@@ -406,17 +346,17 @@ namespace golang::utf8
                     r = RuneError;
                 case 4:
                     _ = p[2];
-                    p[0] = t3 | unsigned char(r >> 12);
-                    p[1] = tx | unsigned char(r >> 6) & maskx;
-                    p[2] = tx | unsigned char(r) & maskx;
+                    p[0] = t3 | (unsigned char)(r >> 12);
+                    p[1] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[2] = tx | (unsigned char)(r) & maskx;
                     return 3;
                     break;
                 default:
                     _ = p[3];
-                    p[0] = t4 | unsigned char(r >> 18);
-                    p[1] = tx | unsigned char(r >> 12) & maskx;
-                    p[2] = tx | unsigned char(r >> 6) & maskx;
-                    p[3] = tx | unsigned char(r) & maskx;
+                    p[0] = t4 | (unsigned char)(r >> 18);
+                    p[1] = tx | (unsigned char)(r >> 12) & maskx;
+                    p[2] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[3] = tx | (unsigned char)(r) & maskx;
                     return 4;
                     break;
             }
@@ -427,7 +367,7 @@ namespace golang::utf8
     {
         if(uint32_t(r) <= rune1Max)
         {
-            return append(p, unsigned char(r));
+            return append(p, (unsigned char)(r));
         }
         return appendRuneNonASCII(p, r);
     }
@@ -445,16 +385,16 @@ namespace golang::utf8
             switch(conditionId)
             {
                 case 0:
-                    return append(p, t2 | unsigned char(r >> 6), tx | unsigned char(r) & maskx);
+                    return append(p, t2 | (unsigned char)(r >> 6), tx | (unsigned char)(r) & maskx);
                     break;
                 case 1:
                 case 2:
                     r = RuneError;
                 case 3:
-                    return append(p, t3 | unsigned char(r >> 12), tx | unsigned char(r >> 6) & maskx, tx | unsigned char(r) & maskx);
+                    return append(p, t3 | (unsigned char)(r >> 12), tx | (unsigned char)(r >> 6) & maskx, tx | (unsigned char)(r) & maskx);
                     break;
                 default:
-                    return append(p, t4 | unsigned char(r >> 18), tx | unsigned char(r >> 12) & maskx, tx | unsigned char(r >> 6) & maskx, tx | unsigned char(r) & maskx);
+                    return append(p, t4 | (unsigned char)(r >> 18), tx | (unsigned char)(r >> 12) & maskx, tx | (unsigned char)(r >> 6) & maskx, tx | (unsigned char)(r) & maskx);
                     break;
             }
         }
@@ -519,54 +459,45 @@ namespace golang::utf8
         auto ns = len(s);
         for(auto i = 0; i < ns; n++)
         {
-            int n;
             auto c = s[i];
             if(c < RuneSelf)
             {
-                int n;
                 i++;
                 continue;
             }
             auto x = first[c];
             if(x == xx)
             {
-                int n;
                 i++;
                 continue;
             }
             auto size = int(x & 7);
             if(i + size > ns)
             {
-                int n;
                 i++;
                 continue;
             }
             auto accept = acceptRanges[x >> 4];
             if(auto c = s[i + 1]; c < accept.lo || accept.hi < c)
             {
-                int n;
                 size = 1;
             }
             else
             if(size == 2)
             {
-                int n;
             }
             else
             if(auto c = s[i + 2]; c < locb || hicb < c)
             {
-                int n;
                 size = 1;
             }
             else
             if(size == 3)
             {
-                int n;
             }
             else
             if(auto c = s[i + 3]; c < locb || hicb < c)
             {
-                int n;
                 size = 1;
             }
             i += size;

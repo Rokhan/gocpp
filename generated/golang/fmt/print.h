@@ -34,6 +34,9 @@ namespace golang::fmt
     extern std::string invReflectString;
     struct State : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         State(){}
         State(State& i) = default;
         State(const State& i) = default;
@@ -101,6 +104,9 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct State& value);
     struct Formatter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Formatter(){}
         Formatter(Formatter& i) = default;
         Formatter(const Formatter& i) = default;
@@ -150,6 +156,9 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct Formatter& value);
     struct Stringer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Stringer(){}
         Stringer(Stringer& i) = default;
         Stringer(const Stringer& i) = default;
@@ -199,6 +208,9 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct Stringer& value);
     struct GoStringer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         GoStringer(){}
         GoStringer(GoStringer& i) = default;
         GoStringer(const GoStringer& i) = default;

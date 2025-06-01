@@ -16,6 +16,9 @@ namespace golang::io
 {
     struct RuneScanner : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         RuneScanner(){}
         RuneScanner(RuneScanner& i) = default;
         RuneScanner(const RuneScanner& i) = default;
@@ -70,6 +73,9 @@ namespace golang::io
     extern gocpp::error ErrNoProgress;
     struct Reader : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Reader(){}
         Reader(Reader& i) = default;
         Reader(const Reader& i) = default;
@@ -119,6 +125,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
     struct Writer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Writer(){}
         Writer(Writer& i) = default;
         Writer(const Writer& i) = default;
@@ -168,6 +177,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     struct Closer : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Closer(){}
         Closer(Closer& i) = default;
         Closer(const Closer& i) = default;
@@ -217,6 +229,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
     struct Seeker : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Seeker(){}
         Seeker(Seeker& i) = default;
         Seeker(const Seeker& i) = default;
@@ -266,6 +281,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct Seeker& value);
     struct ReadWriter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadWriter(){}
         ReadWriter(ReadWriter& i) = default;
         ReadWriter(const ReadWriter& i) = default;
@@ -309,6 +327,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
     struct ReadCloser : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadCloser(){}
         ReadCloser(ReadCloser& i) = default;
         ReadCloser(const ReadCloser& i) = default;
@@ -352,6 +373,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value);
     struct WriteCloser : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         WriteCloser(){}
         WriteCloser(WriteCloser& i) = default;
         WriteCloser(const WriteCloser& i) = default;
@@ -395,6 +419,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct WriteCloser& value);
     struct ReadWriteCloser : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadWriteCloser(){}
         ReadWriteCloser(ReadWriteCloser& i) = default;
         ReadWriteCloser(const ReadWriteCloser& i) = default;
@@ -438,6 +465,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadWriteCloser& value);
     struct ReadSeeker : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadSeeker(){}
         ReadSeeker(ReadSeeker& i) = default;
         ReadSeeker(const ReadSeeker& i) = default;
@@ -481,6 +511,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadSeeker& value);
     struct ReadSeekCloser : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadSeekCloser(){}
         ReadSeekCloser(ReadSeekCloser& i) = default;
         ReadSeekCloser(const ReadSeekCloser& i) = default;
@@ -524,6 +557,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadSeekCloser& value);
     struct WriteSeeker : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         WriteSeeker(){}
         WriteSeeker(WriteSeeker& i) = default;
         WriteSeeker(const WriteSeeker& i) = default;
@@ -567,6 +603,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct WriteSeeker& value);
     struct ReadWriteSeeker : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReadWriteSeeker(){}
         ReadWriteSeeker(ReadWriteSeeker& i) = default;
         ReadWriteSeeker(const ReadWriteSeeker& i) = default;
@@ -610,6 +649,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReadWriteSeeker& value);
     struct ReaderFrom : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReaderFrom(){}
         ReaderFrom(ReaderFrom& i) = default;
         ReaderFrom(const ReaderFrom& i) = default;
@@ -659,6 +701,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReaderFrom& value);
     struct WriterTo : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         WriterTo(){}
         WriterTo(WriterTo& i) = default;
         WriterTo(const WriterTo& i) = default;
@@ -708,6 +753,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct WriterTo& value);
     struct ReaderAt : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ReaderAt(){}
         ReaderAt(ReaderAt& i) = default;
         ReaderAt(const ReaderAt& i) = default;
@@ -757,6 +805,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ReaderAt& value);
     struct WriterAt : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         WriterAt(){}
         WriterAt(WriterAt& i) = default;
         WriterAt(const WriterAt& i) = default;
@@ -806,6 +857,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct WriterAt& value);
     struct ByteReader : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ByteReader(){}
         ByteReader(ByteReader& i) = default;
         ByteReader(const ByteReader& i) = default;
@@ -855,6 +909,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ByteReader& value);
     struct ByteScanner : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ByteScanner(){}
         ByteScanner(ByteScanner& i) = default;
         ByteScanner(const ByteScanner& i) = default;
@@ -905,6 +962,9 @@ namespace golang::io
     extern gocpp::error ErrShortWrite;
     struct RuneReader : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         RuneReader(){}
         RuneReader(RuneReader& i) = default;
         RuneReader(const RuneReader& i) = default;
@@ -954,6 +1014,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct RuneReader& value);
     struct ByteWriter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ByteWriter(){}
         ByteWriter(ByteWriter& i) = default;
         ByteWriter(const ByteWriter& i) = default;
@@ -1003,6 +1066,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
     struct StringWriter : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         StringWriter(){}
         StringWriter(StringWriter& i) = default;
         StringWriter(const StringWriter& i) = default;

@@ -183,15 +183,11 @@ namespace golang::syscall
         auto [namep, err] = BytePtrFromString(name);
         if(err != nullptr)
         {
-            struct Proc* proc;
-            struct gocpp::error err;
             return {nullptr, err};
         }
         auto [a, e] = getprocaddress(uintptr_t(d->Handle), namep);
         if(e != 0)
         {
-            struct Proc* proc;
-            struct gocpp::error err;
             return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;

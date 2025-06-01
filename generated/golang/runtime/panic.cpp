@@ -927,7 +927,6 @@ namespace golang::runtime
         bool ok;
         if(p->lr == 0)
         {
-            bool ok;
             return false;
         }
         auto gp = getg();

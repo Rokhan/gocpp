@@ -420,28 +420,20 @@ namespace golang::runtime
         int64_t duration;
         for(; ; )
         {
-            runtime::limiterEventType typ;
-            int64_t duration;
             auto old = limiterEventStamp(rec::Load(gocpp::recv(e->stamp)));
             typ = rec::typ(gocpp::recv(old));
             if(typ == limiterEventNone)
             {
-                runtime::limiterEventType typ;
-                int64_t duration;
                 return {typ, duration};
             }
             duration = rec::duration(gocpp::recv(old), now);
             if(duration == 0)
             {
-                runtime::limiterEventType typ;
-                int64_t duration;
                 return {limiterEventNone, 0};
             }
             auto go_new = makeLimiterEventStamp(typ, now);
             if(rec::CompareAndSwap(gocpp::recv(e->stamp), uint64_t(old), uint64_t(go_new)))
             {
-                runtime::limiterEventType typ;
-                int64_t duration;
                 break;
             }
         }

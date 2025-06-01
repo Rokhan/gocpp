@@ -175,7 +175,7 @@ namespace golang::bytes
             switch(conditionId)
             {
                 case 0:
-                    return IndexByte(s, unsigned char(r));
+                    return IndexByte(s, (unsigned char)(r));
                     break;
                 case 1:
                     for(auto i = 0; i < len(s); )
@@ -967,13 +967,9 @@ namespace golang::bytes
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
-            bytes::asciiSet as;
-            bool ok;
             auto c = chars[i];
             if(c >= utf8::RuneSelf)
             {
-                bytes::asciiSet as;
-                bool ok;
                 return {as, false};
             }
             as[c / 32] |= 1 << (c % 32);
@@ -1437,9 +1433,6 @@ namespace golang::bytes
         bool found;
         if(auto i = Index(s, sep); i >= 0)
         {
-            gocpp::slice<unsigned char> before;
-            gocpp::slice<unsigned char> after;
-            bool found;
             return {s.make_slice(0, i), s.make_slice(i + len(sep)), true};
         }
         return {s, nullptr, false};
@@ -1460,8 +1453,6 @@ namespace golang::bytes
         bool found;
         if(! HasPrefix(s, prefix))
         {
-            gocpp::slice<unsigned char> after;
-            bool found;
             return {s, false};
         }
         return {s.make_slice(len(prefix)), true};
@@ -1473,8 +1464,6 @@ namespace golang::bytes
         bool found;
         if(! HasSuffix(s, suffix))
         {
-            gocpp::slice<unsigned char> before;
-            bool found;
             return {s, false};
         }
         return {s.make_slice(0, len(s) - len(suffix)), true};

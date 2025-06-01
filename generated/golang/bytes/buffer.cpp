@@ -186,8 +186,6 @@ namespace golang::bytes
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(p));
         if(! ok)
         {
-            int n;
-            struct gocpp::error err;
             m = rec::grow(gocpp::recv(b), len(p));
         }
         return {copy(b->buf.make_slice(m), p), nullptr};
@@ -201,8 +199,6 @@ namespace golang::bytes
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(s));
         if(! ok)
         {
-            int n;
-            struct gocpp::error err;
             m = rec::grow(gocpp::recv(b), len(s));
         }
         return {copy(b->buf.make_slice(m), s), nullptr};
@@ -215,29 +211,21 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         for(; ; )
         {
-            int64_t n;
-            struct gocpp::error err;
             auto i = rec::grow(gocpp::recv(b), MinRead);
             b->buf = b->buf.make_slice(0, i);
             auto [m, e] = rec::Read(gocpp::recv(r), b->buf.make_slice(i, cap(b->buf)));
             if(m < 0)
             {
-                int64_t n;
-                struct gocpp::error err;
                 gocpp::panic(errNegativeRead);
             }
             b->buf = b->buf.make_slice(0, i + m);
             n += int64_t(m);
             if(e == io::go_EOF)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, nullptr};
             }
             if(e != nullptr)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, e};
             }
         }
@@ -277,27 +265,19 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         if(auto nBytes = rec::Len(gocpp::recv(b)); nBytes > 0)
         {
-            int64_t n;
-            struct gocpp::error err;
             auto [m, e] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->off));
             if(m > nBytes)
             {
-                int64_t n;
-                struct gocpp::error err;
                 gocpp::panic("bytes.Buffer.WriteTo: invalid Write count");
             }
             b->off += m;
             n = int64_t(m);
             if(e != nullptr)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, e};
             }
             if(m != nBytes)
             {
-                int64_t n;
-                struct gocpp::error err;
                 return {n, io::ErrShortWrite};
             }
         }
@@ -323,17 +303,13 @@ namespace golang::bytes
         struct gocpp::error err;
         if(uint32_t(r) < utf8::RuneSelf)
         {
-            int n;
-            struct gocpp::error err;
-            rec::WriteByte(gocpp::recv(b), unsigned char(r));
+            rec::WriteByte(gocpp::recv(b), (unsigned char)(r));
             return {1, nullptr};
         }
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), utf8::UTFMax);
         if(! ok)
         {
-            int n;
-            struct gocpp::error err;
             m = rec::grow(gocpp::recv(b), utf8::UTFMax);
         }
         b->buf = utf8::AppendRune(b->buf.make_slice(0, m), r);
@@ -347,13 +323,9 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         if(rec::empty(gocpp::recv(b)))
         {
-            int n;
-            struct gocpp::error err;
             rec::Reset(gocpp::recv(b));
             if(len(p) == 0)
             {
-                int n;
-                struct gocpp::error err;
                 return {0, nullptr};
             }
             return {0, io::go_EOF};
@@ -362,8 +334,6 @@ namespace golang::bytes
         b->off += n;
         if(n > 0)
         {
-            int n;
-            struct gocpp::error err;
             b->lastRead = opRead;
         }
         return {n, nullptr};
@@ -406,18 +376,12 @@ namespace golang::bytes
         struct gocpp::error err;
         if(rec::empty(gocpp::recv(b)))
         {
-            gocpp::rune r;
-            int size;
-            struct gocpp::error err;
             rec::Reset(gocpp::recv(b));
             return {0, 0, io::go_EOF};
         }
         auto c = b->buf[b->off];
         if(c < utf8::RuneSelf)
         {
-            gocpp::rune r;
-            int size;
-            struct gocpp::error err;
             b->off++;
             b->lastRead = opReadRune1;
             return {gocpp::rune(c), 1, nullptr};
@@ -474,8 +438,6 @@ namespace golang::bytes
         auto end = b->off + i + 1;
         if(i < 0)
         {
-            gocpp::slice<unsigned char> line;
-            struct gocpp::error err;
             end = len(b->buf);
             err = io::go_EOF;
         }

@@ -210,27 +210,19 @@ namespace golang::syscall
         auto [p, err] = UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            std::string path;
-            struct gocpp::error err;
             return {"", err};
         }
         auto n = uint32_t(100);
         for(; ; )
         {
-            std::string path;
-            struct gocpp::error err;
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
             std::tie(n, err) = GetFullPathName(p, uint32_t(len(buf)), & buf[0], nullptr);
             if(err != nullptr)
             {
-                std::string path;
-                struct gocpp::error err;
                 return {"", err};
             }
             if(n <= uint32_t(len(buf)))
             {
-                std::string path;
-                struct gocpp::error err;
                 return {UTF16ToString(buf.make_slice(0, n)), nullptr};
             }
         }
@@ -248,14 +240,10 @@ namespace golang::syscall
         auto [ndir, err] = FullPath(dir);
         if(err != nullptr)
         {
-            std::string name;
-            struct gocpp::error err;
             return {"", err};
         }
         if(len(ndir) > 2 && isSlash(ndir[0]) && isSlash(ndir[1]))
         {
-            std::string name;
-            struct gocpp::error err;
             return {"", go_EINVAL};
         }
         return {ndir, nullptr};
@@ -276,78 +264,52 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(p) == 0)
         {
-            std::string name;
-            struct gocpp::error err;
             return {"", go_EINVAL};
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
-            std::string name;
-            struct gocpp::error err;
             return {p, nullptr};
         }
         if(len(p) > 1 && p[1] == ':')
         {
-            std::string name;
-            struct gocpp::error err;
             if(len(p) == 2)
             {
-                std::string name;
-                struct gocpp::error err;
                 return {"", go_EINVAL};
             }
             if(isSlash(p[2]))
             {
-                std::string name;
-                struct gocpp::error err;
                 return {p, nullptr};
             }
             else
             {
-                std::string name;
-                struct gocpp::error err;
                 auto [d, err] = normalizeDir(dir);
                 if(err != nullptr)
                 {
-                    std::string name;
-                    struct gocpp::error err;
                     return {"", err};
                 }
                 if(volToUpper(int(p[0])) == volToUpper(int(d[0])))
                 {
-                    std::string name;
-                    struct gocpp::error err;
                     return FullPath(d + "\\" + p.make_slice(2));
                 }
                 else
                 {
-                    std::string name;
-                    struct gocpp::error err;
                     return FullPath(p);
                 }
             }
         }
         else
         {
-            std::string name;
-            struct gocpp::error err;
             auto [d, err] = normalizeDir(dir);
             if(err != nullptr)
             {
-                std::string name;
-                struct gocpp::error err;
                 return {"", err};
             }
             if(isSlash(p[0]))
             {
-                std::string name;
-                struct gocpp::error err;
                 return FullPath(d.make_slice(0, 2) + p);
             }
             else
             {
-                std::string name;
-                struct gocpp::error err;
                 return FullPath(d + "\\" + p);
             }
         }
@@ -456,105 +418,63 @@ namespace golang::syscall
             struct gocpp::error err;
             if(len(argv0) == 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, go_EWINDOWS};
             }
             if(attr == nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 attr = & zeroProcAttr;
             }
             auto sys = attr->Sys;
             if(sys == nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 sys = & zeroSysProcAttr;
             }
             if(len(attr->Files) > 3)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, go_EWINDOWS};
             }
             if(len(attr->Files) < 3)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, go_EINVAL};
             }
             if(len(attr->Dir) != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 gocpp::error err = {};
                 std::tie(argv0, err) = joinExeDirAndFName(attr->Dir, argv0);
                 if(err != nullptr)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     return {0, 0, err};
                 }
             }
             auto [argv0p, err] = UTF16PtrFromString(argv0);
             if(err != nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, err};
             }
             std::string cmdline = {};
             if(sys->CmdLine != "")
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 cmdline = sys->CmdLine;
             }
             else
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 cmdline = makeCmdLine(argv);
             }
             uint16_t* argvp = {};
             if(len(cmdline) != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 std::tie(argvp, err) = UTF16PtrFromString(cmdline);
                 if(err != nullptr)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     return {0, 0, err};
                 }
             }
             uint16_t* dirp = {};
             if(len(attr->Dir) != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 std::tie(dirp, err) = UTF16PtrFromString(attr->Dir);
                 if(err != nullptr)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     return {0, 0, err};
                 }
             }
@@ -562,28 +482,16 @@ namespace golang::syscall
             auto parentProcess = p;
             if(sys->ParentProcess != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 parentProcess = sys->ParentProcess;
             }
             auto fd = gocpp::make(gocpp::Tag<gocpp::slice<syscall::Handle>>(), len(attr->Files));
             for(auto [i, gocpp_ignored] : attr->Files)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 if(attr->Files[i] > 0)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     auto err = DuplicateHandle(p, Handle(attr->Files[i]), parentProcess, & fd[i], 0, true, DUPLICATE_SAME_ACCESS);
                     if(err != nullptr)
                     {
-                        int pid;
-                        uintptr_t handle;
-                        struct gocpp::error err;
                         return {0, 0, err};
                     }
                     defer.push_back([=]{ DuplicateHandle(parentProcess, fd[i], 0, nullptr, 0, false, DUPLICATE_CLOSE_SOURCE); });
@@ -593,9 +501,6 @@ namespace golang::syscall
             std::tie(si->ProcThreadAttributeList, err) = newProcThreadAttributeList(2);
             if(err != nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, err};
             }
             defer.push_back([=]{ deleteProcThreadAttributeList(si->ProcThreadAttributeList); });
@@ -603,23 +508,14 @@ namespace golang::syscall
             si->Flags = STARTF_USESTDHANDLES;
             if(sys->HideWindow)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 si->Flags |= STARTF_USESHOWWINDOW;
                 si->ShowWindow = SW_HIDE;
             }
             if(sys->ParentProcess != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, unsafe::Pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>(), nullptr, nullptr);
                 if(err != nullptr)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     return {0, 0, err};
                 }
             }
@@ -630,14 +526,8 @@ namespace golang::syscall
             auto j = 0;
             for(auto [i, gocpp_ignored] : fd)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 if(fd[i] != 0)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     fd[j] = fd[i];
                     j++;
                 }
@@ -646,15 +536,9 @@ namespace golang::syscall
             auto willInheritHandles = len(fd) > 0 && ! sys->NoInheritHandles;
             if(willInheritHandles)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, unsafe::Pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>(), nullptr, nullptr);
                 if(err != nullptr)
                 {
-                    int pid;
-                    uintptr_t handle;
-                    struct gocpp::error err;
                     return {0, 0, err};
                 }
             }
@@ -662,32 +546,20 @@ namespace golang::syscall
             std::tie(envBlock, err) = createEnvBlock(attr->Env);
             if(err != nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, err};
             }
             auto pi = new(ProcessInformation);
             auto flags = sys->CreationFlags | CREATE_UNICODE_ENVIRONMENT | _EXTENDED_STARTUPINFO_PRESENT;
             if(sys->Token != 0)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 err = CreateProcessAsUser(sys->Token, argv0p, argvp, sys->ProcessAttributes, sys->ThreadAttributes, willInheritHandles, flags, & envBlock[0], dirp, & si->StartupInfo, pi);
             }
             else
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 err = CreateProcess(argv0p, argvp, sys->ProcessAttributes, sys->ThreadAttributes, willInheritHandles, flags, & envBlock[0], dirp, & si->StartupInfo, pi);
             }
             if(err != nullptr)
             {
-                int pid;
-                uintptr_t handle;
-                struct gocpp::error err;
                 return {0, 0, err};
             }
             defer.push_back([=]{ CloseHandle(Handle(pi->Thread)); });

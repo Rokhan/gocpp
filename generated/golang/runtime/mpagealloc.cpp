@@ -597,25 +597,17 @@ namespace golang::runtime
         assertLockHeld(p->mheapLock);
         if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
-            uintptr_t addr;
-            uintptr_t scav;
             return {0, 0};
         }
         auto searchAddr = minOffAddr;
         if(pallocChunkPages - chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))) >= (unsigned int)(npages))
         {
-            uintptr_t addr;
-            uintptr_t scav;
             auto i = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
             if(auto max = rec::max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (unsigned int)(npages))
             {
-                uintptr_t addr;
-                uintptr_t scav;
                 auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
                 if(j == ~ (unsigned int)(0))
                 {
-                    uintptr_t addr;
-                    uintptr_t scav;
                     print("runtime: max = ", max, ", npages = ", npages, "\n");
                     print("runtime: searchIdx = ", chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = ", hex(rec::addr(gocpp::recv(p->searchAddr))), "\n");
                     go_throw("bad summary data");
@@ -628,12 +620,8 @@ namespace golang::runtime
         std::tie(addr, searchAddr) = rec::find(gocpp::recv(p), npages);
         if(addr == 0)
         {
-            uintptr_t addr;
-            uintptr_t scav;
             if(npages == 1)
             {
-                uintptr_t addr;
-                uintptr_t scav;
                 p->searchAddr = maxSearchAddr();
             }
             return {0, 0};
@@ -642,8 +630,6 @@ namespace golang::runtime
         scav = rec::allocRange(gocpp::recv(p), addr, npages);
         if(rec::lessThan(gocpp::recv(p->searchAddr), searchAddr))
         {
-            uintptr_t addr;
-            uintptr_t scav;
             p->searchAddr = searchAddr;
         }
         return {addr, scav};

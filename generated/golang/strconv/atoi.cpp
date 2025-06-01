@@ -212,7 +212,7 @@ namespace golang::strconv
                         break;
                 }
             }
-            if(d >= unsigned char(base))
+            if(d >= (unsigned char)(base))
             {
                 return {0, syntaxError(fnParseUint, s0)};
             }
@@ -242,23 +242,17 @@ namespace golang::strconv
         auto fnParseInt = "ParseInt";
         if(s == "")
         {
-            int64_t i;
-            struct gocpp::error err;
             return {0, syntaxError(fnParseInt, s)};
         }
         auto s0 = s;
         auto neg = false;
         if(s[0] == '+')
         {
-            int64_t i;
-            struct gocpp::error err;
             s = s.make_slice(1);
         }
         else
         if(s[0] == '-')
         {
-            int64_t i;
-            struct gocpp::error err;
             neg = true;
             s = s.make_slice(1);
         }
@@ -266,36 +260,26 @@ namespace golang::strconv
         std::tie(un, err) = ParseUint(s, base, bitSize);
         if(err != nullptr && gocpp::getValue<NumError*>(err)->Err != ErrRange)
         {
-            int64_t i;
-            struct gocpp::error err;
             gocpp::getValue<NumError*>(err)->Func = fnParseInt;
             gocpp::getValue<NumError*>(err)->Num = cloneString(s0);
             return {0, err};
         }
         if(bitSize == 0)
         {
-            int64_t i;
-            struct gocpp::error err;
             bitSize = IntSize;
         }
         auto cutoff = uint64_t(1 << (unsigned int)(bitSize - 1));
         if(! neg && un >= cutoff)
         {
-            int64_t i;
-            struct gocpp::error err;
             return {int64_t(cutoff - 1), rangeError(fnParseInt, s0)};
         }
         if(neg && un > cutoff)
         {
-            int64_t i;
-            struct gocpp::error err;
             return {- int64_t(cutoff), rangeError(fnParseInt, s0)};
         }
         auto n = int64_t(un);
         if(neg)
         {
-            int64_t i;
-            struct gocpp::error err;
             n = - n;
         }
         return {n, nullptr};

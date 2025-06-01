@@ -28,8 +28,6 @@ namespace golang::math
         int exp;
         if(haveArchFrexp)
         {
-            double frac;
-            int exp;
             return archFrexp(f);
         }
         return frexp(f);
@@ -46,8 +44,6 @@ namespace golang::math
             else if(IsInf(f, 0) || IsNaN(f)) { conditionId = 1; }
             switch(conditionId)
             {
-                double frac;
-                int exp;
                 case 0:
                     return {f, 0};
                     break;

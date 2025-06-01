@@ -104,9 +104,6 @@ namespace golang::registry
         err = regCreateKeyEx(syscall::Handle(k), syscall::StringToUTF16Ptr(path), 0, nullptr, _REG_OPTION_NON_VOLATILE, access, nullptr, & h, & d);
         if(err != nullptr)
         {
-            registry::Key newk;
-            bool openedExisting;
-            struct gocpp::error err;
             return {0, false, err};
         }
         return {Key(h), d == _REG_OPENED_EXISTING_KEY, nullptr};

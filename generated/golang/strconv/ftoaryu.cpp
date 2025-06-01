@@ -318,20 +318,12 @@ namespace golang::strconv
         int e2;
         if(mant != (1 << flt->mantbits) || exp == flt->bias + 1 - int(flt->mantbits))
         {
-            uint64_t lower;
-            uint64_t central;
-            uint64_t upper;
-            int e2;
             std::tie(lower, central, upper) = std::tuple{2 * mant - 1, 2 * mant, 2 * mant + 1};
             e2 = exp - 1;
             return {lower, central, upper, e2};
         }
         else
         {
-            uint64_t lower;
-            uint64_t central;
-            uint64_t upper;
-            int e2;
             std::tie(lower, central, upper) = std::tuple{4 * mant - 1, 4 * mant, 4 * mant + 2};
             e2 = exp - 2;
             return {lower, central, upper, e2};
@@ -368,7 +360,7 @@ namespace golang::strconv
                 auto [v1, v2] = std::tuple{v / 10, v % 10};
                 v = v1;
                 n--;
-                d->d[n] = unsigned char(v2 + '0');
+                d->d[n] = (unsigned char)(v2 + '0');
             }
             d->d = d->d.make_slice(n);
             d->nd = int(9 - n);
@@ -436,7 +428,7 @@ namespace golang::strconv
         }
         if(n == d->nd)
         {
-            d->d[n] = unsigned char(v + '0');
+            d->d[n] = (unsigned char)(v + '0');
         }
         d->nd = endindex + 1;
         d->dp = d->nd + trimmed;
@@ -449,24 +441,15 @@ namespace golang::strconv
         bool exact;
         if(q == 0)
         {
-            uint32_t resM;
-            int resE;
-            bool exact;
             return {m << 6, e2 - 6, true};
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
-            uint32_t resM;
-            int resE;
-            bool exact;
             gocpp::panic("mult64bitPow10: power of 10 is out of range");
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10][1];
         if(q < 0)
         {
-            uint32_t resM;
-            int resE;
-            bool exact;
             pow += 1;
         }
         auto [hi, lo] = bits::Mul64(uint64_t(m), pow);
@@ -481,24 +464,15 @@ namespace golang::strconv
         bool exact;
         if(q == 0)
         {
-            uint64_t resM;
-            int resE;
-            bool exact;
             return {m << 8, e2 - 8, true};
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
-            uint64_t resM;
-            int resE;
-            bool exact;
             gocpp::panic("mult128bitPow10: power of 10 is out of range");
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10];
         if(q < 0)
         {
-            uint64_t resM;
-            int resE;
-            bool exact;
             pow[0] += 1;
         }
         e2 += mulByLog10Log2(q) - 127 + 119;

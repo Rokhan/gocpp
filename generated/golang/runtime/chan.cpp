@@ -489,18 +489,12 @@ namespace golang::runtime
         bool received;
         if(debugChan)
         {
-            bool selected;
-            bool received;
             print("chanrecv: chan=", c, "\n");
         }
         if(c == nullptr)
         {
-            bool selected;
-            bool received;
             if(! block)
             {
-                bool selected;
-                bool received;
                 return {selected, received};
             }
             gopark(nullptr, nullptr, waitReasonChanReceiveNilChan, traceBlockForever, 2);
@@ -508,28 +502,18 @@ namespace golang::runtime
         }
         if(! block && empty(c))
         {
-            bool selected;
-            bool received;
             if(atomic::Load(& c->closed) == 0)
             {
-                bool selected;
-                bool received;
                 return {selected, received};
             }
             if(empty(c))
             {
-                bool selected;
-                bool received;
                 if(raceenabled)
                 {
-                    bool selected;
-                    bool received;
                     raceacquire(rec::raceaddr(gocpp::recv(c)));
                 }
                 if(ep != nullptr)
                 {
-                    bool selected;
-                    bool received;
                     typedmemclr(c->elemtype, ep);
                 }
                 return {true, false};
@@ -538,30 +522,20 @@ namespace golang::runtime
         int64_t t0 = {};
         if(blockprofilerate > 0)
         {
-            bool selected;
-            bool received;
             t0 = cputicks();
         }
         lock(& c->lock);
         if(c->closed != 0)
         {
-            bool selected;
-            bool received;
             if(c->qcount == 0)
             {
-                bool selected;
-                bool received;
                 if(raceenabled)
                 {
-                    bool selected;
-                    bool received;
                     raceacquire(rec::raceaddr(gocpp::recv(c)));
                 }
                 unlock(& c->lock);
                 if(ep != nullptr)
                 {
-                    bool selected;
-                    bool received;
                     typedmemclr(c->elemtype, ep);
                 }
                 return {true, false};
@@ -569,12 +543,8 @@ namespace golang::runtime
         }
         else
         {
-            bool selected;
-            bool received;
             if(auto sg = rec::dequeue(gocpp::recv(c->sendq)); sg != nullptr)
             {
-                bool selected;
-                bool received;
                 recv(c, sg, ep, [=]() mutable -> void
                 {
                     unlock(& c->lock);
@@ -584,27 +554,19 @@ namespace golang::runtime
         }
         if(c->qcount > 0)
         {
-            bool selected;
-            bool received;
             auto qp = chanbuf(c, c->recvx);
             if(raceenabled)
             {
-                bool selected;
-                bool received;
                 racenotify(c, c->recvx, nullptr);
             }
             if(ep != nullptr)
             {
-                bool selected;
-                bool received;
                 typedmemmove(c->elemtype, ep, qp);
             }
             typedmemclr(c->elemtype, qp);
             c->recvx++;
             if(c->recvx == c->dataqsiz)
             {
-                bool selected;
-                bool received;
                 c->recvx = 0;
             }
             c->qcount--;
@@ -613,8 +575,6 @@ namespace golang::runtime
         }
         if(! block)
         {
-            bool selected;
-            bool received;
             unlock(& c->lock);
             return {false, false};
         }
@@ -623,8 +583,6 @@ namespace golang::runtime
         mysg->releasetime = 0;
         if(t0 != 0)
         {
-            bool selected;
-            bool received;
             mysg->releasetime = - 1;
         }
         mysg->elem = ep;
@@ -639,16 +597,12 @@ namespace golang::runtime
         gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
         if(mysg != gp->waiting)
         {
-            bool selected;
-            bool received;
             go_throw("G waiting list is corrupted");
         }
         gp->waiting = nullptr;
         gp->activeStackChans = false;
         if(mysg->releasetime > 0)
         {
-            bool selected;
-            bool received;
             blockevent(mysg->releasetime - t0, 2);
         }
         auto success = mysg->success;

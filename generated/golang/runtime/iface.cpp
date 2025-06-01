@@ -377,17 +377,14 @@ namespace golang::runtime
         unsafe::Pointer x;
         if(val < uint16_t(len(staticuint64s)))
         {
-            unsafe::Pointer x;
             x = unsafe::Pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
             {
-                unsafe::Pointer x;
                 x = add(x, 6);
             }
         }
         else
         {
-            unsafe::Pointer x;
             x = mallocgc(2, uint16Type, false);
             *(uint16_t*)(x) = val;
         }
@@ -399,17 +396,14 @@ namespace golang::runtime
         unsafe::Pointer x;
         if(val < uint32_t(len(staticuint64s)))
         {
-            unsafe::Pointer x;
             x = unsafe::Pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
             {
-                unsafe::Pointer x;
                 x = add(x, 4);
             }
         }
         else
         {
-            unsafe::Pointer x;
             x = mallocgc(4, uint32Type, false);
             *(uint32_t*)(x) = val;
         }
@@ -421,12 +415,10 @@ namespace golang::runtime
         unsafe::Pointer x;
         if(val < uint64_t(len(staticuint64s)))
         {
-            unsafe::Pointer x;
             x = unsafe::Pointer(& staticuint64s[val]);
         }
         else
         {
-            unsafe::Pointer x;
             x = mallocgc(8, uint64Type, false);
             *(uint64_t*)(x) = val;
         }
@@ -438,12 +430,10 @@ namespace golang::runtime
         unsafe::Pointer x;
         if(val == "")
         {
-            unsafe::Pointer x;
             x = unsafe::Pointer(& zeroVal[0]);
         }
         else
         {
-            unsafe::Pointer x;
             x = mallocgc(gocpp::Sizeof<std::string>(), stringType, true);
             *(std::string*)(x) = val;
         }
@@ -455,12 +445,10 @@ namespace golang::runtime
         unsafe::Pointer x;
         if((slice*)(unsafe::Pointer(& val))->array == nullptr)
         {
-            unsafe::Pointer x;
             x = unsafe::Pointer(& zeroVal[0]);
         }
         else
         {
-            unsafe::Pointer x;
             x = mallocgc(gocpp::Sizeof<gocpp::slice<unsigned char>>(), sliceType, true);
             *(gocpp::slice<unsigned char>*)(x) = val;
         }

@@ -70,6 +70,9 @@ namespace golang::reflectlite
     std::string methodName();
     struct gocpp_id_6 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_6(){}
         gocpp_id_6(gocpp_id_6& i) = default;
         gocpp_id_6(const gocpp_id_6& i) = default;
@@ -120,6 +123,9 @@ namespace golang::reflectlite
     go_any valueInterface(struct Value v);
     struct gocpp_id_7 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_7(){}
         gocpp_id_7(gocpp_id_7& i) = default;
         gocpp_id_7(const gocpp_id_7& i) = default;

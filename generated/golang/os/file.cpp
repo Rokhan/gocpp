@@ -116,8 +116,6 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, err};
         }
         auto [n, e] = rec::read(gocpp::recv(f), b);
@@ -130,14 +128,10 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, err};
         }
         if(off < 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readat";
                 x.Path = f->name;
@@ -146,13 +140,9 @@ namespace golang::os
         }
         for(; len(b) > 0; )
         {
-            int n;
-            struct gocpp::error err;
             auto [m, e] = rec::pread(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 err = rec::wrapErr(gocpp::recv(f), "read", e);
                 break;
             }
@@ -169,15 +159,11 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
         {
-            int64_t n;
-            struct gocpp::error err;
             return {0, err};
         }
         auto [n, handled, e] = rec::readFrom(gocpp::recv(f), r);
         if(! handled)
         {
-            int64_t n;
-            struct gocpp::error err;
             return genericReadFrom(f, r);
         }
         return {n, rec::wrapErr(gocpp::recv(f), "write", e)};
@@ -253,28 +239,20 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, err};
         }
         auto [n, e] = rec::write(gocpp::recv(f), b);
         if(n < 0)
         {
-            int n;
-            struct gocpp::error err;
             n = 0;
         }
         if(n != len(b))
         {
-            int n;
-            struct gocpp::error err;
             err = io::ErrShortWrite;
         }
         epipecheck(f, e);
         if(e != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             err = rec::wrapErr(gocpp::recv(f), "write", e);
         }
         return {n, err};
@@ -287,20 +265,14 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
         {
-            int n;
-            struct gocpp::error err;
             return {0, err};
         }
         if(f->appendMode)
         {
-            int n;
-            struct gocpp::error err;
             return {0, errWriteAtInAppendMode};
         }
         if(off < 0)
         {
-            int n;
-            struct gocpp::error err;
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "writeat";
                 x.Path = f->name;
@@ -309,13 +281,9 @@ namespace golang::os
         }
         for(; len(b) > 0; )
         {
-            int n;
-            struct gocpp::error err;
             auto [m, e] = rec::pwrite(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                int n;
-                struct gocpp::error err;
                 err = rec::wrapErr(gocpp::recv(f), "write", e);
                 break;
             }
@@ -332,15 +300,11 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
         {
-            int64_t n;
-            struct gocpp::error err;
             return {0, err};
         }
         auto [n, handled, e] = rec::writeTo(gocpp::recv(f), w);
         if(handled)
         {
-            int64_t n;
-            struct gocpp::error err;
             return {n, rec::wrapErr(gocpp::recv(f), "read", e)};
         }
         return genericWriteTo(f, w);
@@ -416,21 +380,15 @@ namespace golang::os
         struct gocpp::error err;
         if(auto err = rec::checkValid(gocpp::recv(f), "seek"); err != nullptr)
         {
-            int64_t ret;
-            struct gocpp::error err;
             return {0, err};
         }
         auto [r, e] = rec::seek(gocpp::recv(f), offset, whence);
         if(e == nullptr && f->dirinfo != nullptr && r != 0)
         {
-            int64_t ret;
-            struct gocpp::error err;
             e = syscall::go_EISDIR;
         }
         if(e != nullptr)
         {
-            int64_t ret;
-            struct gocpp::error err;
             return {0, rec::wrapErr(gocpp::recv(f), "seek", e)};
         }
         return {r, nullptr};

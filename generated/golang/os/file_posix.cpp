@@ -105,17 +105,14 @@ namespace golang::os
         o |= uint32_t(rec::Perm(gocpp::recv(i)));
         if(i & ModeSetuid != 0)
         {
-            uint32_t o;
             o |= syscall::S_ISUID;
         }
         if(i & ModeSetgid != 0)
         {
-            uint32_t o;
             o |= syscall::S_ISGID;
         }
         if(i & ModeSticky != 0)
         {
-            uint32_t o;
             o |= syscall::S_ISVTX;
         }
         return o;

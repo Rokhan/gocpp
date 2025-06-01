@@ -205,6 +205,9 @@ namespace golang::reflect
     std::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value>)> f);
     struct gocpp_id_9 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_9(){}
         gocpp_id_9(gocpp_id_9& i) = default;
         gocpp_id_9(const gocpp_id_9& i) = default;
@@ -255,6 +258,9 @@ namespace golang::reflect
     go_any valueInterface(struct Value v, bool safe);
     struct gocpp_id_10 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_10(){}
         gocpp_id_10(gocpp_id_10& i) = default;
         gocpp_id_10(const gocpp_id_10& i) = default;

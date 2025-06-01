@@ -39,6 +39,9 @@ namespace golang::os
     extern gocpp::error ErrInvalid;
     struct timeout : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         timeout(){}
         timeout(timeout& i) = default;
         timeout(const timeout& i) = default;

@@ -19,6 +19,9 @@ namespace golang::errors
     struct gocpp::error Unwrap(struct gocpp::error err);
     struct gocpp_id_0 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_0(){}
         gocpp_id_0(gocpp_id_0& i) = default;
         gocpp_id_0(const gocpp_id_0& i) = default;
@@ -70,6 +73,9 @@ namespace golang::errors
     bool is(struct gocpp::error err, struct gocpp::error target, bool targetComparable);
     struct gocpp_id_1 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_1(){}
         gocpp_id_1(gocpp_id_1& i) = default;
         gocpp_id_1(const gocpp_id_1& i) = default;
@@ -119,6 +125,9 @@ namespace golang::errors
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct gocpp_id_3 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_3(){}
         gocpp_id_3(gocpp_id_3& i) = default;
         gocpp_id_3(const gocpp_id_3& i) = default;
@@ -168,6 +177,9 @@ namespace golang::errors
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     struct gocpp_id_4 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_4(){}
         gocpp_id_4(gocpp_id_4& i) = default;
         gocpp_id_4(const gocpp_id_4& i) = default;
@@ -219,6 +231,9 @@ namespace golang::errors
     bool as(struct gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
     struct gocpp_id_5 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_5(){}
         gocpp_id_5(gocpp_id_5& i) = default;
         gocpp_id_5(const gocpp_id_5& i) = default;
@@ -268,6 +283,9 @@ namespace golang::errors
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
     struct gocpp_id_7 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_7(){}
         gocpp_id_7(gocpp_id_7& i) = default;
         gocpp_id_7(const gocpp_id_7& i) = default;
@@ -317,6 +335,9 @@ namespace golang::errors
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
     struct gocpp_id_8 : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         gocpp_id_8(){}
         gocpp_id_8(gocpp_id_8& i) = default;
         gocpp_id_8(const gocpp_id_8& i) = default;

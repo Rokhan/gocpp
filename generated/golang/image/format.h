@@ -40,6 +40,9 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct format& value);
     struct reader : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         reader(){}
         reader(reader& i) = default;
         reader(const reader& i) = default;

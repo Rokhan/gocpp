@@ -162,12 +162,8 @@ namespace golang::runtime
         bool more;
         for(; len(ci->frames) < 2; )
         {
-            struct Frame frame;
-            bool more;
             if(len(ci->callers) == 0)
             {
-                struct Frame frame;
-                bool more;
                 break;
             }
             auto pc = ci->callers[0];
@@ -175,12 +171,8 @@ namespace golang::runtime
             auto funcInfo = findfunc(pc);
             if(! rec::valid(gocpp::recv(funcInfo)))
             {
-                struct Frame frame;
-                bool more;
                 if(cgoSymbolizer != nullptr)
                 {
-                    struct Frame frame;
-                    bool more;
                     ci->frames = append(ci->frames, expandCgoFrames(pc));
                 }
                 continue;
@@ -189,16 +181,12 @@ namespace golang::runtime
             auto entry = rec::Entry(gocpp::recv(f));
             if(pc > entry)
             {
-                struct Frame frame;
-                bool more;
                 pc--;
             }
             auto [u, uf] = newInlineUnwinder(funcInfo, pc);
             auto sf = rec::srcFunc(gocpp::recv(u), uf);
             if(rec::isInlined(gocpp::recv(u), uf))
             {
-                struct Frame frame;
-                bool more;
                 f = nullptr;
             }
             ci->frames = append(ci->frames, gocpp::Init<Frame>([=](auto& x) {
@@ -219,8 +207,6 @@ namespace golang::runtime
             else if(condition == 2) { conditionId = 2; }
             switch(conditionId)
             {
-                struct Frame frame;
-                bool more;
                 case 0:
                     return {frame, more};
                     break;
@@ -242,8 +228,6 @@ namespace golang::runtime
         more = len(ci->frames) > 0;
         if(rec::valid(gocpp::recv(frame.funcInfo)))
         {
-            struct Frame frame;
-            bool more;
             auto [file, line] = funcline1(frame.funcInfo, frame.PC, false);
             std::tie(frame.File, frame.Line) = std::tuple{file, int(line)};
         }
@@ -994,8 +978,6 @@ namespace golang::runtime
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
-            std::string file;
-            int line;
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return {fi->file, int(fi->line)};
         }
@@ -1405,16 +1387,12 @@ namespace golang::runtime
         auto datap = f.datap;
         if(! rec::valid(gocpp::recv(f)))
         {
-            std::string file;
-            int32_t line;
             return {"?", 0};
         }
         auto [fileno, gocpp_id_2] = pcvalue(f, f.pcfile, targetpc, strict);
         std::tie(line, gocpp_id_3) = pcvalue(f, f.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
-            std::string file;
-            int32_t line;
             return {"?", 0};
         }
         file = funcfile(f, fileno);
@@ -1518,15 +1496,11 @@ namespace golang::runtime
         auto uvdelta = uint32_t(p[0]);
         if(uvdelta == 0 && ! first)
         {
-            gocpp::slice<unsigned char> newp;
-            bool ok;
             return {nullptr, false};
         }
         auto n = uint32_t(1);
         if(uvdelta & 0x80 != 0)
         {
-            gocpp::slice<unsigned char> newp;
-            bool ok;
             std::tie(n, uvdelta) = readvarint(p);
         }
         *val += int32_t(- (uvdelta & 1) ^ (uvdelta >> 1));
@@ -1535,8 +1509,6 @@ namespace golang::runtime
         n = 1;
         if(pcdelta & 0x80 != 0)
         {
-            gocpp::slice<unsigned char> newp;
-            bool ok;
             std::tie(n, pcdelta) = readvarint(p);
         }
         p = p.make_slice(n);
@@ -1553,15 +1525,11 @@ namespace golang::runtime
         uint32_t n = {};
         for(; ; )
         {
-            uint32_t read;
-            uint32_t val;
             auto b = p[n];
             n++;
             v |= uint32_t(b & 0x7F) << (shift & 31);
             if(b & 0x80 == 0)
             {
-                uint32_t read;
-                uint32_t val;
                 break;
             }
             shift += 7;

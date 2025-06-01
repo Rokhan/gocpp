@@ -533,63 +533,43 @@ namespace golang::runtime
         uintptr_t i;
         if(inheap(uintptr_t(p)))
         {
-            uintptr_t base;
-            uintptr_t i;
             auto [b, span, gocpp_id_1] = findObject(uintptr_t(p), 0, 0);
             base = b;
             if(base == 0)
             {
-                uintptr_t base;
-                uintptr_t i;
                 return {base, i};
             }
             if(goexperiment::AllocHeaders)
             {
-                uintptr_t base;
-                uintptr_t i;
                 auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), base);
                 for(; ; )
                 {
-                    uintptr_t base;
-                    uintptr_t i;
                     uintptr_t addr = {};
                     if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), base + span->elemsize); addr == 0)
                     {
-                        uintptr_t base;
-                        uintptr_t i;
                         break;
                     }
                     auto pp = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
-                        uintptr_t base;
-                        uintptr_t i;
                         gocpp::panic(errorString(msg));
                     }
                 }
             }
             else
             {
-                uintptr_t base;
-                uintptr_t i;
                 auto n = span->elemsize;
                 auto hbits = heapBitsForAddr(base, n);
                 for(; ; )
                 {
-                    uintptr_t base;
-                    uintptr_t i;
                     uintptr_t addr = {};
                     if(std::tie(hbits, addr) = rec::next(gocpp::recv(hbits)); addr == 0)
                     {
-                        uintptr_t base;
-                        uintptr_t i;
                         break;
                     }
                     auto pp = *(unsafe::Pointer*)(unsafe::Pointer(addr));
                     if(cgoIsGoPointer(pp) && ! isPinned(pp))
                     {
-                        uintptr_t base;
-                        uintptr_t i;
                         gocpp::panic(errorString(msg));
                     }
                 }
@@ -598,12 +578,8 @@ namespace golang::runtime
         }
         for(auto [gocpp_ignored, datap] : activeModules())
         {
-            uintptr_t base;
-            uintptr_t i;
             if(cgoInRange(p, datap->data, datap->edata) || cgoInRange(p, datap->bss, datap->ebss))
             {
-                uintptr_t base;
-                uintptr_t i;
                 gocpp::panic(errorString(msg));
             }
         }

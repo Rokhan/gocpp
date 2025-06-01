@@ -22,6 +22,9 @@ namespace golang::binary
 {
     struct ByteOrder : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         ByteOrder(){}
         ByteOrder(ByteOrder& i) = default;
         ByteOrder(const ByteOrder& i) = default;
@@ -107,6 +110,9 @@ namespace golang::binary
     std::ostream& operator<<(std::ostream& os, const struct ByteOrder& value);
     struct AppendByteOrder : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         AppendByteOrder(){}
         AppendByteOrder(AppendByteOrder& i) = default;
         AppendByteOrder(const AppendByteOrder& i) = default;

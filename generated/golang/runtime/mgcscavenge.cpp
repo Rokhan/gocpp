@@ -384,19 +384,13 @@ namespace golang::runtime
         lock(& s->lock);
         if(getg() != s->g)
         {
-            uintptr_t released;
-            double worked;
             go_throw("tried to run scavenger from another goroutine");
         }
         unlock(& s->lock);
         for(; worked < minScavWorkTime; )
         {
-            uintptr_t released;
-            double worked;
             if(rec::shouldStop(gocpp::recv(s)))
             {
-                uintptr_t released;
-                double worked;
                 break;
             }
             auto scavengeQuantum = 64 << 10;
@@ -404,34 +398,24 @@ namespace golang::runtime
             auto approxWorkedNSPerPhysicalPage = 10e3;
             if(duration == 0)
             {
-                uintptr_t released;
-                double worked;
                 worked += approxWorkedNSPerPhysicalPage * double(r / physPageSize);
             }
             else
             {
-                uintptr_t released;
-                double worked;
                 worked += double(duration);
             }
             released += r;
             if(r < scavengeQuantum)
             {
-                uintptr_t released;
-                double worked;
                 break;
             }
             if(faketime != 0)
             {
-                uintptr_t released;
-                double worked;
                 break;
             }
         }
         if(released > 0 && released < physPageSize)
         {
-            uintptr_t released;
-            double worked;
             go_throw("released less than one physical page of memory");
         }
         return {released, worked};

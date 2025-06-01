@@ -52,7 +52,7 @@ namespace golang::crc32
         crc = ~ crc;
         for(auto [gocpp_ignored, v] : p)
         {
-            crc = tab[unsigned char(crc) ^ v] ^ (crc >> 8);
+            crc = tab[(unsigned char)(crc) ^ v] ^ (crc >> 8);
         }
         return ~ crc;
     }

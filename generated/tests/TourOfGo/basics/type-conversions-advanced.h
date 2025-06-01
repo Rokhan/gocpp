@@ -14,6 +14,9 @@ namespace golang::main
 {
     struct III : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         III(){}
         III(III& i) = default;
         III(const III& i) = default;

@@ -29,15 +29,12 @@ namespace golang::runtime
         reqSize = size;
         if(reqSize <= maxSmallSize - mallocHeaderSize)
         {
-            uintptr_t reqSize;
             if(! noscan && reqSize > minSizeForMallocHeader)
             {
-                uintptr_t reqSize;
                 reqSize += mallocHeaderSize;
             }
             if(reqSize <= smallSizeMax - 8)
             {
-                uintptr_t reqSize;
                 return uintptr_t(class_to_size[size_to_class8[divRoundUp(reqSize, smallSizeDiv)]]) - (reqSize - size);
             }
             return uintptr_t(class_to_size[size_to_class128[divRoundUp(reqSize - smallSizeMax, largeSizeDiv)]]) - (reqSize - size);
@@ -45,7 +42,6 @@ namespace golang::runtime
         reqSize += pageSize - 1;
         if(reqSize < size)
         {
-            uintptr_t reqSize;
             return size;
         }
         return reqSize &^ (pageSize - 1);

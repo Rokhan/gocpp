@@ -30,6 +30,9 @@ namespace golang::reflectlite
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct Type : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Type(){}
         Type(Type& i) = default;
         Type(const Type& i) = default;

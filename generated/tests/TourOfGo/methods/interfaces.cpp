@@ -77,7 +77,10 @@ namespace golang::main
         auto v = Vertex {3, 4};
         a = f;
         a = & v;
-        mocklib::Println(rec::Abs(gocpp::recv(a)));
+        if(a != nullptr || a == nullptr)
+        {
+            mocklib::Println(rec::Abs(gocpp::recv(a)));
+        }
     }
 
     double rec::Abs(golang::main::MyFloat f)

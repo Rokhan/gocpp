@@ -148,35 +148,19 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(account) == 0)
         {
-            struct SID* sid;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             return {nullptr, "", 0, go_EINVAL};
         }
         auto [acc, e] = UTF16PtrFromString(account);
         if(e != nullptr)
         {
-            struct SID* sid;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             return {nullptr, "", 0, e};
         }
         uint16_t* sys = {};
         if(len(system) > 0)
         {
-            struct SID* sid;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             std::tie(sys, e) = UTF16PtrFromString(system);
             if(e != nullptr)
             {
-                struct SID* sid;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {nullptr, "", 0, e};
             }
         }
@@ -184,36 +168,20 @@ namespace golang::syscall
         auto dn = uint32_t(50);
         for(; ; )
         {
-            struct SID* sid;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
             sid = (SID*)(unsafe::Pointer(& b[0]));
             e = LookupAccountName(sys, acc, sid, & n, & db[0], & dn, & accType);
             if(e == nullptr)
             {
-                struct SID* sid;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {sid, UTF16ToString(db), accType, nullptr};
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                struct SID* sid;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {nullptr, "", 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                struct SID* sid;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {nullptr, "", 0, e};
             }
         }
@@ -265,17 +233,9 @@ namespace golang::syscall
         uint16_t* sys = {};
         if(len(system) > 0)
         {
-            std::string account;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             std::tie(sys, err) = UTF16PtrFromString(system);
             if(err != nullptr)
             {
-                std::string account;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {"", "", 0, err};
             }
         }
@@ -283,35 +243,19 @@ namespace golang::syscall
         auto dn = uint32_t(50);
         for(; ; )
         {
-            std::string account;
-            std::string domain;
-            uint32_t accType;
-            struct gocpp::error err;
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
             auto e = LookupAccountSid(sys, sid, & b[0], & n, & db[0], & dn, & accType);
             if(e == nullptr)
             {
-                std::string account;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {UTF16ToString(b), UTF16ToString(db), accType, nullptr};
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                std::string account;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {"", "", 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                std::string account;
-                std::string domain;
-                uint32_t accType;
-                struct gocpp::error err;
                 return {"", "", 0, e};
             }
         }

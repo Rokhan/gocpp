@@ -433,47 +433,33 @@ namespace golang::runtime
         auto nbuckets = base;
         if(b >= 4)
         {
-            unsafe::Pointer buckets;
-            struct bmap* nextOverflow;
             nbuckets += bucketShift(b - 4);
             auto sz = t->Bucket->Size_ * nbuckets;
             auto up = roundupsize(sz, t->Bucket->PtrBytes == 0);
             if(up != sz)
             {
-                unsafe::Pointer buckets;
-                struct bmap* nextOverflow;
                 nbuckets = up / t->Bucket->Size_;
             }
         }
         if(dirtyalloc == nullptr)
         {
-            unsafe::Pointer buckets;
-            struct bmap* nextOverflow;
             buckets = newarray(t->Bucket, int(nbuckets));
         }
         else
         {
-            unsafe::Pointer buckets;
-            struct bmap* nextOverflow;
             buckets = dirtyalloc;
             auto size = t->Bucket->Size_ * nbuckets;
             if(t->Bucket->PtrBytes != 0)
             {
-                unsafe::Pointer buckets;
-                struct bmap* nextOverflow;
                 memclrHasPointers(buckets, size);
             }
             else
             {
-                unsafe::Pointer buckets;
-                struct bmap* nextOverflow;
                 memclrNoHeapPointers(buckets, size);
             }
         }
         if(base != nbuckets)
         {
-            unsafe::Pointer buckets;
-            struct bmap* nextOverflow;
             nextOverflow = (bmap*)(add(buckets, base * uintptr_t(t->BucketSize)));
             auto last = (bmap*)(add(buckets, (nbuckets - 1) * uintptr_t(t->BucketSize)));
             rec::setoverflow(gocpp::recv(last), t, (bmap*)(buckets));

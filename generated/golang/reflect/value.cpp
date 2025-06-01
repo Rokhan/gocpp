@@ -1011,31 +1011,19 @@ namespace golang::reflect
         auto i = methodIndex;
         if(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))) == abi::Interface)
         {
-            abi::Type* rcvrtype;
-            reflect::funcType* t;
-            unsafe::Pointer fn;
             auto tt = (interfaceType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
             if((unsigned int)(i) >= (unsigned int)(len(tt->Methods)))
             {
-                abi::Type* rcvrtype;
-                reflect::funcType* t;
-                unsafe::Pointer fn;
                 gocpp::panic("reflect: internal error: invalid method index");
             }
             auto m = & tt->Methods[i];
             if(! rec::IsExported(gocpp::recv(rec::nameOff(gocpp::recv(tt), m->Name))))
             {
-                abi::Type* rcvrtype;
-                reflect::funcType* t;
-                unsafe::Pointer fn;
                 gocpp::panic("reflect: " + op + " of unexported method");
             }
             auto iface = (nonEmptyInterface*)(v.ptr);
             if(iface->itab == nullptr)
             {
-                abi::Type* rcvrtype;
-                reflect::funcType* t;
-                unsafe::Pointer fn;
                 gocpp::panic("reflect: " + op + " of method on nil interface value");
             }
             rcvrtype = iface->itab->typ;
@@ -1044,24 +1032,15 @@ namespace golang::reflect
         }
         else
         {
-            abi::Type* rcvrtype;
-            reflect::funcType* t;
-            unsafe::Pointer fn;
             rcvrtype = rec::typ(gocpp::recv(v));
             auto ms = rec::ExportedMethods(gocpp::recv(rec::typ(gocpp::recv(v))));
             if((unsigned int)(i) >= (unsigned int)(len(ms)))
             {
-                abi::Type* rcvrtype;
-                reflect::funcType* t;
-                unsafe::Pointer fn;
                 gocpp::panic("reflect: internal error: invalid method index");
             }
             auto m = ms[i];
             if(! rec::IsExported(gocpp::recv(nameOffFor(rec::typ(gocpp::recv(v)), m.Name))))
             {
-                abi::Type* rcvrtype;
-                reflect::funcType* t;
-                unsafe::Pointer fn;
                 gocpp::panic("reflect: " + op + " of unexported method");
             }
             auto ifn = textOffFor(rec::typ(gocpp::recv(v)), m.Ifn);
@@ -2766,8 +2745,6 @@ namespace golang::reflect
         auto tt = (reflect::chanType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
         if(ChanDir(tt->Dir) & RecvDir == 0)
         {
-            struct Value val;
-            bool ok;
             gocpp::panic("reflect: recv on send-only channel");
         }
         auto t = tt->Elem;
@@ -2775,23 +2752,17 @@ namespace golang::reflect
         unsafe::Pointer p = {};
         if(ifaceIndir(t))
         {
-            struct Value val;
-            bool ok;
             p = unsafe_New(t);
             val.ptr = p;
             val.flag |= flagIndir;
         }
         else
         {
-            struct Value val;
-            bool ok;
             p = unsafe::Pointer(& val.ptr);
         }
         auto [selected, ok] = chanrecv(rec::pointer(gocpp::recv(v)), nb, p);
         if(! selected)
         {
-            struct Value val;
-            bool ok;
             val = Value {};
         }
         return {val, ok};
@@ -2810,7 +2781,6 @@ namespace golang::reflect
         auto tt = (reflect::chanType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
         if(ChanDir(tt->Dir) & SendDir == 0)
         {
-            bool selected;
             gocpp::panic("reflect: send on recv-only channel");
         }
         rec::mustBeExported(gocpp::recv(x));
@@ -2818,12 +2788,10 @@ namespace golang::reflect
         unsafe::Pointer p = {};
         if(x.flag & flagIndir != 0)
         {
-            bool selected;
             p = x.ptr;
         }
         else
         {
-            bool selected;
             p = unsafe::Pointer(& x.ptr);
         }
         return chansend(rec::pointer(gocpp::recv(v)), p, nb);
@@ -3760,32 +3728,20 @@ namespace golang::reflect
         bool recvOK;
         if(len(cases) > 65536)
         {
-            int chosen;
-            struct Value recv;
-            bool recvOK;
             gocpp::panic("reflect.Select: too many cases (max 65536)");
         }
         gocpp::slice<runtimeSelect> runcases = {};
         if(len(cases) > 4)
         {
-            int chosen;
-            struct Value recv;
-            bool recvOK;
             runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases));
         }
         else
         {
-            int chosen;
-            struct Value recv;
-            bool recvOK;
             runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases), 4);
         }
         auto haveDefault = false;
         for(auto [i, c] : cases)
         {
-            int chosen;
-            struct Value recv;
-            bool recvOK;
             auto rc = & runcases[i];
             rc->dir = c.Dir;
             //Go switch emulation
@@ -3797,33 +3753,21 @@ namespace golang::reflect
                 else if(condition == SelectRecv) { conditionId = 2; }
                 switch(conditionId)
                 {
-                    int chosen;
-                    struct Value recv;
-                    bool recvOK;
                     default:
                         gocpp::panic("reflect.Select: invalid Dir");
                         break;
                     case 0:
                         if(haveDefault)
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: multiple default cases");
                         }
                         haveDefault = true;
                         if(rec::IsValid(gocpp::recv(c.Chan)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: default case has Chan value");
                         }
                         if(rec::IsValid(gocpp::recv(c.Send)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: default case has Send value");
                         }
                         break;
@@ -3831,9 +3775,6 @@ namespace golang::reflect
                         auto ch = c.Chan;
                         if(! rec::IsValid(gocpp::recv(ch)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             break;
                         }
                         rec::mustBe(gocpp::recv(ch), Chan);
@@ -3841,9 +3782,6 @@ namespace golang::reflect
                         auto tt = (reflect::chanType*)(unsafe::Pointer(rec::typ(gocpp::recv(ch))));
                         if(ChanDir(tt->Dir) & SendDir == 0)
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: SendDir case using recv-only channel");
                         }
                         rc->ch = rec::pointer(gocpp::recv(ch));
@@ -3851,25 +3789,16 @@ namespace golang::reflect
                         auto v = c.Send;
                         if(! rec::IsValid(gocpp::recv(v)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: SendDir case missing Send value");
                         }
                         rec::mustBeExported(gocpp::recv(v));
                         v = rec::assignTo(gocpp::recv(v), "reflect.Select", tt->Elem, nullptr);
                         if(v.flag & flagIndir != 0)
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             rc->val = v.ptr;
                         }
                         else
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             rc->val = unsafe::Pointer(& v.ptr);
                         }
                         escapes(rc->val);
@@ -3877,17 +3806,11 @@ namespace golang::reflect
                     case 2:
                         if(rec::IsValid(gocpp::recv(c.Send)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: RecvDir case has Send value");
                         }
                         auto ch = c.Chan;
                         if(! rec::IsValid(gocpp::recv(ch)))
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             break;
                         }
                         rec::mustBe(gocpp::recv(ch), Chan);
@@ -3895,9 +3818,6 @@ namespace golang::reflect
                         auto tt = (reflect::chanType*)(unsafe::Pointer(rec::typ(gocpp::recv(ch))));
                         if(ChanDir(tt->Dir) & RecvDir == 0)
                         {
-                            int chosen;
-                            struct Value recv;
-                            bool recvOK;
                             gocpp::panic("reflect.Select: RecvDir case using send-only channel");
                         }
                         rc->ch = rec::pointer(gocpp::recv(ch));
@@ -3910,25 +3830,16 @@ namespace golang::reflect
         std::tie(chosen, recvOK) = rselect(runcases);
         if(runcases[chosen].dir == SelectRecv)
         {
-            int chosen;
-            struct Value recv;
-            bool recvOK;
             auto tt = (reflect::chanType*)(unsafe::Pointer(runcases[chosen].typ));
             auto t = tt->Elem;
             auto p = runcases[chosen].val;
             auto fl = flag(rec::Kind(gocpp::recv(t)));
             if(rec::IfaceIndir(gocpp::recv(t)))
             {
-                int chosen;
-                struct Value recv;
-                bool recvOK;
                 recv = Value {t, p, fl | flagIndir};
             }
             else
             {
-                int chosen;
-                struct Value recv;
-                bool recvOK;
                 recv = Value {t, *(unsafe::Pointer*)(p), fl};
             }
         }

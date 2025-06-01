@@ -38,8 +38,6 @@ namespace golang::utf16
         gocpp::rune r2;
         if(r < surrSelf || r > maxRune)
         {
-            gocpp::rune r1;
-            gocpp::rune r2;
             return {replacementChar, replacementChar};
         }
         r -= surrSelf;

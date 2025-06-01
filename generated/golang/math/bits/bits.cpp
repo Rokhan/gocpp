@@ -246,7 +246,6 @@ namespace golang::bits
         int n;
         if(x >= (1 << 8))
         {
-            int n;
             x >>= 8;
             n = 8;
         }
@@ -258,13 +257,11 @@ namespace golang::bits
         int n;
         if(x >= (1 << 16))
         {
-            int n;
             x >>= 16;
             n = 16;
         }
         if(x >= (1 << 8))
         {
-            int n;
             x >>= 8;
             n += 8;
         }
@@ -276,19 +273,16 @@ namespace golang::bits
         int n;
         if(x >= (1 << 32))
         {
-            int n;
             x >>= 32;
             n = 32;
         }
         if(x >= (1 << 16))
         {
-            int n;
             x >>= 16;
             n += 16;
         }
         if(x >= (1 << 8))
         {
-            int n;
             x >>= 8;
             n += 8;
         }
@@ -301,8 +295,6 @@ namespace golang::bits
         unsigned int carryOut;
         if(UintSize == 32)
         {
-            unsigned int sum;
-            unsigned int carryOut;
             auto [s32, c32] = Add32(uint32_t(x), uint32_t(y), uint32_t(carry));
             return {(unsigned int)(s32), (unsigned int)(c32)};
         }
@@ -335,8 +327,6 @@ namespace golang::bits
         unsigned int borrowOut;
         if(UintSize == 32)
         {
-            unsigned int diff;
-            unsigned int borrowOut;
             auto [d32, b32] = Sub32(uint32_t(x), uint32_t(y), uint32_t(borrow));
             return {(unsigned int)(d32), (unsigned int)(b32)};
         }
@@ -368,8 +358,6 @@ namespace golang::bits
         unsigned int lo;
         if(UintSize == 32)
         {
-            unsigned int hi;
-            unsigned int lo;
             auto [h, l] = Mul32(uint32_t(x), uint32_t(y));
             return {(unsigned int)(h), (unsigned int)(l)};
         }
@@ -411,8 +399,6 @@ namespace golang::bits
         unsigned int rem;
         if(UintSize == 32)
         {
-            unsigned int quo;
-            unsigned int rem;
             auto [q, r] = Div32(uint32_t(hi), uint32_t(lo), uint32_t(y));
             return {(unsigned int)(q), (unsigned int)(r)};
         }
@@ -426,8 +412,6 @@ namespace golang::bits
         uint32_t rem;
         if(y != 0 && y <= hi)
         {
-            uint32_t quo;
-            uint32_t rem;
             gocpp::panic(overflowError);
         }
         auto z = (uint64_t(hi) << 32) | uint64_t(lo);
@@ -441,20 +425,14 @@ namespace golang::bits
         uint64_t rem;
         if(y == 0)
         {
-            uint64_t quo;
-            uint64_t rem;
             gocpp::panic(divideError);
         }
         if(y <= hi)
         {
-            uint64_t quo;
-            uint64_t rem;
             gocpp::panic(overflowError);
         }
         if(hi == 0)
         {
-            uint64_t quo;
-            uint64_t rem;
             return {lo / y, lo % y};
         }
         auto s = (unsigned int)(LeadingZeros64(y));
@@ -471,14 +449,10 @@ namespace golang::bits
         auto rhat = un32 - q1 * yn1;
         for(; q1 >= two32 || q1 * yn0 > two32 * rhat + un1; )
         {
-            uint64_t quo;
-            uint64_t rem;
             q1--;
             rhat += yn1;
             if(rhat >= two32)
             {
-                uint64_t quo;
-                uint64_t rem;
                 break;
             }
         }
@@ -487,14 +461,10 @@ namespace golang::bits
         rhat = un21 - q0 * yn1;
         for(; q0 >= two32 || q0 * yn0 > two32 * rhat + un0; )
         {
-            uint64_t quo;
-            uint64_t rem;
             q0--;
             rhat += yn1;
             if(rhat >= two32)
             {
-                uint64_t quo;
-                uint64_t rem;
                 break;
             }
         }

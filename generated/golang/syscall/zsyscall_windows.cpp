@@ -219,7 +219,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_1, e1] = Syscall(rec::Addr(gocpp::recv(procConvertSidToStringSidW)), 2, uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(stringSid)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -231,7 +230,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_3, e1] = Syscall(rec::Addr(gocpp::recv(procConvertStringSidToSidW)), 2, uintptr_t(unsafe::Pointer(stringSid)), uintptr_t(unsafe::Pointer(sid)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -243,7 +241,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_5, e1] = Syscall(rec::Addr(gocpp::recv(procCopySid)), 3, uintptr_t(destSidLen), uintptr_t(unsafe::Pointer(destSid)), uintptr_t(unsafe::Pointer(srcSid)));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -255,13 +252,11 @@ namespace golang::syscall
         uint32_t _p0 = {};
         if(inheritHandles)
         {
-            struct gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_7, e1] = Syscall12(rec::Addr(gocpp::recv(procCreateProcessAsUserW)), 11, uintptr_t(token), uintptr_t(unsafe::Pointer(appName)), uintptr_t(unsafe::Pointer(commandLine)), uintptr_t(unsafe::Pointer(procSecurity)), uintptr_t(unsafe::Pointer(threadSecurity)), uintptr_t(_p0), uintptr_t(creationFlags), uintptr_t(unsafe::Pointer(env)), uintptr_t(unsafe::Pointer(currentDir)), uintptr_t(unsafe::Pointer(startupInfo)), uintptr_t(unsafe::Pointer(outProcInfo)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -273,7 +268,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_9, e1] = Syscall6(rec::Addr(gocpp::recv(procCryptAcquireContextW)), 5, uintptr_t(unsafe::Pointer(provhandle)), uintptr_t(unsafe::Pointer(container)), uintptr_t(unsafe::Pointer(provider)), uintptr_t(provtype), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -285,7 +279,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_11, e1] = Syscall(rec::Addr(gocpp::recv(procCryptGenRandom)), 3, uintptr_t(provhandle), uintptr_t(buflen), uintptr_t(unsafe::Pointer(buf)));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -297,7 +290,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_13, e1] = Syscall(rec::Addr(gocpp::recv(procCryptReleaseContext)), 2, uintptr_t(provhandle), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -317,7 +309,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_19, e1] = Syscall6(rec::Addr(gocpp::recv(procGetTokenInformation)), 5, uintptr_t(t), uintptr_t(infoClass), uintptr_t(unsafe::Pointer(info)), uintptr_t(infoLen), uintptr_t(unsafe::Pointer(returnedLen)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -329,7 +320,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_21, e1] = Syscall9(rec::Addr(gocpp::recv(procLookupAccountNameW)), 7, uintptr_t(unsafe::Pointer(systemName)), uintptr_t(unsafe::Pointer(accountName)), uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(sidLen)), uintptr_t(unsafe::Pointer(refdDomainName)), uintptr_t(unsafe::Pointer(refdDomainNameLen)), uintptr_t(unsafe::Pointer(use)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -341,7 +331,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_23, e1] = Syscall9(rec::Addr(gocpp::recv(procLookupAccountSidW)), 7, uintptr_t(unsafe::Pointer(systemName)), uintptr_t(unsafe::Pointer(sid)), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(nameLen)), uintptr_t(unsafe::Pointer(refdDomainName)), uintptr_t(unsafe::Pointer(refdDomainNameLen)), uintptr_t(unsafe::Pointer(use)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -353,7 +342,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_25, e1] = Syscall(rec::Addr(gocpp::recv(procOpenProcessToken)), 3, uintptr_t(h), uintptr_t(access), uintptr_t(unsafe::Pointer(token)));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -365,7 +353,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_28, gocpp_id_29] = Syscall(rec::Addr(gocpp::recv(procRegCloseKey)), 1, uintptr_t(key), 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
@@ -377,7 +364,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_32, gocpp_id_33] = Syscall9(rec::Addr(gocpp::recv(procRegEnumKeyExW)), 8, uintptr_t(key), uintptr_t(index), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(nameLen)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(unsafe::Pointer(classLen)), uintptr_t(unsafe::Pointer(lastWriteTime)), 0);
         if(r0 != 0)
         {
-            struct gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
@@ -389,7 +375,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_36, gocpp_id_37] = Syscall6(rec::Addr(gocpp::recv(procRegOpenKeyExW)), 5, uintptr_t(key), uintptr_t(unsafe::Pointer(subkey)), uintptr_t(options), uintptr_t(desiredAccess), uintptr_t(unsafe::Pointer(result)), 0);
         if(r0 != 0)
         {
-            struct gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
@@ -401,7 +386,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_40, gocpp_id_41] = Syscall12(rec::Addr(gocpp::recv(procRegQueryInfoKeyW)), 12, uintptr_t(key), uintptr_t(unsafe::Pointer(go_class)), uintptr_t(unsafe::Pointer(classLen)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(subkeysLen)), uintptr_t(unsafe::Pointer(maxSubkeyLen)), uintptr_t(unsafe::Pointer(maxClassLen)), uintptr_t(unsafe::Pointer(valuesLen)), uintptr_t(unsafe::Pointer(maxValueNameLen)), uintptr_t(unsafe::Pointer(maxValueLen)), uintptr_t(unsafe::Pointer(saLen)), uintptr_t(unsafe::Pointer(lastWriteTime)));
         if(r0 != 0)
         {
-            struct gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
@@ -413,7 +397,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_44, gocpp_id_45] = Syscall6(rec::Addr(gocpp::recv(procRegQueryValueExW)), 6, uintptr_t(key), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(reserved)), uintptr_t(unsafe::Pointer(valtype)), uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(buflen)));
         if(r0 != 0)
         {
-            struct gocpp::error regerrno;
             regerrno = Errno(r0);
         }
         return regerrno;
@@ -425,7 +408,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_47, e1] = Syscall6(rec::Addr(gocpp::recv(procCertAddCertificateContextToStore)), 4, uintptr_t(store), uintptr_t(unsafe::Pointer(certContext)), uintptr_t(addDisposition), uintptr_t(unsafe::Pointer(storeContext)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -437,7 +419,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_49, e1] = Syscall(rec::Addr(gocpp::recv(procCertCloseStore)), 2, uintptr_t(store), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -451,8 +432,6 @@ namespace golang::syscall
         context = (CertContext*)(unsafe::Pointer(r0));
         if(context == nullptr)
         {
-            struct CertContext* context;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {context, err};
@@ -466,8 +445,6 @@ namespace golang::syscall
         context = (CertContext*)(unsafe::Pointer(r0));
         if(context == nullptr)
         {
-            struct CertContext* context;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {context, err};
@@ -485,7 +462,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_55, e1] = Syscall(rec::Addr(gocpp::recv(procCertFreeCertificateContext)), 1, uintptr_t(unsafe::Pointer(ctx)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -497,7 +473,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_57, e1] = Syscall9(rec::Addr(gocpp::recv(procCertGetCertificateChain)), 8, uintptr_t(engine), uintptr_t(unsafe::Pointer(leaf)), uintptr_t(unsafe::Pointer(time)), uintptr_t(additionalStore), uintptr_t(unsafe::Pointer(para)), uintptr_t(flags), uintptr_t(reserved), uintptr_t(unsafe::Pointer(chainCtx)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -511,8 +486,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -526,8 +499,6 @@ namespace golang::syscall
         store = Handle(r0);
         if(store == 0)
         {
-            syscall::Handle store;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {store, err};
@@ -539,7 +510,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_63, e1] = Syscall6(rec::Addr(gocpp::recv(procCertVerifyCertificateChainPolicy)), 4, uintptr_t(policyOID), uintptr_t(unsafe::Pointer(chain)), uintptr_t(unsafe::Pointer(para)), uintptr_t(unsafe::Pointer(status)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -560,7 +530,6 @@ namespace golang::syscall
         std::tie(_p0, status) = UTF16PtrFromString(name);
         if(status != nullptr)
         {
-            struct gocpp::error status;
             return status;
         }
         return _DnsQuery(_p0, qtype, options, extra, qrs, pr);
@@ -572,7 +541,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_70, gocpp_id_71] = Syscall6(rec::Addr(gocpp::recv(procDnsQuery_W)), 6, uintptr_t(unsafe::Pointer(name)), uintptr_t(qtype), uintptr_t(options), uintptr_t(unsafe::Pointer(extra)), uintptr_t(unsafe::Pointer(qrs)), uintptr_t(unsafe::Pointer(pr)));
         if(r0 != 0)
         {
-            struct gocpp::error status;
             status = Errno(r0);
         }
         return status;
@@ -590,7 +558,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_74, gocpp_id_75] = Syscall(rec::Addr(gocpp::recv(procGetAdaptersInfo)), 2, uintptr_t(unsafe::Pointer(ai)), uintptr_t(unsafe::Pointer(ol)), 0);
         if(r0 != 0)
         {
-            struct gocpp::error errcode;
             errcode = Errno(r0);
         }
         return errcode;
@@ -602,7 +569,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_78, gocpp_id_79] = Syscall(rec::Addr(gocpp::recv(procGetIfEntry)), 1, uintptr_t(unsafe::Pointer(pIfRow)), 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error errcode;
             errcode = Errno(r0);
         }
         return errcode;
@@ -614,7 +580,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_81, e1] = Syscall(rec::Addr(gocpp::recv(procCancelIo)), 1, uintptr_t(s), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -626,7 +591,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_83, e1] = Syscall(rec::Addr(gocpp::recv(procCancelIoEx)), 2, uintptr_t(s), uintptr_t(unsafe::Pointer(o)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -638,7 +602,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_85, e1] = Syscall(rec::Addr(gocpp::recv(procCloseHandle)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -650,7 +613,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_87, e1] = Syscall(rec::Addr(gocpp::recv(procCreateDirectoryW)), 2, uintptr_t(unsafe::Pointer(path)), uintptr_t(unsafe::Pointer(sa)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -664,8 +626,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -679,8 +639,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -692,7 +650,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_93, e1] = Syscall(rec::Addr(gocpp::recv(procCreateHardLinkW)), 3, uintptr_t(unsafe::Pointer(filename)), uintptr_t(unsafe::Pointer(existingfilename)), uintptr_t(reserved));
         if(r1 & 0xff == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -706,8 +663,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -719,7 +674,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_97, e1] = Syscall6(rec::Addr(gocpp::recv(procCreatePipe)), 4, uintptr_t(unsafe::Pointer(readhandle)), uintptr_t(unsafe::Pointer(writehandle)), uintptr_t(unsafe::Pointer(sa)), uintptr_t(size), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -731,13 +685,11 @@ namespace golang::syscall
         uint32_t _p0 = {};
         if(inheritHandles)
         {
-            struct gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_99, e1] = Syscall12(rec::Addr(gocpp::recv(procCreateProcessW)), 10, uintptr_t(unsafe::Pointer(appName)), uintptr_t(unsafe::Pointer(commandLine)), uintptr_t(unsafe::Pointer(procSecurity)), uintptr_t(unsafe::Pointer(threadSecurity)), uintptr_t(_p0), uintptr_t(creationFlags), uintptr_t(unsafe::Pointer(env)), uintptr_t(unsafe::Pointer(currentDir)), uintptr_t(unsafe::Pointer(startupInfo)), uintptr_t(unsafe::Pointer(outProcInfo)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -749,7 +701,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_101, e1] = Syscall(rec::Addr(gocpp::recv(procCreateSymbolicLinkW)), 3, uintptr_t(unsafe::Pointer(symlinkfilename)), uintptr_t(unsafe::Pointer(targetfilename)), uintptr_t(flags));
         if(r1 & 0xff == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -763,8 +714,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -776,7 +725,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_105, e1] = Syscall(rec::Addr(gocpp::recv(procDeleteFileW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -794,7 +742,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_107, e1] = Syscall9(rec::Addr(gocpp::recv(procDeviceIoControl)), 8, uintptr_t(handle), uintptr_t(ioControlCode), uintptr_t(unsafe::Pointer(inBuffer)), uintptr_t(inBufferSize), uintptr_t(unsafe::Pointer(outBuffer)), uintptr_t(outBufferSize), uintptr_t(unsafe::Pointer(bytesReturned)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -806,13 +753,11 @@ namespace golang::syscall
         uint32_t _p0 = {};
         if(bInheritHandle)
         {
-            struct gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_109, e1] = Syscall9(rec::Addr(gocpp::recv(procDuplicateHandle)), 7, uintptr_t(hSourceProcessHandle), uintptr_t(hSourceHandle), uintptr_t(hTargetProcessHandle), uintptr_t(unsafe::Pointer(lpTargetHandle)), uintptr_t(dwDesiredAccess), uintptr_t(_p0), uintptr_t(dwOptions), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -830,7 +775,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_111, e1] = Syscall(rec::Addr(gocpp::recv(procFindClose)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -844,8 +788,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -857,7 +799,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_115, e1] = Syscall(rec::Addr(gocpp::recv(procFindNextFileW)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(data)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -869,7 +810,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_117, e1] = Syscall(rec::Addr(gocpp::recv(procFlushFileBuffers)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -881,7 +821,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_119, e1] = Syscall(rec::Addr(gocpp::recv(procFlushViewOfFile)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -894,16 +833,12 @@ namespace golang::syscall
         uint16_t* _p0 = {};
         if(len(buf) > 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r0, gocpp_id_121, e1] = Syscall9(rec::Addr(gocpp::recv(procFormatMessageW)), 7, uintptr_t(flags), uintptr_t(msgsrc), uintptr_t(msgid), uintptr_t(langid), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(args)), 0, 0);
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -915,7 +850,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_123, e1] = Syscall(rec::Addr(gocpp::recv(procFreeEnvironmentStringsW)), 1, uintptr_t(unsafe::Pointer(envs)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -927,7 +861,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_125, e1] = Syscall(rec::Addr(gocpp::recv(procFreeLibrary)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -947,7 +880,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_131, e1] = Syscall(rec::Addr(gocpp::recv(procGetComputerNameW)), 2, uintptr_t(unsafe::Pointer(buf)), uintptr_t(unsafe::Pointer(n)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -959,7 +891,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_133, e1] = Syscall(rec::Addr(gocpp::recv(procGetConsoleMode)), 2, uintptr_t(console), uintptr_t(unsafe::Pointer(mode)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -973,8 +904,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -988,8 +917,6 @@ namespace golang::syscall
         pseudoHandle = Handle(r0);
         if(pseudoHandle == 0)
         {
-            syscall::Handle pseudoHandle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {pseudoHandle, err};
@@ -1011,8 +938,6 @@ namespace golang::syscall
         envs = (uint16_t*)(unsafe::Pointer(r0));
         if(envs == nullptr)
         {
-            uint16_t* envs;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {envs, err};
@@ -1026,8 +951,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1039,7 +962,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_147, e1] = Syscall(rec::Addr(gocpp::recv(procGetExitCodeProcess)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(exitcode)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1051,7 +973,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_149, e1] = Syscall(rec::Addr(gocpp::recv(procGetFileAttributesExW)), 3, uintptr_t(unsafe::Pointer(name)), uintptr_t(level), uintptr_t(unsafe::Pointer(info)));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1065,8 +986,6 @@ namespace golang::syscall
         attrs = uint32_t(r0);
         if(attrs == INVALID_FILE_ATTRIBUTES)
         {
-            uint32_t attrs;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {attrs, err};
@@ -1078,7 +997,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_153, e1] = Syscall(rec::Addr(gocpp::recv(procGetFileInformationByHandle)), 2, uintptr_t(handle), uintptr_t(unsafe::Pointer(data)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1092,8 +1010,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1107,8 +1023,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0 || n >= filePathSize)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1122,8 +1036,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1135,7 +1047,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_162, gocpp_id_163] = Syscall(rec::Addr(gocpp::recv(procGetLastError)), 0, 0, 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error lasterr;
             lasterr = Errno(r0);
         }
         return lasterr;
@@ -1149,8 +1060,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1164,8 +1073,6 @@ namespace golang::syscall
         std::tie(_p0, err) = BytePtrFromString(procname);
         if(err != nullptr)
         {
-            uintptr_t proc;
-            struct gocpp::error err;
             return {proc, err};
         }
         return _GetProcAddress(module, _p0);
@@ -1179,8 +1086,6 @@ namespace golang::syscall
         proc = uintptr_t(r0);
         if(proc == 0)
         {
-            uintptr_t proc;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {proc, err};
@@ -1192,7 +1097,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_169, e1] = Syscall6(rec::Addr(gocpp::recv(procGetProcessTimes)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(creationTime)), uintptr_t(unsafe::Pointer(exitTime)), uintptr_t(unsafe::Pointer(kernelTime)), uintptr_t(unsafe::Pointer(userTime)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1204,7 +1108,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_171, e1] = Syscall6(rec::Addr(gocpp::recv(procGetQueuedCompletionStatus)), 5, uintptr_t(cphandle), uintptr_t(unsafe::Pointer(qty)), uintptr_t(unsafe::Pointer(key)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(timeout), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1218,8 +1121,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1239,8 +1140,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -1260,8 +1159,6 @@ namespace golang::syscall
         n = uint32_t(r0);
         if(n == 0)
         {
-            uint32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1275,8 +1172,6 @@ namespace golang::syscall
         rc = uint32_t(r0);
         if(rc == 0xffffffff)
         {
-            uint32_t rc;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {rc, err};
@@ -1290,8 +1185,6 @@ namespace golang::syscall
         ver = uint32_t(r0);
         if(ver == 0)
         {
-            uint32_t ver;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {ver, err};
@@ -1303,7 +1196,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_183, e1] = Syscall6(rec::Addr(gocpp::recv(procInitializeProcThreadAttributeList)), 4, uintptr_t(unsafe::Pointer(attrlist)), uintptr_t(attrcount), uintptr_t(flags), uintptr_t(unsafe::Pointer(size)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1317,8 +1209,6 @@ namespace golang::syscall
         std::tie(_p0, err) = UTF16PtrFromString(libname);
         if(err != nullptr)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             return {handle, err};
         }
         return _LoadLibrary(_p0);
@@ -1332,8 +1222,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -1347,8 +1235,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle != 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -1362,8 +1248,6 @@ namespace golang::syscall
         addr = uintptr_t(r0);
         if(addr == 0)
         {
-            uintptr_t addr;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {addr, err};
@@ -1375,7 +1259,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_191, e1] = Syscall(rec::Addr(gocpp::recv(procMoveFileW)), 2, uintptr_t(unsafe::Pointer(from)), uintptr_t(unsafe::Pointer(to)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1388,16 +1271,12 @@ namespace golang::syscall
         uint32_t _p0 = {};
         if(inheritHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             _p0 = 1;
         }
         auto [r0, gocpp_id_193, e1] = Syscall(rec::Addr(gocpp::recv(procOpenProcess)), 3, uintptr_t(da), uintptr_t(_p0), uintptr_t(pid));
         handle = Handle(r0);
         if(handle == 0)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};
@@ -1409,7 +1288,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_195, e1] = Syscall6(rec::Addr(gocpp::recv(procPostQueuedCompletionStatus)), 4, uintptr_t(cphandle), uintptr_t(qty), uintptr_t(key), uintptr_t(unsafe::Pointer(overlapped)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1421,7 +1299,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_197, e1] = Syscall(rec::Addr(gocpp::recv(procProcess32FirstW)), 2, uintptr_t(snapshot), uintptr_t(unsafe::Pointer(procEntry)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1433,7 +1310,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_199, e1] = Syscall(rec::Addr(gocpp::recv(procProcess32NextW)), 2, uintptr_t(snapshot), uintptr_t(unsafe::Pointer(procEntry)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1445,7 +1321,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_201, e1] = Syscall6(rec::Addr(gocpp::recv(procReadConsoleW)), 5, uintptr_t(console), uintptr_t(unsafe::Pointer(buf)), uintptr_t(toread), uintptr_t(unsafe::Pointer(read)), uintptr_t(unsafe::Pointer(inputControl)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1457,13 +1332,11 @@ namespace golang::syscall
         uint32_t _p0 = {};
         if(watchSubTree)
         {
-            struct gocpp::error err;
             _p0 = 1;
         }
         auto [r1, gocpp_id_203, e1] = Syscall9(rec::Addr(gocpp::recv(procReadDirectoryChangesW)), 8, uintptr_t(handle), uintptr_t(unsafe::Pointer(buf)), uintptr_t(buflen), uintptr_t(_p0), uintptr_t(mask), uintptr_t(unsafe::Pointer(retlen)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(completionRoutine), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1475,13 +1348,11 @@ namespace golang::syscall
         unsigned char* _p0 = {};
         if(len(buf) > 0)
         {
-            struct gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r1, gocpp_id_205, e1] = Syscall6(rec::Addr(gocpp::recv(procReadFile)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(done)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1493,7 +1364,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_207, e1] = Syscall(rec::Addr(gocpp::recv(procRemoveDirectoryW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1505,7 +1375,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_209, e1] = Syscall(rec::Addr(gocpp::recv(procSetCurrentDirectoryW)), 1, uintptr_t(unsafe::Pointer(path)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1517,7 +1386,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_211, e1] = Syscall(rec::Addr(gocpp::recv(procSetEndOfFile)), 1, uintptr_t(handle), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1529,7 +1397,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_213, e1] = Syscall(rec::Addr(gocpp::recv(procSetEnvironmentVariableW)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(value)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1541,7 +1408,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_215, e1] = Syscall(rec::Addr(gocpp::recv(procSetFileAttributesW)), 2, uintptr_t(unsafe::Pointer(name)), uintptr_t(attrs), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1553,7 +1419,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_217, e1] = Syscall(rec::Addr(gocpp::recv(procSetFileCompletionNotificationModes)), 2, uintptr_t(handle), uintptr_t(flags), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1567,8 +1432,6 @@ namespace golang::syscall
         newlowoffset = uint32_t(r0);
         if(newlowoffset == 0xffffffff)
         {
-            uint32_t newlowoffset;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {newlowoffset, err};
@@ -1580,7 +1443,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_221, e1] = Syscall6(rec::Addr(gocpp::recv(procSetFileTime)), 4, uintptr_t(handle), uintptr_t(unsafe::Pointer(ctime)), uintptr_t(unsafe::Pointer(atime)), uintptr_t(unsafe::Pointer(wtime)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1592,7 +1454,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_223, e1] = Syscall(rec::Addr(gocpp::recv(procSetHandleInformation)), 3, uintptr_t(handle), uintptr_t(mask), uintptr_t(flags));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1604,7 +1465,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_225, e1] = Syscall(rec::Addr(gocpp::recv(procTerminateProcess)), 2, uintptr_t(handle), uintptr_t(exitcode), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1616,7 +1476,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_227, e1] = Syscall(rec::Addr(gocpp::recv(procUnmapViewOfFile)), 1, uintptr_t(addr), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1628,7 +1487,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_229, e1] = Syscall9(rec::Addr(gocpp::recv(procUpdateProcThreadAttribute)), 7, uintptr_t(unsafe::Pointer(attrlist)), uintptr_t(flags), uintptr_t(attr), uintptr_t(value), uintptr_t(size), uintptr_t(prevvalue), uintptr_t(unsafe::Pointer(returnedsize)), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1640,7 +1498,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_231, e1] = Syscall(rec::Addr(gocpp::recv(procVirtualLock)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1652,7 +1509,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_233, e1] = Syscall(rec::Addr(gocpp::recv(procVirtualUnlock)), 2, uintptr_t(addr), uintptr_t(length), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1666,8 +1522,6 @@ namespace golang::syscall
         event = uint32_t(r0);
         if(event == 0xffffffff)
         {
-            uint32_t event;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {event, err};
@@ -1679,7 +1533,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_237, e1] = Syscall6(rec::Addr(gocpp::recv(procWriteConsoleW)), 5, uintptr_t(console), uintptr_t(unsafe::Pointer(buf)), uintptr_t(towrite), uintptr_t(unsafe::Pointer(written)), uintptr_t(unsafe::Pointer(reserved)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1691,13 +1544,11 @@ namespace golang::syscall
         unsigned char* _p0 = {};
         if(len(buf) > 0)
         {
-            struct gocpp::error err;
             _p0 = & buf[0];
         }
         auto [r1, gocpp_id_239, e1] = Syscall6(rec::Addr(gocpp::recv(procWriteFile)), 5, uintptr_t(handle), uintptr_t(unsafe::Pointer(_p0)), uintptr_t(len(buf)), uintptr_t(unsafe::Pointer(done)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1709,7 +1560,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_241, e1] = Syscall9(rec::Addr(gocpp::recv(procAcceptEx)), 8, uintptr_t(ls), uintptr_t(as), uintptr_t(unsafe::Pointer(buf)), uintptr_t(rxdatalen), uintptr_t(laddrlen), uintptr_t(raddrlen), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(overlapped)), 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1727,7 +1577,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_243, e1] = Syscall9(rec::Addr(gocpp::recv(procTransmitFile)), 7, uintptr_t(s), uintptr_t(handle), uintptr_t(bytesToWrite), uintptr_t(bytsPerSend), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(transmitFileBuf)), uintptr_t(flags), 0, 0);
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1739,7 +1588,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_246, gocpp_id_247] = Syscall(rec::Addr(gocpp::recv(procNetApiBufferFree)), 1, uintptr_t(unsafe::Pointer(buf)), 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
@@ -1751,7 +1599,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_250, gocpp_id_251] = Syscall(rec::Addr(gocpp::recv(procNetGetJoinInformation)), 3, uintptr_t(unsafe::Pointer(server)), uintptr_t(unsafe::Pointer(name)), uintptr_t(unsafe::Pointer(bufType)));
         if(r0 != 0)
         {
-            struct gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
@@ -1763,7 +1610,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_254, gocpp_id_255] = Syscall6(rec::Addr(gocpp::recv(procNetUserGetInfo)), 4, uintptr_t(unsafe::Pointer(serverName)), uintptr_t(unsafe::Pointer(userName)), uintptr_t(level), uintptr_t(unsafe::Pointer(buf)), 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error neterr;
             neterr = Errno(r0);
         }
         return neterr;
@@ -1781,7 +1627,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_257, e1] = Syscall(rec::Addr(gocpp::recv(procGetUserNameExW)), 3, uintptr_t(nameFormat), uintptr_t(unsafe::Pointer(nameBuffre)), uintptr_t(unsafe::Pointer(nSize)));
         if(r1 & 0xff == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1793,7 +1638,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_259, e1] = Syscall6(rec::Addr(gocpp::recv(procTranslateNameW)), 5, uintptr_t(unsafe::Pointer(accName)), uintptr_t(accNameFormat), uintptr_t(desiredNameFormat), uintptr_t(unsafe::Pointer(translatedName)), uintptr_t(unsafe::Pointer(nSize)), 0);
         if(r1 & 0xff == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1807,8 +1651,6 @@ namespace golang::syscall
         argv = (gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>*)(unsafe::Pointer(r0));
         if(argv == nullptr)
         {
-            gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>* argv;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {argv, err};
@@ -1820,7 +1662,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_263, e1] = Syscall(rec::Addr(gocpp::recv(procGetUserProfileDirectoryW)), 3, uintptr_t(t), uintptr_t(unsafe::Pointer(dir)), uintptr_t(unsafe::Pointer(dirLen)));
         if(r1 == 0)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1838,7 +1679,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_266, gocpp_id_267] = Syscall6(rec::Addr(gocpp::recv(procGetAddrInfoW)), 4, uintptr_t(unsafe::Pointer(nodename)), uintptr_t(unsafe::Pointer(servicename)), uintptr_t(unsafe::Pointer(hints)), uintptr_t(unsafe::Pointer(result)), 0, 0);
         if(r0 != 0)
         {
-            struct gocpp::error sockerr;
             sockerr = Errno(r0);
         }
         return sockerr;
@@ -1850,7 +1690,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_269, e1] = Syscall(rec::Addr(gocpp::recv(procWSACleanup)), 0, 0, 0, 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1864,8 +1703,6 @@ namespace golang::syscall
         n = int32_t(r0);
         if(n == - 1)
         {
-            int32_t n;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {n, err};
@@ -1877,7 +1714,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_273, e1] = Syscall9(rec::Addr(gocpp::recv(procWSAIoctl)), 9, uintptr_t(s), uintptr_t(iocc), uintptr_t(unsafe::Pointer(inbuf)), uintptr_t(cbif), uintptr_t(unsafe::Pointer(outbuf)), uintptr_t(cbob), uintptr_t(unsafe::Pointer(cbbr)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(completionRoutine));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1889,7 +1725,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_275, e1] = Syscall9(rec::Addr(gocpp::recv(procWSARecv)), 7, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(flags)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0, 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1901,7 +1736,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_277, e1] = Syscall9(rec::Addr(gocpp::recv(procWSARecvFrom)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(recvd)), uintptr_t(unsafe::Pointer(flags)), uintptr_t(unsafe::Pointer(from)), uintptr_t(unsafe::Pointer(fromlen)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1913,7 +1747,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_279, e1] = Syscall9(rec::Addr(gocpp::recv(procWSASend)), 7, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0, 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1925,7 +1758,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_281, e1] = Syscall9(rec::Addr(gocpp::recv(procWSASendTo)), 9, uintptr_t(s), uintptr_t(unsafe::Pointer(bufs)), uintptr_t(bufcnt), uintptr_t(unsafe::Pointer(sent)), uintptr_t(flags), uintptr_t(unsafe::Pointer(to)), uintptr_t(tolen), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1937,7 +1769,6 @@ namespace golang::syscall
         auto [r0, gocpp_id_284, gocpp_id_285] = Syscall(rec::Addr(gocpp::recv(procWSAStartup)), 2, uintptr_t(verreq), uintptr_t(unsafe::Pointer(data)), 0);
         if(r0 != 0)
         {
-            struct gocpp::error sockerr;
             sockerr = Errno(r0);
         }
         return sockerr;
@@ -1949,7 +1780,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_287, e1] = Syscall(rec::Addr(gocpp::recv(procbind)), 3, uintptr_t(s), uintptr_t(name), uintptr_t(namelen));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1961,7 +1791,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_289, e1] = Syscall(rec::Addr(gocpp::recv(procclosesocket)), 1, uintptr_t(s), 0, 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1973,7 +1802,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_291, e1] = Syscall(rec::Addr(gocpp::recv(procconnect)), 3, uintptr_t(s), uintptr_t(name), uintptr_t(namelen));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -1987,8 +1815,6 @@ namespace golang::syscall
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
-            struct Hostent* h;
-            struct gocpp::error err;
             return {h, err};
         }
         return _GetHostByName(_p0);
@@ -2002,8 +1828,6 @@ namespace golang::syscall
         h = (Hostent*)(unsafe::Pointer(r0));
         if(h == nullptr)
         {
-            struct Hostent* h;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {h, err};
@@ -2015,7 +1839,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_295, e1] = Syscall(rec::Addr(gocpp::recv(procgetpeername)), 3, uintptr_t(s), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(unsafe::Pointer(addrlen)));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2029,8 +1852,6 @@ namespace golang::syscall
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
-            struct Protoent* p;
-            struct gocpp::error err;
             return {p, err};
         }
         return _GetProtoByName(_p0);
@@ -2044,8 +1865,6 @@ namespace golang::syscall
         p = (Protoent*)(unsafe::Pointer(r0));
         if(p == nullptr)
         {
-            struct Protoent* p;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {p, err};
@@ -2059,16 +1878,12 @@ namespace golang::syscall
         std::tie(_p0, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
-            struct Servent* s;
-            struct gocpp::error err;
             return {s, err};
         }
         unsigned char* _p1 = {};
         std::tie(_p1, err) = BytePtrFromString(proto);
         if(err != nullptr)
         {
-            struct Servent* s;
-            struct gocpp::error err;
             return {s, err};
         }
         return _GetServByName(_p0, _p1);
@@ -2082,8 +1897,6 @@ namespace golang::syscall
         s = (Servent*)(unsafe::Pointer(r0));
         if(s == nullptr)
         {
-            struct Servent* s;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {s, err};
@@ -2095,7 +1908,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_301, e1] = Syscall(rec::Addr(gocpp::recv(procgetsockname)), 3, uintptr_t(s), uintptr_t(unsafe::Pointer(rsa)), uintptr_t(unsafe::Pointer(addrlen)));
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2107,7 +1919,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_303, e1] = Syscall6(rec::Addr(gocpp::recv(procgetsockopt)), 5, uintptr_t(s), uintptr_t(level), uintptr_t(optname), uintptr_t(unsafe::Pointer(optval)), uintptr_t(unsafe::Pointer(optlen)), 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2119,7 +1930,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_305, e1] = Syscall(rec::Addr(gocpp::recv(proclisten)), 2, uintptr_t(s), uintptr_t(backlog), 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2139,7 +1949,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_311, e1] = Syscall6(rec::Addr(gocpp::recv(procsetsockopt)), 5, uintptr_t(s), uintptr_t(level), uintptr_t(optname), uintptr_t(unsafe::Pointer(optval)), uintptr_t(optlen), 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2151,7 +1960,6 @@ namespace golang::syscall
         auto [r1, gocpp_id_313, e1] = Syscall(rec::Addr(gocpp::recv(procshutdown)), 2, uintptr_t(s), uintptr_t(how), 0);
         if(r1 == socket_error)
         {
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return err;
@@ -2165,8 +1973,6 @@ namespace golang::syscall
         handle = Handle(r0);
         if(handle == InvalidHandle)
         {
-            syscall::Handle handle;
-            struct gocpp::error err;
             err = errnoErr(e1);
         }
         return {handle, err};

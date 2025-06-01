@@ -164,7 +164,7 @@ namespace golang::strings
             switch(conditionId)
             {
                 case 0:
-                    return IndexByte(s, unsigned char(r));
+                    return IndexByte(s, (unsigned char)(r));
                     break;
                 case 1:
                     for(auto [i, r] : s)
@@ -571,7 +571,7 @@ namespace golang::strings
             {
                 if(r < utf8::RuneSelf)
                 {
-                    rec::WriteByte(gocpp::recv(b), unsigned char(r));
+                    rec::WriteByte(gocpp::recv(b), (unsigned char)(r));
                 }
                 else
                 {
@@ -926,13 +926,9 @@ namespace golang::strings
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
-            strings::asciiSet as;
-            bool ok;
             auto c = chars[i];
             if(c >= utf8::RuneSelf)
             {
-                strings::asciiSet as;
-                bool ok;
                 return {as, false};
             }
             as[c / 32] |= 1 << (c % 32);
@@ -1358,9 +1354,6 @@ namespace golang::strings
         bool found;
         if(auto i = Index(s, sep); i >= 0)
         {
-            std::string before;
-            std::string after;
-            bool found;
             return {s.make_slice(0, i), s.make_slice(i + len(sep)), true};
         }
         return {s, "", false};
@@ -1372,8 +1365,6 @@ namespace golang::strings
         bool found;
         if(! HasPrefix(s, prefix))
         {
-            std::string after;
-            bool found;
             return {s, false};
         }
         return {s.make_slice(len(prefix)), true};
@@ -1385,8 +1376,6 @@ namespace golang::strings
         bool found;
         if(! HasSuffix(s, suffix))
         {
-            std::string before;
-            bool found;
             return {s, false};
         }
         return {s.make_slice(0, len(s) - len(suffix)), true};

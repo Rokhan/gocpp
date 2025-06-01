@@ -292,16 +292,12 @@ namespace golang::runtime
         bool alreadyFlushed;
         for(; ; )
         {
-            uint32_t cycle;
-            bool alreadyFlushed;
             auto prev = rec::Load(gocpp::recv(c->value));
             cycle = prev >> 1;
             alreadyFlushed = (prev & 0x1) != 0;
             auto next = prev | 0x1;
             if(rec::CompareAndSwap(gocpp::recv(c->value), prev, next))
             {
-                uint32_t cycle;
-                bool alreadyFlushed;
                 return {cycle, alreadyFlushed};
             }
         }
@@ -997,36 +993,24 @@ namespace golang::runtime
         auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
-            int n;
-            bool ok;
             auto mp = rec::mp(gocpp::recv(b));
             if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
             {
-                int n;
-                bool ok;
                 n++;
             }
             if(mp->active.allocs != 0 || mp->active.frees != 0)
             {
-                int n;
-                bool ok;
                 clear = false;
             }
         }
         if(clear)
         {
-            int n;
-            bool ok;
             n = 0;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
-                int n;
-                bool ok;
                 auto mp = rec::mp(gocpp::recv(b));
                 for(auto [c, gocpp_ignored] : mp->future)
                 {
-                    int n;
-                    bool ok;
                     lock(& profMemFutureLock[c]);
                     rec::add(gocpp::recv(mp->active), & mp->future[c]);
                     mp->future[c] = memRecordCycle {};
@@ -1034,27 +1018,19 @@ namespace golang::runtime
                 }
                 if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
                 {
-                    int n;
-                    bool ok;
                     n++;
                 }
             }
         }
         if(n <= len(p))
         {
-            int n;
-            bool ok;
             ok = true;
             auto idx = 0;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
-                int n;
-                bool ok;
                 auto mp = rec::mp(gocpp::recv(b));
                 if(inuseZero || mp->active.alloc_bytes != mp->active.free_bytes)
                 {
-                    int n;
-                    bool ok;
                     record(& p[idx], b);
                     idx++;
                 }
@@ -1142,52 +1118,36 @@ namespace golang::runtime
         auto head = (bucket*)(rec::Load(gocpp::recv(bbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
-            int n;
-            bool ok;
             n++;
         }
         if(n <= len(p))
         {
-            int n;
-            bool ok;
             ok = true;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
-                int n;
-                bool ok;
                 auto bp = rec::bp(gocpp::recv(b));
                 auto r = & p[0];
                 r->Count = int64_t(bp->count);
                 if(r->Count == 0)
                 {
-                    int n;
-                    bool ok;
                     r->Count = 1;
                 }
                 r->Cycles = bp->cycles;
                 if(raceenabled)
                 {
-                    int n;
-                    bool ok;
                     racewriterangepc(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
                 }
                 if(msanenabled)
                 {
-                    int n;
-                    bool ok;
                     msanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 if(asanenabled)
                 {
-                    int n;
-                    bool ok;
                     asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
                 {
-                    int n;
-                    bool ok;
                     r->Stack0[i] = 0;
                 }
                 p = p.make_slice(1);
@@ -1205,19 +1165,13 @@ namespace golang::runtime
         auto head = (bucket*)(rec::Load(gocpp::recv(xbuckets)));
         for(auto b = head; b != nullptr; b = b->allnext)
         {
-            int n;
-            bool ok;
             n++;
         }
         if(n <= len(p))
         {
-            int n;
-            bool ok;
             ok = true;
             for(auto b = head; b != nullptr; b = b->allnext)
             {
-                int n;
-                bool ok;
                 auto bp = rec::bp(gocpp::recv(b));
                 auto r = & p[0];
                 r->Count = int64_t(bp->count);
@@ -1225,8 +1179,6 @@ namespace golang::runtime
                 auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
                 {
-                    int n;
-                    bool ok;
                     r->Stack0[i] = 0;
                 }
                 p = p.make_slice(1);
@@ -1243,20 +1195,14 @@ namespace golang::runtime
         auto first = (m*)(atomic::Loadp(unsafe::Pointer(& allm)));
         for(auto mp = first; mp != nullptr; mp = mp->alllink)
         {
-            int n;
-            bool ok;
             n++;
         }
         if(n <= len(p))
         {
-            int n;
-            bool ok;
             ok = true;
             auto i = 0;
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {
-                int n;
-                bool ok;
                 p[i].Stack0 = mp->createstack;
                 i++;
             }
@@ -1277,8 +1223,6 @@ namespace golang::runtime
         bool ok;
         if(labels != nullptr && len(labels) != len(p))
         {
-            int n;
-            bool ok;
             labels = nullptr;
         }
         return goroutineProfileWithLabelsConcurrent(p, labels);
@@ -1364,14 +1308,10 @@ namespace golang::runtime
         n = int(gcount());
         if(rec::Load(gocpp::recv(fingStatus)) & fingRunningFinalizer != 0)
         {
-            int n;
-            bool ok;
             n++;
         }
         if(n > len(p))
         {
-            int n;
-            bool ok;
             startTheWorld(stw);
             semrelease(& goroutineProfile.sema);
             return {n, false};
@@ -1384,8 +1324,6 @@ namespace golang::runtime
         });
         if(labels != nullptr)
         {
-            int n;
-            bool ok;
             labels[0] = ourg->labels;
         }
         rec::Store(gocpp::recv(ourg->goroutineProfiled), goroutineProfileSatisfied);
@@ -1395,13 +1333,9 @@ namespace golang::runtime
         goroutineProfile.labels = labels;
         if(fing != nullptr)
         {
-            int n;
-            bool ok;
             rec::Store(gocpp::recv(fing->goroutineProfiled), goroutineProfileSatisfied);
             if(readgstatus(fing) != _Gdead && ! isSystemGoroutine(fing, false))
             {
-                int n;
-                bool ok;
                 doRecordGoroutineProfile(fing);
             }
         }
@@ -1422,14 +1356,10 @@ namespace golang::runtime
         });
         if(raceenabled)
         {
-            int n;
-            bool ok;
             raceacquire(unsafe::Pointer(& labelSync));
         }
         if(n != int(endOffset))
         {
-            int n;
-            bool ok;
         }
         semrelease(& goroutineProfile.sema);
         return {n, true};
@@ -1518,8 +1448,6 @@ namespace golang::runtime
         });
         if(n <= len(p))
         {
-            int n;
-            bool ok;
             ok = true;
             auto [r, lbl] = std::tuple{p, labels};
             auto sp = getcallersp();
@@ -1531,8 +1459,6 @@ namespace golang::runtime
             r = r.make_slice(1);
             if(labels != nullptr)
             {
-                int n;
-                bool ok;
                 lbl[0] = gp->labels;
                 lbl = lbl.make_slice(1);
             }
@@ -1560,8 +1486,6 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            int n;
-            bool ok;
             raceacquire(unsafe::Pointer(& labelSync));
         }
         startTheWorld(stw);

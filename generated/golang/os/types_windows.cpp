@@ -115,8 +115,6 @@ namespace golang::os
         err = syscall::GetFileInformationByHandle(h, & d);
         if(err != nullptr)
         {
-            struct fileStat* fs;
-            struct gocpp::error err;
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "GetFileInformationByHandle";
                 x.Path = path;
@@ -127,18 +125,12 @@ namespace golang::os
         err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(unsafe::Pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
         if(err != nullptr)
         {
-            struct fileStat* fs;
-            struct gocpp::error err;
             if(auto [errno, ok] = gocpp::getValue<syscall::Errno>(err); ok && errno == windows::ERROR_INVALID_PARAMETER)
             {
-                struct fileStat* fs;
-                struct gocpp::error err;
                 ti.ReparseTag = 0;
             }
             else
             {
-                struct fileStat* fs;
-                struct gocpp::error err;
                 return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "GetFileInformationByHandleEx";
                     x.Path = path;
@@ -226,22 +218,18 @@ namespace golang::os
         os::FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
         {
-            os::FileMode m;
             m |= 0444;
         }
         else
         {
-            os::FileMode m;
             m |= 0666;
         }
         if(rec::isSymlink(gocpp::recv(fs)))
         {
-            os::FileMode m;
             return m | ModeSymlink;
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
         {
-            os::FileMode m;
             m |= ModeDir | 0111;
         }
         //Go switch emulation
@@ -252,7 +240,6 @@ namespace golang::os
             else if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
             switch(conditionId)
             {
-                os::FileMode m;
                 case 0:
                     m |= ModeNamedPipe;
                     break;
@@ -263,14 +250,11 @@ namespace golang::os
         }
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0 && m & ModeType == 0)
         {
-            os::FileMode m;
             if(fs->ReparseTag == windows::IO_REPARSE_TAG_DEDUP)
             {
-                os::FileMode m;
             }
             else
             {
-                os::FileMode m;
                 m |= ModeIrregular;
             }
         }

@@ -85,45 +85,31 @@ namespace golang::os
         struct gocpp::error err;
         if(mocklib::GOOS == "windows" || mocklib::GOOS == "plan9")
         {
-            std::string dir;
-            struct gocpp::error err;
             return syscall::Getwd();
         }
         auto [dot, err] = statNolog(".");
         if(err != nullptr)
         {
-            std::string dir;
-            struct gocpp::error err;
             return {"", err};
         }
         dir = Getenv("PWD");
         if(len(dir) > 0 && dir[0] == '/')
         {
-            std::string dir;
-            struct gocpp::error err;
             auto [d, err] = statNolog(dir);
             if(err == nullptr && SameFile(dot, d))
             {
-                std::string dir;
-                struct gocpp::error err;
                 return {dir, nullptr};
             }
         }
         if(syscall::ImplementsGetwd)
         {
-            std::string dir;
-            struct gocpp::error err;
             std::string s = {};
             gocpp::error e = {};
             for(; ; )
             {
-                std::string dir;
-                struct gocpp::error err;
                 std::tie(s, e) = syscall::Getwd();
                 if(e != syscall::go_EINTR)
                 {
-                    std::string dir;
-                    struct gocpp::error err;
                     break;
                 }
             }
@@ -134,13 +120,9 @@ namespace golang::os
         rec::Unlock(gocpp::recv(getwdCache));
         if(len(dir) > 0)
         {
-            std::string dir;
-            struct gocpp::error err;
             auto [d, err] = statNolog(dir);
             if(err == nullptr && SameFile(dot, d))
             {
-                std::string dir;
-                struct gocpp::error err;
                 return {dir, nullptr};
             }
         }
@@ -148,55 +130,37 @@ namespace golang::os
         std::tie(root, err) = statNolog("/");
         if(err != nullptr)
         {
-            std::string dir;
-            struct gocpp::error err;
             return {"", err};
         }
         if(SameFile(root, dot))
         {
-            std::string dir;
-            struct gocpp::error err;
             return {"/", nullptr};
         }
         dir = "";
         for(auto parent = ".."; ; parent = "../" + parent)
         {
-            std::string dir;
-            struct gocpp::error err;
             if(len(parent) >= 1024)
             {
-                std::string dir;
-                struct gocpp::error err;
                 return {"", syscall::go_ENAMETOOLONG};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
             if(err != nullptr)
             {
-                std::string dir;
-                struct gocpp::error err;
                 return {"", err};
             }
             for(; ; )
             {
-                std::string dir;
-                struct gocpp::error err;
                 auto [names, err] = rec::Readdirnames(gocpp::recv(fd), 100);
                 if(err != nullptr)
                 {
-                    std::string dir;
-                    struct gocpp::error err;
                     rec::Close(gocpp::recv(fd));
                     return {"", err};
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
-                    std::string dir;
-                    struct gocpp::error err;
                     auto [d, gocpp_id_2] = lstatNolog(parent + "/" + name);
                     if(SameFile(d, dot))
                     {
-                        std::string dir;
-                        struct gocpp::error err;
                         dir = "/" + name + dir;
                         goto Found;
                     }
@@ -208,14 +172,10 @@ namespace golang::os
             rec::Close(gocpp::recv(fd));
             if(err != nullptr)
             {
-                std::string dir;
-                struct gocpp::error err;
                 return {"", err};
             }
             if(SameFile(pd, root))
             {
-                std::string dir;
-                struct gocpp::error err;
                 break;
             }
             dot = pd;

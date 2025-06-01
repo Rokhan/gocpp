@@ -28,8 +28,6 @@ namespace golang::math
         double frac;
         if(haveArchModf)
         {
-            double int;
-            double frac;
             return archModf(f);
         }
         return modf(f);
@@ -41,8 +39,6 @@ namespace golang::math
         double frac;
         if(f < 1)
         {
-            double int;
-            double frac;
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -50,8 +46,6 @@ namespace golang::math
                 else if(f == 0) { conditionId = 1; }
                 switch(conditionId)
                 {
-                    double int;
-                    double frac;
                     case 0:
                         std::tie(int, frac) = Modf(- f);
                         return {- int, - frac};
@@ -67,8 +61,6 @@ namespace golang::math
         auto e = (unsigned int)(x >> shift) & mask - bias;
         if(e < 64 - 12)
         {
-            double int;
-            double frac;
             x &^= (1 << (64 - 12 - e)) - 1;
         }
         int = Float64frombits(x);

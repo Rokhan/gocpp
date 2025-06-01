@@ -408,17 +408,17 @@ namespace golang::strconv
                 break;
             }
             auto li = ui - upper->dp + lower->dp;
-            auto l = unsigned char('0');
+            auto l = (unsigned char)('0');
             if(li >= 0 && li < lower->nd)
             {
                 l = lower->d[li];
             }
-            auto m = unsigned char('0');
+            auto m = (unsigned char)('0');
             if(mi >= 0)
             {
                 m = d->d[mi];
             }
-            auto u = unsigned char('0');
+            auto u = (unsigned char)('0');
             if(ui < upper->nd)
             {
                 u = upper->d[ui];
@@ -510,7 +510,7 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
-        auto ch = unsigned char('0');
+        auto ch = (unsigned char)('0');
         if(d.nd != 0)
         {
             ch = d.d[0];
@@ -555,13 +555,13 @@ namespace golang::strconv
             switch(conditionId)
             {
                 case 0:
-                    dst = append(dst, '0', unsigned char(exp) + '0');
+                    dst = append(dst, '0', (unsigned char)(exp) + '0');
                     break;
                 case 1:
-                    dst = append(dst, unsigned char(exp / 10) + '0', unsigned char(exp % 10) + '0');
+                    dst = append(dst, (unsigned char)(exp / 10) + '0', (unsigned char)(exp % 10) + '0');
                     break;
                 default:
-                    dst = append(dst, unsigned char(exp / 100) + '0', unsigned char(exp / 10) % 10 + '0', unsigned char(exp % 10) + '0');
+                    dst = append(dst, (unsigned char)(exp / 100) + '0', (unsigned char)(exp / 10) % 10 + '0', (unsigned char)(exp % 10) + '0');
                     break;
             }
         }
@@ -592,7 +592,7 @@ namespace golang::strconv
             dst = append(dst, '.');
             for(auto i = 0; i < prec; i++)
             {
-                auto ch = unsigned char('0');
+                auto ch = (unsigned char)('0');
                 if(auto j = d.dp + i; 0 <= j && j < d.nd)
                 {
                     ch = d.d[j];
@@ -657,7 +657,7 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
-        dst = append(dst, '0', fmt, '0' + unsigned char((mant >> 60) & 1));
+        dst = append(dst, '0', fmt, '0' + (unsigned char)((mant >> 60) & 1));
         mant <<= 4;
         if(prec < 0 && mant != 0)
         {
@@ -678,7 +678,7 @@ namespace golang::strconv
                 mant <<= 4;
             }
         }
-        auto ch = unsigned char('P');
+        auto ch = (unsigned char)('P');
         if(fmt == lower(fmt))
         {
             ch = 'p';
@@ -702,13 +702,13 @@ namespace golang::strconv
             switch(conditionId)
             {
                 case 0:
-                    dst = append(dst, unsigned char(exp / 10) + '0', unsigned char(exp % 10) + '0');
+                    dst = append(dst, (unsigned char)(exp / 10) + '0', (unsigned char)(exp % 10) + '0');
                     break;
                 case 1:
-                    dst = append(dst, unsigned char(exp / 100) + '0', unsigned char((exp / 10) % 10) + '0', unsigned char(exp % 10) + '0');
+                    dst = append(dst, (unsigned char)(exp / 100) + '0', (unsigned char)((exp / 10) % 10) + '0', (unsigned char)(exp % 10) + '0');
                     break;
                 default:
-                    dst = append(dst, unsigned char(exp / 1000) + '0', unsigned char(exp / 100) % 10 + '0', unsigned char((exp / 10) % 10) + '0', unsigned char(exp % 10) + '0');
+                    dst = append(dst, (unsigned char)(exp / 1000) + '0', (unsigned char)(exp / 100) % 10 + '0', (unsigned char)((exp / 10) % 10) + '0', (unsigned char)(exp % 10) + '0');
                     break;
             }
         }

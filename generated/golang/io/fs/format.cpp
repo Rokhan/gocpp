@@ -46,11 +46,11 @@ namespace golang::fs
         for(; usize >= 10; )
         {
             auto q = usize / 10;
-            buf[i] = unsigned char('0' + usize - q * 10);
+            buf[i] = (unsigned char)('0' + usize - q * 10);
             i--;
             usize = q;
         }
-        buf[i] = unsigned char('0' + usize);
+        buf[i] = (unsigned char)('0' + usize);
         b = append(b, buf.make_slice(i));
         b = append(b, ' ');
         b = append(b, rec::Format(gocpp::recv(rec::ModTime(gocpp::recv(info))), time::DateTime));

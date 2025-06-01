@@ -226,8 +226,6 @@ namespace golang::os
         struct gocpp::error err;
         if(f->dirinfo != nullptr)
         {
-            int64_t ret;
-            struct gocpp::error err;
             rec::close(gocpp::recv(f->dirinfo));
             f->dirinfo = nullptr;
         }
@@ -333,9 +331,6 @@ namespace golang::os
         auto e = syscall::Pipe(p.make_slice(0));
         if(e != nullptr)
         {
-            struct File* r;
-            struct File* w;
-            struct gocpp::error err;
             return {nullptr, nullptr, NewSyscallError("pipe", e)};
         }
         return {newFile(p[0], "|0", "pipe"), newFile(p[1], "|1", "pipe"), nullptr};

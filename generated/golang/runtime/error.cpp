@@ -160,11 +160,11 @@ namespace golang::runtime
         auto i = len(buf) - 1;
         for(; val >= 10; )
         {
-            buf[i] = unsigned char(val % 10 + '0');
+            buf[i] = (unsigned char)(val % 10 + '0');
             i--;
             val /= 10;
         }
-        buf[i] = unsigned char(val + '0');
+        buf[i] = (unsigned char)(val + '0');
         return buf.make_slice(i);
     }
 

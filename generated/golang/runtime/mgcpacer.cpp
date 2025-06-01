@@ -591,27 +591,19 @@ namespace golang::runtime
         goal = rec::Load(gocpp::recv(c->gcPercentHeapGoal));
         if(auto newGoal = rec::memoryLimitHeapGoal(gocpp::recv(c)); newGoal < goal)
         {
-            uint64_t goal;
-            uint64_t minTrigger;
             goal = newGoal;
         }
         else
         {
-            uint64_t goal;
-            uint64_t minTrigger;
             auto sweepDistTrigger = rec::Load(gocpp::recv(c->sweepDistMinTrigger));
             if(sweepDistTrigger > goal)
             {
-                uint64_t goal;
-                uint64_t minTrigger;
                 goal = sweepDistTrigger;
             }
             minTrigger = sweepDistTrigger;
             auto minRunway = 64 << 10;
             if(c->triggered != ~ uint64_t(0) && goal < c->triggered + minRunway)
             {
-                uint64_t goal;
-                uint64_t minTrigger;
                 goal = c->triggered + minRunway;
             }
         }
@@ -763,7 +755,6 @@ namespace golang::runtime
         });
         if(in < 0)
         {
-            int32_t out;
             gcWaitOnMark(rec::Load(gocpp::recv(work.cycles)));
         }
         return out;

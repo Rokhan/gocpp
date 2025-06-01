@@ -1255,7 +1255,6 @@ namespace golang::png
         std::tie(d->img, err) = rec::decode(gocpp::recv(d));
         if(err != nullptr)
         {
-            struct gocpp::error err;
             return err;
         }
         return rec::verifyChecksum(gocpp::recv(d));

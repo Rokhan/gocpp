@@ -75,7 +75,7 @@ namespace golang::runtime
     {
         auto w = unsafeTraceWriter(gen, nullptr);
         std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
-        rec::byte(gocpp::recv(w), unsigned char(traceEvFrequency));
+        rec::byte(gocpp::recv(w), (unsigned char)(traceEvFrequency));
         rec::varint(gocpp::recv(w), traceClockUnitsPerSecond());
         systemstack([=]() mutable -> void
         {

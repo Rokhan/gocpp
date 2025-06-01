@@ -14,6 +14,9 @@ namespace golang::main
 {
     struct Fetcher : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Fetcher(){}
         Fetcher(Fetcher& i) = default;
         Fetcher(const Fetcher& i) = default;

@@ -410,28 +410,16 @@ namespace golang::runtime
         auto s = *ps;
         for(; s != nullptr; s = *ps)
         {
-            struct sudog* found;
-            int64_t now;
-            int64_t tailtime;
             if(s->elem == unsafe::Pointer(addr))
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 goto Found;
             }
             if(uintptr_t(unsafe::Pointer(addr)) < uintptr_t(s->elem))
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 ps = & s->prev;
             }
             else
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 ps = & s->next;
             }
         }
@@ -440,55 +428,34 @@ namespace golang::runtime
         now = int64_t(0);
         if(s->acquiretime != 0)
         {
-            struct sudog* found;
-            int64_t now;
-            int64_t tailtime;
             now = cputicks();
         }
         if(auto t = s->waitlink; t != nullptr)
         {
-            struct sudog* found;
-            int64_t now;
-            int64_t tailtime;
             *ps = t;
             t->ticket = s->ticket;
             t->parent = s->parent;
             t->prev = s->prev;
             if(t->prev != nullptr)
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 t->prev->parent = t;
             }
             t->next = s->next;
             if(t->next != nullptr)
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 t->next->parent = t;
             }
             if(t->waitlink != nullptr)
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 t->waittail = s->waittail;
             }
             else
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 t->waittail = nullptr;
             }
             t->waiters = s->waiters;
             if(t->waiters > 1)
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 t->waiters--;
             }
             t->acquiretime = now;
@@ -499,54 +466,30 @@ namespace golang::runtime
         }
         else
         {
-            struct sudog* found;
-            int64_t now;
-            int64_t tailtime;
             for(; s->next != nullptr || s->prev != nullptr; )
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 if(s->next == nullptr || s->prev != nullptr && s->prev->ticket < s->next->ticket)
                 {
-                    struct sudog* found;
-                    int64_t now;
-                    int64_t tailtime;
                     rec::rotateRight(gocpp::recv(root), s);
                 }
                 else
                 {
-                    struct sudog* found;
-                    int64_t now;
-                    int64_t tailtime;
                     rec::rotateLeft(gocpp::recv(root), s);
                 }
             }
             if(s->parent != nullptr)
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 if(s->parent->prev == s)
                 {
-                    struct sudog* found;
-                    int64_t now;
-                    int64_t tailtime;
                     s->parent->prev = nullptr;
                 }
                 else
                 {
-                    struct sudog* found;
-                    int64_t now;
-                    int64_t tailtime;
                     s->parent->next = nullptr;
                 }
             }
             else
             {
-                struct sudog* found;
-                int64_t now;
-                int64_t tailtime;
                 root->treap = nullptr;
             }
             tailtime = s->acquiretime;

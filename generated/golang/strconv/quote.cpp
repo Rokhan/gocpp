@@ -85,14 +85,14 @@ namespace golang::strconv
         if(r == gocpp::rune(quote) || r == '\\')
         {
             buf = append(buf, '\\');
-            buf = append(buf, unsigned char(r));
+            buf = append(buf, (unsigned char)(r));
             return buf;
         }
         if(ASCIIonly)
         {
             if(r < utf8::RuneSelf && IsPrint(r))
             {
-                buf = append(buf, unsigned char(r));
+                buf = append(buf, (unsigned char)(r));
                 return buf;
             }
         }
@@ -146,8 +146,8 @@ namespace golang::strconv
                         {
                             case 0:
                                 buf = append(buf, "\\x");
-                                buf = append(buf, lowerhex[unsigned char(r) >> 4]);
-                                buf = append(buf, lowerhex[unsigned char(r) & 0xF]);
+                                buf = append(buf, lowerhex[(unsigned char)(r) >> 4]);
+                                buf = append(buf, lowerhex[(unsigned char)(r) & 0xF]);
                                 break;
                             case 1:
                                 r = 0xFFFD;
@@ -272,8 +272,6 @@ namespace golang::strconv
             else if('A' <= c && c <= 'F') { conditionId = 2; }
             switch(conditionId)
             {
-                gocpp::rune v;
-                bool ok;
                 case 0:
                     return {c - '0', true};
                     break;
@@ -296,10 +294,6 @@ namespace golang::strconv
         struct gocpp::error err;
         if(len(s) == 0)
         {
-            gocpp::rune value;
-            bool multibyte;
-            std::string tail;
-            struct gocpp::error err;
             err = ErrSyntax;
             return {value, multibyte, tail, err};
         }
@@ -312,10 +306,6 @@ namespace golang::strconv
             else if(c != '\\') { conditionId = 2; }
             switch(conditionId)
             {
-                gocpp::rune value;
-                bool multibyte;
-                std::string tail;
-                struct gocpp::error err;
                 case 0:
                     err = ErrSyntax;
                     return {value, multibyte, tail, err};
@@ -331,10 +321,6 @@ namespace golang::strconv
         }
         if(len(s) <= 1)
         {
-            gocpp::rune value;
-            bool multibyte;
-            std::string tail;
-            struct gocpp::error err;
             err = ErrSyntax;
             return {value, multibyte, tail, err};
         }
@@ -367,10 +353,6 @@ namespace golang::strconv
             else if(condition == '"') { conditionId = 20; }
             switch(conditionId)
             {
-                gocpp::rune value;
-                bool multibyte;
-                std::string tail;
-                struct gocpp::error err;
                 case 0:
                     value = '\a';
                     break;
@@ -405,10 +387,6 @@ namespace golang::strconv
                         else if(condition == 'U') { conditionId = 2; }
                         switch(conditionId)
                         {
-                            gocpp::rune value;
-                            bool multibyte;
-                            std::string tail;
-                            struct gocpp::error err;
                             case 0:
                                 n = 2;
                                 break;
@@ -423,26 +401,14 @@ namespace golang::strconv
                     gocpp::rune v = {};
                     if(len(s) < n)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
                     for(auto j = 0; j < n; j++)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         auto [x, ok] = unhex(s[j]);
                         if(! ok)
                         {
-                            gocpp::rune value;
-                            bool multibyte;
-                            std::string tail;
-                            struct gocpp::error err;
                             err = ErrSyntax;
                             return {value, multibyte, tail, err};
                         }
@@ -451,19 +417,11 @@ namespace golang::strconv
                     s = s.make_slice(n);
                     if(c == 'x')
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         value = v;
                         break;
                     }
                     if(! utf8::ValidRune(v))
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -481,26 +439,14 @@ namespace golang::strconv
                     auto v = gocpp::rune(c) - '0';
                     if(len(s) < 2)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
                     for(auto j = 0; j < 2; j++)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         auto x = gocpp::rune(s[j]) - '0';
                         if(x < 0 || x > 7)
                         {
-                            gocpp::rune value;
-                            bool multibyte;
-                            std::string tail;
-                            struct gocpp::error err;
                             err = ErrSyntax;
                             return {value, multibyte, tail, err};
                         }
@@ -509,10 +455,6 @@ namespace golang::strconv
                     s = s.make_slice(2);
                     if(v > 255)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -525,10 +467,6 @@ namespace golang::strconv
                 case 20:
                     if(c != quote)
                     {
-                        gocpp::rune value;
-                        bool multibyte;
-                        std::string tail;
-                        struct gocpp::error err;
                         err = ErrSyntax;
                         return {value, multibyte, tail, err};
                     }
@@ -567,18 +505,12 @@ namespace golang::strconv
         struct gocpp::error err;
         if(len(in) < 2)
         {
-            std::string out;
-            std::string rem;
-            struct gocpp::error err;
             return {"", in, ErrSyntax};
         }
         auto quote = in[0];
         auto end = index(in.make_slice(1), quote);
         if(end < 0)
         {
-            std::string out;
-            std::string rem;
-            struct gocpp::error err;
             return {"", in, ErrSyntax};
         }
         end += 2;
@@ -591,9 +523,6 @@ namespace golang::strconv
             else if(condition == '\'') { conditionId = 2; }
             switch(conditionId)
             {
-                std::string out;
-                std::string rem;
-                struct gocpp::error err;
                 case 0:
                     //Go switch emulation
                     {
@@ -602,9 +531,6 @@ namespace golang::strconv
                         else if(! contains(in.make_slice(0, end), '\r')) { conditionId = 1; }
                         switch(conditionId)
                         {
-                            std::string out;
-                            std::string rem;
-                            struct gocpp::error err;
                             case 0:
                                 out = in.make_slice(0, end);
                                 break;
@@ -615,14 +541,8 @@ namespace golang::strconv
                                 auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`") - len("\r") - len("`"));
                                 for(auto i = len("`"); i < end - len("`"); i++)
                                 {
-                                    std::string out;
-                                    std::string rem;
-                                    struct gocpp::error err;
                                     if(in[i] != '\r')
                                     {
-                                        std::string out;
-                                        std::string rem;
-                                        struct gocpp::error err;
                                         buf = append(buf, in[i]);
                                     }
                                 }
@@ -636,9 +556,6 @@ namespace golang::strconv
                 case 2:
                     if(! contains(in.make_slice(0, end), '\\') && ! contains(in.make_slice(0, end), '\n'))
                     {
-                        std::string out;
-                        std::string rem;
-                        struct gocpp::error err;
                         bool valid = {};
                         //Go switch emulation
                         {
@@ -648,9 +565,6 @@ namespace golang::strconv
                             else if(condition == '\'') { conditionId = 1; }
                             switch(conditionId)
                             {
-                                std::string out;
-                                std::string rem;
-                                struct gocpp::error err;
                                 case 0:
                                     valid = utf8::ValidString(in.make_slice(len("""), end - len(""")));
                                     break;
@@ -662,15 +576,9 @@ namespace golang::strconv
                         }
                         if(valid)
                         {
-                            std::string out;
-                            std::string rem;
-                            struct gocpp::error err;
                             out = in.make_slice(0, end);
                             if(unescape)
                             {
-                                std::string out;
-                                std::string rem;
-                                struct gocpp::error err;
                                 out = out.make_slice(1, end - 1);
                             }
                             return {out, in.make_slice(end), nullptr};
@@ -681,66 +589,39 @@ namespace golang::strconv
                     in = in.make_slice(1);
                     if(unescape)
                     {
-                        std::string out;
-                        std::string rem;
-                        struct gocpp::error err;
                         buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * end / 2);
                     }
                     for(; len(in) > 0 && in[0] != quote; )
                     {
-                        std::string out;
-                        std::string rem;
-                        struct gocpp::error err;
                         auto [r, multibyte, rem, err] = UnquoteChar(in, quote);
                         if(in[0] == '\n' || err != nullptr)
                         {
-                            std::string out;
-                            std::string rem;
-                            struct gocpp::error err;
                             return {"", in0, ErrSyntax};
                         }
                         in = rem;
                         if(unescape)
                         {
-                            std::string out;
-                            std::string rem;
-                            struct gocpp::error err;
                             if(r < utf8::RuneSelf || ! multibyte)
                             {
-                                std::string out;
-                                std::string rem;
-                                struct gocpp::error err;
-                                buf = append(buf, unsigned char(r));
+                                buf = append(buf, (unsigned char)(r));
                             }
                             else
                             {
-                                std::string out;
-                                std::string rem;
-                                struct gocpp::error err;
                                 buf = utf8::AppendRune(buf, r);
                             }
                         }
                         if(quote == '\'')
                         {
-                            std::string out;
-                            std::string rem;
-                            struct gocpp::error err;
                             break;
                         }
                     }
                     if(! (len(in) > 0 && in[0] == quote))
                     {
-                        std::string out;
-                        std::string rem;
-                        struct gocpp::error err;
                         return {"", in0, ErrSyntax};
                     }
                     in = in.make_slice(1);
                     if(unescape)
                     {
-                        std::string out;
-                        std::string rem;
-                        struct gocpp::error err;
                         return {std::string(buf), in, nullptr};
                     }
                     return {in0.make_slice(0, len(in0) - len(in)), in, nullptr};

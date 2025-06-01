@@ -34,7 +34,29 @@ func main() {
 	default:
 		// freebsd, openbsd,
 		// plan9, windows...
-		fmt.Printf("%s.\n", os)
+		fmt.Println(os)
+	}
+
+	// With default first
+	fmt.Print("\nGo runs on ")
+	switch os := runtime.GOOS; os {
+	default:
+		fmt.Println(os)
+	case "darwin":
+		fmt.Println("OS X.")
+	case "linux", "gnu/linux", "debian":
+		fmt.Println("Linux.")
+	}
+
+	// With multiple cases first
+	fmt.Print("\nGo runs on ")
+	switch os := runtime.GOOS; os {
+	case "linux", "gnu/linux", "debian":
+		fmt.Println("Linux.")
+	default:
+		fmt.Println(os)
+	case "darwin":
+		fmt.Println("OS X.")
 	}
 
 	testFallThrough(0)

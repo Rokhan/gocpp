@@ -1802,8 +1802,8 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 				cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
 			}
 			cv.currentSwitchId.Back().Value = id + 1
+			se.prefix = "else "
 		}
-		se.prefix = "else "
 
 	case *ast.CommClause:
 		id := cv.currentSwitchId.Back().Value.(int)

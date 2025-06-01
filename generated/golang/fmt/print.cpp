@@ -708,7 +708,7 @@ namespace golang::fmt
             auto condition = verb;
             int conditionId = -1;
             if(condition == 't') { conditionId = 0; }
-            if(condition == 'v') { conditionId = 1; }
+            else if(condition == 'v') { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -840,15 +840,15 @@ namespace golang::fmt
             auto condition = verb;
             int conditionId = -1;
             if(condition == 'v') { conditionId = 0; }
-            if(condition == 'b') { conditionId = 1; }
-            if(condition == 'g') { conditionId = 2; }
-            if(condition == 'G') { conditionId = 3; }
-            if(condition == 'x') { conditionId = 4; }
-            if(condition == 'X') { conditionId = 5; }
-            if(condition == 'f') { conditionId = 6; }
-            if(condition == 'F') { conditionId = 7; }
-            if(condition == 'e') { conditionId = 8; }
-            if(condition == 'E') { conditionId = 9; }
+            else if(condition == 'b') { conditionId = 1; }
+            else if(condition == 'g') { conditionId = 2; }
+            else if(condition == 'G') { conditionId = 3; }
+            else if(condition == 'x') { conditionId = 4; }
+            else if(condition == 'X') { conditionId = 5; }
+            else if(condition == 'f') { conditionId = 6; }
+            else if(condition == 'F') { conditionId = 7; }
+            else if(condition == 'e') { conditionId = 8; }
+            else if(condition == 'E') { conditionId = 9; }
             switch(conditionId)
             {
                 case 0:
@@ -925,7 +925,7 @@ namespace golang::fmt
             auto condition = verb;
             int conditionId = -1;
             if(condition == 'v') { conditionId = 0; }
-            if(condition == 'd') { conditionId = 1; }
+            else if(condition == 'd') { conditionId = 1; }
             else if(condition == 's') { conditionId = 2; }
             else if(condition == 'x') { conditionId = 3; }
             else if(condition == 'X') { conditionId = 4; }
@@ -994,11 +994,11 @@ namespace golang::fmt
             auto condition = rec::Kind(gocpp::recv(value));
             int conditionId = -1;
             if(condition == reflect::Chan) { conditionId = 0; }
-            if(condition == reflect::Func) { conditionId = 1; }
-            if(condition == reflect::Map) { conditionId = 2; }
-            if(condition == reflect::Pointer) { conditionId = 3; }
-            if(condition == reflect::Slice) { conditionId = 4; }
-            if(condition == reflect::UnsafePointer) { conditionId = 5; }
+            else if(condition == reflect::Func) { conditionId = 1; }
+            else if(condition == reflect::Map) { conditionId = 2; }
+            else if(condition == reflect::Pointer) { conditionId = 3; }
+            else if(condition == reflect::Slice) { conditionId = 4; }
+            else if(condition == reflect::UnsafePointer) { conditionId = 5; }
             switch(conditionId)
             {
                 case 0:
@@ -1145,10 +1145,10 @@ namespace golang::fmt
                     auto condition = verb;
                     int conditionId = -1;
                     if(condition == 'v') { conditionId = 0; }
-                    if(condition == 's') { conditionId = 1; }
-                    if(condition == 'x') { conditionId = 2; }
-                    if(condition == 'X') { conditionId = 3; }
-                    if(condition == 'q') { conditionId = 4; }
+                    else if(condition == 's') { conditionId = 1; }
+                    else if(condition == 'x') { conditionId = 2; }
+                    else if(condition == 'X') { conditionId = 3; }
+                    else if(condition == 'q') { conditionId = 4; }
                     switch(conditionId)
                     {
                         case 0:
@@ -1207,7 +1207,7 @@ namespace golang::fmt
                 auto condition = verb;
                 int conditionId = -1;
                 if(condition == 'T') { conditionId = 0; }
-                if(condition == 'v') { conditionId = 1; }
+                else if(condition == 'v') { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -1601,9 +1601,9 @@ namespace golang::fmt
                         auto condition = verb;
                         int conditionId = -1;
                         if(condition == 's') { conditionId = 0; }
-                        if(condition == 'q') { conditionId = 1; }
-                        if(condition == 'x') { conditionId = 2; }
-                        if(condition == 'X') { conditionId = 3; }
+                        else if(condition == 'q') { conditionId = 1; }
+                        else if(condition == 'x') { conditionId = 2; }
+                        else if(condition == 'X') { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
@@ -1674,9 +1674,9 @@ namespace golang::fmt
                             auto condition = rec::Kind(gocpp::recv(a));
                             int conditionId = -1;
                             if(condition == reflect::Array) { conditionId = 0; }
-                            if(condition == reflect::Slice) { conditionId = 1; }
-                            if(condition == reflect::Struct) { conditionId = 2; }
-                            if(condition == reflect::Map) { conditionId = 3; }
+                            else if(condition == reflect::Slice) { conditionId = 1; }
+                            else if(condition == reflect::Struct) { conditionId = 2; }
+                            else if(condition == reflect::Map) { conditionId = 3; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -1719,10 +1719,10 @@ namespace golang::fmt
                     auto condition = rec::Kind(gocpp::recv(v));
                     int conditionId = -1;
                     if(condition == reflect::Int) { conditionId = 0; }
-                    if(condition == reflect::Int8) { conditionId = 1; }
-                    if(condition == reflect::Int16) { conditionId = 2; }
-                    if(condition == reflect::Int32) { conditionId = 3; }
-                    if(condition == reflect::Int64) { conditionId = 4; }
+                    else if(condition == reflect::Int8) { conditionId = 1; }
+                    else if(condition == reflect::Int16) { conditionId = 2; }
+                    else if(condition == reflect::Int32) { conditionId = 3; }
+                    else if(condition == reflect::Int64) { conditionId = 4; }
                     else if(condition == reflect::Uint) { conditionId = 5; }
                     else if(condition == reflect::Uint8) { conditionId = 6; }
                     else if(condition == reflect::Uint16) { conditionId = 7; }

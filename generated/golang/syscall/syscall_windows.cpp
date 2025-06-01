@@ -305,8 +305,8 @@ namespace golang::syscall
                     auto condition = e;
                     int conditionId = -1;
                     if(condition == ERROR_FILE_NOT_FOUND) { conditionId = 0; }
-                    if(condition == _ERROR_BAD_NETPATH) { conditionId = 1; }
-                    if(condition == ERROR_PATH_NOT_FOUND) { conditionId = 2; }
+                    else if(condition == _ERROR_BAD_NETPATH) { conditionId = 1; }
+                    else if(condition == ERROR_PATH_NOT_FOUND) { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:
@@ -421,7 +421,7 @@ namespace golang::syscall
             {
                 auto condition = runtime::GOARCH;
                 int conditionId = -1;
-                else if(condition == "386") { conditionId = 0; }
+                if(condition == "386") { conditionId = 0; }
                 else if(condition == "arm") { conditionId = 1; }
                 switch(conditionId)
                 {

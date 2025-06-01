@@ -384,7 +384,7 @@ namespace golang::base64
                 auto condition = j;
                 int conditionId = -1;
                 if(condition == 0) { conditionId = 0; }
-                if(condition == 1) { conditionId = 1; }
+                else if(condition == 1) { conditionId = 1; }
                 else if(condition == 2) { conditionId = 2; }
                 switch(conditionId)
                 {

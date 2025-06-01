@@ -147,7 +147,7 @@ namespace golang::runtime
             auto condition = funcname(f);
             int conditionId = -1;
             if(condition == "reflect.makeFuncStub") { conditionId = 0; }
-            if(condition == "reflect.methodValueCall") { conditionId = 1; }
+            else if(condition == "reflect.methodValueCall") { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

@@ -1590,11 +1590,11 @@ namespace golang::binary
             const auto& gocpp_id_10 = gocpp::type_info(data);
             int conditionId = -1;
             if(gocpp_id_10 == typeid(bool)) { conditionId = 0; }
-            if(gocpp_id_10 == typeid(int8_t)) { conditionId = 1; }
-            if(gocpp_id_10 == typeid(uint8_t)) { conditionId = 2; }
-            if(gocpp_id_10 == typeid(bool*)) { conditionId = 3; }
-            if(gocpp_id_10 == typeid(int8_t*)) { conditionId = 4; }
-            if(gocpp_id_10 == typeid(uint8_t*)) { conditionId = 5; }
+            else if(gocpp_id_10 == typeid(int8_t)) { conditionId = 1; }
+            else if(gocpp_id_10 == typeid(uint8_t)) { conditionId = 2; }
+            else if(gocpp_id_10 == typeid(bool*)) { conditionId = 3; }
+            else if(gocpp_id_10 == typeid(int8_t*)) { conditionId = 4; }
+            else if(gocpp_id_10 == typeid(uint8_t*)) { conditionId = 5; }
             else if(gocpp_id_10 == typeid(gocpp::slice<bool>)) { conditionId = 6; }
             else if(gocpp_id_10 == typeid(gocpp::slice<int8_t>)) { conditionId = 7; }
             else if(gocpp_id_10 == typeid(gocpp::slice<uint8_t>)) { conditionId = 8; }

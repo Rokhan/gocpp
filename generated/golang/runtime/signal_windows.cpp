@@ -123,7 +123,7 @@ namespace golang::runtime
         {
             auto condition = info->exceptioncode;
             int conditionId = -1;
-            else if(condition == _EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
+            if(condition == _EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
             else if(condition == _EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
             else if(condition == _EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
             else if(condition == _EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
@@ -369,7 +369,7 @@ namespace golang::runtime
             auto condition = gp->sig;
             int conditionId = -1;
             if(condition == _EXCEPTION_ACCESS_VIOLATION) { conditionId = 0; }
-            if(condition == _EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
+            else if(condition == _EXCEPTION_IN_PAGE_ERROR) { conditionId = 1; }
             else if(condition == _EXCEPTION_INT_DIVIDE_BY_ZERO) { conditionId = 2; }
             else if(condition == _EXCEPTION_INT_OVERFLOW) { conditionId = 3; }
             else if(condition == _EXCEPTION_FLT_DENORMAL_OPERAND) { conditionId = 4; }

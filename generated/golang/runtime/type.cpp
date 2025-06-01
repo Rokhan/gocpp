@@ -596,7 +596,7 @@ namespace golang::runtime
             auto condition = kind;
             int conditionId = -1;
             if(condition == kindString) { conditionId = 0; }
-            if(condition == kindUnsafePointer) { conditionId = 1; }
+            else if(condition == kindUnsafePointer) { conditionId = 1; }
             else if(condition == kindArray) { conditionId = 2; }
             else if(condition == kindChan) { conditionId = 3; }
             else if(condition == kindFunc) { conditionId = 4; }

@@ -71,22 +71,22 @@ namespace golang::os
             auto condition = c;
             int conditionId = -1;
             if(condition == '*') { conditionId = 0; }
-            if(condition == '#') { conditionId = 1; }
-            if(condition == '$') { conditionId = 2; }
-            if(condition == '@') { conditionId = 3; }
-            if(condition == '!') { conditionId = 4; }
-            if(condition == '?') { conditionId = 5; }
-            if(condition == '-') { conditionId = 6; }
-            if(condition == '0') { conditionId = 7; }
-            if(condition == '1') { conditionId = 8; }
-            if(condition == '2') { conditionId = 9; }
-            if(condition == '3') { conditionId = 10; }
-            if(condition == '4') { conditionId = 11; }
-            if(condition == '5') { conditionId = 12; }
-            if(condition == '6') { conditionId = 13; }
-            if(condition == '7') { conditionId = 14; }
-            if(condition == '8') { conditionId = 15; }
-            if(condition == '9') { conditionId = 16; }
+            else if(condition == '#') { conditionId = 1; }
+            else if(condition == '$') { conditionId = 2; }
+            else if(condition == '@') { conditionId = 3; }
+            else if(condition == '!') { conditionId = 4; }
+            else if(condition == '?') { conditionId = 5; }
+            else if(condition == '-') { conditionId = 6; }
+            else if(condition == '0') { conditionId = 7; }
+            else if(condition == '1') { conditionId = 8; }
+            else if(condition == '2') { conditionId = 9; }
+            else if(condition == '3') { conditionId = 10; }
+            else if(condition == '4') { conditionId = 11; }
+            else if(condition == '5') { conditionId = 12; }
+            else if(condition == '6') { conditionId = 13; }
+            else if(condition == '7') { conditionId = 14; }
+            else if(condition == '8') { conditionId = 15; }
+            else if(condition == '9') { conditionId = 16; }
             switch(conditionId)
             {
                 case 0:

@@ -325,7 +325,7 @@ namespace golang::runtime
         {
             auto condition = typ;
             int conditionId = -1;
-            else if(condition == memProfile) { conditionId = 0; }
+            if(condition == memProfile) { conditionId = 0; }
             else if(condition == blockProfile) { conditionId = 1; }
             else if(condition == mutexProfile) { conditionId = 2; }
             switch(conditionId)

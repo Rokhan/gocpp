@@ -602,7 +602,7 @@ namespace golang::flate
             {
                 auto condition = x;
                 int conditionId = -1;
-                else if(condition == 16) { conditionId = 0; }
+                if(condition == 16) { conditionId = 0; }
                 else if(condition == 17) { conditionId = 1; }
                 else if(condition == 18) { conditionId = 2; }
                 switch(conditionId)

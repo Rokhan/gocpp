@@ -83,7 +83,7 @@ namespace golang::runtime
             auto condition = pp->status;
             int conditionId = -1;
             if(condition == _Pidle) { conditionId = 0; }
-            if(condition == _Pgcstop) { conditionId = 1; }
+            else if(condition == _Pgcstop) { conditionId = 1; }
             else if(condition == _Prunning) { conditionId = 2; }
             else if(condition == _Psyscall) { conditionId = 3; }
             switch(conditionId)

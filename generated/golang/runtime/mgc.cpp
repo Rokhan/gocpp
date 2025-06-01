@@ -999,7 +999,7 @@ namespace golang::runtime
                 {
                     auto condition = pp->gcMarkWorkerMode;
                     int conditionId = -1;
-                    else if(condition == gcMarkWorkerDedicatedMode) { conditionId = 0; }
+                    if(condition == gcMarkWorkerDedicatedMode) { conditionId = 0; }
                     else if(condition == gcMarkWorkerFractionalMode) { conditionId = 1; }
                     else if(condition == gcMarkWorkerIdleMode) { conditionId = 2; }
                     switch(conditionId)

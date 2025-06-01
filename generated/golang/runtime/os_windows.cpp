@@ -1060,7 +1060,7 @@ namespace golang::runtime
             auto condition = _type;
             int conditionId = -1;
             if(condition == _CTRL_C_EVENT) { conditionId = 0; }
-            if(condition == _CTRL_BREAK_EVENT) { conditionId = 1; }
+            else if(condition == _CTRL_BREAK_EVENT) { conditionId = 1; }
             else if(condition == _CTRL_CLOSE_EVENT) { conditionId = 2; }
             else if(condition == _CTRL_LOGOFF_EVENT) { conditionId = 3; }
             else if(condition == _CTRL_SHUTDOWN_EVENT) { conditionId = 4; }
@@ -1251,7 +1251,7 @@ namespace golang::runtime
                 {
                     auto condition = GOARCH;
                     int conditionId = -1;
-                    else if(condition == "386") { conditionId = 0; }
+                    if(condition == "386") { conditionId = 0; }
                     else if(condition == "amd64") { conditionId = 1; }
                     else if(condition == "arm") { conditionId = 2; }
                     else if(condition == "arm64") { conditionId = 3; }

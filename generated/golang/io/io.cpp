@@ -1245,7 +1245,7 @@ namespace golang::io
         {
             auto condition = whence;
             int conditionId = -1;
-            else if(condition == SeekStart) { conditionId = 0; }
+            if(condition == SeekStart) { conditionId = 0; }
             else if(condition == SeekCurrent) { conditionId = 1; }
             else if(condition == SeekEnd) { conditionId = 2; }
             switch(conditionId)
@@ -1374,7 +1374,7 @@ namespace golang::io
         {
             auto condition = whence;
             int conditionId = -1;
-            else if(condition == SeekStart) { conditionId = 0; }
+            if(condition == SeekStart) { conditionId = 0; }
             else if(condition == SeekCurrent) { conditionId = 1; }
             switch(conditionId)
             {

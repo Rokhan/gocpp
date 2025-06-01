@@ -710,7 +710,7 @@ namespace golang::runtime
             auto condition = rec::get(gocpp::recv(s->state));
             int conditionId = -1;
             if(condition == mSpanInUse) { conditionId = 0; }
-            if(condition == mSpanManual) { conditionId = 1; }
+            else if(condition == mSpanManual) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

@@ -118,7 +118,7 @@ namespace golang::runtime
                 auto s = readgstatus(gp);
                 auto condition = s;
                 int conditionId = -1;
-                else if(condition == _Gdead) { conditionId = 0; }
+                if(condition == _Gdead) { conditionId = 0; }
                 else if(condition == _Gcopystack) { conditionId = 1; }
                 else if(condition == _Gpreempted) { conditionId = 2; }
                 else if(condition == _Grunnable) { conditionId = 3; }
@@ -222,7 +222,7 @@ namespace golang::runtime
             auto s = readgstatus(gp);
             auto condition = s;
             int conditionId = -1;
-            else if(condition == _Grunnable | _Gscan) { conditionId = 0; }
+            if(condition == _Grunnable | _Gscan) { conditionId = 0; }
             else if(condition == _Gwaiting | _Gscan) { conditionId = 1; }
             else if(condition == _Gsyscall | _Gscan) { conditionId = 2; }
             switch(conditionId)
@@ -331,7 +331,7 @@ namespace golang::runtime
             auto condition = up;
             int conditionId = -1;
             if(condition == abi::UnsafePointRestart1) { conditionId = 0; }
-            if(condition == abi::UnsafePointRestart2) { conditionId = 1; }
+            else if(condition == abi::UnsafePointRestart2) { conditionId = 1; }
             else if(condition == abi::UnsafePointRestartAtEntry) { conditionId = 2; }
             switch(conditionId)
             {

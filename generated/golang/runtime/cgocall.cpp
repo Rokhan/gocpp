@@ -382,7 +382,7 @@ namespace golang::runtime
         {
             auto condition = t->Kind_ & kindMask;
             int conditionId = -1;
-            else if(condition == kindArray) { conditionId = 0; }
+            if(condition == kindArray) { conditionId = 0; }
             else if(condition == kindChan) { conditionId = 1; }
             else if(condition == kindMap) { conditionId = 2; }
             else if(condition == kindFunc) { conditionId = 3; }

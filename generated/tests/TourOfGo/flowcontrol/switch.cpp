@@ -64,7 +64,57 @@ namespace golang::main
                     mocklib::Println("Linux.");
                     break;
                 default:
-                    mocklib::Printf("%s.\n", os);
+                    mocklib::Println(os);
+                    break;
+            }
+        }
+        mocklib::Print("\nGo runs on ");
+        //Go switch emulation
+        {
+            auto os = mocklib::GOOS;
+            auto condition = os;
+            int conditionId = -1;
+            if(condition == "darwin") { conditionId = 0; }
+            else if(condition == "linux") { conditionId = 1; }
+            else if(condition == "gnu/linux") { conditionId = 2; }
+            else if(condition == "debian") { conditionId = 3; }
+            switch(conditionId)
+            {
+                default:
+                    mocklib::Println(os);
+                    break;
+                case 0:
+                    mocklib::Println("OS X.");
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    mocklib::Println("Linux.");
+                    break;
+            }
+        }
+        mocklib::Print("\nGo runs on ");
+        //Go switch emulation
+        {
+            auto os = mocklib::GOOS;
+            auto condition = os;
+            int conditionId = -1;
+            if(condition == "linux") { conditionId = 0; }
+            else if(condition == "gnu/linux") { conditionId = 1; }
+            else if(condition == "debian") { conditionId = 2; }
+            else if(condition == "darwin") { conditionId = 3; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                    mocklib::Println("Linux.");
+                    break;
+                default:
+                    mocklib::Println(os);
+                    break;
+                case 3:
+                    mocklib::Println("OS X.");
                     break;
             }
         }

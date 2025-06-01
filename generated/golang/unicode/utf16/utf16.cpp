@@ -62,7 +62,7 @@ namespace golang::utf16
             {
                 int conditionId = -1;
                 if(0 <= v && v < surr1) { conditionId = 0; }
-                if(surr3 <= v && v < surrSelf) { conditionId = 1; }
+                else if(surr3 <= v && v < surrSelf) { conditionId = 1; }
                 else if(surrSelf <= v && v <= maxRune) { conditionId = 2; }
                 switch(conditionId)
                 {
@@ -93,7 +93,7 @@ namespace golang::utf16
         {
             int conditionId = -1;
             if(0 <= r && r < surr1) { conditionId = 0; }
-            if(surr3 <= r && r < surrSelf) { conditionId = 1; }
+            else if(surr3 <= r && r < surrSelf) { conditionId = 1; }
             else if(surrSelf <= r && r <= maxRune) { conditionId = 2; }
             switch(conditionId)
             {
@@ -126,7 +126,7 @@ namespace golang::utf16
                 auto r = s[i];
                 int conditionId = -1;
                 if(r < surr1) { conditionId = 0; }
-                if(surr3 <= r) { conditionId = 1; }
+                else if(surr3 <= r) { conditionId = 1; }
                 else if(surr1 <= r && r < surr2 && i + 1 < len(s) && surr2 <= s[i + 1] && s[i + 1] < surr3) { conditionId = 2; }
                 switch(conditionId)
                 {

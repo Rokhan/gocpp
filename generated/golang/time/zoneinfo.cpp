@@ -434,18 +434,18 @@ namespace golang::time
                     auto condition = r;
                     int conditionId = -1;
                     if(condition == '0') { conditionId = 0; }
-                    if(condition == '1') { conditionId = 1; }
-                    if(condition == '2') { conditionId = 2; }
-                    if(condition == '3') { conditionId = 3; }
-                    if(condition == '4') { conditionId = 4; }
-                    if(condition == '5') { conditionId = 5; }
-                    if(condition == '6') { conditionId = 6; }
-                    if(condition == '7') { conditionId = 7; }
-                    if(condition == '8') { conditionId = 8; }
-                    if(condition == '9') { conditionId = 9; }
-                    if(condition == ',') { conditionId = 10; }
-                    if(condition == '-') { conditionId = 11; }
-                    if(condition == '+') { conditionId = 12; }
+                    else if(condition == '1') { conditionId = 1; }
+                    else if(condition == '2') { conditionId = 2; }
+                    else if(condition == '3') { conditionId = 3; }
+                    else if(condition == '4') { conditionId = 4; }
+                    else if(condition == '5') { conditionId = 5; }
+                    else if(condition == '6') { conditionId = 6; }
+                    else if(condition == '7') { conditionId = 7; }
+                    else if(condition == '8') { conditionId = 8; }
+                    else if(condition == '9') { conditionId = 9; }
+                    else if(condition == ',') { conditionId = 10; }
+                    else if(condition == '-') { conditionId = 11; }
+                    else if(condition == '+') { conditionId = 12; }
                     switch(conditionId)
                     {
                         case 0:

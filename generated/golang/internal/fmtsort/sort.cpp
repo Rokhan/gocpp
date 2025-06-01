@@ -125,10 +125,10 @@ namespace golang::fmtsort
             auto condition = rec::Kind(gocpp::recv(aVal));
             int conditionId = -1;
             if(condition == reflect::Int) { conditionId = 0; }
-            if(condition == reflect::Int8) { conditionId = 1; }
-            if(condition == reflect::Int16) { conditionId = 2; }
-            if(condition == reflect::Int32) { conditionId = 3; }
-            if(condition == reflect::Int64) { conditionId = 4; }
+            else if(condition == reflect::Int8) { conditionId = 1; }
+            else if(condition == reflect::Int16) { conditionId = 2; }
+            else if(condition == reflect::Int32) { conditionId = 3; }
+            else if(condition == reflect::Int64) { conditionId = 4; }
             else if(condition == reflect::Uint) { conditionId = 5; }
             else if(condition == reflect::Uint8) { conditionId = 6; }
             else if(condition == reflect::Uint16) { conditionId = 7; }

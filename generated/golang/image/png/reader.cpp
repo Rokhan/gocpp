@@ -363,9 +363,9 @@ namespace golang::png
             auto condition = d->cb;
             int conditionId = -1;
             if(condition == cbP1) { conditionId = 0; }
-            if(condition == cbP2) { conditionId = 1; }
-            if(condition == cbP4) { conditionId = 2; }
-            if(condition == cbP8) { conditionId = 3; }
+            else if(condition == cbP2) { conditionId = 1; }
+            else if(condition == cbP4) { conditionId = 2; }
+            else if(condition == cbP8) { conditionId = 3; }
             else if(condition == cbTC8) { conditionId = 4; }
             else if(condition == cbTCA8) { conditionId = 5; }
             else if(condition == cbTC16) { conditionId = 6; }
@@ -407,10 +407,10 @@ namespace golang::png
             auto condition = d->cb;
             int conditionId = -1;
             if(condition == cbG1) { conditionId = 0; }
-            if(condition == cbG2) { conditionId = 1; }
-            if(condition == cbG4) { conditionId = 2; }
-            if(condition == cbG8) { conditionId = 3; }
-            if(condition == cbG16) { conditionId = 4; }
+            else if(condition == cbG2) { conditionId = 1; }
+            else if(condition == cbG4) { conditionId = 2; }
+            else if(condition == cbG8) { conditionId = 3; }
+            else if(condition == cbG16) { conditionId = 4; }
             else if(condition == cbTC8) { conditionId = 5; }
             else if(condition == cbTC16) { conditionId = 6; }
             else if(condition == cbP1) { conditionId = 7; }
@@ -632,9 +632,9 @@ namespace golang::png
             auto condition = d->cb;
             int conditionId = -1;
             if(condition == cbG1) { conditionId = 0; }
-            if(condition == cbG2) { conditionId = 1; }
-            if(condition == cbG4) { conditionId = 2; }
-            if(condition == cbG8) { conditionId = 3; }
+            else if(condition == cbG2) { conditionId = 1; }
+            else if(condition == cbG4) { conditionId = 2; }
+            else if(condition == cbG8) { conditionId = 3; }
             else if(condition == cbGA8) { conditionId = 4; }
             else if(condition == cbTC8) { conditionId = 5; }
             else if(condition == cbP1) { conditionId = 6; }
@@ -1474,9 +1474,9 @@ namespace golang::png
             auto condition = d->cb;
             int conditionId = -1;
             if(condition == cbG1) { conditionId = 0; }
-            if(condition == cbG2) { conditionId = 1; }
-            if(condition == cbG4) { conditionId = 2; }
-            if(condition == cbG8) { conditionId = 3; }
+            else if(condition == cbG2) { conditionId = 1; }
+            else if(condition == cbG4) { conditionId = 2; }
+            else if(condition == cbG8) { conditionId = 3; }
             else if(condition == cbGA8) { conditionId = 4; }
             else if(condition == cbTC8) { conditionId = 5; }
             else if(condition == cbP1) { conditionId = 6; }

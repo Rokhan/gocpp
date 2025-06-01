@@ -636,9 +636,9 @@ namespace golang::fmt
                 auto condition = verb;
                 int conditionId = -1;
                 if(condition == 'v') { conditionId = 0; }
-                if(condition == 'g') { conditionId = 1; }
-                if(condition == 'G') { conditionId = 2; }
-                if(condition == 'x') { conditionId = 3; }
+                else if(condition == 'g') { conditionId = 1; }
+                else if(condition == 'G') { conditionId = 2; }
+                else if(condition == 'x') { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:

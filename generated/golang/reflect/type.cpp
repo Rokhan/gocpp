@@ -2158,7 +2158,7 @@ namespace golang::reflect
         {
             auto condition = dir;
             int conditionId = -1;
-            else if(condition == SendDir) { conditionId = 0; }
+            if(condition == SendDir) { conditionId = 0; }
             else if(condition == RecvDir) { conditionId = 1; }
             else if(condition == BothDir) { conditionId = 2; }
             switch(conditionId)
@@ -2466,21 +2466,21 @@ namespace golang::reflect
             auto condition = Kind(rec::Kind(gocpp::recv(t)));
             int conditionId = -1;
             if(condition == Bool) { conditionId = 0; }
-            if(condition == Int) { conditionId = 1; }
-            if(condition == Int8) { conditionId = 2; }
-            if(condition == Int16) { conditionId = 3; }
-            if(condition == Int32) { conditionId = 4; }
-            if(condition == Int64) { conditionId = 5; }
-            if(condition == Uint) { conditionId = 6; }
-            if(condition == Uint8) { conditionId = 7; }
-            if(condition == Uint16) { conditionId = 8; }
-            if(condition == Uint32) { conditionId = 9; }
-            if(condition == Uint64) { conditionId = 10; }
-            if(condition == Uintptr) { conditionId = 11; }
-            if(condition == Chan) { conditionId = 12; }
-            if(condition == Pointer) { conditionId = 13; }
-            if(condition == String) { conditionId = 14; }
-            if(condition == UnsafePointer) { conditionId = 15; }
+            else if(condition == Int) { conditionId = 1; }
+            else if(condition == Int8) { conditionId = 2; }
+            else if(condition == Int16) { conditionId = 3; }
+            else if(condition == Int32) { conditionId = 4; }
+            else if(condition == Int64) { conditionId = 5; }
+            else if(condition == Uint) { conditionId = 6; }
+            else if(condition == Uint8) { conditionId = 7; }
+            else if(condition == Uint16) { conditionId = 8; }
+            else if(condition == Uint32) { conditionId = 9; }
+            else if(condition == Uint64) { conditionId = 10; }
+            else if(condition == Uintptr) { conditionId = 11; }
+            else if(condition == Chan) { conditionId = 12; }
+            else if(condition == Pointer) { conditionId = 13; }
+            else if(condition == String) { conditionId = 14; }
+            else if(condition == UnsafePointer) { conditionId = 15; }
             else if(condition == Float32) { conditionId = 16; }
             else if(condition == Float64) { conditionId = 17; }
             else if(condition == Complex64) { conditionId = 18; }
@@ -2544,20 +2544,20 @@ namespace golang::reflect
             auto condition = Kind(rec::Kind(gocpp::recv(t)));
             int conditionId = -1;
             if(condition == Bool) { conditionId = 0; }
-            if(condition == Int) { conditionId = 1; }
-            if(condition == Int8) { conditionId = 2; }
-            if(condition == Int16) { conditionId = 3; }
-            if(condition == Int32) { conditionId = 4; }
-            if(condition == Int64) { conditionId = 5; }
-            if(condition == Uint) { conditionId = 6; }
-            if(condition == Uint8) { conditionId = 7; }
-            if(condition == Uint16) { conditionId = 8; }
-            if(condition == Uint32) { conditionId = 9; }
-            if(condition == Uint64) { conditionId = 10; }
-            if(condition == Uintptr) { conditionId = 11; }
-            if(condition == Chan) { conditionId = 12; }
-            if(condition == Pointer) { conditionId = 13; }
-            if(condition == UnsafePointer) { conditionId = 14; }
+            else if(condition == Int) { conditionId = 1; }
+            else if(condition == Int8) { conditionId = 2; }
+            else if(condition == Int16) { conditionId = 3; }
+            else if(condition == Int32) { conditionId = 4; }
+            else if(condition == Int64) { conditionId = 5; }
+            else if(condition == Uint) { conditionId = 6; }
+            else if(condition == Uint8) { conditionId = 7; }
+            else if(condition == Uint16) { conditionId = 8; }
+            else if(condition == Uint32) { conditionId = 9; }
+            else if(condition == Uint64) { conditionId = 10; }
+            else if(condition == Uintptr) { conditionId = 11; }
+            else if(condition == Chan) { conditionId = 12; }
+            else if(condition == Pointer) { conditionId = 13; }
+            else if(condition == UnsafePointer) { conditionId = 14; }
             else if(condition == Float32) { conditionId = 15; }
             else if(condition == Float64) { conditionId = 16; }
             else if(condition == Complex64) { conditionId = 17; }
@@ -3775,12 +3775,12 @@ namespace golang::reflect
             auto condition = Kind(t->Kind_ & kindMask);
             int conditionId = -1;
             if(condition == Chan) { conditionId = 0; }
-            if(condition == Func) { conditionId = 1; }
-            if(condition == Map) { conditionId = 2; }
-            if(condition == Pointer) { conditionId = 3; }
-            if(condition == Slice) { conditionId = 4; }
-            if(condition == String) { conditionId = 5; }
-            if(condition == UnsafePointer) { conditionId = 6; }
+            else if(condition == Func) { conditionId = 1; }
+            else if(condition == Map) { conditionId = 2; }
+            else if(condition == Pointer) { conditionId = 3; }
+            else if(condition == Slice) { conditionId = 4; }
+            else if(condition == String) { conditionId = 5; }
+            else if(condition == UnsafePointer) { conditionId = 6; }
             else if(condition == Interface) { conditionId = 7; }
             else if(condition == Array) { conditionId = 8; }
             else if(condition == Struct) { conditionId = 9; }

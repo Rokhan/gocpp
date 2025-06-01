@@ -275,8 +275,8 @@ namespace golang::poll
             auto condition = netpollErr;
             int conditionId = -1;
             if(condition == ErrNetClosing) { conditionId = 0; }
-            if(condition == ErrFileClosing) { conditionId = 1; }
-            if(condition == ErrDeadlineExceeded) { conditionId = 2; }
+            else if(condition == ErrFileClosing) { conditionId = 1; }
+            else if(condition == ErrDeadlineExceeded) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -392,7 +392,7 @@ namespace golang::poll
             auto condition = net;
             int conditionId = -1;
             if(condition == "file") { conditionId = 0; }
-            if(condition == "dir") { conditionId = 1; }
+            else if(condition == "dir") { conditionId = 1; }
             else if(condition == "console") { conditionId = 2; }
             else if(condition == "pipe") { conditionId = 3; }
             else if(condition == "tcp") { conditionId = 4; }
@@ -460,11 +460,11 @@ namespace golang::poll
                 auto condition = net;
                 int conditionId = -1;
                 if(condition == "tcp") { conditionId = 0; }
-                if(condition == "tcp4") { conditionId = 1; }
-                if(condition == "tcp6") { conditionId = 2; }
-                if(condition == "udp") { conditionId = 3; }
-                if(condition == "udp4") { conditionId = 4; }
-                if(condition == "udp6") { conditionId = 5; }
+                else if(condition == "tcp4") { conditionId = 1; }
+                else if(condition == "tcp6") { conditionId = 2; }
+                else if(condition == "udp") { conditionId = 3; }
+                else if(condition == "udp4") { conditionId = 4; }
+                else if(condition == "udp6") { conditionId = 5; }
                 switch(conditionId)
                 {
                     case 0:
@@ -488,8 +488,8 @@ namespace golang::poll
             auto condition = net;
             int conditionId = -1;
             if(condition == "udp") { conditionId = 0; }
-            if(condition == "udp4") { conditionId = 1; }
-            if(condition == "udp6") { conditionId = 2; }
+            else if(condition == "udp4") { conditionId = 1; }
+            else if(condition == "udp6") { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1317,7 +1317,7 @@ namespace golang::poll
                     auto condition = errno;
                     int conditionId = -1;
                     if(condition == syscall::ERROR_NETNAME_DELETED) { conditionId = 0; }
-                    if(condition == syscall::WSAECONNRESET) { conditionId = 1; }
+                    else if(condition == syscall::WSAECONNRESET) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:

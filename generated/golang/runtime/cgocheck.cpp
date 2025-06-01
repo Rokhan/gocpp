@@ -276,7 +276,7 @@ namespace golang::runtime
         {
             auto condition = typ->Kind_ & kindMask;
             int conditionId = -1;
-            else if(condition == kindArray) { conditionId = 0; }
+            if(condition == kindArray) { conditionId = 0; }
             else if(condition == kindStruct) { conditionId = 1; }
             switch(conditionId)
             {

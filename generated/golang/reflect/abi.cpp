@@ -205,10 +205,10 @@ namespace golang::reflect
             auto condition = Kind(rec::Kind(gocpp::recv(t)));
             int conditionId = -1;
             if(condition == UnsafePointer) { conditionId = 0; }
-            if(condition == Pointer) { conditionId = 1; }
-            if(condition == Chan) { conditionId = 2; }
-            if(condition == Map) { conditionId = 3; }
-            if(condition == Func) { conditionId = 4; }
+            else if(condition == Pointer) { conditionId = 1; }
+            else if(condition == Chan) { conditionId = 2; }
+            else if(condition == Map) { conditionId = 3; }
+            else if(condition == Func) { conditionId = 4; }
             else if(condition == Bool) { conditionId = 5; }
             else if(condition == Int) { conditionId = 6; }
             else if(condition == Uint) { conditionId = 7; }

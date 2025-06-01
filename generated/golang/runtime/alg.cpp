@@ -292,10 +292,10 @@ namespace golang::runtime
             auto condition = t->Kind_ & kindMask;
             int conditionId = -1;
             if(condition == kindFloat32) { conditionId = 0; }
-            if(condition == kindFloat64) { conditionId = 1; }
-            if(condition == kindComplex64) { conditionId = 2; }
-            if(condition == kindComplex128) { conditionId = 3; }
-            if(condition == kindString) { conditionId = 4; }
+            else if(condition == kindFloat64) { conditionId = 1; }
+            else if(condition == kindComplex64) { conditionId = 2; }
+            else if(condition == kindComplex128) { conditionId = 3; }
+            else if(condition == kindString) { conditionId = 4; }
             else if(condition == kindInterface) { conditionId = 5; }
             else if(condition == kindArray) { conditionId = 6; }
             else if(condition == kindStruct) { conditionId = 7; }

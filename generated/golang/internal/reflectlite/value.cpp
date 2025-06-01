@@ -439,10 +439,10 @@ namespace golang::reflectlite
             auto condition = k;
             int conditionId = -1;
             if(condition == abi::Chan) { conditionId = 0; }
-            if(condition == abi::Func) { conditionId = 1; }
-            if(condition == abi::Map) { conditionId = 2; }
-            if(condition == abi::Pointer) { conditionId = 3; }
-            if(condition == abi::UnsafePointer) { conditionId = 4; }
+            else if(condition == abi::Func) { conditionId = 1; }
+            else if(condition == abi::Map) { conditionId = 2; }
+            else if(condition == abi::Pointer) { conditionId = 3; }
+            else if(condition == abi::UnsafePointer) { conditionId = 4; }
             else if(condition == abi::Interface) { conditionId = 5; }
             else if(condition == abi::Slice) { conditionId = 6; }
             switch(conditionId)

@@ -487,7 +487,7 @@ namespace golang::time
             auto condition = loc;
             int conditionId = -1;
             if(condition == UTC) { conditionId = 0; }
-            if(condition == nullptr) { conditionId = 1; }
+            else if(condition == nullptr) { conditionId = 1; }
             else if(condition == Local) { conditionId = 2; }
             switch(conditionId)
             {
@@ -1571,9 +1571,9 @@ namespace golang::time
             auto condition = nUpper;
             int conditionId = -1;
             if(condition == 0) { conditionId = 0; }
-            if(condition == 1) { conditionId = 1; }
-            if(condition == 2) { conditionId = 2; }
-            if(condition == 6) { conditionId = 3; }
+            else if(condition == 1) { conditionId = 1; }
+            else if(condition == 2) { conditionId = 2; }
+            else if(condition == 6) { conditionId = 3; }
             else if(condition == 5) { conditionId = 4; }
             else if(condition == 4) { conditionId = 5; }
             else if(condition == 3) { conditionId = 6; }

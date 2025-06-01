@@ -114,13 +114,13 @@ namespace golang::unicode
                 auto condition = r;
                 int conditionId = -1;
                 if(condition == '\t') { conditionId = 0; }
-                if(condition == '\n') { conditionId = 1; }
-                if(condition == '\v') { conditionId = 2; }
-                if(condition == '\f') { conditionId = 3; }
-                if(condition == '\r') { conditionId = 4; }
-                if(condition == ' ') { conditionId = 5; }
-                if(condition == 0x85) { conditionId = 6; }
-                if(condition == 0xA0) { conditionId = 7; }
+                else if(condition == '\n') { conditionId = 1; }
+                else if(condition == '\v') { conditionId = 2; }
+                else if(condition == '\f') { conditionId = 3; }
+                else if(condition == '\r') { conditionId = 4; }
+                else if(condition == ' ') { conditionId = 5; }
+                else if(condition == 0x85) { conditionId = 6; }
+                else if(condition == 0xA0) { conditionId = 7; }
                 switch(conditionId)
                 {
                     case 0:

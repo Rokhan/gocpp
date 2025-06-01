@@ -14,6 +14,9 @@ namespace golang::main
 {
     struct Abser : gocpp::Interface
     {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
         Abser(){}
         Abser(Abser& i) = default;
         Abser(const Abser& i) = default;

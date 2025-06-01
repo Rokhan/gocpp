@@ -304,17 +304,17 @@ namespace golang::runtime
             auto condition = k;
             int conditionId = -1;
             if(condition == kindBool) { conditionId = 0; }
-            if(condition == kindInt) { conditionId = 1; }
-            if(condition == kindInt8) { conditionId = 2; }
-            if(condition == kindInt16) { conditionId = 3; }
-            if(condition == kindInt32) { conditionId = 4; }
-            if(condition == kindUint) { conditionId = 5; }
-            if(condition == kindUint8) { conditionId = 6; }
-            if(condition == kindUint16) { conditionId = 7; }
-            if(condition == kindUint32) { conditionId = 8; }
-            if(condition == kindUintptr) { conditionId = 9; }
-            if(condition == kindPtr) { conditionId = 10; }
-            if(condition == kindUnsafePointer) { conditionId = 11; }
+            else if(condition == kindInt) { conditionId = 1; }
+            else if(condition == kindInt8) { conditionId = 2; }
+            else if(condition == kindInt16) { conditionId = 3; }
+            else if(condition == kindInt32) { conditionId = 4; }
+            else if(condition == kindUint) { conditionId = 5; }
+            else if(condition == kindUint8) { conditionId = 6; }
+            else if(condition == kindUint16) { conditionId = 7; }
+            else if(condition == kindUint32) { conditionId = 8; }
+            else if(condition == kindUintptr) { conditionId = 9; }
+            else if(condition == kindPtr) { conditionId = 10; }
+            else if(condition == kindUnsafePointer) { conditionId = 11; }
             else if(condition == kindInt64) { conditionId = 12; }
             else if(condition == kindUint64) { conditionId = 13; }
             else if(condition == kindArray) { conditionId = 14; }
@@ -424,7 +424,7 @@ namespace golang::runtime
         {
             auto condition = GOARCH;
             int conditionId = -1;
-            else if(condition == "386") { conditionId = 0; }
+            if(condition == "386") { conditionId = 0; }
             else if(condition == "amd64") { conditionId = 1; }
             else if(condition == "arm") { conditionId = 2; }
             else if(condition == "arm64") { conditionId = 3; }

@@ -302,10 +302,10 @@ namespace golang::runtime
                 auto condition = v->_type->Kind_ & kindMask;
                 int conditionId = -1;
                 if(condition == kindChan) { conditionId = 0; }
-                if(condition == kindFunc) { conditionId = 1; }
-                if(condition == kindMap) { conditionId = 2; }
-                if(condition == kindPtr) { conditionId = 3; }
-                if(condition == kindUnsafePointer) { conditionId = 4; }
+                else if(condition == kindFunc) { conditionId = 1; }
+                else if(condition == kindMap) { conditionId = 2; }
+                else if(condition == kindPtr) { conditionId = 3; }
+                else if(condition == kindUnsafePointer) { conditionId = 4; }
                 switch(conditionId)
                 {
                     case 0:
@@ -735,7 +735,7 @@ namespace golang::runtime
         {
             auto condition = typ;
             int conditionId = -1;
-            else if(condition == debugLogUnknown) { conditionId = 0; }
+            if(condition == debugLogUnknown) { conditionId = 0; }
             else if(condition == debugLogBoolTrue) { conditionId = 1; }
             else if(condition == debugLogBoolFalse) { conditionId = 2; }
             else if(condition == debugLogInt) { conditionId = 3; }

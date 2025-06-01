@@ -45,9 +45,9 @@ namespace golang::syscall
                 auto condition = s[i];
                 int conditionId = -1;
                 if(condition == '"') { conditionId = 0; }
-                if(condition == '\\') { conditionId = 1; }
-                if(condition == ' ') { conditionId = 2; }
-                if(condition == '\t') { conditionId = 3; }
+                else if(condition == '\\') { conditionId = 1; }
+                else if(condition == ' ') { conditionId = 2; }
+                else if(condition == '\t') { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
@@ -79,7 +79,7 @@ namespace golang::syscall
                 auto condition = s[i];
                 int conditionId = -1;
                 if(condition == '"') { conditionId = 0; }
-                if(condition == '\\') { conditionId = 1; }
+                else if(condition == '\\') { conditionId = 1; }
                 else if(condition == ' ') { conditionId = 2; }
                 else if(condition == '\t') { conditionId = 3; }
                 switch(conditionId)
@@ -117,7 +117,7 @@ namespace golang::syscall
             {
                 auto condition = c;
                 int conditionId = -1;
-                else if(condition == '\\') { conditionId = 0; }
+                if(condition == '\\') { conditionId = 0; }
                 else if(condition == '"') { conditionId = 1; }
                 switch(conditionId)
                 {

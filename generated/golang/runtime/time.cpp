@@ -234,7 +234,7 @@ namespace golang::runtime
                 auto condition = s;
                 int conditionId = -1;
                 if(condition == timerWaiting) { conditionId = 0; }
-                if(condition == timerModifiedLater) { conditionId = 1; }
+                else if(condition == timerModifiedLater) { conditionId = 1; }
                 else if(condition == timerModifiedEarlier) { conditionId = 2; }
                 else if(condition == timerDeleted) { conditionId = 3; }
                 else if(condition == timerRemoving) { conditionId = 4; }
@@ -392,8 +392,8 @@ namespace golang::runtime
                 auto condition = status;
                 int conditionId = -1;
                 if(condition == timerWaiting) { conditionId = 0; }
-                if(condition == timerModifiedEarlier) { conditionId = 1; }
-                if(condition == timerModifiedLater) { conditionId = 2; }
+                else if(condition == timerModifiedEarlier) { conditionId = 1; }
+                else if(condition == timerModifiedLater) { conditionId = 2; }
                 else if(condition == timerNoStatus) { conditionId = 3; }
                 else if(condition == timerRemoved) { conditionId = 4; }
                 else if(condition == timerDeleted) { conditionId = 5; }

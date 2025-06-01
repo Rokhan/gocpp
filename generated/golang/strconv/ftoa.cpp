@@ -165,7 +165,7 @@ namespace golang::strconv
                 auto condition = fmt;
                 int conditionId = -1;
                 if(condition == 'e') { conditionId = 0; }
-                if(condition == 'E') { conditionId = 1; }
+                else if(condition == 'E') { conditionId = 1; }
                 else if(condition == 'f') { conditionId = 2; }
                 else if(condition == 'g') { conditionId = 3; }
                 else if(condition == 'G') { conditionId = 4; }
@@ -194,7 +194,7 @@ namespace golang::strconv
                 auto condition = fmt;
                 int conditionId = -1;
                 if(condition == 'e') { conditionId = 0; }
-                if(condition == 'E') { conditionId = 1; }
+                else if(condition == 'E') { conditionId = 1; }
                 else if(condition == 'g') { conditionId = 2; }
                 else if(condition == 'G') { conditionId = 3; }
                 switch(conditionId)
@@ -258,7 +258,7 @@ namespace golang::strconv
                 auto condition = fmt;
                 int conditionId = -1;
                 if(condition == 'e') { conditionId = 0; }
-                if(condition == 'E') { conditionId = 1; }
+                else if(condition == 'E') { conditionId = 1; }
                 else if(condition == 'f') { conditionId = 2; }
                 else if(condition == 'g') { conditionId = 3; }
                 else if(condition == 'G') { conditionId = 4; }
@@ -285,7 +285,7 @@ namespace golang::strconv
                 auto condition = fmt;
                 int conditionId = -1;
                 if(condition == 'e') { conditionId = 0; }
-                if(condition == 'E') { conditionId = 1; }
+                else if(condition == 'E') { conditionId = 1; }
                 else if(condition == 'f') { conditionId = 2; }
                 else if(condition == 'g') { conditionId = 3; }
                 else if(condition == 'G') { conditionId = 4; }
@@ -324,7 +324,7 @@ namespace golang::strconv
             auto condition = fmt;
             int conditionId = -1;
             if(condition == 'e') { conditionId = 0; }
-            if(condition == 'E') { conditionId = 1; }
+            else if(condition == 'E') { conditionId = 1; }
             else if(condition == 'f') { conditionId = 2; }
             else if(condition == 'g') { conditionId = 3; }
             else if(condition == 'G') { conditionId = 4; }

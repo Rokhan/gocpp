@@ -138,8 +138,8 @@ namespace golang::zlib
             auto condition = z->level;
             int conditionId = -1;
             if(condition == - 2) { conditionId = 0; }
-            if(condition == 0) { conditionId = 1; }
-            if(condition == 1) { conditionId = 2; }
+            else if(condition == 0) { conditionId = 1; }
+            else if(condition == 1) { conditionId = 2; }
             else if(condition == 2) { conditionId = 3; }
             else if(condition == 3) { conditionId = 4; }
             else if(condition == 4) { conditionId = 5; }

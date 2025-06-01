@@ -101,7 +101,7 @@ namespace golang::registry
             auto condition = typ;
             int conditionId = -1;
             if(condition == SZ) { conditionId = 0; }
-            if(condition == EXPAND_SZ) { conditionId = 1; }
+            else if(condition == EXPAND_SZ) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

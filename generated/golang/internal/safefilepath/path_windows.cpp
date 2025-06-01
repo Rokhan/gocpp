@@ -42,8 +42,8 @@ namespace golang::safefilepath
                     auto condition = p[i];
                     int conditionId = -1;
                     if(condition == 0) { conditionId = 0; }
-                    if(condition == '\\') { conditionId = 1; }
-                    if(condition == ':') { conditionId = 2; }
+                    else if(condition == '\\') { conditionId = 1; }
+                    else if(condition == ':') { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:
@@ -95,7 +95,7 @@ namespace golang::safefilepath
                 auto condition = base[i];
                 int conditionId = -1;
                 if(condition == ':') { conditionId = 0; }
-                if(condition == '.') { conditionId = 1; }
+                else if(condition == '.') { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -133,9 +133,9 @@ namespace golang::safefilepath
                 auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
                 if(condition == "CON") { conditionId = 0; }
-                if(condition == "PRN") { conditionId = 1; }
-                if(condition == "AUX") { conditionId = 2; }
-                if(condition == "NUL") { conditionId = 3; }
+                else if(condition == "PRN") { conditionId = 1; }
+                else if(condition == "AUX") { conditionId = 2; }
+                else if(condition == "NUL") { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
@@ -154,7 +154,7 @@ namespace golang::safefilepath
                 auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
                 if(condition == "COM") { conditionId = 0; }
-                if(condition == "LPT") { conditionId = 1; }
+                else if(condition == "LPT") { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -168,8 +168,8 @@ namespace golang::safefilepath
                             auto condition = name.make_slice(3);
                             int conditionId = -1;
                             if(condition == "\u00b2") { conditionId = 0; }
-                            if(condition == "\u00b3") { conditionId = 1; }
-                            if(condition == "\u00b9") { conditionId = 2; }
+                            else if(condition == "\u00b3") { conditionId = 1; }
+                            else if(condition == "\u00b9") { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:

@@ -77,7 +77,7 @@ namespace golang::runtime
                     auto condition = errno;
                     int conditionId = -1;
                     if(condition == _ERROR_NOT_ENOUGH_MEMORY) { conditionId = 0; }
-                    if(condition == _ERROR_COMMITMENT_LIMIT) { conditionId = 1; }
+                    else if(condition == _ERROR_COMMITMENT_LIMIT) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:

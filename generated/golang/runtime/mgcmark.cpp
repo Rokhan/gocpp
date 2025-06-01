@@ -603,7 +603,7 @@ namespace golang::runtime
         {
             auto condition = readgstatus(gp) &^ _Gscan;
             int conditionId = -1;
-            else if(condition == _Gdead) { conditionId = 0; }
+            if(condition == _Gdead) { conditionId = 0; }
             else if(condition == _Grunning) { conditionId = 1; }
             else if(condition == _Grunnable) { conditionId = 2; }
             else if(condition == _Gsyscall) { conditionId = 3; }

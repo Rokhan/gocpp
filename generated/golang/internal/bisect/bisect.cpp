@@ -98,7 +98,7 @@ namespace golang::bisect
             {
                 auto condition = c;
                 int conditionId = -1;
-                else if(condition == '2') { conditionId = 0; }
+                if(condition == '2') { conditionId = 0; }
                 else if(condition == '3') { conditionId = 1; }
                 else if(condition == '4') { conditionId = 2; }
                 else if(condition == '5') { conditionId = 3; }
@@ -659,7 +659,7 @@ namespace golang::bisect
                     auto c = idstr[i];
                     auto condition = c;
                     int conditionId = -1;
-                    else if(condition == '0') { conditionId = 0; }
+                    if(condition == '0') { conditionId = 0; }
                     else if(condition == '1') { conditionId = 1; }
                     switch(conditionId)
                     {
@@ -697,7 +697,7 @@ namespace golang::bisect
             {
                 const auto& gocpp_id_6 = gocpp::type_info(v);
                 int conditionId = -1;
-                else if(gocpp_id_6 == typeid(std::string)) { conditionId = 0; }
+                if(gocpp_id_6 == typeid(std::string)) { conditionId = 0; }
                 else if(gocpp_id_6 == typeid(unsigned char)) { conditionId = 1; }
                 else if(gocpp_id_6 == typeid(int)) { conditionId = 2; }
                 else if(gocpp_id_6 == typeid(unsigned int)) { conditionId = 3; }

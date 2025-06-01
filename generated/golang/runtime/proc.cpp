@@ -589,15 +589,15 @@ namespace golang::runtime
             auto condition = GOOS;
             int conditionId = -1;
             if(condition == "aix") { conditionId = 0; }
-            if(condition == "darwin") { conditionId = 1; }
-            if(condition == "ios") { conditionId = 2; }
-            if(condition == "dragonfly") { conditionId = 3; }
-            if(condition == "freebsd") { conditionId = 4; }
-            if(condition == "netbsd") { conditionId = 5; }
-            if(condition == "openbsd") { conditionId = 6; }
-            if(condition == "illumos") { conditionId = 7; }
-            if(condition == "solaris") { conditionId = 8; }
-            if(condition == "linux") { conditionId = 9; }
+            else if(condition == "darwin") { conditionId = 1; }
+            else if(condition == "ios") { conditionId = 2; }
+            else if(condition == "dragonfly") { conditionId = 3; }
+            else if(condition == "freebsd") { conditionId = 4; }
+            else if(condition == "netbsd") { conditionId = 5; }
+            else if(condition == "openbsd") { conditionId = 6; }
+            else if(condition == "illumos") { conditionId = 7; }
+            else if(condition == "solaris") { conditionId = 8; }
+            else if(condition == "linux") { conditionId = 9; }
             switch(conditionId)
             {
                 case 0:
@@ -620,7 +620,7 @@ namespace golang::runtime
             auto condition = GOARCH;
             int conditionId = -1;
             if(condition == "386") { conditionId = 0; }
-            if(condition == "amd64") { conditionId = 1; }
+            else if(condition == "amd64") { conditionId = 1; }
             else if(condition == "arm") { conditionId = 2; }
             else if(condition == "arm64") { conditionId = 3; }
             switch(conditionId)
@@ -650,15 +650,15 @@ namespace golang::runtime
             auto condition = GOOS;
             int conditionId = -1;
             if(condition == "aix") { conditionId = 0; }
-            if(condition == "darwin") { conditionId = 1; }
-            if(condition == "ios") { conditionId = 2; }
-            if(condition == "dragonfly") { conditionId = 3; }
-            if(condition == "freebsd") { conditionId = 4; }
-            if(condition == "netbsd") { conditionId = 5; }
-            if(condition == "openbsd") { conditionId = 6; }
-            if(condition == "illumos") { conditionId = 7; }
-            if(condition == "solaris") { conditionId = 8; }
-            if(condition == "linux") { conditionId = 9; }
+            else if(condition == "darwin") { conditionId = 1; }
+            else if(condition == "ios") { conditionId = 2; }
+            else if(condition == "dragonfly") { conditionId = 3; }
+            else if(condition == "freebsd") { conditionId = 4; }
+            else if(condition == "netbsd") { conditionId = 5; }
+            else if(condition == "openbsd") { conditionId = 6; }
+            else if(condition == "illumos") { conditionId = 7; }
+            else if(condition == "solaris") { conditionId = 8; }
+            else if(condition == "linux") { conditionId = 9; }
             switch(conditionId)
             {
                 case 0:
@@ -900,7 +900,7 @@ namespace golang::runtime
         {
             auto condition = oldval;
             int conditionId = -1;
-            else if(condition == _Gscanrunnable) { conditionId = 0; }
+            if(condition == _Gscanrunnable) { conditionId = 0; }
             else if(condition == _Gscanwaiting) { conditionId = 1; }
             else if(condition == _Gscanrunning) { conditionId = 2; }
             else if(condition == _Gscansyscall) { conditionId = 3; }
@@ -940,9 +940,9 @@ namespace golang::runtime
             auto condition = oldval;
             int conditionId = -1;
             if(condition == _Grunnable) { conditionId = 0; }
-            if(condition == _Grunning) { conditionId = 1; }
-            if(condition == _Gwaiting) { conditionId = 2; }
-            if(condition == _Gsyscall) { conditionId = 3; }
+            else if(condition == _Grunning) { conditionId = 1; }
+            else if(condition == _Gwaiting) { conditionId = 2; }
+            else if(condition == _Gsyscall) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
@@ -1397,11 +1397,11 @@ namespace golang::runtime
             auto condition = GOOS;
             int conditionId = -1;
             if(condition == "aix") { conditionId = 0; }
-            if(condition == "darwin") { conditionId = 1; }
-            if(condition == "illumos") { conditionId = 2; }
-            if(condition == "ios") { conditionId = 3; }
-            if(condition == "solaris") { conditionId = 4; }
-            if(condition == "windows") { conditionId = 5; }
+            else if(condition == "darwin") { conditionId = 1; }
+            else if(condition == "illumos") { conditionId = 2; }
+            else if(condition == "ios") { conditionId = 3; }
+            else if(condition == "solaris") { conditionId = 4; }
+            else if(condition == "windows") { conditionId = 5; }
             else if(condition == "openbsd") { conditionId = 6; }
             switch(conditionId)
             {
@@ -1428,12 +1428,12 @@ namespace golang::runtime
             auto condition = GOOS;
             int conditionId = -1;
             if(condition == "aix") { conditionId = 0; }
-            if(condition == "darwin") { conditionId = 1; }
-            if(condition == "plan9") { conditionId = 2; }
-            if(condition == "illumos") { conditionId = 3; }
-            if(condition == "ios") { conditionId = 4; }
-            if(condition == "solaris") { conditionId = 5; }
-            if(condition == "windows") { conditionId = 6; }
+            else if(condition == "darwin") { conditionId = 1; }
+            else if(condition == "plan9") { conditionId = 2; }
+            else if(condition == "illumos") { conditionId = 3; }
+            else if(condition == "ios") { conditionId = 4; }
+            else if(condition == "solaris") { conditionId = 5; }
+            else if(condition == "windows") { conditionId = 6; }
             else if(condition == "openbsd") { conditionId = 7; }
             switch(conditionId)
             {
@@ -4794,7 +4794,7 @@ namespace golang::runtime
                 auto condition = s &^ _Gscan;
                 int conditionId = -1;
                 if(condition == _Gwaiting) { conditionId = 0; }
-                if(condition == _Gpreempted) { conditionId = 1; }
+                else if(condition == _Gpreempted) { conditionId = 1; }
                 else if(condition == _Grunnable) { conditionId = 2; }
                 else if(condition == _Grunning) { conditionId = 3; }
                 else if(condition == _Gsyscall) { conditionId = 4; }

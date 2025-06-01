@@ -160,7 +160,7 @@ namespace golang::os
             auto condition = ft;
             int conditionId = -1;
             if(condition == syscall::FILE_TYPE_PIPE) { conditionId = 0; }
-            if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
+            else if(condition == syscall::FILE_TYPE_CHAR) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

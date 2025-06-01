@@ -131,7 +131,7 @@ namespace golang::runtime
             {
                 auto condition = rec::Load(gocpp::recv(sig.state));
                 int conditionId = -1;
-                else if(condition == sigIdle) { conditionId = 0; }
+                if(condition == sigIdle) { conditionId = 0; }
                 else if(condition == sigSending) { conditionId = 1; }
                 else if(condition == sigReceiving) { conditionId = 2; }
                 switch(conditionId)
@@ -192,7 +192,7 @@ namespace golang::runtime
                 {
                     auto condition = rec::Load(gocpp::recv(sig.state));
                     int conditionId = -1;
-                    else if(condition == sigIdle) { conditionId = 0; }
+                    if(condition == sigIdle) { conditionId = 0; }
                     else if(condition == sigSending) { conditionId = 1; }
                     switch(conditionId)
                     {

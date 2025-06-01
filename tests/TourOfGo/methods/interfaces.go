@@ -24,7 +24,10 @@ func main() {
 	// and does NOT implement Abser.
 	//a = v
 
-	fmt.Println(a.Abs())
+	// Interface can be compared with nil.
+	if a != nil || a == nil {
+		fmt.Println(a.Abs())
+	}
 }
 
 type MyFloat float64

@@ -2827,6 +2827,9 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	case all, decl:
 		fmt.Fprintf(buf, "struct %s : gocpp::Interface\n", structName)
 		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    using gocpp::Interface::operator==;\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    using gocpp::Interface::operator!=;\n", data.out.Indent())
+		fmt.Fprintf(buf, "\n")
 		fmt.Fprintf(buf, "%s    %s(){}\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", data.out.Indent(), structName)

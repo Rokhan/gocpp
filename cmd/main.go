@@ -1296,8 +1296,10 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 	cv.cpp.indent++
 
 	cppOut := cv.withCppBuffer(func() {
-		for i := range env.outNames {
-			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), env.outNames[i])
+		if env.isFunc {
+			for i := range env.outNames {
+				fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), env.outNames[i])
+			}
 		}
 
 		for _, stmt := range block.List {

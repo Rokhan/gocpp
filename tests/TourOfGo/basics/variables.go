@@ -55,6 +55,21 @@ func main() {
 	var s string
 	ii, s = funcVar3(3)
 	fmt.Println(ii, s)
+	withNamedResults()
+}
+
+func withNamedResults() (i int, s string) {
+	i = 3
+	s = "hello"
+	{
+		j := i
+		i := 10 // TODO i := 10 + i
+		k := i
+		s := "world"
+		fmt.Println("withNamedResults:", i, s, j, k)
+	}
+	fmt.Println("withNamedResults:", i, s)
+	return
 }
 
 func dummy_vars() {

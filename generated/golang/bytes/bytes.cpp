@@ -203,7 +203,7 @@ namespace golang::bytes
 
     int IndexAny(gocpp::slice<unsigned char> s, std::string chars)
     {
-        if(chars == "")
+        if(chars == ""s)
         {
             return - 1;
         }
@@ -296,7 +296,7 @@ namespace golang::bytes
 
     int LastIndexAny(gocpp::slice<unsigned char> s, std::string chars)
     {
-        if(chars == "")
+        if(chars == ""s)
         {
             return - 1;
         }
@@ -591,14 +591,14 @@ namespace golang::bytes
         }
         if(len(s) == 1)
         {
-            return append(gocpp::Tag<gocpp::slice<unsigned char>>()(nullptr), s[0]);
+            return append(gocpp::slice<unsigned char>(nullptr), s[0]);
         }
         int n = {};
         if(len(sep) > 0)
         {
             if(len(sep) >= maxInt / (len(s) - 1))
             {
-                gocpp::panic("bytes: Join output length overflow");
+                gocpp::panic("bytes: Join output length overflow"s);
             }
             n += len(sep) * (len(s) - 1);
         }
@@ -606,7 +606,7 @@ namespace golang::bytes
         {
             if(len(v) > maxInt - n)
             {
-                gocpp::panic("bytes: Join output length overflow");
+                gocpp::panic("bytes: Join output length overflow"s);
             }
             n += len(v);
         }
@@ -659,11 +659,11 @@ namespace golang::bytes
         }
         if(count < 0)
         {
-            gocpp::panic("bytes: negative Repeat count");
+            gocpp::panic("bytes: negative Repeat count"s);
         }
         if(len(b) >= maxInt / count)
         {
-            gocpp::panic("bytes: Repeat output length overflow");
+            gocpp::panic("bytes: Repeat output length overflow"s);
         }
         auto n = len(b) * count;
         if(len(b) == 0)
@@ -711,7 +711,7 @@ namespace golang::bytes
         {
             if(! hasLower)
             {
-                return append(gocpp::Tag<gocpp::slice<unsigned char>>()(""), s);
+                return append(gocpp::slice<unsigned char>(""s), s);
             }
             auto b = bytealg::MakeNoZero(len(s));
             for(auto i = 0; i < len(s); i++)
@@ -745,7 +745,7 @@ namespace golang::bytes
         {
             if(! hasUpper)
             {
-                return append(gocpp::Tag<gocpp::slice<unsigned char>>()(""), s);
+                return append(gocpp::slice<unsigned char>(""s), s);
             }
             auto b = bytealg::MakeNoZero(len(s));
             for(auto i = 0; i < len(s); i++)
@@ -1000,7 +1000,7 @@ namespace golang::bytes
         {
             return nullptr;
         }
-        if(cutset == "")
+        if(cutset == ""s)
         {
             return s;
         }
@@ -1021,7 +1021,7 @@ namespace golang::bytes
         {
             return nullptr;
         }
-        if(cutset == "")
+        if(cutset == ""s)
         {
             return s;
         }
@@ -1090,7 +1090,7 @@ namespace golang::bytes
 
     gocpp::slice<unsigned char> TrimRight(gocpp::slice<unsigned char> s, std::string cutset)
     {
-        if(len(s) == 0 || cutset == "")
+        if(len(s) == 0 || cutset == ""s)
         {
             return s;
         }
@@ -1203,7 +1203,7 @@ namespace golang::bytes
         }
         if(m == 0)
         {
-            return append(gocpp::Tag<gocpp::slice<unsigned char>>()(nullptr), s);
+            return append(gocpp::slice<unsigned char>(nullptr), s);
         }
         if(n < 0 || m < n)
         {

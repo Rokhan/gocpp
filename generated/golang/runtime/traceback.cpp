@@ -112,7 +112,7 @@ namespace golang::runtime
     {
         if(auto ourg = getg(); ourg == gp && ourg == ourg->m->curg)
         {
-            go_throw("cannot trace user goroutine on its own stack");
+            go_throw("cannot trace user goroutine on its own stack"s);
         }
         if(pc0 == ~ uintptr_t(0) && sp0 == ~ uintptr_t(0))
         {
@@ -155,7 +155,7 @@ namespace golang::runtime
                 frame.sp += goarch::PtrSize;
             }
         }
-        if(GOARCH == "arm" && goarm < 7 && GOOS == "linux" && frame.pc & 0xffff0000 == 0xffff0000)
+        if(GOARCH == "arm"s && goarm < 7 && GOOS == "linux"s && frame.pc & 0xffff0000 == 0xffff0000)
         {
             frame.pc = frame.lr;
             frame.lr = 0;
@@ -165,12 +165,12 @@ namespace golang::runtime
         {
             if(flags & unwindSilentErrors == 0)
             {
-                print("runtime: g ", gp->goid, " gp=", gp, ": unknown pc ", hex(frame.pc), "\n");
+                print("runtime: g "s, gp->goid, " gp="s, gp, ": unknown pc "s, hex(frame.pc), "\n"s);
                 tracebackHexdump(gp->stack, & frame, 0);
             }
             if(flags & (unwindPrintErrors | unwindSilentErrors) == 0)
             {
-                go_throw("unknown pc");
+                go_throw("unknown pc"s);
             }
             *u = unwinder {};
             return;
@@ -264,8 +264,8 @@ namespace golang::runtime
         {
             if(u->flags & (unwindPrintErrors | unwindSilentErrors) == 0 && ! innermost)
             {
-                println("traceback: unexpected SPWRITE function", funcname(f));
-                go_throw("traceback");
+                println("traceback: unexpected SPWRITE function"s, funcname(f));
+                go_throw("traceback"s);
             }
             frame->lr = 0;
         }
@@ -334,12 +334,12 @@ namespace golang::runtime
             }
             if(fail || doPrint)
             {
-                print("runtime: g ", gp->goid, ": unexpected return pc for ", funcname(f), " called from ", hex(frame->lr), "\n");
+                print("runtime: g "s, gp->goid, ": unexpected return pc for "s, funcname(f), " called from "s, hex(frame->lr), "\n"s);
                 tracebackHexdump(gp->stack, frame, 0);
             }
             if(fail)
             {
-                go_throw("unknown caller pc");
+                go_throw("unknown caller pc"s);
             }
             frame->lr = 0;
             rec::finishInternal(gocpp::recv(u));
@@ -347,9 +347,9 @@ namespace golang::runtime
         }
         if(frame->pc == frame->lr && frame->sp == frame->fp)
         {
-            print("runtime: traceback stuck. pc=", hex(frame->pc), " sp=", hex(frame->sp), "\n");
+            print("runtime: traceback stuck. pc="s, hex(frame->pc), " sp="s, hex(frame->sp), "\n"s);
             tracebackHexdump(gp->stack, frame, frame->sp);
-            go_throw("traceback stuck");
+            go_throw("traceback stuck"s);
         }
         auto injectedCall = f.funcID == abi::FuncID_sigpanic || f.funcID == abi::FuncID_asyncPreempt || f.funcID == abi::FuncID_debugCallV2;
         if(injectedCall)
@@ -391,9 +391,9 @@ namespace golang::runtime
         auto gp = rec::ptr(gocpp::recv(u->g));
         if(u->flags & (unwindPrintErrors | unwindSilentErrors) == 0 && u->frame.sp != gp->stktopsp)
         {
-            print("runtime: g", gp->goid, ": frame.sp=", hex(u->frame.sp), " top=", hex(gp->stktopsp), "\n");
-            print("\tstack=[", hex(gp->stack.lo), "-", hex(gp->stack.hi), "\n");
-            go_throw("traceback did not unwind completely");
+            print("runtime: g"s, gp->goid, ": frame.sp="s, hex(u->frame.sp), " top="s, hex(gp->stktopsp), "\n"s);
+            print("\tstack=["s, hex(gp->stack.lo), "-"s, hex(gp->stack.hi), "\n"s);
+            go_throw("traceback did not unwind completely"s);
         }
     }
 
@@ -512,7 +512,7 @@ namespace golang::runtime
             print(hex(x));
             if(! isLive(off, slotIdx))
             {
-                print("?");
+                print("?"s);
             }
         };
         auto start = true;
@@ -520,7 +520,7 @@ namespace golang::runtime
         {
             if(! start)
             {
-                print(", ");
+                print(", "s);
             }
         };
         auto pi = 0;
@@ -546,20 +546,20 @@ namespace golang::runtime
                         break;
                     case 1:
                         printcomma();
-                        print("{");
+                        print("{"s);
                         start = true;
                         continue;
                         break;
                     case 2:
-                        print("}");
+                        print("}"s);
                         break;
                     case 3:
                         printcomma();
-                        print("...");
+                        print("..."s);
                         break;
                     case 4:
                         printcomma();
-                        print("_");
+                        print("_"s);
                         break;
                     default:
                         printcomma();
@@ -588,7 +588,7 @@ namespace golang::runtime
         auto i = bytealg::IndexByteString(name, '[');
         if(i < 0)
         {
-            return {name, "", ""};
+            return {name, ""s, ""s};
         }
         auto j = len(name) - 1;
         for(; name[j] != ']'; )
@@ -597,9 +597,9 @@ namespace golang::runtime
         }
         if(j <= i)
         {
-            return {name, "", ""};
+            return {name, ""s, ""s};
         }
-        return {name.make_slice(0, i), "[...]", name.make_slice(j + 1)};
+        return {name.make_slice(0, i), "[...]"s, name.make_slice(j + 1)};
     }
 
     std::string funcNameForPrint(std::string name)
@@ -610,9 +610,9 @@ namespace golang::runtime
 
     void printFuncName(std::string name)
     {
-        if(name == "runtime.gopanic")
+        if(name == "runtime.gopanic"s)
         {
-            print("panic");
+            print("panic"s);
             return;
         }
         auto [a, b, c] = funcNamePiecesForPrint(name);
@@ -631,25 +631,25 @@ namespace golang::runtime
 
     void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid)
     {
-        print("created by ");
+        print("created by "s);
         printFuncName(funcname(f));
         if(goid != 0)
         {
-            print(" in goroutine ", goid);
+            print(" in goroutine "s, goid);
         }
-        print("\n");
+        print("\n"s);
         auto tracepc = pc;
         if(pc > rec::entry(gocpp::recv(f)))
         {
             tracepc -= sys::PCQuantum;
         }
         auto [file, line] = funcline(f, tracepc);
-        print("\t", file, ":", line);
+        print("\t"s, file, ":"s, line);
         if(pc > rec::entry(gocpp::recv(f)))
         {
-            print(" +", hex(pc - rec::entry(gocpp::recv(f))));
+            print(" +"s, hex(pc - rec::entry(gocpp::recv(f))));
         }
-        print("\n");
+        print("\n"s);
     }
 
     void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp)
@@ -705,7 +705,7 @@ namespace golang::runtime
             auto elide = remaining - lastN - tracebackOuterFrames;
             if(elide > 0)
             {
-                print("...", elide, " frames elided...\n");
+                print("..."s, elide, " frames elided...\n"s);
                 traceback2(& u2, showRuntime, lastN + elide, tracebackOuterFrames);
             }
             else
@@ -780,30 +780,30 @@ namespace golang::runtime
                 auto name = rec::name(gocpp::recv(sf));
                 auto [file, line] = rec::fileLine(gocpp::recv(iu), uf);
                 printFuncName(name);
-                print("(");
+                print("("s);
                 if(rec::isInlined(gocpp::recv(iu), uf))
                 {
-                    print("...");
+                    print("..."s);
                 }
                 else
                 {
                     auto argp = unsafe::Pointer(u->frame.argp);
                     printArgs(f, argp, rec::symPC(gocpp::recv(u)));
                 }
-                print(")\n");
-                print("\t", file, ":", line);
+                print(")\n"s);
+                print("\t"s, file, ":"s, line);
                 if(! rec::isInlined(gocpp::recv(iu), uf))
                 {
                     if(u->frame.pc > rec::entry(gocpp::recv(f)))
                     {
-                        print(" +", hex(u->frame.pc - rec::entry(gocpp::recv(f))));
+                        print(" +"s, hex(u->frame.pc - rec::entry(gocpp::recv(f))));
                     }
                     if(gp->m != nullptr && gp->m->throwing >= throwTypeRuntime && gp == gp->m->curg || level >= 2)
                     {
-                        print(" fp=", hex(u->frame.fp), " sp=", hex(u->frame.sp), " pc=", hex(u->frame.pc));
+                        print(" fp="s, hex(u->frame.fp), " sp="s, hex(u->frame.sp), " pc="s, hex(u->frame.pc));
                     }
                 }
-                print("\n");
+                print("\n"s);
             }
             if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
@@ -821,7 +821,7 @@ namespace golang::runtime
                         else
                         if(pr)
                         {
-                            print("non-Go function at pc=", hex(pc), "\n");
+                            print("non-Go function at pc="s, hex(pc), "\n"s);
                         }
                     }
                     else
@@ -850,7 +850,7 @@ namespace golang::runtime
 
     void printAncestorTraceback(struct ancestorInfo ancestor)
     {
-        print("[originating from goroutine ", ancestor.goid, "]:\n");
+        print("[originating from goroutine "s, ancestor.goid, "]:\n"s);
         for(auto [fidx, pc] : ancestor.pcs)
         {
             auto f = findfunc(pc);
@@ -861,7 +861,7 @@ namespace golang::runtime
         }
         if(len(ancestor.pcs) == tracebackInnerFrames)
         {
-            print("...additional frames elided...\n");
+            print("...additional frames elided...\n"s);
         }
         auto f = findfunc(ancestor.gopc);
         if(rec::valid(gocpp::recv(f)) && showfuncinfo(rec::srcFunc(gocpp::recv(f)), false, abi::FuncIDNormal) && ancestor.goid != 1)
@@ -875,13 +875,13 @@ namespace golang::runtime
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto [file, line] = rec::fileLine(gocpp::recv(u), uf);
         printFuncName(rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf))));
-        print("(...)\n");
-        print("\t", file, ":", line);
+        print("(...)\n"s);
+        print("\t"s, file, ":"s, line);
         if(pc > rec::entry(gocpp::recv(f)))
         {
-            print(" +", hex(pc - rec::entry(gocpp::recv(f))));
+            print(" +"s, hex(pc - rec::entry(gocpp::recv(f))));
         }
-        print("\n");
+        print("\n"s);
     }
 
     int callers(int skip, gocpp::slice<uintptr_t> pcbuf)
@@ -928,17 +928,17 @@ namespace golang::runtime
             return false;
         }
         auto name = rec::name(gocpp::recv(sf));
-        if(name == "runtime.gopanic" && ! firstFrame)
+        if(name == "runtime.gopanic"s && ! firstFrame)
         {
             return true;
         }
-        return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime.") || isExportedRuntime(name));
+        return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime."s) || isExportedRuntime(name));
     }
 
     bool isExportedRuntime(std::string name)
     {
-        auto n = len("runtime.");
-        return len(name) > n && name.make_slice(0, n) == "runtime." && 'A' <= name[n] && name[n] <= 'Z';
+        auto n = len("runtime."s);
+        return len(name) > n && name.make_slice(0, n) == "runtime."s && 'A' <= name[n] && name[n] <= 'Z';
     }
 
     bool elideWrapperCalling(abi::FuncID id)
@@ -947,14 +947,14 @@ namespace golang::runtime
     }
 
     gocpp::array<std::string, 10> gStatusStrings = gocpp::Init<gocpp::array<std::string, 10>>([](auto& x) {
-        x[_Gidle] = "idle";
-        x[_Grunnable] = "runnable";
-        x[_Grunning] = "running";
-        x[_Gsyscall] = "syscall";
-        x[_Gwaiting] = "waiting";
-        x[_Gdead] = "dead";
-        x[_Gcopystack] = "copystack";
-        x[_Gpreempted] = "preempted";
+        x[_Gidle] = "idle"s;
+        x[_Grunnable] = "runnable"s;
+        x[_Grunning] = "running"s;
+        x[_Gsyscall] = "syscall"s;
+        x[_Gwaiting] = "waiting"s;
+        x[_Gdead] = "dead"s;
+        x[_Gcopystack] = "copystack"s;
+        x[_Gpreempted] = "preempted"s;
     });
     void goroutineheader(struct g* gp)
     {
@@ -969,7 +969,7 @@ namespace golang::runtime
         }
         else
         {
-            status = "???";
+            status = "???"s;
         }
         if(gpstatus == _Gwaiting && gp->waitreason != waitReasonZero)
         {
@@ -980,33 +980,33 @@ namespace golang::runtime
         {
             waitfor = (nanotime() - gp->waitsince) / 60e9;
         }
-        print("goroutine ", gp->goid);
+        print("goroutine "s, gp->goid);
         if(gp->m != nullptr && gp->m->throwing >= throwTypeRuntime && gp == gp->m->curg || level >= 2)
         {
-            print(" gp=", gp);
+            print(" gp="s, gp);
             if(gp->m != nullptr)
             {
-                print(" m=", gp->m->id, " mp=", gp->m);
+                print(" m="s, gp->m->id, " mp="s, gp->m);
             }
             else
             {
-                print(" m=nil");
+                print(" m=nil"s);
             }
         }
-        print(" [", status);
+        print(" ["s, status);
         if(isScan)
         {
-            print(" (scan)");
+            print(" (scan)"s);
         }
         if(waitfor >= 1)
         {
-            print(", ", waitfor, " minutes");
+            print(", "s, waitfor, " minutes"s);
         }
         if(gp->lockedm != 0)
         {
-            print(", locked to thread");
+            print(", locked to thread"s);
         }
-        print("]:\n");
+        print("]:\n"s);
     }
 
     void tracebackothers(struct g* me)
@@ -1015,7 +1015,7 @@ namespace golang::runtime
         auto curgp = getg()->m->curg;
         if(curgp != nullptr && curgp != me)
         {
-            print("\n");
+            print("\n"s);
             goroutineheader(curgp);
             traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, curgp);
         }
@@ -1025,11 +1025,11 @@ namespace golang::runtime
             {
                 return;
             }
-            print("\n");
+            print("\n"s);
             goroutineheader(gp);
             if(gp->m != getg()->m && readgstatus(gp) &^ _Gscan == _Grunning)
             {
-                print("\tgoroutine running on other thread; stack unavailable\n");
+                print("\tgoroutine running on other thread; stack unavailable\n"s);
                 printcreatedby(gp);
             }
             else
@@ -1069,7 +1069,7 @@ namespace golang::runtime
         {
             hi = stk.hi;
         }
-        print("stack: frame={sp:", hex(frame->sp), ", fp:", hex(frame->fp), "} stack=[", hex(stk.lo), ",", hex(stk.hi), ")\n");
+        print("stack: frame={sp:"s, hex(frame->sp), ", fp:"s, hex(frame->fp), "} stack=["s, hex(stk.lo), ","s, hex(stk.hi), ")\n"s);
         hexdumpWords(lo, hi, [=](uintptr_t p) mutable -> unsigned char
         {
             //Go switch emulation
@@ -1115,18 +1115,18 @@ namespace golang::runtime
             }
             return rec::Load(gocpp::recv(fingStatus)) & fingRunningFinalizer == 0;
         }
-        return hasPrefix(funcname(f), "runtime.");
+        return hasPrefix(funcname(f), "runtime."s);
     }
 
     void SetCgoTraceback(int version, unsafe::Pointer traceback, unsafe::Pointer context, unsafe::Pointer symbolizer)
     {
         if(version != 0)
         {
-            gocpp::panic("unsupported version");
+            gocpp::panic("unsupported version"s);
         }
         if(cgoTraceback != nullptr && cgoTraceback != traceback || cgoContext != nullptr && cgoContext != context || cgoSymbolizer != nullptr && cgoSymbolizer != symbolizer)
         {
-            gocpp::panic("call SetCgoTraceback only once");
+            gocpp::panic("call SetCgoTraceback only once"s);
         }
         cgoTraceback = traceback;
         cgoContext = context;
@@ -1264,7 +1264,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                print("non-Go function at pc=", hex(c), "\n");
+                print("non-Go function at pc="s, hex(c), "\n"s);
             }
             return;
         }
@@ -1308,14 +1308,14 @@ namespace golang::runtime
             }
             else
             {
-                println("non-Go function");
+                println("non-Go function"s);
             }
-            print("\t");
+            print("\t"s);
             if(arg->file != nullptr)
             {
-                print(gostringnocopy(arg->file), ":", arg->lineno, " ");
+                print(gostringnocopy(arg->file), ":"s, arg->lineno, " "s);
             }
-            print("pc=", hex(pc), "\n");
+            print("pc="s, hex(pc), "\n"s);
             if(arg->more == 0)
             {
                 return false;

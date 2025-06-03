@@ -48,7 +48,7 @@ namespace golang::poll
 
     std::string rec::Error(struct errNetClosing e)
     {
-        return "use of closed network connection";
+        return "use of closed network connection"s;
     }
 
     bool rec::Timeout(struct errNetClosing e)
@@ -62,8 +62,8 @@ namespace golang::poll
     }
 
     errNetClosing ErrNetClosing = errNetClosing {};
-    gocpp::error ErrFileClosing = errors::New("use of closed file");
-    gocpp::error ErrNoDeadline = errors::New("file type does not support deadline");
+    gocpp::error ErrFileClosing = errors::New("use of closed file"s);
+    gocpp::error ErrNoDeadline = errors::New("file type does not support deadline"s);
     struct gocpp::error errClosing(bool isFile)
     {
         if(isFile)
@@ -102,7 +102,7 @@ namespace golang::poll
 
     std::string rec::Error(struct DeadlineExceededError* e)
     {
-        return "i/o timeout";
+        return "i/o timeout"s;
     }
 
     bool rec::Timeout(struct DeadlineExceededError* e)
@@ -115,7 +115,7 @@ namespace golang::poll
         return true;
     }
 
-    gocpp::error ErrNotPollable = errors::New("not pollable");
+    gocpp::error ErrNotPollable = errors::New("not pollable"s);
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n)
     {
         for(; len(*v) > 0; )

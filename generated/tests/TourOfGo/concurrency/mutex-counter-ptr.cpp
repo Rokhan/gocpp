@@ -86,11 +86,11 @@ namespace golang::main
         });
         for(auto i = 0; i < 1000; i++)
         {
-            gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"); });
+            gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"s); });
         }
         mocklib::Sleep(mocklib::Second);
-        mocklib::Println("result: ", rec::Value(gocpp::recv(c), "somekey"));
-        mocklib::Println("expected: ", 1000);
+        mocklib::Println("result: "s, rec::Value(gocpp::recv(c), "somekey"s));
+        mocklib::Println("expected: "s, 1000);
     }
 
 }

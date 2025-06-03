@@ -44,7 +44,7 @@ namespace golang::adler32
         return 4;
     }
 
-    std::string magic = "adl\x01";
+    std::string magic = "adl\x01"s;
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::adler32::digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
@@ -57,11 +57,11 @@ namespace golang::adler32
     {
         if(len(b) < len(magic) || std::string(b.make_slice(0, len(magic))) != magic)
         {
-            return errors::New("hash/adler32: invalid hash state identifier");
+            return errors::New("hash/adler32: invalid hash state identifier"s);
         }
         if(len(b) != marshaledSize)
         {
-            return errors::New("hash/adler32: invalid hash state size");
+            return errors::New("hash/adler32: invalid hash state size"s);
         }
         *d = digest(readUint32(b.make_slice(len(magic))));
         return nullptr;

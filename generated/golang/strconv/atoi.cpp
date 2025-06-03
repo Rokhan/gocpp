@@ -27,8 +27,8 @@ namespace golang::strconv
         return c | ('x' - 'X');
     }
 
-    gocpp::error ErrRange = errors::New("value out of range");
-    gocpp::error ErrSyntax = errors::New("invalid syntax");
+    gocpp::error ErrRange = errors::New("value out of range"s);
+    gocpp::error ErrSyntax = errors::New("invalid syntax"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     NumError::operator T()
@@ -66,7 +66,7 @@ namespace golang::strconv
 
     std::string rec::Error(struct NumError* e)
     {
-        return "strconv." + e->Func + ": " + "parsing " + Quote(e->Num) + ": " + rec::Error(gocpp::recv(e->Err));
+        return "strconv."s + e->Func + ": "s + "parsing "s + Quote(e->Num) + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct NumError* e)
@@ -76,7 +76,7 @@ namespace golang::strconv
 
     std::string cloneString(std::string x)
     {
-        return std::string(gocpp::Tag<gocpp::slice<unsigned char>>()(x));
+        return std::string(gocpp::slice<unsigned char>(x));
     }
 
     struct NumError* syntaxError(std::string fn, std::string str)
@@ -91,18 +91,18 @@ namespace golang::strconv
 
     struct NumError* baseError(std::string fn, std::string str, int base)
     {
-        return new NumError {fn, cloneString(str), errors::New("invalid base " + Itoa(base))};
+        return new NumError {fn, cloneString(str), errors::New("invalid base "s + Itoa(base))};
     }
 
     struct NumError* bitSizeError(std::string fn, std::string str, int bitSize)
     {
-        return new NumError {fn, cloneString(str), errors::New("invalid bit size " + Itoa(bitSize))};
+        return new NumError {fn, cloneString(str), errors::New("invalid bit size "s + Itoa(bitSize))};
     }
 
     std::tuple<uint64_t, struct gocpp::error> ParseUint(std::string s, int base, int bitSize)
     {
-        auto fnParseUint = "ParseUint";
-        if(s == "")
+        auto fnParseUint = "ParseUint"s;
+        if(s == ""s)
         {
             return {0, syntaxError(fnParseUint, s)};
         }
@@ -186,7 +186,7 @@ namespace golang::strconv
         auto maxVal = (uint64_t(1) << (unsigned int)(bitSize)) - 1;
         auto underscores = false;
         uint64_t n = {};
-        for(auto [gocpp_ignored, c] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
+        for(auto [gocpp_ignored, c] : gocpp::slice<unsigned char>(s))
         {
             unsigned char d = {};
             //Go switch emulation
@@ -239,8 +239,8 @@ namespace golang::strconv
     {
         int64_t i;
         struct gocpp::error err;
-        auto fnParseInt = "ParseInt";
-        if(s == "")
+        auto fnParseInt = "ParseInt"s;
+        if(s == ""s)
         {
             return {0, syntaxError(fnParseInt, s)};
         }
@@ -287,7 +287,7 @@ namespace golang::strconv
 
     std::tuple<int, struct gocpp::error> Atoi(std::string s)
     {
-        auto fnAtoi = "Atoi";
+        auto fnAtoi = "Atoi"s;
         auto sLen = len(s);
         if(intSize == 32 && (0 < sLen && sLen < 10) || intSize == 64 && (0 < sLen && sLen < 19))
         {
@@ -301,7 +301,7 @@ namespace golang::strconv
                 }
             }
             auto n = 0;
-            for(auto [gocpp_ignored, ch] : gocpp::Tag<gocpp::slice<unsigned char>>()(s))
+            for(auto [gocpp_ignored, ch] : gocpp::slice<unsigned char>(s))
             {
                 ch -= '0';
                 if(ch > 9)

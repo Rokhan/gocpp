@@ -35,7 +35,7 @@ namespace golang::windows
     {
         if(p == nullptr)
         {
-            return "";
+            return ""s;
         }
         auto end = unsafe::Pointer(p);
         auto n = 0;

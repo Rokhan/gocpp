@@ -69,7 +69,7 @@ namespace golang::runtime
     {
         if(traceEnabled())
         {
-            go_throw("traceInitReadCPU called with trace enabled");
+            go_throw("traceInitReadCPU called with trace enabled"s);
         }
         trace.cpuLogRead[0] = newProfBuf(3, profBufWordCount, profBufTagCount);
         trace.cpuLogRead[1] = newProfBuf(3, profBufWordCount, profBufTagCount);
@@ -145,7 +145,7 @@ namespace golang::runtime
     {
         if(! traceEnabled())
         {
-            go_throw("traceStartReadCPU called with trace disabled");
+            go_throw("traceStartReadCPU called with trace disabled"s);
         }
         trace.cpuSleep = newWakeableSleep();
         auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_0>>(), 1);
@@ -175,7 +175,7 @@ namespace golang::runtime
     {
         if(traceEnabled())
         {
-            go_throw("traceStopReadCPU called with trace enabled");
+            go_throw("traceStopReadCPU called with trace enabled"s);
         }
         rec::Store(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
         rec::Store(gocpp::recv(trace.cpuLogWrite[1]), nullptr);

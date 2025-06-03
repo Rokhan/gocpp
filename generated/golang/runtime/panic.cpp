@@ -90,7 +90,7 @@ namespace golang::runtime
 
     void panicCheck1(uintptr_t pc, std::string msg)
     {
-        if(goarch::IsWasm == 0 && hasPrefix(funcname(findfunc(pc)), "runtime."))
+        if(goarch::IsWasm == 0 && hasPrefix(funcname(findfunc(pc)), "runtime."s))
         {
             go_throw(msg);
         }
@@ -112,7 +112,7 @@ namespace golang::runtime
 
     void goPanicIndex(int x, int y)
     {
-        panicCheck1(getcallerpc(), "index out of range");
+        panicCheck1(getcallerpc(), "index out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -123,7 +123,7 @@ namespace golang::runtime
 
     void goPanicIndexU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "index out of range");
+        panicCheck1(getcallerpc(), "index out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -134,7 +134,7 @@ namespace golang::runtime
 
     void goPanicSliceAlen(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -145,7 +145,7 @@ namespace golang::runtime
 
     void goPanicSliceAlenU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -156,7 +156,7 @@ namespace golang::runtime
 
     void goPanicSliceAcap(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -167,7 +167,7 @@ namespace golang::runtime
 
     void goPanicSliceAcapU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -178,7 +178,7 @@ namespace golang::runtime
 
     void goPanicSliceB(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -189,7 +189,7 @@ namespace golang::runtime
 
     void goPanicSliceBU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -200,7 +200,7 @@ namespace golang::runtime
 
     void goPanicSlice3Alen(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -211,7 +211,7 @@ namespace golang::runtime
 
     void goPanicSlice3AlenU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -222,7 +222,7 @@ namespace golang::runtime
 
     void goPanicSlice3Acap(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -233,7 +233,7 @@ namespace golang::runtime
 
     void goPanicSlice3AcapU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -244,7 +244,7 @@ namespace golang::runtime
 
     void goPanicSlice3B(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -255,7 +255,7 @@ namespace golang::runtime
 
     void goPanicSlice3BU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -266,7 +266,7 @@ namespace golang::runtime
 
     void goPanicSlice3C(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -277,7 +277,7 @@ namespace golang::runtime
 
     void goPanicSlice3CU(unsigned int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice bounds out of range");
+        panicCheck1(getcallerpc(), "slice bounds out of range"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = false;
@@ -288,7 +288,7 @@ namespace golang::runtime
 
     void goPanicSliceConvert(int x, int y)
     {
-        panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array");
+        panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array"s);
         gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
             x.x = int64_t(x);
             x.go_signed = true;
@@ -348,46 +348,46 @@ namespace golang::runtime
     void panicSliceConvert(int x, int y)
     /* convertBlockStmt, nil block */;
 
-    gocpp::error shiftError = error(errorString("negative shift amount"));
+    gocpp::error shiftError = error(errorString("negative shift amount"s));
     void panicshift()
     {
-        panicCheck1(getcallerpc(), "negative shift amount");
+        panicCheck1(getcallerpc(), "negative shift amount"s);
         gocpp::panic(shiftError);
     }
 
-    gocpp::error divideError = error(errorString("integer divide by zero"));
+    gocpp::error divideError = error(errorString("integer divide by zero"s));
     void panicdivide()
     {
-        panicCheck2("integer divide by zero");
+        panicCheck2("integer divide by zero"s);
         gocpp::panic(divideError);
     }
 
-    gocpp::error overflowError = error(errorString("integer overflow"));
+    gocpp::error overflowError = error(errorString("integer overflow"s));
     void panicoverflow()
     {
-        panicCheck2("integer overflow");
+        panicCheck2("integer overflow"s);
         gocpp::panic(overflowError);
     }
 
-    gocpp::error floatError = error(errorString("floating point error"));
+    gocpp::error floatError = error(errorString("floating point error"s));
     void panicfloat()
     {
-        panicCheck2("floating point error");
+        panicCheck2("floating point error"s);
         gocpp::panic(floatError);
     }
 
-    gocpp::error memoryError = error(errorString("invalid memory address or nil pointer dereference"));
+    gocpp::error memoryError = error(errorString("invalid memory address or nil pointer dereference"s));
     void panicmem()
     {
-        panicCheck2("invalid memory address or nil pointer dereference");
+        panicCheck2("invalid memory address or nil pointer dereference"s);
         gocpp::panic(memoryError);
     }
 
     void panicmemAddr(uintptr_t addr)
     {
-        panicCheck2("invalid memory address or nil pointer dereference");
+        panicCheck2("invalid memory address or nil pointer dereference"s);
         gocpp::panic(gocpp::Init<errorAddressString>([=](auto& x) {
-            x.msg = "invalid memory address or nil pointer dereference";
+            x.msg = "invalid memory address or nil pointer dereference"s;
             x.addr = addr;
         }));
     }
@@ -397,7 +397,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->curg != gp)
         {
-            go_throw("defer on system stack");
+            go_throw("defer on system stack"s);
         }
         auto d = newdefer();
         d->link = gp->_defer;
@@ -408,7 +408,7 @@ namespace golang::runtime
         return0();
     }
 
-    gocpp::error rangeExitError = error(errorString("range function continued iteration after exit"));
+    gocpp::error rangeExitError = error(errorString("range function continued iteration after exit"s));
     void panicrangeexit()
     {
         gocpp::panic(rangeExitError);
@@ -419,7 +419,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->curg != gp)
         {
-            go_throw("defer on system stack");
+            go_throw("defer on system stack"s);
         }
         auto d = newdefer();
         d->link = gp->_defer;
@@ -450,7 +450,7 @@ namespace golang::runtime
             d1->link = rec::Load(gocpp::recv(head));
             if(d1->link == badDefer())
             {
-                go_throw("defer after range func returned");
+                go_throw("defer after range func returned"s);
             }
             if(rec::CompareAndSwap(gocpp::recv(head), d1->link, d1))
             {
@@ -502,7 +502,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->curg != gp)
         {
-            go_throw("defer on system stack");
+            go_throw("defer on system stack"s);
         }
         d->heap = false;
         d->rangefunc = false;
@@ -593,7 +593,7 @@ namespace golang::runtime
 
     void freedeferfn()
     {
-        go_throw("freedefer with d.fn != nil");
+        go_throw("freedefer with d.fn != nil"s);
     }
 
     void deferreturn()
@@ -636,7 +636,7 @@ namespace golang::runtime
         {
             defer.push_back([=]{ [=]() mutable -> void
             {
-                auto text = "panic while printing panic value";
+                auto text = "panic while printing panic value"s;
                 //Go type switch emulation
                 {
                     const auto& gocpp_id_0 = gocpp::type_info(gocpp::recover());
@@ -653,13 +653,13 @@ namespace golang::runtime
                         case 1:
                         {
                             std::string r = gocpp::any_cast<std::string>(gocpp::recover());
-                            go_throw(text + ": " + r);
+                            go_throw(text + ": "s + r);
                             break;
                         }
                         default:
                         {
                             auto r = gocpp::recover();
-                            go_throw(text + ": type " + rec::string(gocpp::recv(toRType(efaceOf(& r)->_type))));
+                            go_throw(text + ": type "s + rec::string(gocpp::recv(toRType(efaceOf(& r)->_type))));
                             break;
                         }
                     }
@@ -705,20 +705,20 @@ namespace golang::runtime
             printpanics(p->link);
             if(! p->link->goexit)
             {
-                print("\t");
+                print("\t"s);
             }
         }
         if(p->goexit)
         {
             return;
         }
-        print("panic: ");
+        print("panic: "s);
         printany(p->arg);
         if(p->recovered)
         {
-            print(" [recovered]");
+            print(" [recovered]"s);
         }
-        print("\n");
+        print("\n"s);
     }
 
     std::tuple<uint32_t, unsafe::Pointer> readvarintUnsafe(unsafe::Pointer fd)
@@ -737,7 +737,7 @@ namespace golang::runtime
             shift += 7;
             if(shift > 28)
             {
-                gocpp::panic("Bad varint");
+                gocpp::panic("Bad varint"s);
             }
         }
     }
@@ -773,7 +773,7 @@ namespace golang::runtime
 
     std::string rec::Error(PanicNilError*)
     {
-        return "panic called with nil argument";
+        return "panic called with nil argument"s;
     }
 
     void rec::RuntimeError(PanicNilError*)
@@ -781,7 +781,7 @@ namespace golang::runtime
     }
 
     godebugInc* panicnil = gocpp::InitPtr<godebugInc>([](auto& x) {
-        x.name = "panicnil";
+        x.name = "panicnil"s;
     });
     void gopanic(go_any e)
     {
@@ -799,34 +799,34 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->curg != gp)
         {
-            print("panic: ");
+            print("panic: "s);
             printany(e);
-            print("\n");
-            go_throw("panic on system stack");
+            print("\n"s);
+            go_throw("panic on system stack"s);
         }
         if(gp->m->mallocing != 0)
         {
-            print("panic: ");
+            print("panic: "s);
             printany(e);
-            print("\n");
-            go_throw("panic during malloc");
+            print("\n"s);
+            go_throw("panic during malloc"s);
         }
-        if(gp->m->preemptoff != "")
+        if(gp->m->preemptoff != ""s)
         {
-            print("panic: ");
+            print("panic: "s);
             printany(e);
-            print("\n");
-            print("preempt off reason: ");
+            print("\n"s);
+            print("preempt off reason: "s);
             print(gp->m->preemptoff);
-            print("\n");
-            go_throw("panic during preemptoff");
+            print("\n"s);
+            go_throw("panic during preemptoff"s);
         }
         if(gp->m->locks != 0)
         {
-            print("panic: ");
+            print("panic: "s);
             printany(e);
-            print("\n");
-            go_throw("panic holding locks");
+            print("\n"s);
+            go_throw("panic holding locks"s);
         }
         _panic p = {};
         p->arg = e;
@@ -876,12 +876,12 @@ namespace golang::runtime
         {
             if(gp->_panic != p)
             {
-                go_throw("bad panic stack");
+                go_throw("bad panic stack"s);
             }
             if(p->recovered)
             {
                 mcall(recovery);
-                go_throw("recovery failed");
+                go_throw("recovery failed"s);
             }
         }
         p->argp = add(p->startSP, sys::MinFrameSize);
@@ -973,7 +973,7 @@ namespace golang::runtime
         }
         if(fn.deferreturn == 0)
         {
-            go_throw("missing deferreturn");
+            go_throw("missing deferreturn"s);
         }
         uint32_t deferBitsOffset;
         std::tie(deferBitsOffset, fd) = readvarintUnsafe(fd);
@@ -1016,7 +1016,7 @@ namespace golang::runtime
     {
         systemstack([=]() mutable -> void
         {
-            print("fatal error: ", s, "\n");
+            print("fatal error: "s, s, "\n"s);
         });
         fatalthrow(throwTypeRuntime);
     }
@@ -1025,7 +1025,7 @@ namespace golang::runtime
     {
         systemstack([=]() mutable -> void
         {
-            print("fatal error: ", s, "\n");
+            print("fatal error: "s, s, "\n"s);
         });
         fatalthrow(throwTypeUser);
     }
@@ -1055,7 +1055,7 @@ namespace golang::runtime
         }
         if(gp->param != nullptr)
         {
-            go_throw("unexpected gp.param");
+            go_throw("unexpected gp.param"s);
         }
         if(saveOpenDeferState)
         {
@@ -1067,8 +1067,8 @@ namespace golang::runtime
         }
         if(sp != 0 && (sp < gp->stack.lo || gp->stack.hi < sp))
         {
-            print("recover: ", hex(sp), " not in [", hex(gp->stack.lo), ", ", hex(gp->stack.hi), "]\n");
-            go_throw("bad recovery");
+            print("recover: "s, hex(sp), " not in ["s, hex(gp->stack.lo), ", "s, hex(gp->stack.hi), "]\n"s);
+            go_throw("bad recovery"s);
         }
         gp->sched.sp = sp;
         gp->sched.pc = pc;
@@ -1148,7 +1148,7 @@ namespace golang::runtime
         auto gp = getg();
         if(mheap_.cachealloc.size == 0)
         {
-            print("runtime: panic before malloc heap initialized\n");
+            print("runtime: panic before malloc heap initialized\n"s);
         }
         gp->m->mallocing++;
         if(gp->m->locks < 0)
@@ -1177,12 +1177,12 @@ namespace golang::runtime
                     break;
                 case 1:
                     gp->m->dying = 2;
-                    print("panic during panic\n");
+                    print("panic during panic\n"s);
                     return false;
                     break;
                 case 2:
                     gp->m->dying = 3;
-                    print("stack trace unavailable\n");
+                    print("stack trace unavailable\n"s);
                     exit(4);
                 default:
                     exit(5);
@@ -1199,15 +1199,15 @@ namespace golang::runtime
         if(gp->sig != 0)
         {
             auto signame = signame(gp->sig);
-            if(signame != "")
+            if(signame != ""s)
             {
-                print("[signal ", signame);
+                print("[signal "s, signame);
             }
             else
             {
-                print("[signal ", hex(gp->sig));
+                print("[signal "s, hex(gp->sig));
             }
-            print(" code=", hex(gp->sigcode0), " addr=", hex(gp->sigcode1), " pc=", hex(gp->sigpc), "]\n");
+            print(" code="s, hex(gp->sigcode0), " addr="s, hex(gp->sigcode1), " pc="s, hex(gp->sigpc), "]\n"s);
         }
         auto [level, all, docrash] = gotraceback();
         if(level > 0)
@@ -1218,14 +1218,14 @@ namespace golang::runtime
             }
             if(gp != gp->m->g0)
             {
-                print("\n");
+                print("\n"s);
                 goroutineheader(gp);
                 traceback(pc, sp, 0, gp);
             }
             else
             if(level >= 2 || gp->m->throwing >= throwTypeRuntime)
             {
-                print("\nruntime stack:\n");
+                print("\nruntime stack:\n"s);
                 traceback(pc, sp, 0, gp);
             }
             if(! didothers && all)
@@ -1253,7 +1253,7 @@ namespace golang::runtime
             releasem(mp);
             return false;
         }
-        if(mp->locks != 1 || mp->mallocing != 0 || mp->throwing != throwTypeNone || mp->preemptoff != "" || mp->dying != 0)
+        if(mp->locks != 1 || mp->mallocing != 0 || mp->throwing != throwTypeNone || mp->preemptoff != ""s || mp->dying != 0)
         {
             releasem(mp);
             return false;
@@ -1264,7 +1264,7 @@ namespace golang::runtime
             releasem(mp);
             return false;
         }
-        if(GOOS == "windows" && mp->libcallsp != 0)
+        if(GOOS == "windows"s && mp->libcallsp != 0)
         {
             releasem(mp);
             return false;

@@ -190,7 +190,7 @@ namespace golang::flate
         auto n = w->nbytes;
         if(w->nbits & 7 != 0)
         {
-            w->err = InternalError("writeBytes with unfinished bits");
+            w->err = InternalError("writeBytes with unfinished bits"s);
             return;
         }
         for(; w->nbits != 0; )

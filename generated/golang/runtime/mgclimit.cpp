@@ -168,11 +168,11 @@ namespace golang::runtime
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
-            go_throw("failed to acquire lock to start a GC transition");
+            go_throw("failed to acquire lock to start a GC transition"s);
         }
         if(l->gcEnabled == enableGC)
         {
-            go_throw("transitioning GC to the same state as before?");
+            go_throw("transitioning GC to the same state as before?"s);
         }
         rec::updateLocked(gocpp::recv(l), now);
         l->gcEnabled = enableGC;
@@ -183,7 +183,7 @@ namespace golang::runtime
     {
         if(! l->transitioning)
         {
-            go_throw("finishGCTransition called without starting one?");
+            go_throw("finishGCTransition called without starting one?"s);
         }
         if(auto lastUpdate = rec::Load(gocpp::recv(l->lastUpdate)); now >= lastUpdate)
         {
@@ -217,7 +217,7 @@ namespace golang::runtime
         }
         if(l->transitioning)
         {
-            go_throw("update during transition");
+            go_throw("update during transition"s);
         }
         rec::updateLocked(gocpp::recv(l), now);
         rec::unlock(gocpp::recv(l));
@@ -272,7 +272,7 @@ namespace golang::runtime
                             break;
                             break;
                         default:
-                            go_throw("invalid limiter event type found");
+                            go_throw("invalid limiter event type found"s);
                             break;
                     }
                 }
@@ -328,7 +328,7 @@ namespace golang::runtime
         auto old = rec::Swap(gocpp::recv(l->lock), 0);
         if(old != 1)
         {
-            go_throw("double unlock");
+            go_throw("double unlock"s);
         }
     }
 
@@ -336,7 +336,7 @@ namespace golang::runtime
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
-            go_throw("failed to acquire lock to reset capacity");
+            go_throw("failed to acquire lock to reset capacity"s);
         }
         rec::updateLocked(gocpp::recv(l), now);
         l->nprocs = nprocs;
@@ -448,8 +448,8 @@ namespace golang::runtime
             stamp = limiterEventStamp(rec::Load(gocpp::recv(e->stamp)));
             if(rec::typ(gocpp::recv(stamp)) != typ)
             {
-                print("runtime: want=", typ, " got=", rec::typ(gocpp::recv(stamp)), "\n");
-                go_throw("limiterEvent.stop: found wrong event in p's limiter event slot");
+                print("runtime: want="s, typ, " got="s, rec::typ(gocpp::recv(stamp)), "\n"s);
+                go_throw("limiterEvent.stop: found wrong event in p's limiter event slot"s);
             }
             if(rec::CompareAndSwap(gocpp::recv(e->stamp), uint64_t(stamp), uint64_t(limiterEventStampNone)))
             {
@@ -483,7 +483,7 @@ namespace golang::runtime
                     rec::addAssistTime(gocpp::recv(gcCPULimiter), duration);
                     break;
                 default:
-                    go_throw("limiterEvent.stop: invalid limiter event type found");
+                    go_throw("limiterEvent.stop: invalid limiter event type found"s);
                     break;
             }
         }

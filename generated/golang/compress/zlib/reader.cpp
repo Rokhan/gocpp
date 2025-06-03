@@ -33,9 +33,9 @@ namespace golang::zlib
         using io::rec::Write;
     }
 
-    gocpp::error ErrChecksum = errors::New("zlib: invalid checksum");
-    gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary");
-    gocpp::error ErrHeader = errors::New("zlib: invalid header");
+    gocpp::error ErrChecksum = errors::New("zlib: invalid checksum"s);
+    gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary"s);
+    gocpp::error ErrHeader = errors::New("zlib: invalid header"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     reader::operator T()

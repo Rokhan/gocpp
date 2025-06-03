@@ -33,7 +33,7 @@ namespace golang::reflectlite
         if(rec::Kind(gocpp::recv(v)) != Slice)
         {
             gocpp::panic(gocpp::InitPtr<ValueError>([=](auto& x) {
-                x.Method = "Swapper";
+                x.Method = "Swapper"s;
                 x.Kind = rec::Kind(gocpp::recv(v));
             }));
         }
@@ -48,7 +48,7 @@ namespace golang::reflectlite
                 case 0:
                     return [=](int i, int j) mutable -> void
                     {
-                        gocpp::panic("reflect: slice index out of range");
+                        gocpp::panic("reflect: slice index out of range"s);
                     };
                     break;
                 case 1:
@@ -56,7 +56,7 @@ namespace golang::reflectlite
                     {
                         if(i != 0 || j != 0)
                         {
-                            gocpp::panic("reflect: slice index out of range");
+                            gocpp::panic("reflect: slice index out of range"s);
                         }
                     };
                     break;
@@ -133,10 +133,10 @@ namespace golang::reflectlite
         {
             if((unsigned int)(i) >= (unsigned int)(s->Len) || (unsigned int)(j) >= (unsigned int)(s->Len))
             {
-                gocpp::panic("reflect: slice index out of range");
+                gocpp::panic("reflect: slice index out of range"s);
             }
-            auto val1 = arrayAt(s->Data, i, size, "i < s.Len");
-            auto val2 = arrayAt(s->Data, j, size, "j < s.Len");
+            auto val1 = arrayAt(s->Data, i, size, "i < s.Len"s);
+            auto val2 = arrayAt(s->Data, j, size, "j < s.Len"s);
             typedmemmove(typ, tmp, val1);
             typedmemmove(typ, val1, val2);
             typedmemmove(typ, val2, tmp);

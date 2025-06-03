@@ -42,10 +42,10 @@ namespace golang::wc
             }
             if(! ok)
             {
-                mocklib::Printf("FAIL\n f(%q) =\n  %#v\n want:\n  %#v", c.in, got, c.want);
+                mocklib::Printf("FAIL\n f(%q) =\n  %#v\n want:\n  %#v"s, c.in, got, c.want);
                 break;
             }
-            mocklib::Printf("PASS\n f(%q) = \n  %#v\n", c.in, got);
+            mocklib::Printf("PASS\n f(%q) = \n  %#v\n"s, c.in, got);
         }
     }
 
@@ -89,6 +89,6 @@ namespace golang::wc
     }
 
 
-    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!", gocpp::map<std::string, int> {{ "I", 1 }, { "am", 1 }, { "learning", 1 }, { "Go!", 1 }}},  {"The quick brown fox jumped over the lazy dog.", gocpp::map<std::string, int> {{ "The", 1 }, { "quick", 1 }, { "brown", 1 }, { "fox", 1 }, { "jumped", 1 }, { "over", 1 }, { "the", 1 }, { "lazy", 1 }, { "dog.", 1 }}},  {"I ate a donut. Then I ate another donut.", gocpp::map<std::string, int> {{ "I", 2 }, { "ate", 2 }, { "a", 1 }, { "donut.", 2 }, { "Then", 1 }, { "another", 1 }}},  {"A man a plan a canal panama.", gocpp::map<std::string, int> {{ "A", 1 }, { "man", 1 }, { "a", 2 }, { "plan", 1 }, { "canal", 1 }, { "panama.", 1 }}}};
+    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!"s, gocpp::map<std::string, int> {{ "I"s, 1 }, { "am"s, 1 }, { "learning"s, 1 }, { "Go!"s, 1 }}},  {"The quick brown fox jumped over the lazy dog."s, gocpp::map<std::string, int> {{ "The"s, 1 }, { "quick"s, 1 }, { "brown"s, 1 }, { "fox"s, 1 }, { "jumped"s, 1 }, { "over"s, 1 }, { "the"s, 1 }, { "lazy"s, 1 }, { "dog."s, 1 }}},  {"I ate a donut. Then I ate another donut."s, gocpp::map<std::string, int> {{ "I"s, 2 }, { "ate"s, 2 }, { "a"s, 1 }, { "donut."s, 2 }, { "Then"s, 1 }, { "another"s, 1 }}},  {"A man a plan a canal panama."s, gocpp::map<std::string, int> {{ "A"s, 1 }, { "man"s, 1 }, { "a"s, 2 }, { "plan"s, 1 }, { "canal"s, 1 }, { "panama."s, 1 }}}};
 }
 

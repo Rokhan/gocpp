@@ -91,7 +91,7 @@ namespace golang::runtime
         auto t = (runtime::_type*)(efaceOf(& typ)->data);
         if(t->Kind_ & kindMask != kindPtr)
         {
-            go_throw("arena_New: non-pointer type");
+            go_throw("arena_New: non-pointer type"s);
         }
         auto te = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem;
         auto x = rec::go_new(gocpp::recv(((userArena*)(arena))), te);
@@ -136,7 +136,7 @@ namespace golang::runtime
                     v = e->data;
                     break;
                 default:
-                    gocpp::panic("arena: Clone only supports pointers, slices, and strings");
+                    gocpp::panic("arena: Clone only supports pointers, slices, and strings"s);
                     break;
             }
         }
@@ -187,24 +187,24 @@ namespace golang::runtime
     {
         if(userArenaChunkPages * pageSize != userArenaChunkBytes)
         {
-            go_throw("user arena chunk size is not a multiple of the page size");
+            go_throw("user arena chunk size is not a multiple of the page size"s);
         }
         if(userArenaChunkBytes % physPageSize != 0)
         {
-            go_throw("user arena chunk size is not a multiple of the physical page size");
+            go_throw("user arena chunk size is not a multiple of the physical page size"s);
         }
         if(userArenaChunkBytes < heapArenaBytes)
         {
             if(heapArenaBytes % userArenaChunkBytes != 0)
             {
-                go_throw("user arena chunk size is smaller than a heap arena, but doesn't divide it");
+                go_throw("user arena chunk size is smaller than a heap arena, but doesn't divide it"s);
             }
         }
         else
         {
             if(userArenaChunkBytes % heapArenaBytes != 0)
             {
-                go_throw("user arena chunks size is larger than a heap arena, but not a multiple");
+                go_throw("user arena chunks size is larger than a heap arena, but not a multiple"s);
             }
         }
         lockInit(& userArenaState.lock, lockRankUserArenaState);
@@ -277,18 +277,18 @@ namespace golang::runtime
     {
         if(cap < 0)
         {
-            gocpp::panic("userArena.slice: negative cap");
+            gocpp::panic("userArena.slice: negative cap"s);
         }
         auto i = efaceOf(& sl);
         auto typ = i->_type;
         if(typ->Kind_ & kindMask != kindPtr)
         {
-            gocpp::panic("slice result of non-ptr type");
+            gocpp::panic("slice result of non-ptr type"s);
         }
         typ = (runtime::ptrtype*)(unsafe::Pointer(typ))->Elem;
         if(typ->Kind_ & kindMask != kindSlice)
         {
-            gocpp::panic("slice of non-ptr-to-slice type");
+            gocpp::panic("slice of non-ptr-to-slice type"s);
         }
         typ = (runtime::slicetype*)(unsafe::Pointer(typ))->Elem;
         *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
@@ -298,7 +298,7 @@ namespace golang::runtime
     {
         if(rec::Load(gocpp::recv(a->defunct)))
         {
-            gocpp::panic("arena double free");
+            gocpp::panic("arena double free"s);
         }
         rec::Store(gocpp::recv(a->defunct), true);
         SetFinalizer(a, nullptr);
@@ -314,7 +314,7 @@ namespace golang::runtime
         }
         if(a->fullList != nullptr || i >= 0)
         {
-            go_throw("full list doesn't match refs list in length");
+            go_throw("full list doesn't match refs list in length"s);
         }
         s = a->active;
         if(s != nullptr)
@@ -357,7 +357,7 @@ namespace golang::runtime
         {
             if(rec::size(gocpp::recv(s->userArenaChunkFree)) > userArenaChunkMaxAllocBytes)
             {
-                go_throw("wasted too much memory in an arena chunk");
+                go_throw("wasted too much memory in an arena chunk"s);
             }
             s->next = a->fullList;
             a->fullList = s;
@@ -381,7 +381,7 @@ namespace golang::runtime
             std::tie(x, s) = newUserArenaChunk();
             if(s == nullptr)
             {
-                go_throw("out of memory");
+                go_throw("out of memory"s);
             }
         }
         a->refs = append(a->refs, x);
@@ -470,7 +470,7 @@ namespace golang::runtime
         {
             if(size > ~ uintptr_t(0) / uintptr_t(cap))
             {
-                go_throw("out of memory");
+                go_throw("out of memory"s);
             }
             size *= uintptr_t(cap);
         }
@@ -489,11 +489,11 @@ namespace golang::runtime
         auto mp = acquirem();
         if(mp->mallocing != 0)
         {
-            go_throw("malloc deadlock");
+            go_throw("malloc deadlock"s);
         }
         if(mp->gsignal == getg())
         {
-            go_throw("malloc during signal");
+            go_throw("malloc during signal"s);
         }
         mp->mallocing = 1;
         unsafe::Pointer ptr = {};
@@ -521,7 +521,7 @@ namespace golang::runtime
         }
         if(s->needzero != 0)
         {
-            go_throw("arena chunk needs zeroing, but should already be zeroed");
+            go_throw("arena chunk needs zeroing, but should already be zeroed"s);
         }
         if(typ->PtrBytes != 0)
         {
@@ -536,7 +536,7 @@ namespace golang::runtime
             auto c = getMCache(mp);
             if(c == nullptr)
             {
-                go_throw("mallocgc called without a P or outside bootstrapping");
+                go_throw("mallocgc called without a P or outside bootstrapping"s);
             }
             if(cap > 0)
             {
@@ -558,7 +558,7 @@ namespace golang::runtime
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
         if(overflow || n < 0 || mem > maxAlloc)
         {
-            gocpp::panic(plainError("runtime: allocation size out of range"));
+            gocpp::panic(plainError("runtime: allocation size out of range"s));
         }
         for(auto i = 0; i < n; i++)
         {
@@ -570,17 +570,17 @@ namespace golang::runtime
     {
         if(gcphase == _GCmarktermination)
         {
-            go_throw("newUserArenaChunk called with gcphase == _GCmarktermination");
+            go_throw("newUserArenaChunk called with gcphase == _GCmarktermination"s);
         }
         deductAssistCredit(userArenaChunkBytes);
         auto mp = acquirem();
         if(mp->mallocing != 0)
         {
-            go_throw("malloc deadlock");
+            go_throw("malloc deadlock"s);
         }
         if(mp->gsignal == getg())
         {
-            go_throw("malloc during signal");
+            go_throw("malloc during signal"s);
         }
         mp->mallocing = 1;
         mspan* span = {};
@@ -590,7 +590,7 @@ namespace golang::runtime
         });
         if(span == nullptr)
         {
-            go_throw("out of memory");
+            go_throw("out of memory"s);
         }
         auto x = unsafe::Pointer(rec::base(gocpp::recv(span)));
         if(gcphase != _GCoff)
@@ -623,7 +623,7 @@ namespace golang::runtime
             auto c = getMCache(mp);
             if(c == nullptr)
             {
-                go_throw("newUserArenaChunk called without a P or outside bootstrapping");
+                go_throw("newUserArenaChunk called without a P or outside bootstrapping"s);
             }
             if(rate != 1 && userArenaChunkBytes < c->nextSample)
             {
@@ -655,7 +655,7 @@ namespace golang::runtime
         }
         if(uintptr_t(x) % physPageSize != 0)
         {
-            go_throw("user arena chunk is not aligned to the physical page size");
+            go_throw("user arena chunk is not aligned to the physical page size"s);
         }
         return {x, span};
     }
@@ -669,11 +669,11 @@ namespace golang::runtime
     {
         if(! s->isUserArenaChunk)
         {
-            go_throw("invalid span in heapArena for user arena");
+            go_throw("invalid span in heapArena for user arena"s);
         }
         if(s->npages * pageSize != userArenaChunkBytes)
         {
-            go_throw("span on userArena.faultList has invalid size");
+            go_throw("span on userArena.faultList has invalid size"s);
         }
         s->spanclass = makeSpanClass(0, true);
         sysFault(unsafe::Pointer(rec::base(gocpp::recv(s))), s->npages * pageSize);
@@ -712,11 +712,11 @@ namespace golang::runtime
     {
         if(! s->isUserArenaChunk)
         {
-            go_throw("span is not for a user arena");
+            go_throw("span is not for a user arena"s);
         }
         if(s->npages * pageSize != userArenaChunkBytes)
         {
-            go_throw("invalid user arena span size");
+            go_throw("invalid user arena span size"s);
         }
         if(raceenabled)
         {
@@ -775,7 +775,7 @@ namespace golang::runtime
             auto [v, size] = rec::sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, false);
             if(size % userArenaChunkBytes != 0)
             {
-                go_throw("sysAlloc size is not divisible by userArenaChunkBytes");
+                go_throw("sysAlloc size is not divisible by userArenaChunkBytes"s);
             }
             if(size > userArenaChunkBytes)
             {

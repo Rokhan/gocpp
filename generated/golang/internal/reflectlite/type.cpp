@@ -378,7 +378,7 @@ namespace golang::reflectlite
         auto v = 0;
         for(auto i = 0; ; i++)
         {
-            auto x = *rec::data(gocpp::recv(n), off + i, "read varint");
+            auto x = *rec::data(gocpp::recv(n), off + i, "read varint"s);
             v += int(x & 0x7f) << (7 * i);
             if(x & 0x80 == 0)
             {
@@ -391,28 +391,28 @@ namespace golang::reflectlite
     {
         if(n.bytes == nullptr)
         {
-            return "";
+            return ""s;
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"), l);
+        return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"s), l);
     }
 
     std::string rec::tag(struct name n)
     {
         if(! rec::hasTag(gocpp::recv(n)))
         {
-            return "";
+            return ""s;
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
         auto [i2, l2] = rec::readVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"), l2);
+        return unsafe::String(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"s), l2);
     }
 
     std::string pkgPath(abi::Name n)
     {
-        if(n->Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field") & (1 << 2) == 0)
+        if(n->Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field"s) & (1 << 2) == 0)
         {
-            return "";
+            return ""s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto off = 1 + i + l;
@@ -422,7 +422,7 @@ namespace golang::reflectlite
             off += i2 + l2;
         }
         int32_t nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"))).make_slice(0));
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"s))).make_slice(0));
         auto pkgPathName = name {(unsigned char*)(resolveTypeOff(unsafe::Pointer(n->Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
@@ -489,12 +489,12 @@ namespace golang::reflectlite
     {
         if(t.TFlag & abi::TFlagNamed == 0)
         {
-            return "";
+            return ""s;
         }
         auto ut = rec::uncommon(gocpp::recv(t));
         if(ut == nullptr)
         {
-            return "";
+            return ""s;
         }
         return rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), ut->PkgPath)));
     }
@@ -503,7 +503,7 @@ namespace golang::reflectlite
     {
         if(! rec::HasName(gocpp::recv(t)))
         {
-            return "";
+            return ""s;
         }
         auto s = rec::String(gocpp::recv(t));
         auto i = len(s) - 1;
@@ -543,7 +543,7 @@ namespace golang::reflectlite
         {
             return et;
         }
-        gocpp::panic("reflect: Elem of invalid type " + rec::String(gocpp::recv(toRType(t))));
+        gocpp::panic("reflect: Elem of invalid type "s + rec::String(gocpp::recv(toRType(t))));
     }
 
     struct Type rec::Elem(struct rtype t)
@@ -556,7 +556,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: In of non-func type");
+            gocpp::panic("reflect: In of non-func type"s);
         }
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
@@ -566,7 +566,7 @@ namespace golang::reflectlite
         auto tt = rec::MapType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Key of non-map type");
+            gocpp::panic("reflect: Key of non-map type"s);
         }
         return toType(tt->Key);
     }
@@ -576,7 +576,7 @@ namespace golang::reflectlite
         auto tt = rec::ArrayType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Len of non-array type");
+            gocpp::panic("reflect: Len of non-array type"s);
         }
         return int(tt->Len);
     }
@@ -586,7 +586,7 @@ namespace golang::reflectlite
         auto tt = rec::StructType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumField of non-struct type");
+            gocpp::panic("reflect: NumField of non-struct type"s);
         }
         return len(tt->Fields);
     }
@@ -596,7 +596,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumIn of non-func type");
+            gocpp::panic("reflect: NumIn of non-func type"s);
         }
         return int(tt->InCount);
     }
@@ -606,7 +606,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumOut of non-func type");
+            gocpp::panic("reflect: NumOut of non-func type"s);
         }
         return rec::NumOut(gocpp::recv(tt));
     }
@@ -616,7 +616,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Out of non-func type");
+            gocpp::panic("reflect: Out of non-func type"s);
         }
         return toType(rec::OutSlice(gocpp::recv(tt))[i]);
     }
@@ -636,11 +636,11 @@ namespace golang::reflectlite
     {
         if(u == nullptr)
         {
-            gocpp::panic("reflect: nil type passed to Type.Implements");
+            gocpp::panic("reflect: nil type passed to Type.Implements"s);
         }
         if(rec::Kind(gocpp::recv(u)) != Interface)
         {
-            gocpp::panic("reflect: non-interface type passed to Type.Implements");
+            gocpp::panic("reflect: non-interface type passed to Type.Implements"s);
         }
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
@@ -649,7 +649,7 @@ namespace golang::reflectlite
     {
         if(u == nullptr)
         {
-            gocpp::panic("reflect: nil type passed to Type.AssignableTo");
+            gocpp::panic("reflect: nil type passed to Type.AssignableTo"s);
         }
         auto uu = rec::common(gocpp::recv(u));
         auto tt = rec::common(gocpp::recv(t));
@@ -689,12 +689,12 @@ namespace golang::reflectlite
                     if(! rec::IsExported(gocpp::recv(tmName)))
                     {
                         auto tmPkgPath = pkgPath(tmName);
-                        if(tmPkgPath == "")
+                        if(tmPkgPath == ""s)
                         {
                             tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
                         }
                         auto vmPkgPath = pkgPath(vmName);
-                        if(vmPkgPath == "")
+                        if(vmPkgPath == ""s)
                         {
                             vmPkgPath = rec::Name(gocpp::recv(v->PkgPath));
                         }
@@ -729,12 +729,12 @@ namespace golang::reflectlite
                 if(! rec::IsExported(gocpp::recv(tmName)))
                 {
                     auto tmPkgPath = pkgPath(tmName);
-                    if(tmPkgPath == "")
+                    if(tmPkgPath == ""s)
                     {
                         tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
                     }
                     auto vmPkgPath = pkgPath(vmName);
-                    if(vmPkgPath == "")
+                    if(vmPkgPath == ""s)
                     {
                         vmPkgPath = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rV), v->PkgPath)));
                     }

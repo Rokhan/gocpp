@@ -175,7 +175,7 @@ namespace golang::runtime
     {
         if(gcphase != _GCoff)
         {
-            go_throw("queuefinalizer during GC");
+            go_throw("queuefinalizer during GC"s);
         }
         lock(& finlock);
         if(finq == nullptr || finq->cnt == uint32_t(len(finq->fin)))
@@ -189,7 +189,7 @@ namespace golang::runtime
                 {
                     if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.fn) != 0 || unsafe::Offsetof(finalizer {}.arg) != goarch::PtrSize || unsafe::Offsetof(finalizer {}.nret) != 2 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.fint) != 3 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.ot) != 4 * goarch::PtrSize))
                     {
-                        go_throw("finalizer out of sync");
+                        go_throw("finalizer out of sync"s);
                     }
                     for(auto [i, gocpp_ignored] : finptrmask)
                     {
@@ -288,7 +288,7 @@ namespace golang::runtime
                     }
                     if(f->fint == nullptr)
                     {
-                        go_throw("missing type in runfinq");
+                        go_throw("missing type in runfinq"s);
                     }
                     auto r = frame;
                     if(argRegs > 0)
@@ -320,7 +320,7 @@ namespace golang::runtime
                                 }
                                 break;
                             default:
-                                go_throw("bad kind in runfinq");
+                                go_throw("bad kind in runfinq"s);
                                 break;
                         }
                     }
@@ -386,20 +386,20 @@ namespace golang::runtime
         auto etyp = e->_type;
         if(etyp == nullptr)
         {
-            go_throw("runtime.SetFinalizer: first argument is nil");
+            go_throw("runtime.SetFinalizer: first argument is nil"s);
         }
         if(etyp->Kind_ & kindMask != kindPtr)
         {
-            go_throw("runtime.SetFinalizer: first argument is " + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer");
+            go_throw("runtime.SetFinalizer: first argument is "s + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer"s);
         }
         auto ot = (runtime::ptrtype*)(unsafe::Pointer(etyp));
         if(ot->Elem == nullptr)
         {
-            go_throw("nil elem type!");
+            go_throw("nil elem type!"s);
         }
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
-            go_throw("runtime.SetFinalizer: first argument was allocated into an arena");
+            go_throw("runtime.SetFinalizer: first argument was allocated into an arena"s);
         }
         auto [base, span, gocpp_id_1] = findObject(uintptr_t(e->data), 0, 0);
         if(base == 0)
@@ -408,7 +408,7 @@ namespace golang::runtime
             {
                 return;
             }
-            go_throw("runtime.SetFinalizer: pointer not in allocated block");
+            go_throw("runtime.SetFinalizer: pointer not in allocated block"s);
         }
         if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
         {
@@ -418,7 +418,7 @@ namespace golang::runtime
         {
             if(ot->Elem == nullptr || ot->Elem->PtrBytes != 0 || ot->Elem->Size_ >= maxTinySize)
             {
-                go_throw("runtime.SetFinalizer: pointer not at beginning of allocated block");
+                go_throw("runtime.SetFinalizer: pointer not at beginning of allocated block"s);
             }
         }
         auto f = efaceOf(& finalizer);
@@ -433,16 +433,16 @@ namespace golang::runtime
         }
         if(ftyp->Kind_ & kindMask != kindFunc)
         {
-            go_throw("runtime.SetFinalizer: second argument is " + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function");
+            go_throw("runtime.SetFinalizer: second argument is "s + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function"s);
         }
         auto ft = (runtime::functype*)(unsafe::Pointer(ftyp));
         if(rec::IsVariadic(gocpp::recv(ft)))
         {
-            go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot");
+            go_throw("runtime.SetFinalizer: cannot pass "s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "s + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot"s);
         }
         if(ft->InCount != 1)
         {
-            go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))));
+            go_throw("runtime.SetFinalizer: cannot pass "s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "s + rec::string(gocpp::recv(toRType(ftyp))));
         }
         auto fint = rec::InSlice(gocpp::recv(ft))[0];
         //Go switch emulation
@@ -475,7 +475,7 @@ namespace golang::runtime
                     break;
             }
         }
-        go_throw("runtime.SetFinalizer: cannot pass " + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer " + rec::string(gocpp::recv(toRType(ftyp))));
+        go_throw("runtime.SetFinalizer: cannot pass "s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "s + rec::string(gocpp::recv(toRType(ftyp))));
         okarg:
         auto nret = uintptr_t(0);
         for(auto [gocpp_ignored, t] : rec::OutSlice(gocpp::recv(ft)))
@@ -488,7 +488,7 @@ namespace golang::runtime
         {
             if(! addfinalizer(e->data, (funcval*)(f->data), nret, fint, ot))
             {
-                go_throw("runtime.SetFinalizer: finalizer already set");
+                go_throw("runtime.SetFinalizer: finalizer already set"s);
             }
         });
     }

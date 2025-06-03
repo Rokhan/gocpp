@@ -33,73 +33,73 @@ namespace golang::cpu
     void doinit()
     {
         options = gocpp::slice<option> {gocpp::Init<>([=](auto& x) {
-            x.Name = "adx";
+            x.Name = "adx"s;
             x.Feature = & X86.HasADX;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "aes";
+            x.Name = "aes"s;
             x.Feature = & X86.HasAES;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "erms";
+            x.Name = "erms"s;
             x.Feature = & X86.HasERMS;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "pclmulqdq";
+            x.Name = "pclmulqdq"s;
             x.Feature = & X86.HasPCLMULQDQ;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "rdtscp";
+            x.Name = "rdtscp"s;
             x.Feature = & X86.HasRDTSCP;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "sha";
+            x.Name = "sha"s;
             x.Feature = & X86.HasSHA;
         })};
         auto level = getGOAMD64level();
         if(level < 2)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "popcnt";
+                x.Name = "popcnt"s;
                 x.Feature = & X86.HasPOPCNT;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse3";
+                x.Name = "sse3"s;
                 x.Feature = & X86.HasSSE3;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse41";
+                x.Name = "sse41"s;
                 x.Feature = & X86.HasSSE41;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse42";
+                x.Name = "sse42"s;
                 x.Feature = & X86.HasSSE42;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "ssse3";
+                x.Name = "ssse3"s;
                 x.Feature = & X86.HasSSSE3;
             }));
         }
         if(level < 3)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx";
+                x.Name = "avx"s;
                 x.Feature = & X86.HasAVX;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx2";
+                x.Name = "avx2"s;
                 x.Feature = & X86.HasAVX2;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "bmi1";
+                x.Name = "bmi1"s;
                 x.Feature = & X86.HasBMI1;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "bmi2";
+                x.Name = "bmi2"s;
                 x.Feature = & X86.HasBMI2;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "fma";
+                x.Name = "fma"s;
                 x.Feature = & X86.HasFMA;
             }));
         }
         if(level < 4)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512f";
+                x.Name = "avx512f"s;
                 x.Feature = & X86.HasAVX512F;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512bw";
+                x.Name = "avx512bw"s;
                 x.Feature = & X86.HasAVX512BW;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512vl";
+                x.Name = "avx512vl"s;
                 x.Feature = & X86.HasAVX512VL;
             }));
         }
@@ -164,7 +164,7 @@ namespace golang::cpu
     {
         if(maxExtendedFunctionInformation < 0x80000004)
         {
-            return "";
+            return ""s;
         }
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * 4 * 4);
         uint32_t eax = {};

@@ -29,7 +29,7 @@ namespace golang::main
         }
         else
         {
-            mocklib::Printf("%g >= %g\n", v, lim);
+            mocklib::Printf("%g >= %g\n"s, v, lim);
         }
         return lim;
     }

@@ -25,7 +25,7 @@ namespace golang::main
         int i = 1;
         int j = 2;
         auto k = 3;
-        auto [c, python, java] = std::tuple{true, false, "no!"};
+        auto [c, python, java] = std::tuple{true, false, "no!"s};
         mocklib::Println(i, j, k, c, python, java);
     }
 

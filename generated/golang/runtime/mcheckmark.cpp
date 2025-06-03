@@ -112,7 +112,7 @@ namespace golang::runtime
                 bitmap = (checkmarksMap*)(persistentalloc(gocpp::Sizeof<checkmarksMap>(), 0, & memstats.gcMiscSys));
                 if(bitmap == nullptr)
                 {
-                    go_throw("out of memory allocating checkmarks bitmap");
+                    go_throw("out of memory allocating checkmarks bitmap"s);
                 }
                 arena->checkmarks = bitmap;
             }
@@ -131,7 +131,7 @@ namespace golang::runtime
     {
         if(gcMarkWorkAvailable(nullptr))
         {
-            go_throw("GC work not flushed");
+            go_throw("GC work not flushed"s);
         }
         useCheckmark = false;
     }
@@ -141,12 +141,12 @@ namespace golang::runtime
         if(! rec::isMarked(gocpp::recv(mbits)))
         {
             printlock();
-            print("runtime: checkmarks found unexpected unmarked object obj=", hex(obj), "\n");
-            print("runtime: found obj at *(", hex(base), "+", hex(off), ")\n");
-            gcDumpObject("base", base, off);
-            gcDumpObject("obj", obj, ~ uintptr_t(0));
+            print("runtime: checkmarks found unexpected unmarked object obj="s, hex(obj), "\n"s);
+            print("runtime: found obj at *("s, hex(base), "+"s, hex(off), ")\n"s);
+            gcDumpObject("base"s, base, off);
+            gcDumpObject("obj"s, obj, ~ uintptr_t(0));
             getg()->m->traceback = 2;
-            go_throw("checkmark found unmarked object");
+            go_throw("checkmark found unmarked object"s);
         }
         auto ai = arenaIndex(obj);
         auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];

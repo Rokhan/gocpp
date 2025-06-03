@@ -120,7 +120,7 @@ namespace golang::testlog
     {
         if(rec::Load(gocpp::recv(logger)) != nullptr)
         {
-            gocpp::panic("testlog: SetLogger must be called only once");
+            gocpp::panic("testlog: SetLogger must be called only once"s);
         }
         rec::Store(gocpp::recv(logger), & impl);
     }

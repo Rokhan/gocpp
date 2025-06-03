@@ -48,18 +48,18 @@ namespace golang::time
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
             std::string std = {};
             std::string dlt = {};
-            std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std");
+            std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std"s);
             if(err == nullptr)
             {
-                std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt");
+                std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt"s);
             }
             if(err != nullptr)
             {
-                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"); err != nullptr)
+                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"s); err != nullptr)
                 {
                     return {false, err};
                 }
-                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"); err != nullptr)
+                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"s); err != nullptr)
                 {
                     return {false, err};
                 }
@@ -85,17 +85,17 @@ namespace golang::time
         gocpp::Defer defer;
         try
         {
-            auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones", registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
+            auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"s, registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
             gocpp::slice<std::string> names;
             std::tie(names, err) = rec::ReadSubKeyNames(gocpp::recv(k));
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             for(auto [gocpp_ignored, name] : names)
             {
@@ -105,7 +105,7 @@ namespace golang::time
                     return {name, nullptr};
                 }
             }
-            return {"", errors::New("English name for time zone "" + stdname + "" not found in registry")};
+            return {""s, errors::New("English name for time zone ""s + stdname + "" not found in registry"s)};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -177,7 +177,7 @@ namespace golang::time
     void initLocalFromTZI(syscall::Timezoneinformation* i)
     {
         auto l = & localLoc;
-        l->name = "Local";
+        l->name = "Local"s;
         auto nzone = 1;
         if(i->StandardDate.Month > 0)
         {
@@ -266,7 +266,7 @@ namespace golang::time
         syscall::Timezoneinformation i = {};
         if(auto [gocpp_id_3, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
         {
-            localLoc.name = "UTC";
+            localLoc.name = "UTC"s;
             return;
         }
         initLocalFromTZI(& i);

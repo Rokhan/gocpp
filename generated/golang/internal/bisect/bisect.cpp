@@ -37,7 +37,7 @@ namespace golang::bisect
 
     std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern)
     {
-        if(pattern == "")
+        if(pattern == ""s)
         {
             return {nullptr, nullptr};
         }
@@ -47,9 +47,9 @@ namespace golang::bisect
         {
             m->quiet = true;
             p = p.make_slice(1);
-            if(p == "")
+            if(p == ""s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
             }
         }
         for(; len(p) > 0 && p[0] == 'v'; )
@@ -57,9 +57,9 @@ namespace golang::bisect
             m->verbose = true;
             m->quiet = false;
             p = p.make_slice(1);
-            if(p == "")
+            if(p == ""s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
             }
         }
         m->enable = true;
@@ -67,15 +67,15 @@ namespace golang::bisect
         {
             m->enable = ! m->enable;
             p = p.make_slice(1);
-            if(p == "")
+            if(p == ""s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
             }
         }
-        if(p == "n")
+        if(p == "n"s)
         {
             m->enable = ! m->enable;
-            p = "y";
+            p = "y"s;
         }
         auto result = true;
         auto bits = uint64_t(0);
@@ -126,7 +126,7 @@ namespace golang::bisect
                 switch(conditionId)
                 {
                     default:
-                        return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                        return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
                         break;
                     case 0:
                     case 1:
@@ -138,7 +138,7 @@ namespace golang::bisect
                     case 7:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
                         }
                     case 8:
                     case 9:
@@ -159,7 +159,7 @@ namespace golang::bisect
                     case 21:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
                         }
                         bits <<= 4;
                         bits |= uint64_t(c &^ 0x20 - 'A' + 10);
@@ -167,7 +167,7 @@ namespace golang::bisect
                     case 22:
                         if(i + 1 < len(p) && (p[i + 1] == '0' || p[i + 1] == '1'))
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
                         }
                         bits = 0;
                         break;
@@ -175,18 +175,18 @@ namespace golang::bisect
                     case 24:
                         if(c == '+' && result == false)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax (+ after -): " + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax (+ after -): "s + pattern}};
                         }
                         if(i > 0)
                         {
                             auto n = (i - start) * wid;
                             if(n > 64)
                             {
-                                return {nullptr, new parseError {"pattern bits too long: " + pattern}};
+                                return {nullptr, new parseError {"pattern bits too long: "s + pattern}};
                             }
                             if(n <= 0)
                             {
-                                return {nullptr, new parseError {"invalid pattern syntax: " + pattern}};
+                                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
                             }
                             if(p[start] == 'y')
                             {
@@ -551,7 +551,7 @@ namespace golang::bisect
             auto [f, more] = rec::Next(gocpp::recv(frames));
             buf = append(buf, prefix);
             buf = append(buf, rec::Name(gocpp::recv(f.Func)));
-            buf = append(buf, "()\n");
+            buf = append(buf, "()\n"s);
             buf = append(buf, prefix);
             buf = append(buf, '\t');
             buf = appendFileLine(buf, f.File, f.Line);
@@ -574,12 +574,12 @@ namespace golang::bisect
 
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id)
     {
-        auto prefix = "[bisect-match 0x";
+        auto prefix = "[bisect-match 0x"s;
         gocpp::array<unsigned char, len(prefix) + 16 + 1> buf = {};
         copy(buf.make_slice(0), prefix);
         for(auto i = 0; i < 16; i++)
         {
-            buf[len(prefix) + i] = "0123456789abcdef"[id >> 60];
+            buf[len(prefix) + i] = "0123456789abcdef"s[id >> 60];
             id <<= 4;
         }
         buf[len(prefix) + 16] = ']';
@@ -591,7 +591,7 @@ namespace golang::bisect
         std::string short;
         uint64_t id;
         bool ok;
-        auto prefix = "[bisect-match ";
+        auto prefix = "[bisect-match "s;
         auto i = 0;
         for(; ; i++)
         {
@@ -614,7 +614,7 @@ namespace golang::bisect
             return {line, 0, false};
         }
         auto idstr = line.make_slice(i + len(prefix), j);
-        if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x")
+        if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x"s)
         {
             if(len(idstr) > 2 + 16)
             {
@@ -647,7 +647,7 @@ namespace golang::bisect
         }
         else
         {
-            if(idstr == "" || len(idstr) > 64)
+            if(idstr == ""s || len(idstr) > 64)
             {
                 return {line, 0, false};
             }
@@ -720,7 +720,7 @@ namespace golang::bisect
                     default:
                     {
                         auto v = v;
-                        gocpp::panic("bisect.Hash: unexpected argument type");
+                        gocpp::panic("bisect.Hash: unexpected argument type"s);
                         break;
                     }
                     case 0:

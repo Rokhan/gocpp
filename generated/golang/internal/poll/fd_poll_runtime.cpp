@@ -149,7 +149,7 @@ namespace golang::poll
     {
         if(pd->runtimeCtx == 0)
         {
-            return errors::New("waiting for unsupported file type");
+            return errors::New("waiting for unsupported file type"s);
         }
         auto res = runtime_pollWait(pd->runtimeCtx, mode);
         return convertErr(res, isFile);
@@ -205,8 +205,8 @@ namespace golang::poll
                     break;
             }
         }
-        println("unreachable: ", res);
-        gocpp::panic("unreachable");
+        println("unreachable: "s, res);
+        gocpp::panic("unreachable"s);
     }
 
     struct gocpp::error rec::SetDeadline(struct FD* fd, mocklib::Date t)

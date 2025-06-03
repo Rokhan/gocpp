@@ -36,7 +36,7 @@ namespace golang::syscall
     {
         if(len(s) == 0)
         {
-            return """";
+            return """"s;
         }
         for(auto i = 0; i < len(s); i++)
         {
@@ -68,7 +68,7 @@ namespace golang::syscall
     {
         if(len(s) == 0)
         {
-            return append(b, """");
+            return append(b, """"s);
         }
         auto needsBackslash = false;
         auto hasSpace = false;
@@ -167,7 +167,7 @@ namespace golang::syscall
     {
         if(len(envv) == 0)
         {
-            return {utf16::Encode(gocpp::Tag<gocpp::slice<gocpp::rune>>()("\x00\x00")), nullptr};
+            return {utf16::Encode(gocpp::slice<gocpp::rune>("\x00\x00"s)), nullptr};
         }
         int length = {};
         for(auto [gocpp_ignored, s] : envv)
@@ -210,7 +210,7 @@ namespace golang::syscall
         auto [p, err] = UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         auto n = uint32_t(100);
         for(; ; )
@@ -219,7 +219,7 @@ namespace golang::syscall
             std::tie(n, err) = GetFullPathName(p, uint32_t(len(buf)), & buf[0], nullptr);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             if(n <= uint32_t(len(buf)))
             {
@@ -240,11 +240,11 @@ namespace golang::syscall
         auto [ndir, err] = FullPath(dir);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         if(len(ndir) > 2 && isSlash(ndir[0]) && isSlash(ndir[1]))
         {
-            return {"", go_EINVAL};
+            return {""s, go_EINVAL};
         }
         return {ndir, nullptr};
     }
@@ -264,7 +264,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(p) == 0)
         {
-            return {"", go_EINVAL};
+            return {""s, go_EINVAL};
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
@@ -274,7 +274,7 @@ namespace golang::syscall
         {
             if(len(p) == 2)
             {
-                return {"", go_EINVAL};
+                return {""s, go_EINVAL};
             }
             if(isSlash(p[2]))
             {
@@ -285,11 +285,11 @@ namespace golang::syscall
                 auto [d, err] = normalizeDir(dir);
                 if(err != nullptr)
                 {
-                    return {"", err};
+                    return {""s, err};
                 }
                 if(volToUpper(int(p[0])) == volToUpper(int(d[0])))
                 {
-                    return FullPath(d + "\\" + p.make_slice(2));
+                    return FullPath(d + "\\"s + p.make_slice(2));
                 }
                 else
                 {
@@ -302,7 +302,7 @@ namespace golang::syscall
             auto [d, err] = normalizeDir(dir);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             if(isSlash(p[0]))
             {
@@ -310,7 +310,7 @@ namespace golang::syscall
             }
             else
             {
-                return FullPath(d + "\\" + p);
+                return FullPath(d + "\\"s + p);
             }
         }
     }
@@ -452,7 +452,7 @@ namespace golang::syscall
                 return {0, 0, err};
             }
             std::string cmdline = {};
-            if(sys->CmdLine != "")
+            if(sys->CmdLine != ""s)
             {
                 cmdline = sys->CmdLine;
             }

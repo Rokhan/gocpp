@@ -21,25 +21,25 @@ namespace golang::syscall
     }
 
     gocpp::array<std::string, 16> signals = gocpp::Init<gocpp::array<std::string, 16>>([](auto& x) {
-        x[1] = "hangup";
-        x[2] = "interrupt";
-        x[3] = "quit";
-        x[4] = "illegal instruction";
-        x[5] = "trace/breakpoint trap";
-        x[6] = "aborted";
-        x[7] = "bus error";
-        x[8] = "floating point exception";
-        x[9] = "killed";
-        x[10] = "user defined signal 1";
-        x[11] = "segmentation fault";
-        x[12] = "user defined signal 2";
-        x[13] = "broken pipe";
-        x[14] = "alarm clock";
-        x[15] = "terminated";
+        x[1] = "hangup"s;
+        x[2] = "interrupt"s;
+        x[3] = "quit"s;
+        x[4] = "illegal instruction"s;
+        x[5] = "trace/breakpoint trap"s;
+        x[6] = "aborted"s;
+        x[7] = "bus error"s;
+        x[8] = "floating point exception"s;
+        x[9] = "killed"s;
+        x[10] = "user defined signal 1"s;
+        x[11] = "segmentation fault"s;
+        x[12] = "user defined signal 2"s;
+        x[13] = "broken pipe"s;
+        x[14] = "alarm clock"s;
+        x[15] = "terminated"s;
     });
-    gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::Tag<gocpp::slice<unsigned char>>()("1.3.6.1.5.5.7.3.1\x00");
-    gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::Tag<gocpp::slice<unsigned char>>()("1.3.6.1.4.1.311.10.3.3\x00");
-    gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::Tag<gocpp::slice<unsigned char>>()("2.16.840.1.113730.4.1\x00");
+    gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"s);
+    gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"s);
+    gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"s);
     struct gocpp_id_0
     {
 

@@ -335,7 +335,7 @@ namespace golang::fmtsort
                     return compare(rec::Elem(gocpp::recv(aVal)), rec::Elem(gocpp::recv(bVal)));
                     break;
                 default:
-                    gocpp::panic("bad type in compare: " + rec::String(gocpp::recv(aType)));
+                    gocpp::panic("bad type in compare: "s + rec::String(gocpp::recv(aType)));
                     break;
             }
         }

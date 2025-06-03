@@ -22,12 +22,12 @@ namespace golang::main
 
     void main()
     {
-        auto names = gocpp::array<std::string, 4> {"John", "Paul", "George", "Ringo"};
+        auto names = gocpp::array<std::string, 4> {"John"s, "Paul"s, "George"s, "Ringo"s};
         mocklib::Println(names);
         auto a = names.make_slice(0, 2);
         auto b = names.make_slice(1, 3);
         mocklib::Println(a, b);
-        b[0] = "XXX";
+        b[0] = "XXX"s;
         mocklib::Println(a, b);
         mocklib::Println(names);
     }

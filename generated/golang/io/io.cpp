@@ -24,12 +24,12 @@ namespace golang::io
         using sync::rec::Put;
     }
 
-    gocpp::error ErrShortWrite = errors::New("short write");
-    gocpp::error errInvalidWrite = errors::New("invalid write result");
-    gocpp::error ErrShortBuffer = errors::New("short buffer");
-    gocpp::error go_EOF = errors::New("EOF");
-    gocpp::error ErrUnexpectedEOF = errors::New("unexpected EOF");
-    gocpp::error ErrNoProgress = errors::New("multiple Read calls return no data or error");
+    gocpp::error ErrShortWrite = errors::New("short write"s);
+    gocpp::error errInvalidWrite = errors::New("invalid write result"s);
+    gocpp::error ErrShortBuffer = errors::New("short buffer"s);
+    gocpp::error go_EOF = errors::New("EOF"s);
+    gocpp::error ErrUnexpectedEOF = errors::New("unexpected EOF"s);
+    gocpp::error ErrNoProgress = errors::New("multiple Read calls return no data or error"s);
     
     template<typename T>
     Reader::Reader(T& ref)
@@ -974,7 +974,7 @@ namespace golang::io
         {
             return rec::WriteString(gocpp::recv(sw), s);
         }
-        return rec::Write(gocpp::recv(w), gocpp::Tag<gocpp::slice<unsigned char>>()(s));
+        return rec::Write(gocpp::recv(w), gocpp::slice<unsigned char>(s));
     }
 
     std::tuple<int, struct gocpp::error> ReadAtLeast(struct Reader r, gocpp::slice<unsigned char> buf, int min)
@@ -1039,7 +1039,7 @@ namespace golang::io
         struct gocpp::error err;
         if(buf != nullptr && len(buf) == 0)
         {
-            gocpp::panic("empty buffer in CopyBuffer");
+            gocpp::panic("empty buffer in CopyBuffer"s);
         }
         return copyBuffer(dst, src, buf);
     }
@@ -1237,8 +1237,8 @@ namespace golang::io
         return {n, err};
     }
 
-    gocpp::error errWhence = errors::New("Seek: invalid whence");
-    gocpp::error errOffset = errors::New("Seek: invalid offset");
+    gocpp::error errWhence = errors::New("Seek: invalid whence"s);
+    gocpp::error errOffset = errors::New("Seek: invalid offset"s);
     std::tuple<int64_t, struct gocpp::error> rec::Seek(struct SectionReader* s, int64_t offset, int whence)
     {
         //Go switch emulation

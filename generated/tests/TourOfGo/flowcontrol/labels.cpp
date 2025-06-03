@@ -38,7 +38,7 @@ namespace golang::main
         {
             for(auto j = 0; j < 3; j++)
             {
-                mocklib::Println("for", i, j);
+                mocklib::Println("for"s, i, j);
                 //Go switch emulation
                 {
                     auto condition = k;
@@ -63,7 +63,7 @@ namespace golang::main
                 break;
             }
         }
-        mocklib::Println("end");
+        mocklib::Println("end"s);
         mocklib::Println();
     }
 
@@ -74,7 +74,7 @@ namespace golang::main
         {
             for(auto [j, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
             {
-                mocklib::Println("range", i, j);
+                mocklib::Println("range"s, i, j);
                 //Go switch emulation
                 {
                     auto condition = k;
@@ -99,7 +99,7 @@ namespace golang::main
                 break;
             }
         }
-        mocklib::Println("end");
+        mocklib::Println("end"s);
         mocklib::Println();
     }
 
@@ -110,14 +110,14 @@ namespace golang::main
         i++;
         if(i < 5)
         {
-            mocklib::Println("goto label1");
+            mocklib::Println("goto label1"s);
             goto label1;
         }
         label2:
         if(i < 10)
         {
             i++;
-            mocklib::Println("goto label2");
+            mocklib::Println("goto label2"s);
             goto label2;
         }
         label3:
@@ -126,10 +126,10 @@ namespace golang::main
             i++;
             if(i < 15)
             {
-                mocklib::Printf("goto label3, i = %v, j = %v\n", i, j);
+                mocklib::Printf("goto label3, i = %v, j = %v\n"s, i, j);
                 goto label3;
             }
-            mocklib::Printf("............ i = %v, j = %v\n", i, j);
+            mocklib::Printf("............ i = %v, j = %v\n"s, i, j);
             if(false) {
             label3_continue:
                 continue;

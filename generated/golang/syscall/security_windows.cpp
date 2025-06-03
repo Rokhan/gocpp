@@ -29,7 +29,7 @@ namespace golang::syscall
         auto [u, e] = UTF16PtrFromString(username);
         if(e != nullptr)
         {
-            return {"", e};
+            return {""s, e};
         }
         auto n = uint32_t(50);
         for(; ; )
@@ -42,11 +42,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {"", e};
+                return {""s, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {"", e};
+                return {""s, e};
             }
         }
     }
@@ -148,12 +148,12 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(account) == 0)
         {
-            return {nullptr, "", 0, go_EINVAL};
+            return {nullptr, ""s, 0, go_EINVAL};
         }
         auto [acc, e] = UTF16PtrFromString(account);
         if(e != nullptr)
         {
-            return {nullptr, "", 0, e};
+            return {nullptr, ""s, 0, e};
         }
         uint16_t* sys = {};
         if(len(system) > 0)
@@ -161,7 +161,7 @@ namespace golang::syscall
             std::tie(sys, e) = UTF16PtrFromString(system);
             if(e != nullptr)
             {
-                return {nullptr, "", 0, e};
+                return {nullptr, ""s, 0, e};
             }
         }
         auto n = uint32_t(50);
@@ -178,11 +178,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {nullptr, "", 0, e};
+                return {nullptr, ""s, 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {nullptr, "", 0, e};
+                return {nullptr, ""s, 0, e};
             }
         }
     }
@@ -196,7 +196,7 @@ namespace golang::syscall
             auto e = ConvertSidToStringSid(sid, & s);
             if(e != nullptr)
             {
-                return {"", e};
+                return {""s, e};
             }
             defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(s))); });
             return {utf16PtrToString(s), nullptr};
@@ -236,7 +236,7 @@ namespace golang::syscall
             std::tie(sys, err) = UTF16PtrFromString(system);
             if(err != nullptr)
             {
-                return {"", "", 0, err};
+                return {""s, ""s, 0, err};
             }
         }
         auto n = uint32_t(50);
@@ -252,11 +252,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {"", "", 0, e};
+                return {""s, ""s, 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {"", "", 0, e};
+                return {""s, ""s, 0, e};
             }
         }
     }
@@ -427,11 +427,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {"", e};
+                return {""s, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {"", e};
+                return {""s, e};
             }
         }
     }

@@ -31,7 +31,7 @@ namespace golang::syscall
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)
         {
-            return {"", false};
+            return {""s, false};
         }
         auto n = uint32_t(100);
         for(; ; )
@@ -40,7 +40,7 @@ namespace golang::syscall
             std::tie(n, err) = GetEnvironmentVariable(keyp, & b[0], uint32_t(len(b)));
             if(n == 0 && err == ERROR_ENVVAR_NOT_FOUND)
             {
-                return {"", false};
+                return {""s, false};
             }
             if(n <= uint32_t(len(b)))
             {

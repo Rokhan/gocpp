@@ -192,26 +192,26 @@ namespace golang::runtime
     }
 
     gocpp::array<std::string, 15> traceBlockReasonStrings = gocpp::Init<gocpp::array<std::string, 15>>([](auto& x) {
-        x[traceBlockGeneric] = "unspecified";
-        x[traceBlockForever] = "forever";
-        x[traceBlockNet] = "network";
-        x[traceBlockSelect] = "select";
-        x[traceBlockCondWait] = "sync.(*Cond).Wait";
-        x[traceBlockSync] = "sync";
-        x[traceBlockChanSend] = "chan send";
-        x[traceBlockChanRecv] = "chan receive";
-        x[traceBlockGCMarkAssist] = "GC mark assist wait for work";
-        x[traceBlockGCSweep] = "GC background sweeper wait";
-        x[traceBlockSystemGoroutine] = "system goroutine wait";
-        x[traceBlockPreempted] = "preempted";
-        x[traceBlockDebugCall] = "wait for debug call";
-        x[traceBlockUntilGCEnds] = "wait until GC ends";
-        x[traceBlockSleep] = "sleep";
+        x[traceBlockGeneric] = "unspecified"s;
+        x[traceBlockForever] = "forever"s;
+        x[traceBlockNet] = "network"s;
+        x[traceBlockSelect] = "select"s;
+        x[traceBlockCondWait] = "sync.(*Cond).Wait"s;
+        x[traceBlockSync] = "sync"s;
+        x[traceBlockChanSend] = "chan send"s;
+        x[traceBlockChanRecv] = "chan receive"s;
+        x[traceBlockGCMarkAssist] = "GC mark assist wait for work"s;
+        x[traceBlockGCSweep] = "GC background sweeper wait"s;
+        x[traceBlockSystemGoroutine] = "system goroutine wait"s;
+        x[traceBlockPreempted] = "preempted"s;
+        x[traceBlockDebugCall] = "wait for debug call"s;
+        x[traceBlockUntilGCEnds] = "wait until GC ends"s;
+        x[traceBlockSleep] = "sleep"s;
     });
     gocpp::array<std::string, 3> traceGoStopReasonStrings = gocpp::Init<gocpp::array<std::string, 3>>([](auto& x) {
-        x[traceGoStopGeneric] = "unspecified";
-        x[traceGoStopGoSched] = "runtime.Gosched";
-        x[traceGoStopPreempted] = "preempted";
+        x[traceGoStopGeneric] = "unspecified"s;
+        x[traceGoStopGoSched] = "runtime.Gosched"s;
+        x[traceGoStopPreempted] = "preempted"s;
     });
     bool traceEnabled()
     {
@@ -271,7 +271,7 @@ namespace golang::runtime
         auto seq = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 1)
         {
-            go_throw("bad use of trace.seqlock or tracer is reentrant");
+            go_throw("bad use of trace.seqlock or tracer is reentrant"s);
         }
         auto gen = rec::Load(gocpp::recv(trace.gen));
         if(gen == 0)
@@ -293,8 +293,8 @@ namespace golang::runtime
         auto seq = rec::Add(gocpp::recv(tl.mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 0)
         {
-            print("runtime: seq=", seq, "\n");
-            go_throw("bad use of trace.seqlock");
+            print("runtime: seq="s, seq, "\n"s);
+            go_throw("bad use of trace.seqlock"s);
         }
         releasem(tl.mp);
     }
@@ -358,7 +358,7 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(pp->trace.maySweep)
         {
-            go_throw("double traceGCSweepStart");
+            go_throw("double traceGCSweepStart"s);
         }
         std::tie(pp->trace.maySweep, pp->trace.swept, pp->trace.reclaimed) = std::tuple{true, 0, 0};
     }
@@ -382,7 +382,7 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(! pp->trace.maySweep)
         {
-            go_throw("missing traceGCSweepStart");
+            go_throw("missing traceGCSweepStart"s);
         }
         if(pp->trace.inSweep)
         {
@@ -463,7 +463,7 @@ namespace golang::runtime
         {
             int conditionId = -1;
             if(tracefpunwindoff()) { conditionId = 0; }
-            else if(GOOS == "solaris" || GOOS == "illumos") { conditionId = 1; }
+            else if(GOOS == "solaris"s || GOOS == "illumos"s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -625,7 +625,7 @@ namespace golang::runtime
         auto seq = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 1)
         {
-            go_throw("bad use of trace.seqlock or tracer is reentrant");
+            go_throw("bad use of trace.seqlock or tracer is reentrant"s);
         }
         systemstack([=]() mutable -> void
         {
@@ -643,8 +643,8 @@ namespace golang::runtime
         auto seq1 = rec::Add(gocpp::recv(mp->trace.seqlock), 1);
         if(seq1 != seq + 1)
         {
-            print("runtime: seq1=", seq1, "\n");
-            go_throw("bad use of trace.seqlock");
+            print("runtime: seq1="s, seq1, "\n"s);
+            go_throw("bad use of trace.seqlock"s);
         }
     }
 

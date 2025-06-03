@@ -31,7 +31,7 @@ namespace golang::image
         using mocklib::rec::Unlock;
     }
 
-    gocpp::error ErrFormat = errors::New("image: unknown format");
+    gocpp::error ErrFormat = errors::New("image: unknown format"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     format::operator T()
@@ -173,7 +173,7 @@ namespace golang::image
         auto f = sniff(rr);
         if(f.decode == nullptr)
         {
-            return {nullptr, "", ErrFormat};
+            return {nullptr, ""s, ErrFormat};
         }
         auto [m, err] = rec::decode(gocpp::recv(f), rr);
         return {m, f.name, err};
@@ -185,7 +185,7 @@ namespace golang::image
         auto f = sniff(rr);
         if(f.decodeConfig == nullptr)
         {
-            return {Config {}, "", ErrFormat};
+            return {Config {}, ""s, ErrFormat};
         }
         auto [c, err] = rec::decodeConfig(gocpp::recv(f), rr);
         return {c, f.name, err};

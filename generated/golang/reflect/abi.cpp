@@ -128,17 +128,17 @@ namespace golang::reflect
     {
         for(auto [i, p] : a->steps)
         {
-            println("part", i, p.kind, p.offset, p.size, p.stkOff, p.ireg, p.freg);
+            println("part"s, i, p.kind, p.offset, p.size, p.stkOff, p.ireg, p.freg);
         }
-        print("values ");
+        print("values "s);
         for(auto [gocpp_ignored, i] : a->valueStart)
         {
-            print(i, " ");
+            print(i, " "s);
         }
         println();
-        println("stack", a->stackBytes);
-        println("iregs", a->iregs);
-        println("fregs", a->fregs);
+        println("stack"s, a->stackBytes);
+        println("iregs"s, a->iregs);
+        println("fregs"s, a->fregs);
     }
 
     gocpp::slice<abiStep> rec::stepsForValue(struct abiSeq* a, int i)
@@ -324,23 +324,23 @@ namespace golang::reflect
                     return true;
                     break;
                 default:
-                    print("t.Kind == ", rec::Kind(gocpp::recv(t)), "\n");
-                    gocpp::panic("unknown type kind");
+                    print("t.Kind == "s, rec::Kind(gocpp::recv(t)), "\n"s);
+                    gocpp::panic("unknown type kind"s);
                     break;
             }
         }
-        gocpp::panic("unhandled register assignment path");
+        gocpp::panic("unhandled register assignment path"s);
     }
 
     bool rec::assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
     {
         if(n > 8 || n < 0)
         {
-            gocpp::panic("invalid n");
+            gocpp::panic("invalid n"s);
         }
         if(ptrMap != 0 && size != goarch::PtrSize)
         {
-            gocpp::panic("non-empty pointer map passed for non-pointer-size values");
+            gocpp::panic("non-empty pointer map passed for non-pointer-size values"s);
         }
         if(a->iregs + n > intArgRegs)
         {
@@ -368,7 +368,7 @@ namespace golang::reflect
     {
         if(n < 0)
         {
-            gocpp::panic("invalid n");
+            gocpp::panic("invalid n"s);
         }
         if(a->fregs + n > floatArgRegs || floatRegSize < size)
         {
@@ -451,18 +451,18 @@ namespace golang::reflect
 
     void rec::dump(struct abiDesc* a)
     {
-        println("ABI");
-        println("call");
+        println("ABI"s);
+        println("call"s);
         rec::dump(gocpp::recv(a->call));
-        println("ret");
+        println("ret"s);
         rec::dump(gocpp::recv(a->ret));
-        println("stackCallArgsSize", a->stackCallArgsSize);
-        println("retOffset", a->retOffset);
-        println("spill", a->spill);
-        print("inRegPtrs:");
+        println("stackCallArgsSize"s, a->stackCallArgsSize);
+        println("retOffset"s, a->retOffset);
+        println("spill"s, a->spill);
+        print("inRegPtrs:"s);
         dumpPtrBitMap(a->inRegPtrs);
         println();
-        print("outRegPtrs:");
+        print("outRegPtrs:"s);
         dumpPtrBitMap(a->outRegPtrs);
         println();
     }
@@ -476,7 +476,7 @@ namespace golang::reflect
             {
                 x = 1;
             }
-            print(" ", x);
+            print(" "s, x);
         }
     }
 
@@ -580,7 +580,7 @@ namespace golang::reflect
                     *(double*)(to) = *(double*)(unsafe::Pointer(& r->Floats[reg]));
                     break;
                 default:
-                    gocpp::panic("bad argSize");
+                    gocpp::panic("bad argSize"s);
                     break;
             }
         }
@@ -603,7 +603,7 @@ namespace golang::reflect
                     r->Floats[reg] = *(uint64_t*)(from);
                     break;
                 default:
-                    gocpp::panic("bad argSize");
+                    gocpp::panic("bad argSize"s);
                     break;
             }
         }

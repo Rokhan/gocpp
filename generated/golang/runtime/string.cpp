@@ -68,7 +68,7 @@ namespace golang::runtime
             }
             if(l + n < l)
             {
-                go_throw("string concatenation too long");
+                go_throw("string concatenation too long"s);
             }
             l += n;
             count++;
@@ -76,7 +76,7 @@ namespace golang::runtime
         }
         if(count == 0)
         {
-            return "";
+            return ""s;
         }
         if(count == 1 && (buf != nullptr || ! stringDataOnStack(a[idx])))
         {
@@ -115,7 +115,7 @@ namespace golang::runtime
     {
         if(n == 0)
         {
-            return "";
+            return ""s;
         }
         if(raceenabled)
         {
@@ -382,7 +382,7 @@ namespace golang::runtime
         gocpp::slice<gocpp::rune> b;
         if(uintptr_t(size) > maxAlloc / 4)
         {
-            go_throw("out of memory");
+            go_throw("out of memory"s);
         }
         auto mem = roundupsize(uintptr_t(size) * 4, true);
         auto p = mallocgc(mem, nullptr, false);
@@ -403,7 +403,7 @@ namespace golang::runtime
         }
         if(n < 0 || uintptr_t(n) > maxAlloc)
         {
-            gocpp::panic(errorString("gobytes: length out of range"));
+            gocpp::panic(errorString("gobytes: length out of range"s));
         }
         auto bp = mallocgc(uintptr_t(n), nullptr, false);
         memmove(bp, unsafe::Pointer(p), uintptr_t(n));
@@ -416,7 +416,7 @@ namespace golang::runtime
         auto l = findnull(p);
         if(l == 0)
         {
-            return "";
+            return ""s;
         }
         auto [s, b] = rawstring(l);
         memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
@@ -432,7 +432,7 @@ namespace golang::runtime
     {
         if(l == 0)
         {
-            return "";
+            return ""s;
         }
         auto [s, b] = rawstring(l);
         memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
@@ -451,7 +451,7 @@ namespace golang::runtime
 
     std::tuple<int64_t, bool> atoi64(std::string s)
     {
-        if(s == "")
+        if(s == ""s)
         {
             return {0, false};
         }
@@ -517,7 +517,7 @@ namespace golang::runtime
 
     std::tuple<int64_t, bool> parseByteCount(std::string s)
     {
-        if(s == "")
+        if(s == ""s)
         {
             return {0, false};
         }
@@ -610,7 +610,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        if(GOOS == "plan9")
+        if(GOOS == "plan9"s)
         {
             auto p = (gocpp::array<unsigned char, maxAlloc / 2 - 1>*)(unsafe::Pointer(s));
             auto l = 0;

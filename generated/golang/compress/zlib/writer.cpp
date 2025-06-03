@@ -103,7 +103,7 @@ namespace golang::zlib
     {
         if(level < HuffmanOnly || level > BestCompression)
         {
-            return {nullptr, mocklib::Errorf("zlib: invalid compression level: %d", level)};
+            return {nullptr, mocklib::Errorf("zlib: invalid compression level: %d"s, level)};
         }
         return {gocpp::InitPtr<Writer>([=](auto& x) {
             x.w = w;
@@ -172,7 +172,7 @@ namespace golang::zlib
                     z->scratch[1] = 3 << 6;
                     break;
                 default:
-                    gocpp::panic("unreachable");
+                    gocpp::panic("unreachable"s);
                     break;
             }
         }

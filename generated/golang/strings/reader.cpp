@@ -91,7 +91,7 @@ namespace golang::strings
         struct gocpp::error err;
         if(off < 0)
         {
-            return {0, errors::New("strings.Reader.ReadAt: negative offset")};
+            return {0, errors::New("strings.Reader.ReadAt: negative offset"s)};
         }
         if(off >= int64_t(len(r->s)))
         {
@@ -121,7 +121,7 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return errors::New("strings.Reader.UnreadByte: at beginning of string");
+            return errors::New("strings.Reader.UnreadByte: at beginning of string"s);
         }
         r->prevRune = - 1;
         r->i--;
@@ -153,11 +153,11 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return errors::New("strings.Reader.UnreadRune: at beginning of string");
+            return errors::New("strings.Reader.UnreadRune: at beginning of string"s);
         }
         if(r->prevRune < 0)
         {
-            return errors::New("strings.Reader.UnreadRune: previous operation was not ReadRune");
+            return errors::New("strings.Reader.UnreadRune: previous operation was not ReadRune"s);
         }
         r->i = int64_t(r->prevRune);
         r->prevRune = - 1;
@@ -187,13 +187,13 @@ namespace golang::strings
                     abs = int64_t(len(r->s)) + offset;
                     break;
                 default:
-                    return {0, errors::New("strings.Reader.Seek: invalid whence")};
+                    return {0, errors::New("strings.Reader.Seek: invalid whence"s)};
                     break;
             }
         }
         if(abs < 0)
         {
-            return {0, errors::New("strings.Reader.Seek: negative position")};
+            return {0, errors::New("strings.Reader.Seek: negative position"s)};
         }
         r->i = abs;
         return {abs, nullptr};
@@ -212,7 +212,7 @@ namespace golang::strings
         auto [m, err] = io::WriteString(w, s);
         if(m > len(s))
         {
-            gocpp::panic("strings.Reader.WriteTo: invalid WriteString count");
+            gocpp::panic("strings.Reader.WriteTo: invalid WriteString count"s);
         }
         r->i += int64_t(m);
         n = int64_t(m);

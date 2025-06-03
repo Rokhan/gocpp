@@ -77,7 +77,7 @@ namespace golang::main
 
     void main()
     {
-        auto s = strings::NewReader("Lbh penpxrq gur pbqr!");
+        auto s = strings::NewReader("Lbh penpxrq gur pbqr!"s);
         auto r = rot13Reader {s};
         io::Copy(os::Stdout, & r);
     }

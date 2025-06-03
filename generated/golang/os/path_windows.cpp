@@ -27,7 +27,7 @@ namespace golang::os
     {
         if(len(name) == 2 && name[1] == ':')
         {
-            name = ".";
+            name = "."s;
         }
         else
         if(len(name) > 2 && name[1] == ':')
@@ -54,12 +54,12 @@ namespace golang::os
     {
         bool b;
         auto v = volumeName(path);
-        if(v == "")
+        if(v == ""s)
         {
             return false;
         }
         path = path.make_slice(len(v));
-        if(path == "")
+        if(path == ""s)
         {
             return false;
         }
@@ -71,7 +71,7 @@ namespace golang::os
         std::string v;
         if(len(path) < 2)
         {
-            return "";
+            return ""s;
         }
         auto c = path[0];
         if(path[1] == ':' && ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z'))
@@ -104,7 +104,7 @@ namespace golang::os
                 }
             }
         }
-        return "";
+        return ""s;
     }
 
     std::string fromSlash(std::string path)
@@ -146,9 +146,9 @@ namespace golang::os
         {
             dir = dir.make_slice(0, last);
         }
-        if(dir == "")
+        if(dir == ""s)
         {
-            dir = ".";
+            dir = "."s;
         }
         return vol + dir;
     }
@@ -164,7 +164,7 @@ namespace golang::os
         {
             return path;
         }
-        if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\")
+        if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\"s)
         {
             return path;
         }
@@ -172,8 +172,8 @@ namespace golang::os
         {
             return path;
         }
-        auto prefix = "\\\\?";
-        auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"));
+        auto prefix = "\\\\?"s;
+        auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"s));
         copy(pathbuf, prefix);
         auto n = len(path);
         auto [r, w] = std::tuple{0, len(prefix)};
@@ -208,7 +208,7 @@ namespace golang::os
                 }
             }
         }
-        if(w == len("\\\\?\\c:"))
+        if(w == len("\\\\?\\c:"s))
         {
             pathbuf[w] = '\\';
             w++;

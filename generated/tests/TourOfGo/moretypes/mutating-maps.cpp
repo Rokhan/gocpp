@@ -23,14 +23,14 @@ namespace golang::main
     void main()
     {
         auto m = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
-        m["Answer"] = 42;
-        mocklib::Println("The value:", m["Answer"]);
-        m["Answer"] = 48;
-        mocklib::Println("The value:", m["Answer"]);
-        remove(m, "Answer");
-        mocklib::Println("The value:", m["Answer"]);
-        auto [v, ok] = m["Answer"];
-        mocklib::Println("The value:", v, "Present?", ok);
+        m["Answer"s] = 42;
+        mocklib::Println("The value:"s, m["Answer"s]);
+        m["Answer"s] = 48;
+        mocklib::Println("The value:"s, m["Answer"s]);
+        remove(m, "Answer"s);
+        mocklib::Println("The value:"s, m["Answer"s]);
+        auto [v, ok] = m["Answer"s];
+        mocklib::Println("The value:"s, v, "Present?"s, ok);
     }
 
 }

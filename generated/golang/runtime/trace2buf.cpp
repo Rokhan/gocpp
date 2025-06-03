@@ -151,7 +151,7 @@ namespace golang::runtime
                 w.traceBuf = (traceBuf*)(sysAlloc(gocpp::Sizeof<traceBuf>(), & memstats.other_sys));
                 if(w.traceBuf == nullptr)
                 {
-                    go_throw("trace: out of memory");
+                    go_throw("trace: out of memory"s);
                 }
             }
         });
@@ -371,7 +371,7 @@ namespace golang::runtime
         }
         if(v != 0)
         {
-            go_throw("v could not fit in traceBytesPerNumber");
+            go_throw("v could not fit in traceBytesPerNumber"s);
         }
     }
 

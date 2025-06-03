@@ -133,8 +133,8 @@ namespace golang::runtime
         iocphandle = stdcall4(_CreateIoCompletionPort, _INVALID_HANDLE_VALUE, 0, 0, _DWORD_MAX);
         if(iocphandle == 0)
         {
-            println("runtime: CreateIoCompletionPort failed (errno=", getlasterror(), ")");
-            go_throw("runtime: netpollinit failed");
+            println("runtime: CreateIoCompletionPort failed (errno="s, getlasterror(), ")"s);
+            go_throw("runtime: netpollinit failed"s);
         }
     }
 
@@ -159,7 +159,7 @@ namespace golang::runtime
 
     void netpollarm(struct pollDesc* pd, int mode)
     {
-        go_throw("runtime: unused");
+        go_throw("runtime: unused"s);
     }
 
     void netpollBreak()
@@ -170,8 +170,8 @@ namespace golang::runtime
         }
         if(stdcall4(_PostQueuedCompletionStatus, iocphandle, 0, 0, 0) == 0)
         {
-            println("runtime: netpoll: PostQueuedCompletionStatus failed (errno=", getlasterror(), ")");
-            go_throw("runtime: netpoll: PostQueuedCompletionStatus failed");
+            println("runtime: netpoll: PostQueuedCompletionStatus failed (errno="s, getlasterror(), ")"s);
+            go_throw("runtime: netpoll: PostQueuedCompletionStatus failed"s);
         }
     }
 
@@ -231,8 +231,8 @@ namespace golang::runtime
             {
                 return {gList {}, 0};
             }
-            println("runtime: GetQueuedCompletionStatusEx failed (errno=", errno, ")");
-            go_throw("runtime: netpoll failed");
+            println("runtime: GetQueuedCompletionStatusEx failed (errno="s, errno, ")"s);
+            go_throw("runtime: netpoll failed"s);
         }
         mp->blocked = false;
         auto delta = int32_t(0);
@@ -266,8 +266,8 @@ namespace golang::runtime
         auto mode = op->mode;
         if(mode != 'r' && mode != 'w')
         {
-            println("runtime: GetQueuedCompletionStatusEx returned invalid mode=", mode);
-            go_throw("runtime: netpoll failed");
+            println("runtime: GetQueuedCompletionStatusEx returned invalid mode="s, mode);
+            go_throw("runtime: netpoll failed"s);
         }
         op->errno = errno;
         op->qty = qty;

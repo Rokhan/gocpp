@@ -87,7 +87,7 @@ namespace golang::reflectlite
     {
         if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
         {
-            gocpp::panic("can't call pointer on a non-pointer Value");
+            gocpp::panic("can't call pointer on a non-pointer Value"s);
         }
         if(v.flag & flagIndir != 0)
         {
@@ -111,7 +111,7 @@ namespace golang::reflectlite
                 case 0:
                     if(v.flag & flagIndir == 0)
                     {
-                        gocpp::panic("bad indir");
+                        gocpp::panic("bad indir"s);
                     }
                     auto ptr = v.ptr;
                     if(v.flag & flagAddr != 0)
@@ -186,9 +186,9 @@ namespace golang::reflectlite
     {
         if(e->Kind == 0)
         {
-            return "reflect: call of " + e->Method + " on zero Value";
+            return "reflect: call of "s + e->Method + " on zero Value"s;
         }
-        return "reflect: call of " + e->Method + " on " + rec::String(gocpp::recv(e->Kind)) + " Value";
+        return "reflect: call of "s + e->Method + " on "s + rec::String(gocpp::recv(e->Kind)) + " Value"s;
     }
 
     std::string methodName()
@@ -197,7 +197,7 @@ namespace golang::reflectlite
         auto f = runtime::FuncForPC(pc);
         if(f == nullptr)
         {
-            return "unknown method";
+            return "unknown method"s;
         }
         return rec::Name(gocpp::recv(f));
     }
@@ -242,7 +242,7 @@ namespace golang::reflectlite
         }
         if(f & flagRO != 0)
         {
-            gocpp::panic("reflect: " + methodName() + " using value obtained using unexported field");
+            gocpp::panic("reflect: "s + methodName() + " using value obtained using unexported field"s);
         }
     }
 
@@ -254,11 +254,11 @@ namespace golang::reflectlite
         }
         if(f & flagRO != 0)
         {
-            gocpp::panic("reflect: " + methodName() + " using value obtained using unexported field");
+            gocpp::panic("reflect: "s + methodName() + " using value obtained using unexported field"s);
         }
         if(f & flagAddr == 0)
         {
-            gocpp::panic("reflect: " + methodName() + " using unaddressable value");
+            gocpp::panic("reflect: "s + methodName() + " using unaddressable value"s);
         }
     }
 
@@ -362,7 +362,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.Elem", rec::kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflectlite.Value.Elem"s, rec::kind(gocpp::recv(v))});
     }
 
     
@@ -418,7 +418,7 @@ namespace golang::reflectlite
     {
         if(v.flag == 0)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.Interface", 0});
+            gocpp::panic(new ValueError {"reflectlite.Value.Interface"s, 0});
         }
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
@@ -465,7 +465,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.IsNil", rec::kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflectlite.Value.IsNil"s, rec::kind(gocpp::recv(v))});
     }
 
     bool rec::IsValid(struct Value v)
@@ -516,14 +516,14 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Len", rec::kind(gocpp::recv(v))});
+        gocpp::panic(new ValueError {"reflect.Value.Len"s, rec::kind(gocpp::recv(v))});
     }
 
     int rec::numMethod(struct Value v)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.NumMethod", abi::Invalid});
+            gocpp::panic(new ValueError {"reflectlite.Value.NumMethod"s, abi::Invalid});
         }
         return rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v))));
     }
@@ -537,7 +537,7 @@ namespace golang::reflectlite
         {
             target = v.ptr;
         }
-        x = rec::assignTo(gocpp::recv(x), "reflectlite.Set", rec::typ(gocpp::recv(v)), target);
+        x = rec::assignTo(gocpp::recv(x), "reflectlite.Set"s, rec::typ(gocpp::recv(v)), target);
         if(x.flag & flagIndir != 0)
         {
             typedmemmove(rec::typ(gocpp::recv(v)), v.ptr, x.ptr);
@@ -553,7 +553,7 @@ namespace golang::reflectlite
         auto f = v.flag;
         if(f == 0)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.Type", abi::Invalid});
+            gocpp::panic(new ValueError {"reflectlite.Value.Type"s, abi::Invalid});
         }
         return toRType(rec::typ(gocpp::recv(v)));
     }
@@ -606,12 +606,12 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(context + ": value of type " + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type " + rec::String(gocpp::recv(toRType(dst))));
+        gocpp::panic(context + ": value of type "s + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type "s + rec::String(gocpp::recv(toRType(dst))));
     }
 
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe)
     {
-        return add(p, uintptr_t(i) * eltSize, "i < len");
+        return add(p, uintptr_t(i) * eltSize, "i < len"s);
     }
 
     void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst)

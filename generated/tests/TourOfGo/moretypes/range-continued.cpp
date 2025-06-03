@@ -29,7 +29,7 @@ namespace golang::main
         }
         for(auto [gocpp_ignored, value] : pow)
         {
-            mocklib::Printf("%v\n", value);
+            mocklib::Printf("%v\n"s, value);
         }
     }
 

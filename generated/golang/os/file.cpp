@@ -59,9 +59,9 @@ namespace golang::os
         return f->name;
     }
 
-    File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin");
-    File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout");
-    File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr");
+    File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin"s);
+    File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout"s);
+    File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     LinkError::operator T()
@@ -102,7 +102,7 @@ namespace golang::os
 
     std::string rec::Error(struct LinkError* e)
     {
-        return e->Op + " " + e->Old + " " + e->New + ": " + rec::Error(gocpp::recv(e->Err));
+        return e->Op + " "s + e->Old + " "s + e->New + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct LinkError* e)
@@ -114,28 +114,28 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
         {
             return {0, err};
         }
         auto [n, e] = rec::read(gocpp::recv(f), b);
-        return {n, rec::wrapErr(gocpp::recv(f), "read", e)};
+        return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
     }
 
     std::tuple<int, struct gocpp::error> rec::ReadAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
         {
             return {0, err};
         }
         if(off < 0)
         {
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readat";
+                x.Op = "readat"s;
                 x.Path = f->name;
-                x.Err = errors::New("negative offset");
+                x.Err = errors::New("negative offset"s);
             })};
         }
         for(; len(b) > 0; )
@@ -143,7 +143,7 @@ namespace golang::os
             auto [m, e] = rec::pread(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                err = rec::wrapErr(gocpp::recv(f), "read", e);
+                err = rec::wrapErr(gocpp::recv(f), "read"s, e);
                 break;
             }
             n += m;
@@ -157,7 +157,7 @@ namespace golang::os
     {
         int64_t n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
         {
             return {0, err};
         }
@@ -166,7 +166,7 @@ namespace golang::os
         {
             return genericReadFrom(f, r);
         }
-        return {n, rec::wrapErr(gocpp::recv(f), "write", e)};
+        return {n, rec::wrapErr(gocpp::recv(f), "write"s, e)};
     }
 
     
@@ -197,7 +197,7 @@ namespace golang::os
 
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(noReadFrom, io::Reader)
     {
-        gocpp::panic("can't happen");
+        gocpp::panic("can't happen"s);
     }
 
     
@@ -237,7 +237,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
         {
             return {0, err};
         }
@@ -253,17 +253,17 @@ namespace golang::os
         epipecheck(f, e);
         if(e != nullptr)
         {
-            err = rec::wrapErr(gocpp::recv(f), "write", e);
+            err = rec::wrapErr(gocpp::recv(f), "write"s, e);
         }
         return {n, err};
     }
 
-    gocpp::error errWriteAtInAppendMode = errors::New("os: invalid use of WriteAt on file opened with O_APPEND");
+    gocpp::error errWriteAtInAppendMode = errors::New("os: invalid use of WriteAt on file opened with O_APPEND"s);
     std::tuple<int, struct gocpp::error> rec::WriteAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
         {
             return {0, err};
         }
@@ -274,9 +274,9 @@ namespace golang::os
         if(off < 0)
         {
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "writeat";
+                x.Op = "writeat"s;
                 x.Path = f->name;
-                x.Err = errors::New("negative offset");
+                x.Err = errors::New("negative offset"s);
             })};
         }
         for(; len(b) > 0; )
@@ -284,7 +284,7 @@ namespace golang::os
             auto [m, e] = rec::pwrite(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                err = rec::wrapErr(gocpp::recv(f), "write", e);
+                err = rec::wrapErr(gocpp::recv(f), "write"s, e);
                 break;
             }
             n += m;
@@ -298,14 +298,14 @@ namespace golang::os
     {
         int64_t n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
         {
             return {0, err};
         }
         auto [n, handled, e] = rec::writeTo(gocpp::recv(f), w);
         if(handled)
         {
-            return {n, rec::wrapErr(gocpp::recv(f), "read", e)};
+            return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
         }
         return genericWriteTo(f, w);
     }
@@ -338,7 +338,7 @@ namespace golang::os
 
     std::tuple<int64_t, struct gocpp::error> rec::WriteTo(noWriteTo, io::Writer)
     {
-        gocpp::panic("can't happen");
+        gocpp::panic("can't happen"s);
     }
 
     
@@ -378,7 +378,7 @@ namespace golang::os
     {
         int64_t ret;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "seek"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "seek"s); err != nullptr)
         {
             return {0, err};
         }
@@ -389,7 +389,7 @@ namespace golang::os
         }
         if(e != nullptr)
         {
-            return {0, rec::wrapErr(gocpp::recv(f), "seek", e)};
+            return {0, rec::wrapErr(gocpp::recv(f), "seek"s, e)};
         }
         return {r, nullptr};
     }
@@ -412,7 +412,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "mkdir";
+                x.Op = "mkdir"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -445,7 +445,7 @@ namespace golang::os
         {
             testlog::Open(dir);
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chdir";
+                x.Op = "chdir"s;
                 x.Path = dir;
                 x.Err = e;
             });
@@ -517,7 +517,7 @@ namespace golang::os
         else
         if(checkWrapErr && errors::Is(err, poll::ErrFileClosing))
         {
-            gocpp::panic("unexpected error wrapping poll.ErrFileClosing: " + rec::Error(gocpp::recv(err)));
+            gocpp::panic("unexpected error wrapping poll.ErrFileClosing: "s + rec::Error(gocpp::recv(err)));
         }
         return gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = op;
@@ -538,46 +538,46 @@ namespace golang::os
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows") { conditionId = 0; }
-            else if(condition == "darwin") { conditionId = 1; }
-            else if(condition == "ios") { conditionId = 2; }
-            else if(condition == "plan9") { conditionId = 3; }
+            if(condition == "windows"s) { conditionId = 0; }
+            else if(condition == "darwin"s) { conditionId = 1; }
+            else if(condition == "ios"s) { conditionId = 2; }
+            else if(condition == "plan9"s) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    dir = Getenv("LocalAppData");
-                    if(dir == "")
+                    dir = Getenv("LocalAppData"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("%LocalAppData% is not defined")};
+                        return {""s, errors::New("%LocalAppData% is not defined"s)};
                     }
                     break;
                 case 1:
                 case 2:
-                    dir = Getenv("HOME");
-                    if(dir == "")
+                    dir = Getenv("HOME"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("$HOME is not defined")};
+                        return {""s, errors::New("$HOME is not defined"s)};
                     }
-                    dir += "/Library/Caches";
+                    dir += "/Library/Caches"s;
                     break;
                 case 3:
-                    dir = Getenv("home");
-                    if(dir == "")
+                    dir = Getenv("home"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("$home is not defined")};
+                        return {""s, errors::New("$home is not defined"s)};
                     }
-                    dir += "/lib/cache";
+                    dir += "/lib/cache"s;
                     break;
                 default:
-                    dir = Getenv("XDG_CACHE_HOME");
-                    if(dir == "")
+                    dir = Getenv("XDG_CACHE_HOME"s);
+                    if(dir == ""s)
                     {
-                        dir = Getenv("HOME");
-                        if(dir == "")
+                        dir = Getenv("HOME"s);
+                        if(dir == ""s)
                         {
-                            return {"", errors::New("neither $XDG_CACHE_HOME nor $HOME are defined")};
+                            return {""s, errors::New("neither $XDG_CACHE_HOME nor $HOME are defined"s)};
                         }
-                        dir += "/.cache";
+                        dir += "/.cache"s;
                     }
                     break;
             }
@@ -592,46 +592,46 @@ namespace golang::os
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows") { conditionId = 0; }
-            else if(condition == "darwin") { conditionId = 1; }
-            else if(condition == "ios") { conditionId = 2; }
-            else if(condition == "plan9") { conditionId = 3; }
+            if(condition == "windows"s) { conditionId = 0; }
+            else if(condition == "darwin"s) { conditionId = 1; }
+            else if(condition == "ios"s) { conditionId = 2; }
+            else if(condition == "plan9"s) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    dir = Getenv("AppData");
-                    if(dir == "")
+                    dir = Getenv("AppData"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("%AppData% is not defined")};
+                        return {""s, errors::New("%AppData% is not defined"s)};
                     }
                     break;
                 case 1:
                 case 2:
-                    dir = Getenv("HOME");
-                    if(dir == "")
+                    dir = Getenv("HOME"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("$HOME is not defined")};
+                        return {""s, errors::New("$HOME is not defined"s)};
                     }
-                    dir += "/Library/Application Support";
+                    dir += "/Library/Application Support"s;
                     break;
                 case 3:
-                    dir = Getenv("home");
-                    if(dir == "")
+                    dir = Getenv("home"s);
+                    if(dir == ""s)
                     {
-                        return {"", errors::New("$home is not defined")};
+                        return {""s, errors::New("$home is not defined"s)};
                     }
-                    dir += "/lib";
+                    dir += "/lib"s;
                     break;
                 default:
-                    dir = Getenv("XDG_CONFIG_HOME");
-                    if(dir == "")
+                    dir = Getenv("XDG_CONFIG_HOME"s);
+                    if(dir == ""s)
                     {
-                        dir = Getenv("HOME");
-                        if(dir == "")
+                        dir = Getenv("HOME"s);
+                        if(dir == ""s)
                         {
-                            return {"", errors::New("neither $XDG_CONFIG_HOME nor $HOME are defined")};
+                            return {""s, errors::New("neither $XDG_CONFIG_HOME nor $HOME are defined"s)};
                         }
-                        dir += "/.config";
+                        dir += "/.config"s;
                     }
                     break;
             }
@@ -641,24 +641,24 @@ namespace golang::os
 
     std::tuple<std::string, struct gocpp::error> UserHomeDir()
     {
-        auto [env, enverr] = std::tuple{"HOME", "$HOME"};
+        auto [env, enverr] = std::tuple{"HOME"s, "$HOME"s};
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows") { conditionId = 0; }
-            else if(condition == "plan9") { conditionId = 1; }
+            if(condition == "windows"s) { conditionId = 0; }
+            else if(condition == "plan9"s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    std::tie(env, enverr) = std::tuple{"USERPROFILE", "%userprofile%"};
+                    std::tie(env, enverr) = std::tuple{"USERPROFILE"s, "%userprofile%"s};
                     break;
                 case 1:
-                    std::tie(env, enverr) = std::tuple{"home", "$home"};
+                    std::tie(env, enverr) = std::tuple{"home"s, "$home"s};
                     break;
             }
         }
-        if(auto v = Getenv(env); v != "")
+        if(auto v = Getenv(env); v != ""s)
         {
             return {v, nullptr};
         }
@@ -666,19 +666,19 @@ namespace golang::os
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "android") { conditionId = 0; }
-            else if(condition == "ios") { conditionId = 1; }
+            if(condition == "android"s) { conditionId = 0; }
+            else if(condition == "ios"s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    return {"/sdcard", nullptr};
+                    return {"/sdcard"s, nullptr};
                     break;
                 case 1:
-                    return {"/", nullptr};
+                    return {"/"s, nullptr};
                     break;
             }
         }
-        return {"", errors::New(enverr + " is not defined")};
+        return {""s, errors::New(enverr + " is not defined"s)};
     }
 
     struct gocpp::error Chmod(std::string name, golang::os::FileMode mode)
@@ -708,7 +708,7 @@ namespace golang::os
 
     std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"s); err != nullptr)
         {
             return {nullptr, err};
         }
@@ -726,7 +726,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "open";
+                x.Op = "open"s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -747,7 +747,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readfile";
+                x.Op = "readfile"s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -771,7 +771,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readdir";
+                x.Op = "readdir"s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -795,7 +795,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "stat";
+                x.Op = "stat"s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -812,18 +812,18 @@ namespace golang::os
 
     std::tuple<std::string, struct gocpp::error> rec::join(golang::os::dirFS dir, std::string name)
     {
-        if(dir == "")
+        if(dir == ""s)
         {
-            return {"", errors::New("os: DirFS with empty root")};
+            return {""s, errors::New("os: DirFS with empty root"s)};
         }
         if(! fs::ValidPath(name))
         {
-            return {"", ErrInvalid};
+            return {""s, ErrInvalid};
         }
         auto [name, err] = safefilepath::FromFS(name);
         if(err != nullptr)
         {
-            return {"", ErrInvalid};
+            return {""s, ErrInvalid};
         }
         if(IsPathSeparator(dir[len(dir) - 1]))
         {

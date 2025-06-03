@@ -57,6 +57,6 @@ namespace golang::errors
         return e->s;
     }
 
-    gocpp::error ErrUnsupported = New("unsupported operation");
+    gocpp::error ErrUnsupported = New("unsupported operation"s);
 }
 

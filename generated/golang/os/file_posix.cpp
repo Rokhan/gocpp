@@ -128,7 +128,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chmod";
+                x.Op = "chmod"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -138,13 +138,13 @@ namespace golang::os
 
     struct gocpp::error rec::chmod(struct File* f, golang::os::FileMode mode)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chmod"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chmod"s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchmod(gocpp::recv(f->pfd), syscallMode(mode)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chmod", e);
+            return rec::wrapErr(gocpp::recv(f), "chmod"s, e);
         }
         return nullptr;
     }
@@ -158,7 +158,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chown";
+                x.Op = "chown"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -175,7 +175,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "lchown";
+                x.Op = "lchown"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -185,39 +185,39 @@ namespace golang::os
 
     struct gocpp::error rec::Chown(struct File* f, int uid, int gid)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chown"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chown"s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchown(gocpp::recv(f->pfd), uid, gid); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chown", e);
+            return rec::wrapErr(gocpp::recv(f), "chown"s, e);
         }
         return nullptr;
     }
 
     struct gocpp::error rec::Truncate(struct File* f, int64_t size)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "truncate"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "truncate"s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Ftruncate(gocpp::recv(f->pfd), size); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "truncate", e);
+            return rec::wrapErr(gocpp::recv(f), "truncate"s, e);
         }
         return nullptr;
     }
 
     struct gocpp::error rec::Sync(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "sync"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "sync"s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fsync(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "sync", e);
+            return rec::wrapErr(gocpp::recv(f), "sync"s, e);
         }
         return nullptr;
     }
@@ -244,7 +244,7 @@ namespace golang::os
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chtimes";
+                x.Op = "chtimes"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -254,20 +254,20 @@ namespace golang::os
 
     struct gocpp::error rec::Chdir(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chdir"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chdir"s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchdir(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chdir", e);
+            return rec::wrapErr(gocpp::recv(f), "chdir"s, e);
         }
         return nullptr;
     }
 
     struct gocpp::error rec::setDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"s); err != nullptr)
         {
             return err;
         }
@@ -276,7 +276,7 @@ namespace golang::os
 
     struct gocpp::error rec::setReadDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"s); err != nullptr)
         {
             return err;
         }
@@ -285,7 +285,7 @@ namespace golang::os
 
     struct gocpp::error rec::setWriteDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"s); err != nullptr)
         {
             return err;
         }

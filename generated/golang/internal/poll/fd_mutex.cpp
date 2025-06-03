@@ -62,7 +62,7 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    std::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)";
+    std::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"s;
     bool rec::incref(struct fdMutex* mu)
     {
         for(; ; )
@@ -123,7 +123,7 @@ namespace golang::poll
             auto old = atomic::LoadUint64(& mu->state);
             if(old & mutexRefMask == 0)
             {
-                gocpp::panic("inconsistent poll.fdMutex");
+                gocpp::panic("inconsistent poll.fdMutex"s);
             }
             auto go_new = old - mutexRef;
             if(atomic::CompareAndSwapUint64(& mu->state, old, go_new))
@@ -213,7 +213,7 @@ namespace golang::poll
             auto old = atomic::LoadUint64(& mu->state);
             if(old & mutexBit == 0 || old & mutexRefMask == 0)
             {
-                gocpp::panic("inconsistent poll.fdMutex");
+                gocpp::panic("inconsistent poll.fdMutex"s);
             }
             auto go_new = (old &^ mutexBit) - mutexRef;
             if(old & mutexMask != 0)

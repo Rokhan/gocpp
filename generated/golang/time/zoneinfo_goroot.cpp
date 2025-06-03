@@ -20,11 +20,11 @@ namespace golang::time
 
     std::tuple<std::string, bool> gorootZoneSource(std::string goroot)
     {
-        if(goroot == "")
+        if(goroot == ""s)
         {
-            return {"", false};
+            return {""s, false};
         }
-        return {goroot + "/lib/time/zoneinfo.zip", true};
+        return {goroot + "/lib/time/zoneinfo.zip"s, true};
     }
 
 }

@@ -23,8 +23,8 @@ namespace golang::fmt
         using namespace mocklib::rec;
     }
 
-    std::string ldigits = "0123456789abcdefx";
-    std::string udigits = "0123456789ABCDEFX";
+    std::string ldigits = "0123456789abcdefx"s;
+    std::string udigits = "0123456789ABCDEFX"s;
     
     template<typename T> requires gocpp::GoStruct<T>
     fmtFlags::operator T()
@@ -198,11 +198,11 @@ namespace golang::fmt
     {
         if(v)
         {
-            rec::padString(gocpp::recv(f), "true");
+            rec::padString(gocpp::recv(f), "true"s);
         }
         else
         {
-            rec::padString(gocpp::recv(f), "false");
+            rec::padString(gocpp::recv(f), "false"s);
         }
     }
 
@@ -340,7 +340,7 @@ namespace golang::fmt
                     }
                     break;
                 default:
-                    gocpp::panic("fmt: unknown base; can't happen");
+                    gocpp::panic("fmt: unknown base; can't happen"s);
                     break;
             }
         }
@@ -546,7 +546,7 @@ namespace golang::fmt
 
     void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
     {
-        rec::fmtSbx(gocpp::recv(f), "", b, digits);
+        rec::fmtSbx(gocpp::recv(f), ""s, b, digits);
     }
 
     void rec::fmtQ(struct fmt* f, std::string s)
@@ -554,7 +554,7 @@ namespace golang::fmt
         s = rec::truncateString(gocpp::recv(f), s);
         if(f->sharp && strconv::CanBackquote(s))
         {
-            rec::padString(gocpp::recv(f), "`" + s + "`");
+            rec::padString(gocpp::recv(f), "`"s + s + "`"s);
             return;
         }
         auto buf = f->intbuf.make_slice(0, 0);

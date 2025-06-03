@@ -21,9 +21,9 @@ namespace golang::main
     }
 
     gocpp::array<std::string, 6> errors = gocpp::Init<gocpp::array<std::string, 6>>([](auto& x) {
-        x[3] = "argument list too long";
-        x[5] = "permission denied";
-        x[1] = "address already in use";
+        x[3] = "argument list too long"s;
+        x[5] = "permission denied"s;
+        x[1] = "address already in use"s;
     });
     struct gocpp_id_0
         {

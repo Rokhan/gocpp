@@ -77,7 +77,7 @@ namespace golang::main
 
     void describe(struct I i)
     {
-        mocklib::Printf("(%v, %T)\n", i, i);
+        mocklib::Printf("(%v, %T)\n"s, i, i);
     }
 
 }

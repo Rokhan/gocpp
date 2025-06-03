@@ -156,7 +156,7 @@ namespace golang::syscall
             return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
-                x.Msg = "Failed to load " + name + ": " + rec::Error(gocpp::recv(e));
+                x.Msg = "Failed to load "s + name + ": "s + rec::Error(gocpp::recv(e));
             })};
         }
         auto d = gocpp::InitPtr<DLL>([=](auto& x) {
@@ -191,7 +191,7 @@ namespace golang::syscall
             return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
-                x.Msg = "Failed to find " + name + " procedure in " + d->Name + ": " + rec::Error(gocpp::recv(e));
+                x.Msg = "Failed to find "s + name + " procedure in "s + d->Name + ": "s + rec::Error(gocpp::recv(e));
             })};
         }
         auto p = gocpp::InitPtr<Proc>([=](auto& x) {

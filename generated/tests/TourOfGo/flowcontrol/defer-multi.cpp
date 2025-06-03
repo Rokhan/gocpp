@@ -25,12 +25,12 @@ namespace golang::main
         gocpp::Defer defer;
         try
         {
-            mocklib::Println("counting");
+            mocklib::Println("counting"s);
             for(auto i = 0; i < 10; i++)
             {
                 defer.push_back([=]{ mocklib::Println(i); });
             }
-            mocklib::Println("done");
+            mocklib::Println("done"s);
         }
         catch(gocpp::GoPanic& gp)
         {

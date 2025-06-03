@@ -23,18 +23,18 @@ namespace golang::main
 
     void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
-        gocpp::panic("Not implemented");
+        gocpp::panic("Not implemented"s);
     }
 
     bool Same(tree::Tree* t1, tree::Tree* t2)
     {
-        gocpp::panic("Not implemented");
+        gocpp::panic("Not implemented"s);
     }
 
     void main()
     {
         tree::Tree tree = {};
-        mocklib::Printf("%T", tree);
+        mocklib::Printf("%T"s, tree);
     }
 
 }

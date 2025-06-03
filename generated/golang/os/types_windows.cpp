@@ -116,7 +116,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "GetFileInformationByHandle";
+                x.Op = "GetFileInformationByHandle"s;
                 x.Path = path;
                 x.Err = err;
             })};
@@ -132,7 +132,7 @@ namespace golang::os
             else
             {
                 return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "GetFileInformationByHandleEx";
+                    x.Op = "GetFileInformationByHandleEx"s;
                     x.Path = path;
                     x.Err = err;
                 })};
@@ -285,14 +285,14 @@ namespace golang::os
         {
             rec::Lock(gocpp::recv(fs));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fs)); });
-            if(fs->path == "")
+            if(fs->path == ""s)
             {
                 return nullptr;
             }
             std::string path = {};
             if(fs->appendNameToPath)
             {
-                path = fixLongPath(fs->path + "\\" + fs->name);
+                path = fixLongPath(fs->path + "\\"s + fs->name);
             }
             else
             {
@@ -317,7 +317,7 @@ namespace golang::os
             {
                 return err;
             }
-            fs->path = "";
+            fs->path = ""s;
             fs->vol = i.VolumeSerialNumber;
             fs->idxhi = i.FileIndexHigh;
             fs->idxlo = i.FileIndexLow;
@@ -339,7 +339,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "FullPath";
+                    x.Op = "FullPath"s;
                     x.Path = path;
                     x.Err = err;
                 });

@@ -308,18 +308,18 @@ namespace golang::errors
         }
         if(target == nullptr)
         {
-            gocpp::panic("errors: target cannot be nil");
+            gocpp::panic("errors: target cannot be nil"s);
         }
         auto val = reflectlite::ValueOf(target);
         auto typ = rec::Type(gocpp::recv(val));
         if(rec::Kind(gocpp::recv(typ)) != reflectlite::Ptr || rec::IsNil(gocpp::recv(val)))
         {
-            gocpp::panic("errors: target must be a non-nil pointer");
+            gocpp::panic("errors: target must be a non-nil pointer"s);
         }
         auto targetType = rec::Elem(gocpp::recv(typ));
         if(rec::Kind(gocpp::recv(targetType)) != reflectlite::Interface && ! rec::Implements(gocpp::recv(targetType), errorType))
         {
-            gocpp::panic("errors: *target must be interface or implement error");
+            gocpp::panic("errors: *target must be interface or implement error"s);
         }
         return as(err, target, val, targetType);
     }

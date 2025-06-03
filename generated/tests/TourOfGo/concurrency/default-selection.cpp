@@ -39,14 +39,14 @@ namespace golang::main
                 switch(conditionId)
                 {
                     case 0:
-                        mocklib::Println("tick.");
+                        mocklib::Println("tick."s);
                         break;
                     case 1:
-                        mocklib::Println("BOOM!");
+                        mocklib::Println("BOOM!"s);
                         return;
                         break;
                     default:
-                        mocklib::Println("    .");
+                        mocklib::Println("    ."s);
                         mocklib::Sleep(50 * mocklib::Millisecond);
                         break;
                 }

@@ -122,7 +122,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "readdir";
+                    x.Op = "readdir"s;
                     x.Path = file->name;
                     x.Err = err;
                 });
@@ -145,7 +145,7 @@ namespace golang::os
                     if(err != nullptr)
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "readdir";
+                            x.Op = "readdir"s;
                             x.Path = file->name;
                             x.Err = err;
                         });
@@ -179,7 +179,7 @@ namespace golang::os
                     if(auto [s, gocpp_id_1] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "readdir";
+                            x.Op = "readdir"s;
                             x.Path = file->name;
                             x.Err = syscall::go_ENOTDIR;
                         });
@@ -187,7 +187,7 @@ namespace golang::os
                     else
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "GetFileInformationByHandleEx";
+                            x.Op = "GetFileInformationByHandleEx"s;
                             x.Path = file->name;
                             x.Err = err;
                         });

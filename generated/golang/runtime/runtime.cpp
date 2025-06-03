@@ -239,7 +239,7 @@ namespace golang::runtime
     void syscall_runtimeSetenv(std::string key, std::string value)
     {
         setenv_c(key, value);
-        if(key == "GODEBUG")
+        if(key == "GODEBUG"s)
         {
             auto p = new(string);
             *p = value;
@@ -251,7 +251,7 @@ namespace golang::runtime
     void syscall_runtimeUnsetenv(std::string key)
     {
         unsetenv_c(key);
-        if(key == "GODEBUG")
+        if(key == "GODEBUG"s)
         {
             rec::Store(gocpp::recv(godebugEnv), nullptr);
             godebugNotify(true);

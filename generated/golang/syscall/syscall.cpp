@@ -28,7 +28,7 @@ namespace golang::syscall
         auto [a, err] = ByteSliceFromString(s);
         if(err != nullptr)
         {
-            gocpp::panic("syscall: string with NUL passed to StringByteSlice");
+            gocpp::panic("syscall: string with NUL passed to StringByteSlice"s);
         }
         return a;
     }

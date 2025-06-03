@@ -123,23 +123,23 @@ namespace golang::runtime
 
     void printsp()
     {
-        printstring(" ");
+        printstring(" "s);
     }
 
     void printnl()
     {
-        printstring("\n");
+        printstring("\n"s);
     }
 
     void printbool(bool v)
     {
         if(v)
         {
-            printstring("true");
+            printstring("true"s);
         }
         else
         {
-            printstring("false");
+            printstring("false"s);
         }
     }
 
@@ -154,15 +154,15 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    printstring("NaN");
+                    printstring("NaN"s);
                     return;
                     break;
                 case 1:
-                    printstring("+Inf");
+                    printstring("+Inf"s);
                     return;
                     break;
                 case 2:
-                    printstring("-Inf");
+                    printstring("-Inf"s);
                     return;
                     break;
             }
@@ -231,7 +231,7 @@ namespace golang::runtime
 
     void printcomplex(struct gocpp::complex128 c)
     {
-        print("(", real(c), imag(c), "i)");
+        print("("s, real(c), imag(c), "i)"s);
     }
 
     void printuint(uint64_t v)
@@ -254,7 +254,7 @@ namespace golang::runtime
     {
         if(v < 0)
         {
-            printstring("-");
+            printstring("-"s);
             v = - v;
         }
         printuint(uint64_t(v));
@@ -263,7 +263,7 @@ namespace golang::runtime
     long minhexdigits = 0;
     void printhex(uint64_t v)
     {
-        auto dig = "0123456789abcdef";
+        auto dig = "0123456789abcdef"s;
         gocpp::array<unsigned char, 100> buf = {};
         auto i = len(buf);
         for(i--; i > 0; i--)
@@ -300,18 +300,18 @@ namespace golang::runtime
     void printslice(gocpp::slice<unsigned char> s)
     {
         auto sp = (slice*)(unsafe::Pointer(& s));
-        print("[", len(s), "/", cap(s), "]");
+        print("["s, len(s), "/"s, cap(s), "]"s);
         printpointer(sp->array);
     }
 
     void printeface(struct eface e)
     {
-        print("(", e._type, ",", e.data, ")");
+        print("("s, e._type, ","s, e.data, ")"s);
     }
 
     void printiface(struct iface i)
     {
-        print("(", i.tab, ",", i.data, ")");
+        print("("s, i.tab, ","s, i.data, ")"s);
     }
 
     void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark)
@@ -328,7 +328,7 @@ namespace golang::runtime
                 {
                     println();
                 }
-                print(hex(p + i), ": ");
+                print(hex(p + i), ": "s);
             }
             if(mark != nullptr)
             {
@@ -341,11 +341,11 @@ namespace golang::runtime
             gwrite(markbuf.make_slice(0));
             auto val = *(uintptr_t*)(unsafe::Pointer(p + i));
             print(hex(val));
-            print(" ");
+            print(" "s);
             auto fn = findfunc(val);
             if(rec::valid(gocpp::recv(fn)))
             {
-                print("<", funcname(fn), "+", hex(val - rec::entry(gocpp::recv(fn))), "> ");
+                print("<"s, funcname(fn), "+"s, hex(val - rec::entry(gocpp::recv(fn))), "> "s);
             }
         }
         minhexdigits = 0;

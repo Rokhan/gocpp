@@ -24,13 +24,13 @@ namespace golang::main
     int gocpp_id_1 = (1 << 2) - 1;
     void main()
     {
-        mocklib::Printf("%v %v %v // %v %v %v\n", c0, c1, c2, c3, c4, c5);
-        mocklib::Printf("%v %v %v\n", a, b, c);
-        mocklib::Printf("%v %v %v %v\n", z0, za, zb, zc);
-        mocklib::Printf("%v %v %v\n", u, v, w);
-        mocklib::Printf("%v %v\n", x, y);
-        mocklib::Printf("%v %v %v\n", bit0, bit1, bit3);
-        mocklib::Printf("%v %v %v\n", mask0, mask1, mask3);
+        mocklib::Printf("%v %v %v // %v %v %v\n"s, c0, c1, c2, c3, c4, c5);
+        mocklib::Printf("%v %v %v\n"s, a, b, c);
+        mocklib::Printf("%v %v %v %v\n"s, z0, za, zb, zc);
+        mocklib::Printf("%v %v %v\n"s, u, v, w);
+        mocklib::Printf("%v %v\n"s, x, y);
+        mocklib::Printf("%v %v %v\n"s, bit0, bit1, bit3);
+        mocklib::Printf("%v %v %v\n"s, mask0, mask1, mask3);
     }
 
 }

@@ -69,7 +69,7 @@ namespace golang::strings
         else
         if(b->addr != b)
         {
-            gocpp::panic("strings: illegal use of non-zero Builder copied by value");
+            gocpp::panic("strings: illegal use of non-zero Builder copied by value"s);
         }
     }
 
@@ -106,7 +106,7 @@ namespace golang::strings
         rec::copyCheck(gocpp::recv(b));
         if(n < 0)
         {
-            gocpp::panic("strings.Builder.Grow: negative count");
+            gocpp::panic("strings.Builder.Grow: negative count"s);
         }
         if(cap(b->buf) - len(b->buf) < n)
         {

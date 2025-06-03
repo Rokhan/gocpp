@@ -22,7 +22,7 @@ namespace golang::main
 
     std::tuple<std::string, bool> dummy()
     {
-        return {"dummyStr", true};
+        return {"dummyStr"s, true};
     }
 
     bool okok = false;
@@ -77,7 +77,7 @@ namespace golang::main
                     mocklib::Println(s1);
                     break;
                 default:
-                    mocklib::Println("default");
+                    mocklib::Println("default"s);
                     break;
             }
         }
@@ -93,7 +93,7 @@ namespace golang::main
                     mocklib::Println(s2);
                     break;
                 default:
-                    mocklib::Println("default");
+                    mocklib::Println("default"s);
                     break;
             }
         }
@@ -109,7 +109,7 @@ namespace golang::main
                     mocklib::Println(s3);
                     break;
                 default:
-                    mocklib::Println("default");
+                    mocklib::Println("default"s);
                     break;
             }
         }

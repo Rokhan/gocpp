@@ -215,8 +215,8 @@ namespace golang::runtime
         auto [head, tail] = rec::split(gocpp::recv(rec::load(gocpp::recv(b->index))));
         if(head < tail)
         {
-            print("head = ", head, ", tail = ", tail, "\n");
-            go_throw("attempt to clear non-empty span set");
+            print("head = "s, head, ", tail = "s, tail, "\n"s);
+            go_throw("attempt to clear non-empty span set"s);
         }
         auto top = head / spanSetBlockEntries;
         if(uintptr_t(top) < rec::Load(gocpp::recv(b->spineLen)))
@@ -227,11 +227,11 @@ namespace golang::runtime
             {
                 if(rec::Load(gocpp::recv(block->popped)) == 0)
                 {
-                    go_throw("span set block with unpopped elements found in reset");
+                    go_throw("span set block with unpopped elements found in reset"s);
                 }
                 if(rec::Load(gocpp::recv(block->popped)) == spanSetBlockEntries)
                 {
-                    go_throw("fully empty unfreed span set block found in reset");
+                    go_throw("fully empty unfreed span set block found in reset"s);
                 }
                 rec::StoreNoWB(gocpp::recv(blockp), nullptr);
                 rec::free(gocpp::recv(spanSetBlockPool), block);
@@ -437,8 +437,8 @@ namespace golang::runtime
         auto ht = headTailIndex(rec::Add(gocpp::recv(h->u), 1));
         if(rec::tail(gocpp::recv(ht)) == 0)
         {
-            print("runtime: head = ", rec::head(gocpp::recv(ht)), ", tail = ", rec::tail(gocpp::recv(ht)), "\n");
-            go_throw("headTailIndex overflow");
+            print("runtime: head = "s, rec::head(gocpp::recv(ht)), ", tail = "s, rec::tail(gocpp::recv(ht)), "\n"s);
+            go_throw("headTailIndex overflow"s);
         }
         return ht;
     }

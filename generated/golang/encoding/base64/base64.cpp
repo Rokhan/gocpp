@@ -66,12 +66,12 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::string decodeMapInitialize = "" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff";
+    std::string decodeMapInitialize = ""s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s;
     struct Encoding* NewEncoding(std::string encoder)
     {
         if(len(encoder) != 64)
         {
-            gocpp::panic("encoding alphabet is not 64-bytes long");
+            gocpp::panic("encoding alphabet is not 64-bytes long"s);
         }
         auto e = new(Encoding);
         e->padChar = StdPadding;
@@ -87,10 +87,10 @@ namespace golang::base64
                 switch(conditionId)
                 {
                     case 0:
-                        gocpp::panic("encoding alphabet contains newline character");
+                        gocpp::panic("encoding alphabet contains newline character"s);
                         break;
                     case 1:
-                        gocpp::panic("encoding alphabet includes duplicate symbols");
+                        gocpp::panic("encoding alphabet includes duplicate symbols"s);
                         break;
                 }
             }
@@ -109,10 +109,10 @@ namespace golang::base64
             switch(conditionId)
             {
                 case 0:
-                    gocpp::panic("invalid padding");
+                    gocpp::panic("invalid padding"s);
                     break;
                 case 1:
-                    gocpp::panic("padding contained in alphabet");
+                    gocpp::panic("padding contained in alphabet"s);
                     break;
             }
         }
@@ -126,8 +126,8 @@ namespace golang::base64
         return & enc;
     }
 
-    Encoding* StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-    Encoding* URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+    Encoding* StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"s);
+    Encoding* URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"s);
     Encoding* RawStdEncoding = rec::WithPadding(gocpp::recv(StdEncoding), NoPadding);
     Encoding* RawURLEncoding = rec::WithPadding(gocpp::recv(URLEncoding), NoPadding);
     void rec::Encode(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
@@ -327,7 +327,7 @@ namespace golang::base64
 
     std::string rec::Error(golang::base64::CorruptInputError e)
     {
-        return "illegal base64 data at input byte " + strconv::FormatInt(int64_t(e), 10);
+        return "illegal base64 data at input byte "s + strconv::FormatInt(int64_t(e), 10);
     }
 
     std::tuple<int, int, struct gocpp::error> rec::decodeQuantum(struct Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
@@ -470,7 +470,7 @@ namespace golang::base64
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::DecodeString(struct Encoding* enc, std::string s)
     {
         auto dbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::DecodedLen(gocpp::recv(enc), len(s)));
-        auto [n, err] = rec::Decode(gocpp::recv(enc), dbuf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
+        auto [n, err] = rec::Decode(gocpp::recv(enc), dbuf, gocpp::slice<unsigned char>(s));
         return {dbuf.make_slice(0, n), err};
     }
 

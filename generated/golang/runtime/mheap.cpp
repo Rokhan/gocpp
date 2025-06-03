@@ -90,7 +90,7 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    bool physPageAlignedStacks = GOOS == "openbsd";
+    bool physPageAlignedStacks = GOOS == "openbsd"s;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
@@ -404,7 +404,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::slice<std::string> mSpanStateNames = gocpp::slice<std::string> {"mSpanDead", "mSpanInUse", "mSpanManual"};
+    gocpp::slice<std::string> mSpanStateNames = gocpp::slice<std::string> {"mSpanDead"s, "mSpanInUse"s, "mSpanManual"s};
     
     template<typename T> requires gocpp::GoStruct<T>
     mSpanStateBox::operator T()
@@ -625,7 +625,7 @@ namespace golang::runtime
             sp->array = sysAlloc(uintptr_t(n) * goarch::PtrSize, & memstats.other_sys);
             if(sp->array == nullptr)
             {
-                go_throw("runtime: cannot allocate memory");
+                go_throw("runtime: cannot allocate memory"s);
             }
             sp->len = len(h->allspans);
             sp->cap = n;
@@ -953,7 +953,7 @@ namespace golang::runtime
     {
         if(! rec::manual(gocpp::recv(typ)))
         {
-            go_throw("manual span allocation called with non-manually-managed type");
+            go_throw("manual span allocation called with non-manually-managed type"s);
         }
         return rec::allocSpan(gocpp::recv(h), npages, typ, 0);
     }
@@ -1002,7 +1002,7 @@ namespace golang::runtime
                 zeroedBase = atomic::Loaduintptr(& ha->zeroedBase);
                 if(zeroedBase <= arenaLimit && zeroedBase > arenaBase)
                 {
-                    go_throw("potentially overlapping in-use allocations detected");
+                    go_throw("potentially overlapping in-use allocations detected"s);
                 }
             }
             base += arenaLimit - arenaBase;
@@ -1102,7 +1102,7 @@ namespace golang::runtime
                 std::tie(base, gocpp_id_4) = rec::find(gocpp::recv(h->pages), npages + extraPages);
                 if(base == 0)
                 {
-                    go_throw("grew heap, but no adequate free space found");
+                    go_throw("grew heap, but no adequate free space found"s);
                 }
             }
             base = alignUp(base, physPageSize);
@@ -1123,7 +1123,7 @@ namespace golang::runtime
                 std::tie(base, scav) = rec::alloc(gocpp::recv(h->pages), npages);
                 if(base == 0)
                 {
-                    go_throw("grew heap, but no adequate free space found");
+                    go_throw("grew heap, but no adequate free space found"s);
                 }
             }
         }
@@ -1288,7 +1288,7 @@ namespace golang::runtime
             if(av == nullptr)
             {
                 auto inUse = rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) + rec::load(gocpp::recv(gcController.heapInUse));
-                print("runtime: out of memory: cannot allocate ", ask, "-byte block (", inUse, " in use)\n");
+                print("runtime: out of memory: cannot allocate "s, ask, "-byte block ("s, inUse, " in use)\n"s);
                 return {0, false};
             }
             if(uintptr_t(av) == h->curArena.end)
@@ -1368,25 +1368,25 @@ namespace golang::runtime
                 case 0:
                     if(s->allocCount != 0)
                     {
-                        go_throw("mheap.freeSpanLocked - invalid stack free");
+                        go_throw("mheap.freeSpanLocked - invalid stack free"s);
                     }
                     break;
                 case 1:
                     if(s->isUserArenaChunk)
                     {
-                        go_throw("mheap.freeSpanLocked - invalid free of user arena chunk");
+                        go_throw("mheap.freeSpanLocked - invalid free of user arena chunk"s);
                     }
                     if(s->allocCount != 0 || s->sweepgen != h->sweepgen)
                     {
-                        print("mheap.freeSpanLocked - span ", s, " ptr ", hex(rec::base(gocpp::recv(s))), " allocCount ", s->allocCount, " sweepgen ", s->sweepgen, "/", h->sweepgen, "\n");
-                        go_throw("mheap.freeSpanLocked - invalid free");
+                        print("mheap.freeSpanLocked - span "s, s, " ptr "s, hex(rec::base(gocpp::recv(s))), " allocCount "s, s->allocCount, " sweepgen "s, s->sweepgen, "/"s, h->sweepgen, "\n"s);
+                        go_throw("mheap.freeSpanLocked - invalid free"s);
                     }
                     rec::Add(gocpp::recv(h->pagesInUse), - s->npages);
                     auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
                     atomic::And8(& arena->pageInUse[pageIdx], ~ pageMask);
                     break;
                 default:
-                    go_throw("mheap.freeSpanLocked - invalid span state");
+                    go_throw("mheap.freeSpanLocked - invalid span state"s);
                     break;
             }
         }
@@ -1485,8 +1485,8 @@ namespace golang::runtime
     {
         if(span->list != list)
         {
-            print("runtime: failed mSpanList.remove span.npages=", span->npages, " span=", span, " prev=", span->prev, " span.list=", span->list, " list=", list, "\n");
-            go_throw("mSpanList.remove");
+            print("runtime: failed mSpanList.remove span.npages="s, span->npages, " span="s, span, " prev="s, span->prev, " span.list="s, span->list, " list="s, list, "\n"s);
+            go_throw("mSpanList.remove"s);
         }
         if(list->first == span)
         {
@@ -1518,8 +1518,8 @@ namespace golang::runtime
     {
         if(span->next != nullptr || span->prev != nullptr || span->list != nullptr)
         {
-            println("runtime: failed mSpanList.insert", span, span->next, span->prev, span->list);
-            go_throw("mSpanList.insert");
+            println("runtime: failed mSpanList.insert"s, span, span->next, span->prev, span->list);
+            go_throw("mSpanList.insert"s);
         }
         span->next = list->first;
         if(list->first != nullptr)
@@ -1538,8 +1538,8 @@ namespace golang::runtime
     {
         if(span->next != nullptr || span->prev != nullptr || span->list != nullptr)
         {
-            println("runtime: failed mSpanList.insertBack", span, span->next, span->prev, span->list);
-            go_throw("mSpanList.insertBack");
+            println("runtime: failed mSpanList.insertBack"s, span, span->next, span->prev, span->list);
+            go_throw("mSpanList.insertBack"s);
         }
         span->prev = list->last;
         if(list->last != nullptr)
@@ -1636,7 +1636,7 @@ namespace golang::runtime
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
         {
-            go_throw("addspecial on invalid pointer");
+            go_throw("addspecial on invalid pointer"s);
         }
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
@@ -1661,7 +1661,7 @@ namespace golang::runtime
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
         {
-            go_throw("removespecial on invalid pointer");
+            go_throw("removespecial on invalid pointer"s);
         }
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
@@ -1841,7 +1841,7 @@ namespace golang::runtime
         s->b = b;
         if(! addspecial(p, & s->special))
         {
-            go_throw("setprofilebucket: profile already set");
+            go_throw("setprofilebucket: profile already set"s);
         }
     }
 
@@ -2004,8 +2004,8 @@ namespace golang::runtime
                     unlock(& mheap_.speciallock);
                     break;
                 default:
-                    go_throw("bad special kind");
-                    gocpp::panic("not reached");
+                    go_throw("bad special kind"s);
+                    gocpp::panic("not reached"s);
                     break;
             }
         }
@@ -2219,7 +2219,7 @@ namespace golang::runtime
         auto p = rec::tryAlloc(gocpp::recv(fresh), bytesNeeded);
         if(p == nullptr)
         {
-            go_throw("markBits overflow");
+            go_throw("markBits overflow"s);
         }
         fresh->next = gcBitsArenas.next;
         atomic::StorepNoWB(unsafe::Pointer(& gcBitsArenas.next), unsafe::Pointer(fresh));
@@ -2266,7 +2266,7 @@ namespace golang::runtime
             result = (gcBitsArena*)(sysAlloc(gcBitsChunkBytes, & memstats.gcMiscSys));
             if(result == nullptr)
             {
-                go_throw("runtime: cannot allocate memory");
+                go_throw("runtime: cannot allocate memory"s);
             }
             lock(& gcBitsArenas.lock);
         }

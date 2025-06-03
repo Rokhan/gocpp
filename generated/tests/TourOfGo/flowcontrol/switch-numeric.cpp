@@ -25,7 +25,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Print("Roman Time");
+        mocklib::Print("Roman Time"s);
         auto hour = 1 + (rec::Hour(gocpp::recv(mocklib::Date::Now())) % 12);
         //Go switch emulation
         {
@@ -46,43 +46,43 @@ namespace golang::main
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Println("I");
+                    mocklib::Println("I"s);
                     break;
                 case 1:
-                    mocklib::Println("II");
+                    mocklib::Println("II"s);
                     break;
                 case 2:
-                    mocklib::Println("III");
+                    mocklib::Println("III"s);
                     break;
                 case 3:
-                    mocklib::Println("IV");
+                    mocklib::Println("IV"s);
                     break;
                 case 4:
-                    mocklib::Println("V");
+                    mocklib::Println("V"s);
                     break;
                 case 5:
-                    mocklib::Println("VI");
+                    mocklib::Println("VI"s);
                     break;
                 case 6:
-                    mocklib::Println("VII");
+                    mocklib::Println("VII"s);
                     break;
                 case 7:
-                    mocklib::Println("VIII");
+                    mocklib::Println("VIII"s);
                     break;
                 case 8:
-                    mocklib::Println("IX");
+                    mocklib::Println("IX"s);
                     break;
                 case 9:
-                    mocklib::Println("X");
+                    mocklib::Println("X"s);
                     break;
                 case 10:
-                    mocklib::Println("XI");
+                    mocklib::Println("XI"s);
                     break;
                 case 11:
-                    mocklib::Println("XII");
+                    mocklib::Println("XII"s);
                     break;
                 default:
-                    gocpp::panic("Should not happen");
+                    gocpp::panic("Should not happen"s);
                     break;
             }
         }

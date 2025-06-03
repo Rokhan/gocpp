@@ -260,11 +260,11 @@ namespace golang::runtime
     {
         if(t->Size_ > goarch::PtrSize)
         {
-            gocpp::panic("compileCallback: argument size is larger than uintptr");
+            gocpp::panic("compileCallback: argument size is larger than uintptr"s);
         }
-        if(auto k = t->Kind_ & kindMask; GOARCH != "386" && (k == kindFloat32 || k == kindFloat64))
+        if(auto k = t->Kind_ & kindMask; GOARCH != "386"s && (k == kindFloat32 || k == kindFloat64))
         {
-            gocpp::panic("compileCallback: float arguments not supported");
+            gocpp::panic("compileCallback: float arguments not supported"s);
         }
         if(t->Size_ == 0)
         {
@@ -363,7 +363,7 @@ namespace golang::runtime
                     break;
             }
         }
-        gocpp::panic("compileCallback: type " + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks");
+        gocpp::panic("compileCallback: type "s + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks"s);
     }
 
     bool rec::assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset)
@@ -424,14 +424,14 @@ namespace golang::runtime
         {
             auto condition = GOARCH;
             int conditionId = -1;
-            if(condition == "386") { conditionId = 0; }
-            else if(condition == "amd64") { conditionId = 1; }
-            else if(condition == "arm") { conditionId = 2; }
-            else if(condition == "arm64") { conditionId = 3; }
+            if(condition == "386"s) { conditionId = 0; }
+            else if(condition == "amd64"s) { conditionId = 1; }
+            else if(condition == "arm"s) { conditionId = 2; }
+            else if(condition == "arm64"s) { conditionId = 3; }
             switch(conditionId)
             {
                 default:
-                    gocpp::panic("unsupported architecture");
+                    gocpp::panic("unsupported architecture"s);
                     break;
                 case 0:
                 case 1:
@@ -449,13 +449,13 @@ namespace golang::runtime
     uintptr_t compileCallback(struct eface fn, bool cdecl)
     {
         uintptr_t code;
-        if(GOARCH != "386")
+        if(GOARCH != "386"s)
         {
             cdecl = false;
         }
         if(fn._type == nullptr || (fn._type->Kind_ & kindMask) != kindFunc)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result");
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
         }
         auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
         abiDesc abiMap = {};
@@ -467,15 +467,15 @@ namespace golang::runtime
         abiMap.retOffset = abiMap.dstStackSize;
         if(len(rec::OutSlice(gocpp::recv(ft))) != 1)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result");
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
         }
         if(rec::OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result");
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
         }
         if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
         {
-            gocpp::panic("compileCallback: float results not supported");
+            gocpp::panic("compileCallback: float results not supported"s);
         }
         if(intArgRegs == 0)
         {
@@ -485,7 +485,7 @@ namespace golang::runtime
         frameSize += abiMap.dstSpill;
         if(frameSize > callbackMaxFrame)
         {
-            gocpp::panic("compileCallback: function argument frame too large");
+            gocpp::panic("compileCallback: function argument frame too large"s);
         }
         uintptr_t retPop = {};
         if(cdecl)
@@ -507,7 +507,7 @@ namespace golang::runtime
         if(n >= len(cbs.ctxt))
         {
             cbsUnlock();
-            go_throw("too many callback functions");
+            go_throw("too many callback functions"s);
         }
         auto c = winCallback {key.fn, retPop, abiMap};
         cbs.ctxt[n] = c;
@@ -580,7 +580,7 @@ namespace golang::runtime
                         memmove(goReg, add(a->args, part.srcStackOffset), part.len);
                         break;
                     default:
-                        gocpp::panic("bad ABI description");
+                        gocpp::panic("bad ABI description"s);
                         break;
                 }
             }
@@ -790,7 +790,7 @@ namespace golang::runtime
                         args = tmp.make_slice(0);
                         break;
                     case 1:
-                        gocpp::panic("runtime: SyscallN has too many arguments");
+                        gocpp::panic("runtime: SyscallN has too many arguments"s);
                         break;
                 }
             }

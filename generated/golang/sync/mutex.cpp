@@ -192,7 +192,7 @@ namespace golang::sync
             {
                 if(go_new & mutexWoken == 0)
                 {
-                    go_throw("sync: inconsistent mutex state");
+                    go_throw("sync: inconsistent mutex state"s);
                 }
                 go_new &^= mutexWoken;
             }
@@ -214,7 +214,7 @@ namespace golang::sync
                 {
                     if(old & (mutexLocked | mutexWoken) != 0 || (old >> mutexWaiterShift) == 0)
                     {
-                        go_throw("sync: inconsistent mutex state");
+                        go_throw("sync: inconsistent mutex state"s);
                     }
                     auto delta = int32_t(mutexLocked - (1 << mutexWaiterShift));
                     if(! starving || (old >> mutexWaiterShift) == 1)
@@ -256,7 +256,7 @@ namespace golang::sync
     {
         if((go_new + mutexLocked) & mutexLocked == 0)
         {
-            fatal("sync: unlock of unlocked mutex");
+            fatal("sync: unlock of unlocked mutex"s);
         }
         if(go_new & mutexStarving == 0)
         {

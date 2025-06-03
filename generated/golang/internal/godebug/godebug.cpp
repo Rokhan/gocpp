@@ -147,7 +147,7 @@ namespace golang::godebug
 
     std::string rec::Name(struct Setting* s)
     {
-        if(s->name != "" && s->name[0] == '#')
+        if(s->name != ""s && s->name[0] == '#')
         {
             return s->name.make_slice(1);
         }
@@ -156,12 +156,12 @@ namespace golang::godebug
 
     bool rec::Undocumented(struct Setting* s)
     {
-        return s->name != "" && s->name[0] == '#';
+        return s->name != ""s && s->name[0] == '#';
     }
 
     std::string rec::String(struct Setting* s)
     {
-        return rec::Name(gocpp::recv(s)) + "=" + rec::Value(gocpp::recv(s));
+        return rec::Name(gocpp::recv(s)) + "="s + rec::Value(gocpp::recv(s));
     }
 
     void rec::IncNonDefault(struct Setting* s)
@@ -174,9 +174,9 @@ namespace golang::godebug
     {
         if(s->info == nullptr || s->info->Opaque)
         {
-            gocpp::panic("godebug: unexpected IncNonDefault of " + s->name);
+            gocpp::panic("godebug: unexpected IncNonDefault of "s + s->name);
         }
-        registerMetric("/godebug/non-default-behavior/" + rec::Name(gocpp::recv(s)) + ":events", s->nonDefault.Load);
+        registerMetric("/godebug/non-default-behavior/"s + rec::Name(gocpp::recv(s)) + ":events"s, s->nonDefault.Load);
     }
 
     sync::Map cache;
@@ -188,13 +188,13 @@ namespace golang::godebug
             s->setting = lookup(rec::Name(gocpp::recv(s)));
             if(s->info == nullptr && ! rec::Undocumented(gocpp::recv(s)))
             {
-                gocpp::panic("godebug: Value of name not listed in godebugs.All: " + s->name);
+                gocpp::panic("godebug: Value of name not listed in godebugs.All: "s + s->name);
             }
         });
         auto v = *rec::Load(gocpp::recv(s->value));
         if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & stderr))
         {
-            return "";
+            return ""s;
         }
         return v.text;
     }

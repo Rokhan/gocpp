@@ -25,14 +25,14 @@ namespace golang::safefilepath
     {
         if(! utf8::ValidString(path))
         {
-            return {"", errInvalidPath};
+            return {""s, errInvalidPath};
         }
         for(; len(path) > 1 && path[0] == '/' && path[1] == '/'; )
         {
             path = path.make_slice(1);
         }
         auto containsSlash = false;
-        for(auto p = path; p != ""; )
+        for(auto p = path; p != ""s; )
         {
             auto i = 0;
             for(; i < len(p) && p[i] != '/'; )
@@ -49,7 +49,7 @@ namespace golang::safefilepath
                         case 0:
                         case 1:
                         case 2:
-                            return {"", errInvalidPath};
+                            return {""s, errInvalidPath};
                             break;
                     }
                 }
@@ -63,16 +63,16 @@ namespace golang::safefilepath
             }
             else
             {
-                p = "";
+                p = ""s;
             }
             if(IsReservedName(part))
             {
-                return {"", errInvalidPath};
+                return {""s, errInvalidPath};
             }
         }
         if(containsSlash)
         {
-            auto buf = gocpp::Tag<gocpp::slice<unsigned char>>()(path);
+            auto buf = gocpp::slice<unsigned char>(path);
             for(auto [i, b] : buf)
             {
                 if(b == '/')
@@ -117,7 +117,7 @@ namespace golang::safefilepath
         {
             return true;
         }
-        if(auto [p, gocpp_id_1] = syscall::FullPath(name); len(p) >= 4 && p.make_slice(0, 4) == "\\\\.\\")
+        if(auto [p, gocpp_id_1] = syscall::FullPath(name); len(p) >= 4 && p.make_slice(0, 4) == "\\\\.\\"s)
         {
             return true;
         }
@@ -132,10 +132,10 @@ namespace golang::safefilepath
             {
                 auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
-                if(condition == "CON") { conditionId = 0; }
-                else if(condition == "PRN") { conditionId = 1; }
-                else if(condition == "AUX") { conditionId = 2; }
-                else if(condition == "NUL") { conditionId = 3; }
+                if(condition == "CON"s) { conditionId = 0; }
+                else if(condition == "PRN"s) { conditionId = 1; }
+                else if(condition == "AUX"s) { conditionId = 2; }
+                else if(condition == "NUL"s) { conditionId = 3; }
                 switch(conditionId)
                 {
                     case 0:
@@ -153,8 +153,8 @@ namespace golang::safefilepath
             {
                 auto condition = std::string(gocpp::slice<unsigned char> {toUpper(name[0]), toUpper(name[1]), toUpper(name[2])});
                 int conditionId = -1;
-                if(condition == "COM") { conditionId = 0; }
-                else if(condition == "LPT") { conditionId = 1; }
+                if(condition == "COM"s) { conditionId = 0; }
+                else if(condition == "LPT"s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -167,9 +167,9 @@ namespace golang::safefilepath
                         {
                             auto condition = name.make_slice(3);
                             int conditionId = -1;
-                            if(condition == "\u00b2") { conditionId = 0; }
-                            else if(condition == "\u00b3") { conditionId = 1; }
-                            else if(condition == "\u00b9") { conditionId = 2; }
+                            if(condition == "\u00b2"s) { conditionId = 0; }
+                            else if(condition == "\u00b3"s) { conditionId = 1; }
+                            else if(condition == "\u00b9"s) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
@@ -184,11 +184,11 @@ namespace golang::safefilepath
                 }
             }
         }
-        if(len(name) == 6 && name[5] == '$' && equalFold(name, "CONIN$"))
+        if(len(name) == 6 && name[5] == '$' && equalFold(name, "CONIN$"s))
         {
             return true;
         }
-        if(len(name) == 7 && name[6] == '$' && equalFold(name, "CONOUT$"))
+        if(len(name) == 7 && name[6] == '$' && equalFold(name, "CONOUT$"s))
         {
             return true;
         }

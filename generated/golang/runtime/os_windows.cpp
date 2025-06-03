@@ -191,19 +191,19 @@ namespace golang::runtime
 
     int32_t open(unsigned char* name, int32_t mode, int32_t perm)
     {
-        go_throw("unimplemented");
+        go_throw("unimplemented"s);
         return - 1;
     }
 
     int32_t closefd(int32_t fd)
     {
-        go_throw("unimplemented");
+        go_throw("unimplemented"s);
         return - 1;
     }
 
     int32_t read(int32_t fd, unsafe::Pointer p, int32_t n)
     {
-        go_throw("unimplemented");
+        go_throw("unimplemented"s);
         return - 1;
     }
 
@@ -241,7 +241,7 @@ namespace golang::runtime
     {
         if(name[len(name) - 1] != 0)
         {
-            go_throw("usage");
+            go_throw("usage"s);
         }
         auto f = stdcall2(_GetProcAddress, lib, uintptr_t(unsafe::Pointer(& name[0])));
         return stdFunction(unsafe::Pointer(f));
@@ -254,7 +254,7 @@ namespace golang::runtime
         auto l = stdcall2(_GetSystemDirectoryA, uintptr_t(unsafe::Pointer(& sysDirectory[0])), uintptr_t(len(sysDirectory) - 1));
         if(l == 0 || l > uintptr_t(len(sysDirectory) - 1))
         {
-            go_throw("Unable to determine system directory");
+            go_throw("Unable to determine system directory"s);
         }
         sysDirectory[l] = '\\';
         sysDirectoryLen = l + 1;
@@ -275,36 +275,36 @@ namespace golang::runtime
         auto bcryptPrimitives = windowsLoadSystemLib(bcryptprimitivesdll.make_slice(0));
         if(bcryptPrimitives == 0)
         {
-            go_throw("bcryptprimitives.dll not found");
+            go_throw("bcryptprimitives.dll not found"s);
         }
-        _ProcessPrng = windowsFindfunc(bcryptPrimitives, gocpp::Tag<gocpp::slice<unsigned char>>()("ProcessPrng\000"));
+        _ProcessPrng = windowsFindfunc(bcryptPrimitives, gocpp::slice<unsigned char>("ProcessPrng\000"s));
         auto n32 = windowsLoadSystemLib(ntdlldll.make_slice(0));
         if(n32 == 0)
         {
-            go_throw("ntdll.dll not found");
+            go_throw("ntdll.dll not found"s);
         }
-        _RtlGetCurrentPeb = windowsFindfunc(n32, gocpp::Tag<gocpp::slice<unsigned char>>()("RtlGetCurrentPeb\000"));
-        _RtlGetNtVersionNumbers = windowsFindfunc(n32, gocpp::Tag<gocpp::slice<unsigned char>>()("RtlGetNtVersionNumbers\000"));
+        _RtlGetCurrentPeb = windowsFindfunc(n32, gocpp::slice<unsigned char>("RtlGetCurrentPeb\000"s));
+        _RtlGetNtVersionNumbers = windowsFindfunc(n32, gocpp::slice<unsigned char>("RtlGetNtVersionNumbers\000"s));
         auto m32 = windowsLoadSystemLib(winmmdll.make_slice(0));
         if(m32 == 0)
         {
-            go_throw("winmm.dll not found");
+            go_throw("winmm.dll not found"s);
         }
-        _timeBeginPeriod = windowsFindfunc(m32, gocpp::Tag<gocpp::slice<unsigned char>>()("timeBeginPeriod\000"));
-        _timeEndPeriod = windowsFindfunc(m32, gocpp::Tag<gocpp::slice<unsigned char>>()("timeEndPeriod\000"));
+        _timeBeginPeriod = windowsFindfunc(m32, gocpp::slice<unsigned char>("timeBeginPeriod\000"s));
+        _timeEndPeriod = windowsFindfunc(m32, gocpp::slice<unsigned char>("timeEndPeriod\000"s));
         if(_timeBeginPeriod == nullptr || _timeEndPeriod == nullptr)
         {
-            go_throw("timeBegin/EndPeriod not found");
+            go_throw("timeBegin/EndPeriod not found"s);
         }
         auto ws232 = windowsLoadSystemLib(ws2_32dll.make_slice(0));
         if(ws232 == 0)
         {
-            go_throw("ws2_32.dll not found");
+            go_throw("ws2_32.dll not found"s);
         }
-        _WSAGetOverlappedResult = windowsFindfunc(ws232, gocpp::Tag<gocpp::slice<unsigned char>>()("WSAGetOverlappedResult\000"));
+        _WSAGetOverlappedResult = windowsFindfunc(ws232, gocpp::slice<unsigned char>("WSAGetOverlappedResult\000"s));
         if(_WSAGetOverlappedResult == nullptr)
         {
-            go_throw("WSAGetOverlappedResult not found");
+            go_throw("WSAGetOverlappedResult not found"s);
         }
     }
 
@@ -348,7 +348,7 @@ namespace golang::runtime
         {
             return;
         }
-        auto powerRegisterSuspendResumeNotification = windowsFindfunc(powrprof, gocpp::Tag<gocpp::slice<unsigned char>>()("PowerRegisterSuspendResumeNotification\000"));
+        auto powerRegisterSuspendResumeNotification = windowsFindfunc(powrprof, gocpp::slice<unsigned char>("PowerRegisterSuspendResumeNotification\000"s));
         if(powerRegisterSuspendResumeNotification == nullptr)
         {
             return;
@@ -484,7 +484,7 @@ namespace golang::runtime
             readTimeRandom(targ);
         }
         auto start = copy(longFileName.make_slice(0), sysDirectory.make_slice(0, sysDirectoryLen));
-        auto dig = "0123456789abcdef";
+        auto dig = "0123456789abcdef"s;
         for(auto i = 0; i < 32; i++)
         {
             longFileName[start + i * 2] = dig[longFileName[len(longFileName) - 33 + i] >> 4];
@@ -499,7 +499,7 @@ namespace golang::runtime
         if(getlasterror() == ERROR_PATH_NOT_FOUND)
         {
             *bitField = originalBitField;
-            println("runtime: warning: IsLongPathAwareProcess failed to enable long paths; proceeding in fixup mode");
+            println("runtime: warning: IsLongPathAwareProcess failed to enable long paths; proceeding in fixup mode"s);
             return;
         }
         canUseLongPaths = true;
@@ -721,21 +721,21 @@ namespace golang::runtime
                 case 2:
                     systemstack([=]() mutable -> void
                     {
-                        go_throw("runtime.semasleep wait_abandoned");
+                        go_throw("runtime.semasleep wait_abandoned"s);
                     });
                     break;
                 case 3:
                     systemstack([=]() mutable -> void
                     {
-                        print("runtime: waitforsingleobject wait_failed; errno=", getlasterror(), "\n");
-                        go_throw("runtime.semasleep wait_failed");
+                        print("runtime: waitforsingleobject wait_failed; errno="s, getlasterror(), "\n"s);
+                        go_throw("runtime.semasleep wait_failed"s);
                     });
                     break;
                 default:
                     systemstack([=]() mutable -> void
                     {
-                        print("runtime: waitforsingleobject unexpected; result=", result, "\n");
-                        go_throw("runtime.semasleep unexpected");
+                        print("runtime: waitforsingleobject unexpected; result="s, result, "\n"s);
+                        go_throw("runtime.semasleep unexpected"s);
                     });
                     break;
             }
@@ -749,8 +749,8 @@ namespace golang::runtime
         {
             systemstack([=]() mutable -> void
             {
-                print("runtime: setevent failed; errno=", getlasterror(), "\n");
-                go_throw("runtime.semawakeup");
+                print("runtime: setevent failed; errno="s, getlasterror(), "\n"s);
+                go_throw("runtime.semawakeup"s);
             });
         }
     }
@@ -766,8 +766,8 @@ namespace golang::runtime
         {
             systemstack([=]() mutable -> void
             {
-                print("runtime: createevent failed; errno=", getlasterror(), "\n");
-                go_throw("runtime.semacreate");
+                print("runtime: createevent failed; errno="s, getlasterror(), "\n"s);
+                go_throw("runtime.semacreate"s);
             });
         }
         mp->resumesema = stdcall4(_CreateEventA, 0, 0, 0, 0);
@@ -775,8 +775,8 @@ namespace golang::runtime
         {
             systemstack([=]() mutable -> void
             {
-                print("runtime: createevent failed; errno=", getlasterror(), "\n");
-                go_throw("runtime.semacreate");
+                print("runtime: createevent failed; errno="s, getlasterror(), "\n"s);
+                go_throw("runtime.semacreate"s);
             });
             stdcall1(_CloseHandle, mp->waitsema);
             mp->waitsema = 0;
@@ -793,20 +793,20 @@ namespace golang::runtime
                 lock(& deadlock);
                 lock(& deadlock);
             }
-            print("runtime: failed to create new OS thread (have ", mcount(), " already; errno=", getlasterror(), ")\n");
-            go_throw("runtime.newosproc");
+            print("runtime: failed to create new OS thread (have "s, mcount(), " already; errno="s, getlasterror(), ")\n"s);
+            go_throw("runtime.newosproc"s);
         }
         stdcall1(_CloseHandle, thandle);
     }
 
     void newosproc0(struct m* mp, unsafe::Pointer stk)
     {
-        go_throw("bad newosproc0");
+        go_throw("bad newosproc0"s);
     }
 
     void exitThread(atomic::Uint32* wait)
     {
-        go_throw("exitThread");
+        go_throw("exitThread"s);
     }
 
     void mpreinit(struct m* mp)
@@ -834,8 +834,8 @@ namespace golang::runtime
         uintptr_t thandle = {};
         if(stdcall7(_DuplicateHandle, currentProcess, currentThread, currentProcess, uintptr_t(unsafe::Pointer(& thandle)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
         {
-            print("runtime.minit: duplicatehandle failed; errno=", getlasterror(), "\n");
-            go_throw("runtime.minit: duplicatehandle failed");
+            print("runtime.minit: duplicatehandle failed; errno="s, getlasterror(), "\n"s);
+            go_throw("runtime.minit: duplicatehandle failed"s);
         }
         auto mp = getg()->m;
         lock(& mp->threadLock);
@@ -846,8 +846,8 @@ namespace golang::runtime
             mp->highResTimer = createHighResTimer();
             if(mp->highResTimer == 0)
             {
-                print("runtime: CreateWaitableTimerEx failed; errno=", getlasterror(), "\n");
-                go_throw("CreateWaitableTimerEx when creating timer failed");
+                print("runtime: CreateWaitableTimerEx failed; errno="s, getlasterror(), "\n"s);
+                go_throw("CreateWaitableTimerEx when creating timer failed"s);
             }
         }
         unlock(& mp->threadLock);
@@ -855,15 +855,15 @@ namespace golang::runtime
         auto res = stdcall3(_VirtualQuery, uintptr_t(unsafe::Pointer(& mbi)), uintptr_t(unsafe::Pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
         {
-            print("runtime: VirtualQuery failed; errno=", getlasterror(), "\n");
-            go_throw("VirtualQuery for stack base failed");
+            print("runtime: VirtualQuery failed; errno="s, getlasterror(), "\n"s);
+            go_throw("VirtualQuery for stack base failed"s);
         }
         auto base = mbi.allocationBase + (16 << 10);
         auto g0 = getg();
         if(base > g0->stack.hi || g0->stack.hi - base > (64 << 20))
         {
-            print("runtime: g0 stack [", hex(base), ",", hex(g0->stack.hi), ")\n");
-            go_throw("bad g0 stack");
+            print("runtime: g0 stack ["s, hex(base), ","s, hex(g0->stack.hi), ")\n"s);
+            go_throw("bad g0 stack"s);
         }
         g0->stack.lo = base;
         g0->stackguard0 = g0->stack.lo + stackGuard;
@@ -1145,8 +1145,8 @@ namespace golang::runtime
                 uintptr_t thread = {};
                 if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(unsafe::Pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
                 {
-                    print("runtime: duplicatehandle failed; errno=", getlasterror(), "\n");
-                    go_throw("duplicatehandle failed");
+                    print("runtime: duplicatehandle failed; errno="s, getlasterror(), "\n"s);
+                    go_throw("duplicatehandle failed"s);
                 }
                 unlock(& mp->threadLock);
                 if(int32_t(stdcall1(_SuspendThread, thread)) == - 1)
@@ -1204,7 +1204,7 @@ namespace golang::runtime
     {
         if(mp == getg()->m)
         {
-            go_throw("self-preempt");
+            go_throw("self-preempt"s);
         }
         if(! atomic::Cas(& mp->preemptExtLock, 0, 1))
         {
@@ -1222,8 +1222,8 @@ namespace golang::runtime
         uintptr_t thread = {};
         if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(unsafe::Pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
         {
-            print("runtime.preemptM: duplicatehandle failed; errno=", getlasterror(), "\n");
-            go_throw("runtime.preemptM: duplicatehandle failed");
+            print("runtime.preemptM: duplicatehandle failed; errno="s, getlasterror(), "\n"s);
+            go_throw("runtime.preemptM: duplicatehandle failed"s);
         }
         unlock(& mp->threadLock);
         context* c = {};
@@ -1251,14 +1251,14 @@ namespace golang::runtime
                 {
                     auto condition = GOARCH;
                     int conditionId = -1;
-                    if(condition == "386") { conditionId = 0; }
-                    else if(condition == "amd64") { conditionId = 1; }
-                    else if(condition == "arm") { conditionId = 2; }
-                    else if(condition == "arm64") { conditionId = 3; }
+                    if(condition == "386"s) { conditionId = 0; }
+                    else if(condition == "amd64"s) { conditionId = 1; }
+                    else if(condition == "arm"s) { conditionId = 2; }
+                    else if(condition == "arm64"s) { conditionId = 3; }
                     switch(conditionId)
                     {
                         default:
-                            go_throw("unsupported architecture");
+                            go_throw("unsupported architecture"s);
                             break;
                         case 0:
                         case 1:

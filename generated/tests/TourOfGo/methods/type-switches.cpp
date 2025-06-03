@@ -33,19 +33,19 @@ namespace golang::main
                 case 0:
                 {
                     int v = gocpp::any_cast<int>(i);
-                    mocklib::Printf("Twice %v is %v\n", v, v * 2);
+                    mocklib::Printf("Twice %v is %v\n"s, v, v * 2);
                     break;
                 }
                 case 1:
                 {
                     std::string v = gocpp::any_cast<std::string>(i);
-                    mocklib::Printf("%q is %v bytes long\n", v, len(v));
+                    mocklib::Printf("%q is %v bytes long\n"s, v, len(v));
                     break;
                 }
                 default:
                 {
                     auto v = i;
-                    mocklib::Printf("I don't know about type %T!\n", v);
+                    mocklib::Printf("I don't know about type %T!\n"s, v);
                     break;
                 }
             }
@@ -55,7 +55,7 @@ namespace golang::main
     void main()
     {
         go_do(21);
-        go_do("hello");
+        go_do("hello"s);
         go_do(true);
     }
 

@@ -20,127 +20,127 @@ namespace golang::math
 
     double archAcos(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAcosh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAsin(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAsinh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAtan(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAtan2(double y, double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archAtanh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archCbrt(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archCos(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archCosh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archErf(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archErfc(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archExpm1(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     std::tuple<double, int> archFrexp(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archLdexp(double frac, int exp)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archLog10(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archLog2(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archLog1p(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archMod(double x, double y)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archPow(double x, double y)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archRemainder(double x, double y)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archSin(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archSinh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archTan(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     double archTanh(double x)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
 }

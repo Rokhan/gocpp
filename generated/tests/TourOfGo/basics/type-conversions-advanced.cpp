@@ -148,9 +148,9 @@ namespace golang::main
         unsigned int z1 = (unsigned int)(f);
         mocklib::Println(x, y, z1);
         unsigned int z2 = (unsigned int)(f);
-        mocklib::Println("z2:", z2);
+        mocklib::Println("z2:"s, z2);
         unsigned int z3 = (unsigned int)(z2);
-        mocklib::Println("z2:", z3);
+        mocklib::Println("z2:"s, z3);
         go_any ifunc1 = (std::function<void ()>)(toto);
         mocklib::Println(ifunc1);
         go_any ifunc2 = (main::totoInt)();

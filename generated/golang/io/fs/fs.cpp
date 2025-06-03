@@ -76,7 +76,7 @@ namespace golang::fs
         {
             return false;
         }
-        if(name == ".")
+        if(name == "."s)
         {
             return true;
         }
@@ -88,7 +88,7 @@ namespace golang::fs
                 i++;
             }
             auto elem = name.make_slice(0, i);
-            if(elem == "" || elem == "." || elem == "..")
+            if(elem == ""s || elem == "."s || elem == ".."s)
             {
                 return false;
             }
@@ -474,7 +474,7 @@ namespace golang::fs
 
     std::string rec::String(golang::fs::FileMode m)
     {
-        auto str = "dalTLDpSugct?";
+        auto str = "dalTLDpSugct?"s;
         gocpp::array<unsigned char, 32> buf = {};
         auto w = 0;
         for(auto [i, c] : str)
@@ -490,7 +490,7 @@ namespace golang::fs
             buf[w] = '-';
             w++;
         }
-        auto rwx = "rwxrwxrwx";
+        auto rwx = "rwxrwxrwx"s;
         for(auto [i, c] : rwx)
         {
             if(m & (1 << (unsigned int)(9 - 1 - i)) != 0)
@@ -563,7 +563,7 @@ namespace golang::fs
 
     std::string rec::Error(struct PathError* e)
     {
-        return e->Op + " " + e->Path + ": " + rec::Error(gocpp::recv(e->Err));
+        return e->Op + " "s + e->Path + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct PathError* e)

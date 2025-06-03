@@ -62,22 +62,22 @@ namespace golang::abi
 
     void rec::Dump(struct RegArgs* r)
     {
-        print("Ints:");
+        print("Ints:"s);
         for(auto [gocpp_ignored, x] : r->Ints)
         {
-            print(" ", x);
+            print(" "s, x);
         }
         println();
-        print("Floats:");
+        print("Floats:"s);
         for(auto [gocpp_ignored, x] : r->Floats)
         {
-            print(" ", x);
+            print(" "s, x);
         }
         println();
-        print("Ptrs:");
+        print("Ptrs:"s);
         for(auto [gocpp_ignored, x] : r->Ptrs)
         {
-            print(" ", x);
+            print(" "s, x);
         }
         println();
     }
@@ -86,7 +86,7 @@ namespace golang::abi
     {
         if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {
-            gocpp::panic("invalid argSize");
+            gocpp::panic("invalid argSize"s);
         }
         auto offset = uintptr_t(0);
         if(goarch::BigEndian)

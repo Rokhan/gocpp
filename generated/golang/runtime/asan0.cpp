@@ -23,27 +23,27 @@ namespace golang::runtime
 
     void asanread(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("asan");
+        go_throw("asan"s);
     }
 
     void asanwrite(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("asan");
+        go_throw("asan"s);
     }
 
     void asanunpoison(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("asan");
+        go_throw("asan"s);
     }
 
     void asanpoison(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("asan");
+        go_throw("asan"s);
     }
 
     void asanregisterglobals(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("asan");
+        go_throw("asan"s);
     }
 
 }

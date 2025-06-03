@@ -22,7 +22,7 @@ namespace golang::math
     {
         double int;
         double frac;
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
 }

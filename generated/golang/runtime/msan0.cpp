@@ -23,27 +23,27 @@ namespace golang::runtime
 
     void msanread(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("msan");
+        go_throw("msan"s);
     }
 
     void msanwrite(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("msan");
+        go_throw("msan"s);
     }
 
     void msanmalloc(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("msan");
+        go_throw("msan"s);
     }
 
     void msanfree(unsafe::Pointer addr, uintptr_t sz)
     {
-        go_throw("msan");
+        go_throw("msan"s);
     }
 
     void msanmove(unsafe::Pointer dst, unsafe::Pointer src, uintptr_t sz)
     {
-        go_throw("msan");
+        go_throw("msan"s);
     }
 
 }

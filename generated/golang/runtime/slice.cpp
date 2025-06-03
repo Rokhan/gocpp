@@ -108,12 +108,12 @@ namespace golang::runtime
 
     void panicmakeslicelen()
     {
-        gocpp::panic(errorString("makeslice: len out of range"));
+        gocpp::panic(errorString("makeslice: len out of range"s));
     }
 
     void panicmakeslicecap()
     {
-        gocpp::panic(errorString("makeslice: cap out of range"));
+        gocpp::panic(errorString("makeslice: cap out of range"s));
     }
 
     unsafe::Pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, unsafe::Pointer from)
@@ -218,7 +218,7 @@ namespace golang::runtime
         }
         if(newLen < 0)
         {
-            gocpp::panic(errorString("growslice: len out of range"));
+            gocpp::panic(errorString("growslice: len out of range"s));
         }
         if(et->Size_ == 0)
         {
@@ -281,7 +281,7 @@ namespace golang::runtime
         }
         if(overflow || capmem > maxAlloc)
         {
-            gocpp::panic(errorString("growslice: len out of range"));
+            gocpp::panic(errorString("growslice: len out of range"s));
         }
         unsafe::Pointer p = {};
         if(et->PtrBytes == 0)

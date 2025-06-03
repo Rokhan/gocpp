@@ -23,17 +23,17 @@ namespace golang::runtime
 
     void sigNoteSetup(note*)
     {
-        go_throw("sigNoteSetup");
+        go_throw("sigNoteSetup"s);
     }
 
     void sigNoteSleep(note*)
     {
-        go_throw("sigNoteSleep");
+        go_throw("sigNoteSleep"s);
     }
 
     void sigNoteWakeup(note*)
     {
-        go_throw("sigNoteWakeup");
+        go_throw("sigNoteWakeup"s);
     }
 
 }

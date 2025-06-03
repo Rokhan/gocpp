@@ -67,7 +67,7 @@ namespace golang::reflect
     {
         if(rec::Kind(gocpp::recv(typ)) != Func)
         {
-            gocpp::panic("reflect: call of MakeFunc with non-Func type");
+            gocpp::panic("reflect: call of MakeFunc with non-Func type"s);
         }
         auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
@@ -125,7 +125,7 @@ namespace golang::reflect
     {
         if(v.flag & flagMethod == 0)
         {
-            gocpp::panic("reflect: internal error: invalid use of makeMethodValue");
+            gocpp::panic("reflect: internal error: invalid use of makeMethodValue"s);
         }
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));

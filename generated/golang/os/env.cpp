@@ -36,11 +36,11 @@ namespace golang::os
                 }
                 buf = append(buf, s.make_slice(i, j));
                 auto [name, w] = getShellName(s.make_slice(j + 1));
-                if(name == "" && w > 0)
+                if(name == ""s && w > 0)
                 {
                 }
                 else
-                if(name == "")
+                if(name == ""s)
                 {
                     buf = append(buf, s[j]);
                 }
@@ -138,12 +138,12 @@ namespace golang::os
                         {
                             if(i == 1)
                             {
-                                return {"", 2};
+                                return {""s, 2};
                             }
                             return {s.make_slice(1, i), i + 1};
                         }
                     }
-                    return {"", 1};
+                    return {""s, 1};
                     break;
                 case 1:
                     return {s.make_slice(0, 1), 1};
@@ -175,7 +175,7 @@ namespace golang::os
         auto err = syscall::Setenv(key, value);
         if(err != nullptr)
         {
-            return NewSyscallError("setenv", err);
+            return NewSyscallError("setenv"s, err);
         }
         return nullptr;
     }

@@ -36,7 +36,7 @@ namespace golang::main
 
     void printSlice(gocpp::slice<int> s)
     {
-        mocklib::Printf("## len=%v cap=%v %v\n", len(s), cap(s), s);
+        mocklib::Printf("## len=%v cap=%v %v\n"s, len(s), cap(s), s);
     }
 
     void appendValue(gocpp::slice<int> s, int value)

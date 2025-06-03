@@ -33,9 +33,9 @@ namespace golang::main
 
     void main()
     {
-        gocpp::go([&]{ say("world"); });
+        gocpp::go([&]{ say("world"s); });
         mocklib::Sleep(50 * mocklib::Millisecond);
-        say("hello");
+        say("hello"s);
     }
 
 }

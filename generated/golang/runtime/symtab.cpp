@@ -818,8 +818,8 @@ namespace golang::runtime
         auto hdr = datap->pcHeader;
         if(hdr->magic != 0xfffffff1 || hdr->pad1 != 0 || hdr->pad2 != 0 || hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize || hdr->textStart != datap->text)
         {
-            println("runtime: pcHeader: magic=", hex(hdr->magic), "pad1=", hdr->pad1, "pad2=", hdr->pad2, "minLC=", hdr->minLC, "ptrSize=", hdr->ptrSize, "pcHeader.textStart=", hex(hdr->textStart), "text=", hex(datap->text), "pluginpath=", datap->pluginpath);
-            go_throw("invalid function symbol table");
+            println("runtime: pcHeader: magic="s, hex(hdr->magic), "pad1="s, hdr->pad1, "pad2="s, hdr->pad2, "minLC="s, hdr->minLC, "ptrSize="s, hdr->ptrSize, "pcHeader.textStart="s, hex(hdr->textStart), "text="s, hex(datap->text), "pluginpath="s, datap->pluginpath);
+            go_throw("invalid function symbol table"s);
         }
         auto nftab = len(datap->ftab) - 1;
         for(auto i = 0; i < nftab; i++)
@@ -828,36 +828,36 @@ namespace golang::runtime
             {
                 auto f1 = funcInfo {(_func*)(unsafe::Pointer(& datap->pclntable[datap->ftab[i].funcoff])), datap};
                 auto f2 = funcInfo {(_func*)(unsafe::Pointer(& datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
-                auto f2name = "end";
+                auto f2name = "end"s;
                 if(i + 1 < nftab)
                 {
                     f2name = funcname(f2);
                 }
-                println("function symbol table not sorted by PC offset:", hex(datap->ftab[i].entryoff), funcname(f1), ">", hex(datap->ftab[i + 1].entryoff), f2name, ", plugin:", datap->pluginpath);
+                println("function symbol table not sorted by PC offset:"s, hex(datap->ftab[i].entryoff), funcname(f1), ">"s, hex(datap->ftab[i + 1].entryoff), f2name, ", plugin:"s, datap->pluginpath);
                 for(auto j = 0; j <= i; j++)
                 {
-                    println("\t", hex(datap->ftab[j].entryoff), funcname(funcInfo {(_func*)(unsafe::Pointer(& datap->pclntable[datap->ftab[j].funcoff])), datap}));
+                    println("\t"s, hex(datap->ftab[j].entryoff), funcname(funcInfo {(_func*)(unsafe::Pointer(& datap->pclntable[datap->ftab[j].funcoff])), datap}));
                 }
-                if(GOOS == "aix" && isarchive)
+                if(GOOS == "aix"s && isarchive)
                 {
-                    println("-Wl,-bnoobjreorder is mandatory on aix/ppc64 with c-archive");
+                    println("-Wl,-bnoobjreorder is mandatory on aix/ppc64 with c-archive"s);
                 }
-                go_throw("invalid runtime symbol table");
+                go_throw("invalid runtime symbol table"s);
             }
         }
         auto min = rec::textAddr(gocpp::recv(datap), datap->ftab[0].entryoff);
         auto max = rec::textAddr(gocpp::recv(datap), datap->ftab[nftab].entryoff);
         if(datap->minpc != min || datap->maxpc != max)
         {
-            println("minpc=", hex(datap->minpc), "min=", hex(min), "maxpc=", hex(datap->maxpc), "max=", hex(max));
-            go_throw("minpc or maxpc invalid");
+            println("minpc="s, hex(datap->minpc), "min="s, hex(min), "maxpc="s, hex(datap->maxpc), "max="s, hex(max));
+            go_throw("minpc or maxpc invalid"s);
         }
         for(auto [gocpp_ignored, modulehash] : datap->modulehashes)
         {
             if(modulehash.linktimehash != *modulehash.runtimehash)
             {
-                println("abi mismatch detected between", datap->modulename, "and", modulehash.modulename);
-                go_throw("abi mismatch");
+                println("abi mismatch detected between"s, datap->modulename, "and"s, modulehash.modulename);
+                go_throw("abi mismatch"s);
             }
         }
     }
@@ -876,10 +876,10 @@ namespace golang::runtime
                     break;
                 }
             }
-            if(res > md->etext && GOARCH != "wasm")
+            if(res > md->etext && GOARCH != "wasm"s)
             {
-                println("runtime: textAddr", hex(res), "out of range", hex(md->text), "-", hex(md->etext));
-                go_throw("runtime: text offset out of range");
+                println("runtime: textAddr"s, hex(res), "out of range"s, hex(md->text), "-"s, hex(md->etext));
+                go_throw("runtime: text offset out of range"s);
             }
         }
         return res;
@@ -915,7 +915,7 @@ namespace golang::runtime
     {
         if(nameOff == 0)
         {
-            return "";
+            return ""s;
         }
         return gostringnocopy(& md->funcnametab[nameOff]);
     }
@@ -949,7 +949,7 @@ namespace golang::runtime
     {
         if(f == nullptr)
         {
-            return "";
+            return ""s;
         }
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
@@ -1134,7 +1134,7 @@ namespace golang::runtime
     {
         if(s.datap == nullptr)
         {
-            return "";
+            return ""s;
         }
         return rec::funcName(gocpp::recv(s.datap), s.nameOff);
     }
@@ -1253,7 +1253,7 @@ namespace golang::runtime
             else
             if(debugCheckCache && (cache->inUse < 1 || cache->inUse > 2))
             {
-                go_throw("cache.inUse out of range");
+                go_throw("cache.inUse out of range"s);
             }
             cache->inUse--;
             releasem(mp);
@@ -1262,8 +1262,8 @@ namespace golang::runtime
         {
             if(strict && rec::Load(gocpp::recv(panicking)) == 0)
             {
-                println("runtime: no module data for", hex(rec::entry(gocpp::recv(f))));
-                go_throw("no module data");
+                println("runtime: no module data for"s, hex(rec::entry(gocpp::recv(f))));
+                go_throw("no module data"s);
             }
             return {- 1, 0};
         }
@@ -1286,8 +1286,8 @@ namespace golang::runtime
                 {
                     if(checkVal != val || checkPC != prevpc)
                     {
-                        print("runtime: table value ", val, "@", prevpc, " != cache value ", checkVal, "@", checkPC, " at PC ", targetpc, " off ", off, "\n");
-                        go_throw("bad pcvalue cache");
+                        print("runtime: table value "s, val, "@"s, prevpc, " != cache value "s, checkVal, "@"s, checkPC, " at PC "s, targetpc, " off "s, off, "\n"s);
+                        go_throw("bad pcvalue cache"s);
                     }
                 }
                 else
@@ -1318,7 +1318,7 @@ namespace golang::runtime
         {
             return {- 1, 0};
         }
-        print("runtime: invalid pc-encoded table f=", funcname(f), " pc=", hex(pc), " targetpc=", hex(targetpc), " tab=", p, "\n");
+        print("runtime: invalid pc-encoded table f="s, funcname(f), " pc="s, hex(pc), " targetpc="s, hex(targetpc), " tab="s, p, "\n"s);
         p = datap->pctab.make_slice(off);
         pc = rec::entry(gocpp::recv(f));
         val = - 1;
@@ -1330,9 +1330,9 @@ namespace golang::runtime
             {
                 break;
             }
-            print("\tvalue=", val, " until pc=", hex(pc), "\n");
+            print("\tvalue="s, val, " until pc="s, hex(pc), "\n"s);
         }
-        go_throw("invalid runtime symbol table");
+        go_throw("invalid runtime symbol table"s);
         return {- 1, 0};
     }
 
@@ -1340,7 +1340,7 @@ namespace golang::runtime
     {
         if(! rec::valid(gocpp::recv(f)))
         {
-            return "";
+            return ""s;
         }
         return rec::funcName(gocpp::recv(f.datap), f.nameOff);
     }
@@ -1371,13 +1371,13 @@ namespace golang::runtime
         auto datap = f.datap;
         if(! rec::valid(gocpp::recv(f)))
         {
-            return "?";
+            return "?"s;
         }
         if(auto fileoff = datap->cutab[f.cuOffset + uint32_t(fileno)]; fileoff != ~ uint32_t(0))
         {
             return gostringnocopy(& datap->filetab[fileoff]);
         }
-        return "?";
+        return "?"s;
     }
 
     std::tuple<std::string, int32_t> funcline1(struct funcInfo f, uintptr_t targetpc, bool strict)
@@ -1387,13 +1387,13 @@ namespace golang::runtime
         auto datap = f.datap;
         if(! rec::valid(gocpp::recv(f)))
         {
-            return {"?", 0};
+            return {"?"s, 0};
         }
         auto [fileno, gocpp_id_2] = pcvalue(f, f.pcfile, targetpc, strict);
         std::tie(line, gocpp_id_3) = pcvalue(f, f.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
-            return {"?", 0};
+            return {"?"s, 0};
         }
         file = funcfile(f, fileno);
         return {file, line};
@@ -1411,8 +1411,8 @@ namespace golang::runtime
         auto [x, gocpp_id_5] = pcvalue(f, f.pcsp, targetpc, true);
         if(debugPcln && x & (goarch::PtrSize - 1) != 0)
         {
-            print("invalid spdelta ", funcname(f), " ", hex(rec::entry(gocpp::recv(f))), " ", hex(targetpc), " ", hex(f.pcsp), " ", x, "\n");
-            go_throw("bad spdelta");
+            print("invalid spdelta "s, funcname(f), " "s, hex(rec::entry(gocpp::recv(f))), " "s, hex(targetpc), " "s, hex(f.pcsp), " "s, x, "\n"s);
+            go_throw("bad spdelta"s);
         }
         return x;
     }
@@ -1576,7 +1576,7 @@ namespace golang::runtime
     {
         if(stackDebug > 0 && (n < 0 || n >= stkmap->n))
         {
-            go_throw("stackmapdata: index out of range");
+            go_throw("stackmapdata: index out of range"s);
         }
         return bitvector {stkmap->nbit, addb(& stkmap->bytedata[0], uintptr_t(n * ((stkmap->nbit + 7) >> 3)))};
     }

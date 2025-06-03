@@ -101,16 +101,16 @@ namespace golang::os
 
     struct File* newFile(syscall::Handle h, std::string name, std::string kind)
     {
-        if(kind == "file")
+        if(kind == "file"s)
         {
             uint32_t m = {};
             if(syscall::GetConsoleMode(h, & m) == nullptr)
             {
-                kind = "console";
+                kind = "console"s;
             }
             if(auto [t, err] = syscall::GetFileType(h); err == nullptr && t == syscall::FILE_TYPE_PIPE)
             {
-                kind = "pipe";
+                kind = "pipe"s;
             }
         }
         auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
@@ -128,7 +128,7 @@ namespace golang::os
 
     struct File* newConsoleFile(syscall::Handle h, std::string name)
     {
-        return newFile(h, name, "console");
+        return newFile(h, name, "console"s);
     }
 
     struct File* NewFile(uintptr_t fd, std::string name)
@@ -138,20 +138,20 @@ namespace golang::os
         {
             return nullptr;
         }
-        return newFile(h, name, "file");
+        return newFile(h, name, "file"s);
     }
 
     void epipecheck(struct File* file, struct gocpp::error e)
     {
     }
 
-    std::string DevNull = "NUL";
+    std::string DevNull = "NUL"s;
     std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm)
     {
-        if(name == "")
+        if(name == ""s)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "open";
+                x.Op = "open"s;
                 x.Path = name;
                 x.Err = syscall::go_ENOENT;
             })};
@@ -174,17 +174,17 @@ namespace golang::os
                 }
             }
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "open";
+                x.Op = "open"s;
                 x.Path = name;
                 x.Err = e;
             })};
         }
         File* f;
-        std::tie(f, e) = std::tuple{newFile(r, name, "file"), nullptr};
+        std::tie(f, e) = std::tuple{newFile(r, name, "file"s), nullptr};
         if(e != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "open";
+                x.Op = "open"s;
                 x.Path = name;
                 x.Err = e;
             })};
@@ -211,7 +211,7 @@ namespace golang::os
                 e = ErrClosed;
             }
             err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "close";
+                x.Op = "close"s;
                 x.Path = file->name;
                 x.Err = e;
             });
@@ -264,7 +264,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "remove";
+                x.Op = "remove"s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -306,7 +306,7 @@ namespace golang::os
             }
         }
         return gocpp::InitPtr<os::PathError>([=](auto& x) {
-            x.Op = "remove";
+            x.Op = "remove"s;
             x.Path = name;
             x.Err = e;
         });
@@ -317,7 +317,7 @@ namespace golang::os
         auto e = windows::Rename(fixLongPath(oldname), fixLongPath(newname));
         if(e != nullptr)
         {
-            return new LinkError {"rename", oldname, newname, e};
+            return new LinkError {"rename"s, oldname, newname, e};
         }
         return nullptr;
     }
@@ -331,9 +331,9 @@ namespace golang::os
         auto e = syscall::Pipe(p.make_slice(0));
         if(e != nullptr)
         {
-            return {nullptr, nullptr, NewSyscallError("pipe", e)};
+            return {nullptr, nullptr, NewSyscallError("pipe"s, e)};
         }
-        return {newFile(p[0], "|0", "pipe"), newFile(p[1], "|1", "pipe"), nullptr};
+        return {newFile(p[0], "|0"s, "pipe"s), newFile(p[1], "|1"s, "pipe"s), nullptr};
     }
 
     sync::Once useGetTempPath2Once;
@@ -375,18 +375,18 @@ namespace golang::os
         auto [n, err] = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
         {
-            return new LinkError {"link", oldname, newname, err};
+            return new LinkError {"link"s, oldname, newname, err};
         }
         uint16_t* o;
         std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
         if(err != nullptr)
         {
-            return new LinkError {"link", oldname, newname, err};
+            return new LinkError {"link"s, oldname, newname, err};
         }
         err = syscall::CreateHardLink(n, o, 0);
         if(err != nullptr)
         {
-            return new LinkError {"link", oldname, newname, err};
+            return new LinkError {"link"s, oldname, newname, err};
         }
         return nullptr;
     }
@@ -395,18 +395,18 @@ namespace golang::os
     {
         oldname = fromSlash(oldname);
         auto destpath = oldname;
-        if(auto v = volumeName(oldname); v == "")
+        if(auto v = volumeName(oldname); v == ""s)
         {
             if(len(oldname) > 0 && IsPathSeparator(oldname[0]))
             {
-                if(v = volumeName(newname); v != "")
+                if(v = volumeName(newname); v != ""s)
                 {
                     destpath = v + oldname;
                 }
             }
             else
             {
-                destpath = dirname(newname) + "\\" + oldname;
+                destpath = dirname(newname) + "\\"s + oldname;
             }
         }
         auto [fi, err] = Stat(destpath);
@@ -415,13 +415,13 @@ namespace golang::os
         std::tie(n, err) = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
         {
-            return new LinkError {"symlink", oldname, newname, err};
+            return new LinkError {"symlink"s, oldname, newname, err};
         }
         uint16_t* o;
         std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
         if(err != nullptr)
         {
-            return new LinkError {"symlink", oldname, newname, err};
+            return new LinkError {"symlink"s, oldname, newname, err};
         }
         uint32_t flags = windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
         if(isdir)
@@ -435,7 +435,7 @@ namespace golang::os
             err = syscall::CreateSymbolicLink(n, o, flags);
             if(err != nullptr)
             {
-                return new LinkError {"symlink", oldname, newname, err};
+                return new LinkError {"symlink"s, oldname, newname, err};
             }
         }
         return nullptr;
@@ -464,7 +464,7 @@ namespace golang::os
         gocpp::Defer defer;
         try
         {
-            if(len(path) < 4 || path.make_slice(0, 4) != "\\??\\")
+            if(len(path) < 4 || path.make_slice(0, 4) != "\\??\\"s)
             {
                 return {path, nullptr};
             }
@@ -473,21 +473,21 @@ namespace golang::os
             {
                 int conditionId = -1;
                 if(len(s) >= 2 && s[1] == ':') { conditionId = 0; }
-                else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\") { conditionId = 1; }
+                else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\"s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                         return {s, nullptr};
                         break;
                     case 1:
-                        return {"\\\\" + s.make_slice(4), nullptr};
+                        return {"\\\\"s + s.make_slice(4), nullptr};
                         break;
                 }
             }
             auto [h, err] = openSymlink(path);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             defer.push_back([=]{ syscall::CloseHandle(h); });
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 100);
@@ -496,7 +496,7 @@ namespace golang::os
                 auto [n, err] = windows::GetFinalPathNameByHandle(h, & buf[0], uint32_t(len(buf)), windows::VOLUME_NAME_DOS);
                 if(err != nullptr)
                 {
-                    return {"", err};
+                    return {""s, err};
                 }
                 if(n < uint32_t(len(buf)))
                 {
@@ -505,16 +505,16 @@ namespace golang::os
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
             }
             s = syscall::UTF16ToString(buf);
-            if(len(s) > 4 && s.make_slice(0, 4) == "\\\\?\\")
+            if(len(s) > 4 && s.make_slice(0, 4) == "\\\\?\\"s)
             {
                 s = s.make_slice(4);
-                if(len(s) > 3 && s.make_slice(0, 3) == "UNC")
+                if(len(s) > 3 && s.make_slice(0, 3) == "UNC"s)
                 {
-                    return {"\\" + s.make_slice(3), nullptr};
+                    return {"\\"s + s.make_slice(3), nullptr};
                 }
                 return {s, nullptr};
             }
-            return {"", errors::New("GetFinalPathNameByHandle returned unexpected path: " + s)};
+            return {""s, errors::New("GetFinalPathNameByHandle returned unexpected path: "s + s)};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -530,7 +530,7 @@ namespace golang::os
             auto [h, err] = openSymlink(path);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             defer.push_back([=]{ syscall::CloseHandle(h); });
             auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), syscall::MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
@@ -538,7 +538,7 @@ namespace golang::os
             err = syscall::DeviceIoControl(h, syscall::FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             auto rdb = (windows::REPARSE_DATA_BUFFER*)(unsafe::Pointer(& rdbbuf[0]));
             //Go switch emulation
@@ -562,7 +562,7 @@ namespace golang::os
                         return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME)))));
                         break;
                     default:
-                        return {"", syscall::go_ENOENT};
+                        return {""s, syscall::go_ENOENT};
                         break;
                 }
             }
@@ -578,8 +578,8 @@ namespace golang::os
         auto [s, err] = readReparseLink(fixLongPath(name));
         if(err != nullptr)
         {
-            return {"", gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readlink";
+            return {""s, gocpp::InitPtr<os::PathError>([=](auto& x) {
+                x.Op = "readlink"s;
                 x.Path = name;
                 x.Err = err;
             })};

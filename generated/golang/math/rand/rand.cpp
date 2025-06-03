@@ -249,7 +249,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Int63n");
+            gocpp::panic("invalid argument to Int63n"s);
         }
         if(n & (n - 1) == 0)
         {
@@ -268,7 +268,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Int31n");
+            gocpp::panic("invalid argument to Int31n"s);
         }
         if(n & (n - 1) == 0)
         {
@@ -305,7 +305,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Intn");
+            gocpp::panic("invalid argument to Intn"s);
         }
         if(n <= (1 << 31) - 1)
         {
@@ -352,7 +352,7 @@ namespace golang::rand
     {
         if(n < 0)
         {
-            gocpp::panic("invalid argument to Shuffle");
+            gocpp::panic("invalid argument to Shuffle"s);
         }
         auto i = n - 1;
         for(; i > (1 << 31) - 1 - 1; i--)
@@ -427,7 +427,7 @@ namespace golang::rand
     }
 
     atomic::Pointer<Rand> globalRandGenerator;
-    godebug::Setting* randautoseed = godebug::New("randautoseed");
+    godebug::Setting* randautoseed = godebug::New("randautoseed"s);
     struct Rand* globalRand()
     {
         if(auto r = rec::Load(gocpp::recv(globalRandGenerator)); r != nullptr)
@@ -435,7 +435,7 @@ namespace golang::rand
             return r;
         }
         Rand* r = {};
-        if(rec::Value(gocpp::recv(randautoseed)) == "0")
+        if(rec::Value(gocpp::recv(randautoseed)) == "0"s)
         {
             rec::IncNonDefault(gocpp::recv(randautoseed));
             r = New(new(lockedSource));
@@ -494,7 +494,7 @@ namespace golang::rand
 
     void rec::Seed(runtimeSource*, int64_t)
     {
-        gocpp::panic("internal error: call to runtimeSource.Seed");
+        gocpp::panic("internal error: call to runtimeSource.Seed"s);
     }
 
     uint64_t rec::Uint64(runtimeSource*)

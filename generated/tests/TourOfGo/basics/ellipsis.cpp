@@ -28,7 +28,7 @@ namespace golang::main
     {
         for(auto [gocpp_ignored, elt] : elts)
         {
-            mocklib::Printf("%v, ", elt);
+            mocklib::Printf("%v, "s, elt);
         }
         mocklib::Println();
     }
@@ -41,7 +41,7 @@ namespace golang::main
 
     void main()
     {
-        DummyPrintf("tototot", 1, 2, 3);
+        DummyPrintf("tototot"s, 1, 2, 3);
     }
 
 }

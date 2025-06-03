@@ -24,13 +24,13 @@ namespace golang::main
 
     void main()
     {
-        auto r = strings::NewReader("Hello, Reader!");
+        auto r = strings::NewReader("Hello, Reader!"s);
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
         for(; ; )
         {
             auto [n, err] = rec::Read(gocpp::recv(r), b);
-            mocklib::Printf("n = %v err = %v b = %v\n", n, err, b);
-            mocklib::Printf("b[:n] = %q\n", b.make_slice(0, n));
+            mocklib::Printf("n = %v err = %v b = %v\n"s, n, err, b);
+            mocklib::Printf("b[:n] = %q\n"s, b.make_slice(0, n));
             if(err == io::go_EOF)
             {
                 break;

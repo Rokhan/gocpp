@@ -66,9 +66,9 @@ namespace golang::main
 
     void main()
     {
-        auto vstr1 = str1("hello");
-        auto vstr2 = str2("hello");
-        mocklib::Println("str1:", vstr1, ", str2:", vstr2);
+        auto vstr1 = str1("hello"s);
+        auto vstr2 = str2("hello"s);
+        mocklib::Println("str1:"s, vstr1, ", str2:"s, vstr2);
         mocklib::Println(main::Vertex {1, 2});
         UseTypedefPtr1(new main::Vertex {1, 2});
         UseTypedefPtr2(new main::vvvv2 {1, 2});

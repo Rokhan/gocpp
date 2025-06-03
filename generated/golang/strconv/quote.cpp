@@ -21,8 +21,8 @@ namespace golang::strconv
         using namespace mocklib::rec;
     }
 
-    std::string lowerhex = "0123456789abcdef";
-    std::string upperhex = "0123456789ABCDEF";
+    std::string lowerhex = "0123456789abcdef"s;
+    std::string upperhex = "0123456789ABCDEF"s;
     bool contains(std::string s, unsigned char c)
     {
         return index(s, c) != - 1;
@@ -57,7 +57,7 @@ namespace golang::strconv
             }
             if(width == 1 && r == utf8::RuneError)
             {
-                buf = append(buf, "\\x");
+                buf = append(buf, "\\x"s);
                 buf = append(buf, lowerhex[s[0] >> 4]);
                 buf = append(buf, lowerhex[s[0] & 0xF]);
                 continue;
@@ -115,25 +115,25 @@ namespace golang::strconv
             switch(conditionId)
             {
                 case 0:
-                    buf = append(buf, "\\a");
+                    buf = append(buf, "\\a"s);
                     break;
                 case 1:
-                    buf = append(buf, "\\b");
+                    buf = append(buf, "\\b"s);
                     break;
                 case 2:
-                    buf = append(buf, "\\f");
+                    buf = append(buf, "\\f"s);
                     break;
                 case 3:
-                    buf = append(buf, "\\n");
+                    buf = append(buf, "\\n"s);
                     break;
                 case 4:
-                    buf = append(buf, "\\r");
+                    buf = append(buf, "\\r"s);
                     break;
                 case 5:
-                    buf = append(buf, "\\t");
+                    buf = append(buf, "\\t"s);
                     break;
                 case 6:
-                    buf = append(buf, "\\v");
+                    buf = append(buf, "\\v"s);
                     break;
                 default:
                     //Go switch emulation
@@ -145,21 +145,21 @@ namespace golang::strconv
                         switch(conditionId)
                         {
                             case 0:
-                                buf = append(buf, "\\x");
+                                buf = append(buf, "\\x"s);
                                 buf = append(buf, lowerhex[(unsigned char)(r) >> 4]);
                                 buf = append(buf, lowerhex[(unsigned char)(r) & 0xF]);
                                 break;
                             case 1:
                                 r = 0xFFFD;
                             case 2:
-                                buf = append(buf, "\\u");
+                                buf = append(buf, "\\u"s);
                                 for(auto s = 12; s >= 0; s -= 4)
                                 {
                                     buf = append(buf, lowerhex[(r >> (unsigned int)(s)) & 0xF]);
                                 }
                                 break;
                             default:
-                                buf = append(buf, "\\U");
+                                buf = append(buf, "\\U"s);
                                 for(auto s = 28; s >= 0; s -= 4)
                                 {
                                     buf = append(buf, lowerhex[(r >> (unsigned int)(s)) & 0xF]);
@@ -493,7 +493,7 @@ namespace golang::strconv
         auto [out, rem, err] = unquote(s, true);
         if(len(rem) > 0)
         {
-            return {"", ErrSyntax};
+            return {""s, ErrSyntax};
         }
         return {out, err};
     }
@@ -505,13 +505,13 @@ namespace golang::strconv
         struct gocpp::error err;
         if(len(in) < 2)
         {
-            return {"", in, ErrSyntax};
+            return {""s, in, ErrSyntax};
         }
         auto quote = in[0];
         auto end = index(in.make_slice(1), quote);
         if(end < 0)
         {
-            return {"", in, ErrSyntax};
+            return {""s, in, ErrSyntax};
         }
         end += 2;
         //Go switch emulation
@@ -535,11 +535,11 @@ namespace golang::strconv
                                 out = in.make_slice(0, end);
                                 break;
                             case 1:
-                                out = in.make_slice(len("`"), end - len("`"));
+                                out = in.make_slice(len("`"s), end - len("`"s));
                                 break;
                             default:
-                                auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`") - len("\r") - len("`"));
-                                for(auto i = len("`"); i < end - len("`"); i++)
+                                auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`"s) - len("\r"s) - len("`"s));
+                                for(auto i = len("`"s); i < end - len("`"s); i++)
                                 {
                                     if(in[i] != '\r')
                                     {
@@ -566,11 +566,11 @@ namespace golang::strconv
                             switch(conditionId)
                             {
                                 case 0:
-                                    valid = utf8::ValidString(in.make_slice(len("""), end - len(""")));
+                                    valid = utf8::ValidString(in.make_slice(len("""s), end - len("""s)));
                                     break;
                                 case 1:
-                                    auto [r, n] = utf8::DecodeRuneInString(in.make_slice(len("'"), end - len("'")));
-                                    valid = len("'") + n + len("'") == end && (r != utf8::RuneError || n != 1);
+                                    auto [r, n] = utf8::DecodeRuneInString(in.make_slice(len("'"s), end - len("'"s)));
+                                    valid = len("'"s) + n + len("'"s) == end && (r != utf8::RuneError || n != 1);
                                     break;
                             }
                         }
@@ -596,7 +596,7 @@ namespace golang::strconv
                         auto [r, multibyte, rem, err] = UnquoteChar(in, quote);
                         if(in[0] == '\n' || err != nullptr)
                         {
-                            return {"", in0, ErrSyntax};
+                            return {""s, in0, ErrSyntax};
                         }
                         in = rem;
                         if(unescape)
@@ -617,7 +617,7 @@ namespace golang::strconv
                     }
                     if(! (len(in) > 0 && in[0] == quote))
                     {
-                        return {"", in0, ErrSyntax};
+                        return {""s, in0, ErrSyntax};
                     }
                     in = in.make_slice(1);
                     if(unescape)
@@ -627,7 +627,7 @@ namespace golang::strconv
                     return {in0.make_slice(0, len(in0) - len(in)), in, nullptr};
                     break;
                 default:
-                    return {"", in, ErrSyntax};
+                    return {""s, in, ErrSyntax};
                     break;
             }
         }

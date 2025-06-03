@@ -275,12 +275,12 @@ namespace golang::runtime
         auto wg = rec::Load(gocpp::recv(pd->wg));
         if(wg != pdNil && wg != pdReady)
         {
-            go_throw("runtime: blocked write on free polldesc");
+            go_throw("runtime: blocked write on free polldesc"s);
         }
         auto rg = rec::Load(gocpp::recv(pd->rg));
         if(rg != pdNil && rg != pdReady)
         {
-            go_throw("runtime: blocked read on free polldesc");
+            go_throw("runtime: blocked read on free polldesc"s);
         }
         pd->fd = fd;
         if(rec::Load(gocpp::recv(pd->fdseq)) == 0)
@@ -311,17 +311,17 @@ namespace golang::runtime
     {
         if(! pd->closing)
         {
-            go_throw("runtime: close polldesc w/o unblock");
+            go_throw("runtime: close polldesc w/o unblock"s);
         }
         auto wg = rec::Load(gocpp::recv(pd->wg));
         if(wg != pdNil && wg != pdReady)
         {
-            go_throw("runtime: blocked write on closing polldesc");
+            go_throw("runtime: blocked write on closing polldesc"s);
         }
         auto rg = rec::Load(gocpp::recv(pd->rg));
         if(rg != pdNil && rg != pdReady)
         {
-            go_throw("runtime: blocked read on closing polldesc");
+            go_throw("runtime: blocked read on closing polldesc"s);
         }
         netpollclose(pd->fd);
         rec::free(gocpp::recv(pollcache), pd);
@@ -367,7 +367,7 @@ namespace golang::runtime
         {
             return errcode;
         }
-        if(GOOS == "solaris" || GOOS == "illumos" || GOOS == "aix" || GOOS == "wasip1")
+        if(GOOS == "solaris"s || GOOS == "illumos"s || GOOS == "aix"s || GOOS == "wasip1"s)
         {
             netpollarm(pd, mode);
         }
@@ -498,7 +498,7 @@ namespace golang::runtime
         lock(& pd->lock);
         if(pd->closing)
         {
-            go_throw("runtime: unblock on closing polldesc");
+            go_throw("runtime: unblock on closing polldesc"s);
         }
         pd->closing = true;
         pd->rseq++;
@@ -607,7 +607,7 @@ namespace golang::runtime
             }
             if(auto v = rec::Load(gocpp::recv(gpp)); v != pdReady && v != pdNil)
             {
-                go_throw("runtime: double wait");
+                go_throw("runtime: double wait"s);
             }
         }
         if(waitio || netpollcheckerr(pd, mode) == pollNoError)
@@ -617,7 +617,7 @@ namespace golang::runtime
         auto old = rec::Swap(gocpp::recv(gpp), pdNil);
         if(old > pdWait)
         {
-            go_throw("runtime: corrupted polldesc");
+            go_throw("runtime: corrupted polldesc"s);
         }
         return old == pdReady;
     }
@@ -680,7 +680,7 @@ namespace golang::runtime
         {
             if(pd->rd <= 0 || pd->rt.f == nullptr)
             {
-                go_throw("runtime: inconsistent read deadline");
+                go_throw("runtime: inconsistent read deadline"s);
             }
             pd->rd = - 1;
             rec::publishInfo(gocpp::recv(pd));
@@ -691,7 +691,7 @@ namespace golang::runtime
         {
             if(pd->wd <= 0 || pd->wt.f == nullptr && ! read)
             {
-                go_throw("runtime: inconsistent write deadline");
+                go_throw("runtime: inconsistent write deadline"s);
             }
             pd->wd = - 1;
             rec::publishInfo(gocpp::recv(pd));

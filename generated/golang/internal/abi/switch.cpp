@@ -132,17 +132,17 @@ namespace golang::abi
         {
             auto condition = goarch;
             int conditionId = -1;
-            if(condition == "amd64") { conditionId = 0; }
-            else if(condition == "arm64") { conditionId = 1; }
-            else if(condition == "loong64") { conditionId = 2; }
-            else if(condition == "mips") { conditionId = 3; }
-            else if(condition == "mipsle") { conditionId = 4; }
-            else if(condition == "mips64") { conditionId = 5; }
-            else if(condition == "mips64le") { conditionId = 6; }
-            else if(condition == "ppc64") { conditionId = 7; }
-            else if(condition == "ppc64le") { conditionId = 8; }
-            else if(condition == "riscv64") { conditionId = 9; }
-            else if(condition == "s390x") { conditionId = 10; }
+            if(condition == "amd64"s) { conditionId = 0; }
+            else if(condition == "arm64"s) { conditionId = 1; }
+            else if(condition == "loong64"s) { conditionId = 2; }
+            else if(condition == "mips"s) { conditionId = 3; }
+            else if(condition == "mipsle"s) { conditionId = 4; }
+            else if(condition == "mips64"s) { conditionId = 5; }
+            else if(condition == "mips64le"s) { conditionId = 6; }
+            else if(condition == "ppc64"s) { conditionId = 7; }
+            else if(condition == "ppc64le"s) { conditionId = 8; }
+            else if(condition == "riscv64"s) { conditionId = 9; }
+            else if(condition == "s390x"s) { conditionId = 10; }
             switch(conditionId)
             {
                 case 0:

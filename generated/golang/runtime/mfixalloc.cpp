@@ -117,7 +117,7 @@ namespace golang::runtime
     {
         if(size > _FixAllocChunk)
         {
-            go_throw("runtime: fixalloc size too large");
+            go_throw("runtime: fixalloc size too large"s);
         }
         size = gocpp::max(size, gocpp::Sizeof<mlink>());
         f->size = size;
@@ -136,8 +136,8 @@ namespace golang::runtime
     {
         if(f->size == 0)
         {
-            print("runtime: use of FixAlloc_Alloc before FixAlloc_Init\n");
-            go_throw("runtime: internal error");
+            print("runtime: use of FixAlloc_Alloc before FixAlloc_Init\n"s);
+            go_throw("runtime: internal error"s);
         }
         if(f->list != nullptr)
         {

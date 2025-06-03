@@ -125,7 +125,7 @@ namespace golang::runtime
 
     std::string rec::Error(struct TypeAssertionError* e)
     {
-        auto inter = "interface";
+        auto inter = "interface"s;
         if(e->_interface != nullptr)
         {
             inter = rec::string(gocpp::recv(toRType(e->_interface)));
@@ -133,26 +133,26 @@ namespace golang::runtime
         auto as = rec::string(gocpp::recv(toRType(e->asserted)));
         if(e->concrete == nullptr)
         {
-            return "interface conversion: " + inter + " is nil, not " + as;
+            return "interface conversion: "s + inter + " is nil, not "s + as;
         }
         auto cs = rec::string(gocpp::recv(toRType(e->concrete)));
-        if(e->missingMethod == "")
+        if(e->missingMethod == ""s)
         {
-            auto msg = "interface conversion: " + inter + " is " + cs + ", not " + as;
+            auto msg = "interface conversion: "s + inter + " is "s + cs + ", not "s + as;
             if(cs == as)
             {
                 if(rec::pkgpath(gocpp::recv(toRType(e->concrete))) != rec::pkgpath(gocpp::recv(toRType(e->asserted))))
                 {
-                    msg += " (types from different packages)";
+                    msg += " (types from different packages)"s;
                 }
                 else
                 {
-                    msg += " (types from different scopes)";
+                    msg += " (types from different scopes)"s;
                 }
             }
             return msg;
         }
-        return "interface conversion: " + cs + " is not " + as + ": missing method " + e->missingMethod;
+        return "interface conversion: "s + cs + " is not "s + as + ": missing method "s + e->missingMethod;
     }
 
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val)
@@ -174,7 +174,7 @@ namespace golang::runtime
 
     std::string rec::Error(golang::runtime::errorString e)
     {
-        return "runtime error: " + std::string(e);
+        return "runtime error: "s + std::string(e);
     }
 
     
@@ -215,7 +215,7 @@ namespace golang::runtime
 
     std::string rec::Error(struct errorAddressString e)
     {
-        return "runtime error: " + e.msg;
+        return "runtime error: "s + e.msg;
     }
 
     uintptr_t rec::Addr(struct errorAddressString e)
@@ -271,25 +271,25 @@ namespace golang::runtime
     }
 
     gocpp::array<std::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<std::string, 9>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x] with length %y";
-        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y";
-        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y";
-        x[boundsSliceB] = "slice bounds out of range [%x:%y]";
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y";
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y";
-        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]";
-        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]";
-        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x";
+        x[boundsIndex] = "index out of range [%x] with length %y"s;
+        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y"s;
+        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y"s;
+        x[boundsSliceB] = "slice bounds out of range [%x:%y]"s;
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y"s;
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y"s;
+        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]"s;
+        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]"s;
+        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"s;
     });
     gocpp::array<std::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<std::string, 8>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x]";
-        x[boundsSliceAlen] = "slice bounds out of range [:%x]";
-        x[boundsSliceAcap] = "slice bounds out of range [:%x]";
-        x[boundsSliceB] = "slice bounds out of range [%x:]";
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x]";
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x]";
-        x[boundsSlice3B] = "slice bounds out of range [:%x:]";
-        x[boundsSlice3C] = "slice bounds out of range [%x::]";
+        x[boundsIndex] = "index out of range [%x]"s;
+        x[boundsSliceAlen] = "slice bounds out of range [:%x]"s;
+        x[boundsSliceAcap] = "slice bounds out of range [:%x]"s;
+        x[boundsSliceB] = "slice bounds out of range [%x:]"s;
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x]"s;
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x]"s;
+        x[boundsSlice3B] = "slice bounds out of range [:%x:]"s;
+        x[boundsSlice3C] = "slice bounds out of range [%x::]"s;
     });
     void rec::RuntimeError(struct boundsError e)
     {
@@ -315,7 +315,7 @@ namespace golang::runtime
             fmt = boundsNegErrorFmts[e.code];
         }
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 100);
-        b = append(b, "runtime error: ");
+        b = append(b, "runtime error: "s);
         for(auto i = 0; i < len(fmt); i++)
         {
             auto c = fmt[i];
@@ -422,7 +422,7 @@ namespace golang::runtime
                 case 0:
                 {
                     untyped nil v = gocpp::any_cast<untyped nil>(i);
-                    print("nil");
+                    print("nil"s);
                     break;
                 }
                 case 1:
@@ -565,49 +565,49 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    print(typestring, "("", *(std::string*)(eface->data), "")");
+                    print(typestring, "(""s, *(std::string*)(eface->data), "")"s);
                     break;
                 case 1:
-                    print(typestring, "(", *(bool*)(eface->data), ")");
+                    print(typestring, "("s, *(bool*)(eface->data), ")"s);
                     break;
                 case 2:
-                    print(typestring, "(", *(int*)(eface->data), ")");
+                    print(typestring, "("s, *(int*)(eface->data), ")"s);
                     break;
                 case 3:
-                    print(typestring, "(", *(int8_t*)(eface->data), ")");
+                    print(typestring, "("s, *(int8_t*)(eface->data), ")"s);
                     break;
                 case 4:
-                    print(typestring, "(", *(int16_t*)(eface->data), ")");
+                    print(typestring, "("s, *(int16_t*)(eface->data), ")"s);
                     break;
                 case 5:
-                    print(typestring, "(", *(int32_t*)(eface->data), ")");
+                    print(typestring, "("s, *(int32_t*)(eface->data), ")"s);
                     break;
                 case 6:
-                    print(typestring, "(", *(int64_t*)(eface->data), ")");
+                    print(typestring, "("s, *(int64_t*)(eface->data), ")"s);
                     break;
                 case 7:
-                    print(typestring, "(", *(unsigned int*)(eface->data), ")");
+                    print(typestring, "("s, *(unsigned int*)(eface->data), ")"s);
                     break;
                 case 8:
-                    print(typestring, "(", *(uint8_t*)(eface->data), ")");
+                    print(typestring, "("s, *(uint8_t*)(eface->data), ")"s);
                     break;
                 case 9:
-                    print(typestring, "(", *(uint16_t*)(eface->data), ")");
+                    print(typestring, "("s, *(uint16_t*)(eface->data), ")"s);
                     break;
                 case 10:
-                    print(typestring, "(", *(uint32_t*)(eface->data), ")");
+                    print(typestring, "("s, *(uint32_t*)(eface->data), ")"s);
                     break;
                 case 11:
-                    print(typestring, "(", *(uint64_t*)(eface->data), ")");
+                    print(typestring, "("s, *(uint64_t*)(eface->data), ")"s);
                     break;
                 case 12:
-                    print(typestring, "(", *(uintptr_t*)(eface->data), ")");
+                    print(typestring, "("s, *(uintptr_t*)(eface->data), ")"s);
                     break;
                 case 13:
-                    print(typestring, "(", *(float*)(eface->data), ")");
+                    print(typestring, "("s, *(float*)(eface->data), ")"s);
                     break;
                 case 14:
-                    print(typestring, "(", *(double*)(eface->data), ")");
+                    print(typestring, "("s, *(double*)(eface->data), ")"s);
                     break;
                 case 15:
                     print(typestring, *(gocpp::complex64*)(eface->data));
@@ -616,7 +616,7 @@ namespace golang::runtime
                     print(typestring, *(gocpp::complex128*)(eface->data));
                     break;
                 default:
-                    print("(", typestring, ") ", eface->data);
+                    print("("s, typestring, ") "s, eface->data);
                     break;
             }
         }
@@ -629,26 +629,26 @@ namespace golang::runtime
         auto i = bytealg::IndexByteString(name, '(');
         if(i < 0)
         {
-            go_throw("panicwrap: no ( in " + name);
+            go_throw("panicwrap: no ( in "s + name);
         }
         auto pkg = name.make_slice(0, i - 1);
-        if(i + 2 >= len(name) || name.make_slice(i - 1, i + 2) != ".(*")
+        if(i + 2 >= len(name) || name.make_slice(i - 1, i + 2) != ".(*"s)
         {
-            go_throw("panicwrap: unexpected string after package name: " + name);
+            go_throw("panicwrap: unexpected string after package name: "s + name);
         }
         name = name.make_slice(i + 2);
         i = bytealg::IndexByteString(name, ')');
         if(i < 0)
         {
-            go_throw("panicwrap: no ) in " + name);
+            go_throw("panicwrap: no ) in "s + name);
         }
-        if(i + 2 >= len(name) || name.make_slice(i, i + 2) != ").")
+        if(i + 2 >= len(name) || name.make_slice(i, i + 2) != ")."s)
         {
-            go_throw("panicwrap: unexpected string after type name: " + name);
+            go_throw("panicwrap: unexpected string after type name: "s + name);
         }
         auto typ = name.make_slice(0, i);
         auto meth = name.make_slice(i + 2);
-        gocpp::panic(plainError("value method " + pkg + "." + typ + "." + meth + " called using nil *" + typ + " pointer"));
+        gocpp::panic(plainError("value method "s + pkg + "."s + typ + "."s + meth + " called using nil *"s + typ + " pointer"s));
     }
 
 }

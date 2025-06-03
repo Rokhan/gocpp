@@ -263,7 +263,7 @@ namespace golang::flate
     {
         if(maxBits >= maxBitsLimit)
         {
-            gocpp::panic("flate: maxBits too large");
+            gocpp::panic("flate: maxBits too large"s);
         }
         auto n = int32_t(len(list));
         list = list.make_slice(0, n + 1);
@@ -333,7 +333,7 @@ namespace golang::flate
         }
         if(leafCounts[maxBits][maxBits] != n)
         {
-            gocpp::panic("leafCounts[maxBits][maxBits] != n");
+            gocpp::panic("leafCounts[maxBits][maxBits] != n"s);
         }
         auto bitCount = h->bitCount.make_slice(0, maxBits + 1);
         auto bits = 1;

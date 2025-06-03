@@ -62,7 +62,7 @@ namespace golang::runtime
 
     void badsystemstack()
     {
-        writeErrStr("fatal: systemstack called from unexpected goroutine");
+        writeErrStr("fatal: systemstack called from unexpected goroutine"s);
     }
 
     void memclrNoHeapPointers(unsafe::Pointer ptr, uintptr_t n)

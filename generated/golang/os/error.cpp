@@ -123,7 +123,7 @@ namespace golang::os
 
     std::string rec::Error(struct SyscallError* e)
     {
-        return e->Syscall + ": " + rec::Error(gocpp::recv(e->Err));
+        return e->Syscall + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct SyscallError* e)

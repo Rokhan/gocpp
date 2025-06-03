@@ -93,7 +93,7 @@ namespace golang::strconv
                     flt = & float64info;
                     break;
                 default:
-                    gocpp::panic("strconv: illegal AppendFloat/FormatFloat bitSize");
+                    gocpp::panic("strconv: illegal AppendFloat/FormatFloat bitSize"s);
                     break;
             }
         }
@@ -118,13 +118,13 @@ namespace golang::strconv
                         switch(conditionId)
                         {
                             case 0:
-                                s = "NaN";
+                                s = "NaN"s;
                                 break;
                             case 1:
-                                s = "-Inf";
+                                s = "-Inf"s;
                                 break;
                             default:
-                                s = "+Inf";
+                                s = "+Inf"s;
                                 break;
                         }
                     }

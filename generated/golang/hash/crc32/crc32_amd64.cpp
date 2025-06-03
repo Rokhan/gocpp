@@ -43,7 +43,7 @@ namespace golang::crc32
     {
         if(! cpu::X86.HasSSE42)
         {
-            gocpp::panic("arch-specific Castagnoli not available");
+            gocpp::panic("arch-specific Castagnoli not available"s);
         }
         castagnoliSSE42TableK1 = new(sse42Table);
         castagnoliSSE42TableK2 = new(sse42Table);
@@ -68,7 +68,7 @@ namespace golang::crc32
     {
         if(! cpu::X86.HasSSE42)
         {
-            gocpp::panic("not available");
+            gocpp::panic("not available"s);
         }
         crc = ~ crc;
         if(len(p) >= castagnoliK1 * 3)
@@ -109,7 +109,7 @@ namespace golang::crc32
     {
         if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)
         {
-            gocpp::panic("not available");
+            gocpp::panic("not available"s);
         }
         archIeeeTable8 = slicingMakeTable(IEEE);
     }
@@ -118,7 +118,7 @@ namespace golang::crc32
     {
         if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)
         {
-            gocpp::panic("not available");
+            gocpp::panic("not available"s);
         }
         if(len(p) >= 64)
         {

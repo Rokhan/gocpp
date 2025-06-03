@@ -35,7 +35,7 @@ namespace golang::time
     std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
     std::string rec::Error(golang::time::fileSizeError f)
     {
-        return "time: file " + std::string(f) + " is too large";
+        return "time: file "s + std::string(f) + " is too large"s;
     }
 
     
@@ -142,11 +142,11 @@ namespace golang::time
         return std::string(p);
     }
 
-    gocpp::error errBadData = errors::New("malformed time zone information");
+    gocpp::error errBadData = errors::New("malformed time zone information"s);
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
-        if(auto magic = rec::read(gocpp::recv(d), 4); std::string(magic) != "TZif")
+        if(auto magic = rec::read(gocpp::recv(d), 4); std::string(magic) != "TZif"s)
         {
             return {nullptr, errBadData};
         }
@@ -275,9 +275,9 @@ namespace golang::time
                 return {nullptr, errBadData};
             }
             zones[i].name = byteString(abbrev.make_slice(b));
-            if(mocklib::GOOS == "aix" && len(name) > 8 && (name.make_slice(0, 8) == "Etc/GMT+" || name.make_slice(0, 8) == "Etc/GMT-"))
+            if(mocklib::GOOS == "aix"s && len(name) > 8 && (name.make_slice(0, 8) == "Etc/GMT+"s || name.make_slice(0, 8) == "Etc/GMT-"s))
             {
-                if(name != "Etc/GMT+0")
+                if(name != "Etc/GMT+0"s)
                 {
                     zones[i].name = name.make_slice(4);
                 }
@@ -350,7 +350,7 @@ namespace golang::time
                     l->cacheEnd = tx[i + 1].when;
                 }
                 else
-                if(l->extend != "")
+                if(l->extend != ""s)
                 {
                     if(auto [name, offset, estart, eend, isDST, ok] = tzset(l->extend, l->cacheStart, sec); ok)
                     {
@@ -390,13 +390,13 @@ namespace golang::time
 
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name)
     {
-        if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip")
+        if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip"s)
         {
             return loadTzinfoFromZip(dir, name);
         }
-        if(dir != "")
+        if(dir != ""s)
         {
-            name = dir + "/" + name;
+            name = dir + "/"s + name;
         }
         return readFile(name);
     }
@@ -438,7 +438,7 @@ namespace golang::time
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
             if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)
             {
-                return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                return {nullptr, errors::New("corrupt zip file "s + zipfile)};
             }
             auto n = get2(buf.make_slice(10));
             auto size = get4(buf.make_slice(12));
@@ -446,7 +446,7 @@ namespace golang::time
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
             if(auto err = preadn(fd, buf, off); err != nullptr)
             {
-                return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                return {nullptr, errors::New("corrupt zip file "s + zipfile)};
             }
             for(auto i = 0; i < n; i++)
             {
@@ -468,18 +468,18 @@ namespace golang::time
                 }
                 if(meth != 0)
                 {
-                    return {nullptr, errors::New("unsupported compression for " + name + " in " + zipfile)};
+                    return {nullptr, errors::New("unsupported compression for "s + name + " in "s + zipfile)};
                 }
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
                 if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || std::string(buf.make_slice(30, 30 + namelen)) != name)
                 {
-                    return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                    return {nullptr, errors::New("corrupt zip file "s + zipfile)};
                 }
                 xlen = get2(buf.make_slice(28));
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
                 if(auto err = preadn(fd, buf, off + 30 + namelen + xlen); err != nullptr)
                 {
-                    return {nullptr, errors::New("corrupt zip file " + zipfile)};
+                    return {nullptr, errors::New("corrupt zip file "s + zipfile)};
                 }
                 return {buf, nullptr};
             }
@@ -494,7 +494,7 @@ namespace golang::time
     std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (std::string file, std::string name)> loadTzinfoFromTzdata;
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source)
     {
-        if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata")
+        if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata"s)
         {
             return loadTzinfoFromTzdata(source, name);
         }
@@ -525,7 +525,7 @@ namespace golang::time
             auto [zoneData, err] = loadFromEmbeddedTZData(name);
             if(err == nullptr)
             {
-                if(std::tie(z, err) = LoadLocationFromTZData(name, gocpp::Tag<gocpp::slice<unsigned char>>()(zoneData)); err == nullptr)
+                if(std::tie(z, err) = LoadLocationFromTZData(name, gocpp::slice<unsigned char>(zoneData)); err == nullptr)
                 {
                     return {z, nullptr};
                 }
@@ -554,7 +554,7 @@ namespace golang::time
         {
             return {nullptr, firstErr};
         }
-        return {nullptr, errors::New("unknown time zone " + name)};
+        return {nullptr, errors::New("unknown time zone "s + name)};
     }
 
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name)

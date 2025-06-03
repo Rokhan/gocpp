@@ -54,13 +54,13 @@ namespace golang::main
 
     std::string rec::String(struct Person p)
     {
-        return mocklib::Sprintf("%v (%v years)", p.Name, p.Age);
+        return mocklib::Sprintf("%v (%v years)"s, p.Name, p.Age);
     }
 
     void main()
     {
-        auto a = Person {"Arthur Dent", 42};
-        auto z = Person {"Zaphod Beeblebrox", 9001};
+        auto a = Person {"Arthur Dent"s, 42};
+        auto z = Person {"Zaphod Beeblebrox"s, 9001};
         mocklib::Println(a, z);
     }
 

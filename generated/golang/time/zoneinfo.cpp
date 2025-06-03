@@ -152,7 +152,7 @@ namespace golang::time
 
     Location* UTC = & utcLoc;
     Location utcLoc = gocpp::Init<Location>([](auto& x) {
-        x.name = "UTC";
+        x.name = "UTC"s;
     });
     Location* Local = & localLoc;
     Location localLoc;
@@ -182,14 +182,14 @@ namespace golang::time
         auto hoursBeforeUTC = 12;
         auto hoursAfterUTC = 14;
         auto hour = offset / 60 / 60;
-        if(name == "" && - hoursBeforeUTC <= hour && hour <= + hoursAfterUTC && hour * 60 * 60 == offset)
+        if(name == ""s && - hoursBeforeUTC <= hour && hour <= + hoursAfterUTC && hour * 60 * 60 == offset)
         {
             rec::Do(gocpp::recv(unnamedFixedZonesOnce), [=]() mutable -> void
             {
                 unnamedFixedZones = gocpp::make(gocpp::Tag<gocpp::slice<Location*>>(), hoursBeforeUTC + 1 + hoursAfterUTC);
                 for(auto hr = - hoursBeforeUTC; hr <= + hoursAfterUTC; hr++)
                 {
-                    unnamedFixedZones[hr + hoursBeforeUTC] = fixedZone("", hr * 60 * 60);
+                    unnamedFixedZones[hr + hoursBeforeUTC] = fixedZone(""s, hr * 60 * 60);
                 }
             });
             return unnamedFixedZones[hour + hoursBeforeUTC];
@@ -220,7 +220,7 @@ namespace golang::time
         l = rec::get(gocpp::recv(l));
         if(len(l->zone) == 0)
         {
-            name = "UTC";
+            name = "UTC"s;
             offset = 0;
             start = alpha;
             end = omega;
@@ -276,7 +276,7 @@ namespace golang::time
         offset = zone->offset;
         start = tx[lo].when;
         isDST = zone->isDST;
-        if(lo == len(tx) - 1 && l->extend != "")
+        if(lo == len(tx) - 1 && l->extend != ""s)
         {
             if(auto [ename, eoffset, estart, eend, eisDST, ok] = tzset(l->extend, start, sec); ok)
             {
@@ -343,7 +343,7 @@ namespace golang::time
         }
         if(! ok)
         {
-            return {"", 0, 0, 0, false, false};
+            return {""s, 0, 0, 0, false, false};
         }
         stdOffset = - stdOffset;
         if(len(s) == 0 || s[0] == ',')
@@ -365,15 +365,15 @@ namespace golang::time
         }
         if(! ok)
         {
-            return {"", 0, 0, 0, false, false};
+            return {""s, 0, 0, 0, false, false};
         }
         if(len(s) == 0)
         {
-            s = ",M3.2.0,M11.1.0";
+            s = ",M3.2.0,M11.1.0"s;
         }
         if(s[0] != ',' && s[0] != ';')
         {
-            return {"", 0, 0, 0, false, false};
+            return {""s, 0, 0, 0, false, false};
         }
         s = s.make_slice(1);
         rule startRule = {};
@@ -381,13 +381,13 @@ namespace golang::time
         std::tie(startRule, s, ok) = tzsetRule(s);
         if(! ok || len(s) == 0 || s[0] != ',')
         {
-            return {"", 0, 0, 0, false, false};
+            return {""s, 0, 0, 0, false, false};
         }
         s = s.make_slice(1);
         std::tie(endRule, s, ok) = tzsetRule(s);
         if(! ok || len(s) > 0)
         {
-            return {"", 0, 0, 0, false, false};
+            return {""s, 0, 0, 0, false, false};
         }
         auto [year, gocpp_id_2, gocpp_id_3, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
         auto ysec = int64_t(yday * secondsPerDay) + sec % secondsPerDay;
@@ -423,7 +423,7 @@ namespace golang::time
     {
         if(len(s) == 0)
         {
-            return {"", "", false};
+            return {""s, ""s, false};
         }
         if(s[0] != '<')
         {
@@ -463,7 +463,7 @@ namespace golang::time
                         case 12:
                             if(i < 3)
                             {
-                                return {"", "", false};
+                                return {""s, ""s, false};
                             }
                             return {s.make_slice(0, i), s.make_slice(i), true};
                             break;
@@ -472,9 +472,9 @@ namespace golang::time
             }
             if(len(s) < 3)
             {
-                return {"", "", false};
+                return {""s, ""s, false};
             }
-            return {s, "", true};
+            return {s, ""s, true};
         }
         else
         {
@@ -485,7 +485,7 @@ namespace golang::time
                     return {s.make_slice(1, i), s.make_slice(i + 1), true};
                 }
             }
-            return {"", "", false};
+            return {""s, ""s, false};
         }
     }
 
@@ -496,7 +496,7 @@ namespace golang::time
         bool ok;
         if(len(s) == 0)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
         auto neg = false;
         if(s[0] == '+')
@@ -513,7 +513,7 @@ namespace golang::time
         std::tie(hours, s, ok) = tzsetNum(s, 0, 24 * 7);
         if(! ok)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
         auto off = hours * secondsPerHour;
         if(len(s) == 0 || s[0] != ':')
@@ -528,7 +528,7 @@ namespace golang::time
         std::tie(mins, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
         off += mins * secondsPerMinute;
         if(len(s) == 0 || s[0] != ':')
@@ -543,7 +543,7 @@ namespace golang::time
         std::tie(secs, s, ok) = tzsetNum(s.make_slice(1), 0, 59);
         if(! ok)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
         off += secs;
         if(neg)
@@ -599,7 +599,7 @@ namespace golang::time
         rule r = {};
         if(len(s) == 0)
         {
-            return {rule {}, "", false};
+            return {rule {}, ""s, false};
         }
         auto ok = false;
         if(s[0] == 'J')
@@ -608,7 +608,7 @@ namespace golang::time
             std::tie(jday, s, ok) = tzsetNum(s.make_slice(1), 1, 365);
             if(! ok)
             {
-                return {rule {}, "", false};
+                return {rule {}, ""s, false};
             }
             r.kind = ruleJulian;
             r.day = jday;
@@ -620,19 +620,19 @@ namespace golang::time
             std::tie(mon, s, ok) = tzsetNum(s.make_slice(1), 1, 12);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
-                return {rule {}, "", false};
+                return {rule {}, ""s, false};
             }
             int week = {};
             std::tie(week, s, ok) = tzsetNum(s.make_slice(1), 1, 5);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
-                return {rule {}, "", false};
+                return {rule {}, ""s, false};
             }
             int day = {};
             std::tie(day, s, ok) = tzsetNum(s.make_slice(1), 0, 6);
             if(! ok)
             {
-                return {rule {}, "", false};
+                return {rule {}, ""s, false};
             }
             r.kind = ruleMonthWeekDay;
             r.day = day;
@@ -645,7 +645,7 @@ namespace golang::time
             std::tie(day, s, ok) = tzsetNum(s, 0, 365);
             if(! ok)
             {
-                return {rule {}, "", false};
+                return {rule {}, ""s, false};
             }
             r.kind = ruleDOY;
             r.day = day;
@@ -660,7 +660,7 @@ namespace golang::time
         std::tie(offset, s, ok) = tzsetOffset(s.make_slice(1));
         if(! ok)
         {
-            return {rule {}, "", false};
+            return {rule {}, ""s, false};
         }
         r.time = offset;
         return {r, s, true};
@@ -673,7 +673,7 @@ namespace golang::time
         bool ok;
         if(len(s) == 0)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
         num = 0;
         for(auto [i, r] : s)
@@ -682,7 +682,7 @@ namespace golang::time
             {
                 if(i == 0 || num < min)
                 {
-                    return {0, "", false};
+                    return {0, ""s, false};
                 }
                 return {num, s.make_slice(i), true};
             }
@@ -690,14 +690,14 @@ namespace golang::time
             num += int(r) - '0';
             if(num > max)
             {
-                return {0, "", false};
+                return {0, ""s, false};
             }
         }
         if(num < min)
         {
-            return {0, "", false};
+            return {0, ""s, false};
         }
-        return {num, "", true};
+        return {num, ""s, true};
     }
 
     int tzruleTime(int year, struct rule r, int off)
@@ -789,16 +789,16 @@ namespace golang::time
         return {offset, ok};
     }
 
-    gocpp::error errLocation = errors::New("time: invalid location name");
+    gocpp::error errLocation = errors::New("time: invalid location name"s);
     std::string* zoneinfo;
     sync::Once zoneinfoOnce;
     std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name)
     {
-        if(name == "" || name == "UTC")
+        if(name == ""s || name == "UTC"s)
         {
             return {UTC, nullptr};
         }
-        if(name == "Local")
+        if(name == "Local"s)
         {
             return {Local, nullptr};
         }
@@ -808,11 +808,11 @@ namespace golang::time
         }
         rec::Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void
         {
-            auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO");
+            auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO"s);
             zoneinfo = & env;
         });
         gocpp::error firstErr = {};
-        if(*zoneinfo != "")
+        if(*zoneinfo != ""s)
         {
             if(auto [zoneData, err] = loadTzinfoFromDirOrZip(*zoneinfo, name); err == nullptr)
             {

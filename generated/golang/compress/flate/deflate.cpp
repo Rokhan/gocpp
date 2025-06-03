@@ -236,7 +236,7 @@ namespace golang::flate
         }
         if(d->index != 0 || d->windowEnd != 0)
         {
-            gocpp::panic("internal error: fillWindow called with stale data");
+            gocpp::panic("internal error: fillWindow called with stale data"s);
         }
         if(len(b) > windowSize)
         {
@@ -444,7 +444,7 @@ namespace golang::flate
         {
             if(d->index > d->windowEnd)
             {
-                gocpp::panic("index > windowEnd");
+                gocpp::panic("index > windowEnd"s);
             }
             auto lookahead = d->windowEnd - d->index;
             if(lookahead < minMatchLength + maxMatchLength)
@@ -455,7 +455,7 @@ namespace golang::flate
                 }
                 if(d->index > d->windowEnd)
                 {
-                    gocpp::panic("index > windowEnd");
+                    gocpp::panic("index > windowEnd"s);
                 }
                 if(lookahead == 0)
                 {
@@ -693,7 +693,7 @@ namespace golang::flate
                     d->step = (*compressor)->deflate;
                     break;
                 default:
-                    return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]", level);
+                    return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]"s, level);
                     break;
             }
         }
@@ -831,7 +831,7 @@ namespace golang::flate
         return rec::Write(gocpp::recv(w->w), b);
     }
 
-    gocpp::error errWriterClosed = errors::New("flate: closed writer");
+    gocpp::error errWriterClosed = errors::New("flate: closed writer"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()

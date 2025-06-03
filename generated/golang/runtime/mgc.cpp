@@ -94,7 +94,7 @@ namespace golang::runtime
     {
         if(gocpp::Sizeof<workbuf>() != _WorkbufSize)
         {
-            go_throw("size of Workbuf is suboptimal");
+            go_throw("size of Workbuf is suboptimal"s);
         }
         rec::Store(gocpp::recv(sweep.active.state), sweepDrainedMask);
         rec::init(gocpp::recv(gcController), readGOGC(), readGOMEMLIMIT());
@@ -168,7 +168,7 @@ namespace golang::runtime
         writeBarrier.enabled = gcphase == _GCmark || gcphase == _GCmarktermination;
     }
 
-    gocpp::array<std::string, 4> gcMarkWorkerModeStrings = gocpp::array<std::string, 4> {"Not worker", "GC (dedicated)", "GC (fractional)", "GC (idle)"};
+    gocpp::array<std::string, 4> gcMarkWorkerModeStrings = gocpp::array<std::string, 4> {"Not worker"s, "GC (dedicated)"s, "GC (fractional)"s, "GC (idle)"s};
     bool pollFractionalWorkerExit()
     {
         auto now = nanotime();
@@ -556,7 +556,7 @@ namespace golang::runtime
     void gcStart(struct gcTrigger trigger)
     {
         auto mp = acquirem();
-        if(auto gp = getg(); gp == mp->g0 || mp->locks > 1 || mp->preemptoff != "")
+        if(auto gp = getg(); gp == mp->g0 || mp->locks > 1 || mp->preemptoff != ""s)
         {
             releasem(mp);
             return;
@@ -595,8 +595,8 @@ namespace golang::runtime
         {
             if(auto fg = rec::Load(gocpp::recv(p->mcache->flushGen)); fg != mheap_.sweepgen)
             {
-                println("runtime: p", p->id, "flushGen", fg, "!= sweepgen", mheap_.sweepgen);
-                go_throw("p mcache not flushed");
+                println("runtime: p"s, p->id, "flushGen"s, fg, "!= sweepgen"s, mheap_.sweepgen);
+                go_throw("p mcache not flushed"s);
             }
         }
         gcBgMarkStartWorkers();
@@ -682,7 +682,7 @@ namespace golang::runtime
         }
         auto now = nanotime();
         work.tMarkTerm = now;
-        getg()->m->preemptoff = "gcing";
+        getg()->m->preemptoff = "gcing"s;
         worldStop stw = {};
         systemstack([=]() mutable -> void
         {
@@ -703,7 +703,7 @@ namespace golang::runtime
         });
         if(restart)
         {
-            getg()->m->preemptoff = "";
+            getg()->m->preemptoff = ""s;
             systemstack([=]() mutable -> void
             {
                 auto now = startTheWorldWithSema(0, stw);
@@ -728,7 +728,7 @@ namespace golang::runtime
         work.heap1 = rec::Load(gocpp::recv(gcController.heapLive));
         auto startTime = nanotime();
         auto mp = acquirem();
-        mp->preemptoff = "gcing";
+        mp->preemptoff = "gcing"s;
         mp->traceback = 2;
         auto curgp = mp->curg;
         casGToWaiting(curgp, _Grunning, waitReasonGarbageCollection);
@@ -761,10 +761,10 @@ namespace golang::runtime
             rec::GCDone(gocpp::recv(trace));
             traceRelease(trace);
         }
-        mp->preemptoff = "";
+        mp->preemptoff = ""s;
         if(gcphase != _GCoff)
         {
-            go_throw("gc done but gcphase != _GCoff");
+            go_throw("gc done but gcphase != _GCoff"s);
         }
         memstats.lastHeapInUse = rec::load(gocpp::recv(gcController.heapInUse));
         systemstack(gcControllerCommit);
@@ -800,12 +800,12 @@ namespace golang::runtime
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(! stwSwept && ! sl.valid)
         {
-            go_throw("failed to set sweep barrier");
+            go_throw("failed to set sweep barrier"s);
         }
         else
         if(stwSwept && sl.valid)
         {
-            go_throw("non-concurrent sweep failed to drain all sweep queues");
+            go_throw("non-concurrent sweep failed to drain all sweep queues"s);
         }
         systemstack([=]() mutable -> void
         {
@@ -837,37 +837,37 @@ namespace golang::runtime
             auto util = int(memstats.gc_cpu_fraction * 100);
             gocpp::array<unsigned char, 24> sbuf = {};
             printlock();
-            print("gc ", memstats.numgc, " @", std::string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1e6, 3)), "s ", util, "%: ");
+            print("gc "s, memstats.numgc, " @"s, std::string(itoaDiv(sbuf.make_slice(0), uint64_t(work.tSweepTerm - runtimeInitTime) / 1e6, 3)), "s "s, util, "%: "s);
             auto prev = work.tSweepTerm;
             for(auto [i, ns] : gocpp::slice<int64_t> {work.tMark, work.tMarkTerm, work.tEnd})
             {
                 if(i != 0)
                 {
-                    print("+");
+                    print("+"s);
                 }
                 print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns - prev))));
                 prev = ns;
             }
-            print(" ms clock, ");
+            print(" ms clock, "s);
             for(auto [i, ns] : gocpp::slice<int64_t> {int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm), rec::Load(gocpp::recv(gcController.assistTime)), rec::Load(gocpp::recv(gcController.dedicatedMarkTime)) + rec::Load(gocpp::recv(gcController.fractionalMarkTime)), rec::Load(gocpp::recv(gcController.idleMarkTime)), markTermCpu})
             {
                 if(i == 2 || i == 3)
                 {
-                    print("/");
+                    print("/"s);
                 }
                 else
                 if(i != 0)
                 {
-                    print("+");
+                    print("+"s);
                 }
                 print(std::string(fmtNSAsMS(sbuf.make_slice(0), uint64_t(ns))));
             }
-            print(" ms cpu, ", work.heap0 >> 20, "->", work.heap1 >> 20, "->", work.heap2 >> 20, " MB, ", gcController.lastHeapGoal >> 20, " MB goal, ", rec::Load(gocpp::recv(gcController.lastStackScan)) >> 20, " MB stacks, ", rec::Load(gocpp::recv(gcController.globalsScan)) >> 20, " MB globals, ", work.maxprocs, " P");
+            print(" ms cpu, "s, work.heap0 >> 20, "->"s, work.heap1 >> 20, "->"s, work.heap2 >> 20, " MB, "s, gcController.lastHeapGoal >> 20, " MB goal, "s, rec::Load(gocpp::recv(gcController.lastStackScan)) >> 20, " MB stacks, "s, rec::Load(gocpp::recv(gcController.globalsScan)) >> 20, " MB globals, "s, work.maxprocs, " P"s);
             if(work.userForced)
             {
-                print(" (forced)");
+                print(" (forced)"s);
             }
-            print("\n");
+            print("\n"s);
             printunlock();
         }
         lock(& userArenaState.lock);
@@ -950,9 +950,9 @@ namespace golang::runtime
     void gcBgMarkWorker()
     {
         auto gp = getg();
-        gp->m->preemptoff = "GC worker init";
+        gp->m->preemptoff = "GC worker init"s;
         auto node = new(gcBgMarkWorkerNode);
-        gp->m->preemptoff = "";
+        gp->m->preemptoff = ""s;
         rec::set(gocpp::recv(node->gp), gp);
         rec::set(gocpp::recv(node->m), acquirem());
         notewakeup(& work.bgMarkReady);
@@ -972,12 +972,12 @@ namespace golang::runtime
             auto pp = rec::ptr(gocpp::recv(gp->m->p));
             if(gcBlackenEnabled == 0)
             {
-                println("worker mode", pp->gcMarkWorkerMode);
-                go_throw("gcBgMarkWorker: blackening not enabled");
+                println("worker mode"s, pp->gcMarkWorkerMode);
+                go_throw("gcBgMarkWorker: blackening not enabled"s);
             }
             if(pp->gcMarkWorkerMode == gcMarkWorkerNotWorker)
             {
-                go_throw("gcBgMarkWorker: mode not set");
+                go_throw("gcBgMarkWorker: mode not set"s);
             }
             auto startTime = nanotime();
             pp->gcMarkWorkerStartTime = startTime;
@@ -989,8 +989,8 @@ namespace golang::runtime
             auto decnwait = atomic::Xadd(& work.nwait, - 1);
             if(decnwait == work.nproc)
             {
-                println("runtime: work.nwait=", decnwait, "work.nproc=", work.nproc);
-                go_throw("work.nwait was > work.nproc");
+                println("runtime: work.nwait="s, decnwait, "work.nproc="s, work.nproc);
+                go_throw("work.nwait was > work.nproc"s);
             }
             systemstack([=]() mutable -> void
             {
@@ -1005,7 +1005,7 @@ namespace golang::runtime
                     switch(conditionId)
                     {
                         default:
-                            go_throw("gcBgMarkWorker: unexpected gcMarkWorkerMode");
+                            go_throw("gcBgMarkWorker: unexpected gcMarkWorkerMode"s);
                             break;
                         case 0:
                             gcDrainMarkWorkerDedicated(& pp->gcw, true);
@@ -1044,8 +1044,8 @@ namespace golang::runtime
             auto incnwait = atomic::Xadd(& work.nwait, + 1);
             if(incnwait > work.nproc)
             {
-                println("runtime: p.gcMarkWorkerMode=", pp->gcMarkWorkerMode, "work.nwait=", incnwait, "work.nproc=", work.nproc);
-                go_throw("work.nwait > work.nproc");
+                println("runtime: p.gcMarkWorkerMode="s, pp->gcMarkWorkerMode, "work.nwait="s, incnwait, "work.nproc="s, work.nproc);
+                go_throw("work.nwait > work.nproc"s);
             }
             pp->gcMarkWorkerMode = gcMarkWorkerNotWorker;
             if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
@@ -1082,13 +1082,13 @@ namespace golang::runtime
         }
         if(gcphase != _GCmarktermination)
         {
-            go_throw("in gcMark expecting to see gcphase as _GCmarktermination");
+            go_throw("in gcMark expecting to see gcphase as _GCmarktermination"s);
         }
         work.tstart = startTime;
         if(work.full != 0 || work.markrootNext < work.markrootJobs)
         {
-            print("runtime: full=", hex(work.full), " next=", work.markrootNext, " jobs=", work.markrootJobs, " nDataRoots=", work.nDataRoots, " nBSSRoots=", work.nBSSRoots, " nSpanRoots=", work.nSpanRoots, " nStackRoots=", work.nStackRoots, "\n");
-            gocpp::panic("non-empty mark queue after concurrent mark");
+            print("runtime: full="s, hex(work.full), " next="s, work.markrootNext, " jobs="s, work.markrootJobs, " nDataRoots="s, work.nDataRoots, " nBSSRoots="s, work.nBSSRoots, " nSpanRoots="s, work.nSpanRoots, " nStackRoots="s, work.nStackRoots, "\n"s);
+            gocpp::panic("non-empty mark queue after concurrent mark"s);
         }
         if(debug.gccheckmark > 0)
         {
@@ -1109,25 +1109,25 @@ namespace golang::runtime
             if(! rec::empty(gocpp::recv(gcw)))
             {
                 printlock();
-                print("runtime: P ", p->id, " flushedWork ", gcw->flushedWork);
+                print("runtime: P "s, p->id, " flushedWork "s, gcw->flushedWork);
                 if(gcw->wbuf1 == nullptr)
                 {
-                    print(" wbuf1=<nil>");
+                    print(" wbuf1=<nil>"s);
                 }
                 else
                 {
-                    print(" wbuf1.n=", gcw->wbuf1->nobj);
+                    print(" wbuf1.n="s, gcw->wbuf1->nobj);
                 }
                 if(gcw->wbuf2 == nullptr)
                 {
-                    print(" wbuf2=<nil>");
+                    print(" wbuf2=<nil>"s);
                 }
                 else
                 {
-                    print(" wbuf2.n=", gcw->wbuf2->nobj);
+                    print(" wbuf2.n="s, gcw->wbuf2->nobj);
                 }
-                print("\n");
-                go_throw("P has cached GC work at end of mark termination");
+                print("\n"s);
+                go_throw("P has cached GC work at end of mark termination"s);
             }
             rec::dispose(gocpp::recv(gcw));
         }
@@ -1148,7 +1148,7 @@ namespace golang::runtime
         assertWorldStopped();
         if(gcphase != _GCoff)
         {
-            go_throw("gcSweep being done but phase is not GCoff");
+            go_throw("gcSweep being done but phase is not GCoff"s);
         }
         lock(& mheap_.lock);
         mheap_.sweepgen += 2;
@@ -1306,7 +1306,7 @@ namespace golang::runtime
         uint64_t mask;
         if(len(ptrs) > 64)
         {
-            gocpp::panic("too many pointers for uint64 mask");
+            gocpp::panic("too many pointers for uint64 mask"s);
         }
         semacquire(& gcsema);
         auto specials = gocpp::make(gocpp::Tag<gocpp::slice<specialReachable*>>(), len(ptrs));
@@ -1318,7 +1318,7 @@ namespace golang::runtime
             s->special.kind = _KindSpecialReachable;
             if(! addspecial(p, & s->special))
             {
-                go_throw("already have a reachable special (duplicate pointer?)");
+                go_throw("already have a reachable special (duplicate pointer?)"s);
             }
             specials[i] = s;
             ptrs[i] = nullptr;
@@ -1330,8 +1330,8 @@ namespace golang::runtime
             if(! s->done)
             {
                 printlock();
-                println("runtime: object", i, "was not swept");
-                go_throw("IsReachable failed");
+                println("runtime: object"s, i, "was not swept"s);
+                go_throw("IsReachable failed"s);
             }
             if(s->reachable)
             {
@@ -1350,25 +1350,25 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->stack.lo <= p2 && p2 < gp->stack.hi)
         {
-            return "stack";
+            return "stack"s;
         }
         if(auto [base, gocpp_id_10, gocpp_id_11] = findObject(p2, 0, 0); base != 0)
         {
-            return "heap";
+            return "heap"s;
         }
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(datap->data <= p2 && p2 < datap->edata || datap->noptrdata <= p2 && p2 < datap->enoptrdata)
             {
-                return "data";
+                return "data"s;
             }
             if(datap->bss <= p2 && p2 < datap->ebss || datap->noptrbss <= p2 && p2 <= datap->enoptrbss)
             {
-                return "bss";
+                return "bss"s;
             }
         }
         KeepAlive(p);
-        return "other";
+        return "other"s;
     }
 
 }

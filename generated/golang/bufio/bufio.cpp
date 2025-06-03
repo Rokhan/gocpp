@@ -32,10 +32,10 @@ namespace golang::bufio
         using strings::rec::Write;
     }
 
-    gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte");
-    gocpp::error ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune");
-    gocpp::error ErrBufferFull = errors::New("bufio: buffer full");
-    gocpp::error ErrNegativeCount = errors::New("bufio: negative count");
+    gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte"s);
+    gocpp::error ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune"s);
+    gocpp::error ErrBufferFull = errors::New("bufio: buffer full"s);
+    gocpp::error ErrNegativeCount = errors::New("bufio: negative count"s);
     
     template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
@@ -128,7 +128,7 @@ namespace golang::bufio
         });
     }
 
-    gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read");
+    gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read"s);
     void rec::fill(struct Reader* b)
     {
         if(b->r > 0)
@@ -139,7 +139,7 @@ namespace golang::bufio
         }
         if(b->w >= len(b->buf))
         {
-            gocpp::panic("bufio: tried to fill full buffer");
+            gocpp::panic("bufio: tried to fill full buffer"s);
         }
         for(auto i = maxConsecutiveEmptyReads; i > 0; i--)
         {
@@ -421,7 +421,7 @@ namespace golang::bufio
             {
                 if(b->r == 0)
                 {
-                    gocpp::panic("bufio: tried to rewind past start of buffer");
+                    gocpp::panic("bufio: tried to rewind past start of buffer"s);
                 }
                 b->r--;
                 line = line.make_slice(0, len(line) - 1);
@@ -547,7 +547,7 @@ namespace golang::bufio
         return {n, rec::readErr(gocpp::recv(b))};
     }
 
-    gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write");
+    gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write"s);
     std::tuple<int64_t, struct gocpp::error> rec::writeBuf(struct Reader* b, io::Writer w)
     {
         auto [n, err] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->r, b->w));

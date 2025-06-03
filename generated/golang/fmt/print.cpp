@@ -62,20 +62,20 @@ namespace golang::fmt
         using sync::rec::Put;
     }
 
-    std::string commaSpaceString = ", ";
-    std::string nilAngleString = "<nil>";
-    std::string nilParenString = "(nil)";
-    std::string nilString = "nil";
-    std::string mapString = "map[";
-    std::string percentBangString = "%!";
-    std::string missingString = "(MISSING)";
-    std::string badIndexString = "(BADINDEX)";
-    std::string panicString = "(PANIC=";
-    std::string extraString = "%!(EXTRA ";
-    std::string badWidthString = "%!(BADWIDTH)";
-    std::string badPrecString = "%!(BADPREC)";
-    std::string noVerbString = "%!(NOVERB)";
-    std::string invReflectString = "<invalid reflect.Value>";
+    std::string commaSpaceString = ", "s;
+    std::string nilAngleString = "<nil>"s;
+    std::string nilParenString = "(nil)"s;
+    std::string nilString = "nil"s;
+    std::string mapString = "map["s;
+    std::string percentBangString = "%!"s;
+    std::string missingString = "(MISSING)"s;
+    std::string badIndexString = "(BADINDEX)"s;
+    std::string panicString = "(PANIC="s;
+    std::string extraString = "%!(EXTRA "s;
+    std::string badWidthString = "%!(BADWIDTH)"s;
+    std::string badPrecString = "%!(BADPREC)"s;
+    std::string noVerbString = "%!(NOVERB)"s;
+    std::string invReflectString = "<invalid reflect.Value>"s;
     
     template<typename T>
     State::State(T& ref)
@@ -317,7 +317,7 @@ namespace golang::fmt
     {
         gocpp::array<unsigned char, 16> tmp = {};
         auto b = append(tmp.make_slice(0, 0), '%');
-        for(auto [gocpp_ignored, c] : " +-#0")
+        for(auto [gocpp_ignored, c] : " +-#0"s)
         {
             if(rec::Flag(gocpp::recv(state), int(c)))
             {
@@ -866,7 +866,7 @@ namespace golang::fmt
                     rec::fmtFloat(gocpp::recv(p), real(v), size / 2, verb);
                     p->fmt.plus = true;
                     rec::fmtFloat(gocpp::recv(p), imag(v), size / 2, verb);
-                    rec::writeString(gocpp::recv(p->buf), "i)");
+                    rec::writeString(gocpp::recv(p->buf), "i)"s);
                     p->fmt.plus = oldPlus;
                     break;
                 default:
@@ -1033,7 +1033,7 @@ namespace golang::fmt
                     {
                         rec::writeByte(gocpp::recv(p->buf), '(');
                         rec::writeString(gocpp::recv(p->buf), rec::String(gocpp::recv(rec::Type(gocpp::recv(value)))));
-                        rec::writeString(gocpp::recv(p->buf), ")(");
+                        rec::writeString(gocpp::recv(p->buf), ")("s);
                         if(u == 0)
                         {
                             rec::writeString(gocpp::recv(p->buf), nilString);
@@ -1092,7 +1092,7 @@ namespace golang::fmt
             rec::writeRune(gocpp::recv(p->buf), verb);
             rec::writeString(gocpp::recv(p->buf), panicString);
             rec::writeString(gocpp::recv(p->buf), method);
-            rec::writeString(gocpp::recv(p->buf), " method: ");
+            rec::writeString(gocpp::recv(p->buf), " method: "s);
             p->panicking = true;
             rec::printArg(gocpp::recv(p), err, 'v');
             p->panicking = false;
@@ -1124,7 +1124,7 @@ namespace golang::fmt
             if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
             {
                 handled = true;
-                defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Format"); });
+                defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Format"s); });
                 rec::Format(gocpp::recv(formatter), p, verb);
                 return handled;
             }
@@ -1133,7 +1133,7 @@ namespace golang::fmt
                 if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
                 {
                     handled = true;
-                    defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"); });
+                    defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"s); });
                     rec::fmtS(gocpp::recv(p->fmt), rec::GoString(gocpp::recv(stringer)));
                     return handled;
                 }
@@ -1168,7 +1168,7 @@ namespace golang::fmt
                                     {
                                         gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
                                         handled = true;
-                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Error"); });
+                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Error"s); });
                                         rec::fmtString(gocpp::recv(p), rec::Error(gocpp::recv(v)), verb);
                                         return handled;
                                         break;
@@ -1177,7 +1177,7 @@ namespace golang::fmt
                                     {
                                         Stringer v = gocpp::any_cast<Stringer>(p->arg);
                                         handled = true;
-                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "String"); });
+                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "String"s); });
                                         rec::fmtString(gocpp::recv(p), rec::String(gocpp::recv(v)), verb);
                                         return handled;
                                         break;
@@ -1369,7 +1369,7 @@ namespace golang::fmt
                 case 17:
                 {
                     gocpp::slice<unsigned char> f = gocpp::any_cast<gocpp::slice<unsigned char>>(arg);
-                    rec::fmtBytes(gocpp::recv(p), f, verb, "[]byte");
+                    rec::fmtBytes(gocpp::recv(p), f, verb, "[]byte"s);
                     break;
                 }
                 case 18:
@@ -1565,7 +1565,7 @@ namespace golang::fmt
                         }
                         if(p->fmt.plusV || p->fmt.sharpV)
                         {
-                            if(auto name = rec::Field(gocpp::recv(rec::Type(gocpp::recv(f))), i).Name; name != "")
+                            if(auto name = rec::Field(gocpp::recv(rec::Type(gocpp::recv(f))), i).Name; name != ""s)
                             {
                                 rec::writeString(gocpp::recv(p->buf), name);
                                 rec::writeByte(gocpp::recv(p->buf), ':');

@@ -98,7 +98,7 @@ namespace golang::runtime
         {
             if(cpuprof.on || cpuprof.log != nullptr)
             {
-                print("runtime: cannot set cpu profile rate until previous profile has finished.\n");
+                print("runtime: cannot set cpu profile rate until previous profile has finished.\n"s);
                 unlock(& cpuprof.lock);
                 return;
             }
@@ -184,7 +184,7 @@ namespace golang::runtime
 
     gocpp::slice<unsigned char> CPUProfile()
     {
-        gocpp::panic("CPUProfile no longer available");
+        gocpp::panic("CPUProfile no longer available"s);
     }
 
     int64_t runtime_pprof_runtime_cyclesPerSecond()
@@ -198,7 +198,7 @@ namespace golang::runtime
         auto log = cpuprof.log;
         unlock(& cpuprof.lock);
         auto readMode = profBufBlocking;
-        if(GOOS == "darwin" || GOOS == "ios")
+        if(GOOS == "darwin"s || GOOS == "ios"s)
         {
             readMode = profBufNonBlocking;
         }

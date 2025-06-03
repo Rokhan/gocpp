@@ -68,16 +68,16 @@ namespace golang::main
 
     void main()
     {
-        auto World = "世界";
-        mocklib::Println("Hello", World);
-        mocklib::Println("Happy", Pi, "Day");
+        auto World = "世界"s;
+        mocklib::Println("Hello"s, World);
+        mocklib::Println("Happy"s, Pi, "Day"s);
         auto Truth = true;
-        mocklib::Println("Go rules?", Truth);
-        mocklib::Println("Pi:", Pi);
+        mocklib::Println("Go rules?"s, Truth);
+        mocklib::Println("Pi:"s, Pi);
         auto t = toto {};
-        mocklib::Println("toto.Pi:", rec::Pi(gocpp::recv(t)));
+        mocklib::Println("toto.Pi:"s, rec::Pi(gocpp::recv(t)));
         auto toto = toto {};
-        mocklib::Println("toto.Pi:", rec::Pi(gocpp::recv(toto)));
+        mocklib::Println("toto.Pi:"s, rec::Pi(gocpp::recv(toto)));
     }
 
 }

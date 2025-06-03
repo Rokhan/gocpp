@@ -29,7 +29,7 @@ namespace golang::runtime
         auto env = environ();
         if(env == nullptr)
         {
-            go_throw("getenv before env init");
+            go_throw("getenv before env init"s);
         }
         for(auto [gocpp_ignored, s] : env)
         {
@@ -38,12 +38,12 @@ namespace golang::runtime
                 return s.make_slice(len(key) + 1);
             }
         }
-        return "";
+        return ""s;
     }
 
     bool envKeyEqual(std::string a, std::string b)
     {
-        if(GOOS == "windows")
+        if(GOOS == "windows"s)
         {
             for(auto i = 0; i < len(a); i++)
             {

@@ -41,7 +41,7 @@ namespace golang::syscall
         auto [a, err] = UTF16FromString(s);
         if(err != nullptr)
         {
-            gocpp::panic("syscall: string with NUL passed to StringToUTF16");
+            gocpp::panic("syscall: string with NUL passed to StringToUTF16"s);
         }
         return a;
     }
@@ -94,7 +94,7 @@ namespace golang::syscall
     {
         if(p == nullptr)
         {
-            return "";
+            return ""s;
         }
         auto end = unsafe::Pointer(p);
         auto n = 0;
@@ -148,7 +148,7 @@ namespace golang::syscall
             std::tie(n, err) = formatMessage(flags, 0, uint32_t(e), 0, b, nullptr);
             if(err != nullptr)
             {
-                return "winapi error #" + itoa::Itoa(int(e));
+                return "winapi error #"s + itoa::Itoa(int(e));
             }
         }
         for(; n > 0 && (b[n - 1] == '\n' || b[n - 1] == '\r'); n--)
@@ -407,7 +407,7 @@ namespace golang::syscall
     }
 
     int64_t ioSync;
-    LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx");
+    LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx"s);
     struct gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
     {
         syscall::Errno e1 = {};
@@ -421,12 +421,12 @@ namespace golang::syscall
             {
                 auto condition = runtime::GOARCH;
                 int conditionId = -1;
-                if(condition == "386") { conditionId = 0; }
-                else if(condition == "arm") { conditionId = 1; }
+                if(condition == "386"s) { conditionId = 0; }
+                else if(condition == "arm"s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     default:
-                        gocpp::panic("unsupported 32-bit architecture");
+                        gocpp::panic("unsupported 32-bit architecture"s);
                         break;
                     case 0:
                         std::tie(gocpp_id_2, gocpp_id_3, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0);
@@ -499,7 +499,7 @@ namespace golang::syscall
             auto [n, e] = GetCurrentDirectory(uint32_t(len(b)), & b[0]);
             if(e != nullptr)
             {
-                return {"", e};
+                return {""s, e};
             }
             if(int(n) <= len(b))
             {
@@ -579,7 +579,7 @@ namespace golang::syscall
         auto e = GetComputerName(& b[0], & n);
         if(e != nullptr)
         {
-            return {"", e};
+            return {""s, e};
         }
         return {UTF16ToString(b.make_slice(0, n)), nullptr};
     }
@@ -1449,7 +1449,7 @@ namespace golang::syscall
         auto err = LoadConnectEx();
         if(err != nullptr)
         {
-            return errorspkg::New("failed to find ConnectEx: " + rec::Error(gocpp::recv(err)));
+            return errorspkg::New("failed to find ConnectEx: "s + rec::Error(gocpp::recv(err)));
         }
         unsafe::Pointer ptr;
         int32_t n;
@@ -1998,12 +1998,12 @@ namespace golang::syscall
         if(0 <= s && int(s) < len(signals))
         {
             auto str = signals[s];
-            if(str != "")
+            if(str != ""s)
             {
                 return str;
             }
         }
-        return "signal " + itoa::Itoa(int(s));
+        return "signal "s + itoa::Itoa(int(s));
     }
 
     struct gocpp::error LoadCreateSymbolicLink()
@@ -2047,20 +2047,20 @@ namespace golang::syscall
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
                         if(data->Flags & _SYMLINK_FLAG_RELATIVE == 0)
                         {
-                            if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\")
+                            if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"s)
                             {
                                 s = s.make_slice(4);
                                 //Go switch emulation
                                 {
                                     int conditionId = -1;
                                     if(len(s) >= 2 && s[1] == ':') { conditionId = 0; }
-                                    else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\") { conditionId = 1; }
+                                    else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\"s) { conditionId = 1; }
                                     switch(conditionId)
                                     {
                                         case 0:
                                             break;
                                         case 1:
-                                            s = "\\\\" + s.make_slice(4);
+                                            s = "\\\\"s + s.make_slice(4);
                                             break;
                                         default:
                                             break;
@@ -2076,7 +2076,7 @@ namespace golang::syscall
                         auto data = (mountPointReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
                         auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
-                        if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\")
+                        if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"s)
                         {
                             s = s.make_slice(4);
                         }
@@ -2089,7 +2089,7 @@ namespace golang::syscall
                         break;
                 }
             }
-            n = copy(buf, gocpp::Tag<gocpp::slice<unsigned char>>()(s));
+            n = copy(buf, gocpp::slice<unsigned char>(s));
             return {n, nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -2118,7 +2118,7 @@ namespace golang::syscall
             *key = uint32_t(ukey);
             if(uintptr_t(*key) != ukey && err == nullptr)
             {
-                err = errorspkg::New("GetQueuedCompletionStatus returned key overflow");
+                err = errorspkg::New("GetQueuedCompletionStatus returned key overflow"s);
             }
         }
         return err;
@@ -2137,7 +2137,7 @@ namespace golang::syscall
         {
             if(err == nullptr)
             {
-                return {nullptr, errorspkg::New("unable to query buffer size from InitializeProcThreadAttributeList")};
+                return {nullptr, errorspkg::New("unable to query buffer size from InitializeProcThreadAttributeList"s)};
             }
             return {nullptr, err};
         }

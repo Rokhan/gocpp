@@ -157,7 +157,7 @@ namespace golang::runtime
     {
         if(int64_t(int(size)) != size)
         {
-            gocpp::panic(plainError("makechan: size out of range"));
+            gocpp::panic(plainError("makechan: size out of range"s));
         }
         return makechan(t, int(size));
     }
@@ -167,16 +167,16 @@ namespace golang::runtime
         auto elem = t->Elem;
         if(elem->Size_ >= (1 << 16))
         {
-            go_throw("makechan: invalid channel element type");
+            go_throw("makechan: invalid channel element type"s);
         }
         if(hchanSize % maxAlign != 0 || elem->Align_ > maxAlign)
         {
-            go_throw("makechan: bad alignment");
+            go_throw("makechan: bad alignment"s);
         }
         auto [mem, overflow] = math::MulUintptr(elem->Size_, uintptr_t(size));
         if(overflow || mem > maxAlloc - hchanSize || size < 0)
         {
-            gocpp::panic(plainError("makechan: size out of range"));
+            gocpp::panic(plainError("makechan: size out of range"s));
         }
         hchan* c = {};
         //Go switch emulation
@@ -206,7 +206,7 @@ namespace golang::runtime
         lockInit(& c->lock, lockRankHchan);
         if(debugChan)
         {
-            print("makechan: chan=", c, "; elemsize=", elem->Size_, "; dataqsiz=", size, "\n");
+            print("makechan: chan="s, c, "; elemsize="s, elem->Size_, "; dataqsiz="s, size, "\n"s);
         }
         return c;
     }
@@ -239,11 +239,11 @@ namespace golang::runtime
                 return false;
             }
             gopark(nullptr, nullptr, waitReasonChanSendNilChan, traceBlockForever, 2);
-            go_throw("unreachable");
+            go_throw("unreachable"s);
         }
         if(debugChan)
         {
-            print("chansend: chan=", c, "\n");
+            print("chansend: chan="s, c, "\n"s);
         }
         if(raceenabled)
         {
@@ -262,7 +262,7 @@ namespace golang::runtime
         if(c->closed != 0)
         {
             unlock(& c->lock);
-            gocpp::panic(plainError("send on closed channel"));
+            gocpp::panic(plainError("send on closed channel"s));
         }
         if(auto sg = rec::dequeue(gocpp::recv(c->recvq)); sg != nullptr)
         {
@@ -314,7 +314,7 @@ namespace golang::runtime
         KeepAlive(ep);
         if(mysg != gp->waiting)
         {
-            go_throw("G waiting list is corrupted");
+            go_throw("G waiting list is corrupted"s);
         }
         gp->waiting = nullptr;
         gp->activeStackChans = false;
@@ -330,9 +330,9 @@ namespace golang::runtime
         {
             if(c->closed == 0)
             {
-                go_throw("chansend: spurious wakeup");
+                go_throw("chansend: spurious wakeup"s);
             }
-            gocpp::panic(plainError("send on closed channel"));
+            gocpp::panic(plainError("send on closed channel"s));
         }
         return true;
     }
@@ -391,13 +391,13 @@ namespace golang::runtime
     {
         if(c == nullptr)
         {
-            gocpp::panic(plainError("close of nil channel"));
+            gocpp::panic(plainError("close of nil channel"s));
         }
         lock(& c->lock);
         if(c->closed != 0)
         {
             unlock(& c->lock);
-            gocpp::panic(plainError("close of closed channel"));
+            gocpp::panic(plainError("close of closed channel"s));
         }
         if(raceenabled)
         {
@@ -489,7 +489,7 @@ namespace golang::runtime
         bool received;
         if(debugChan)
         {
-            print("chanrecv: chan=", c, "\n");
+            print("chanrecv: chan="s, c, "\n"s);
         }
         if(c == nullptr)
         {
@@ -498,7 +498,7 @@ namespace golang::runtime
                 return {selected, received};
             }
             gopark(nullptr, nullptr, waitReasonChanReceiveNilChan, traceBlockForever, 2);
-            go_throw("unreachable");
+            go_throw("unreachable"s);
         }
         if(! block && empty(c))
         {
@@ -597,7 +597,7 @@ namespace golang::runtime
         gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
         if(mysg != gp->waiting)
         {
-            go_throw("G waiting list is corrupted");
+            go_throw("G waiting list is corrupted"s);
         }
         gp->waiting = nullptr;
         gp->activeStackChans = false;

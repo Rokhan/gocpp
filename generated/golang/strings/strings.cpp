@@ -188,7 +188,7 @@ namespace golang::strings
 
     int IndexAny(std::string s, std::string chars)
     {
-        if(chars == "")
+        if(chars == ""s)
         {
             return - 1;
         }
@@ -227,7 +227,7 @@ namespace golang::strings
 
     int LastIndexAny(std::string s, std::string chars)
     {
-        if(chars == "")
+        if(chars == ""s)
         {
             return - 1;
         }
@@ -299,7 +299,7 @@ namespace golang::strings
         {
             return nullptr;
         }
-        if(sep == "")
+        if(sep == ""s)
         {
             return explode(s, n);
         }
@@ -483,7 +483,7 @@ namespace golang::strings
             switch(conditionId)
             {
                 case 0:
-                    return "";
+                    return ""s;
                     break;
                 case 1:
                     return elems[0];
@@ -495,7 +495,7 @@ namespace golang::strings
         {
             if(len(sep) >= maxInt / (len(elems) - 1))
             {
-                gocpp::panic("strings: Join output length overflow");
+                gocpp::panic("strings: Join output length overflow"s);
             }
             n += len(sep) * (len(elems) - 1);
         }
@@ -503,7 +503,7 @@ namespace golang::strings
         {
             if(len(elem) > maxInt - n)
             {
-                gocpp::panic("strings: Join output length overflow");
+                gocpp::panic("strings: Join output length overflow"s);
             }
             n += len(elem);
         }
@@ -593,7 +593,7 @@ namespace golang::strings
             switch(conditionId)
             {
                 case 0:
-                    return "";
+                    return ""s;
                     break;
                 case 1:
                     return s;
@@ -602,16 +602,16 @@ namespace golang::strings
         }
         if(count < 0)
         {
-            gocpp::panic("strings: negative Repeat count");
+            gocpp::panic("strings: negative Repeat count"s);
         }
         if(len(s) >= maxInt / count)
         {
-            gocpp::panic("strings: Repeat output length overflow");
+            gocpp::panic("strings: Repeat output length overflow"s);
         }
         auto n = len(s) * count;
         if(len(s) == 0)
         {
-            return "";
+            return ""s;
         }
         auto chunkLimit = 8 * 1024;
         auto chunkMax = n;
@@ -859,7 +859,7 @@ namespace golang::strings
         auto i = indexFunc(s, f, false);
         if(i == - 1)
         {
-            return "";
+            return ""s;
         }
         return s.make_slice(i);
     }
@@ -943,7 +943,7 @@ namespace golang::strings
 
     std::string Trim(std::string s, std::string cutset)
     {
-        if(s == "" || cutset == "")
+        if(s == ""s || cutset == ""s)
         {
             return s;
         }
@@ -960,7 +960,7 @@ namespace golang::strings
 
     std::string TrimLeft(std::string s, std::string cutset)
     {
-        if(s == "" || cutset == "")
+        if(s == ""s || cutset == ""s)
         {
             return s;
         }
@@ -1017,7 +1017,7 @@ namespace golang::strings
 
     std::string TrimRight(std::string s, std::string cutset)
     {
-        if(s == "" || cutset == "")
+        if(s == ""s || cutset == ""s)
         {
             return s;
         }
@@ -1356,7 +1356,7 @@ namespace golang::strings
         {
             return {s.make_slice(0, i), s.make_slice(i + len(sep)), true};
         }
-        return {s, "", false};
+        return {s, ""s, false};
     }
 
     std::tuple<std::string, bool> CutPrefix(std::string s, std::string prefix)

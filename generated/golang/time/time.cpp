@@ -221,7 +221,7 @@ namespace golang::time
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 20);
         auto n = fmtInt(buf, uint64_t(m));
-        return "%!Month(" + std::string(buf.make_slice(n)) + ")";
+        return "%!Month("s + std::string(buf.make_slice(n)) + ")"s;
     }
 
     std::string rec::String(golang::time::Weekday d)
@@ -232,7 +232,7 @@ namespace golang::time
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 20);
         auto n = fmtInt(buf, uint64_t(d));
-        return "%!Weekday(" + std::string(buf.make_slice(n)) + ")";
+        return "%!Weekday("s + std::string(buf.make_slice(n)) + ")"s;
     }
 
     bool rec::IsZero(struct Time t)
@@ -289,7 +289,7 @@ namespace golang::time
         }
         else
         {
-            name = "UTC";
+            name = "UTC"s;
         }
         abs = uint64_t(sec + (unixToInternal + internalToAbsolute));
         return {name, offset, abs};
@@ -436,7 +436,7 @@ namespace golang::time
                     case 2:
                         prec = 3;
                         w--;
-                        copy(buf.make_slice(w), "µ");
+                        copy(buf.make_slice(w), "µ"s);
                         break;
                     default:
                         prec = 6;
@@ -863,7 +863,7 @@ namespace golang::time
     {
         if(loc == nullptr)
         {
-            gocpp::panic("time: missing Location in call to Time.In");
+            gocpp::panic("time: missing Location in call to Time.In"s);
         }
         rec::setLoc(gocpp::recv(t), loc);
         return t;
@@ -945,7 +945,7 @@ namespace golang::time
             offset /= 60;
             if(offset < - 32768 || offset == - 1 || offset > 32767)
             {
-                return {nullptr, errors::New("Time.MarshalBinary: unexpected zone offset")};
+                return {nullptr, errors::New("Time.MarshalBinary: unexpected zone offset"s)};
             }
             offsetMin = int16_t(offset);
         }
@@ -964,12 +964,12 @@ namespace golang::time
         auto buf = data;
         if(len(buf) == 0)
         {
-            return errors::New("Time.UnmarshalBinary: no data");
+            return errors::New("Time.UnmarshalBinary: no data"s);
         }
         auto version = buf[0];
         if(version != timeBinaryVersionV1 && version != timeBinaryVersionV2)
         {
-            return errors::New("Time.UnmarshalBinary: unsupported version");
+            return errors::New("Time.UnmarshalBinary: unsupported version"s);
         }
         auto wantLen = 1 + 8 + 4 + 2;
         if(version == timeBinaryVersionV2)
@@ -978,7 +978,7 @@ namespace golang::time
         }
         if(len(buf) != wantLen)
         {
-            return errors::New("Time.UnmarshalBinary: invalid length");
+            return errors::New("Time.UnmarshalBinary: invalid length"s);
         }
         buf = buf.make_slice(1);
         auto sec = int64_t(buf[7]) | (int64_t(buf[6]) << 8) | (int64_t(buf[5]) << 16) | (int64_t(buf[4]) << 24) | (int64_t(buf[3]) << 32) | (int64_t(buf[2]) << 40) | (int64_t(buf[1]) << 48) | (int64_t(buf[0]) << 56);
@@ -1004,7 +1004,7 @@ namespace golang::time
         }
         else
         {
-            rec::setLoc(gocpp::recv(t), FixedZone("", offset));
+            rec::setLoc(gocpp::recv(t), FixedZone(""s, offset));
         }
         return nullptr;
     }
@@ -1021,29 +1021,29 @@ namespace golang::time
 
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalJSON(struct Time t)
     {
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""));
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""s));
         b = append(b, '"');
         gocpp::error err;
         std::tie(b, err) = rec::appendStrictRFC3339(gocpp::recv(t), b);
         b = append(b, '"');
         if(err != nullptr)
         {
-            return {nullptr, errors::New("Time.MarshalJSON: " + rec::Error(gocpp::recv(err)))};
+            return {nullptr, errors::New("Time.MarshalJSON: "s + rec::Error(gocpp::recv(err)))};
         }
         return {b, nullptr};
     }
 
     struct gocpp::error rec::UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
     {
-        if(std::string(data) == "null")
+        if(std::string(data) == "null"s)
         {
             return nullptr;
         }
         if(len(data) < 2 || data[0] != '"' || data[len(data) - 1] != '"')
         {
-            return errors::New("Time.UnmarshalJSON: input is not a JSON string");
+            return errors::New("Time.UnmarshalJSON: input is not a JSON string"s);
         }
-        data = data.make_slice(len("""), len(data) - len("""));
+        data = data.make_slice(len("""s), len(data) - len("""s));
         gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
         return err;
@@ -1056,7 +1056,7 @@ namespace golang::time
         std::tie(b, err) = rec::appendStrictRFC3339(gocpp::recv(t), b);
         if(err != nullptr)
         {
-            return {nullptr, errors::New("Time.MarshalText: " + rec::Error(gocpp::recv(err)))};
+            return {nullptr, errors::New("Time.MarshalText: "s + rec::Error(gocpp::recv(err)))};
         }
         return {b, nullptr};
     }
@@ -1128,7 +1128,7 @@ namespace golang::time
     {
         if(loc == nullptr)
         {
-            gocpp::panic("time: missing Location in call to Date");
+            gocpp::panic("time: missing Location in call to Date"s);
         }
         auto m = int(month) - 1;
         std::tie(year, m) = norm(year, m, 12);

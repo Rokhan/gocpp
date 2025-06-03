@@ -27,8 +27,8 @@ namespace golang::main
 
     void main()
     {
-        auto [a, b] = swap("hello", "world");
-        auto [s, i, f] = std::tuple{"str", 5, 3.14159};
+        auto [a, b] = swap("hello"s, "world"s);
+        auto [s, i, f] = std::tuple{"str"s, 5, 3.14159};
         mocklib::Println(a, b);
         mocklib::Println(s, i, f);
     }

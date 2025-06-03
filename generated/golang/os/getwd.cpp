@@ -83,16 +83,16 @@ namespace golang::os
     {
         std::string dir;
         struct gocpp::error err;
-        if(mocklib::GOOS == "windows" || mocklib::GOOS == "plan9")
+        if(mocklib::GOOS == "windows"s || mocklib::GOOS == "plan9"s)
         {
             return syscall::Getwd();
         }
-        auto [dot, err] = statNolog(".");
+        auto [dot, err] = statNolog("."s);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
-        dir = Getenv("PWD");
+        dir = Getenv("PWD"s);
         if(len(dir) > 0 && dir[0] == '/')
         {
             auto [d, err] = statNolog(dir);
@@ -113,7 +113,7 @@ namespace golang::os
                     break;
                 }
             }
-            return {s, NewSyscallError("getwd", e)};
+            return {s, NewSyscallError("getwd"s, e)};
         }
         rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
@@ -127,26 +127,26 @@ namespace golang::os
             }
         }
         fs::FileInfo root;
-        std::tie(root, err) = statNolog("/");
+        std::tie(root, err) = statNolog("/"s);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         if(SameFile(root, dot))
         {
-            return {"/", nullptr};
+            return {"/"s, nullptr};
         }
-        dir = "";
-        for(auto parent = ".."; ; parent = "../" + parent)
+        dir = ""s;
+        for(auto parent = ".."s; ; parent = "../"s + parent)
         {
             if(len(parent) >= 1024)
             {
-                return {"", syscall::go_ENAMETOOLONG};
+                return {""s, syscall::go_ENAMETOOLONG};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             for(; ; )
             {
@@ -154,14 +154,14 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     rec::Close(gocpp::recv(fd));
-                    return {"", err};
+                    return {""s, err};
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
-                    auto [d, gocpp_id_2] = lstatNolog(parent + "/" + name);
+                    auto [d, gocpp_id_2] = lstatNolog(parent + "/"s + name);
                     if(SameFile(d, dot))
                     {
-                        dir = "/" + name + dir;
+                        dir = "/"s + name + dir;
                         goto Found;
                     }
                 }
@@ -172,7 +172,7 @@ namespace golang::os
             rec::Close(gocpp::recv(fd));
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             if(SameFile(pd, root))
             {

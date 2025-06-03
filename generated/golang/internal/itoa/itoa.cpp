@@ -22,7 +22,7 @@ namespace golang::itoa
     {
         if(val < 0)
         {
-            return "-" + Uitoa((unsigned int)(- val));
+            return "-"s + Uitoa((unsigned int)(- val));
         }
         return Uitoa((unsigned int)(val));
     }
@@ -31,7 +31,7 @@ namespace golang::itoa
     {
         if(val == 0)
         {
-            return "0";
+            return "0"s;
         }
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;
@@ -46,12 +46,12 @@ namespace golang::itoa
         return std::string(buf.make_slice(i));
     }
 
-    std::string hex = "0123456789abcdef";
+    std::string hex = "0123456789abcdef"s;
     std::string Uitox(unsigned int val)
     {
         if(val == 0)
         {
-            return "0x0";
+            return "0x0"s;
         }
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;

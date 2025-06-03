@@ -60,8 +60,8 @@ namespace golang::bytes
         return value.PrintTo(os);
     }
 
-    gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large");
-    gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read");
+    gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large"s);
+    gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read"s);
     gocpp::slice<unsigned char> rec::Bytes(struct Buffer* b)
     {
         return b->buf.make_slice(b->off);
@@ -76,7 +76,7 @@ namespace golang::bytes
     {
         if(b == nullptr)
         {
-            return "<nil>";
+            return "<nil>"s;
         }
         return std::string(b->buf.make_slice(b->off));
     }
@@ -111,7 +111,7 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         if(n < 0 || n > rec::Len(gocpp::recv(b)))
         {
-            gocpp::panic("bytes.Buffer: truncation out of range");
+            gocpp::panic("bytes.Buffer: truncation out of range"s);
         }
         b->buf = b->buf.make_slice(0, b->off + n);
     }
@@ -172,7 +172,7 @@ namespace golang::bytes
     {
         if(n < 0)
         {
-            gocpp::panic("bytes.Buffer.Grow: negative count");
+            gocpp::panic("bytes.Buffer.Grow: negative count"s);
         }
         auto m = rec::grow(gocpp::recv(b), n);
         b->buf = b->buf.make_slice(0, m);
@@ -248,7 +248,7 @@ namespace golang::bytes
             {
                 c = 2 * cap(b);
             }
-            auto b2 = append(gocpp::Tag<gocpp::slice<unsigned char>>()(nullptr), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), c));
+            auto b2 = append(gocpp::slice<unsigned char>(nullptr), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), c));
             copy(b2, b);
             return b2.make_slice(0, len(b));
         }
@@ -268,7 +268,7 @@ namespace golang::bytes
             auto [m, e] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->off));
             if(m > nBytes)
             {
-                gocpp::panic("bytes.Buffer.WriteTo: invalid Write count");
+                gocpp::panic("bytes.Buffer.WriteTo: invalid Write count"s);
             }
             b->off += m;
             n = int64_t(m);
@@ -396,7 +396,7 @@ namespace golang::bytes
     {
         if(b->lastRead <= opInvalid)
         {
-            return errors::New("bytes.Buffer: UnreadRune: previous operation was not a successful ReadRune");
+            return errors::New("bytes.Buffer: UnreadRune: previous operation was not a successful ReadRune"s);
         }
         if(b->off >= int(b->lastRead))
         {
@@ -406,7 +406,7 @@ namespace golang::bytes
         return nullptr;
     }
 
-    gocpp::error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read");
+    gocpp::error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read"s);
     struct gocpp::error rec::UnreadByte(struct Buffer* b)
     {
         if(b->lastRead == opInvalid)
@@ -465,7 +465,7 @@ namespace golang::bytes
     struct Buffer* NewBufferString(std::string s)
     {
         return gocpp::InitPtr<Buffer>([=](auto& x) {
-            x.buf = gocpp::Tag<gocpp::slice<unsigned char>>()(s);
+            x.buf = gocpp::slice<unsigned char>(s);
         });
     }
 

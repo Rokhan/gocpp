@@ -139,7 +139,7 @@ namespace golang::sync
         if(r + 1 == 0 || r + 1 == - rwmutexMaxReaders)
         {
             race::Enable();
-            fatal("sync: RUnlock of unlocked RWMutex");
+            fatal("sync: RUnlock of unlocked RWMutex"s);
         }
         if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
         {
@@ -213,7 +213,7 @@ namespace golang::sync
         if(r >= rwmutexMaxReaders)
         {
             race::Enable();
-            fatal("sync: Unlock of unlocked RWMutex");
+            fatal("sync: Unlock of unlocked RWMutex"s);
         }
         for(auto i = 0; i < int(r); i++)
         {

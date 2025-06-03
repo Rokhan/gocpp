@@ -74,15 +74,15 @@ namespace golang::strconv
         return smallsString.make_slice(i * 2, i * 2 + 2);
     }
 
-    std::string smallsString = "00010203040506070809" + "10111213141516171819" + "20212223242526272829" + "30313233343536373839" + "40414243444546474849" + "50515253545556575859" + "60616263646566676869" + "70717273747576777879" + "80818283848586878889" + "90919293949596979899";
-    std::string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+    std::string smallsString = "00010203040506070809"s + "10111213141516171819"s + "20212223242526272829"s + "30313233343536373839"s + "40414243444546474849"s + "50515253545556575859"s + "60616263646566676869"s + "70717273747576777879"s + "80818283848586878889"s + "90919293949596979899"s;
+    std::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"s;
     std::tuple<gocpp::slice<unsigned char>, std::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_)
     {
         gocpp::slice<unsigned char> d;
         std::string s;
         if(base < 2 || base > len(digits))
         {
-            gocpp::panic("strconv: illegal AppendInt/FormatInt base");
+            gocpp::panic("strconv: illegal AppendInt/FormatInt base"s);
         }
         gocpp::array<unsigned char, 64 + 1> a = {};
         auto i = len(a);

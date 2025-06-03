@@ -380,7 +380,7 @@ namespace golang::unicode
 
     gocpp::rune rec::ToUpper(golang::unicode::SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(UpperCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
+        auto [r1, hadMapping] = to(UpperCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = ToUpper(r);
@@ -390,7 +390,7 @@ namespace golang::unicode
 
     gocpp::rune rec::ToTitle(golang::unicode::SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(TitleCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
+        auto [r1, hadMapping] = to(TitleCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = ToTitle(r);
@@ -400,7 +400,7 @@ namespace golang::unicode
 
     gocpp::rune rec::ToLower(golang::unicode::SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(LowerCase, r, gocpp::Tag<gocpp::slice<CaseRange>>()(special));
+        auto [r1, hadMapping] = to(LowerCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = ToLower(r);

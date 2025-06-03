@@ -103,7 +103,7 @@ namespace golang::runtime
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
-            go_throw("suspendG from non-preemptible goroutine");
+            go_throw("suspendG from non-preemptible goroutine"s);
         }
         auto yieldDelay = 10 * 1000;
         int64_t nextYield = {};
@@ -133,7 +133,7 @@ namespace golang::runtime
                             break;
                         }
                         dumpgstatus(gp);
-                        go_throw("invalid g status");
+                        go_throw("invalid g status"s);
                         break;
                     case 0:
                         return gocpp::Init<suspendGState>([=](auto& x) {
@@ -229,7 +229,7 @@ namespace golang::runtime
             {
                 default:
                     dumpgstatus(gp);
-                    go_throw("unexpected g status");
+                    go_throw("unexpected g status"s);
                     break;
                 case 0:
                 case 1:
@@ -246,7 +246,7 @@ namespace golang::runtime
 
     bool canPreemptM(struct m* mp)
     {
-        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == "" && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
+        return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
     }
 
     void asyncPreempt()
@@ -277,8 +277,8 @@ namespace golang::runtime
         asyncPreemptStack = uintptr_t(total) + 8 * goarch::PtrSize;
         if(asyncPreemptStack > stackNosplit)
         {
-            print("runtime: asyncPreemptStack=", asyncPreemptStack, "\n");
-            go_throw("async stack too large");
+            print("runtime: asyncPreemptStack="s, asyncPreemptStack, "\n"s);
+            go_throw("async stack too large"s);
         }
     }
 
@@ -307,7 +307,7 @@ namespace golang::runtime
         {
             return {false, 0};
         }
-        if((GOARCH == "mips" || GOARCH == "mipsle" || GOARCH == "mips64" || GOARCH == "mips64le") && lr == pc + 8 && funcspdelta(f, pc) == 0)
+        if((GOARCH == "mips"s || GOARCH == "mipsle"s || GOARCH == "mips64"s || GOARCH == "mips64le"s) && lr == pc + 8 && funcspdelta(f, pc) == 0)
         {
             return {false, 0};
         }
@@ -322,7 +322,7 @@ namespace golang::runtime
         }
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto name = rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf)));
-        if(hasPrefix(name, "runtime.") || hasPrefix(name, "runtime/internal/") || hasPrefix(name, "reflect."))
+        if(hasPrefix(name, "runtime."s) || hasPrefix(name, "runtime/internal/"s) || hasPrefix(name, "reflect."s))
         {
             return {false, 0};
         }
@@ -339,7 +339,7 @@ namespace golang::runtime
                 case 1:
                     if(startpc == 0 || startpc > pc || pc - startpc > 20)
                     {
-                        go_throw("bad restart PC");
+                        go_throw("bad restart PC"s);
                     }
                     return {true, startpc};
                     break;

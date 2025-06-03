@@ -26,7 +26,7 @@ namespace golang::main
         double f = {};
         bool b = {};
         std::string s = {};
-        mocklib::Printf("%v %v %v %q\n", i, f, b, s);
+        mocklib::Printf("%v %v %v %q\n"s, i, f, b, s);
     }
 
 }

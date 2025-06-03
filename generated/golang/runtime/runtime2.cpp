@@ -1772,49 +1772,49 @@ namespace golang::runtime
     }
 
     gocpp::array<std::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<std::string, 37>>([](auto& x) {
-        x[waitReasonZero] = "";
-        x[waitReasonGCAssistMarking] = "GC assist marking";
-        x[waitReasonIOWait] = "IO wait";
-        x[waitReasonChanReceiveNilChan] = "chan receive (nil chan)";
-        x[waitReasonChanSendNilChan] = "chan send (nil chan)";
-        x[waitReasonDumpingHeap] = "dumping heap";
-        x[waitReasonGarbageCollection] = "garbage collection";
-        x[waitReasonGarbageCollectionScan] = "garbage collection scan";
-        x[waitReasonPanicWait] = "panicwait";
-        x[waitReasonSelect] = "select";
-        x[waitReasonSelectNoCases] = "select (no cases)";
-        x[waitReasonGCAssistWait] = "GC assist wait";
-        x[waitReasonGCSweepWait] = "GC sweep wait";
-        x[waitReasonGCScavengeWait] = "GC scavenge wait";
-        x[waitReasonChanReceive] = "chan receive";
-        x[waitReasonChanSend] = "chan send";
-        x[waitReasonFinalizerWait] = "finalizer wait";
-        x[waitReasonForceGCIdle] = "force gc (idle)";
-        x[waitReasonSemacquire] = "semacquire";
-        x[waitReasonSleep] = "sleep";
-        x[waitReasonSyncCondWait] = "sync.Cond.Wait";
-        x[waitReasonSyncMutexLock] = "sync.Mutex.Lock";
-        x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock";
-        x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock";
-        x[waitReasonTraceReaderBlocked] = "trace reader (blocked)";
-        x[waitReasonWaitForGCCycle] = "wait for GC cycle";
-        x[waitReasonGCWorkerIdle] = "GC worker (idle)";
-        x[waitReasonGCWorkerActive] = "GC worker (active)";
-        x[waitReasonPreempted] = "preempted";
-        x[waitReasonDebugCall] = "debug call";
-        x[waitReasonGCMarkTermination] = "GC mark termination";
-        x[waitReasonStoppingTheWorld] = "stopping the world";
-        x[waitReasonFlushProcCaches] = "flushing proc caches";
-        x[waitReasonTraceGoroutineStatus] = "trace goroutine status";
-        x[waitReasonTraceProcStatus] = "trace proc status";
-        x[waitReasonPageTraceFlush] = "page trace flush";
-        x[waitReasonCoroutine] = "coroutine";
+        x[waitReasonZero] = ""s;
+        x[waitReasonGCAssistMarking] = "GC assist marking"s;
+        x[waitReasonIOWait] = "IO wait"s;
+        x[waitReasonChanReceiveNilChan] = "chan receive (nil chan)"s;
+        x[waitReasonChanSendNilChan] = "chan send (nil chan)"s;
+        x[waitReasonDumpingHeap] = "dumping heap"s;
+        x[waitReasonGarbageCollection] = "garbage collection"s;
+        x[waitReasonGarbageCollectionScan] = "garbage collection scan"s;
+        x[waitReasonPanicWait] = "panicwait"s;
+        x[waitReasonSelect] = "select"s;
+        x[waitReasonSelectNoCases] = "select (no cases)"s;
+        x[waitReasonGCAssistWait] = "GC assist wait"s;
+        x[waitReasonGCSweepWait] = "GC sweep wait"s;
+        x[waitReasonGCScavengeWait] = "GC scavenge wait"s;
+        x[waitReasonChanReceive] = "chan receive"s;
+        x[waitReasonChanSend] = "chan send"s;
+        x[waitReasonFinalizerWait] = "finalizer wait"s;
+        x[waitReasonForceGCIdle] = "force gc (idle)"s;
+        x[waitReasonSemacquire] = "semacquire"s;
+        x[waitReasonSleep] = "sleep"s;
+        x[waitReasonSyncCondWait] = "sync.Cond.Wait"s;
+        x[waitReasonSyncMutexLock] = "sync.Mutex.Lock"s;
+        x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock"s;
+        x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock"s;
+        x[waitReasonTraceReaderBlocked] = "trace reader (blocked)"s;
+        x[waitReasonWaitForGCCycle] = "wait for GC cycle"s;
+        x[waitReasonGCWorkerIdle] = "GC worker (idle)"s;
+        x[waitReasonGCWorkerActive] = "GC worker (active)"s;
+        x[waitReasonPreempted] = "preempted"s;
+        x[waitReasonDebugCall] = "debug call"s;
+        x[waitReasonGCMarkTermination] = "GC mark termination"s;
+        x[waitReasonStoppingTheWorld] = "stopping the world"s;
+        x[waitReasonFlushProcCaches] = "flushing proc caches"s;
+        x[waitReasonTraceGoroutineStatus] = "trace goroutine status"s;
+        x[waitReasonTraceProcStatus] = "trace proc status"s;
+        x[waitReasonPageTraceFlush] = "page trace flush"s;
+        x[waitReasonCoroutine] = "coroutine"s;
     });
     std::string rec::String(golang::runtime::waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))
         {
-            return "unknown wait reason";
+            return "unknown wait reason"s;
         }
         return waitReasonStrings[w];
     }
@@ -1842,6 +1842,6 @@ namespace golang::runtime
     uint8_t goarmsoftfp;
     bool islibrary;
     bool isarchive;
-    bool framepointer_enabled = GOARCH == "amd64" || GOARCH == "arm64";
+    bool framepointer_enabled = GOARCH == "amd64"s || GOARCH == "arm64"s;
 }
 

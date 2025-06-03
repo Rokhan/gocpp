@@ -23,10 +23,10 @@ namespace golang::main
     void main()
     {
         f();
-        mocklib::Println("Returned normally from f.");
+        mocklib::Println("Returned normally from f."s);
         if(auto r = gocpp::recover(); r != nullptr)
         {
-            mocklib::Println("R should always be nil, r =", r);
+            mocklib::Println("R should always be nil, r ="s, r);
         }
     }
 
@@ -39,16 +39,16 @@ namespace golang::main
             {
                 if(auto r = gocpp::recover(); r != nullptr)
                 {
-                    mocklib::Println("Recovered in f", r);
+                    mocklib::Println("Recovered in f"s, r);
                 }
             }(); });
             defer.push_back([=]{ [=]() mutable -> void
             {
-                mocklib::Println("Simple defer in f");
+                mocklib::Println("Simple defer in f"s);
             }(); });
-            mocklib::Println("Calling g.");
+            mocklib::Println("Calling g."s);
             g(0);
-            mocklib::Println("Returned normally from g.");
+            mocklib::Println("Returned normally from g."s);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -61,14 +61,14 @@ namespace golang::main
         gocpp::Defer defer;
         try
         {
-            defer.push_back([=]{ mocklib::Println("Defer1 in g", i); });
+            defer.push_back([=]{ mocklib::Println("Defer1 in g"s, i); });
             if(i > 3)
             {
-                mocklib::Println("Panicking!");
+                mocklib::Println("Panicking!"s);
                 gocpp::panic(mocklib::Sprint(i));
             }
-            defer.push_back([=]{ mocklib::Println("Defer2 in g", i); });
-            mocklib::Println("Printing in g", i);
+            defer.push_back([=]{ mocklib::Println("Defer2 in g"s, i); });
+            mocklib::Println("Printing in g"s, i);
             g(i + 1);
         }
         catch(gocpp::GoPanic& gp)

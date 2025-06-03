@@ -56,7 +56,7 @@ namespace golang::image
 
     std::string rec::String(struct Point p)
     {
-        return "(" + strconv::Itoa(p.X) + "," + strconv::Itoa(p.Y) + ")";
+        return "("s + strconv::Itoa(p.X) + ","s + strconv::Itoa(p.Y) + ")"s;
     }
 
     struct Point rec::Add(struct Point p, struct Point q)
@@ -146,7 +146,7 @@ namespace golang::image
 
     std::string rec::String(struct Rectangle r)
     {
-        return rec::String(gocpp::recv(r.Min)) + "-" + rec::String(gocpp::recv(r.Max));
+        return rec::String(gocpp::recv(r.Min)) + "-"s + rec::String(gocpp::recv(r.Max));
     }
 
     int rec::Dx(struct Rectangle r)

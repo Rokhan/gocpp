@@ -21,7 +21,7 @@ namespace golang::safefilepath
         using namespace mocklib::rec;
     }
 
-    gocpp::error errInvalidPath = errors::New("invalid path");
+    gocpp::error errInvalidPath = errors::New("invalid path"s);
     std::tuple<std::string, struct gocpp::error> FromFS(std::string path)
     {
         return fromFS(path);

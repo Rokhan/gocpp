@@ -152,15 +152,15 @@ namespace golang::main
 
     void main()
     {
-        auto [h1, h2] = HashStr("toto");
-        mocklib::Printf("Hash: %v, %v\n", h1, h2);
+        auto [h1, h2] = HashStr("toto"s);
+        mocklib::Printf("Hash: %v, %v\n"s, h1, h2);
         auto [h3, h4] = HashStr(gocpp::slice<unsigned char> {1, 2, 3});
-        mocklib::Printf("Hash: %v, %v\n", h3, h4);
+        mocklib::Printf("Hash: %v, %v\n"s, h3, h4);
         auto o1 = Or(1, 2, 3, 4, 5);
         auto o2 = Or(0, 1, 2, 2, 3, 0, 0);
-        mocklib::Printf("o1: %v, o2:%v\n", o1, o2);
-        mocklib::Printf("Zero: %v\n", Zero<int>());
-        mocklib::Printf("Unused: %v\n", UnusedGenericParameter<double>());
+        mocklib::Printf("o1: %v, o2:%v\n"s, o1, o2);
+        mocklib::Printf("Zero: %v\n"s, Zero<int>());
+        mocklib::Printf("Unused: %v\n"s, UnusedGenericParameter<double>());
     }
 
 }

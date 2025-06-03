@@ -34,13 +34,13 @@ namespace golang::main
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Println("Good morning!");
+                    mocklib::Println("Good morning!"s);
                     break;
                 case 1:
-                    mocklib::Println("Good afternoon.");
+                    mocklib::Println("Good afternoon."s);
                     break;
                 default:
-                    mocklib::Println("Good evening.");
+                    mocklib::Println("Good evening."s);
                     break;
             }
         }

@@ -87,19 +87,19 @@ namespace golang::tree
     {
         if(t == nullptr)
         {
-            return "()";
+            return "()"s;
         }
-        auto s = "";
+        auto s = ""s;
         if(t->Left != nullptr)
         {
-            s += rec::String(gocpp::recv(t->Left)) + " ";
+            s += rec::String(gocpp::recv(t->Left)) + " "s;
         }
         s += mocklib::Sprint(t->Value);
         if(t->Right != nullptr)
         {
-            s += " " + rec::String(gocpp::recv(t->Right));
+            s += " "s + rec::String(gocpp::recv(t->Right));
         }
-        return "(" + s + ")";
+        return "("s + s + ")"s;
     }
 
 }

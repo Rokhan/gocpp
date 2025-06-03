@@ -30,7 +30,7 @@ namespace golang::registry
 
     syscall::Errno ErrShortBuffer = syscall::ERROR_MORE_DATA;
     syscall::Errno ErrNotExist = syscall::ERROR_FILE_NOT_FOUND;
-    gocpp::error ErrUnexpectedType = errors::New("unexpected key value type");
+    gocpp::error ErrUnexpectedType = errors::New("unexpected key value type"s);
     std::tuple<int, uint32_t, struct gocpp::error> rec::GetValue(golang::registry::Key k, std::string name, gocpp::slice<unsigned char> buf)
     {
         int n;
@@ -94,7 +94,7 @@ namespace golang::registry
         auto [data, typ, err2] = rec::getValue(gocpp::recv(k), name, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 64));
         if(err2 != nullptr)
         {
-            return {"", typ, err2};
+            return {""s, typ, err2};
         }
         //Go switch emulation
         {
@@ -108,13 +108,13 @@ namespace golang::registry
                 case 1:
                     break;
                 default:
-                    return {"", typ, ErrUnexpectedType};
+                    return {""s, typ, ErrUnexpectedType};
                     break;
             }
         }
         if(len(data) == 0)
         {
-            return {"", typ, nullptr};
+            return {""s, typ, nullptr};
         }
         auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
         return {syscall::UTF16ToString(u), typ, nullptr};
@@ -125,7 +125,7 @@ namespace golang::registry
         auto [pname, err] = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 1024);
         uint32_t buflen = {};
@@ -134,15 +134,15 @@ namespace golang::registry
         if(err == syscall::ERROR_FILE_NOT_FOUND)
         {
             std::string s = {};
-            std::tie(s, err) = ExpandString("%SystemRoot%\\system32\\");
+            std::tie(s, err) = ExpandString("%SystemRoot%\\system32\\"s);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             std::tie(pdir, err) = syscall::UTF16PtrFromString(s);
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             err = regLoadMUIString(syscall::Handle(k), pname, & buf[0], uint32_t(len(buf)), & buflen, 0, pdir);
         }
@@ -157,21 +157,21 @@ namespace golang::registry
         }
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         return {syscall::UTF16ToString(buf), nullptr};
     }
 
     std::tuple<std::string, struct gocpp::error> ExpandString(std::string value)
     {
-        if(value == "")
+        if(value == ""s)
         {
-            return {"", nullptr};
+            return {""s, nullptr};
         }
         auto [p, err] = syscall::UTF16PtrFromString(value);
         if(err != nullptr)
         {
-            return {"", err};
+            return {""s, err};
         }
         auto r = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 100);
         for(; ; )
@@ -179,7 +179,7 @@ namespace golang::registry
             auto [n, err] = expandEnvironmentStrings(p, & r[0], uint32_t(len(r)));
             if(err != nullptr)
             {
-                return {"", err};
+                return {""s, err};
             }
             if(n <= uint32_t(len(r)))
             {
@@ -250,14 +250,14 @@ namespace golang::registry
                 case 0:
                     if(len(data) != 4)
                     {
-                        return {0, typ, errors::New("DWORD value is not 4 bytes long")};
+                        return {0, typ, errors::New("DWORD value is not 4 bytes long"s)};
                     }
                     return {uint64_t(*(uint32_t*)(unsafe::Pointer(& data[0]))), DWORD, nullptr};
                     break;
                 case 1:
                     if(len(data) != 8)
                     {
-                        return {0, typ, errors::New("QWORD value is not 8 bytes long")};
+                        return {0, typ, errors::New("QWORD value is not 8 bytes long"s)};
                     }
                     return {*(uint64_t*)(unsafe::Pointer(& data[0])), QWORD, nullptr};
                     break;
@@ -332,19 +332,19 @@ namespace golang::registry
 
     struct gocpp::error rec::SetStringsValue(golang::registry::Key k, std::string name, gocpp::slice<std::string> value)
     {
-        auto ss = "";
+        auto ss = ""s;
         for(auto [gocpp_ignored, s] : value)
         {
             for(auto i = 0; i < len(s); i++)
             {
                 if(s[i] == 0)
                 {
-                    return errors::New("string cannot have 0 inside");
+                    return errors::New("string cannot have 0 inside"s);
                 }
             }
-            ss += s + "\x00";
+            ss += s + "\x00"s;
         }
-        auto v = utf16::Encode(gocpp::Tag<gocpp::slice<gocpp::rune>>()(ss + "\x00"));
+        auto v = utf16::Encode(gocpp::slice<gocpp::rune>(ss + "\x00"s));
         auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, MULTI_SZ, buf);
     }

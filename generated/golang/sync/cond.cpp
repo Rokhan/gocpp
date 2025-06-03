@@ -94,7 +94,7 @@ namespace golang::sync
     {
         if(uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(unsafe::Pointer(c))) && uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)))
         {
-            gocpp::panic("sync.Cond is copied");
+            gocpp::panic("sync.Cond is copied"s);
         }
     }
 

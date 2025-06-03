@@ -62,7 +62,7 @@ namespace golang::runtime
 
     int GOMAXPROCS(int n)
     {
-        if(GOARCH == "wasm" && n > 1)
+        if(GOARCH == "wasm"s && n > 1)
         {
             n = 1;
         }

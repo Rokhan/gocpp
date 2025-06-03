@@ -23,19 +23,19 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Printf("Hello, world.\n");
-        auto hello = "Hello";
-        auto world = "World";
-        helloFunc(hello, world, "!");
+        mocklib::Printf("Hello, world.\n"s);
+        auto hello = "Hello"s;
+        auto world = "World"s;
+        helloFunc(hello, world, "!"s);
         using Yyy = color::Color;
         Yyy _ = {};
         auto a = 5;
         auto b = 8 + 7;
-        mocklib::Printf("result = %d\n", a * b + 4);
-        mocklib::Printf("\n");
-        printN("zzz1", square(3));
+        mocklib::Printf("result = %d\n"s, a * b + 4);
+        mocklib::Printf("\n"s);
+        printN("zzz1"s, square(3));
         auto n = square(2);
-        printN("zzz2", n);
+        printN("zzz2"s, n);
     }
 
     int square(int num)
@@ -45,12 +45,12 @@ namespace golang::main
 
     void helloFunc(std::string str1, std::string str2, std::string str3)
     {
-        mocklib::Printf(str1 + ", " + str2 + str3);
+        mocklib::Printf(str1 + ", "s + str2 + str3);
     }
 
     void printN(std::string str1, int n)
     {
-        mocklib::Printf(str1 + "%d\n", n);
+        mocklib::Printf(str1 + "%d\n"s, n);
     }
 
 }

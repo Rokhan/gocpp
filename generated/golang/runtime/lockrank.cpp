@@ -19,74 +19,74 @@ namespace golang::runtime
     }
 
     gocpp::slice<std::string> lockNames = gocpp::Init<gocpp::slice<std::string>>([](auto& x) {
-        x[lockRankSysmon] = "sysmon";
-        x[lockRankScavenge] = "scavenge";
-        x[lockRankForcegc] = "forcegc";
-        x[lockRankDefer] = "defer";
-        x[lockRankSweepWaiters] = "sweepWaiters";
-        x[lockRankAssistQueue] = "assistQueue";
-        x[lockRankSweep] = "sweep";
-        x[lockRankTestR] = "testR";
-        x[lockRankTestW] = "testW";
-        x[lockRankAllocmW] = "allocmW";
-        x[lockRankExecW] = "execW";
-        x[lockRankCpuprof] = "cpuprof";
-        x[lockRankPollDesc] = "pollDesc";
-        x[lockRankWakeableSleep] = "wakeableSleep";
-        x[lockRankAllocmR] = "allocmR";
-        x[lockRankExecR] = "execR";
-        x[lockRankSched] = "sched";
-        x[lockRankAllg] = "allg";
-        x[lockRankAllp] = "allp";
-        x[lockRankTimers] = "timers";
-        x[lockRankNetpollInit] = "netpollInit";
-        x[lockRankHchan] = "hchan";
-        x[lockRankNotifyList] = "notifyList";
-        x[lockRankSudog] = "sudog";
-        x[lockRankRoot] = "root";
-        x[lockRankItab] = "itab";
-        x[lockRankReflectOffs] = "reflectOffs";
-        x[lockRankUserArenaState] = "userArenaState";
-        x[lockRankTraceBuf] = "traceBuf";
-        x[lockRankTraceStrings] = "traceStrings";
-        x[lockRankFin] = "fin";
-        x[lockRankSpanSetSpine] = "spanSetSpine";
-        x[lockRankMspanSpecial] = "mspanSpecial";
-        x[lockRankGcBitsArenas] = "gcBitsArenas";
-        x[lockRankProfInsert] = "profInsert";
-        x[lockRankProfBlock] = "profBlock";
-        x[lockRankProfMemActive] = "profMemActive";
-        x[lockRankProfMemFuture] = "profMemFuture";
-        x[lockRankGscan] = "gscan";
-        x[lockRankStackpool] = "stackpool";
-        x[lockRankStackLarge] = "stackLarge";
-        x[lockRankHchanLeaf] = "hchanLeaf";
-        x[lockRankWbufSpans] = "wbufSpans";
-        x[lockRankMheap] = "mheap";
-        x[lockRankMheapSpecial] = "mheapSpecial";
-        x[lockRankGlobalAlloc] = "globalAlloc";
-        x[lockRankTrace] = "trace";
-        x[lockRankTraceStackTab] = "traceStackTab";
-        x[lockRankPanic] = "panic";
-        x[lockRankDeadlock] = "deadlock";
-        x[lockRankRaceFini] = "raceFini";
-        x[lockRankAllocmRInternal] = "allocmRInternal";
-        x[lockRankExecRInternal] = "execRInternal";
-        x[lockRankTestRInternal] = "testRInternal";
+        x[lockRankSysmon] = "sysmon"s;
+        x[lockRankScavenge] = "scavenge"s;
+        x[lockRankForcegc] = "forcegc"s;
+        x[lockRankDefer] = "defer"s;
+        x[lockRankSweepWaiters] = "sweepWaiters"s;
+        x[lockRankAssistQueue] = "assistQueue"s;
+        x[lockRankSweep] = "sweep"s;
+        x[lockRankTestR] = "testR"s;
+        x[lockRankTestW] = "testW"s;
+        x[lockRankAllocmW] = "allocmW"s;
+        x[lockRankExecW] = "execW"s;
+        x[lockRankCpuprof] = "cpuprof"s;
+        x[lockRankPollDesc] = "pollDesc"s;
+        x[lockRankWakeableSleep] = "wakeableSleep"s;
+        x[lockRankAllocmR] = "allocmR"s;
+        x[lockRankExecR] = "execR"s;
+        x[lockRankSched] = "sched"s;
+        x[lockRankAllg] = "allg"s;
+        x[lockRankAllp] = "allp"s;
+        x[lockRankTimers] = "timers"s;
+        x[lockRankNetpollInit] = "netpollInit"s;
+        x[lockRankHchan] = "hchan"s;
+        x[lockRankNotifyList] = "notifyList"s;
+        x[lockRankSudog] = "sudog"s;
+        x[lockRankRoot] = "root"s;
+        x[lockRankItab] = "itab"s;
+        x[lockRankReflectOffs] = "reflectOffs"s;
+        x[lockRankUserArenaState] = "userArenaState"s;
+        x[lockRankTraceBuf] = "traceBuf"s;
+        x[lockRankTraceStrings] = "traceStrings"s;
+        x[lockRankFin] = "fin"s;
+        x[lockRankSpanSetSpine] = "spanSetSpine"s;
+        x[lockRankMspanSpecial] = "mspanSpecial"s;
+        x[lockRankGcBitsArenas] = "gcBitsArenas"s;
+        x[lockRankProfInsert] = "profInsert"s;
+        x[lockRankProfBlock] = "profBlock"s;
+        x[lockRankProfMemActive] = "profMemActive"s;
+        x[lockRankProfMemFuture] = "profMemFuture"s;
+        x[lockRankGscan] = "gscan"s;
+        x[lockRankStackpool] = "stackpool"s;
+        x[lockRankStackLarge] = "stackLarge"s;
+        x[lockRankHchanLeaf] = "hchanLeaf"s;
+        x[lockRankWbufSpans] = "wbufSpans"s;
+        x[lockRankMheap] = "mheap"s;
+        x[lockRankMheapSpecial] = "mheapSpecial"s;
+        x[lockRankGlobalAlloc] = "globalAlloc"s;
+        x[lockRankTrace] = "trace"s;
+        x[lockRankTraceStackTab] = "traceStackTab"s;
+        x[lockRankPanic] = "panic"s;
+        x[lockRankDeadlock] = "deadlock"s;
+        x[lockRankRaceFini] = "raceFini"s;
+        x[lockRankAllocmRInternal] = "allocmRInternal"s;
+        x[lockRankExecRInternal] = "execRInternal"s;
+        x[lockRankTestRInternal] = "testRInternal"s;
     });
     std::string rec::String(golang::runtime::lockRank rank)
     {
         if(rank == 0)
         {
-            return "UNKNOWN";
+            return "UNKNOWN"s;
         }
         if(rank == lockRankLeafRank)
         {
-            return "LEAF";
+            return "LEAF"s;
         }
         if(rank < 0 || int(rank) >= len(lockNames))
         {
-            return "BAD RANK";
+            return "BAD RANK"s;
         }
         return lockNames[rank];
     }

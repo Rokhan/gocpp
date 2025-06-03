@@ -33,13 +33,13 @@ namespace golang::main
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Print("1 ");
+                    mocklib::Print("1 "s);
                 case 1:
-                    mocklib::Print("2 ");
+                    mocklib::Print("2 "s);
                 case 2:
-                    mocklib::Print("3 ");
+                    mocklib::Print("3 "s);
                 default:
-                    mocklib::Printf("Soleil !\n");
+                    mocklib::Printf("Soleil !\n"s);
                     break;
             }
         }
@@ -47,74 +47,74 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Print("Go runs on ");
+        mocklib::Print("Go runs on "s);
         //Go switch emulation
         {
             auto os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
-            if(condition == "darwin") { conditionId = 0; }
-            else if(condition == "linux") { conditionId = 1; }
+            if(condition == "darwin"s) { conditionId = 0; }
+            else if(condition == "linux"s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Println("OS X.");
+                    mocklib::Println("OS X."s);
                     break;
                 case 1:
-                    mocklib::Println("Linux.");
+                    mocklib::Println("Linux."s);
                     break;
                 default:
                     mocklib::Println(os);
                     break;
             }
         }
-        mocklib::Print("\nGo runs on ");
+        mocklib::Print("\nGo runs on "s);
         //Go switch emulation
         {
             auto os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
-            if(condition == "darwin") { conditionId = 0; }
-            else if(condition == "linux") { conditionId = 1; }
-            else if(condition == "gnu/linux") { conditionId = 2; }
-            else if(condition == "debian") { conditionId = 3; }
+            if(condition == "darwin"s) { conditionId = 0; }
+            else if(condition == "linux"s) { conditionId = 1; }
+            else if(condition == "gnu/linux"s) { conditionId = 2; }
+            else if(condition == "debian"s) { conditionId = 3; }
             switch(conditionId)
             {
                 default:
                     mocklib::Println(os);
                     break;
                 case 0:
-                    mocklib::Println("OS X.");
+                    mocklib::Println("OS X."s);
                     break;
                 case 1:
                 case 2:
                 case 3:
-                    mocklib::Println("Linux.");
+                    mocklib::Println("Linux."s);
                     break;
             }
         }
-        mocklib::Print("\nGo runs on ");
+        mocklib::Print("\nGo runs on "s);
         //Go switch emulation
         {
             auto os = mocklib::GOOS;
             auto condition = os;
             int conditionId = -1;
-            if(condition == "linux") { conditionId = 0; }
-            else if(condition == "gnu/linux") { conditionId = 1; }
-            else if(condition == "debian") { conditionId = 2; }
-            else if(condition == "darwin") { conditionId = 3; }
+            if(condition == "linux"s) { conditionId = 0; }
+            else if(condition == "gnu/linux"s) { conditionId = 1; }
+            else if(condition == "debian"s) { conditionId = 2; }
+            else if(condition == "darwin"s) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 case 2:
-                    mocklib::Println("Linux.");
+                    mocklib::Println("Linux."s);
                     break;
                 default:
                     mocklib::Println(os);
                     break;
                 case 3:
-                    mocklib::Println("OS X.");
+                    mocklib::Println("OS X."s);
                     break;
             }
         }

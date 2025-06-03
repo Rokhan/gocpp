@@ -77,7 +77,7 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                        x.Op = "FindFirstFile";
+                        x.Op = "FindFirstFile"s;
                         x.Path = name;
                         x.Err = err;
                     })};
@@ -114,7 +114,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "CreateFile";
+                    x.Op = "CreateFile"s;
                     x.Path = name;
                     x.Err = err;
                 })};
@@ -128,7 +128,7 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                        x.Op = "CreateFile";
+                        x.Op = "CreateFile"s;
                         x.Path = name;
                         x.Err = err;
                     })};
@@ -150,7 +150,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "GetFileType";
+                x.Op = "GetFileType"s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -184,17 +184,17 @@ namespace golang::os
 
     std::tuple<os::FileInfo, struct gocpp::error> statNolog(std::string name)
     {
-        return stat("Stat", name, true);
+        return stat("Stat"s, name, true);
     }
 
     std::tuple<os::FileInfo, struct gocpp::error> lstatNolog(std::string name)
     {
         auto followSurrogates = false;
-        if(name != "" && IsPathSeparator(name[len(name) - 1]))
+        if(name != ""s && IsPathSeparator(name[len(name) - 1]))
         {
             followSurrogates = true;
         }
-        return stat("Lstat", name, followSurrogates);
+        return stat("Lstat"s, name, followSurrogates);
     }
 
 }

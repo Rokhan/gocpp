@@ -376,12 +376,12 @@ namespace golang::binary
 
     std::string rec::String(littleEndian)
     {
-        return "LittleEndian";
+        return "LittleEndian"s;
     }
 
     std::string rec::GoString(littleEndian)
     {
-        return "binary.LittleEndian";
+        return "binary.LittleEndian"s;
     }
 
     
@@ -474,22 +474,22 @@ namespace golang::binary
 
     std::string rec::String(bigEndian)
     {
-        return "BigEndian";
+        return "BigEndian"s;
     }
 
     std::string rec::GoString(bigEndian)
     {
-        return "binary.BigEndian";
+        return "binary.BigEndian"s;
     }
 
     std::string rec::String(nativeEndian)
     {
-        return "NativeEndian";
+        return "NativeEndian"s;
     }
 
     std::string rec::GoString(nativeEndian)
     {
-        return "binary.NativeEndian";
+        return "binary.NativeEndian"s;
     }
 
     struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data)
@@ -725,7 +725,7 @@ namespace golang::binary
         }
         if(size < 0)
         {
-            return errors::New("binary.Read: invalid type " + rec::String(gocpp::recv(reflect::TypeOf(data))));
+            return errors::New("binary.Read: invalid type "s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.order = order;
@@ -1041,7 +1041,7 @@ namespace golang::binary
         auto size = dataSize(v);
         if(size < 0)
         {
-            return errors::New("binary.Write: some values are not fixed-sized in type " + rec::String(gocpp::recv(reflect::TypeOf(data))));
+            return errors::New("binary.Write: some values are not fixed-sized in type "s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         auto e = gocpp::InitPtr<encoder>([=](auto& x) {
@@ -1341,7 +1341,7 @@ namespace golang::binary
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
-                        if(auto v = rec::Field(gocpp::recv(v), i); rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_")
+                        if(auto v = rec::Field(gocpp::recv(v), i); rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"s)
                         {
                             rec::value(gocpp::recv(d), v);
                         }
@@ -1440,7 +1440,7 @@ namespace golang::binary
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
-                        if(auto v = rec::Field(gocpp::recv(v), i); rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_")
+                        if(auto v = rec::Field(gocpp::recv(v), i); rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"s)
                         {
                             rec::value(gocpp::recv(e), v);
                         }

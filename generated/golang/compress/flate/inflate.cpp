@@ -36,12 +36,12 @@ namespace golang::flate
     huffmanDecoder fixedHuffmanDecoder;
     std::string rec::Error(golang::flate::CorruptInputError e)
     {
-        return "flate: corrupt input before offset " + strconv::FormatInt(int64_t(e), 10);
+        return "flate: corrupt input before offset "s + strconv::FormatInt(int64_t(e), 10);
     }
 
     std::string rec::Error(golang::flate::InternalError e)
     {
-        return "flate: internal error: " + std::string(e);
+        return "flate: internal error: "s + std::string(e);
     }
 
     
@@ -78,7 +78,7 @@ namespace golang::flate
 
     std::string rec::Error(struct ReadError* e)
     {
-        return "flate: read error at offset " + strconv::FormatInt(e->Offset, 10) + ": " + rec::Error(gocpp::recv(e->Err));
+        return "flate: read error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     
@@ -115,7 +115,7 @@ namespace golang::flate
 
     std::string rec::Error(struct WriteError* e)
     {
-        return "flate: write error at offset " + strconv::FormatInt(e->Offset, 10) + ": " + rec::Error(gocpp::recv(e->Err));
+        return "flate: write error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
     
@@ -260,7 +260,7 @@ namespace golang::flate
                 auto off = j - (unsigned int)(link);
                 if(sanity && h->chunks[reverse] != 0)
                 {
-                    gocpp::panic("impossible: overwriting existing chunk");
+                    gocpp::panic("impossible: overwriting existing chunk"s);
                 }
                 h->chunks[reverse] = uint32_t((off << huffmanValueShift) | (huffmanChunkBits + 1));
                 h->links[off] = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), numLinks);
@@ -283,7 +283,7 @@ namespace golang::flate
                 {
                     if(sanity && h->chunks[off] != 0)
                     {
-                        gocpp::panic("impossible: overwriting existing chunk");
+                        gocpp::panic("impossible: overwriting existing chunk"s);
                     }
                     h->chunks[off] = chunk;
                 }
@@ -293,7 +293,7 @@ namespace golang::flate
                 auto j = reverse & (huffmanNumChunks - 1);
                 if(sanity && h->chunks[j] & huffmanCountMask != huffmanChunkBits + 1)
                 {
-                    gocpp::panic("impossible: not an indirect chunk");
+                    gocpp::panic("impossible: not an indirect chunk"s);
                 }
                 auto value = h->chunks[j] >> huffmanValueShift;
                 auto linktab = h->links[value];
@@ -302,7 +302,7 @@ namespace golang::flate
                 {
                     if(sanity && linktab[off] != 0)
                     {
-                        gocpp::panic("impossible: overwriting existing chunk");
+                        gocpp::panic("impossible: overwriting existing chunk"s);
                     }
                     linktab[off] = chunk;
                 }
@@ -318,7 +318,7 @@ namespace golang::flate
                     {
                         continue;
                     }
-                    gocpp::panic("impossible: missing chunk");
+                    gocpp::panic("impossible: missing chunk"s);
                 }
             }
             for(auto [gocpp_ignored, linktab] : h->links)
@@ -327,7 +327,7 @@ namespace golang::flate
                 {
                     if(chunk == 0)
                     {
-                        gocpp::panic("impossible: missing chunk");
+                        gocpp::panic("impossible: missing chunk"s);
                     }
                 }
             }
@@ -608,7 +608,7 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     default:
-                        return InternalError("unexpected length code");
+                        return InternalError("unexpected length code"s);
                         break;
                     case 0:
                         rep = 3;

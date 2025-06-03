@@ -25,7 +25,7 @@ namespace golang::main
     {
         if(x < 0)
         {
-            return sqrt(- x) + "i";
+            return sqrt(- x) + "i"s;
         }
         return mocklib::Sprint(std::sqrt(x));
     }

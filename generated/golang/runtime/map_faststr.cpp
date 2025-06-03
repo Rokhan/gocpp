@@ -47,7 +47,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write");
+            fatal("concurrent map read and map write"s);
         }
         auto key = stringStructOf(& ky);
         if(h->B == 0)
@@ -161,7 +161,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write");
+            fatal("concurrent map read and map write"s);
         }
         auto key = stringStructOf(& ky);
         if(h->B == 0)
@@ -266,7 +266,7 @@ namespace golang::runtime
     {
         if(h == nullptr)
         {
-            gocpp::panic(plainError("assignment to entry in nil map"));
+            gocpp::panic(plainError("assignment to entry in nil map"s));
         }
         if(raceenabled)
         {
@@ -275,7 +275,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes");
+            fatal("concurrent map writes"s);
         }
         auto key = stringStructOf(& s);
         auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
@@ -358,7 +358,7 @@ namespace golang::runtime
         auto elem = add(unsafe::Pointer(insertb), dataOffset + bucketCnt * 2 * goarch::PtrSize + inserti * uintptr_t(t->ValueSize));
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes");
+            fatal("concurrent map writes"s);
         }
         h->flags &^= hashWriting;
         return elem;
@@ -377,7 +377,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes");
+            fatal("concurrent map writes"s);
         }
         auto key = stringStructOf(& ky);
         auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
@@ -470,7 +470,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes");
+            fatal("concurrent map writes"s);
         }
         h->flags &^= hashWriting;
     }
@@ -516,7 +516,7 @@ namespace golang::runtime
                     }
                     if(top < minTopHash)
                     {
-                        go_throw("bad map state");
+                        go_throw("bad map state"s);
                     }
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))

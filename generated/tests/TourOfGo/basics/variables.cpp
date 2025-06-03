@@ -28,17 +28,17 @@ namespace golang::main
     int kk = 5;
     std::function<void (void)> funcVar1 = []() mutable -> void
     {
-        mocklib::Println("funcVar");
+        mocklib::Println("funcVar"s);
     };
     std::function<int (int)> funcVar2 = [](int i) mutable -> int
     {
-        mocklib::Println("funcVar,", i);
+        mocklib::Println("funcVar,"s, i);
         return 3;
     };
     std::function<std::tuple<int, std::string> (int)> funcVar3 = [](int i) mutable -> std::tuple<int, std::string>
     {
-        mocklib::Println("funcVar,", i);
-        return {3, "zz"};
+        mocklib::Println("funcVar,"s, i);
+        return {3, "zz"s};
     };
     void main()
     {
@@ -60,7 +60,7 @@ namespace golang::main
             mocklib::Println(ii, zz, ll);
         }
         mocklib::Println(ii, zz, kk);
-        auto [go_do, go_while, go_template, go_class] = std::tuple{"do", "while", "template", "class"};
+        auto [go_do, go_while, go_template, go_class] = std::tuple{"do"s, "while"s, "template"s, "class"s};
         mocklib::Println(go_do, go_while, go_template, go_class);
         dummy_vars();
         funcVar1();
@@ -76,24 +76,24 @@ namespace golang::main
         int i;
         std::string s;
         i = 3;
-        s = "hello";
+        s = "hello"s;
         {
             auto j = i;
             auto i = 10;
             auto k = i;
-            auto s = "world";
-            mocklib::Println("withNamedResults:", i, s, j, k);
+            auto s = "world"s;
+            mocklib::Println("withNamedResults:"s, i, s, j, k);
         }
-        mocklib::Println("withNamedResults:", i, s);
+        mocklib::Println("withNamedResults:"s, i, s);
         return {i, s};
     }
 
     void dummy_vars()
     {
-        std::string go_do = "do";
-        std::string go_while = "while";
-        std::string go_template = "template";
-        std::string go_class = "class";
+        std::string go_do = "do"s;
+        std::string go_while = "while"s;
+        std::string go_template = "template"s;
+        std::string go_class = "class"s;
         mocklib::Println(go_do, go_while, go_template, go_class);
     }
 

@@ -581,26 +581,26 @@ namespace golang::cpu
     void processOptions(std::string env)
     {
         field:
-        for(; env != ""; )
+        for(; env != ""s; )
         {
-            auto field = "";
+            auto field = ""s;
             auto i = indexByte(env, ',');
             if(i < 0)
             {
-                std::tie(field, env) = std::tuple{env, ""};
+                std::tie(field, env) = std::tuple{env, ""s};
             }
             else
             {
                 std::tie(field, env) = std::tuple{env.make_slice(0, i), env.make_slice(i + 1)};
             }
-            if(len(field) < 4 || field.make_slice(0, 4) != "cpu.")
+            if(len(field) < 4 || field.make_slice(0, 4) != "cpu."s)
             {
                 continue;
             }
             i = indexByte(field, '=');
             if(i < 0)
             {
-                print("GODEBUG: no value specified for \"", field, "\"\n");
+                print("GODEBUG: no value specified for \""s, field, "\"\n"s);
                 continue;
             }
             auto [key, value] = std::tuple{field.make_slice(4, i), field.make_slice(i + 1)};
@@ -609,8 +609,8 @@ namespace golang::cpu
             {
                 auto condition = value;
                 int conditionId = -1;
-                if(condition == "on") { conditionId = 0; }
-                else if(condition == "off") { conditionId = 1; }
+                if(condition == "on"s) { conditionId = 0; }
+                else if(condition == "off"s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -620,12 +620,12 @@ namespace golang::cpu
                         enable = false;
                         break;
                     default:
-                        print("GODEBUG: value \"", value, "\" not supported for cpu option \"", key, "\"\n");
+                        print("GODEBUG: value \""s, value, "\" not supported for cpu option \""s, key, "\"\n"s);
                         goto field_continue;
                         break;
                 }
             }
-            if(key == "all")
+            if(key == "all"s)
             {
                 for(auto [i, gocpp_ignored] : options)
                 {
@@ -643,7 +643,7 @@ namespace golang::cpu
                     goto field_continue;
                 }
             }
-            print("GODEBUG: unknown cpu feature \"", key, "\"\n");
+            print("GODEBUG: unknown cpu feature \""s, key, "\"\n"s);
             if(false) {
             field_continue:
                 continue;
@@ -659,7 +659,7 @@ namespace golang::cpu
             }
             if(o.Enable && ! *o.Feature)
             {
-                print("GODEBUG: can not enable \"", o.Name, "\", missing CPU support\n");
+                print("GODEBUG: can not enable \""s, o.Name, "\", missing CPU support\n"s);
                 continue;
             }
             *o.Feature = o.Enable;

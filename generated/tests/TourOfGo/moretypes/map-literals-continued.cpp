@@ -52,7 +52,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::map<std::string, Vertex> m = gocpp::map<std::string, Vertex> {{ "Bell Labs",  {40.68433, - 74.39967} }, { "Google",  {37.42202, - 122.08408} }};
+    gocpp::map<std::string, Vertex> m = gocpp::map<std::string, Vertex> {{ "Bell Labs"s,  {40.68433, - 74.39967} }, { "Google"s,  {37.42202, - 122.08408} }};
     void main()
     {
         mocklib::Println(m);

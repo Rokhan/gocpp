@@ -182,7 +182,7 @@ namespace golang::runtime
         }
         if(bufwords >= (1 << 28) || tags >= (1 << 28))
         {
-            go_throw("newProfBuf: buffer too large");
+            go_throw("newProfBuf: buffer too large"s);
         }
         int i = {};
         for(i = 1; i < bufwords; i <<= 1)
@@ -254,7 +254,7 @@ namespace golang::runtime
         }
         if(len(hdr) > int(b->hdrsize))
         {
-            go_throw("misuse of profBuf.write");
+            go_throw("misuse of profBuf.write"s);
         }
         if(auto hasOverflow = rec::hasOverflow(gocpp::recv(b)); hasOverflow && rec::canWriteTwoRecords(gocpp::recv(b), 1, len(stk)))
         {
@@ -322,7 +322,7 @@ namespace golang::runtime
     {
         if(rec::Load(gocpp::recv(b->eof)) > 0)
         {
-            go_throw("runtime: profBuf already closed");
+            go_throw("runtime: profBuf already closed"s);
         }
         rec::Store(gocpp::recv(b->eof), 1);
         rec::wakeupExtra(gocpp::recv(b));
@@ -437,7 +437,7 @@ namespace golang::runtime
         auto ntag = countSub(rec::tagCount(gocpp::recv(bw)), rec::tagCount(gocpp::recv(br)));
         if(ntag == 0)
         {
-            go_throw("runtime: malformed profBuf buffer - tag and data out of sync");
+            go_throw("runtime: malformed profBuf buffer - tag and data out of sync"s);
         }
         tags = b->tags.make_slice(rec::tagCount(gocpp::recv(br)) % uint32_t(len(b->tags)));
         if(len(tags) > ntag)
@@ -450,7 +450,7 @@ namespace golang::runtime
         {
             if(uintptr_t(di) + uintptr_t(data[di]) > uintptr_t(len(data)))
             {
-                go_throw("runtime: malformed profBuf buffer - invalid size");
+                go_throw("runtime: malformed profBuf buffer - invalid size"s);
             }
             di += int(data[di]);
             ti++;

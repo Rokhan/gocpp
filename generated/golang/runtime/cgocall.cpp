@@ -118,13 +118,13 @@ namespace golang::runtime
     uint64_t ncgocall;
     int32_t cgocall(unsafe::Pointer fn, unsafe::Pointer arg)
     {
-        if(! iscgo && GOOS != "solaris" && GOOS != "illumos" && GOOS != "windows")
+        if(! iscgo && GOOS != "solaris"s && GOOS != "illumos"s && GOOS != "windows"s)
         {
-            go_throw("cgocall unavailable");
+            go_throw("cgocall unavailable"s);
         }
         if(fn == nullptr)
         {
-            go_throw("cgocall nil");
+            go_throw("cgocall nil"s);
         }
         if(raceenabled)
         {
@@ -167,8 +167,8 @@ namespace golang::runtime
             g0->stack.lo = sp - 32 * 1024;
             g0->stackguard0 = g0->stack.lo + stackGuard;
             g0->stackguard1 = g0->stackguard0;
-            print("M ", mp->id, " procid ", mp->procid, " runtime: cgocallback with sp=", hex(sp), " out of bounds [", hex(lo), ", ", hex(hi), "]");
-            print("\n");
+            print("M "s, mp->id, " procid "s, mp->procid, " runtime: cgocallback with sp="s, hex(sp), " out of bounds ["s, hex(lo), ", "s, hex(hi), "]"s);
+            print("\n"s);
             exit(2);
         }
         g0->stack.hi = sp + 1024;
@@ -192,7 +192,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->curg)
         {
-            println("runtime: bad g in cgocallback");
+            println("runtime: bad g in cgocallback"s);
             exit(2);
         }
         auto sp = gp->m->g0->sched.sp;
@@ -211,7 +211,7 @@ namespace golang::runtime
         osPreemptExtExit(gp->m);
         if(gp->nocgocallback)
         {
-            gocpp::panic("runtime: function marked with #cgo nocallback called back into Go");
+            gocpp::panic("runtime: function marked with #cgo nocallback called back into Go"s);
         }
         cgocallbackg1(fn, frame, ctxt);
         gp->m->incgo = true;
@@ -222,7 +222,7 @@ namespace golang::runtime
         }
         if(gp->m != checkm)
         {
-            go_throw("m changed unexpectedly in cgocallbackg");
+            go_throw("m changed unexpectedly in cgocallbackg"s);
         }
         osPreemptExtEnter(gp->m);
         reentersyscall(savedpc, uintptr_t(savedsp));
@@ -304,12 +304,12 @@ namespace golang::runtime
 
     void badcgocallback()
     {
-        go_throw("misaligned stack in cgocallback");
+        go_throw("misaligned stack in cgocallback"s);
     }
 
     void cgounimpl()
     {
-        go_throw("cgo not implemented");
+        go_throw("cgo not implemented"s);
     }
 
     uint64_t racecgosync;
@@ -362,7 +362,7 @@ namespace golang::runtime
                         top = false;
                         break;
                     default:
-                        go_throw("can't happen");
+                        go_throw("can't happen"s);
                         break;
                 }
             }
@@ -370,8 +370,8 @@ namespace golang::runtime
         cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, top, cgoCheckPointerFail);
     }
 
-    std::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer";
-    std::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer";
+    std::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer"s;
+    std::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer"s;
     void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
     {
         if(t->PtrBytes == 0 || p == nullptr)
@@ -395,7 +395,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    go_throw("can't happen");
+                    go_throw("can't happen"s);
                     break;
                 case 0:
                     auto at = (runtime::arraytype*)(unsafe::Pointer(t));
@@ -403,7 +403,7 @@ namespace golang::runtime
                     {
                         if(at->Len != 1)
                         {
-                            go_throw("can't happen");
+                            go_throw("can't happen"s);
                         }
                         cgoCheckArg(at->Elem, p, at->Elem->Kind_ & kindDirectIface == 0, top, msg);
                         return;
@@ -489,7 +489,7 @@ namespace golang::runtime
                     {
                         if(len(st->Fields) != 1)
                         {
-                            go_throw("can't happen");
+                            go_throw("can't happen"s);
                         }
                         cgoCheckArg(st->Fields[0].Typ, p, st->Fields[0].Typ->Kind_ & kindDirectIface == 0, top, msg);
                         return;

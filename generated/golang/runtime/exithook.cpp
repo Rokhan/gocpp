@@ -106,7 +106,7 @@ namespace golang::runtime
     {
         if(exitHooks.runningExitHooks)
         {
-            go_throw("internal error: exit hook invoked exit");
+            go_throw("internal error: exit hook invoked exit"s);
         }
         exitHooks.runningExitHooks = true;
         auto runExitHook = [=](std::function<void ()> f) mutable -> bool
@@ -140,7 +140,7 @@ namespace golang::runtime
             }
             if(auto caughtPanic = runExitHook(h.f); caughtPanic)
             {
-                go_throw("internal error: exit hook invoked panic");
+                go_throw("internal error: exit hook invoked panic"s);
             }
         }
         exitHooks.hooks = nullptr;

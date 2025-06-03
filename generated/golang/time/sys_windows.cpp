@@ -70,7 +70,7 @@ namespace golang::time
             {
                 if(err == nullptr)
                 {
-                    return errors::New("short read");
+                    return errors::New("short read"s);
                 }
                 return err;
             }

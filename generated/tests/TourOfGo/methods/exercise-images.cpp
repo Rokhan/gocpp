@@ -51,17 +51,17 @@ namespace golang::main
 
     color::Model rec::ColorModel(Image)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     image::Rectangle rec::Bounds(Image)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     color::Color rec::At(Image, int x, int y)
     {
-        gocpp::panic("not implemented");
+        gocpp::panic("not implemented"s);
     }
 
     void main()

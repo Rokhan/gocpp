@@ -27,14 +27,14 @@ namespace golang::main
         std::string name;
         int offset;
         uint64_t abs;
-        return {"UTC", 0, 0};
+        return {"UTC"s, 0, 0};
     }
 
     void main()
     {
         auto c = true;
         auto python = false;
-        auto java = "no!";
+        auto java = "no!"s;
         mocklib::Println(i, j, c, python, java);
         auto [name, offset, abs] = locabs();
         mocklib::Println(name, offset, abs);

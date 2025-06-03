@@ -59,8 +59,8 @@ namespace golang::runtime
     std::string defaultGOROOT;
     std::string GOROOT()
     {
-        auto s = gogetenv("GOROOT");
-        if(s != "")
+        auto s = gogetenv("GOROOT"s);
+        if(s != ""s)
         {
             return s;
         }

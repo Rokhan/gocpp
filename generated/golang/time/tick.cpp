@@ -58,7 +58,7 @@ namespace golang::time
     {
         if(d <= 0)
         {
-            gocpp::panic("non-positive interval for NewTicker");
+            gocpp::panic("non-positive interval for NewTicker"s);
         }
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
         auto t = gocpp::InitPtr<Ticker>([=](auto& x) {
@@ -83,11 +83,11 @@ namespace golang::time
     {
         if(d <= 0)
         {
-            gocpp::panic("non-positive interval for Ticker.Reset");
+            gocpp::panic("non-positive interval for Ticker.Reset"s);
         }
         if(t->r.f == nullptr)
         {
-            gocpp::panic("time: Reset called on uninitialized Ticker");
+            gocpp::panic("time: Reset called on uninitialized Ticker"s);
         }
         modTimer(& t->r, when(d), int64_t(d), t->r.f, t->r.arg, t->r.seq);
     }

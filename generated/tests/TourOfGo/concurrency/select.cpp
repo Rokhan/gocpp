@@ -36,7 +36,7 @@ namespace golang::main
                         std::tie(x, y) = std::tuple{y, x + y};
                         break;
                     case 1:
-                        mocklib::Println("quit");
+                        mocklib::Println("quit"s);
                         return;
                         break;
                 }

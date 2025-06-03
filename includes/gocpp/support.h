@@ -1389,6 +1389,26 @@ namespace mocklib
         }
     }
 
+    std::ostream& PrintTo(std::ostream& os, const Date& value);
+    std::ostream& PrintTo(std::ostream& os, bool value);
+    std::ostream& PrintTo(std::ostream& os, char value);
+    std::ostream& PrintTo(std::ostream& os, unsigned char value);
+
+    template<typename K, typename V>
+    std::ostream& PrintTo(std::ostream& os, const gocpp::map<K, V>& value);
+
+    template<typename V>
+    std::ostream& PrintTo(std::ostream& os, const gocpp::map_value<V>& value);
+
+    template<typename T>
+    std::ostream& PrintTo(std::ostream& os, const T& value);
+
+    template<typename T, typename E>
+    std::ostream& PrintTo(std::ostream& os, const gocpp::result_or_error<T, E>& value);
+
+    template<typename T, typename... Args>
+    std::ostream& PrintTo(std::ostream& os, const T& value, Args&&... args);
+
     // internals: operators for tupples/ostream/slices
     template<typename... Ts>
     std::ostream& operator<<(std::ostream& os, const std::tuple<Ts...>& theTuple)
@@ -1399,7 +1419,7 @@ namespace mocklib
             {
                 os << '[';
                 std::size_t n{0};
-                ((os << tupleArgs << (++n != sizeof...(Ts) ? ", " : "")), ...);
+                ((PrintTo(os, tupleArgs) << (++n != sizeof...(Ts) ? ", " : "")), ...);
                 os << ']';
             }, theTuple
         );
@@ -1413,9 +1433,9 @@ namespace mocklib
         for(int i=0; i< array.size(); ++i)
         {
             if(i == 0)
-                os << array[i];
+                PrintTo(os, array[i]);
             else
-                os << " " << array[i];
+                PrintTo(os << " ", array[i]);
         }
         os << ']';
         return os;
@@ -1429,9 +1449,9 @@ namespace mocklib
         for(const T& item : array)
         {
             if(i == 0)
-                os << item;
+                PrintTo(os, item);
             else
-                os << " " << item;
+                PrintTo(os << " ", item);
 
             i++;
         }
@@ -1445,7 +1465,7 @@ namespace mocklib
         if(ptr)
         {
             os << '&';
-            os << *ptr;
+            PrintTo(os, *ptr);
         }
         else
         {
@@ -1481,9 +1501,9 @@ namespace mocklib
         for(int i=0; i< slice.mEnd - slice.mStart; ++i)
         {
             if(i == 0)
-                os << slice[i];
+                PrintTo(os, slice[i]);
             else
-                os << " " << slice[i];
+                PrintTo(os << " ", slice[i]);
         }
         os << ']';
         return os;
@@ -1512,53 +1532,70 @@ namespace mocklib
     template<typename T, typename... Args>
     void PrintToVect(std::vector<std::string>& out, const T& value, Args&&... args);
 
-    void Print(const Date& value)
+    std::ostream& PrintTo(std::ostream& os, const Date& value)
     {
-        std::cout << "[DATE]";
+        return os << "[DATE]";
     }
 
-    void Print(bool value)
+    std::ostream& PrintTo(std::ostream& os, bool value)
     {
-        std::cout << value;
+        return os << value;
+    }   
+
+    std::ostream& PrintTo(std::ostream& os, char value)
+    {
+        return os << int(value);
+    }
+
+    std::ostream& PrintTo(std::ostream& os, unsigned char value)
+    {
+        return os << int(value);
     }
 
     template<typename K, typename V>
-    void Print(const gocpp::map<K, V>& value)
+    std::ostream& PrintTo(std::ostream& os, const gocpp::map<K, V>& value)
     {
-        std::cout << "map[";
+        os << "map[";
         auto sep = "";
         for(auto kv : value)
         {
-            std::cout << sep << kv.first << ":" << kv.second;
+            os << sep << kv.first << ":" << kv.second;
             sep = " ";
         }
-        std::cout << "]";
+        return os << "]";
     }
 
     template<typename V>
-    void Print(const gocpp::map_value<V>& value)
+    std::ostream& PrintTo(std::ostream& os, const gocpp::map_value<V>& value)
     {
-        std::cout << std::get<0>(value);
+        return os << std::get<0>(value);
     }
 
     template<typename T>
-    void Print(const T& value)
+    std::ostream& PrintTo(std::ostream& os, const T& value)
     {
-        std::cout << value;
+        return os << value;
     }
 
     template<typename T, typename E>
-    void Print(const gocpp::result_or_error<T, E>& value)
+    std::ostream& PrintTo(std::ostream& os, const gocpp::result_or_error<T, E>& value)
     {
-        std::cout << value.first;
+        return os << value.first;
     }
 
     template<typename T, typename... Args>
-    void Print(const T& value, Args&&... args)
+    std::ostream& PrintTo(std::ostream& os, const T& value, Args&&... args)
     {
-        Print(value);
-        Print(" ");
-        Print(std::forward<Args>(args)...);
+        PrintTo(os, value);
+        PrintTo(os, " ");
+        PrintTo(os, std::forward<Args>(args)...);
+        return os;
+    }
+
+    template<typename... Args>
+    void Print(Args&&... args)
+    {
+        PrintTo(std::cout, std::forward<Args>(args)...);
     }
 
     template<typename T>

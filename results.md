@@ -224,7 +224,7 @@
 | $(ImportDir)/math/abs.go | ✔️ ([cpp](generated/golang/math/abs.cpp), [h](generated/golang/math/abs.h))| ❌ |
 | $(ImportDir)/math/bits.go | ✔️ ([cpp](generated/golang/math/bits.cpp), [h](generated/golang/math/bits.h))| ✔️ |
 | $(ImportDir)/math/bits/bits.go | ✔️ ([cpp](generated/golang/math/bits/bits.cpp), [h](generated/golang/math/bits/bits.h))| ❌ |
-| $(ImportDir)/math/bits/bits_tables.go | ✔️ ([cpp](generated/golang/math/bits/bits_tables.cpp), [h](generated/golang/math/bits/bits_tables.h))| ❌ |
+| $(ImportDir)/math/bits/bits_tables.go | ✔️ ([cpp](generated/golang/math/bits/bits_tables.cpp), [h](generated/golang/math/bits/bits_tables.h))| ✔️ |
 | $(ImportDir)/math/cmplx/sqrt.go | ✔️ ([cpp](generated/golang/math/cmplx/sqrt.cpp), [h](generated/golang/math/cmplx/sqrt.h))| ❌ |
 | $(ImportDir)/math/const.go | ✔️ ([cpp](generated/golang/math/const.cpp), [h](generated/golang/math/const.h))| ✔️ |
 | $(ImportDir)/math/copysign.go | ✔️ ([cpp](generated/golang/math/copysign.cpp), [h](generated/golang/math/copysign.h))| ❌ |
@@ -303,7 +303,7 @@
 | $(ImportDir)/runtime/internal/math/math.go | ✔️ ([cpp](generated/golang/runtime/internal/math/math.cpp), [h](generated/golang/runtime/internal/math/math.h))| ❌ |
 | $(ImportDir)/runtime/internal/sys/consts.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts.cpp), [h](generated/golang/runtime/internal/sys/consts.h))| ✔️ |
 | $(ImportDir)/runtime/internal/sys/consts_norace.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts_norace.cpp), [h](generated/golang/runtime/internal/sys/consts_norace.h))| ✔️ |
-| $(ImportDir)/runtime/internal/sys/intrinsics.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/intrinsics.cpp), [h](generated/golang/runtime/internal/sys/intrinsics.h))| ❌ |
+| $(ImportDir)/runtime/internal/sys/intrinsics.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/intrinsics.cpp), [h](generated/golang/runtime/internal/sys/intrinsics.h))| ✔️ |
 | $(ImportDir)/runtime/internal/sys/nih.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/nih.cpp), [h](generated/golang/runtime/internal/sys/nih.h))| ✔️ |
 | $(ImportDir)/runtime/lfstack.go | ✔️ ([cpp](generated/golang/runtime/lfstack.cpp), [h](generated/golang/runtime/lfstack.h))| ❌ |
 | $(ImportDir)/runtime/lock_sema.go | ✔️ ([cpp](generated/golang/runtime/lock_sema.cpp), [h](generated/golang/runtime/lock_sema.h))| ❌ |

@@ -863,6 +863,14 @@ namespace gocpp
             mStart = 0;
             mEnd = this->size();
         }
+        
+        template<std::ranges::range R>
+        slice(R range)
+        {
+            this->mArray = std::make_shared<store_type>(range.begin(), range.end());
+            mStart = 0;
+            mEnd = this->size();
+        }
 
         slice(array_base<T>& a, int low, int high)
         {

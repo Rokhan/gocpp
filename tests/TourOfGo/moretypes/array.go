@@ -34,4 +34,15 @@ func main() {
 
 	var st2 = semTable2{{1}, {1}}
 	fmt.Println(st2)
+
+	chars := [5]byte{'H', 'e', 'l', 'l', 'o'}
+	fmt.Println(chars)
+
+	var hw1 = `Hello, World!`
+	var hwBytes1 = []byte(hw1)
+	fmt.Println(hwBytes1)
+
+	var hw2 = "Hello, World!"
+	var hwBytes2 = []byte(hw2)
+	fmt.Println(hwBytes2)
 }

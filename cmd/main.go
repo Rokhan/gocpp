@@ -3363,8 +3363,12 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 				*buf.defs = append(*buf.defs, receiver(fun))
 				sep = ", "
 			}
+
 		case *ast.ParenExpr:
 			cv.BuffExprPrintf(buf, "(%v)(", cv.convertTypeExpr(fun.X, ctContext{}))
+
+		case *ast.ArrayType, *ast.ChanType, *ast.FuncType, *ast.MapType, *ast.InterfaceType:
+			cv.BuffExprPrintf(buf, "%v(", cv.convertTypeExpr(fun, ctContext{}))
 
 		case *ast.Ident:
 			if fun.Name == "recover" {

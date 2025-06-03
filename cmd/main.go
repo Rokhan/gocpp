@@ -3281,11 +3281,12 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			switch n.Value[0] {
 			case '`':
 				// TODO: check if there is other replacements to do
-				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\""
+				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\"s"
 				return mkCppExpr(content)
+			case '"':
+				return mkCppExpr(n.Value + "s")
 			default:
 				return mkCppExpr(n.Value)
-
 			}
 		}
 

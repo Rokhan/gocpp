@@ -18,9 +18,11 @@
 
 #include "thread_pool/thread_pool.h"
 
-// Temporary definitions to mock broken include files
 namespace golang
 {
+    using namespace std::string_literals;
+
+    // Temporary definitions to mock broken include files
     namespace runtime
     {
         struct g {};

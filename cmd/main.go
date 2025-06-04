@@ -1101,6 +1101,9 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 			usedNames[cppName] = true
 			param.names = append(param.names, cppName)
 		}
+		if len(field.Names) == 0 && ctx.ensureHasName {
+			param.names = append(param.names, "_")
+		}
 		param.doc = field.Doc
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		params = append(params, param)
@@ -1133,14 +1136,14 @@ type method struct {
 	params typeNames
 }
 
-func (cv *cppConverter) readMethods(fields *ast.FieldList) (methods []method) {
+func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (methods []method) {
 	if fields == nil {
 		return
 	}
 
 	for _, field := range fields.List {
 		for _, name := range field.Names {
-			outPrm, inPrm := cv.convertMethodExpr(field.Type)
+			outPrm, inPrm := cv.convertMethodExpr(field.Type, ctx)
 			methods = append(methods, method{GetCppName(name.Name), outPrm, inPrm})
 		}
 	}
@@ -2396,6 +2399,7 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 
 type ctContext struct {
 	inDeclaration bool
+	ensureHasName bool
 	namespace     string
 }
 
@@ -2539,14 +2543,14 @@ func (cv *cppConverter) checkIsParam(n *ast.Ident, identType *cppType) {
 	}
 }
 
-func (cv *cppConverter) convertMethodExpr(node ast.Expr) (string, typeNames) {
+func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string, typeNames) {
 	if node == nil {
 		panic("node is nil")
 	}
 
 	switch n := node.(type) {
 	case *ast.FuncType:
-		params := cv.readFields(n.Params)
+		params := cv.readFieldsCtx(n.Params, ctx)
 		_, outTypes := cv.getResultInfos(n)
 		resultType := buildOutType(outTypes)
 		return resultType, params
@@ -2839,7 +2843,7 @@ func getAnotherTemplateParamName(excludedNames []string) string {
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms []string, param genStructParam) string {
 	buf := new(bytes.Buffer)
-	methods := cv.readMethods(node.Methods)
+	methods := cv.readMethods(node.Methods, ctContext{ensureHasName: true})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {

@@ -12,6 +12,9 @@ type Abser interface {
 	Abs() float64
 }
 
+// Check interface declaration with method with nameless parameter
+type dummy interface{ As(any) bool }
+
 func main() {
 	var a Abser
 	f := MyFloat(-math.Sqrt2)

@@ -54,6 +54,13 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // The constant is known to the compiler.
+    // There is no fundamental theory behind this number.
+    // concatstrings implements a Go string concatenation x+y+z+...
+    // The operands are passed in the slice a.
+    // If buf != nil, the compiler has determined that the result does not
+    // escape the calling function, so the string data can be stored in buf
+    // if small enough.
     std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a)
     {
         auto idx = 0;
@@ -111,6 +118,12 @@ namespace golang::runtime
         return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2, a3, a4});
     }
 
+    // slicebytetostring converts a byte slice to a string.
+    // It is inserted by the compiler into generated code.
+    // ptr is a pointer to the first element of the slice;
+    // n is the length of the slice.
+    // Buf is a fixed-size buffer for the result,
+    // it is not nil if the result does not escape.
     std::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n)
     {
         if(n == 0)
@@ -151,6 +164,8 @@ namespace golang::runtime
         return unsafe::String((unsigned char*)(p), n);
     }
 
+    // stringDataOnStack reports whether the string's data is
+    // stored on the current goroutine's stack.
     bool stringDataOnStack(std::string s)
     {
         auto ptr = uintptr_t(unsafe::Pointer(unsafe::StringData(s)));
@@ -174,6 +189,20 @@ namespace golang::runtime
         return {s, b};
     }
 
+    // slicebytetostringtmp returns a "string" referring to the actual []byte bytes.
+    //
+    // Callers need to ensure that the returned string will not be used after
+    // the calling goroutine modifies the original slice or synchronizes with
+    // another goroutine.
+    //
+    // The function is only called when instrumenting
+    // and otherwise intrinsified by the compiler.
+    //
+    // Some internal compiler optimizations use this function.
+    //   - Used for m[T1{... Tn{..., string(k), ...} ...}] and m[string(k)]
+    //     where k is []byte, T1 to Tn is a nesting of struct and array literals.
+    //   - Used for "<"+string(b)+">" concatenation where b is []byte.
+    //   - Used for string(b)=="foo" comparison where b is []byte.
     std::string slicebytetostringtmp(unsigned char* ptr, int n)
     {
         if(raceenabled && n > 0)
@@ -298,6 +327,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Variant with *byte pointer type for DWARF debugging.
     
     template<typename T> requires gocpp::GoStruct<T>
     stringStructDWARF::operator T()
@@ -356,6 +386,10 @@ namespace golang::runtime
         return s.make_slice(0, n);
     }
 
+    // rawstring allocates storage for a new string. The returned
+    // string and byte slice both refer to the same storage.
+    // The storage is not zeroed. Callers should use
+    // b to set the string contents and then drop b.
     std::tuple<std::string, gocpp::slice<unsigned char>> rawstring(int size)
     {
         std::string s;
@@ -364,6 +398,7 @@ namespace golang::runtime
         return {unsafe::String((unsigned char*)(p), size), unsafe::Slice((unsigned char*)(p), size)};
     }
 
+    // rawbyteslice allocates a new byte slice. The byte slice is not zeroed.
     gocpp::slice<unsigned char> rawbyteslice(int size)
     {
         gocpp::slice<unsigned char> b;
@@ -377,6 +412,7 @@ namespace golang::runtime
         return b;
     }
 
+    // rawruneslice allocates a new rune slice. The rune slice is not zeroed.
     gocpp::slice<gocpp::rune> rawruneslice(int size)
     {
         gocpp::slice<gocpp::rune> b;
@@ -394,6 +430,7 @@ namespace golang::runtime
         return b;
     }
 
+    // used by cmd/cgo
     gocpp::slice<unsigned char> gobytes(unsigned char* p, int n)
     {
         gocpp::slice<unsigned char> b;
@@ -411,6 +448,9 @@ namespace golang::runtime
         return b;
     }
 
+    // This is exported via linkname to assembly in syscall (for Plan9).
+    //
+    //go:linkname gostring
     std::string gostring(unsigned char* p)
     {
         auto l = findnull(p);
@@ -423,6 +463,9 @@ namespace golang::runtime
         return s;
     }
 
+    // internal_syscall_gostring is a version of gostring for internal/syscall/unix.
+    //
+    //go:linkname internal_syscall_gostring internal/syscall/unix.gostring
     std::string internal_syscall_gostring(unsigned char* p)
     {
         return gostring(p);
@@ -449,6 +492,9 @@ namespace golang::runtime
         return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
     }
 
+    // atoi64 parses an int64 from a string s.
+    // The bool result reports whether s is a number
+    // representable by a value of type int64.
     std::tuple<int64_t, bool> atoi64(std::string s)
     {
         if(s == ""s)
@@ -497,6 +543,8 @@ namespace golang::runtime
         return {n, true};
     }
 
+    // atoi is like atoi64 but for integers
+    // that fit into an int.
     std::tuple<int, bool> atoi(std::string s)
     {
         if(auto [n, ok] = atoi64(s); n == int64_t(int(n)))
@@ -506,6 +554,8 @@ namespace golang::runtime
         return {0, false};
     }
 
+    // atoi32 is like atoi but for integers
+    // that fit into an int32.
     std::tuple<int32_t, bool> atoi32(std::string s)
     {
         if(auto [n, ok] = atoi64(s); n == int64_t(int32_t(n)))
@@ -515,6 +565,19 @@ namespace golang::runtime
         return {0, false};
     }
 
+    // parseByteCount parses a string that represents a count of bytes.
+    //
+    // s must match the following regular expression:
+    //
+    //	^[0-9]+(([KMGT]i)?B)?$
+    //
+    // In other words, an integer byte count with an optional unit
+    // suffix. Acceptable suffixes include one of
+    // - KiB, MiB, GiB, TiB which represent binary IEC/ISO 80000 units, or
+    // - B, which just represents bytes.
+    //
+    // Returns an int64 because that's what its callers want and receive,
+    // but the result is always non-negative.
     std::tuple<int64_t, bool> parseByteCount(std::string s)
     {
         if(s == ""s)
@@ -604,6 +667,7 @@ namespace golang::runtime
         return {int64_t(un), true};
     }
 
+    //go:nosplit
     int findnull(unsigned char* s)
     {
         if(s == nullptr)
@@ -620,6 +684,10 @@ namespace golang::runtime
             }
             return l;
         }
+        // pageSize is the unit we scan at a time looking for NULL.
+        // It must be the minimum page size for any architecture Go
+        // runs on. It's okay (just a minor performance loss) if the
+        // actual system page size is larger than this value.
         auto pageSize = 4096;
         auto offset = 0;
         auto ptr = unsafe::Pointer(s);
@@ -652,6 +720,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     std::string gostringnocopy(unsigned char* str)
     {
         auto ss = gocpp::Init<stringStruct>([=](auto& x) {

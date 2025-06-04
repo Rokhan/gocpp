@@ -35,6 +35,13 @@ namespace golang::runtime
         using abi::rec::Get;
     }
 
+    // typedmemmove copies a value of type typ to dst from src.
+    // Must be nosplit, see #16026.
+    //
+    // TODO: Perfect for go:nosplitrec since we can't have a safe point
+    // anywhere in the bulk barrier or memmove.
+    //
+    //go:nosplit
     void typedmemmove(abi::Type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(dst == src)
@@ -52,16 +59,29 @@ namespace golang::runtime
         }
     }
 
+    // wbZero performs the write barrier operations necessary before
+    // zeroing a region of memory at address dst of type typ.
+    // Does not actually do the zeroing.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     void wbZero(golang::runtime::_type* typ, unsafe::Pointer dst)
     {
         bulkBarrierPreWrite(uintptr_t(dst), 0, typ->PtrBytes, typ);
     }
 
+    // wbMove performs the write barrier operations necessary before
+    // copying a region of memory from src to dst of type typ.
+    // Does not actually do the copying.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     void wbMove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
     }
 
+    //go:linkname reflect_typedmemmove reflect.typedmemmove
     void reflect_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         if(raceenabled)
@@ -82,11 +102,22 @@ namespace golang::runtime
         typedmemmove(typ, dst, src);
     }
 
+    //go:linkname reflectlite_typedmemmove internal/reflectlite.typedmemmove
     void reflectlite_typedmemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         reflect_typedmemmove(typ, dst, src);
     }
 
+    // reflectcallmove is invoked by reflectcall to copy the return values
+    // out of the stack and into the heap, invoking the necessary write
+    // barriers. dst, src, and size describe the return value area to
+    // copy. typ describes the entire frame (not just the return values).
+    // typ may be nil, which indicates write barriers are not needed.
+    //
+    // It must be nosplit and must only call nosplit functions because the
+    // stack map of reflectcall is wrong.
+    //
+    //go:nosplit
     void reflectcallmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t size, abi::RegArgs* regs)
     {
         if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
@@ -103,6 +134,7 @@ namespace golang::runtime
         }
     }
 
+    //go:nosplit
     int typedslicecopy(golang::runtime::_type* typ, unsafe::Pointer dstPtr, int dstLen, unsafe::Pointer srcPtr, int srcLen)
     {
         auto n = dstLen;
@@ -149,6 +181,7 @@ namespace golang::runtime
         return n;
     }
 
+    //go:linkname reflect_typedslicecopy reflect.typedslicecopy
     int reflect_typedslicecopy(golang::runtime::_type* elemType, struct slice dst, struct slice src)
     {
         if(elemType->PtrBytes == 0)
@@ -158,6 +191,17 @@ namespace golang::runtime
         return typedslicecopy(elemType, dst.array, dst.len, src.array, src.len);
     }
 
+    // typedmemclr clears the typed memory at ptr with type typ. The
+    // memory at ptr must already be initialized (and hence in type-safe
+    // state). If the memory is being initialized for the first time, see
+    // memclrNoHeapPointers.
+    //
+    // If the caller knows that typ has pointers, it can alternatively
+    // call memclrHasPointers.
+    //
+    // TODO: A "go:nosplitrec" annotation would be perfect for this.
+    //
+    //go:nosplit
     void typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
@@ -167,11 +211,13 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, typ->Size_);
     }
 
+    //go:linkname reflect_typedmemclr reflect.typedmemclr
     void reflect_typedmemclr(golang::runtime::_type* typ, unsafe::Pointer ptr)
     {
         typedmemclr(typ, ptr);
     }
 
+    //go:linkname reflect_typedmemclrpartial reflect.typedmemclrpartial
     void reflect_typedmemclrpartial(golang::runtime::_type* typ, unsafe::Pointer ptr, uintptr_t off, uintptr_t size)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
@@ -181,6 +227,7 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, size);
     }
 
+    //go:linkname reflect_typedarrayclear reflect.typedarrayclear
     void reflect_typedarrayclear(golang::runtime::_type* typ, unsafe::Pointer ptr, int len)
     {
         auto size = typ->Size_ * uintptr_t(len);
@@ -191,6 +238,12 @@ namespace golang::runtime
         memclrNoHeapPointers(ptr, size);
     }
 
+    // memclrHasPointers clears n bytes of typed memory starting at ptr.
+    // The caller must ensure that the type of the object at ptr has
+    // pointers, usually by checking typ.PtrBytes. However, ptr
+    // does not have to point to the start of the allocation.
+    //
+    //go:nosplit
     void memclrHasPointers(unsafe::Pointer ptr, uintptr_t n)
     {
         bulkBarrierPreWrite(uintptr_t(ptr), 0, n, nullptr);

@@ -37,6 +37,8 @@ namespace golang::os
         using namespace mocklib::rec;
     }
 
+    // Stat returns the FileInfo structure describing file.
+    // If there is an error, it will be of type *PathError.
     std::tuple<os::FileInfo, struct gocpp::error> rec::Stat(struct File* file)
     {
         if(file == nullptr)
@@ -46,6 +48,7 @@ namespace golang::os
         return statHandle(file->name, file->pfd.Sysfd);
     }
 
+    // stat implements both Stat and Lstat of a file.
     std::tuple<os::FileInfo, struct gocpp::error> stat(std::string funcname, std::string name, bool followSurrogates)
     {
         gocpp::Defer defer;
@@ -68,6 +71,8 @@ namespace golang::os
                     x.Err = err;
                 })};
             }
+            // Try GetFileAttributesEx first, because it is faster than CreateFile.
+            // See https://golang.org/issues/19922#issuecomment-300031421 for details.
             syscall::Win32FileAttributeData fa = {};
             err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(unsafe::Pointer(& fa)));
             if(err == windows::ERROR_SHARING_VIOLATION)
@@ -182,11 +187,13 @@ namespace golang::os
         return {fs, err};
     }
 
+    // statNolog implements Stat for Windows.
     std::tuple<os::FileInfo, struct gocpp::error> statNolog(std::string name)
     {
         return stat("Stat"s, name, true);
     }
 
+    // lstatNolog implements Lstat for Windows.
     std::tuple<os::FileInfo, struct gocpp::error> lstatNolog(std::string name)
     {
         auto followSurrogates = false;

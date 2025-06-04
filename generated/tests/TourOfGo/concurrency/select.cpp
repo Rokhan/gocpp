@@ -109,6 +109,7 @@ namespace golang::main
             }
 
 
+    // from src\runtime\trace2.go:967:3
     void testInlinedType()
     {
         gocpp::channel<gocpp_id_0> wakeup = {};

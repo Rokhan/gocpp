@@ -31,6 +31,13 @@ namespace golang::rand
         return uint32_t(i);
     }
 
+    // NormFloat64 returns a normally distributed float64 in
+    // the range -[math.MaxFloat64] through +[math.MaxFloat64] inclusive,
+    // with standard normal distribution (mean = 0, stddev = 1).
+    // To produce a different normal distribution, callers can
+    // adjust the output using:
+    //
+    //	sample = NormFloat64() * desiredStdDev + desiredMean
     double rec::NormFloat64(struct Rand* r)
     {
         for(; ; )

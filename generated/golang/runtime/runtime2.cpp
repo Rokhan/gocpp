@@ -59,6 +59,94 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // defined constants
+    // _Gidle means this goroutine was just allocated and has not
+    // yet been initialized.
+    // _Grunnable means this goroutine is on a run queue. It is
+    // not currently executing user code. The stack is not owned.
+    // _Grunning means this goroutine may execute user code. The
+    // stack is owned by this goroutine. It is not on a run queue.
+    // It is assigned an M and a P (g.m and g.m.p are valid).
+    // _Gsyscall means this goroutine is executing a system call.
+    // It is not executing user code. The stack is owned by this
+    // goroutine. It is not on a run queue. It is assigned an M.
+    // _Gwaiting means this goroutine is blocked in the runtime.
+    // It is not executing user code. It is not on a run queue,
+    // but should be recorded somewhere (e.g., a channel wait
+    // queue) so it can be ready()d when necessary. The stack is
+    // not owned *except* that a channel operation may read or
+    // write parts of the stack under the appropriate channel
+    // lock. Otherwise, it is not safe to access the stack after a
+    // goroutine enters _Gwaiting (e.g., it may get moved).
+    // _Gmoribund_unused is currently unused, but hardcoded in gdb
+    // scripts.
+    // _Gdead means this goroutine is currently unused. It may be
+    // just exited, on a free list, or just being initialized. It
+    // is not executing user code. It may or may not have a stack
+    // allocated. The G and its stack (if any) are owned by the M
+    // that is exiting the G or that obtained the G from the free
+    // list.
+    // _Genqueue_unused is currently unused.
+    // _Gcopystack means this goroutine's stack is being moved. It
+    // is not executing user code and is not on a run queue. The
+    // stack is owned by the goroutine that put it in _Gcopystack.
+    // _Gpreempted means this goroutine stopped itself for a
+    // suspendG preemption. It is like _Gwaiting, but nothing is
+    // yet responsible for ready()ing it. Some suspendG must CAS
+    // the status to _Gwaiting to take responsibility for
+    // ready()ing this G.
+    // _Gscan combined with one of the above states other than
+    // _Grunning indicates that GC is scanning the stack. The
+    // goroutine is not executing user code and the stack is owned
+    // by the goroutine that set the _Gscan bit.
+    //
+    // _Gscanrunning is different: it is used to briefly block
+    // state transitions while GC signals the G to scan its own
+    // stack. This is otherwise like _Grunning.
+    //
+    // atomicstatus&~Gscan gives the state the goroutine will
+    // return to when the scan completes.
+    // _Pidle means a P is not being used to run user code or the
+    // scheduler. Typically, it's on the idle P list and available
+    // to the scheduler, but it may just be transitioning between
+    // other states.
+    //
+    // The P is owned by the idle list or by whatever is
+    // transitioning its state. Its run queue is empty.
+    // _Prunning means a P is owned by an M and is being used to
+    // run user code or the scheduler. Only the M that owns this P
+    // is allowed to change the P's status from _Prunning. The M
+    // may transition the P to _Pidle (if it has no more work to
+    // do), _Psyscall (when entering a syscall), or _Pgcstop (to
+    // halt for the GC). The M may also hand ownership of the P
+    // off directly to another M (e.g., to schedule a locked G).
+    // _Psyscall means a P is not running user code. It has
+    // affinity to an M in a syscall but is not owned by it and
+    // may be stolen by another M. This is similar to _Pidle but
+    // uses lightweight transitions and maintains M affinity.
+    //
+    // Leaving _Psyscall must be done with a CAS, either to steal
+    // or retake the P. Note that there's an ABA hazard: even if
+    // an M successfully CASes its original P back to _Prunning
+    // after a syscall, it must understand the P may have been
+    // used by another M in the interim.
+    // _Pgcstop means a P is halted for STW and owned by the M
+    // that stopped the world. The M that stopped the world
+    // continues to use its P, even in _Pgcstop. Transitioning
+    // from _Prunning to _Pgcstop causes an M to release its P and
+    // park.
+    //
+    // The P retains its run queue and startTheWorld will restart
+    // the scheduler on Ps with non-empty run queues.
+    // _Pdead means a P is no longer used (GOMAXPROCS shrank). We
+    // reuse Ps if GOMAXPROCS increases. A dead P is mostly
+    // stripped of its resources, though a few things remain
+    // (e.g., trace buffers).
+    // Mutual exclusion locks.  In the uncontended case,
+    // as fast as spin locks (just a few user-level instructions),
+    // but on the contention path they sleep in the kernel.
+    // A zeroed Mutex is unlocked (no need to initialize each lock).
+    // Initialization is helpful for static lock ranking, but not required.
     
     template<typename T> requires gocpp::GoStruct<T>
     mutex::operator T()
@@ -88,6 +176,26 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // sleep and wakeup on one-time events.
+    // before any calls to notesleep or notewakeup,
+    // must call noteclear to initialize the Note.
+    // then, exactly one thread can call notesleep
+    // and exactly one thread can call notewakeup (once).
+    // once notewakeup has been called, the notesleep
+    // will return.  future notesleep will return immediately.
+    // subsequent noteclear must be called only after
+    // previous notesleep has returned, e.g. it's disallowed
+    // to call noteclear straight after notewakeup.
+    //
+    // notetsleep is like notesleep but wakes up after
+    // a given number of nanoseconds even if the event
+    // has not yet happened.  if a goroutine uses notetsleep to
+    // wake up early, it must wait to call noteclear until it
+    // can be sure that no other goroutine is calling
+    // notewakeup.
+    //
+    // notesleep/notetsleep are generally called on g0,
+    // notetsleepg is similar to notetsleep but is called on user g.
     
     template<typename T> requires gocpp::GoStruct<T>
     note::operator T()
@@ -215,51 +323,99 @@ namespace golang::runtime
         return (eface*)(unsafe::Pointer(ep));
     }
 
+    // A guintptr holds a goroutine pointer, but typed as a uintptr
+    // to bypass write barriers. It is used in the Gobuf goroutine state
+    // and in scheduling lists that are manipulated without a P.
+    //
+    // The Gobuf.g goroutine pointer is almost always updated by assembly code.
+    // In one of the few places it is updated by Go code - func save - it must be
+    // treated as a uintptr to avoid a write barrier being emitted at a bad time.
+    // Instead of figuring out how to emit the write barriers missing in the
+    // assembly manipulation, we change the type of the field to uintptr,
+    // so that it does not require write barriers at all.
+    //
+    // Goroutine structs are published in the allg list and never freed.
+    // That will keep the goroutine structs from being collected.
+    // There is never a time that Gobuf.g's contain the only references
+    // to a goroutine: the publishing of the goroutine in allg comes first.
+    // Goroutine pointers are also kept in non-GC-visible places like TLS,
+    // so I can't see them ever moving. If we did want to start moving data
+    // in the GC, we'd need to allocate the goroutine structs from an
+    // alternate arena. Using guintptr doesn't make that problem any worse.
+    // Note that pollDesc.rg, pollDesc.wg also store g in uintptr form,
+    // so they would need to be updated too if g's start moving.
+    //go:nosplit
     struct g* rec::ptr(golang::runtime::guintptr gp)
     {
         return (g*)(unsafe::Pointer(gp));
     }
 
+    //go:nosplit
     void rec::set(golang::runtime::guintptr* gp, struct g* g)
     {
         *gp = guintptr(unsafe::Pointer(g));
     }
 
+    //go:nosplit
     bool rec::cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new)
     {
         return atomic::Casuintptr((uintptr_t*)(unsafe::Pointer(gp)), uintptr_t(old), uintptr_t(go_new));
     }
 
+    //go:nosplit
     runtime::guintptr rec::guintptr(struct g* gp)
     {
         return guintptr(unsafe::Pointer(gp));
     }
 
+    // setGNoWB performs *gp = new without a write barrier.
+    // For times when it's impractical to use a guintptr.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void setGNoWB(struct g** gp, struct g* go_new)
     {
         rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
     }
 
+    //go:nosplit
     struct p* rec::ptr(golang::runtime::puintptr pp)
     {
         return (p*)(unsafe::Pointer(pp));
     }
 
+    //go:nosplit
     void rec::set(golang::runtime::puintptr* pp, struct p* p)
     {
         *pp = puintptr(unsafe::Pointer(p));
     }
 
+    // muintptr is a *m that is not tracked by the garbage collector.
+    //
+    // Because we do free Ms, there are some additional constrains on
+    // muintptrs:
+    //
+    //  1. Never hold an muintptr locally across a safe point.
+    //
+    //  2. Any muintptr in the heap must be owned by the M itself so it can
+    //     ensure it is not in use when the last true *m is released.
+    //go:nosplit
     struct m* rec::ptr(golang::runtime::muintptr mp)
     {
         return (m*)(unsafe::Pointer(mp));
     }
 
+    //go:nosplit
     void rec::set(golang::runtime::muintptr* mp, struct m* m)
     {
         *mp = muintptr(unsafe::Pointer(m));
     }
 
+    // setMNoWB performs *mp = new without a write barrier.
+    // For times when it's impractical to use an muintptr.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void setMNoWB(struct m** mp, struct m* go_new)
     {
         rec::set(gocpp::recv((runtime::muintptr*)(unsafe::Pointer(mp))), go_new);
@@ -312,6 +468,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // sudog (pseudo-g) represents a g in a wait list, such as for sending/receiving
+    // on a channel.
+    //
+    // sudog is necessary because the g ↔ synchronization object relation
+    // is many-to-many. A g can be on many wait lists, so there may be
+    // many sudogs for one g; and many gs may be waiting on the same
+    // synchronization object, so there may be many sudogs for one object.
+    //
+    // sudogs are allocated from a special pool. Use acquireSudog and
+    // releaseSudog to allocate and free them.
     
     template<typename T> requires gocpp::GoStruct<T>
     sudog::operator T()
@@ -424,6 +590,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Stack describes a Go execution stack.
+    // The bounds of the stack are exactly [lo, hi),
+    // with no implicit data structures on either side.
     
     template<typename T> requires gocpp::GoStruct<T>
     stack::operator T()
@@ -456,6 +625,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // heldLockInfo gives info on a held lock and the rank of that lock
     
     template<typename T> requires gocpp::GoStruct<T>
     heldLockInfo::operator T()
@@ -676,6 +846,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // gTrackingPeriod is the number of transitions out of _Grunning between
+    // latency tracking runs.
+    // tlsSlots is the number of pointer-sized slots reserved for TLS on some platforms,
+    // like Windows.
+    // Values for m.freeWait.
     
     template<typename T> requires gocpp::GoStruct<T>
     m::operator T()
@@ -1366,6 +1541,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Values for the flags field of a sigTabT.
+    // Layout of in-memory per-function information prepared by linker
+    // See https://golang.org/s/go12symtab.
+    // Keep in sync with linker (../cmd/link/internal/ld/pcln.go:/pclntab)
+    // and with package debug/gosym and with symtab.go in package runtime.
     
     template<typename T> requires gocpp::GoStruct<T>
     _func::operator T()
@@ -1434,6 +1614,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Pseudo-Func that is returned for PCs that occur in inlined code.
+    // A *Func can be either a *_func or a *funcinl, and they are distinguished
+    // by the first uintptr.
+    //
+    // TODO(austin): Can we merge this with inlinedCall?
     
     template<typename T> requires gocpp::GoStruct<T>
     funcinl::operator T()
@@ -1478,6 +1663,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // layout of Itab known to compilers
+    // allocated in non-garbage-collected memory
+    // Needs to be in sync with
+    // ../cmd/compile/internal/reflectdata/reflect.go:/^func.WritePluginTable.
     
     template<typename T> requires gocpp::GoStruct<T>
     itab::operator T()
@@ -1519,6 +1708,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Lock-free stack node.
+    // Also known to export_test.go.
     
     template<typename T> requires gocpp::GoStruct<T>
     lfnode::operator T()
@@ -1586,6 +1777,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A _defer holds an entry on the list of deferred calls.
+    // If you add a field here, add code to clear it in deferProcStack.
+    // This struct must match the code in cmd/compile/internal/ssagen/ssa.go:deferstruct
+    // and cmd/compile/internal/ssagen/ssa.go:(*state).call.
+    // Some defers will be allocated on the stack and some on the heap.
+    // All defers are logically part of the stack, so write barriers to
+    // initialize them are not required. All defers must be manually scanned,
+    // and for heap defers, marked.
     
     template<typename T> requires gocpp::GoStruct<T>
     _defer::operator T()
@@ -1633,6 +1832,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A _panic holds information about an active panic.
+    //
+    // A _panic value must only ever live on the stack.
+    //
+    // The argp and link fields are stack pointers, but don't need special
+    // handling during stack growth: because they are pointer-typed and
+    // _panic values only live on the stack, regular stack pointer
+    // adjustment takes care of them.
     
     template<typename T> requires gocpp::GoStruct<T>
     _panic::operator T()
@@ -1701,6 +1908,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // savedOpenDeferState tracks the extra state from _panic that's
+    // necessary for deferreturn to pick up where gopanic left off,
+    // without needing to unwind the stack.
     
     template<typename T> requires gocpp::GoStruct<T>
     savedOpenDeferState::operator T()
@@ -1736,6 +1946,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // ancestorInfo records details of where a goroutine was started.
     
     template<typename T> requires gocpp::GoStruct<T>
     ancestorInfo::operator T()
@@ -1771,6 +1982,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A waitReason explains why a goroutine has been stopped.
+    // See gopark. Do not re-use waitReasons, add new ones.
     gocpp::array<std::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<std::string, 37>>([](auto& x) {
         x[waitReasonZero] = ""s;
         x[waitReasonGCAssistMarking] = "GC assist marking"s;
@@ -1824,6 +2037,30 @@ namespace golang::runtime
         return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
     }
 
+    // allpLock protects P-less reads and size changes of allp, idlepMask,
+    // and timerpMask, and all writes to allp.
+    // len(allp) == gomaxprocs; may change at safe points, otherwise
+    // immutable.
+    // Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must
+    // be atomic. Length may change at safe points.
+    //
+    // Each P must update only its own bit. In order to maintain
+    // consistency, a P going idle must the idle mask simultaneously with
+    // updates to the idle P list under the sched.lock, otherwise a racing
+    // pidleget may clear the mask before pidleput sets the mask,
+    // corrupting the bitmap.
+    //
+    // N.B., procresize takes ownership of all Ps in stopTheWorldWithSema.
+    // Bitmask of Ps that may have a timer, one bit per P. Reads and writes
+    // must be atomic. Length may change at safe points.
+    // Pool of GC parked background workers. Entries are type
+    // *gcBgMarkWorkerNode.
+    // Total number of gcBgMarkWorker goroutines. Protected by worldsema.
+    // Information about what cpu features are available.
+    // Packages outside the runtime should not use these
+    // as they are not an external api.
+    // Set on startup in asm_{386,amd64}.s
+    // set by cmd/link on arm systems
     m* allm;
     int32_t gomaxprocs;
     int32_t ncpu;
@@ -1840,8 +2077,10 @@ namespace golang::runtime
     bool isIntel;
     uint8_t goarm;
     uint8_t goarmsoftfp;
+    // Set by the linker so the runtime can determine the buildmode.
     bool islibrary;
     bool isarchive;
+    // Must agree with internal/buildcfg.FramePointerEnabled.
     bool framepointer_enabled = GOARCH == "amd64"s || GOARCH == "arm64"s;
 }
 

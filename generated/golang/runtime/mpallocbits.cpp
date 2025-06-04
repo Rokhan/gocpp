@@ -21,21 +21,26 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // pageBits is a bitmap representing one bit per page in a palloc chunk.
+    // get returns the value of the i'th bit in the bitmap.
     unsigned int rec::get(golang::runtime::pageBits* b, unsigned int i)
     {
         return (unsigned int)((b[i / 64] >> (i % 64)) & 1);
     }
 
+    // block64 returns the 64-bit aligned block of bits containing the i'th bit.
     uint64_t rec::block64(golang::runtime::pageBits* b, unsigned int i)
     {
         return b[i / 64];
     }
 
+    // set sets bit i of pageBits.
     void rec::set(golang::runtime::pageBits* b, unsigned int i)
     {
         b[i / 64] |= 1 << (i % 64);
     }
 
+    // setRange sets bits in the range [i, i+n).
     void rec::setRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         _ = b[i / 64];
@@ -59,6 +64,7 @@ namespace golang::runtime
         b[j / 64] |= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
+    // setAll sets all the bits of b.
     void rec::setAll(golang::runtime::pageBits* b)
     {
         for(auto [i, gocpp_ignored] : b)
@@ -67,16 +73,20 @@ namespace golang::runtime
         }
     }
 
+    // setBlock64 sets the 64-bit aligned block of bits containing the i'th bit that
+    // are set in v.
     void rec::setBlock64(golang::runtime::pageBits* b, unsigned int i, uint64_t v)
     {
         b[i / 64] |= v;
     }
 
+    // clear clears bit i of pageBits.
     void rec::clear(golang::runtime::pageBits* b, unsigned int i)
     {
         b[i / 64] &^= 1 << (i % 64);
     }
 
+    // clearRange clears bits in the range [i, i+n).
     void rec::clearRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         _ = b[i / 64];
@@ -100,6 +110,7 @@ namespace golang::runtime
         b[j / 64] &^= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
+    // clearAll frees all the bits of b.
     void rec::clearAll(golang::runtime::pageBits* b)
     {
         for(auto [i, gocpp_ignored] : b)
@@ -108,11 +119,15 @@ namespace golang::runtime
         }
     }
 
+    // clearBlock64 clears the 64-bit aligned block of bits containing the i'th bit that
+    // are set in v.
     void rec::clearBlock64(golang::runtime::pageBits* b, unsigned int i, uint64_t v)
     {
         b[i / 64] &^= v;
     }
 
+    // popcntRange counts the number of set bits in the
+    // range [i, i+n).
     unsigned int rec::popcntRange(golang::runtime::pageBits* b, unsigned int i, unsigned int n)
     {
         unsigned int s;
@@ -136,6 +151,12 @@ namespace golang::runtime
         return s;
     }
 
+    // pallocBits is a bitmap that tracks page allocations for at most one
+    // palloc chunk.
+    //
+    // The precise representation is an implementation detail, but for the
+    // sake of documentation, 0s are free pages and 1s are allocated pages.
+    // summarize returns a packed summary of the bitmap in pallocBits.
     runtime::pallocSum rec::summarize(golang::runtime::pallocBits* b)
     {
         unsigned int start = {};
@@ -163,6 +184,7 @@ namespace golang::runtime
         }
         if(start == notSetYet)
         {
+            // Made it all the way through without finding a single 1 bit.
             auto n = (unsigned int)(64 * len(b));
             return packPallocSum(n, n, n);
         }
@@ -224,6 +246,15 @@ namespace golang::runtime
         return packPallocSum(start, most, cur);
     }
 
+    // find searches for npages contiguous free pages in pallocBits and returns
+    // the index where that run starts, as well as the index of the first free page
+    // it found in the search. searchIdx represents the first known free page and
+    // where to begin the next search from.
+    //
+    // If find fails to find any free space, it returns an index of ^uint(0) and
+    // the new searchIdx should be ignored.
+    //
+    // Note that if npages == 1, the two returned values will always be identical.
     std::tuple<unsigned int, unsigned int> rec::find(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         if(npages == 1)
@@ -239,6 +270,10 @@ namespace golang::runtime
         return rec::findLargeN(gocpp::recv(b), npages, searchIdx);
     }
 
+    // find1 is a helper for find which searches for a single free page
+    // in the pallocBits and returns the index.
+    //
+    // See find for an explanation of the searchIdx parameter.
     unsigned int rec::find1(golang::runtime::pallocBits* b, unsigned int searchIdx)
     {
         _ = b[0];
@@ -254,6 +289,16 @@ namespace golang::runtime
         return ~ (unsigned int)(0);
     }
 
+    // findSmallN is a helper for find which searches for npages contiguous free pages
+    // in this pallocBits and returns the index where that run of contiguous pages
+    // starts as well as the index of the first free page it finds in its search.
+    //
+    // See find for an explanation of the searchIdx parameter.
+    //
+    // Returns a ^uint(0) index on failure and the new searchIdx should be ignored.
+    //
+    // findSmallN assumes npages <= 64, where any such contiguous run of pages
+    // crosses at most one aligned 64-bit boundary in the bits.
     std::tuple<unsigned int, unsigned int> rec::findSmallN(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         auto [end, newSearchIdx] = std::tuple{(unsigned int)(0), ~ (unsigned int)(0)};
@@ -284,6 +329,16 @@ namespace golang::runtime
         return {~ (unsigned int)(0), newSearchIdx};
     }
 
+    // findLargeN is a helper for find which searches for npages contiguous free pages
+    // in this pallocBits and returns the index where that run starts, as well as the
+    // index of the first free page it found it its search.
+    //
+    // See alloc for an explanation of the searchIdx parameter.
+    //
+    // Returns a ^uint(0) index on failure and the new searchIdx should be ignored.
+    //
+    // findLargeN assumes npages > 64, where any such run of free pages
+    // crosses at least one aligned 64-bit boundary in the bits.
     std::tuple<unsigned int, unsigned int> rec::findLargeN(golang::runtime::pallocBits* b, uintptr_t npages, unsigned int searchIdx)
     {
         auto [start, size, newSearchIdx] = std::tuple{~ (unsigned int)(0), (unsigned int)(0), ~ (unsigned int)(0)};
@@ -326,41 +381,55 @@ namespace golang::runtime
         return {start, newSearchIdx};
     }
 
+    // allocRange allocates the range [i, i+n).
     void rec::allocRange(golang::runtime::pallocBits* b, unsigned int i, unsigned int n)
     {
         rec::setRange(gocpp::recv((runtime::pageBits*)(b)), i, n);
     }
 
+    // allocAll allocates all the bits of b.
     void rec::allocAll(golang::runtime::pallocBits* b)
     {
         rec::setAll(gocpp::recv((runtime::pageBits*)(b)));
     }
 
+    // free1 frees a single page in the pallocBits at i.
     void rec::free1(golang::runtime::pallocBits* b, unsigned int i)
     {
         rec::clear(gocpp::recv((runtime::pageBits*)(b)), i);
     }
 
+    // free frees the range [i, i+n) of pages in the pallocBits.
     void rec::free(golang::runtime::pallocBits* b, unsigned int i, unsigned int n)
     {
         rec::clearRange(gocpp::recv((runtime::pageBits*)(b)), i, n);
     }
 
+    // freeAll frees all the bits of b.
     void rec::freeAll(golang::runtime::pallocBits* b)
     {
         rec::clearAll(gocpp::recv((runtime::pageBits*)(b)));
     }
 
+    // pages64 returns a 64-bit bitmap representing a block of 64 pages aligned
+    // to 64 pages. The returned block of pages is the one containing the i'th
+    // page in this pallocBits. Each bit represents whether the page is in-use.
     uint64_t rec::pages64(golang::runtime::pallocBits* b, unsigned int i)
     {
         return rec::block64(gocpp::recv((runtime::pageBits*)(b)), i);
     }
 
+    // allocPages64 allocates a 64-bit block of 64 pages aligned to 64 pages according
+    // to the bits set in alloc. The block set is the one containing the i'th page.
     void rec::allocPages64(golang::runtime::pallocBits* b, unsigned int i, uint64_t alloc)
     {
         rec::setBlock64(gocpp::recv((runtime::pageBits*)(b)), i, alloc);
     }
 
+    // findBitRange64 returns the bit index of the first set of
+    // n consecutive 1 bits. If no consecutive set of 1 bits of
+    // size n may be found in c, then it returns an integer >= 64.
+    // n must be > 0.
     unsigned int findBitRange64(uint64_t c, unsigned int n)
     {
         auto p = n - 1;
@@ -383,6 +452,13 @@ namespace golang::runtime
         return (unsigned int)(sys::TrailingZeros64(c));
     }
 
+    // pallocData encapsulates pallocBits and a bitmap for
+    // whether or not a given page is scavenged in a single
+    // structure. It's effectively a pallocBits with
+    // additional functionality.
+    //
+    // Update the comment on (*pageAlloc).chunks should this
+    // structure change.
     
     template<typename T> requires gocpp::GoStruct<T>
     pallocData::operator T()
@@ -412,12 +488,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // allocRange sets bits [i, i+n) in the bitmap to 1 and
+    // updates the scavenged bits appropriately.
     void rec::allocRange(struct pallocData* m, unsigned int i, unsigned int n)
     {
         rec::allocRange(gocpp::recv(m->pallocBits), i, n);
         rec::clearRange(gocpp::recv(m->scavenged), i, n);
     }
 
+    // allocAll sets every bit in the bitmap to 1 and updates
+    // the scavenged bits appropriately.
     void rec::allocAll(struct pallocData* m)
     {
         rec::allocAll(gocpp::recv(m->pallocBits));

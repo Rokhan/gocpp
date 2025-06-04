@@ -30,6 +30,17 @@
 #include "golang/unicode/utf8/utf8.h"
 #include "golang/unsafe/unsafe.h"
 
+// Package reflect implements run-time reflection, allowing a program to
+// manipulate objects with arbitrary types. The typical use is to take a value
+// with static type interface{} and extract its dynamic type information by
+// calling TypeOf, which returns a Type.
+//
+// A call to ValueOf returns a Value representing the run-time data.
+// Zero takes a Type and returns a Value representing a zero value
+// for that type.
+//
+// See "The Laws of Reflection" for an introduction to reflection in Go:
+// https://golang.org/doc/articles/laws_of_reflection.html
 namespace golang::reflect
 {
     namespace rec
@@ -71,6 +82,17 @@ namespace golang::reflect
         using sync::rec::Store;
     }
 
+    // Type is the representation of a Go type.
+    //
+    // Not all methods apply to all kinds of types. Restrictions,
+    // if any, are noted in the documentation for each method.
+    // Use the Kind method to find out the kind of type before
+    // calling kind-specific methods. Calling a method
+    // inappropriate to the kind of type causes a run-time panic.
+    //
+    // Type values are comparable, such as with the == operator,
+    // so they can be used as map keys.
+    // Two Type values are equal if they represent identical types.
     
     template<typename T>
     Type::Type(T& ref)
@@ -569,6 +591,14 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // A Kind represents the specific kind of type that a [Type] represents.
+    // The zero Kind is not a valid kind.
+    // Ptr is the old name for the [Pointer] kind.
+    // uncommonType is present only for defined types or types with methods
+    // (if T is a defined type, the uncommonTypes for T and *T have methods).
+    // Using a pointer to this struct reduces the overall size required
+    // to describe a non-defined type with no methods.
+    // Embed this type to get common/uncommon
     
     template<typename T> requires gocpp::GoStruct<T>
     common::operator T()
@@ -595,6 +625,8 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // rtype is the common implementation of most values.
+    // It is embedded in other struct types.
     
     template<typename T> requires gocpp::GoStruct<T>
     rtype::operator T()
@@ -634,6 +666,21 @@ namespace golang::reflect
         return rec::Uncommon(gocpp::recv(t->t));
     }
 
+    // ChanDir represents a channel type's direction.
+    // arrayType represents a fixed array type.
+    // chanType represents a channel type.
+    // funcType represents a function type.
+    //
+    // A *rtype for each in and out parameter is stored in an array that
+    // directly follows the funcType (and possibly its uncommonType). So
+    // a function type with one method, one input, and one output is:
+    //
+    //	struct {
+    //		funcType
+    //		uncommonType
+    //		[2]*rtype    // [0] is in, [1] is out
+    //	}
+    // interfaceType represents an interface type.
     
     template<typename T> requires gocpp::GoStruct<T>
     interfaceType::operator T()
@@ -690,6 +737,7 @@ namespace golang::reflect
         return rec::Uncommon(gocpp::recv(t));
     }
 
+    // mapType represents a map type.
     
     template<typename T> requires gocpp::GoStruct<T>
     mapType::operator T()
@@ -716,6 +764,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // ptrType represents a pointer type.
     
     template<typename T> requires gocpp::GoStruct<T>
     ptrType::operator T()
@@ -742,6 +791,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // sliceType represents a slice type.
     
     template<typename T> requires gocpp::GoStruct<T>
     sliceType::operator T()
@@ -768,6 +818,8 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // Struct field
+    // structType represents a struct type.
     
     template<typename T> requires gocpp::GoStruct<T>
     structType::operator T()
@@ -820,6 +872,7 @@ namespace golang::reflect
         return abi::NewName(n, tag, exported, embedded);
     }
 
+    // Method represents a single method.
     
     template<typename T> requires gocpp::GoStruct<T>
     Method::operator T()
@@ -861,11 +914,13 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // IsExported reports whether the method is exported.
     bool rec::IsExported(struct Method m)
     {
         return m.PkgPath == ""s;
     }
 
+    // String returns the name of k.
     std::string rec::String(golang::reflect::Kind k)
     {
         if((unsigned int)(k) < (unsigned int)(len(kindNames)))
@@ -904,28 +959,55 @@ namespace golang::reflect
         x[Struct] = "struct"s;
         x[UnsafePointer] = "unsafe.Pointer"s;
     });
+    // resolveNameOff resolves a name offset from a base pointer.
+    // The (*rtype).nameOff method is a convenience wrapper for this function.
+    // Implemented in the runtime package.
+    //
+    //go:noescape
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     /* convertBlockStmt, nil block */;
 
+    // resolveTypeOff resolves an *rtype offset from a base type.
+    // The (*rtype).typeOff method is a convenience wrapper for this function.
+    // Implemented in the runtime package.
+    //
+    //go:noescape
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
+    // resolveTextOff resolves a function pointer offset from a base type.
+    // The (*rtype).textOff method is a convenience wrapper for this function.
+    // Implemented in the runtime package.
+    //
+    //go:noescape
     unsafe::Pointer resolveTextOff(unsafe::Pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
+    // addReflectOff adds a pointer to the reflection lookup map in the runtime.
+    // It returns a new ID that can be used as a typeOff or textOff, and will
+    // be resolved correctly. Implemented in the runtime package.
+    //
+    //go:noescape
     int32_t addReflectOff(unsafe::Pointer ptr)
     /* convertBlockStmt, nil block */;
 
+    // resolveReflectName adds a name to the reflection lookup map in the runtime.
+    // It returns a new nameOff that can be used to refer to the pointer.
     reflect::aNameOff resolveReflectName(abi::Name n)
     {
         return aNameOff(addReflectOff(unsafe::Pointer(n->Bytes)));
     }
 
+    // resolveReflectType adds a *rtype to the reflection lookup map in the runtime.
+    // It returns a new typeOff that can be used to refer to the pointer.
     reflect::aTypeOff resolveReflectType(abi::Type* t)
     {
         return aTypeOff(addReflectOff(unsafe::Pointer(t)));
     }
 
+    // resolveReflectText adds a function pointer to the reflection lookup map in
+    // the runtime. It returns a new textOff that can be used to refer to the
+    // pointer.
     reflect::aTextOff resolveReflectText(unsafe::Pointer ptr)
     {
         return aTextOff(addReflectOff(ptr));
@@ -1297,6 +1379,13 @@ namespace golang::reflect
         return rec::IsVariadic(gocpp::recv(tt));
     }
 
+    // add returns p+x.
+    //
+    // The whySafe string is ignored, so that the function still inlines
+    // as efficiently as p+x, but all call sites should use the string to
+    // record why the addition is safe, which is to say why the addition
+    // does not cause x to advance to the very end of p's allocation
+    // and therefore point incorrectly at the next block in memory.
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe)
     {
         return unsafe::Pointer(uintptr_t(p) + x);
@@ -1327,6 +1416,7 @@ namespace golang::reflect
         return "ChanDir"s + strconv::Itoa(int(d));
     }
 
+    // Method returns the i'th method in the type's method set.
     struct Method rec::Method(struct interfaceType* t, int i)
     {
         struct Method m;
@@ -1350,11 +1440,13 @@ namespace golang::reflect
         return m;
     }
 
+    // NumMethod returns the number of interface methods in the type's method set.
     int rec::NumMethod(struct interfaceType* t)
     {
         return len(t->Methods);
     }
 
+    // MethodByName method with the given name in the type's method set.
     std::tuple<struct Method, bool> rec::MethodByName(struct interfaceType* t, std::string name)
     {
         struct Method m;
@@ -1375,6 +1467,7 @@ namespace golang::reflect
         return {m, ok};
     }
 
+    // A StructField describes a single field in a struct.
     
     template<typename T> requires gocpp::GoStruct<T>
     StructField::operator T()
@@ -1422,17 +1515,37 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // IsExported reports whether the field is exported.
     bool rec::IsExported(struct StructField f)
     {
         return f.PkgPath == ""s;
     }
 
+    // A StructTag is the tag string in a struct field.
+    //
+    // By convention, tag strings are a concatenation of
+    // optionally space-separated key:"value" pairs.
+    // Each key is a non-empty string consisting of non-control
+    // characters other than space (U+0020 ' '), quote (U+0022 '"'),
+    // and colon (U+003A ':').  Each value is quoted using U+0022 '"'
+    // characters and Go string literal syntax.
+    // Get returns the value associated with key in the tag string.
+    // If there is no such key in the tag, Get returns the empty string.
+    // If the tag does not have the conventional format, the value
+    // returned by Get is unspecified. To determine whether a tag is
+    // explicitly set to the empty string, use Lookup.
     std::string rec::Get(golang::reflect::StructTag tag, std::string key)
     {
         auto [v, gocpp_id_1] = rec::Lookup(gocpp::recv(tag), key);
         return v;
     }
 
+    // Lookup returns the value associated with key in the tag string.
+    // If the key is present in the tag the value (which may be empty)
+    // is returned. Otherwise the returned value will be the empty string.
+    // The ok return value reports whether the value was explicitly set in
+    // the tag string. If the tag does not have the conventional format,
+    // the value returned by Lookup is unspecified.
     std::tuple<std::string, bool> rec::Lookup(golang::reflect::StructTag tag, std::string key)
     {
         std::string value;
@@ -1488,6 +1601,7 @@ namespace golang::reflect
         return {""s, false};
     }
 
+    // Field returns the i'th struct field.
     struct StructField rec::Field(struct structType* t, int i)
     {
         struct StructField f;
@@ -1512,6 +1626,7 @@ namespace golang::reflect
         return f;
     }
 
+    // FieldByIndex returns the nested field corresponding to index.
     struct StructField rec::FieldByIndex(struct structType* t, gocpp::slice<int> index)
     {
         struct StructField f;
@@ -1532,6 +1647,7 @@ namespace golang::reflect
         return f;
     }
 
+    // A fieldScan represents an item on the fieldByNameFunc scan work list.
     
     template<typename T> requires gocpp::GoStruct<T>
     fieldScan::operator T()
@@ -1564,6 +1680,8 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // FieldByNameFunc returns the struct field with a name that satisfies the
+    // match function and a boolean to indicate if the field was found.
     std::tuple<struct StructField, bool> rec::FieldByNameFunc(struct structType* t, std::function<bool (std::string)> match)
     {
         struct StructField result;
@@ -1572,6 +1690,12 @@ namespace golang::reflect
         auto next = gocpp::slice<fieldScan> {gocpp::Init<>([=](auto& x) {
             x.typ = t;
         })};
+        // nextCount records the number of times an embedded type has been
+        // encountered and considered for queueing in the 'next' slice.
+        // We only queue the first one, but we increment the count on each.
+        // If a struct type T can be reached more than once at a given depth level,
+        // then it annihilates itself and need not be considered at all when we
+        // process that next depth level.
         gocpp::map<structType*, int> nextCount = {};
         auto visited = gocpp::map<structType*, bool> {};
         for(; len(next) > 0; )
@@ -1646,6 +1770,8 @@ namespace golang::reflect
         return {result, ok};
     }
 
+    // FieldByName returns the struct field with the given name
+    // and a boolean to indicate if the field was found.
     std::tuple<struct StructField, bool> rec::FieldByName(struct structType* t, std::string name)
     {
         struct StructField f;
@@ -1676,24 +1802,37 @@ namespace golang::reflect
         });
     }
 
+    // TypeOf returns the reflection [Type] that represents the dynamic type of i.
+    // If i is a nil interface value, TypeOf returns nil.
     struct Type TypeOf(go_any i)
     {
         auto eface = *(emptyInterface*)(unsafe::Pointer(& i));
         return toType((abi::Type*)(noescape(unsafe::Pointer(eface.typ))));
     }
 
+    // rtypeOf directly extracts the *rtype of the provided value.
     abi::Type* rtypeOf(go_any i)
     {
         auto eface = *(emptyInterface*)(unsafe::Pointer(& i));
         return eface.typ;
     }
 
+    // ptrMap is the cache for PointerTo.
     sync::Map ptrMap;
+    // PtrTo returns the pointer type with element t.
+    // For example, if t represents type Foo, PtrTo(t) represents *Foo.
+    //
+    // PtrTo is the old spelling of [PointerTo].
+    // The two functions behave identically.
+    //
+    // Deprecated: Superseded by [PointerTo].
     struct Type PtrTo(struct Type t)
     {
         return PointerTo(t);
     }
 
+    // PointerTo returns the pointer type with element t.
+    // For example, if t represents type Foo, PointerTo(t) represents *Foo.
     struct Type PointerTo(struct Type t)
     {
         return toRType(rec::ptrTo(gocpp::recv(gocpp::getValue<rtype*>(t))));
@@ -1721,6 +1860,8 @@ namespace golang::reflect
             auto [pi, gocpp_id_3] = rec::LoadOrStore(gocpp::recv(ptrMap), t, p);
             return & gocpp::getValue<ptrType*>(pi)->Type;
         }
+        // Create a new ptrType starting with the description
+        // of an *unsafe.Pointer.
         go_any iptr = (unsafe::Pointer*)(nullptr);
         auto prototype = *(ptrType**)(unsafe::Pointer(& iptr));
         auto pp = *prototype;
@@ -1737,6 +1878,7 @@ namespace golang::reflect
         return rec::ptrTo(gocpp::recv(toRType(t)));
     }
 
+    // fnv1 incorporates the list of bytes into the hash x using the FNV-1 hash function.
     uint32_t fnv1(uint32_t x, gocpp::slice<unsigned char> list)
     {
         for(auto [gocpp_ignored, b] : list)
@@ -1783,6 +1925,7 @@ namespace golang::reflect
         return t->t.Equal != nullptr;
     }
 
+    // implements reports whether the type V implements the interface type T.
     bool implements(abi::Type* T, abi::Type* V)
     {
         if(rec::Kind(gocpp::recv(T)) != abi::Interface)
@@ -1872,11 +2015,20 @@ namespace golang::reflect
         return false;
     }
 
+    // specialChannelAssignability reports whether a value x of channel type V
+    // can be directly assigned (using memmove) to another channel type T.
+    // https://golang.org/doc/go_spec.html#Assignability
+    // T and V must be both of Chan kind.
     bool specialChannelAssignability(abi::Type* T, abi::Type* V)
     {
         return rec::ChanDir(gocpp::recv(V)) == abi::BothDir && (nameFor(T) == ""s || nameFor(V) == ""s) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), true);
     }
 
+    // directlyAssignable reports whether a value x of type V can be directly
+    // assigned (using memmove) to a value of type T.
+    // https://golang.org/doc/go_spec.html#Assignability
+    // Ignoring the interface rules (implemented elsewhere)
+    // and the ideal constant rules (no ideal constants at run time).
     bool directlyAssignable(abi::Type* T, abi::Type* V)
     {
         if(T == V)
@@ -2024,6 +2176,25 @@ namespace golang::reflect
         return false;
     }
 
+    // typelinks is implemented in package runtime.
+    // It returns a slice of the sections in each module,
+    // and a slice of *rtype offsets in each module.
+    //
+    // The types in each module are sorted by string. That is, the first
+    // two linked types of the first module are:
+    //
+    //	d0 := sections[0]
+    //	t1 := (*rtype)(add(d0, offset[0][0]))
+    //	t2 := (*rtype)(add(d0, offset[0][1]))
+    //
+    // and
+    //
+    //	t1.String() < t2.String()
+    //
+    // Note that strings are not unique identifiers for types:
+    // there can be more than one with a given string.
+    // Only types we might want to look up are included:
+    // pointers, channels, maps, slices, and arrays.
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks()
     /* convertBlockStmt, nil block */;
 
@@ -2032,6 +2203,10 @@ namespace golang::reflect
         return (abi::Type*)(add(section, uintptr_t(off), "sizeof(rtype) > 0"s));
     }
 
+    // typesByString returns the subslice of typelinks() whose elements have
+    // the given string representation.
+    // It may be empty (no known types with that string) or may have
+    // multiple elements (multiple types with that string).
     gocpp::slice<abi::Type*> typesByString(std::string s)
     {
         auto [sections, offset] = typelinks();
@@ -2065,7 +2240,11 @@ namespace golang::reflect
         return ret;
     }
 
+    // The lookupCache caches ArrayOf, ChanOf, MapOf and SliceOf lookups.
     sync::Map lookupCache;
+    // A cacheKey is the key for use in the lookupCache.
+    // Four values describe any of the types we are looking for:
+    // type kind, one or two subtypes, and an extra integer.
     
     template<typename T> requires gocpp::GoStruct<T>
     cacheKey::operator T()
@@ -2140,7 +2319,15 @@ namespace golang::reflect
     }
 
 
+    // The funcLookupCache caches FuncOf lookups.
+    // FuncOf does not share the common lookupCache since cacheKey is not
+    // sufficient to represent functions unambiguously.
     gocpp_id_6 funcLookupCache;
+    // ChanOf returns the channel type with the given direction and element type.
+    // For example, if t represents int, ChanOf(RecvDir, t) represents <-chan int.
+    //
+    // The gc runtime imposes a limit of 64 kB on channel element types.
+    // If t's size is equal to or exceeds this limit, ChanOf panics.
     struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
@@ -2153,6 +2340,7 @@ namespace golang::reflect
         {
             gocpp::panic("reflect.ChanOf: element size too large"s);
         }
+        // Look in known types.
         std::string s = {};
         //Go switch emulation
         {
@@ -2194,6 +2382,7 @@ namespace golang::reflect
                 return gocpp::getValue<Type>(ti);
             }
         }
+        // Make a channel type.
         go_any ichan = (gocpp::channel<unsafe::Pointer>)(nullptr);
         auto prototype = *(reflect::chanType**)(unsafe::Pointer(& ichan));
         auto ch = *prototype;
@@ -2206,6 +2395,12 @@ namespace golang::reflect
         return gocpp::getValue<Type>(ti);
     }
 
+    // MapOf returns the map type with the given key and element types.
+    // For example, if k represents int and e represents string,
+    // MapOf(k, e) represents map[int]string.
+    //
+    // If the key type is not a valid map key type (that is, if it does
+    // not implement Go's == operator), MapOf panics.
     struct Type MapOf(struct Type key, struct Type elem)
     {
         auto ktyp = rec::common(gocpp::recv(key));
@@ -2229,6 +2424,9 @@ namespace golang::reflect
                 return gocpp::getValue<Type>(ti);
             }
         }
+        // Make a map type.
+        // Note: flag values must match those used in the TMAP case
+        // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
         go_any imap = (gocpp::map<unsafe::Pointer, unsafe::Pointer>)(nullptr);
         auto mt = **(mapType**)(unsafe::Pointer(& imap));
         mt.Str = resolveReflectName(newName(s, ""s, false, false));
@@ -2312,6 +2510,13 @@ namespace golang::reflect
         }
     }
 
+    // FuncOf returns the function type with the given argument and result types.
+    // For example if k represents int and e represents string,
+    // FuncOf([]Type{k}, []Type{e}, false) represents func(int) string.
+    //
+    // The variadic argument controls whether the function is variadic. FuncOf
+    // panics if the in[len(in)-1] does not represent a slice and variadic is
+    // true.
     struct Type FuncOf(gocpp::slice<Type> in, gocpp::slice<Type> out, bool variadic)
     {
         gocpp::Defer defer;
@@ -2321,6 +2526,7 @@ namespace golang::reflect
             {
                 gocpp::panic("reflect.FuncOf: last arg of variadic func must be slice"s);
             }
+            // Make a func type.
             go_any ifunc = (std::function<void ()>)(nullptr);
             auto prototype = *(reflect::funcType**)(unsafe::Pointer(& ifunc));
             auto n = len(in) + len(out);
@@ -2332,6 +2538,7 @@ namespace golang::reflect
             auto ft = (reflect::funcType*)(unsafe::Pointer(rec::Pointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(o), 0)))))));
             auto args = unsafe::Slice((rtype**)(unsafe::Pointer(rec::Pointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(o), 1))))))), n).make_slice(0, 0, n);
             *ft = *prototype;
+            // Build a hash and minimally populate ft.
             uint32_t hash = {};
             for(auto [gocpp_ignored, in] : in)
             {
@@ -2413,6 +2620,7 @@ namespace golang::reflect
         return rec::String(gocpp::recv(toRType(t)));
     }
 
+    // funcStr builds a string representation of a funcType.
     std::string funcStr(golang::reflect::funcType* ft)
     {
         auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
@@ -2459,6 +2667,8 @@ namespace golang::reflect
         return std::string(repr);
     }
 
+    // isReflexive reports whether the == operation on the type is reflexive.
+    // That is, x == x for all values x of type t.
     bool isReflexive(abi::Type* t)
     {
         //Go switch emulation
@@ -2537,6 +2747,7 @@ namespace golang::reflect
         }
     }
 
+    // needKeyUpdate reports whether map overwrites require the key to be copied.
     bool needKeyUpdate(abi::Type* t)
     {
         //Go switch emulation
@@ -2615,6 +2826,7 @@ namespace golang::reflect
         }
     }
 
+    // hashMightPanic reports whether the hash of a map key of type t might panic.
     bool hashMightPanic(abi::Type* t)
     {
         //Go switch emulation
@@ -2651,6 +2863,10 @@ namespace golang::reflect
         }
     }
 
+    // Make sure these routines stay in sync with ../runtime/map.go!
+    // These types exist only for GC, so we only fill out GC relevant info.
+    // Currently, that's just size and the GC program. We also fill in string
+    // for possible debugging use.
     abi::Type* bucketOf(abi::Type* ktyp, abi::Type* etyp)
     {
         if(ktyp->Size_ > maxKeySize)
@@ -2661,6 +2877,11 @@ namespace golang::reflect
         {
             etyp = ptrTo(etyp);
         }
+        // Prepare GC data if any.
+        // A bucket is at most bucketSize*(1+maxKeySize+maxValSize)+ptrSize bytes,
+        // or 2064 bytes, or 258 pointer-size words, or 33 bytes of pointer bitmap.
+        // Note that since the key and value are known to be <= 128 bytes,
+        // they're guaranteed to have bitmaps instead of GC programs.
         unsigned char* gcdata = {};
         uintptr_t ptrdata = {};
         auto size = bucketSize * (1 + ktyp->Size_ + etyp->Size_) + goarch::PtrSize;
@@ -2711,6 +2932,8 @@ namespace golang::reflect
         return (gocpp::array<unsigned char, 1 << 30>*)(unsafe::Pointer(t->t.GCData)).make_slice(begin, end, end);
     }
 
+    // emitGCMask writes the GC mask for [n]typ into out, starting at bit
+    // offset base.
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n)
     {
         if(typ->Kind_ & kindGCProg != 0)
@@ -2733,6 +2956,8 @@ namespace golang::reflect
         }
     }
 
+    // appendGCProg appends the GC program for the first ptrdata bytes of
+    // typ to dst and returns the extended slice.
     gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ)
     {
         if(typ->Kind_ & kindGCProg != 0)
@@ -2754,6 +2979,8 @@ namespace golang::reflect
         return dst;
     }
 
+    // SliceOf returns the slice type with element type t.
+    // For example, if t represents int, SliceOf(t) represents []int.
     struct Type SliceOf(struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
@@ -2772,6 +2999,7 @@ namespace golang::reflect
                 return gocpp::getValue<Type>(ti);
             }
         }
+        // Make a slice type.
         go_any islice = (gocpp::slice<unsafe::Pointer>)(nullptr);
         auto prototype = *(sliceType**)(unsafe::Pointer(& islice));
         auto slice = *prototype;
@@ -2820,6 +3048,9 @@ namespace golang::reflect
     }
 
 
+    // The structLookupCache caches StructOf lookups.
+    // StructOf does not share the common lookupCache since we need to pin
+    // the memory associated with *structTypeFixedN.
     gocpp_id_19 structLookupCache;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -2850,11 +3081,18 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // isLetter reports whether a given 'rune' is classified as a Letter.
     bool isLetter(gocpp::rune ch)
     {
         return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' || ch >= utf8::RuneSelf && unicode::IsLetter(ch);
     }
 
+    // isValidFieldName checks if a string is a valid (struct) field name or not.
+    //
+    // According to the language spec, a field name should be an identifier.
+    //
+    // identifier = letter { letter | unicode_digit } .
+    // letter = unicode_letter | "_" .
     bool isValidFieldName(std::string fieldName)
     {
         for(auto [i, c] : fieldName)
@@ -2967,6 +3205,12 @@ namespace golang::reflect
         }
 
 
+    // StructOf returns the struct type containing fields.
+    // The Offset and Index fields are ignored and computed as they would be
+    // by the compiler.
+    //
+    // StructOf currently does not support promoted methods of embedded fields
+    // and panics if passed unexported StructFields.
     struct Type StructOf(gocpp::slice<StructField> fields)
     {
         gocpp::Defer defer;
@@ -3215,6 +3459,7 @@ namespace golang::reflect
                 gocpp::panic("reflect.StructOf: struct size would exceed virtual address space"s);
             }
             size = s;
+            // Make the struct type.
             go_any istruct = gocpp_id_24 {};
             auto prototype = *(structType**)(unsafe::Pointer(& istruct));
             *typ = *prototype;
@@ -3371,6 +3616,9 @@ namespace golang::reflect
         gocpp::panic("reflect: StructOf does not support methods of embedded interfaces"s);
     }
 
+    // runtimeStructField takes a StructField value passed to StructOf and
+    // returns both the corresponding internal representation, of type
+    // structField, and the pkgpath value to use for this field.
     std::tuple<reflect::structField, std::string> runtimeStructField(struct StructField field)
     {
         if(field.Anonymous && field.PkgPath != ""s)
@@ -3394,6 +3642,9 @@ namespace golang::reflect
         return {f, field.PkgPath};
     }
 
+    // typeptrdata returns the length in bytes of the prefix of t
+    // containing pointer data. Anything after this offset is scalar data.
+    // keep in sync with ../cmd/compile/internal/reflectdata/reflect.go
     uintptr_t typeptrdata(abi::Type* t)
     {
         //Go switch emulation
@@ -3428,6 +3679,12 @@ namespace golang::reflect
         }
     }
 
+    // See cmd/compile/internal/reflectdata/reflect.go for derivation of constant.
+    // ArrayOf returns the array type with the given length and element type.
+    // For example, if t represents int, ArrayOf(5, t) represents [5]int.
+    //
+    // If the resulting type would be larger than the available address space,
+    // ArrayOf panics.
     struct Type ArrayOf(int length, struct Type elem)
     {
         if(length < 0)
@@ -3450,6 +3707,7 @@ namespace golang::reflect
                 return gocpp::getValue<Type>(ti);
             }
         }
+        // Make an array type.
         go_any iarray = gocpp::array<unsafe::Pointer, 1> {};
         auto prototype = *(reflect::arrayType**)(unsafe::Pointer(& iarray));
         auto array = *prototype;
@@ -3583,6 +3841,11 @@ namespace golang::reflect
         return x;
     }
 
+    // toType converts from a *rtype to a Type that can be returned
+    // to the client of package reflect. In gc, the only concern is that
+    // a nil *rtype must be replaced by a nil Type, but in gccgo this
+    // function takes care of ensuring that multiple *rtype for the same
+    // type are coalesced into a single Type.
     struct Type toType(abi::Type* t)
     {
         if(t == nullptr)
@@ -3660,6 +3923,13 @@ namespace golang::reflect
     }
 
     sync::Map layoutCache;
+    // funcLayout computes a struct type representing the layout of the
+    // stack-assigned function arguments and return values for the function
+    // type t.
+    // If rcvr != nil, rcvr specifies the type of the receiver.
+    // The returned type exists only for GC, so we only fill out GC relevant info.
+    // Currently, that's just size and the GC program. We also fill in
+    // the name for possible debugging use.
     std::tuple<abi::Type*, sync::Pool*, struct abiDesc> funcLayout(golang::reflect::funcType* t, abi::Type* rcvr)
     {
         abi::Type* frametype;
@@ -3714,11 +3984,13 @@ namespace golang::reflect
         return {lt.t, lt.framePool, lt.abid};
     }
 
+    // ifaceIndir reports whether t is stored indirectly in an interface value.
     bool ifaceIndir(abi::Type* t)
     {
         return t->Kind_ & kindDirectIface == 0;
     }
 
+    // Note: this type must agree with runtime.bitvector.
     
     template<typename T> requires gocpp::GoStruct<T>
     bitVector::operator T()
@@ -3751,6 +4023,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // append a bit to the bitmap.
     void rec::append(struct bitVector* bv, uint8_t bit)
     {
         if(bv->n % (8 * goarch::PtrSize) == 0)
@@ -3826,6 +4099,7 @@ namespace golang::reflect
         }
     }
 
+    // TypeFor returns the [Type] that represents the type argument T.
 
     template<typename T>
     struct Type TypeFor()

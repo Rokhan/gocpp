@@ -22,6 +22,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // adjust Gobuf as if it executed a call to fn with context ctxt
+    // and then stopped before the first instruction in fn.
     void gostartcall(struct gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt)
     {
         auto sp = buf->sp;

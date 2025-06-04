@@ -85,6 +85,11 @@ namespace golang::safefilepath
         return {path, nullptr};
     }
 
+    // IsReservedName reports if name is a Windows reserved device name.
+    // It does not detect names with an extension, which are also reserved on some Windows versions.
+    //
+    // For details, search for PRN in
+    // https://docs.microsoft.com/en-us/windows/desktop/fileio/naming-a-file.
     bool IsReservedName(std::string name)
     {
         auto base = name;

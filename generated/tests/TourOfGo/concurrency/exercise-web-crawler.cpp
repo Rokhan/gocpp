@@ -69,6 +69,8 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    // Crawl uses fetcher to recursively crawl
+    // pages starting with url, to a maximum of depth.
     void Crawl(std::string url, int depth, struct Fetcher fetcher)
     {
         if(depth <= 0)
@@ -94,6 +96,7 @@ namespace golang::main
         Crawl("https://golang.org/"s, 4, fetcher);
     }
 
+    // fakeFetcher is Fetcher that returns canned results.
     
     template<typename T> requires gocpp::GoStruct<T>
     fakeResult::operator T()
@@ -135,6 +138,7 @@ namespace golang::main
         return {""s, nullptr, mocklib::Errorf("not found: %s"s, url)};
     }
 
+    // fetcher is a populated fakeFetcher.
     main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"s, new fakeResult {"The Go Programming Language"s, gocpp::slice<std::string> {"https://golang.org/pkg/"s, "https://golang.org/cmd/"s}} }, { "https://golang.org/pkg/"s, new fakeResult {"Packages"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/cmd/"s, "https://golang.org/pkg/fmt/"s, "https://golang.org/pkg/os/"s}} }, { "https://golang.org/pkg/fmt/"s, new fakeResult {"Package fmt"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }, { "https://golang.org/pkg/os/"s, new fakeResult {"Package os"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }};
 }
 

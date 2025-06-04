@@ -11,6 +11,9 @@
 #include "golang/internal/godebugs/table.h"
 #include "gocpp/support.h"
 
+// Package godebugs provides a table of known GODEBUG settings,
+// for use by a variety of other packages, including internal/godebug,
+// runtime, runtime/metrics, and cmd/go/internal/load.
 namespace golang::godebugs
 {
     namespace rec
@@ -18,6 +21,7 @@ namespace golang::godebugs
         using namespace mocklib::rec;
     }
 
+    // An Info describes a single known GODEBUG setting.
     
     template<typename T> requires gocpp::GoStruct<T>
     Info::operator T()
@@ -59,6 +63,14 @@ namespace golang::godebugs
         return value.PrintTo(os);
     }
 
+    // All is the table of known settings, sorted by Name.
+    //
+    // Note: After adding entries to this table, run 'go generate runtime/metrics'
+    // to update the runtime/metrics doc comment.
+    // (Otherwise the runtime/metrics test will fail.)
+    //
+    // Note: After adding entries to this table, update the list in doc/godebug.md as well.
+    // (Otherwise the test in this package will fail.)
     gocpp::slice<Info> All = gocpp::slice<Info> {gocpp::Init<>([](auto& x) {
         x.Name = "execerrdot"s;
         x.Package = "os/exec"s;
@@ -155,6 +167,7 @@ namespace golang::godebugs
         x.Name = "zipinsecurepath"s;
         x.Package = "archive/zip"s;
     })};
+    // Lookup returns the Info with the given name.
     struct Info* Lookup(std::string name)
     {
         auto lo = 0;

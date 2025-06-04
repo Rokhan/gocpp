@@ -54,6 +54,10 @@ namespace golang::os
         using time::rec::UnixNano;
     }
 
+    // Close closes the File, rendering it unusable for I/O.
+    // On files that support SetDeadline, any pending I/O operations will
+    // be canceled and return immediately with an ErrClosed error.
+    // Close will return an error if it has already been called.
     struct gocpp::error rec::Close(struct File* f)
     {
         if(f == nullptr)
@@ -63,6 +67,8 @@ namespace golang::os
         return rec::close(gocpp::recv(f->file));
     }
 
+    // read reads up to len(b) bytes from the File.
+    // It returns the number of bytes read and an error, if any.
     std::tuple<int, struct gocpp::error> rec::read(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -72,6 +78,9 @@ namespace golang::os
         return {n, err};
     }
 
+    // pread reads len(b) bytes from the File starting at byte offset off.
+    // It returns the number of bytes read and the error, if any.
+    // EOF is signaled by a zero count with err set to nil.
     std::tuple<int, struct gocpp::error> rec::pread(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -81,6 +90,8 @@ namespace golang::os
         return {n, err};
     }
 
+    // write writes len(b) bytes to the File.
+    // It returns the number of bytes written and an error, if any.
     std::tuple<int, struct gocpp::error> rec::write(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -90,6 +101,8 @@ namespace golang::os
         return {n, err};
     }
 
+    // pwrite writes len(b) bytes to the File starting at byte offset off.
+    // It returns the number of bytes written and an error, if any.
     std::tuple<int, struct gocpp::error> rec::pwrite(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -99,6 +112,7 @@ namespace golang::os
         return {n, err};
     }
 
+    // syscallMode returns the syscall-specific mode bits from Go's portable mode bits.
     uint32_t syscallMode(golang::os::FileMode i)
     {
         uint32_t o;
@@ -118,6 +132,7 @@ namespace golang::os
         return o;
     }
 
+    // See docs in file.go:Chmod.
     struct gocpp::error chmod(std::string name, golang::os::FileMode mode)
     {
         auto longName = fixLongPath(name);
@@ -136,6 +151,7 @@ namespace golang::os
         return nullptr;
     }
 
+    // See docs in file.go:(*File).Chmod.
     struct gocpp::error rec::chmod(struct File* f, golang::os::FileMode mode)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chmod"s); err != nullptr)
@@ -149,6 +165,13 @@ namespace golang::os
         return nullptr;
     }
 
+    // Chown changes the numeric uid and gid of the named file.
+    // If the file is a symbolic link, it changes the uid and gid of the link's target.
+    // A uid or gid of -1 means to not change that value.
+    // If there is an error, it will be of type *PathError.
+    //
+    // On Windows or Plan 9, Chown always returns the syscall.EWINDOWS or
+    // EPLAN9 error, wrapped in *PathError.
     struct gocpp::error Chown(std::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -166,6 +189,12 @@ namespace golang::os
         return nullptr;
     }
 
+    // Lchown changes the numeric uid and gid of the named file.
+    // If the file is a symbolic link, it changes the uid and gid of the link itself.
+    // If there is an error, it will be of type *PathError.
+    //
+    // On Windows, it always returns the syscall.EWINDOWS error, wrapped
+    // in *PathError.
     struct gocpp::error Lchown(std::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -183,6 +212,11 @@ namespace golang::os
         return nullptr;
     }
 
+    // Chown changes the numeric uid and gid of the named file.
+    // If there is an error, it will be of type *PathError.
+    //
+    // On Windows, it always returns the syscall.EWINDOWS error, wrapped
+    // in *PathError.
     struct gocpp::error rec::Chown(struct File* f, int uid, int gid)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chown"s); err != nullptr)
@@ -196,6 +230,9 @@ namespace golang::os
         return nullptr;
     }
 
+    // Truncate changes the size of the file.
+    // It does not change the I/O offset.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error rec::Truncate(struct File* f, int64_t size)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "truncate"s); err != nullptr)
@@ -209,6 +246,9 @@ namespace golang::os
         return nullptr;
     }
 
+    // Sync commits the current contents of the file to stable storage.
+    // Typically, this means flushing the file system's in-memory copy
+    // of recently written data to disk.
     struct gocpp::error rec::Sync(struct File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "sync"s); err != nullptr)
@@ -222,6 +262,13 @@ namespace golang::os
         return nullptr;
     }
 
+    // Chtimes changes the access and modification times of the named
+    // file, similar to the Unix utime() or utimes() functions.
+    // A zero time.Time value will leave the corresponding file time unchanged.
+    //
+    // The underlying filesystem may truncate or round the values to a
+    // less precise time unit.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error Chtimes(std::string name, mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
@@ -252,6 +299,9 @@ namespace golang::os
         return nullptr;
     }
 
+    // Chdir changes the current working directory to the file,
+    // which must be a directory.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error rec::Chdir(struct File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chdir"s); err != nullptr)
@@ -265,6 +315,7 @@ namespace golang::os
         return nullptr;
     }
 
+    // setDeadline sets the read and write deadline.
     struct gocpp::error rec::setDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"s); err != nullptr)
@@ -274,6 +325,7 @@ namespace golang::os
         return rec::SetDeadline(gocpp::recv(f->pfd), t);
     }
 
+    // setReadDeadline sets the read deadline.
     struct gocpp::error rec::setReadDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"s); err != nullptr)
@@ -283,6 +335,7 @@ namespace golang::os
         return rec::SetReadDeadline(gocpp::recv(f->pfd), t);
     }
 
+    // setWriteDeadline sets the write deadline.
     struct gocpp::error rec::setWriteDeadline(struct File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"s); err != nullptr)
@@ -292,6 +345,8 @@ namespace golang::os
         return rec::SetWriteDeadline(gocpp::recv(f->pfd), t);
     }
 
+    // checkValid checks whether f is valid for use.
+    // If not, it returns an appropriate error, perhaps incorporating the operation name op.
     struct gocpp::error rec::checkValid(struct File* f, std::string op)
     {
         if(f == nullptr)
@@ -301,6 +356,13 @@ namespace golang::os
         return nullptr;
     }
 
+    // ignoringEINTR makes a function call and repeats it if it returns an
+    // EINTR error. This appears to be required even though we install all
+    // signal handlers with SA_RESTART: see #22838, #38033, #38836, #40846.
+    // Also #20400 and #36644 are issues in which a signal handler is
+    // installed without setting SA_RESTART. None of these are the common case,
+    // but there are enough of them that it seems that we can't avoid
+    // an EINTR loop.
     struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn)
     {
         for(; ; )

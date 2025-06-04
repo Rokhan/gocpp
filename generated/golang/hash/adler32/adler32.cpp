@@ -15,6 +15,15 @@
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
+// Package adler32 implements the Adler-32 checksum.
+//
+// It is defined in RFC 1950:
+//
+//	Adler-32 is composed of two sums accumulated per byte: s1 is
+//	the sum of all bytes, s2 is the sum of all s1 values. Both sums
+//	are done modulo 65521. s1 is initialized to 1, s2 to zero.  The
+//	Adler-32 checksum is stored as s2*65536 + s1 in most-
+//	significant-byte first (network) order.
 namespace golang::adler32
 {
     namespace rec
@@ -22,11 +31,23 @@ namespace golang::adler32
         using namespace mocklib::rec;
     }
 
+    // mod is the largest prime that is less than 65536.
+    // nmax is the largest n such that
+    // 255 * n * (n+1) / 2 + (n+1) * (mod-1) <= 2^32-1.
+    // It is mentioned in RFC 1950 (search for "5552").
+    // The size of an Adler-32 checksum in bytes.
+    // digest represents the partial evaluation of a checksum.
+    // The low 16 bits are s1, the high 16 bits are s2.
     void rec::Reset(golang::adler32::digest* d)
     {
         *d = 1;
     }
 
+    // New returns a new hash.Hash32 computing the Adler-32 checksum. Its
+    // Sum method will lay the value out in big-endian byte order. The
+    // returned Hash32 also implements [encoding.BinaryMarshaler] and
+    // [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
+    // state of the hash.
     hash::Hash32 New()
     {
         auto d = new(digest);
@@ -67,17 +88,22 @@ namespace golang::adler32
         return nullptr;
     }
 
+    // appendUint32 is semantically the same as [binary.BigEndian.AppendUint32]
+    // We copied this function because we can not import "encoding/binary" here.
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
     {
         return append(b, (unsigned char)(x >> 24), (unsigned char)(x >> 16), (unsigned char)(x >> 8), (unsigned char)(x));
     }
 
+    // readUint32 is semantically the same as [binary.BigEndian.Uint32]
+    // We copied this function because we can not import "encoding/binary" here.
     uint32_t readUint32(gocpp::slice<unsigned char> b)
     {
         _ = b[3];
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
+    // Add p to the running checksum d.
     adler32::digest update(golang::adler32::digest d, gocpp::slice<unsigned char> p)
     {
         auto [s1, s2] = std::tuple{uint32_t(d & 0xffff), uint32_t(d >> 16)};
@@ -131,6 +157,7 @@ namespace golang::adler32
         return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));
     }
 
+    // Checksum returns the Adler-32 checksum of data.
     uint32_t Checksum(gocpp::slice<unsigned char> data)
     {
         return uint32_t(update(1, data));

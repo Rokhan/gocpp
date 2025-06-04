@@ -60,6 +60,10 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // GOMAXPROCS sets the maximum number of CPUs that can be executing
+    // simultaneously and returns the previous setting. It defaults to
+    // the value of [runtime.NumCPU]. If n < 1, it does not change the current setting.
+    // This call will go away when the scheduler improves.
     int GOMAXPROCS(int n)
     {
         if(GOARCH == "wasm"s && n > 1)
@@ -79,11 +83,17 @@ namespace golang::runtime
         return ret;
     }
 
+    // NumCPU returns the number of logical CPUs usable by the current process.
+    //
+    // The set of available CPUs is checked by querying the operating system
+    // at process startup. Changes to operating system CPU allocation after
+    // process startup are not reflected.
     int NumCPU()
     {
         return int(ncpu);
     }
 
+    // NumCgoCall returns the number of cgo calls made by the current process.
     int64_t NumCgoCall()
     {
         auto n = int64_t(atomic::Load64(& ncgocall));
@@ -105,16 +115,39 @@ namespace golang::runtime
         return total;
     }
 
+    // NumGoroutine returns the number of goroutines that currently exist.
     int NumGoroutine()
     {
         return int(gcount());
     }
 
+    //go:linkname debug_modinfo runtime/debug.modinfo
     std::string debug_modinfo()
     {
         return modinfo;
     }
 
+    // mayMoreStackPreempt is a maymorestack hook that forces a preemption
+    // at every possible cooperative preemption point.
+    //
+    // This is valuable to apply to the runtime, which can be sensitive to
+    // preemption points. To apply this to all preemption points in the
+    // runtime and runtime-like code, use the following in bash or zsh:
+    //
+    //	X=(-{gc,asm}flags={runtime/...,reflect,sync}=-d=maymorestack=runtime.mayMoreStackPreempt) GOFLAGS=${X[@]}
+    //
+    // This must be deeply nosplit because it is called from a function
+    // prologue before the stack is set up and because the compiler will
+    // call it from any splittable prologue (leading to infinite
+    // recursion).
+    //
+    // Ideally it should also use very little stack because the linker
+    // doesn't currently account for this in nosplit stack depth checking.
+    //
+    // Ensure mayMoreStackPreempt can be called for all ABIs.
+    //
+    //go:nosplit
+    //go:linkname mayMoreStackPreempt
     void mayMoreStackPreempt()
     {
         auto gp = getg();
@@ -128,6 +161,13 @@ namespace golang::runtime
         }
     }
 
+    // mayMoreStackMove is a maymorestack hook that forces stack movement
+    // at every possible point.
+    //
+    // See mayMoreStackPreempt.
+    //
+    //go:nosplit
+    //go:linkname mayMoreStackMove
     void mayMoreStackMove()
     {
         auto gp = getg();

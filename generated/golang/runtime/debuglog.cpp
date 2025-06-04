@@ -68,6 +68,28 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // debugLogBytes is the size of each per-M ring buffer. This is
+    // allocated off-heap to avoid blowing up the M and hence the GC'd
+    // heap size.
+    // debugLogStringLimit is the maximum number of bytes in a string.
+    // Above this, the string will be truncated with "..(n more bytes).."
+    // dlog returns a debug logger. The caller can use methods on the
+    // returned logger to add values, which will be space-separated in the
+    // final output, much like println. The caller must call end() to
+    // finish the message.
+    //
+    // dlog can be used from highly-constrained corners of the runtime: it
+    // is safe to use in the signal handler, from within the write
+    // barrier, from within the stack implementation, and in places that
+    // must be recursively nosplit.
+    //
+    // This will be compiled away if built without the debuglog build tag.
+    // However, argument construction may not be. If any of the arguments
+    // are not literals or trivial expressions, consider protecting the
+    // call with "if dlogEnabled".
+    //
+    //go:nosplit
+    //go:nowritebarrierrec
     struct dlogger* dlog()
     {
         if(! dlogEnabled)
@@ -109,6 +131,9 @@ namespace golang::runtime
                 }
             }
         }
+        // If the time delta is getting too high, write a new sync
+        // packet. We set the limit so we don't write more than 6
+        // bytes of delta in the record header.
         auto deltaLimit = (1 << (3 * 7)) - 1;
         if(tick - l->w.tick > deltaLimit || nano - l->w.nano > deltaLimit)
         {
@@ -130,6 +155,10 @@ namespace golang::runtime
         return l;
     }
 
+    // A dlogger writes to the debug log.
+    //
+    // To obtain a dlogger, call dlog(). When done with the dlogger, call
+    // end().
     
     template<typename T> requires gocpp::GoStruct<T>
     dlogger::operator T()
@@ -168,7 +197,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // allDloggers is a list of all dloggers, linked through
+    // dlogger.allLink. This is accessed atomically. This is prepend only,
+    // so it doesn't need to protect against ABA races.
     dlogger* allDloggers;
+    //go:nosplit
     void rec::end(struct dlogger* l)
     {
         if(! dlogEnabled)
@@ -188,6 +221,7 @@ namespace golang::runtime
         rec::Store(gocpp::recv(l->owned), 0);
     }
 
+    //go:nosplit
     struct dlogger* rec::b(struct dlogger* l, bool x)
     {
         if(! dlogEnabled)
@@ -205,26 +239,31 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::i(struct dlogger* l, int x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::i8(struct dlogger* l, int8_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::i16(struct dlogger* l, int16_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::i32(struct dlogger* l, int32_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::i64(struct dlogger* l, int64_t x)
     {
         if(! dlogEnabled)
@@ -236,31 +275,37 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::u(struct dlogger* l, unsigned int x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::uptr(struct dlogger* l, uintptr_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::u8(struct dlogger* l, uint8_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::u16(struct dlogger* l, uint16_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::u32(struct dlogger* l, uint32_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
+    //go:nosplit
     struct dlogger* rec::u64(struct dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
@@ -272,6 +317,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::hex(struct dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
@@ -283,6 +329,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::p(struct dlogger* l, go_any x)
     {
         if(! dlogEnabled)
@@ -324,6 +371,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::s(struct dlogger* l, std::string x)
     {
         if(! dlogEnabled)
@@ -341,6 +389,8 @@ namespace golang::runtime
         else
         {
             rec::byte(gocpp::recv(l->w), debugLogString);
+            // We can't use unsafe.Slice as it may panic, which isn't safe
+            // in this (potentially) nowritebarrier context.
             gocpp::slice<unsigned char> b = {};
             auto bb = (slice*)(unsafe::Pointer(& b));
             bb->array = unsafe::Pointer(strData);
@@ -360,6 +410,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::pc(struct dlogger* l, uintptr_t x)
     {
         if(! dlogEnabled)
@@ -371,6 +422,7 @@ namespace golang::runtime
         return l;
     }
 
+    //go:nosplit
     struct dlogger* rec::traceback(struct dlogger* l, gocpp::slice<uintptr_t> x)
     {
         if(! dlogEnabled)
@@ -386,6 +438,19 @@ namespace golang::runtime
         return l;
     }
 
+    // A debugLogWriter is a ring buffer of binary debug log records.
+    //
+    // A log record consists of a 2-byte framing header and a sequence of
+    // fields. The framing header gives the size of the record as a little
+    // endian 16-bit value. Each field starts with a byte indicating its
+    // type, followed by type-specific data. If the size in the framing
+    // header is 0, it's a sync record consisting of two little endian
+    // 64-bit values giving a new time base.
+    //
+    // Because this is a ring buffer, new records will eventually
+    // overwrite old records. Hence, it maintains a reader that consumes
+    // the log as it gets overwritten. That reader state is where an
+    // actual log reader would start.
     
     template<typename T> requires gocpp::GoStruct<T>
     debugLogWriter::operator T()
@@ -465,6 +530,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // debugLogHeaderSize is the number of bytes in the framing
+    // header of every dlog record.
+    // debugLogSyncSize is the number of bytes in a sync record.
+    //go:nosplit
     void rec::ensure(struct debugLogWriter* l, uint64_t n)
     {
         for(; l->write + n >= l->r.begin + uint64_t(len(l->data.b)); )
@@ -476,6 +545,7 @@ namespace golang::runtime
         }
     }
 
+    //go:nosplit
     bool rec::writeFrameAt(struct debugLogWriter* l, uint64_t pos, uint64_t size)
     {
         l->data.b[pos % uint64_t(len(l->data.b))] = uint8_t(size);
@@ -483,6 +553,7 @@ namespace golang::runtime
         return size <= 0xFFFF;
     }
 
+    //go:nosplit
     void rec::writeSync(struct debugLogWriter* l, uint64_t tick, uint64_t nano)
     {
         std::tie(l->tick, l->nano) = std::tuple{tick, nano};
@@ -494,6 +565,7 @@ namespace golang::runtime
         l->r.end = l->write;
     }
 
+    //go:nosplit
     void rec::writeUint64LE(struct debugLogWriter* l, uint64_t x)
     {
         gocpp::array<unsigned char, 8> b = {};
@@ -508,6 +580,7 @@ namespace golang::runtime
         rec::bytes(gocpp::recv(l), b.make_slice(0));
     }
 
+    //go:nosplit
     void rec::byte(struct debugLogWriter* l, unsigned char x)
     {
         rec::ensure(gocpp::recv(l), 1);
@@ -516,6 +589,7 @@ namespace golang::runtime
         l->data.b[pos % uint64_t(len(l->data.b))] = x;
     }
 
+    //go:nosplit
     void rec::bytes(struct debugLogWriter* l, gocpp::slice<unsigned char> x)
     {
         rec::ensure(gocpp::recv(l), uint64_t(len(x)));
@@ -529,6 +603,7 @@ namespace golang::runtime
         }
     }
 
+    //go:nosplit
     void rec::varint(struct debugLogWriter* l, int64_t x)
     {
         uint64_t u = {};
@@ -543,6 +618,7 @@ namespace golang::runtime
         rec::uvarint(gocpp::recv(l), u);
     }
 
+    //go:nosplit
     void rec::uvarint(struct debugLogWriter* l, uint64_t u)
     {
         auto i = 0;
@@ -598,6 +674,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    //go:nosplit
     uint64_t rec::skip(struct debugLogReader* r)
     {
         if(r->begin + debugLogHeaderSize > r->end)
@@ -619,11 +696,13 @@ namespace golang::runtime
         return size;
     }
 
+    //go:nosplit
     uint16_t rec::readUint16LEAt(struct debugLogReader* r, uint64_t pos)
     {
         return uint16_t(r->data->b[pos % uint64_t(len(r->data->b))]) | (uint16_t(r->data->b[(pos + 1) % uint64_t(len(r->data->b))]) << 8);
     }
 
+    //go:nosplit
     uint64_t rec::readUint64LEAt(struct debugLogReader* r, uint64_t pos)
     {
         gocpp::array<unsigned char, 8> b = {};
@@ -861,6 +940,7 @@ namespace golang::runtime
             }
 
 
+    // printDebugLog prints the debug log.
     void printDebugLog()
     {
         if(! dlogEnabled)
@@ -880,6 +960,7 @@ namespace golang::runtime
             printunlock();
             return;
         }
+        // Prepare read state for all logs.
         
         template<typename T> requires gocpp::GoStruct<T>
         readState::operator T()
@@ -937,6 +1018,7 @@ namespace golang::runtime
         }
         for(; ; )
         {
+            // Find the next record.
             gocpp_id_0 best = {};
             best.tick = ~ uint64_t(0);
             for(auto [i, gocpp_ignored] : state)
@@ -996,6 +1078,8 @@ namespace golang::runtime
         printunlock();
     }
 
+    // printDebugLogPC prints a single symbolized PC. If returnPC is true,
+    // pc is a return PC that must first be converted to a call PC.
     void printDebugLogPC(uintptr_t pc, bool returnPC)
     {
         auto fn = findfunc(pc);

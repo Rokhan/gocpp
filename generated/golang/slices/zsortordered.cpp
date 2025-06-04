@@ -21,6 +21,7 @@ namespace golang::slices
         using namespace mocklib::rec;
     }
 
+    // insertionSortOrdered sorts data[a:b] using insertion sort.
 
     template<typename E>
     void insertionSortOrdered(gocpp::slice<E> data, int a, int b)
@@ -34,6 +35,8 @@ namespace golang::slices
         }
     }
 
+    // siftDownOrdered implements the heap property on data[lo:hi].
+    // first is an offset into the array where the root of the heap lies.
 
     template<typename E>
     void siftDownOrdered(gocpp::slice<E> data, int lo, int hi, int first)
@@ -77,6 +80,12 @@ namespace golang::slices
         }
     }
 
+    // pdqsortOrdered sorts data[a:b].
+    // The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuicksort.
+    // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
+    // C++ implementation: https://github.com/orlp/pdqsort
+    // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
+    // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
 
     template<typename E>
     void pdqsortOrdered(gocpp::slice<E> data, int a, int b, int limit)
@@ -141,6 +150,10 @@ namespace golang::slices
         }
     }
 
+    // partitionOrdered does one quicksort partition.
+    // Let p = data[pivot]
+    // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
+    // On return, data[newpivot] = p
 
     template<typename E>
     std::tuple<int, bool> partitionOrdered(gocpp::slice<E> data, int a, int b, int pivot)
@@ -187,6 +200,8 @@ namespace golang::slices
         return {j, false};
     }
 
+    // partitionEqualOrdered partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
+    // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
 
     template<typename E>
     int partitionEqualOrdered(gocpp::slice<E> data, int a, int b, int pivot)
@@ -215,6 +230,7 @@ namespace golang::slices
         return i;
     }
 
+    // partialInsertionSortOrdered partially sorts a slice, returns true if the slice is sorted at the end.
 
     template<typename E>
     bool partialInsertionSortOrdered(gocpp::slice<E> data, int a, int b)
@@ -263,6 +279,8 @@ namespace golang::slices
         return false;
     }
 
+    // breakPatternsOrdered scatters some elements around in an attempt to break some patterns
+    // that might cause imbalanced partitions in quicksort.
 
     template<typename E>
     void breakPatternsOrdered(gocpp::slice<E> data, int a, int b)
@@ -284,6 +302,11 @@ namespace golang::slices
         }
     }
 
+    // choosePivotOrdered chooses a pivot in data[a:b].
+    //
+    // [0,8): chooses a static pivot.
+    // [8,shortestNinther): uses the simple median-of-three method.
+    // [shortestNinther,∞): uses the Tukey ninther method.
 
     template<typename E>
     std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
@@ -328,6 +351,7 @@ namespace golang::slices
         }
     }
 
+    // order2Ordered returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
 
     template<typename E>
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps)
@@ -340,6 +364,7 @@ namespace golang::slices
         return {a, b};
     }
 
+    // medianOrdered returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
 
     template<typename E>
     int medianOrdered(gocpp::slice<E> data, int a, int b, int c, int* swaps)
@@ -350,6 +375,7 @@ namespace golang::slices
         return b;
     }
 
+    // medianAdjacentOrdered finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
 
     template<typename E>
     int medianAdjacentOrdered(gocpp::slice<E> data, int a, int* swaps)
@@ -411,6 +437,25 @@ namespace golang::slices
         }
     }
 
+    // symMergeOrdered merges the two sorted subsequences data[a:m] and data[m:b] using
+    // the SymMerge algorithm from Pok-Son Kim and Arne Kutzner, "Stable Minimum
+    // Storage Merging by Symmetric Comparisons", in Susanne Albers and Tomasz
+    // Radzik, editors, Algorithms - ESA 2004, volume 3221 of Lecture Notes in
+    // Computer Science, pages 714-723. Springer, 2004.
+    //
+    // Let M = m-a and N = b-n. Wolog M < N.
+    // The recursion depth is bound by ceil(log(N+M)).
+    // The algorithm needs O(M*log(N/M + 1)) calls to data.Less.
+    // The algorithm needs O((M+N)*log(M)) calls to data.Swap.
+    //
+    // The paper gives O((M+N)*log(M)) as the number of assignments assuming a
+    // rotation algorithm which uses O(M+N+gcd(M+N)) assignments. The argumentation
+    // in the paper carries through for Swap operations, especially as the block
+    // swapping rotate uses only O(M+N) Swaps.
+    //
+    // symMerge assumes non-degenerate arguments: a < m && m < b.
+    // Having the caller check this condition eliminates many leaf recursion calls,
+    // which improves performance.
 
     template<typename E>
     void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b)
@@ -501,6 +546,10 @@ namespace golang::slices
         }
     }
 
+    // rotateOrdered rotates two consecutive blocks u = data[a:m] and v = data[m:b] in data:
+    // Data of the form 'x u v y' is changed to 'x v u y'.
+    // rotate performs at most b-a many calls to data.Swap,
+    // and it assumes non-degenerate arguments: a < m && m < b.
 
     template<typename E>
     void rotateOrdered(gocpp::slice<E> data, int a, int m, int b)

@@ -32,6 +32,10 @@ namespace golang::bytealg
         }
     }
 
+    // Cutover reports the number of failures of IndexByte we should tolerate
+    // before switching over to Index.
+    // n is the number of bytes processed so far.
+    // See the bytes.Index implementation for details.
     int Cutover(int n)
     {
         return (n + 16) / 8;

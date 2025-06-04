@@ -18,6 +18,7 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // A RawConn is a raw network connection.
     
     template<typename T>
     RawConn::RawConn(T& ref)
@@ -96,6 +97,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Conn is implemented by some types in the net and os packages to provide
+    // access to the underlying file descriptor or handle.
     
     template<typename T>
     Conn::Conn(T& ref)

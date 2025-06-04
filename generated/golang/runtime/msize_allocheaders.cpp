@@ -23,6 +23,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Returns size of the memory block that mallocgc will allocate if you ask for the size,
+    // minus any inline space for metadata.
     uintptr_t roundupsize(uintptr_t size, bool noscan)
     {
         uintptr_t reqSize;

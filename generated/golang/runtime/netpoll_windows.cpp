@@ -47,6 +47,8 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // net_op must be the same as beginning of internal/poll.operation.
+    // Keep these in sync.
     
     template<typename T> requires gocpp::GoStruct<T>
     net_op::operator T()
@@ -175,6 +177,11 @@ namespace golang::runtime
         }
     }
 
+    // netpoll checks for ready network connections.
+    // Returns list of goroutines that become runnable.
+    // delay < 0: blocks indefinitely
+    // delay == 0: does not block, just polls
+    // delay > 0: block for up to that many nanoseconds
     std::tuple<struct gList, int32_t> netpoll(int64_t delay)
     {
         gocpp::array<overlappedEntry, 64> entries = {};

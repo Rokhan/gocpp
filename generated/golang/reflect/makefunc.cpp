@@ -31,6 +31,11 @@ namespace golang::reflect
         using abi::rec::Kind;
     }
 
+    // makeFuncImpl is the closure value implementing the function
+    // returned by MakeFunc.
+    // The first three words of this type must be kept in sync with
+    // methodValue and runtime.reflectMethodValue.
+    // Any changes should be reflected in all three.
     
     template<typename T> requires gocpp::GoStruct<T>
     makeFuncImpl::operator T()
@@ -63,6 +68,27 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // MakeFunc returns a new function of the given Type
+    // that wraps the function fn. When called, that new function
+    // does the following:
+    //
+    //   - converts its arguments to a slice of Values.
+    //   - runs results := fn(args).
+    //   - returns the results as a slice of Values, one per formal result.
+    //
+    // The implementation fn can assume that the argument Value slice
+    // has the number and type of arguments given by typ.
+    // If typ describes a variadic function, the final Value is itself
+    // a slice representing the variadic arguments, as in the
+    // body of a variadic function. The result Value slice returned by fn
+    // must have the number and type of results given by typ.
+    //
+    // The Value.Call method allows the caller to invoke a typed function
+    // in terms of Values; in contrast, MakeFunc allows the caller to implement
+    // a typed function in terms of Values.
+    //
+    // The Examples section of the documentation includes an illustration
+    // of how to use MakeFunc to build a swap function for different types.
     struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn)
     {
         if(rec::Kind(gocpp::recv(typ)) != Func)
@@ -86,9 +112,17 @@ namespace golang::reflect
         return Value {t, unsafe::Pointer(impl), flag(Func)};
     }
 
+    // makeFuncStub is an assembly function that is the code half of
+    // the function returned from MakeFunc. It expects a *callReflectFunc
+    // as its context register, and its job is to invoke callReflect(ctxt, frame)
+    // where ctxt is the context register and frame is a pointer to the first
+    // word in the passed-in argument frame.
     void makeFuncStub()
     /* convertBlockStmt, nil block */;
 
+    // The first 3 words of this type must be kept in sync with
+    // makeFuncImpl and runtime.reflectMethodValue.
+    // Any changes should be reflected in all three.
     
     template<typename T> requires gocpp::GoStruct<T>
     methodValue::operator T()
@@ -121,6 +155,13 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // makeMethodValue converts v from the rcvr+method index representation
+    // of a method value to an actual method func value, which is
+    // basically the receiver value with a special bit set, into a true
+    // func value - a value holding an actual func. The output is
+    // semantically equivalent to the input as far as the user of package
+    // reflect can tell, but the true func representation can be handled
+    // by code like Convert and Interface and Assign.
     struct Value makeMethodValue(std::string op, struct Value v)
     {
         if(v.flag & flagMethod == 0)
@@ -152,9 +193,16 @@ namespace golang::reflect
         return abi::FuncPCABI0(methodValueCall);
     }
 
+    // methodValueCall is an assembly function that is the code half of
+    // the function returned from makeMethodValue. It expects a *methodValue
+    // as its context register, and its job is to invoke callMethod(ctxt, frame)
+    // where ctxt is the context register and frame is a pointer to the first
+    // word in the passed-in argument frame.
     void methodValueCall()
     /* convertBlockStmt, nil block */;
 
+    // This structure must be kept in sync with runtime.reflectMethodValue.
+    // Any changes should be reflected in all both.
     
     template<typename T> requires gocpp::GoStruct<T>
     makeFuncCtxt::operator T()
@@ -193,6 +241,17 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
+    // moveMakeFuncArgPtrs uses ctxt.regPtrs to copy integer pointer arguments
+    // in args.Ints to args.Ptrs where the GC can see them.
+    //
+    // This is similar to what reflectcallmove does in the runtime, except
+    // that happens on the return path, whereas this happens on the call path.
+    //
+    // nosplit because pointers are being held in uintptr slots in args, so
+    // having our stack scanned now could lead to accidentally freeing
+    // memory.
+    //
+    //go:nosplit
     void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args)
     {
         for(auto [i, arg] : args->Ints)

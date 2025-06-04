@@ -59,6 +59,27 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Event types in the trace, args are given in square brackets.
+    //
+    // Naming scheme:
+    //   - Time range event pairs have suffixes "Begin" and "End".
+    //   - "Start", "Stop", "Create", "Destroy", "Block", "Unblock"
+    //     are suffixes reserved for scheduling resources.
+    //
+    // NOTE: If you add an event type, make sure you also update all
+    // tables in this file!
+    // Structural events.
+    // Procs.
+    // Goroutines.
+    // STW.
+    // GC events.
+    // Annotations.
+    // traceArg is a simple wrapper type to help ensure that arguments passed
+    // to traces are well-formed.
+    // traceEventWriter is the high-level API for writing trace events.
+    //
+    // See the comment on traceWriter about style for more details as to why
+    // this type and its methods are structured the way they are.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceEventWriter::operator T()
@@ -88,6 +109,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // eventWriter creates a new traceEventWriter. It is the main entrypoint for writing trace events.
+    //
+    // Before creating the event writer, this method will emit a status for the current goroutine
+    // or proc if it exists, and if it hasn't had its status emitted yet. goStatus and procStatus indicate
+    // what the status of goroutine or P should be immediately *before* the events that are about to
+    // be written using the eventWriter (if they exist). No status will be written if there's no active
+    // goroutine or P.
+    //
+    // Callers can elect to pass a constant value here if the status is clear (e.g. a goroutine must have
+    // been Runnable before a GoStart). Otherwise, callers can query the status of either the goroutine
+    // or P and pass the appropriate status.
+    //
+    // In this case, the default status should be traceGoBad or traceProcBad to help identify bugs sooner.
     struct traceEventWriter rec::eventWriter(struct traceLocker tl, golang::runtime::traceGoStatus goStatus, golang::runtime::traceProcStatus procStatus)
     {
         auto w = rec::writer(gocpp::recv(tl));
@@ -102,23 +136,28 @@ namespace golang::runtime
         return traceEventWriter {w};
     }
 
+    // commit writes out a trace event and calls end. It's a helper to make the
+    // common case of writing out a single event less error-prone.
     void rec::commit(struct traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         e = rec::write(gocpp::recv(e), ev, args);
         rec::end(gocpp::recv(e));
     }
 
+    // write writes an event into the trace.
     struct traceEventWriter rec::write(struct traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         e.w = rec::event(gocpp::recv(e.w), ev, args);
         return e;
     }
 
+    // end finishes writing to the trace. The traceEventWriter must not be used after this call.
     void rec::end(struct traceEventWriter e)
     {
         rec::end(gocpp::recv(e.w));
     }
 
+    // traceEventWrite is the part of traceEvent that actually writes the event.
     struct traceWriter rec::event(struct traceWriter w, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
         std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
@@ -138,21 +177,35 @@ namespace golang::runtime
         return w;
     }
 
+    // stack takes a stack trace skipping the provided number of frames.
+    // It then returns a traceArg representing that stack which may be
+    // passed to write.
     runtime::traceArg rec::stack(struct traceLocker tl, int skip)
     {
         return traceArg(traceStack(skip, tl.mp, tl.gen));
     }
 
+    // startPC takes a start PC for a goroutine and produces a unique
+    // stack ID for it.
+    //
+    // It then returns a traceArg representing that stack which may be
+    // passed to write.
     runtime::traceArg rec::startPC(struct traceLocker tl, uintptr_t pc)
     {
         return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
     }
 
+    // string returns a traceArg representing s which may be passed to write.
+    // The string is assumed to be relatively short and popular, so it may be
+    // stored for a while in the string dictionary.
     runtime::traceArg rec::string(struct traceLocker tl, std::string s)
     {
         return traceArg(rec::put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
 
+    // uniqueString returns a traceArg representing s which may be passed to write.
+    // The string is assumed to be unique or long, so it will be written out to
+    // the trace eagerly.
     runtime::traceArg rec::uniqueString(struct traceLocker tl, std::string s)
     {
         return traceArg(rec::emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));

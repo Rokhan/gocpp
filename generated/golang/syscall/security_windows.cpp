@@ -24,6 +24,8 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // TranslateAccountName converts a directory service
+    // object name from one format to another.
     std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)
     {
         auto [u, e] = UTF16PtrFromString(username);
@@ -51,6 +53,7 @@ namespace golang::syscall
         }
     }
 
+    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     UserInfo10::operator T()
@@ -89,6 +92,9 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // do not reorder
+    // The security identifier (SID) structure is a variable-length
+    // structure used to uniquely identify users or groups.
     
     template<typename T> requires gocpp::GoStruct<T>
     SID::operator T()
@@ -115,6 +121,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // StringToSid converts a string-format security identifier
+    // sid into a valid, functional sid.
     std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s)
     {
         gocpp::Defer defer;
@@ -140,6 +148,9 @@ namespace golang::syscall
         }
     }
 
+    // LookupSID retrieves a security identifier sid for the account
+    // and the name of the domain on which the account was found.
+    // System specify target computer to search.
     std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account)
     {
         struct SID* sid;
@@ -187,6 +198,8 @@ namespace golang::syscall
         }
     }
 
+    // String converts sid to a string format
+    // suitable for display, storage, or transmission.
     std::tuple<std::string, struct gocpp::error> rec::String(struct SID* sid)
     {
         gocpp::Defer defer;
@@ -207,11 +220,13 @@ namespace golang::syscall
         }
     }
 
+    // Len returns the length, in bytes, of a valid security identifier sid.
     int rec::Len(struct SID* sid)
     {
         return int(GetLengthSid(sid));
     }
 
+    // Copy creates a duplicate of security identifier sid.
     std::tuple<struct SID*, struct gocpp::error> rec::Copy(struct SID* sid)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(sid)));
@@ -224,6 +239,9 @@ namespace golang::syscall
         return {sid2, nullptr};
     }
 
+    // LookupAccount retrieves the name of the account for this sid
+    // and the name of the first domain on which this sid is found.
+    // System specify target computer to search for.
     std::tuple<std::string, std::string, uint32_t, struct gocpp::error> rec::LookupAccount(struct SID* sid, std::string system)
     {
         std::string account;
@@ -261,6 +279,8 @@ namespace golang::syscall
         }
     }
 
+    // do not reorder
+    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     SIDAndAttributes::operator T()
@@ -351,6 +371,15 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // An access token contains the security information for a logon session.
+    // The system creates an access token when a user logs on, and every
+    // process executed on behalf of the user has a copy of the token.
+    // The token identifies the user, the user's groups, and the user's
+    // privileges. The system uses the token to control access to securable
+    // objects and to control the ability of the user to perform various
+    // system-related operations on the local computer.
+    // OpenCurrentProcessToken opens the access token
+    // associated with current process.
     std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken()
     {
         auto [p, e] = GetCurrentProcess();
@@ -367,11 +396,13 @@ namespace golang::syscall
         return {t, nullptr};
     }
 
+    // Close releases access to access token.
     struct gocpp::error rec::Close(golang::syscall::Token t)
     {
         return CloseHandle(Handle(t));
     }
 
+    // getInfo retrieves a specified type of information about an access token.
     std::tuple<unsafe::Pointer, struct gocpp::error> rec::getInfo(golang::syscall::Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
@@ -394,6 +425,7 @@ namespace golang::syscall
         }
     }
 
+    // GetTokenUser retrieves access token t user account information.
     std::tuple<struct Tokenuser*, struct gocpp::error> rec::GetTokenUser(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenUser, 50);
@@ -404,6 +436,9 @@ namespace golang::syscall
         return {(Tokenuser*)(i), nullptr};
     }
 
+    // GetTokenPrimaryGroup retrieves access token t primary group information.
+    // A pointer to a SID structure representing a group that will become
+    // the primary group of any objects created by a process using this access token.
     std::tuple<struct Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
@@ -414,6 +449,8 @@ namespace golang::syscall
         return {(Tokenprimarygroup*)(i), nullptr};
     }
 
+    // GetUserProfileDirectory retrieves path to the
+    // root directory of the access token t user's profile.
     std::tuple<std::string, struct gocpp::error> rec::GetUserProfileDirectory(golang::syscall::Token t)
     {
         auto n = uint32_t(100);

@@ -18,12 +18,14 @@ namespace golang::png
         using namespace mocklib::rec;
     }
 
+    // intSize is either 32 or 64.
     int abs(int x)
     {
         auto m = x >> (intSize - 1);
         return (x ^ m) - m;
     }
 
+    // paeth implements the Paeth filter function, as per the PNG specification.
     uint8_t paeth(uint8_t a, uint8_t b, uint8_t c)
     {
         auto pc = int(c);
@@ -44,6 +46,8 @@ namespace golang::png
         return c;
     }
 
+    // filterPaeth applies the Paeth filter to the cdat slice.
+    // cdat is the current row's data, pdat is the previous row's data.
     void filterPaeth(gocpp::slice<unsigned char> cdat, gocpp::slice<unsigned char> pdat, int bytesPerPixel)
     {
         int a = {};

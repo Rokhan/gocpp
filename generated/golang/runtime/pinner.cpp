@@ -74,6 +74,9 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // A Pinner is a set of Go objects each pinned to a fixed location in memory. The
+    // [Pinner.Pin] method pins one object, while [Pinner.Unpin] unpins all pinned
+    // objects. See their comments for more information.
     
     template<typename T> requires gocpp::GoStruct<T>
     Pinner::operator T()
@@ -100,6 +103,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Pin pins a Go object, preventing it from being moved or freed by the garbage
+    // collector until the [Pinner.Unpin] method has been called.
+    //
+    // A pointer to a pinned object can be directly stored in C memory or can be
+    // contained in Go memory passed to C functions. If the pinned object itself
+    // contains pointers to Go objects, these objects must be pinned separately if they
+    // are going to be accessed from C code.
+    //
+    // The argument must be a pointer of any type or an [unsafe.Pointer].
+    // It's safe to call Pin on non-Go pointers, in which case Pin will do nothing.
     void rec::Pin(struct Pinner* p, go_any pointer)
     {
         if(p->pinner == nullptr)
@@ -132,6 +145,7 @@ namespace golang::runtime
         }
     }
 
+    // Unpin unpins all pinned objects of the [Pinner].
     void rec::Unpin(struct Pinner* p)
     {
         rec::unpin(gocpp::recv(p->pinner));
@@ -209,6 +223,10 @@ namespace golang::runtime
         return e->data;
     }
 
+    // isPinned checks if a Go pointer is pinned.
+    // nosplit, because it's called from nosplit code in cgocheck.
+    //
+    //go:nosplit
     bool isPinned(unsafe::Pointer ptr)
     {
         auto span = spanOfHeap(uintptr_t(ptr));
@@ -227,6 +245,10 @@ namespace golang::runtime
         return rec::isPinned(gocpp::recv(pinState));
     }
 
+    // setPinned marks or unmarks a Go pointer as pinned, when the ptr is a Go pointer.
+    // It will be ignored while try to pin a non-Go pointer,
+    // and it will be panic while try to unpin a non-Go pointer,
+    // which should not happen in normal usage.
     bool setPinned(unsafe::Pointer ptr, bool pin)
     {
         auto span = spanOfHeap(uintptr_t(ptr));
@@ -333,6 +355,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // nosplit, because it's called by isPinned, which is nosplit
+    //
+    //go:nosplit
     bool rec::isPinned(struct pinState* v)
     {
         return (v->byteVal & v->mask) != 0;
@@ -353,6 +378,8 @@ namespace golang::runtime
         rec::set(gocpp::recv(v), val, true);
     }
 
+    // set sets the pin bit of the pinState to val. If multipin is true, it
+    // sets/unsets the multipin bit instead.
     void rec::set(struct pinState* v, bool val, bool multipin)
     {
         auto mask = v->mask;
@@ -370,6 +397,11 @@ namespace golang::runtime
         }
     }
 
+    // pinnerBits is the same type as gcBits but has different methods.
+    // ofObject returns the pinState of the n'th object.
+    // nosplit, because it's called by isPinned, which is nosplit
+    //
+    //go:nosplit
     struct pinState rec::ofObject(golang::runtime::pinnerBits* p, uintptr_t n)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv((gcBits*)(p)), n * 2);
@@ -382,11 +414,17 @@ namespace golang::runtime
         return divRoundUp(uintptr_t(s->nelems) * 2, 8);
     }
 
+    // newPinnerBits returns a pointer to 8 byte aligned bytes to be used for this
+    // span's pinner bits. newPinneBits is used to mark objects that are pinned.
+    // They are copied when the span is swept.
     runtime::pinnerBits* rec::newPinnerBits(struct mspan* s)
     {
         return (runtime::pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
 
+    // nosplit, because it's called by isPinned, which is nosplit
+    //
+    //go:nosplit
     runtime::pinnerBits* rec::getPinnerBits(struct mspan* s)
     {
         return (runtime::pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
@@ -397,6 +435,9 @@ namespace golang::runtime
         atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
     }
 
+    // refreshPinnerBits replaces pinnerBits with a fresh copy in the arenas for the
+    // next GC cycle. If it does not contain any pinned objects, pinnerBits of the
+    // span is set to nil.
     void rec::refreshPinnerBits(struct mspan* s)
     {
         auto p = rec::getPinnerBits(gocpp::recv(s));
@@ -426,6 +467,8 @@ namespace golang::runtime
         }
     }
 
+    // incPinCounter is only called for multiple pins of the same object and records
+    // the _additional_ pins.
     void rec::incPinCounter(struct mspan* span, uintptr_t offset)
     {
         specialPinCounter* rec = {};
@@ -448,6 +491,8 @@ namespace golang::runtime
         rec->counter++;
     }
 
+    // decPinCounter decreases the counter. If the counter reaches 0, the counter
+    // special is deleted and false is returned. Otherwise true is returned.
     bool rec::decPinCounter(struct mspan* span, uintptr_t offset)
     {
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
@@ -472,6 +517,7 @@ namespace golang::runtime
         return true;
     }
 
+    // only for tests
     uintptr_t* pinnerGetPinCounter(unsafe::Pointer addr)
     {
         auto [gocpp_id_1, span, objIndex] = findObject(uintptr_t(addr), 0, 0);
@@ -485,6 +531,8 @@ namespace golang::runtime
         return & counter->counter;
     }
 
+    // to be able to test that the GC panics when a pinned pointer is leaking, this
+    // panic function is a variable, that can be overwritten by a test.
     std::function<void (void)> pinnerLeakPanic = []() mutable -> void
     {
         gocpp::panic(errorString("runtime.Pinner: found leaking pinned pointer; forgot to call Unpin()?"s));

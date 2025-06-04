@@ -13,6 +13,11 @@
 
 #include "golang/errors/errors.h"
 
+// Package poll supports non-blocking I/O on file descriptors with polling.
+// This supports I/O operations that block only a goroutine, not a thread.
+// This is used by the net and os packages.
+// It uses a poller built into the runtime, with support from the
+// runtime scheduler.
 namespace golang::poll
 {
     namespace rec
@@ -20,6 +25,8 @@ namespace golang::poll
         using namespace mocklib::rec;
     }
 
+    // errNetClosing is the type of the variable ErrNetClosing.
+    // This is used to implement the net.Error interface.
     
     template<typename T> requires gocpp::GoStruct<T>
     errNetClosing::operator T()
@@ -46,6 +53,10 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
+    // Error returns the error message for ErrNetClosing.
+    // Keep this string consistent because of issue #4373:
+    // since historically programs have not been able to detect
+    // this error, they look for the string.
     std::string rec::Error(struct errNetClosing e)
     {
         return "use of closed network connection"s;
@@ -61,9 +72,16 @@ namespace golang::poll
         return false;
     }
 
+    // ErrNetClosing is returned when a network descriptor is used after
+    // it has been closed.
     errNetClosing ErrNetClosing = errNetClosing {};
+    // ErrFileClosing is returned when a file descriptor is used after it
+    // has been closed.
     gocpp::error ErrFileClosing = errors::New("use of closed file"s);
+    // ErrNoDeadline is returned when a request is made to set a deadline
+    // on a file type that does not use the poller.
     gocpp::error ErrNoDeadline = errors::New("file type does not support deadline"s);
+    // Return the appropriate closing error based on isFile.
     struct gocpp::error errClosing(bool isFile)
     {
         if(isFile)
@@ -73,7 +91,10 @@ namespace golang::poll
         return ErrNetClosing;
     }
 
+    // ErrDeadlineExceeded is returned for an expired deadline.
+    // This is exported by the os package as os.ErrDeadlineExceeded.
     gocpp::error ErrDeadlineExceeded = new DeadlineExceededError {};
+    // DeadlineExceededError is returned for an expired deadline.
     
     template<typename T> requires gocpp::GoStruct<T>
     DeadlineExceededError::operator T()
@@ -100,6 +121,10 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
+    // Implement the net.Error interface.
+    // The string is "i/o timeout" because that is what was returned
+    // by earlier Go versions. Changing it may break programs that
+    // match on error strings.
     std::string rec::Error(struct DeadlineExceededError* e)
     {
         return "i/o timeout"s;
@@ -115,7 +140,10 @@ namespace golang::poll
         return true;
     }
 
+    // ErrNotPollable is returned when the file or socket is not suitable
+    // for event notification.
     gocpp::error ErrNotPollable = errors::New("not pollable"s);
+    // consume removes data from a slice of byte slices, for writev.
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n)
     {
         for(; len(*v) > 0; )
@@ -132,8 +160,18 @@ namespace golang::poll
         }
     }
 
+    // TestHookDidWritev is a hook for testing writev.
     std::function<void (int)> TestHookDidWritev = [](int wrote) mutable -> void
     {
     };
+    // String is an internal string definition for methods/functions
+    // that is not intended for use outside the standard libraries.
+    //
+    // Other packages in std that import internal/poll and have some
+    // exported APIs (now we've got some in net.rawConn) which are only used
+    // internally and are not intended to be used outside the standard libraries,
+    // Therefore, we make those APIs use internal types like poll.FD or poll.String
+    // in their function signatures to disable the usability of these APIs from
+    // external codebase.
 }
 

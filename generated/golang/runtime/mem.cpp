@@ -26,6 +26,17 @@ namespace golang::runtime
         using atomic::rec::Add;
     }
 
+    // sysAlloc transitions an OS-chosen region of memory from None to Ready.
+    // More specifically, it obtains a large chunk of zeroed memory from the
+    // operating system, typically on the order of a hundred kilobytes
+    // or a megabyte. This memory is always immediately available for use.
+    //
+    // sysStat must be non-nil.
+    //
+    // Don't split the stack as this function may be invoked without a valid G,
+    // which prevents us from allocating more stack.
+    //
+    //go:nosplit
     unsafe::Pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
@@ -33,33 +44,69 @@ namespace golang::runtime
         return sysAllocOS(n);
     }
 
+    // sysUnused transitions a memory region from Ready to Prepared. It notifies the
+    // operating system that the physical pages backing this memory region are no
+    // longer needed and can be reused for other purposes. The contents of a
+    // sysUnused memory region are considered forfeit and the region must not be
+    // accessed again until sysUsed is called.
     void sysUnused(unsafe::Pointer v, uintptr_t n)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysUnusedOS(v, n);
     }
 
+    // sysUsed transitions a memory region from Prepared to Ready. It notifies the
+    // operating system that the memory region is needed and ensures that the region
+    // may be safely accessed. This is typically a no-op on systems that don't have
+    // an explicit commit step and hard over-commit limits, but is critical on
+    // Windows, for example.
+    //
+    // This operation is idempotent for memory already in the Prepared state, so
+    // it is safe to refer, with v and n, to a range of memory that includes both
+    // Prepared and Ready memory. However, the caller must provide the exact amount
+    // of Prepared memory for accounting purposes.
     void sysUsed(unsafe::Pointer v, uintptr_t n, uintptr_t prepared)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(prepared));
         sysUsedOS(v, n);
     }
 
+    // sysHugePage does not transition memory regions, but instead provides a
+    // hint to the OS that it would be more efficient to back this memory region
+    // with pages of a larger size transparently.
     void sysHugePage(unsafe::Pointer v, uintptr_t n)
     {
         sysHugePageOS(v, n);
     }
 
+    // sysNoHugePage does not transition memory regions, but instead provides a
+    // hint to the OS that it would be less efficient to back this memory region
+    // with pages of a larger size transparently.
     void sysNoHugePage(unsafe::Pointer v, uintptr_t n)
     {
         sysNoHugePageOS(v, n);
     }
 
+    // sysHugePageCollapse attempts to immediately back the provided memory region
+    // with huge pages. It is best-effort and may fail silently.
     void sysHugePageCollapse(unsafe::Pointer v, uintptr_t n)
     {
         sysHugePageCollapseOS(v, n);
     }
 
+    // sysFree transitions a memory region from any state to None. Therefore, it
+    // returns memory unconditionally. It is used if an out-of-memory error has been
+    // detected midway through an allocation or to carve out an aligned section of
+    // the address space. It is okay if sysFree is a no-op only if sysReserve always
+    // returns a memory region aligned to the heap allocator's alignment
+    // restrictions.
+    //
+    // sysStat must be non-nil.
+    //
+    // Don't split the stack as this function may be invoked without a valid G,
+    // which prevents us from allocating more stack.
+    //
+    //go:nosplit
     void sysFree(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), - int64_t(n));
@@ -67,17 +114,42 @@ namespace golang::runtime
         sysFreeOS(v, n);
     }
 
+    // sysFault transitions a memory region from Ready to Reserved. It
+    // marks a region such that it will always fault if accessed. Used only for
+    // debugging the runtime.
+    //
+    // TODO(mknyszek): Currently it's true that all uses of sysFault transition
+    // memory from Ready to Reserved, but this may not be true in the future
+    // since on every platform the operation is much more general than that.
+    // If a transition from Prepared is ever introduced, create a new function
+    // that elides the Ready state accounting.
     void sysFault(unsafe::Pointer v, uintptr_t n)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFaultOS(v, n);
     }
 
+    // sysReserve transitions a memory region from None to Reserved. It reserves
+    // address space in such a way that it would cause a fatal fault upon access
+    // (either via permissions or not committing the memory). Such a reservation is
+    // thus never backed by physical memory.
+    //
+    // If the pointer passed to it is non-nil, the caller wants the
+    // reservation there, but sysReserve can still choose another
+    // location if that one is unavailable.
+    //
+    // NOTE: sysReserve returns OS-aligned memory, but the heap allocator
+    // may use larger alignment, so the caller must be careful to realign the
+    // memory obtained by sysReserve.
     unsafe::Pointer sysReserve(unsafe::Pointer v, uintptr_t n)
     {
         return sysReserveOS(v, n);
     }
 
+    // sysMap transitions a memory region from Reserved to Prepared. It ensures the
+    // memory region can be efficiently transitioned to Ready.
+    //
+    // sysStat must be non-nil.
     void sysMap(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));

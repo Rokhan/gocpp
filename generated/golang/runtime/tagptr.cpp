@@ -18,5 +18,10 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // taggedPointer is a pointer with a numeric tag.
+    // The size of the numeric tag is GOARCH-dependent,
+    // currently at least 10 bits.
+    // This should only be used with pointers allocated outside the Go heap.
+    // minTagBits is the minimum number of tag bits that we expect.
 }
 

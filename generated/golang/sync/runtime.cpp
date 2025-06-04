@@ -20,9 +20,20 @@ namespace golang::sync
         using namespace mocklib::rec;
     }
 
+    // Semacquire waits until *s > 0 and then atomically decrements it.
+    // It is intended as a simple sleep primitive for use by the synchronization
+    // library and should not be used directly.
     void runtime_Semacquire(uint32_t* s)
     /* convertBlockStmt, nil block */;
 
+    // Semacquire(RW)Mutex(R) is like Semacquire, but for profiling contended
+    // Mutexes and RWMutexes.
+    // If lifo is true, queue waiter at the head of wait queue.
+    // skipframes is the number of frames to omit during tracing, counting from
+    // runtime_SemacquireMutex's caller.
+    // The different forms of this function just tell the runtime how to present
+    // the reason for waiting in a backtrace, and is used to compute some metrics.
+    // Otherwise they're functionally identical.
     void runtime_SemacquireMutex(uint32_t* s, bool lifo, int skipframes)
     /* convertBlockStmt, nil block */;
 
@@ -32,21 +43,33 @@ namespace golang::sync
     void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int skipframes)
     /* convertBlockStmt, nil block */;
 
+    // Semrelease atomically increments *s and notifies a waiting goroutine
+    // if one is blocked in Semacquire.
+    // It is intended as a simple wakeup primitive for use by the synchronization
+    // library and should not be used directly.
+    // If handoff is true, pass count directly to the first waiter.
+    // skipframes is the number of frames to omit during tracing, counting from
+    // runtime_Semrelease's caller.
     void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes)
     /* convertBlockStmt, nil block */;
 
+    // See runtime/sema.go for documentation.
     uint32_t runtime_notifyListAdd(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
+    // See runtime/sema.go for documentation.
     void runtime_notifyListWait(struct notifyList* l, uint32_t t)
     /* convertBlockStmt, nil block */;
 
+    // See runtime/sema.go for documentation.
     void runtime_notifyListNotifyAll(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
+    // See runtime/sema.go for documentation.
     void runtime_notifyListNotifyOne(struct notifyList* l)
     /* convertBlockStmt, nil block */;
 
+    // Ensure that sync and runtime agree on size of notifyList.
     void runtime_notifyListCheck(uintptr_t size)
     /* convertBlockStmt, nil block */;
 
@@ -56,9 +79,12 @@ namespace golang::sync
         runtime_notifyListCheck(gocpp::Sizeof<notifyList>());
     }
 
+    // Active spinning runtime support.
+    // runtime_canSpin reports whether spinning makes sense at the moment.
     bool runtime_canSpin(int i)
     /* convertBlockStmt, nil block */;
 
+    // runtime_doSpin does active spinning.
     void runtime_doSpin()
     /* convertBlockStmt, nil block */;
 

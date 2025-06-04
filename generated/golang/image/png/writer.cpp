@@ -53,6 +53,7 @@ namespace golang::png
         using zlib::rec::Write;
     }
 
+    // Encoder configures encoding PNG images.
     
     template<typename T> requires gocpp::GoStruct<T>
     Encoder::operator T()
@@ -85,6 +86,9 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // EncoderBufferPool is an interface for getting and returning temporary
+    // instances of the [EncoderBuffer] struct. This can be used to reuse buffers
+    // when encoding multiple images.
     
     template<typename T>
     EncoderBufferPool::EncoderBufferPool(T& ref)
@@ -148,6 +152,7 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // EncoderBuffer holds the buffers used for encoding PNG images.
     
     template<typename T> requires gocpp::GoStruct<T>
     encoder::operator T()
@@ -213,6 +218,7 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // CompressionLevel indicates the compression level.
     
     template<typename T>
     opaquer::opaquer(T& ref)
@@ -261,6 +267,7 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // Returns whether or not the image is fully opaque.
     bool opaque(image::Image m)
     {
         if(auto [o, ok] = gocpp::getValue<opaquer>(m); ok)
@@ -282,6 +289,7 @@ namespace golang::png
         return true;
     }
 
+    // The absolute value of a byte interpreted as a signed int8.
     int abs8(uint8_t d)
     {
         if(d < 128)
@@ -421,6 +429,12 @@ namespace golang::png
         }
     }
 
+    // An encoder is an io.Writer that satisfies writes by writing PNG IDAT chunks,
+    // including an 8-byte header and 4-byte CRC checksum per Write call. Such calls
+    // should be relatively infrequent, since writeIDATs uses a [bufio.Writer].
+    //
+    // This method should only be called from writeIDATs (via writeImage).
+    // No other code should treat an encoder as an io.Writer.
     std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
         rec::writeChunk(gocpp::recv(e), b, "IDAT"s);
@@ -431,6 +445,8 @@ namespace golang::png
         return {len(b), nullptr};
     }
 
+    // Chooses the filter to use for encoding the current row, and applies it.
+    // The return value is the index of the filter and also of the row in cr that has had it applied.
     int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp)
     {
         auto cdat0 = cr[0].make_slice(1);
@@ -775,6 +791,14 @@ namespace golang::png
                                     }
                                     else
                                     {
+                                        // This code does the same as color.NRGBAModel.Convert(
+                                        // rgba.At(x, y)).(color.NRGBA) but with no extra memory
+                                        // allocations or interface/function call overhead.
+                                        //
+                                        // The multiplier m combines 0x101 (which converts
+                                        // 8-bit color to 16-bit color) and 0xffff (which, when
+                                        // combined with the division-by-a, converts from
+                                        // alpha-premultiplied to non-alpha-premultiplied).
                                         auto m = 0x101 * 0xffff;
                                         auto a = uint32_t(s[3]) * 0x101;
                                         d[0] = uint8_t((uint32_t(s[0]) * m / a) >> 8);
@@ -856,6 +880,7 @@ namespace golang::png
         }
     }
 
+    // Write the actual image data to one or more IDAT chunks.
     void rec::writeIDATs(struct encoder* e)
     {
         if(e->err != nullptr)
@@ -878,6 +903,8 @@ namespace golang::png
         e->err = rec::Flush(gocpp::recv(e->bw));
     }
 
+    // This function is required because we want the zero value of
+    // Encoder.CompressionLevel to map to zlib.DefaultCompression.
     int levelToZlib(golang::png::CompressionLevel l)
     {
         //Go switch emulation
@@ -914,12 +941,15 @@ namespace golang::png
         rec::writeChunk(gocpp::recv(e), nullptr, "IEND"s);
     }
 
+    // Encode writes the Image m to w in PNG format. Any Image may be
+    // encoded, but images that are not [image.NRGBA] might be encoded lossily.
     struct gocpp::error Encode(io::Writer w, image::Image m)
     {
         Encoder e = {};
         return rec::Encode(gocpp::recv(e), w, m);
     }
 
+    // Encode writes the Image m to w in PNG format.
     struct gocpp::error rec::Encode(struct Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;

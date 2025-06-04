@@ -23,6 +23,10 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Don't split the stack as this function may be invoked without a valid G,
+    // which prevents us from allocating more stack.
+    //
+    //go:nosplit
     unsafe::Pointer sysAllocOS(uintptr_t n)
     {
         return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
@@ -109,6 +113,10 @@ namespace golang::runtime
     {
     }
 
+    // Don't split the stack as this function may be invoked without a valid G,
+    // which prevents us from allocating more stack.
+    //
+    //go:nosplit
     void sysFreeOS(unsafe::Pointer v, uintptr_t n)
     {
         auto r = stdcall3(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);

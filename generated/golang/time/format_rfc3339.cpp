@@ -133,6 +133,7 @@ namespace golang::time
             return {Time {}, false};
         }
         s = s.make_slice(19);
+        // Parse the fractional second.
         int nsec = {};
         if(len(s) >= 2 && s[0] == '.' && isDigit(s, 1))
         {

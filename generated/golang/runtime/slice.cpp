@@ -71,6 +71,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A notInHeapSlice is a slice backed by runtime/internal/sys.NotInHeap memory.
     
     template<typename T> requires gocpp::GoStruct<T>
     notInHeapSlice::operator T()
@@ -116,6 +117,8 @@ namespace golang::runtime
         gocpp::panic(errorString("makeslice: cap out of range"s));
     }
 
+    // makeslicecopy allocates a slice of "tolen" elements of type "et",
+    // then copies "fromlen" elements of type "et" into that new allocation from "from".
     unsafe::Pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, unsafe::Pointer from)
     {
         uintptr_t tomem = {};
@@ -200,6 +203,37 @@ namespace golang::runtime
         return makeslice(et, len, cap);
     }
 
+    // growslice allocates new backing store for a slice.
+    //
+    // arguments:
+    //
+    //	oldPtr = pointer to the slice's backing array
+    //	newLen = new length (= oldLen + num)
+    //	oldCap = original slice's capacity.
+    //	   num = number of elements being added
+    //	    et = element type
+    //
+    // return values:
+    //
+    //	newPtr = pointer to the new backing store
+    //	newLen = same value as the argument
+    //	newCap = capacity of the new backing store
+    //
+    // Requires that uint(newLen) > uint(oldCap).
+    // Assumes the original slice length is newLen - num
+    //
+    // A new backing store is allocated with space for at least newLen elements.
+    // Existing entries [0, oldLen) are copied over to the new backing store.
+    // Added entries [oldLen, newLen) are not initialized by growslice
+    // (although for pointer-containing element types, they are zeroed). They
+    // must be initialized by the caller.
+    // Trailing entries [newLen, newCap) are zeroed.
+    //
+    // growslice's odd calling convention makes the generated code that calls
+    // this function simpler. In particular, it accepts and returns the
+    // new length so that the old length is not live (does not need to be
+    // spilled/restored) and the new length is returned (also does not need
+    // to be spilled/restored).
     struct slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et)
     {
         auto oldLen = newLen - num;
@@ -301,6 +335,7 @@ namespace golang::runtime
         return slice {p, newLen, newcap};
     }
 
+    // nextslicecap computes the next appropriate slice length.
     int nextslicecap(int newLen, int oldCap)
     {
         auto newcap = oldCap;
@@ -329,6 +364,7 @@ namespace golang::runtime
         return newcap;
     }
 
+    //go:linkname reflect_growslice reflect.growslice
     struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num)
     {
         num -= old.cap - old.len;
@@ -348,6 +384,7 @@ namespace golang::runtime
         return x & (x - 1) == 0;
     }
 
+    // slicecopy is used to copy from a string or slice of pointerless elements into a slice.
     int slicecopy(unsafe::Pointer toPtr, int toLen, unsafe::Pointer fromPtr, int fromLen, uintptr_t width)
     {
         if(fromLen == 0 || toLen == 0)
@@ -392,6 +429,7 @@ namespace golang::runtime
         return n;
     }
 
+    //go:linkname bytealg_MakeNoZero internal/bytealg.MakeNoZero
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len)
     {
         if(uintptr_t(len) > maxAlloc)

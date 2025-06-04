@@ -58,6 +58,22 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Maximum number of PCs in a single stack trace.
+    // Since events contain only stack id rather than whole stack trace,
+    // we can allow quite large values here.
+    // logicalStackSentinel is a sentinel value at pcBuf[0] signifying that
+    // pcBuf[1:] holds a logical stack requiring no further processing. Any other
+    // value at pcBuf[0] represents a skip value to apply to the physical stack in
+    // pcBuf[1:] after inline expansion.
+    // traceStack captures a stack trace and registers it in the trace stack table.
+    // It then returns its unique ID.
+    //
+    // skip controls the number of leaf frames to omit in order to hide tracer internals
+    // from stack traces, see CL 5523.
+    //
+    // Avoid calling this function directly. gen needs to be the current generation
+    // that this stack trace is being written out for, which needs to be synchronized with
+    // generations moving forward. Prefer traceEventWriter.stack.
     uint64_t traceStack(int skip, struct m* mp, uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
@@ -103,6 +119,8 @@ namespace golang::runtime
         return id;
     }
 
+    // traceStackTable maps stack traces (arrays of PC's) to unique uint32 ids.
+    // It is lock-free for reading.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceStackTable::operator T()
@@ -132,6 +150,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // put returns a unique id for the stack trace pcs and caches it in the table,
+    // if it sees the trace for the first time.
     uint64_t rec::put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs)
     {
         if(len(pcs) == 0)
@@ -142,6 +162,14 @@ namespace golang::runtime
         return id;
     }
 
+    // dump writes all previously cached stacks to trace buffers,
+    // releases all memory and resets state. It must only be called once the caller
+    // can guarantee that there are no more writers to the table.
+    //
+    // This must run on the system stack because it flushes buffers and thus
+    // may acquire trace.lock.
+    //
+    //go:systemstack
     void rec::dump(struct traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
@@ -153,6 +181,11 @@ namespace golang::runtime
                 auto stack = unsafe::Slice((uintptr_t*)(unsafe::Pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
+                // Estimate the size of this record. This
+                // bound is pretty loose, but avoids counting
+                // lots of varint sizes.
+                //
+                // Add 1 because we might also write traceEvStacks.
                 bool flushed = {};
                 std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 1 + maxBytes);
                 if(flushed)
@@ -177,6 +210,8 @@ namespace golang::runtime
         rec::end(gocpp::recv(rec::flush(gocpp::recv(w))));
     }
 
+    // makeTraceFrames returns the frames corresponding to pcs. It may
+    // allocate and may emit trace events.
     gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
     {
         auto frames = gocpp::make(gocpp::Tag<gocpp::slice<traceFrame>>(), 0, len(pcs));
@@ -230,6 +265,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // makeTraceFrame sets up a traceFrame for a frame.
     struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f)
     {
         traceFrame frame = {};
@@ -251,11 +287,17 @@ namespace golang::runtime
         return frame;
     }
 
+    // tracefpunwindoff returns true if frame pointer unwinding for the tracer is
+    // disabled via GODEBUG or not supported by the architecture.
     bool tracefpunwindoff()
     {
         return debug.tracefpunwindoff != 0 || (goarch::ArchFamily != goarch::AMD64 && goarch::ArchFamily != goarch::ARM64);
     }
 
+    // fpTracebackPCs populates pcBuf with the return addresses for each frame and
+    // returns the number of PCs written to pcBuf. The returned PCs correspond to
+    // "physical frames" rather than "logical frames"; that is if A is inlined into
+    // B, this will return a PC for only B.
     int fpTracebackPCs(unsafe::Pointer fp, gocpp::slice<uintptr_t> pcBuf)
     {
         int i;
@@ -267,12 +309,19 @@ namespace golang::runtime
         return i;
     }
 
+    // fpunwindExpand checks if pcBuf contains logical frames (which include inlined
+    // frames) or physical frames (produced by frame pointer unwinding) using a
+    // sentinel value in pcBuf[0]. Logical frames are simply returned without the
+    // sentinel. Physical frames are turned into logical frames via inline unwinding
+    // and by applying the skip value that's stored in pcBuf[0].
     gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf)
     {
         if(len(pcBuf) > 0 && pcBuf[0] == logicalStackSentinel)
         {
             return pcBuf.make_slice(1);
         }
+        // skipOrAdd skips or appends retPC to newPCBuf and returns true if more
+        // pcs can be added.
         auto lastFuncID = abi::FuncIDNormal;
         auto newPCBuf = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 0, traceStackSize);
         auto skip = pcBuf[0];
@@ -325,6 +374,9 @@ namespace golang::runtime
         return newPCBuf;
     }
 
+    // startPCForTrace returns the start PC of a goroutine for tracing purposes.
+    // If pc is a wrapper, it returns the PC of the wrapped function. Otherwise it
+    // returns pc.
     uintptr_t startPCForTrace(uintptr_t pc)
     {
         auto f = findfunc(pc);

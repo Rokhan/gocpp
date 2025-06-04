@@ -20,6 +20,14 @@
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
+// Package crc32 implements the 32-bit cyclic redundancy check, or CRC-32,
+// checksum. See https://en.wikipedia.org/wiki/Cyclic_redundancy_check for
+// information.
+//
+// Polynomials are represented in LSB-first form also known as reversed representation.
+//
+// See https://en.wikipedia.org/wiki/Mathematics_of_cyclic_redundancy_checks#Reversed_representations_and_reciprocal_polynomials
+// for information.
 namespace golang::crc32
 {
     namespace rec
@@ -30,6 +38,21 @@ namespace golang::crc32
         using sync::rec::Do;
     }
 
+    // The size of a CRC-32 checksum in bytes.
+    // Predefined polynomials.
+    // IEEE is by far and away the most common CRC-32 polynomial.
+    // Used by ethernet (IEEE 802.3), v.42, fddi, gzip, zip, png, ...
+    // Castagnoli's polynomial, used in iSCSI.
+    // Has better error detection characteristics than IEEE.
+    // https://dx.doi.org/10.1109/26.231911
+    // Koopman's polynomial.
+    // Also has better error detection characteristics than IEEE.
+    // https://dx.doi.org/10.1109/DSN.2002.1028931
+    // Table is a 256-word table representing the polynomial for efficient processing.
+    // castagnoliTable points to a lazily initialized Table for the Castagnoli
+    // polynomial. MakeTable will always return this value when asked to make a
+    // Castagnoli table so we can compare against it to find when the caller is
+    // using this polynomial.
     crc32::Table* castagnoliTable;
     slicing8Table* castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
@@ -54,7 +77,9 @@ namespace golang::crc32
         rec::Store(gocpp::recv(haveCastagnoli), true);
     }
 
+    // IEEETable is the table for the [IEEE] polynomial.
     Table* IEEETable = simpleMakeTable(IEEE);
+    // ieeeTable8 is the slicing8Table for IEEE
     slicing8Table* ieeeTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     sync::Once ieeeOnce;
@@ -75,6 +100,8 @@ namespace golang::crc32
         }
     }
 
+    // MakeTable returns a [Table] constructed from the specified polynomial.
+    // The contents of this [Table] must not be modified.
     crc32::Table* MakeTable(uint32_t poly)
     {
         //Go switch emulation
@@ -100,6 +127,7 @@ namespace golang::crc32
         }
     }
 
+    // digest represents the partial evaluation of a checksum.
     
     template<typename T> requires gocpp::GoStruct<T>
     digest::operator T()
@@ -132,6 +160,11 @@ namespace golang::crc32
         return value.PrintTo(os);
     }
 
+    // New creates a new [hash.Hash32] computing the CRC-32 checksum using the
+    // polynomial represented by the [Table]. Its Sum method will lay the
+    // value out in big-endian byte order. The returned Hash32 also
+    // implements [encoding.BinaryMarshaler] and [encoding.BinaryUnmarshaler] to
+    // marshal and unmarshal the internal state of the hash.
     hash::Hash32 New(golang::crc32::Table* tab)
     {
         if(tab == IEEETable)
@@ -141,6 +174,11 @@ namespace golang::crc32
         return new digest {0, tab};
     }
 
+    // NewIEEE creates a new [hash.Hash32] computing the CRC-32 checksum using
+    // the [IEEE] polynomial. Its Sum method will lay the value out in
+    // big-endian byte order. The returned Hash32 also implements
+    // [encoding.BinaryMarshaler] and [encoding.BinaryUnmarshaler] to marshal
+    // and unmarshal the internal state of the hash.
     hash::Hash32 NewIEEE()
     {
         return New(IEEETable);
@@ -189,11 +227,15 @@ namespace golang::crc32
         return nullptr;
     }
 
+    // appendUint32 is semantically the same as [binary.BigEndian.AppendUint32]
+    // We copied this function because we can not import "encoding/binary" here.
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x)
     {
         return append(b, (unsigned char)(x >> 24), (unsigned char)(x >> 16), (unsigned char)(x >> 8), (unsigned char)(x));
     }
 
+    // readUint32 is semantically the same as [binary.BigEndian.Uint32]
+    // We copied this function because we can not import "encoding/binary" here.
     uint32_t readUint32(gocpp::slice<unsigned char> b)
     {
         _ = b[3];
@@ -226,6 +268,7 @@ namespace golang::crc32
         }
     }
 
+    // Update returns the result of adding the bytes in p to the crc.
     uint32_t Update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p)
     {
         return update(crc, tab, p, true);
@@ -250,17 +293,22 @@ namespace golang::crc32
         return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));
     }
 
+    // Checksum returns the CRC-32 checksum of data
+    // using the polynomial represented by the [Table].
     uint32_t Checksum(gocpp::slice<unsigned char> data, golang::crc32::Table* tab)
     {
         return Update(0, tab, data);
     }
 
+    // ChecksumIEEE returns the CRC-32 checksum of data
+    // using the [IEEE] polynomial.
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data)
     {
         rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
         return updateIEEE(0, data);
     }
 
+    // tableSum returns the IEEE checksum of table t.
     uint32_t tableSum(golang::crc32::Table* t)
     {
         gocpp::array<unsigned char, 1024> a = {};

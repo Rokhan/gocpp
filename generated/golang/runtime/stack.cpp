@@ -92,7 +92,36 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // stackSystem is a number of additional bytes to add
+    // to each stack below the usual guard area for OS-specific
+    // purposes like signal handling. Used on Windows, Plan 9,
+    // and iOS because they do not use a separate stack.
+    // The minimum size of stack used by Go code
+    // The minimum stack size to allocate.
+    // The hackery here rounds fixedStack0 up to a power of 2.
+    // stackNosplit is the maximum number of bytes that a chain of NOSPLIT
+    // functions can use.
+    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackNosplit.
+    // The stack guard is a pointer this many bytes above the
+    // bottom of the stack.
+    //
+    // The guard leaves enough room for a stackNosplit chain of NOSPLIT calls
+    // plus one stackSmall frame plus stackSystem bytes for the OS.
+    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackLimit.
+    // stackDebug == 0: no logging
+    //            == 1: logging of per-stack operations
+    //            == 2: logging of per-frame operations
+    //            == 3: logging of per-word updates
+    //            == 4: logging of per-word reads
+    // check the BP links during traceback.
     long stackPoisonCopy = 0;
+    // Goroutine preemption request.
+    // 0xfffffade in hex.
+    // Thread is forking. Causes a split stack check failure.
+    // 0xfffffb2e in hex.
+    // Force a stack movement. Used for debugging.
+    // 0xfffffeed in hex.
+    // stackPoisonMin is the lowest allowed stack poison value.
     struct gocpp_id_0
     {
         stackpoolItem item;
@@ -133,6 +162,12 @@ namespace golang::runtime
     }
 
 
+    // Global pool of spans that have free stacks.
+    // Stacks are assigned an order according to size.
+    //
+    //	order = log_2(size/FixedStack)
+    //
+    // There is a free list for each order.
     gocpp::array<gocpp_id_0, _NumStackOrders> stackpool;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -209,6 +244,7 @@ namespace golang::runtime
     }
 
 
+    // Global pool of large stack spans.
     gocpp_id_1 stackLarge;
     void stackinit()
     {
@@ -228,6 +264,7 @@ namespace golang::runtime
         }
     }
 
+    // stacklog2 returns ⌊log_2(n)⌋.
     int stacklog2(uintptr_t n)
     {
         auto log2 = 0;
@@ -239,6 +276,8 @@ namespace golang::runtime
         return log2;
     }
 
+    // Allocates a stack from the free pool. Must be called with
+    // stackpool[order].item.mu held.
     runtime::gclinkptr stackpoolalloc(uint8_t order)
     {
         auto list = & stackpool[order].item.span;
@@ -283,6 +322,7 @@ namespace golang::runtime
         return x;
     }
 
+    // Adds stack x to the free pool. Must be called with stackpool[order].item.mu held.
     void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order)
     {
         auto s = spanOfUnchecked(uintptr_t(x));
@@ -306,12 +346,18 @@ namespace golang::runtime
         }
     }
 
+    // stackcacherefill/stackcacherelease implement a global pool of stack segments.
+    // The pool is required to prevent unlimited growth of per-thread caches.
+    //
+    //go:systemstack
     void stackcacherefill(struct mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
         {
             print("stackcacherefill order="s, order, "\n"s);
         }
+        // Grab some stacks from the global cache.
+        // Grab half of the allowed capacity (to prevent thrashing).
         runtime::gclinkptr list = {};
         uintptr_t size = {};
         lock(& stackpool[order].item.mu);
@@ -327,6 +373,7 @@ namespace golang::runtime
         c->stackcache[order].size = size;
     }
 
+    //go:systemstack
     void stackcacherelease(struct mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
@@ -348,6 +395,7 @@ namespace golang::runtime
         c->stackcache[order].size = size;
     }
 
+    //go:systemstack
     void stackcache_clear(struct mcache* c)
     {
         if(stackDebug >= 1)
@@ -370,6 +418,12 @@ namespace golang::runtime
         }
     }
 
+    // stackalloc allocates an n byte stack.
+    //
+    // stackalloc must run on the system stack because it uses per-P
+    // resources and must not split the stack.
+    //
+    //go:systemstack
     struct stack stackalloc(uint32_t n)
     {
         auto thisg = getg();
@@ -395,6 +449,9 @@ namespace golang::runtime
             }
             return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
         }
+        // Small stacks are allocated with a fixed-size free-list allocator.
+        // If we need a stack of a bigger size, we fall back on allocating
+        // a dedicated span.
         unsafe::Pointer v = {};
         if(n < (fixedStack << _NumStackOrders) && n < _StackCacheSize)
         {
@@ -470,6 +527,12 @@ namespace golang::runtime
         return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
     }
 
+    // stackfree frees an n byte stack allocation at stk.
+    //
+    // stackfree must run on the system stack because it uses per-P
+    // resources and must not split the stack.
+    //
+    //go:systemstack
     void stackfree(struct stack stk)
     {
         auto gp = getg();
@@ -600,6 +663,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // adjustpointer checks whether *vpp is in the old stack described by adjinfo.
+    // If so, it rewrites *vpp to point into the new stack.
     void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp)
     {
         auto pp = (uintptr_t*)(vpp);
@@ -618,6 +683,8 @@ namespace golang::runtime
         }
     }
 
+    // Information from the compiler about the layout of stack frames.
+    // Note: this type must agree with reflect.bitVector.
     
     template<typename T> requires gocpp::GoStruct<T>
     bitvector::operator T()
@@ -650,12 +717,18 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // ptrbit returns the i'th bit in bv.
+    // ptrbit is less efficient than iterating directly over bitvector bits,
+    // and should only be used in non-performance-critical code.
+    // See adjustpointers for an example of a high-efficiency walk of a bitvector.
     uint8_t rec::ptrbit(struct bitvector* bv, uintptr_t i)
     {
         auto b = *(addb(bv->bytedata, i / 8));
         return (b >> (i % 8)) & 1;
     }
 
+    // bv describes the memory starting at address scanp.
+    // Adjust any pointers contained therein.
     void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f)
     {
         auto minp = adjinfo->old.lo;
@@ -709,6 +782,7 @@ namespace golang::runtime
         }
     }
 
+    // Note: the argument/return area is adjusted by the callee.
     void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo)
     {
         if(frame->continpc == 0)
@@ -866,12 +940,16 @@ namespace golang::runtime
         return sghi;
     }
 
+    // syncadjustsudogs adjusts gp's sudogs and copies the part of gp's
+    // stack they refer to while synchronizing with concurrent channel
+    // operations. It returns the number of bytes of stack copied.
     uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo)
     {
         if(gp->waiting == nullptr)
         {
             return 0;
         }
+        // Lock channels to prevent concurrent send/receive.
         hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
@@ -882,6 +960,9 @@ namespace golang::runtime
             lastc = sg->c;
         }
         adjustsudogs(gp, adjinfo);
+        // Copy the part of the stack the sudogs point in to
+        // while holding the lock to prevent races on
+        // send/receive slots.
         uintptr_t sgsize = {};
         if(adjinfo->sghi != 0)
         {
@@ -902,6 +983,8 @@ namespace golang::runtime
         return sgsize;
     }
 
+    // Copies gp's stack to a new stack of a different size.
+    // Caller must have changed gp status to Gcopystack.
     void copystack(struct g* gp, uintptr_t newsize)
     {
         if(gp->syscallsp != 0)
@@ -924,6 +1007,7 @@ namespace golang::runtime
         {
             print("copystack gp="s, gp, " ["s, hex(old.lo), " "s, hex(old.hi - used), " "s, hex(old.hi), "]"s, " -> ["s, hex(go_new.lo), " "s, hex(go_new.hi - used), " "s, hex(go_new.hi), "]/"s, newsize, "\n"s);
         }
+        // Compute adjustment.
         adjustinfo adjinfo = {};
         adjinfo->old = old;
         adjinfo->delta = go_new.hi - old.hi;
@@ -953,6 +1037,7 @@ namespace golang::runtime
         gp->stackguard0 = go_new.lo + stackGuard;
         gp->sched.sp = go_new.hi - used;
         gp->stktopsp += adjinfo->delta;
+        // Adjust pointers in the new stack.
         unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
@@ -965,6 +1050,7 @@ namespace golang::runtime
         stackfree(old);
     }
 
+    // round x up to a power of 2.
     int32_t round2(int32_t x)
     {
         auto s = (unsigned int)(0);
@@ -975,6 +1061,18 @@ namespace golang::runtime
         return 1 << s;
     }
 
+    // Called from runtime·morestack when more stack is needed.
+    // Allocate larger stack and relocate to new stack.
+    // Stack growth is multiplicative, for constant amortized cost.
+    //
+    // g->atomicstatus will be Grunning or Gscanrunning upon entry.
+    // If the scheduler is trying to stop this g, then it will set preemptStop.
+    //
+    // This must be nowritebarrierrec because it can be called as part of
+    // stack growth from other nowritebarrierrec functions, but the
+    // compiler doesn't check this.
+    //
+    //go:nowritebarrierrec
     void newstack()
     {
         auto thisg = getg();
@@ -1101,11 +1199,14 @@ namespace golang::runtime
         gogo(& gp->sched);
     }
 
+    //go:nosplit
     void nilfunc()
     {
         *(uint8_t*)(nullptr) = 0;
     }
 
+    // adjust Gobuf as if it executed a call to fn
+    // and then stopped before the first instruction in fn.
     void gostartcallfn(struct gobuf* gobuf, struct funcval* fv)
     {
         unsafe::Pointer fn = {};
@@ -1120,11 +1221,18 @@ namespace golang::runtime
         gostartcall(gobuf, fn, unsafe::Pointer(fv));
     }
 
+    // isShrinkStackSafe returns whether it's safe to attempt to shrink
+    // gp's stack. Shrinking the stack is only safe when we have precise
+    // pointer maps for all frames on the stack.
     bool isShrinkStackSafe(struct g* gp)
     {
         return gp->syscallsp == 0 && ! gp->asyncSafePoint && ! rec::Load(gocpp::recv(gp->parkingOnChan));
     }
 
+    // Maybe shrink the stack being used by gp.
+    //
+    // gp must be stopped and we must own its stack. It may be in
+    // _Grunning, but only if this is our own user G.
     void shrinkstack(struct g* gp)
     {
         if(gp->stack.lo == 0)
@@ -1173,6 +1281,7 @@ namespace golang::runtime
         copystack(gp, newsize);
     }
 
+    // freeStackSpans frees unused stack spans at the end of GC.
     void freeStackSpans()
     {
         for(auto [order, gocpp_ignored] : stackpool)
@@ -1208,6 +1317,8 @@ namespace golang::runtime
         unlock(& stackLarge.lock);
     }
 
+    // A stackObjectRecord is generated by the compiler for each stack object in a stack frame.
+    // This record must match the generator code in cmd/compile/internal/liveness/plive.go:emitStackObjects.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackObjectRecord::operator T()
@@ -1261,6 +1372,7 @@ namespace golang::runtime
         return uintptr_t(x);
     }
 
+    // gcdata returns pointer map or GC prog of the type.
     unsigned char* rec::gcdata(struct stackObjectRecord* r)
     {
         auto ptr = uintptr_t(unsafe::Pointer(r));
@@ -1277,11 +1389,19 @@ namespace golang::runtime
         return (unsigned char*)(unsafe::Pointer(res));
     }
 
+    // This is exported as ABI0 via linkname so obj can call it.
+    //
+    //go:nosplit
+    //go:linkname morestackc
     void morestackc()
     {
         go_throw("attempt to execute system stack code on user stack"s);
     }
 
+    // startingStackSize is the amount of stack that new goroutines start with.
+    // It is a power of 2, and between _FixedStack and maxstacksize, inclusive.
+    // startingStackSize is updated every GC by tracking the average size of
+    // stacks scanned during the GC.
     uint32_t startingStackSize = fixedStack;
     void gcComputeStartingStackSize()
     {
@@ -1289,6 +1409,16 @@ namespace golang::runtime
         {
             return;
         }
+        // For details, see the design doc at
+        // https://docs.google.com/document/d/1YDlGIdVTPnmUiTAavlZxBI1d9pwGQgZT7IKFKlIXohQ/edit?usp=sharing
+        // The basic algorithm is to track the average size of stacks
+        // and start goroutines with stack equal to that average size.
+        // Starting at the average size uses at most 2x the space that
+        // an ideal algorithm would have used.
+        // This is just a heuristic to avoid excessive stack growth work
+        // early in a goroutine's lifetime. See issue 18138. Stacks that
+        // are allocated too small can still grow, and stacks allocated
+        // too large can still shrink.
         uint64_t scannedStackSize = {};
         uint64_t scannedStacks = {};
         for(auto [gocpp_ignored, p] : allp)

@@ -46,6 +46,18 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // This implementation depends on OS-specific implementations of
+    //
+    //	func semacreate(mp *m)
+    //		Create a semaphore for mp, if it does not already have one.
+    //
+    //	func semasleep(ns int64) int32
+    //		If ns < 0, acquire m's semaphore and return 0.
+    //		If ns >= 0, try to acquire m's semaphore for at most ns nanoseconds.
+    //		Return 0 if the semaphore was acquired, -1 if interrupted or timed out.
+    //
+    //	func semawakeup(mp *m)
+    //		Wake up mp, which is or will soon be sleeping on its semaphore.
     bool mutexContended(struct mutex* l)
     {
         return atomic::Loaduintptr(& l->key) > locked;
@@ -135,6 +147,9 @@ namespace golang::runtime
         unlockWithRank(l);
     }
 
+    // We might not be holding a p in this code.
+    //
+    //go:nowritebarrier
     void unlock2(struct mutex* l)
     {
         auto gp = getg();
@@ -171,6 +186,7 @@ namespace golang::runtime
         }
     }
 
+    // One-time notifications.
     void noteclear(struct note* n)
     {
         n->key = 0;
@@ -229,6 +245,7 @@ namespace golang::runtime
         }
         else
         {
+            // Sleep for an arbitrary-but-moderate interval to poll libc interceptors.
             auto ns = 10e6;
             for(; atomic::Loaduintptr(& n->key) == 0; )
             {
@@ -239,6 +256,7 @@ namespace golang::runtime
         gp->m->blocked = false;
     }
 
+    //go:nosplit
     bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline)
     {
         gp = getg();
@@ -259,6 +277,7 @@ namespace golang::runtime
             }
             else
             {
+                // Sleep in arbitrary-but-moderate intervals to poll libc interceptors.
                 auto ns = 10e6;
                 for(; semasleep(ns) < 0; )
                 {
@@ -337,6 +356,8 @@ namespace golang::runtime
         return notetsleep_internal(n, ns, nullptr, 0);
     }
 
+    // same as runtime·notetsleep, but called on user g (not g0)
+    // calls only nosplit functions between entersyscallblock/exitsyscall.
     bool notetsleepg(struct note* n, int64_t ns)
     {
         auto gp = getg();

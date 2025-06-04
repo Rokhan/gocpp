@@ -22,9 +22,13 @@ namespace golang::windows
         using namespace mocklib::rec;
     }
 
+    //go:linkname WSASendtoInet4 syscall.wsaSendtoInet4
+    //go:noescape
     struct gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine)
     /* convertBlockStmt, nil block */;
 
+    //go:linkname WSASendtoInet6 syscall.wsaSendtoInet6
+    //go:noescape
     struct gocpp::error WSASendtoInet6(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet6* to, syscall::Overlapped* overlapped, unsigned char* croutine)
     /* convertBlockStmt, nil block */;
 
@@ -68,6 +72,8 @@ namespace golang::windows
         rtlGetNtVersionNumbers(& maj, & min, & build);
         return maj >= 10 && build & 0xffff >= 16299;
     });
+    //go:linkname rtlGetNtVersionNumbers syscall.rtlGetNtVersionNumbers
+    //go:noescape
     void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber)
     /* convertBlockStmt, nil block */;
 

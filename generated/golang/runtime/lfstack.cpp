@@ -34,6 +34,14 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // lfstack is the head of a lock-free stack.
+    //
+    // The zero value of lfstack is an empty list.
+    //
+    // This stack is intrusive. Nodes must embed lfnode as the first field.
+    //
+    // The stack does not keep GC-visible pointers to nodes, so the caller
+    // must ensure the nodes are allocated outside the Go heap.
     void rec::push(golang::runtime::lfstack* head, struct lfnode* node)
     {
         node->pushcnt++;
@@ -77,6 +85,8 @@ namespace golang::runtime
         return atomic::Load64((uint64_t*)(head)) == 0;
     }
 
+    // lfnodeValidate panics if node is not a valid address for use with
+    // lfstack.push. This only needs to be called when node is allocated.
     void lfnodeValidate(struct lfnode* node)
     {
         if(auto [base, gocpp_id_2, gocpp_id_3] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)

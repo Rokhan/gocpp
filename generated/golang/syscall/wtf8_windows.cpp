@@ -21,6 +21,8 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // encodeWTF16 returns the potentially ill-formed
+    // UTF-16 encoding of s.
     gocpp::slice<uint16_t> encodeWTF16(std::string s, gocpp::slice<uint16_t> buf)
     {
         for(auto i = 0; i < len(s); )
@@ -42,6 +44,8 @@ namespace golang::syscall
         return buf;
     }
 
+    // decodeWTF16 returns the WTF-8 encoding of
+    // the potentially ill-formed UTF-16 s.
     gocpp::slice<unsigned char> decodeWTF16(gocpp::slice<uint16_t> s, gocpp::slice<unsigned char> buf)
     {
         for(auto i = 0; i < len(s); i++)

@@ -60,11 +60,16 @@ namespace golang::runtime
     {
         auto errormode = stdcall0(_GetErrorMode);
         stdcall1(_SetErrorMode, errormode | _SEM_FAILCRITICALERRORS | _SEM_NOGPFAULTERRORBOX | _SEM_NOOPENFILEERRORBOX);
+        // Disable WER fault reporting UI.
+        // Do this even if WER is disabled as a whole,
+        // as WER might be enabled later with setTraceback("wer")
+        // and we still want the fault reporting UI to be disabled if this happens.
         uintptr_t werflags = {};
         stdcall2(_WerGetFlags, currentProcess, uintptr_t(unsafe::Pointer(& werflags)));
         stdcall1(_WerSetFlags, werflags | _WER_FAULT_REPORTING_NO_UI);
     }
 
+    // enableWER re-enables Windows error reporting without fault reporting UI.
     void enableWER()
     {
         auto errormode = stdcall0(_GetErrorMode);
@@ -74,6 +79,7 @@ namespace golang::runtime
         }
     }
 
+    // in sys_windows_386.s, sys_windows_amd64.s, sys_windows_arm.s, and sys_windows_arm64.s
     void exceptiontramp()
     /* convertBlockStmt, nil block */;
 
@@ -103,6 +109,10 @@ namespace golang::runtime
         }
     }
 
+    // isAbort returns true, if context r describes exception raised
+    // by calling runtime.abort function.
+    //
+    //go:nosplit
     bool isAbort(struct context* r)
     {
         auto pc = rec::ip(gocpp::recv(r));
@@ -113,6 +123,13 @@ namespace golang::runtime
         return isAbortPC(pc);
     }
 
+    // isgoexception reports whether this exception should be translated
+    // into a Go panic or throw.
+    //
+    // It is nosplit to avoid growing the stack in case we're aborting
+    // because of a stack overflow.
+    //
+    //go:nosplit
     bool isgoexception(struct exceptionrecord* info, struct context* r)
     {
         if(rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r)))
@@ -166,6 +183,11 @@ namespace golang::runtime
         return true;
     }
 
+    // sigFetchGSafe is like getg() but without panicking
+    // when TLS is not set.
+    // Only implemented on windows/386, which is the only
+    // arch that loads TLS when calling getg(). Others
+    // use a dedicated register.
     struct g* sigFetchGSafe()
     /* convertBlockStmt, nil block */;
 
@@ -178,6 +200,14 @@ namespace golang::runtime
         return getg();
     }
 
+    // sigtrampgo is called from the exception handler function, sigtramp,
+    // written in assembly code.
+    // Return EXCEPTION_CONTINUE_EXECUTION if the exception is handled,
+    // else return EXCEPTION_CONTINUE_SEARCH.
+    //
+    // It is nosplit for the same reason as exceptionhandler.
+    //
+    //go:nosplit
     int32_t sigtrampgo(struct exceptionpointers* ep, int kind)
     {
         auto gp = sigFetchG();
@@ -209,6 +239,20 @@ namespace golang::runtime
                     break;
             }
         }
+        // Check if we are running on g0 stack, and if we are,
+        // call fn directly instead of creating the closure.
+        // for the systemstack argument.
+        //
+        // A closure can't be marked as nosplit, so it might
+        // call morestack if we are at the g0 stack limit.
+        // If that happens, the runtime will call abort
+        // and end up in sigtrampgo again.
+        // TODO: revisit this workaround if/when closures
+        // can be compiled as nosplit.
+        //
+        // Note that this scenario should only occur on
+        // TestG0StackOverflow. Any other occurrence should
+        // be treated as a bug.
         int32_t ret = {};
         if(gp != gp->m->g0)
         {
@@ -235,6 +279,14 @@ namespace golang::runtime
         return ret;
     }
 
+    // Called by sigtramp from Windows VEH handler.
+    // Return value signals whether the exception has been handled (EXCEPTION_CONTINUE_EXECUTION)
+    // or should be made available to other handlers in the chain (EXCEPTION_CONTINUE_SEARCH).
+    //
+    // This is nosplit to avoid growing the stack until we've checked for
+    // _EXCEPTION_BREAKPOINT, which is raised by abort() if we overflow the g0 stack.
+    //
+    //go:nosplit
     int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(! isgoexception(info, r))
@@ -269,6 +321,11 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
+    // sehhandler is reached as part of the SEH chain.
+    //
+    // It is nosplit for the same reason as exceptionhandler.
+    //
+    //go:nosplit
     int32_t sehhandler(struct exceptionrecord* _1, uint64_t _2, struct context* _3, struct _DISPATCHER_CONTEXT* dctxt)
     {
         auto g0 = getg();
@@ -296,6 +353,14 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_SEARCH_SEH;
     }
 
+    // It seems Windows searches ContinueHandler's list even
+    // if ExceptionHandler returns EXCEPTION_CONTINUE_EXECUTION.
+    // firstcontinuehandler will stop that search,
+    // if exceptionhandler did the same earlier.
+    //
+    // It is nosplit for the same reason as exceptionhandler.
+    //
+    //go:nosplit
     int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(! isgoexception(info, r))
@@ -305,6 +370,12 @@ namespace golang::runtime
         return _EXCEPTION_CONTINUE_EXECUTION;
     }
 
+    // lastcontinuehandler is reached, because runtime cannot handle
+    // current exception. lastcontinuehandler will print crash info and exit.
+    //
+    // It is nosplit for the same reason as exceptionhandler.
+    //
+    //go:nosplit
     int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         if(islibrary || isarchive)
@@ -319,6 +390,9 @@ namespace golang::runtime
         return 0;
     }
 
+    // Always called on g0. gp is the G where the exception occurred.
+    //
+    //go:nosplit
     void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         auto g0 = getg();
@@ -438,11 +512,16 @@ namespace golang::runtime
         return ""s;
     }
 
+    //go:nosplit
     void crash()
     {
         dieFromException(nullptr, nullptr);
     }
 
+    // dieFromException raises an exception that bypasses all exception handlers.
+    // This provides the expected exit status for the shell.
+    //
+    //go:nosplit
     void dieFromException(struct exceptionrecord* info, struct context* r)
     {
         if(info == nullptr)
@@ -469,6 +548,7 @@ namespace golang::runtime
         stdcall3(_RaiseFailFastException, uintptr_t(unsafe::Pointer(info)), uintptr_t(unsafe::Pointer(r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
     }
 
+    // gsignalStack is unused on Windows.
     
     template<typename T> requires gocpp::GoStruct<T>
     gsignalStack::operator T()

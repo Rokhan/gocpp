@@ -31,6 +31,8 @@ namespace golang::windows
         using syscall::rec::Find;
     }
 
+    // UTF16PtrToString is like UTF16ToString, but takes *uint16
+    // as a parameter instead of []uint16.
     std::string UTF16PtrToString(uint16_t* p)
     {
         if(p == nullptr)
@@ -458,6 +460,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
+    // flags for CreateToolhelp32Snapshot
     
     template<typename T> requires gocpp::GoStruct<T>
     ModuleEntry32::operator T()
@@ -709,6 +712,7 @@ namespace golang::windows
         return MoveFileEx(from, to, MOVEFILE_REPLACE_EXISTING);
     }
 
+    // Constants from lmshare.h
     
     template<typename T> requires gocpp::GoStruct<T>
     SHARE_INFO_2::operator T()

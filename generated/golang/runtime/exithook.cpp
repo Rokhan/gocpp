@@ -21,6 +21,18 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // addExitHook registers the specified function 'f' to be run at
+    // program termination (e.g. when someone invokes os.Exit(), or when
+    // main.main returns). Hooks are run in reverse order of registration:
+    // first hook added is the last one run.
+    //
+    // CAREFUL: the expectation is that addExitHook should only be called
+    // from a safe context (e.g. not an error/panic path or signal
+    // handler, preemption enabled, allocation allowed, write barriers
+    // allowed, etc), and that the exit function 'f' will be invoked under
+    // similar circumstances. That is the say, we are expecting that 'f'
+    // uses normal / high-level Go code as opposed to one of the more
+    // restricted dialects used for the trickier parts of the runtime.
     void addExitHook(std::function<void ()> f, bool runOnNonZeroExit)
     {
         exitHooks.hooks = append(exitHooks.hooks, gocpp::Init<exitHook>([=](auto& x) {
@@ -29,6 +41,8 @@ namespace golang::runtime
         }));
     }
 
+    // exitHook stores a function to be run on program exit, registered
+    // by the utility runtime.addExitHook.
     
     template<typename T> requires gocpp::GoStruct<T>
     exitHook::operator T()
@@ -101,7 +115,13 @@ namespace golang::runtime
     }
 
 
+    // exitHooks stores state related to hook functions registered to
+    // run when program execution terminates.
     gocpp_id_0 exitHooks;
+    // runExitHooks runs any registered exit hook functions (funcs
+    // previously registered using runtime.addExitHook). Here 'exitCode'
+    // is the status code being passed to os.Exit, or zero if the program
+    // is terminating normally without calling os.Exit.
     void runExitHooks(int exitCode)
     {
         if(exitHooks.runningExitHooks)

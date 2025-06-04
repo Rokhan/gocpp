@@ -90,6 +90,30 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // minPhysPageSize is a lower-bound on the physical page size. The
+    // true physical page size may be larger than this. In contrast,
+    // sys.PhysPageSize is an upper-bound on the physical page size.
+    // maxPhysPageSize is the maximum page size the runtime supports.
+    // maxPhysHugePageSize sets an upper-bound on the maximum huge page size
+    // that the runtime supports.
+    // pagesPerReclaimerChunk indicates how many pages to scan from the
+    // pageInUse bitmap at a time. Used by the page reclaimer.
+    //
+    // Higher values reduce contention on scanning indexes (such as
+    // h.reclaimIndex), but increase the minimum latency of the
+    // operation.
+    //
+    // The time required to scan this many pages can vary a lot depending
+    // on how many spans are actually freed. Experimentally, it can
+    // scan for pages at ~300 GB/ms on a 2.6GHz Core i7, but can only
+    // free spans at ~32 MB/ms. Using 512 pages bounds this at
+    // roughly 100µs.
+    //
+    // Must be a multiple of the pageInUse bitmap element size and
+    // must also evenly divide pagesPerArena.
+    // physPageAlignedStacks indicates whether stack allocations must be
+    // physical page aligned. This is a requirement for MAP_STACK on
+    // OpenBSD.
     bool physPageAlignedStacks = GOOS == "openbsd"s;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -193,6 +217,12 @@ namespace golang::runtime
     }
 
 
+    // Main malloc heap.
+    // The heap itself is the "free" and "scav" treaps,
+    // but all the other global data is here too.
+    //
+    // mheap must not be heap-allocated because it contains mSpanLists,
+    // which must not be heap-allocated.
     
     template<typename T> requires gocpp::GoStruct<T>
     mheap::operator T()
@@ -319,6 +349,8 @@ namespace golang::runtime
     }
 
     mheap mheap_;
+    // A heapArena stores metadata for a heap arena. heapArenas are stored
+    // outside of the Go heap and accessed via the mheap_.arenas index.
     
     template<typename T> requires gocpp::GoStruct<T>
     heapArena::operator T()
@@ -366,6 +398,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // arenaHint is a hint for where to grow the heap arenas. See
+    // mheap_.arenaHints.
     
     template<typename T> requires gocpp::GoStruct<T>
     arenaHint::operator T()
@@ -404,7 +438,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // An mspan representing actual memory has state mSpanInUse,
+    // mSpanManual, or mSpanFree. Transitions between these states are
+    // constrained as follows:
+    //
+    //   - A span may transition from free to in-use or manual during any GC
+    //     phase.
+    //
+    //   - During sweeping (gcphase == _GCoff), a span may transition from
+    //     in-use to free (as a result of sweeping) or manual to free (as a
+    //     result of stacks being freed).
+    //
+    //   - During GC (gcphase != _GCoff), a span *must not* transition from
+    //     manual or in-use to free. Because concurrent GC may read a pointer
+    //     and then look up its span, the span state must be monotonic.
+    //
+    // Setting mspan.state to mSpanInUse or mSpanManual must be done
+    // atomically and only after all other span fields are valid.
+    // Likewise, if inspecting a span is contingent on it being
+    // mSpanInUse, the state should be loaded atomically and checked
+    // before depending on other fields. This allows the garbage collector
+    // to safely deal with potentially invalid pointers, since resolving
+    // such pointers may race with a span being allocated.
+    // mSpanStateNames are the names of the span states, indexed by
+    // mSpanState.
     gocpp::slice<std::string> mSpanStateNames = gocpp::slice<std::string> {"mSpanDead"s, "mSpanInUse"s, "mSpanManual"s};
+    // mSpanStateBox holds an atomic.Uint8 to provide atomic operations on
+    // an mSpanState. This is a separate type to disallow accidental comparison
+    // or assignment with mSpanState.
     
     template<typename T> requires gocpp::GoStruct<T>
     mSpanStateBox::operator T()
@@ -434,16 +495,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    //go:nosplit
     void rec::set(struct mSpanStateBox* b, golang::runtime::mSpanState s)
     {
         rec::Store(gocpp::recv(b->s), uint8_t(s));
     }
 
+    //go:nosplit
     runtime::mSpanState rec::get(struct mSpanStateBox* b)
     {
         return mSpanState(rec::Load(gocpp::recv(b->s)));
     }
 
+    // mSpanList heads a linked list of spans.
     
     template<typename T> requires gocpp::GoStruct<T>
     mSpanList::operator T()
@@ -608,6 +672,19 @@ namespace golang::runtime
         return {size, n, total};
     }
 
+    // recordspan adds a newly allocated span to h.allspans.
+    //
+    // This only happens the first time a span is allocated from
+    // mheap.spanalloc (it is not called when a span is reused).
+    //
+    // Write barriers are disallowed here because it can be called from
+    // gcWork when allocating new workbufs. However, because it's an
+    // indirect call from the fixalloc initializer, the compiler can't see
+    // this.
+    //
+    // The heap lock must be held.
+    //
+    //go:nowritebarrierrec
     void recordspan(unsafe::Pointer vh, unsafe::Pointer p)
     {
         auto h = (mheap*)(vh);
@@ -644,31 +721,59 @@ namespace golang::runtime
         h->allspans[len(h->allspans) - 1] = s;
     }
 
+    // A spanClass represents the size class and noscan-ness of a span.
+    //
+    // Each size class has a noscan spanClass and a scan spanClass. The
+    // noscan spanClass contains only noscan objects, which do not contain
+    // pointers and thus do not need to be scanned by the garbage
+    // collector.
     runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan)
     {
         return spanClass(sizeclass << 1) | spanClass(bool2int(noscan));
     }
 
+    //go:nosplit
     int8_t rec::sizeclass(golang::runtime::spanClass sc)
     {
         return int8_t(sc >> 1);
     }
 
+    //go:nosplit
     bool rec::noscan(golang::runtime::spanClass sc)
     {
         return sc & 1 != 0;
     }
 
+    // arenaIndex returns the index into mheap_.arenas of the arena
+    // containing metadata for p. This index combines of an index into the
+    // L1 map and an index into the L2 map and should be used as
+    // mheap_.arenas[ai.l1()][ai.l2()].
+    //
+    // If p is outside the range of valid heap addresses, either l1() or
+    // l2() will be out of bounds.
+    //
+    // It is nosplit because it's called by spanOf and several other
+    // nosplit functions.
+    //
+    //go:nosplit
     runtime::arenaIdx arenaIndex(uintptr_t p)
     {
         return arenaIdx((p - arenaBaseOffset) / heapArenaBytes);
     }
 
+    // arenaBase returns the low address of the region covered by heap
+    // arena i.
     uintptr_t arenaBase(golang::runtime::arenaIdx i)
     {
         return uintptr_t(i) * heapArenaBytes + arenaBaseOffset;
     }
 
+    // l1 returns the "l1" portion of an arenaIdx.
+    //
+    // Marked nosplit because it's called by spanOf and other nosplit
+    // functions.
+    //
+    //go:nosplit
     unsigned int rec::l1(golang::runtime::arenaIdx i)
     {
         if(arenaL1Bits == 0)
@@ -681,6 +786,12 @@ namespace golang::runtime
         }
     }
 
+    // l2 returns the "l2" portion of an arenaIdx.
+    //
+    // Marked nosplit because it's called by spanOf and other nosplit funcs.
+    // functions.
+    //
+    //go:nosplit
     unsigned int rec::l2(golang::runtime::arenaIdx i)
     {
         if(arenaL1Bits == 0)
@@ -693,11 +804,22 @@ namespace golang::runtime
         }
     }
 
+    // inheap reports whether b is a pointer into a (potentially dead) heap object.
+    // It returns false for pointers into mSpanManual spans.
+    // Non-preemptible because it is used by write barriers.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     bool inheap(uintptr_t b)
     {
         return spanOfHeap(b) != nullptr;
     }
 
+    // inHeapOrStack is a variant of inheap that returns true for pointers
+    // into any allocated heap span.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     bool inHeapOrStack(uintptr_t b)
     {
         auto s = spanOf(b);
@@ -724,6 +846,17 @@ namespace golang::runtime
         }
     }
 
+    // spanOf returns the span of p. If p does not point into the heap
+    // arena or no span has ever contained p, spanOf returns nil.
+    //
+    // If p does not point to allocated memory, this may return a non-nil
+    // span that does *not* contain p. If this is a possibility, the
+    // caller should either call spanOfHeap or check the span bounds
+    // explicitly.
+    //
+    // Must be nosplit because it has callers that are nosplit.
+    //
+    //go:nosplit
     struct mspan* spanOf(uintptr_t p)
     {
         auto ri = arenaIndex(p);
@@ -754,12 +887,24 @@ namespace golang::runtime
         return ha->spans[(p / pageSize) % pagesPerArena];
     }
 
+    // spanOfUnchecked is equivalent to spanOf, but the caller must ensure
+    // that p points into an allocated heap arena.
+    //
+    // Must be nosplit because it has callers that are nosplit.
+    //
+    //go:nosplit
     struct mspan* spanOfUnchecked(uintptr_t p)
     {
         auto ai = arenaIndex(p);
         return mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))]->spans[(p / pageSize) % pagesPerArena];
     }
 
+    // spanOfHeap is like spanOf, but returns nil if p does not point to a
+    // heap object.
+    //
+    // Must be nosplit because it has callers that are nosplit.
+    //
+    //go:nosplit
     struct mspan* spanOfHeap(uintptr_t p)
     {
         auto s = spanOf(p);
@@ -770,6 +915,8 @@ namespace golang::runtime
         return s;
     }
 
+    // pageIndexOf returns the arena, page index, and page mask for pointer p.
+    // The caller must ensure p is in the heap.
     std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p)
     {
         struct heapArena* arena;
@@ -782,6 +929,7 @@ namespace golang::runtime
         return {arena, pageIdx, pageMask};
     }
 
+    // Initialize the heap.
     void rec::init(struct mheap* h)
     {
         lockInit(& h->lock, lockRankMheap);
@@ -801,6 +949,12 @@ namespace golang::runtime
         rec::init(gocpp::recv(h->pages), & h->lock, & memstats.gcMiscSys, false);
     }
 
+    // reclaim sweeps and reclaims at least npage pages into the heap.
+    // It is called before allocating npage pages to keep growth in check.
+    //
+    // reclaim implements the page-reclaimer half of the sweeper.
+    //
+    // h.lock must NOT be held.
     void rec::reclaim(struct mheap* h, uintptr_t npage)
     {
         if(rec::Load(gocpp::recv(h->reclaimIndex)) >= (1 << 63))
@@ -866,6 +1020,12 @@ namespace golang::runtime
         releasem(mp);
     }
 
+    // reclaimChunk sweeps unmarked spans that start at page indexes [pageIdx, pageIdx+n).
+    // It returns the number of pages returned to the heap.
+    //
+    // h.lock must be held and the caller must be non-preemptible. Note: h.lock may be
+    // temporarily unlocked and re-locked in order to do sweeping or if tracing is
+    // enabled.
     uintptr_t rec::reclaimChunk(struct mheap* h, gocpp::slice<golang::runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
     {
         assertLockHeld(& h->lock);
@@ -930,13 +1090,25 @@ namespace golang::runtime
         return nFreed;
     }
 
+    // spanAllocType represents the type of allocation to make, or
+    // the type of allocation to be freed.
+    // manual returns true if the span allocation is manually managed.
     bool rec::manual(golang::runtime::spanAllocType s)
     {
         return s != spanAllocHeap;
     }
 
+    // alloc allocates a new span of npage pages from the GC'd heap.
+    //
+    // spanclass indicates the span's size class and scannability.
+    //
+    // Returns a span that has been fully initialized. span.needzero indicates
+    // whether the span has been zeroed. Note that it may not be.
     struct mspan* rec::alloc(struct mheap* h, uintptr_t npages, golang::runtime::spanClass spanclass)
     {
+        // Don't do any operations that lock the heap on the G stack.
+        // It might trigger stack growth, and the stack growth code needs
+        // to be able to allocate heap.
         mspan* s = {};
         systemstack([=]() mutable -> void
         {
@@ -949,6 +1121,23 @@ namespace golang::runtime
         return s;
     }
 
+    // allocManual allocates a manually-managed span of npage pages.
+    // allocManual returns nil if allocation fails.
+    //
+    // allocManual adds the bytes used to *stat, which should be a
+    // memstats in-use field. Unlike allocations in the GC'd heap, the
+    // allocation does *not* count toward heapInUse.
+    //
+    // The memory backing the returned span may not be zeroed if
+    // span.needzero is set.
+    //
+    // allocManual must be called on the system stack because it may
+    // acquire the heap lock via allocSpan. See mheap for details.
+    //
+    // If new code is written to call allocManual, do NOT use an
+    // existing spanAllocType value and instead declare a new one.
+    //
+    //go:systemstack
     struct mspan* rec::allocManual(struct mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ)
     {
         if(! rec::manual(gocpp::recv(typ)))
@@ -958,6 +1147,8 @@ namespace golang::runtime
         return rec::allocSpan(gocpp::recv(h), npages, typ, 0);
     }
 
+    // setSpans modifies the span map so [spanOf(base), spanOf(base+npage*pageSize))
+    // is s.
     void rec::setSpans(struct mheap* h, uintptr_t base, uintptr_t npage, struct mspan* s)
     {
         auto p = base / pageSize;
@@ -975,6 +1166,16 @@ namespace golang::runtime
         }
     }
 
+    // allocNeedsZero checks if the region of address space [base, base+npage*pageSize),
+    // assumed to be allocated, needs to be zeroed, updating heap arena metadata for
+    // future allocations.
+    //
+    // This must be called each time pages are allocated from the heap, even if the page
+    // allocator can otherwise prove the memory it's allocating is already zero because
+    // they're fresh from the operating system. It updates heapArena metadata that is
+    // critical for future page allocations.
+    //
+    // There are no locking constraints on this method.
     bool rec::allocNeedsZero(struct mheap* h, uintptr_t base, uintptr_t npage)
     {
         bool needZero;
@@ -1011,6 +1212,18 @@ namespace golang::runtime
         return needZero;
     }
 
+    // tryAllocMSpan attempts to allocate an mspan object from
+    // the P-local cache, but may fail.
+    //
+    // h.lock need not be held.
+    //
+    // This caller must ensure that its P won't change underneath
+    // it during this function. Currently to ensure that we enforce
+    // that the function is run on the system stack, because that's
+    // the only place it is used now. In the future, this requirement
+    // may be relaxed if its use is necessary elsewhere.
+    //
+    //go:systemstack
     struct mspan* rec::tryAllocMSpan(struct mheap* h)
     {
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
@@ -1023,6 +1236,16 @@ namespace golang::runtime
         return s;
     }
 
+    // allocMSpanLocked allocates an mspan object.
+    //
+    // h.lock must be held.
+    //
+    // allocMSpanLocked must be called on the system stack because
+    // its caller holds the heap lock. See mheap for details.
+    // Running on the system stack also ensures that we won't
+    // switch Ps during this function. See tryAllocMSpan for details.
+    //
+    //go:systemstack
     struct mspan* rec::allocMSpanLocked(struct mheap* h)
     {
         assertLockHeld(& h->lock);
@@ -1045,6 +1268,16 @@ namespace golang::runtime
         return s;
     }
 
+    // freeMSpanLocked free an mspan object.
+    //
+    // h.lock must be held.
+    //
+    // freeMSpanLocked must be called on the system stack because
+    // its caller holds the heap lock. See mheap for details.
+    // Running on the system stack also ensures that we won't
+    // switch Ps during this function. See tryAllocMSpan for details.
+    //
+    //go:systemstack
     void rec::freeMSpanLocked(struct mheap* h, struct mspan* s)
     {
         assertLockHeld(& h->lock);
@@ -1058,6 +1291,23 @@ namespace golang::runtime
         rec::free(gocpp::recv(h->spanalloc), unsafe::Pointer(s));
     }
 
+    // allocSpan allocates an mspan which owns npages worth of memory.
+    //
+    // If typ.manual() == false, allocSpan allocates a heap span of class spanclass
+    // and updates heap accounting. If manual == true, allocSpan allocates a
+    // manually-managed span (spanclass is ignored), and the caller is
+    // responsible for any accounting related to its use of the span. Either
+    // way, allocSpan will atomically add the bytes in the newly allocated
+    // span to *sysStat.
+    //
+    // The returned span is fully initialized.
+    //
+    // h.lock must not be held.
+    //
+    // allocSpan must be called on the system stack both because it acquires
+    // the heap lock and because it must block GC transitions.
+    //
+    //go:systemstack
     struct mspan* rec::allocSpan(struct mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass)
     {
         struct mspan* s;
@@ -1159,6 +1409,9 @@ namespace golang::runtime
                 }
             }
         }
+        // There are a few very limited circumstances where we won't have a P here.
+        // It's OK to simply skip scavenging in these cases. Something else will notice
+        // and pick up the tab.
         int64_t now = {};
         if(pp != nullptr && bytesToScavenge > 0)
         {
@@ -1220,6 +1473,8 @@ namespace golang::runtime
         return s;
     }
 
+    // initSpan initializes a blank span s which will represent the range
+    // [base, base+npages*pageSize). typ is the type of span being allocated.
     void rec::initSpan(struct mheap* h, struct mspan* s, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass, uintptr_t base, uintptr_t npages)
     {
         rec::init(gocpp::recv(s), base, npages);
@@ -1275,6 +1530,10 @@ namespace golang::runtime
         publicationBarrier();
     }
 
+    // Try to add at least npage pages of memory to the heap,
+    // returning how much the heap grew by and whether it worked.
+    //
+    // h.lock must be held.
     std::tuple<uintptr_t, bool> rec::grow(struct mheap* h, uintptr_t npage)
     {
         assertLockHeld(& h->lock);
@@ -1322,6 +1581,7 @@ namespace golang::runtime
         return {totalGrowth, true};
     }
 
+    // Free the span back into the heap.
     void rec::freeSpan(struct mheap* h, struct mspan* s)
     {
         systemstack([=]() mutable -> void
@@ -1345,6 +1605,17 @@ namespace golang::runtime
         });
     }
 
+    // freeManual frees a manually-managed span returned by allocManual.
+    // typ must be the same as the spanAllocType passed to the allocManual that
+    // allocated s.
+    //
+    // This must only be called when gcphase == _GCoff. See mSpanState for
+    // an explanation.
+    //
+    // freeManual must be called on the system stack because it acquires
+    // the heap lock. See mheap for details.
+    //
+    //go:systemstack
     void rec::freeManual(struct mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)
     {
         pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
@@ -1427,6 +1698,13 @@ namespace golang::runtime
         rec::freeMSpanLocked(gocpp::recv(h), s);
     }
 
+    // scavengeAll acquires the heap lock (blocking any additional
+    // manipulation of the page allocator) and iterates over the whole
+    // heap, scavenging every free page available.
+    //
+    // Must run on the system stack because it acquires the heap lock.
+    //
+    //go:systemstack
     void rec::scavengeAll(struct mheap* h)
     {
         auto gp = getg();
@@ -1439,6 +1717,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname runtime_debug_freeOSMemory runtime/debug.freeOSMemory
     void runtime_debug_freeOSMemory()
     {
         GC();
@@ -1448,6 +1727,7 @@ namespace golang::runtime
         });
     }
 
+    // Initialize a new span with the given start and npages.
     void rec::init(struct mspan* span, uintptr_t base, uintptr_t npages)
     {
         span->next = nullptr;
@@ -1475,6 +1755,7 @@ namespace golang::runtime
         return span->list != nullptr;
     }
 
+    // Initialize an empty doubly-linked list.
     void rec::init(struct mSpanList* list)
     {
         list->first = nullptr;
@@ -1554,6 +1835,8 @@ namespace golang::runtime
         span->list = list;
     }
 
+    // takeAll removes all spans from other and inserts them at the front
+    // of list.
     void rec::takeAll(struct mSpanList* list, struct mSpanList* other)
     {
         if(rec::isEmpty(gocpp::recv(other)))
@@ -1577,6 +1860,10 @@ namespace golang::runtime
         std::tie(other->first, other->last) = std::tuple{nullptr, nullptr};
     }
 
+    // _KindSpecialReachable is a special used for tracking
+    // reachability during testing.
+    // _KindSpecialPinCounter is a special used for objects that are pinned
+    // multiple times
     
     template<typename T> requires gocpp::GoStruct<T>
     special::operator T()
@@ -1615,6 +1902,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // spanHasSpecials marks a span as having specials in the arena bitmap.
     void spanHasSpecials(struct mspan* s)
     {
         auto arenaPage = (rec::base(gocpp::recv(s)) / pageSize) % pagesPerArena;
@@ -1623,6 +1911,7 @@ namespace golang::runtime
         atomic::Or8(& ha->pageSpecials[arenaPage / 8], uint8_t(1) << (arenaPage % 8));
     }
 
+    // spanHasNoSpecials marks a span as having no specials in the arena bitmap.
     void spanHasNoSpecials(struct mspan* s)
     {
         auto arenaPage = (rec::base(gocpp::recv(s)) / pageSize) % pagesPerArena;
@@ -1631,6 +1920,12 @@ namespace golang::runtime
         atomic::And8(& ha->pageSpecials[arenaPage / 8], ~ (uint8_t(1) << (arenaPage % 8)));
     }
 
+    // Adds the special record s to the list of special records for
+    // the object p. All fields of s should be filled in except for
+    // offset & next, which this routine will fill in.
+    // Returns true if the special was successfully added, false otherwise.
+    // (The add will fail only if a record with the same p and s->kind
+    // already exists.)
     bool addspecial(unsafe::Pointer p, struct special* s)
     {
         auto span = spanOfHeap(uintptr_t(p));
@@ -1656,6 +1951,9 @@ namespace golang::runtime
         return ! exists;
     }
 
+    // Removes the Special record of the given kind for the object p.
+    // Returns the record if the record existed, nil otherwise.
+    // The caller must FixAlloc_Free the result.
     struct special* removespecial(unsafe::Pointer p, uint8_t kind)
     {
         auto span = spanOfHeap(uintptr_t(p));
@@ -1684,6 +1982,9 @@ namespace golang::runtime
         return result;
     }
 
+    // Find a splice point in the sorted list and check for an already existing
+    // record. Returns a pointer to the next-reference in the list predecessor.
+    // Returns true, if the referenced item is an exact match.
     std::tuple<struct special**, bool> rec::specialFindSplicePoint(struct mspan* span, uintptr_t offset, unsigned char kind)
     {
         auto iter = & span->specials;
@@ -1709,6 +2010,10 @@ namespace golang::runtime
         return {iter, found};
     }
 
+    // The described object has a finalizer set for it.
+    //
+    // specialfinalizer is allocated from non-GC'd memory, so any heap
+    // pointers must be specially handled.
     
     template<typename T> requires gocpp::GoStruct<T>
     specialfinalizer::operator T()
@@ -1753,6 +2058,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Adds a finalizer to the object p. Returns true if it succeeded.
     bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
     {
         lock(& mheap_.speciallock);
@@ -1785,6 +2091,7 @@ namespace golang::runtime
         return false;
     }
 
+    // Removes the finalizer (if any) from the object p.
     void removefinalizer(unsafe::Pointer p)
     {
         auto s = (specialfinalizer*)(unsafe::Pointer(removespecial(p, _KindSpecialFinalizer)));
@@ -1797,6 +2104,7 @@ namespace golang::runtime
         unlock(& mheap_.speciallock);
     }
 
+    // The described object is being heap profiled.
     
     template<typename T> requires gocpp::GoStruct<T>
     specialprofile::operator T()
@@ -1832,6 +2140,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Set the heap profile bucket associated with addr to b.
     void setprofilebucket(unsafe::Pointer p, struct bucket* b)
     {
         lock(& mheap_.speciallock);
@@ -1845,6 +2154,8 @@ namespace golang::runtime
         }
     }
 
+    // specialReachable tracks whether an object is reachable on the next
+    // GC cycle. This is used by testing.
     
     template<typename T> requires gocpp::GoStruct<T>
     specialReachable::operator T()
@@ -1880,6 +2191,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // specialPinCounter tracks whether an object is pinned multiple times.
     
     template<typename T> requires gocpp::GoStruct<T>
     specialPinCounter::operator T()
@@ -1912,6 +2224,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // specialsIter helps iterate over specials lists.
     
     template<typename T> requires gocpp::GoStruct<T>
     specialsIter::operator T()
@@ -1960,6 +2273,8 @@ namespace golang::runtime
         i->s = *i->pprev;
     }
 
+    // unlinkAndNext removes the current special from the list and moves
+    // the iterator to the next special. It returns the unlinked special.
     struct special* rec::unlinkAndNext(struct specialsIter* i)
     {
         auto cur = i->s;
@@ -1968,6 +2283,8 @@ namespace golang::runtime
         return cur;
     }
 
+    // freeSpecial performs any cleanup on special s and deallocates it.
+    // s must already be unlinked from the specials list.
     void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size)
     {
         //Go switch emulation
@@ -2011,6 +2328,7 @@ namespace golang::runtime
         }
     }
 
+    // gcBits is an alloc/mark bitmap. This is always used as gcBits.x.
     
     template<typename T> requires gocpp::GoStruct<T>
     gcBits::operator T()
@@ -2043,11 +2361,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // bytep returns a pointer to the n'th byte of b.
     uint8_t* rec::bytep(struct gcBits* b, uintptr_t n)
     {
         return addb(& b->x, n);
     }
 
+    // bitp returns a pointer to the byte containing bit n and a mask for
+    // selecting that bit from *bytep.
     std::tuple<uint8_t*, uint8_t> rec::bitp(struct gcBits* b, uintptr_t n)
     {
         uint8_t* bytep;
@@ -2178,6 +2499,8 @@ namespace golang::runtime
 
 
     gocpp_id_7 gcBitsArenas;
+    // tryAlloc allocates from b or returns nil if b does not have enough room.
+    // This is safe to call concurrently.
     struct gcBits* rec::tryAlloc(struct gcBitsArena* b, uintptr_t bytes)
     {
         if(b == nullptr || atomic::Loaduintptr(& b->free) + bytes > uintptr_t(len(b->bits)))
@@ -2193,6 +2516,8 @@ namespace golang::runtime
         return & b->bits[start];
     }
 
+    // newMarkBits returns a pointer to 8 byte aligned bytes
+    // to be used for a span's mark bits.
     struct gcBits* newMarkBits(uintptr_t nelems)
     {
         auto blocksNeeded = (nelems + 63) / 64;
@@ -2227,11 +2552,31 @@ namespace golang::runtime
         return p;
     }
 
+    // newAllocBits returns a pointer to 8 byte aligned bytes
+    // to be used for this span's alloc bits.
+    // newAllocBits is used to provide newly initialized spans
+    // allocation bits. For spans not being initialized the
+    // mark bits are repurposed as allocation bits when
+    // the span is swept.
     struct gcBits* newAllocBits(uintptr_t nelems)
     {
         return newMarkBits(nelems);
     }
 
+    // nextMarkBitArenaEpoch establishes a new epoch for the arenas
+    // holding the mark bits. The arenas are named relative to the
+    // current GC cycle which is demarcated by the call to finishweep_m.
+    //
+    // All current spans have been swept.
+    // During that sweep each span allocated room for its gcmarkBits in
+    // gcBitsArenas.next block. gcBitsArenas.next becomes the gcBitsArenas.current
+    // where the GC will mark objects and after each span is swept these bits
+    // will be used to allocate objects.
+    // gcBitsArenas.current becomes gcBitsArenas.previous where the span's
+    // gcAllocBits live until all the spans have been swept during this GC cycle.
+    // The span's sweep extinguishes all the references to gcBitsArenas.previous
+    // by pointing gcAllocBits into the gcBitsArenas.current.
+    // The gcBitsArenas.previous is released to the gcBitsArenas.free list.
     void nextMarkBitArenaEpoch()
     {
         lock(& gcBitsArenas.lock);
@@ -2257,6 +2602,8 @@ namespace golang::runtime
         unlock(& gcBitsArenas.lock);
     }
 
+    // newArenaMayUnlock allocates and zeroes a gcBits arena.
+    // The caller must hold gcBitsArena.lock. This may temporarily release it.
     struct gcBitsArena* newArenaMayUnlock()
     {
         gcBitsArena* result = {};

@@ -44,26 +44,64 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider
+    // in the bitmap at once.
+    // The number of radix bits for each level.
+    //
+    // The value of 3 is chosen such that the block of summaries we need to scan at
+    // each level fits in 64 bytes (2^3 summaries * 8 bytes per summary), which is
+    // close to the L1 cache line width on many systems. Also, a value of 3 fits 4 tree
+    // levels perfectly into the 21-bit pallocBits summary field at the root level.
+    //
+    // The following equation explains how each of the constants relate:
+    // summaryL0Bits + (summaryLevels-1)*summaryLevelBits + logPallocChunkBytes = heapAddrBits
+    //
+    // summaryLevels is an architecture-dependent value defined in mpagealloc_*.go.
+    // pallocChunksL2Bits is the number of bits of the chunk index number
+    // covered by the second level of the chunks map.
+    //
+    // See (*pageAlloc).chunks for more details. Update the documentation
+    // there should this change.
+    // maxSearchAddr returns the maximum searchAddr value, which indicates
+    // that the heap has no free space.
+    //
+    // This function exists just to make it clear that this is the maximum address
+    // for the page allocator's search space. See maxOffAddr for details.
+    //
+    // It's a function (rather than a variable) because it needs to be
+    // usable before package runtime's dynamic initialization is complete.
+    // See #51913 for details.
     struct offAddr maxSearchAddr()
     {
         return maxOffAddr;
     }
 
+    // Global chunk index.
+    //
+    // Represents an index into the leaf level of the radix tree.
+    // Similar to arenaIndex, except instead of arenas, it divides the address
+    // space into chunks.
+    // chunkIndex returns the global index of the palloc chunk containing the
+    // pointer p.
     runtime::chunkIdx chunkIndex(uintptr_t p)
     {
         return chunkIdx((p - arenaBaseOffset) / pallocChunkBytes);
     }
 
+    // chunkBase returns the base address of the palloc chunk at index ci.
     uintptr_t chunkBase(golang::runtime::chunkIdx ci)
     {
         return uintptr_t(ci) * pallocChunkBytes + arenaBaseOffset;
     }
 
+    // chunkPageIndex computes the index of the page that contains p,
+    // relative to the chunk which contains p.
     unsigned int chunkPageIndex(uintptr_t p)
     {
         return (unsigned int)(p % pallocChunkBytes / pageSize);
     }
 
+    // l1 returns the index into the first level of (*pageAlloc).chunks.
     unsigned int rec::l1(golang::runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
@@ -76,6 +114,7 @@ namespace golang::runtime
         }
     }
 
+    // l2 returns the index into the second level of (*pageAlloc).chunks.
     unsigned int rec::l2(golang::runtime::chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
@@ -88,16 +127,25 @@ namespace golang::runtime
         }
     }
 
+    // offAddrToLevelIndex converts an address in the offset address space
+    // to the index into summary[level] containing addr.
     int offAddrToLevelIndex(int level, struct offAddr addr)
     {
         return int((addr.a - arenaBaseOffset) >> levelShift[level]);
     }
 
+    // levelIndexToOffAddr converts an index into summary[level] into
+    // the corresponding address in the offset address space.
     struct offAddr levelIndexToOffAddr(int level, int idx)
     {
         return offAddr {(uintptr_t(idx) << levelShift[level]) + arenaBaseOffset};
     }
 
+    // addrsToSummaryRange converts base and limit pointers into a range
+    // of entries for the given summary level.
+    //
+    // The returned range is inclusive on the lower bound and exclusive on
+    // the upper bound.
     std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit)
     {
         int lo;
@@ -107,6 +155,9 @@ namespace golang::runtime
         return {lo, hi};
     }
 
+    // blockAlignSummaryRange aligns indices into the given level to that
+    // level's block width (1 << levelBits[level]). It assumes lo is inclusive
+    // and hi is exclusive, and so aligns them down and up respectively.
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi)
     {
         auto e = uintptr_t(1) << levelBits[level];
@@ -228,6 +279,9 @@ namespace golang::runtime
         p->test = test;
     }
 
+    // tryChunkOf returns the bitmap data for the given chunk.
+    //
+    // Returns nil if the chunk data has not been mapped.
     struct pallocData* rec::tryChunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         auto l2 = p->chunks[rec::l1(gocpp::recv(ci))];
@@ -238,11 +292,18 @@ namespace golang::runtime
         return & l2[rec::l2(gocpp::recv(ci))];
     }
 
+    // chunkOf returns the chunk at the given chunk index.
+    //
+    // The chunk index must be valid or this method may throw.
     struct pallocData* rec::chunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         return & p->chunks[rec::l1(gocpp::recv(ci))][rec::l2(gocpp::recv(ci))];
     }
 
+    // grow sets up the metadata for the address range [base, base+size).
+    // It may allocate metadata, in which case *p.sysStat will be updated.
+    //
+    // p.mheapLock must be held.
     void rec::grow(struct pageAlloc* p, uintptr_t base, uintptr_t size)
     {
         assertLockHeld(p->mheapLock);
@@ -269,6 +330,7 @@ namespace golang::runtime
         {
             if(p->chunks[rec::l1(gocpp::recv(c))] == nullptr)
             {
+                // Create the necessary l2 entry.
                 auto l2Size = gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>();
                 auto r = sysAlloc(l2Size, p->sysStat);
                 if(r == nullptr)
@@ -293,6 +355,19 @@ namespace golang::runtime
         rec::update(gocpp::recv(p), base, size / pageSize, true, false);
     }
 
+    // enableChunkHugePages enables huge pages for the chunk bitmap mappings (disabled by default).
+    //
+    // This function is idempotent.
+    //
+    // A note on latency: for sufficiently small heaps (<10s of GiB) this function will take constant
+    // time, but may take time proportional to the size of the mapped heap beyond that.
+    //
+    // The heap lock must not be held over this operation, since it will briefly acquire
+    // the heap lock.
+    //
+    // Must be called on the system stack because it acquires the heap lock.
+    //
+    //go:systemstack
     void rec::enableChunkHugePages(struct pageAlloc* p)
     {
         lock(& mheap_.lock);
@@ -315,6 +390,14 @@ namespace golang::runtime
         }
     }
 
+    // update updates heap metadata. It must be called each time the bitmap
+    // is updated.
+    //
+    // If contig is true, update does some optimizations assuming that there was
+    // a contiguous allocation or free between addr and addr+npages. alloc indicates
+    // whether the operation performed was an allocation or a free.
+    //
+    // p.mheapLock must be held.
     void rec::update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
     {
         assertLockHeld(p->mheapLock);
@@ -381,6 +464,14 @@ namespace golang::runtime
         }
     }
 
+    // allocRange marks the range of memory [base, base+npages*pageSize) as
+    // allocated. It also updates the summaries to reflect the newly-updated
+    // bitmap.
+    //
+    // Returns the amount of scavenged memory in bytes present in the
+    // allocated range.
+    //
+    // p.mheapLock must be held.
     uintptr_t rec::allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
@@ -417,6 +508,12 @@ namespace golang::runtime
         return uintptr_t(scav) * pageSize;
     }
 
+    // findMappedAddr returns the smallest mapped offAddr that is
+    // >= addr. That is, if addr refers to mapped memory, then it is
+    // returned. If addr is higher than any mapped region, then
+    // it returns maxOffAddr.
+    //
+    // p.mheapLock must be held.
     struct offAddr rec::findMappedAddr(struct pageAlloc* p, struct offAddr addr)
     {
         assertLockHeld(p->mheapLock);
@@ -476,6 +573,22 @@ namespace golang::runtime
         }
 
 
+    // find searches for the first (address-ordered) contiguous free region of
+    // npages in size and returns a base address for that region.
+    //
+    // It uses p.searchAddr to prune its search and assumes that no palloc chunks
+    // below chunkIndex(p.searchAddr) contain any free memory at all.
+    //
+    // find also computes and returns a candidate p.searchAddr, which may or
+    // may not prune more of the address space than p.searchAddr already does.
+    // This candidate is always a valid p.searchAddr.
+    //
+    // find represents the slow path and the full radix tree search.
+    //
+    // Returns a base address of 0 on failure, in which case the candidate
+    // searchAddr returned is invalid and must be ignored.
+    //
+    // p.mheapLock must be held.
     std::tuple<uintptr_t, struct offAddr> rec::find(struct pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
@@ -513,6 +626,16 @@ namespace golang::runtime
             {
                 j0 = searchIdx & (entriesPerBlock - 1);
             }
+            // Run over the level entries looking for
+            // a contiguous run of at least npages either
+            // within an entry or across entries.
+            //
+            // base contains the page index (relative to
+            // the first entry's first page) of the currently
+            // considered run of consecutive pages.
+            //
+            // size contains the size of the currently considered
+            // run of consecutive pages.
             unsigned int base = {};
             unsigned int size = {};
             for(auto j = j0; j < len(entries); j++)
@@ -590,6 +713,18 @@ namespace golang::runtime
         return {addr, rec::findMappedAddr(gocpp::recv(p), firstFree.base)};
     }
 
+    // alloc allocates npages worth of memory from the page heap, returning the base
+    // address for the allocation and the amount of scavenged memory in bytes
+    // contained in the region [base address, base address + npages*pageSize).
+    //
+    // Returns a 0 base address on failure, in which case other returned values
+    // should be ignored.
+    //
+    // p.mheapLock must be held.
+    //
+    // Must run on the system stack because p.mheapLock must be held.
+    //
+    //go:systemstack
     std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageAlloc* p, uintptr_t npages)
     {
         uintptr_t addr;
@@ -635,6 +770,13 @@ namespace golang::runtime
         return {addr, scav};
     }
 
+    // free returns npages worth of memory starting at base back to the page heap.
+    //
+    // p.mheapLock must be held.
+    //
+    // Must run on the system stack because p.mheapLock must be held.
+    //
+    //go:systemstack
     void rec::free(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
@@ -675,6 +817,14 @@ namespace golang::runtime
         rec::update(gocpp::recv(p), base, npages, true, false);
     }
 
+    // maxPackedValue is the maximum value that any of the three fields in
+    // the pallocSum may take on.
+    // pallocSum is a packed summary type which packs three numbers: start, max,
+    // and end into a single 8-byte value. Each of these values are a summary of
+    // a bitmap and are thus counts, each of which may have a maximum value of
+    // 2^21 - 1, or all three may be equal to 2^21. The latter case is represented
+    // by just setting the 64th bit.
+    // packPallocSum takes a start, max, and end value and produces a pallocSum.
     runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
     {
         if(max == maxPackedValue)
@@ -684,6 +834,7 @@ namespace golang::runtime
         return pallocSum((uint64_t(start) & (maxPackedValue - 1)) | ((uint64_t(max) & (maxPackedValue - 1)) << logMaxPackedValue) | ((uint64_t(end) & (maxPackedValue - 1)) << (2 * logMaxPackedValue)));
     }
 
+    // start extracts the start value from a packed sum.
     unsigned int rec::start(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
@@ -693,6 +844,7 @@ namespace golang::runtime
         return (unsigned int)(uint64_t(p) & (maxPackedValue - 1));
     }
 
+    // max extracts the max value from a packed sum.
     unsigned int rec::max(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
@@ -702,6 +854,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1));
     }
 
+    // end extracts the end value from a packed sum.
     unsigned int rec::end(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
@@ -711,6 +864,7 @@ namespace golang::runtime
         return (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1));
     }
 
+    // unpack unpacks all three values from the summary.
     std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(golang::runtime::pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
@@ -720,6 +874,8 @@ namespace golang::runtime
         return {(unsigned int)(uint64_t(p) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> logMaxPackedValue) & (maxPackedValue - 1)), (unsigned int)((uint64_t(p) >> (2 * logMaxPackedValue)) & (maxPackedValue - 1))};
     }
 
+    // mergeSummaries merges consecutive summaries which may each represent at
+    // most 1 << logMaxPagesPerSum pages each together into one.
     runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum)
     {
         auto [start, most, end] = rec::unpack(gocpp::recv(sums[0]));

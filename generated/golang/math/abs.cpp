@@ -20,6 +20,12 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Abs returns the absolute value of x.
+    //
+    // Special cases are:
+    //
+    //	Abs(±Inf) = +Inf
+    //	Abs(NaN) = NaN
     double Abs(double x)
     {
         return Float64frombits(Float64bits(x) &^ (1 << 63));

@@ -113,16 +113,25 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // next is a type-safe wrapper around link.
     struct traceMapNode* rec::next(struct traceMapNode* n)
     {
         return (traceMapNode*)(rec::Load(gocpp::recv(n->link)));
     }
 
+    // stealID steals an ID from the table, ensuring that it will not
+    // appear in the table anymore.
     uint64_t rec::stealID(struct traceMap* tab)
     {
         return rec::Add(gocpp::recv(tab->seq), 1);
     }
 
+    // put inserts the data into the table.
+    //
+    // It's always safe to noescape data because its bytes are always copied.
+    //
+    // Returns a unique ID for the data and whether this is the first time
+    // the data has been added to the map.
     std::tuple<uint64_t, bool> rec::put(struct traceMap* tab, unsafe::Pointer data, uintptr_t size)
     {
         if(size == 0)
@@ -134,6 +143,8 @@ namespace golang::runtime
         {
             return {id, false};
         }
+        // Now, double check under the mutex.
+        // Switch to the system stack so we can acquire tab.lock
         uint64_t id = {};
         bool added = {};
         systemstack([=]() mutable -> void
@@ -155,6 +166,9 @@ namespace golang::runtime
         return {id, added};
     }
 
+    // find looks up data in the table, assuming hash is a hash of data.
+    //
+    // Returns 0 if the data is not found, and the unique ID for it if it is.
     uint64_t rec::find(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash)
     {
         auto part = int(hash % uintptr_t(len(tab->tab)));
@@ -171,6 +185,7 @@ namespace golang::runtime
         return 0;
     }
 
+    // bucket is a type-safe wrapper for looking up a value in tab.tab.
     struct traceMapNode* rec::bucket(struct traceMap* tab, int part)
     {
         return (traceMapNode*)(rec::Load(gocpp::recv(tab->tab[part])));
@@ -191,6 +206,11 @@ namespace golang::runtime
         return meta;
     }
 
+    // reset drops all allocated memory from the table and resets it.
+    //
+    // tab.lock must be held. Must run on the system stack because of this.
+    //
+    //go:systemstack
     void rec::reset(struct traceMap* tab)
     {
         assertLockHeld(& tab->lock);

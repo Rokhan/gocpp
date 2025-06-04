@@ -25,6 +25,7 @@ namespace golang::main
         using mocklib::rec::Unlock;
     }
 
+    // SafeCounter is safe to use concurrently.
     
     template<typename T> requires gocpp::GoStruct<T>
     SafeCounter::operator T()
@@ -57,6 +58,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    // Inc increments the counter for the given key.
     void rec::Inc(struct SafeCounter* c, std::string key)
     {
         rec::Lock(gocpp::recv(c->mu));
@@ -64,6 +66,7 @@ namespace golang::main
         rec::Unlock(gocpp::recv(c->mu));
     }
 
+    // Value returns the current value of the counter for the given key.
     int rec::Value(struct SafeCounter* c, std::string key)
     {
         gocpp::Defer defer;

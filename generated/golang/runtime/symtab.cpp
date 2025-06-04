@@ -62,6 +62,8 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // Frames may be used to get function/file/line information for a
+    // slice of PC values returned by [Callers].
     
     template<typename T> requires gocpp::GoStruct<T>
     Frames::operator T()
@@ -97,6 +99,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Frame is the information returned by [Frames] for each call frame.
     
     template<typename T> requires gocpp::GoStruct<T>
     Frame::operator T()
@@ -147,6 +150,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // CallersFrames takes a slice of PC values returned by [Callers] and
+    // prepares to return function/file/line information.
+    // Do not change the slice until you are done with the [Frames].
     struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers)
     {
         auto f = gocpp::InitPtr<Frames>([=](auto& x) {
@@ -156,6 +162,15 @@ namespace golang::runtime
         return f;
     }
 
+    // Next returns a [Frame] representing the next call frame in the slice
+    // of PC values. If it has already returned all call frames, Next
+    // returns a zero [Frame].
+    //
+    // The more result indicates whether the next call to Next will return
+    // a valid [Frame]. It does not necessarily indicate whether this call
+    // returned one.
+    //
+    // See the [Frames] example for idiomatic usage.
     std::tuple<struct Frame, bool> rec::Next(struct Frames* ci)
     {
         struct Frame frame;
@@ -234,11 +249,19 @@ namespace golang::runtime
         return {frame, more};
     }
 
+    // runtime_FrameStartLine returns the start line of the function in a Frame.
+    //
+    //go:linkname runtime_FrameStartLine runtime/pprof.runtime_FrameStartLine
     int runtime_FrameStartLine(struct Frame* f)
     {
         return f->startLine;
     }
 
+    // runtime_FrameSymbolName returns the full symbol name of the function in a Frame.
+    // For generic functions this differs from f.Function in that this doesn't replace
+    // the shape name to "...".
+    //
+    //go:linkname runtime_FrameSymbolName runtime/pprof.runtime_FrameSymbolName
     std::string runtime_FrameSymbolName(struct Frame* f)
     {
         if(! rec::valid(gocpp::recv(f->funcInfo)))
@@ -250,6 +273,10 @@ namespace golang::runtime
         return rec::name(gocpp::recv(sf));
     }
 
+    // runtime_expandFinalInlineFrame expands the final pc in stk to include all
+    // "callers" if pc is inline.
+    //
+    //go:linkname runtime_expandFinalInlineFrame runtime/pprof.runtime_expandFinalInlineFrame
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk)
     {
         if(len(stk) == 0)
@@ -285,6 +312,9 @@ namespace golang::runtime
         return stk;
     }
 
+    // expandCgoFrames expands frame information for pc, known to be
+    // a non-Go function, using the cgoSymbolizer hook. expandCgoFrames
+    // returns nil if pc could not be expanded.
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc)
     {
         auto arg = gocpp::Init<cgoSymbolizerArg>([=](auto& x) {
@@ -344,6 +374,7 @@ namespace golang::runtime
     }
 
 
+    // A Func represents a Go function in the running binary.
     
     template<typename T> requires gocpp::GoStruct<T>
     Func::operator T()
@@ -403,6 +434,7 @@ namespace golang::runtime
         return funcInfo {f, mod};
     }
 
+    // pcHeader holds data used by the pclntab lookups.
     
     template<typename T> requires gocpp::GoStruct<T>
     pcHeader::operator T()
@@ -468,6 +500,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // moduledata records information about the layout of the executable
+    // image. It is written by the linker. Any changes here must be
+    // matched changes to the code in cmd/link/internal/ld/symtab.go:symtab.
+    // moduledata is stored in statically allocated non-pointer memory;
+    // none of the pointers here are visible to the garbage collector.
     
     template<typename T> requires gocpp::GoStruct<T>
     moduledata::operator T()
@@ -626,6 +663,18 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A modulehash is used to compare the ABI of a new module or a
+    // package in a new module with the loaded program.
+    //
+    // For each shared library a module links against, the linker creates an entry in the
+    // moduledata.modulehashes slice containing the name of the module, the abi hash seen
+    // at link time and a pointer to the runtime abi hash. These are checked in
+    // moduledataverify1 below.
+    //
+    // For each loaded plugin, the pkghashes slice has a modulehash of the
+    // newly loaded package that can be used to check the plugin's version of
+    // a package against any previously loaded version of the package.
+    // This is done in plugin.lastmoduleinit.
     
     template<typename T> requires gocpp::GoStruct<T>
     modulehash::operator T()
@@ -661,10 +710,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // pinnedTypemaps are the map[typeOff]*_type from the moduledata objects.
+    //
+    // These typemap objects are allocated at run time on the heap, but the
+    // only direct reference to them is in the moduledata, created by the
+    // linker and marked SNOPTRDATA so it is ignored by the GC.
+    //
+    // To make sure the map isn't collected, we keep a second reference here.
     gocpp::slice<gocpp::map<runtime::typeOff, runtime::_type*>> pinnedTypemaps;
     moduledata firstmoduledata;
     moduledata* lastmoduledatap;
     gocpp::slice<moduledata*>* modulesSlice;
+    // activeModules returns a slice of active modules.
+    //
+    // A module is active once its gcdatamask and gcbssmask have been
+    // assembled and it is usable by the GC.
+    //
+    // This is nosplit/nowritebarrier because it is called by the
+    // cgo pointer checking code.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     gocpp::slice<moduledata*> activeModules()
     {
         auto p = (gocpp::slice<moduledata*>*)(atomic::Loadp(unsafe::Pointer(& modulesSlice)));
@@ -675,6 +741,24 @@ namespace golang::runtime
         return *p;
     }
 
+    // modulesinit creates the active modules slice out of all loaded modules.
+    //
+    // When a module is first loaded by the dynamic linker, an .init_array
+    // function (written by cmd/link) is invoked to call addmoduledata,
+    // appending to the module to the linked list that starts with
+    // firstmoduledata.
+    //
+    // There are two times this can happen in the lifecycle of a Go
+    // program. First, if compiled with -linkshared, a number of modules
+    // built with -buildmode=shared can be loaded at program initialization.
+    // Second, a Go program can load a module while running that was built
+    // with -buildmode=plugin.
+    //
+    // After loading, this function is called which initializes the
+    // moduledata so it is usable by the GC and creates a new activeModules
+    // list.
+    //
+    // Only one goroutine may call modulesinit at a time.
     void modulesinit()
     {
         auto modules = new(gocpp::Tag<gocpp::slice<moduledata*>>());
@@ -773,6 +857,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // findfuncbucket is an array of these structures.
+    // Each bucket represents 4096 bytes of the text segment.
+    // Each subbucket represents 256 bytes of the text segment.
+    // To find a function given a pc, locate the bucket and subbucket for
+    // that pc. Add together the idx and subbucket value to obtain a
+    // function index. Then scan the functab array starting at that
+    // index to find the target function.
+    // This table uses 20 bytes for every 4096 bytes of code, or ~0.5% overhead.
     
     template<typename T> requires gocpp::GoStruct<T>
     findfuncbucket::operator T()
@@ -862,6 +954,24 @@ namespace golang::runtime
         }
     }
 
+    // textAddr returns md.text + off, with special handling for multiple text sections.
+    // off is a (virtual) offset computed at internal linking time,
+    // before the external linker adjusts the sections' base addresses.
+    //
+    // The text, or instruction stream is generated as one large buffer.
+    // The off (offset) for a function is its offset within this buffer.
+    // If the total text size gets too large, there can be issues on platforms like ppc64
+    // if the target of calls are too far for the call instruction.
+    // To resolve the large text issue, the text is split into multiple text sections
+    // to allow the linker to generate long calls when necessary.
+    // When this happens, the vaddr for each text section is set to its offset within the text.
+    // Each function's offset is compared against the section vaddrs and ends to determine the containing section.
+    // Then the section relative offset is added to the section's
+    // relocated baseaddr to compute the function address.
+    //
+    // It is nosplit because it is part of the findfunc implementation.
+    //
+    //go:nosplit
     uintptr_t rec::textAddr(struct moduledata* md, uint32_t off32)
     {
         auto off = uintptr_t(off32);
@@ -885,6 +995,12 @@ namespace golang::runtime
         return res;
     }
 
+    // textOff is the opposite of textAddr. It converts a PC to a (virtual) offset
+    // to md.text, and returns if the PC is in any Go text section.
+    //
+    // It is nosplit because it is part of the findfunc implementation.
+    //
+    //go:nosplit
     std::tuple<uint32_t, bool> rec::textOff(struct moduledata* md, uintptr_t pc)
     {
         auto res = uint32_t(pc - md->text);
@@ -911,6 +1027,7 @@ namespace golang::runtime
         return {res, true};
     }
 
+    // funcName returns the string at nameOff in the function name table.
     std::string rec::funcName(struct moduledata* md, int32_t nameOff)
     {
         if(nameOff == 0)
@@ -920,6 +1037,12 @@ namespace golang::runtime
         return gostringnocopy(& md->funcnametab[nameOff]);
     }
 
+    // FuncForPC returns a *[Func] describing the function that contains the
+    // given program counter address, or else nil.
+    //
+    // If pc represents multiple functions because of inlining, it returns
+    // the *Func describing the innermost function, but with an entry of
+    // the outermost function.
     struct Func* FuncForPC(uintptr_t pc)
     {
         auto f = findfunc(pc);
@@ -945,6 +1068,7 @@ namespace golang::runtime
         return (Func*)(unsafe::Pointer(fi));
     }
 
+    // Name returns the name of the function.
     std::string rec::Name(struct Func* f)
     {
         if(f == nullptr)
@@ -960,6 +1084,7 @@ namespace golang::runtime
         return funcNameForPrint(funcname(rec::funcInfo(gocpp::recv(f))));
     }
 
+    // Entry returns the entry address of the function.
     uintptr_t rec::Entry(struct Func* f)
     {
         auto fn = rec::raw(gocpp::recv(f));
@@ -971,6 +1096,10 @@ namespace golang::runtime
         return rec::entry(gocpp::recv(rec::funcInfo(gocpp::recv(fn))));
     }
 
+    // FileLine returns the file name and line number of the
+    // source code corresponding to the program counter pc.
+    // The result will not be accurate if pc is not a program
+    // counter within f.
     std::tuple<std::string, int> rec::FileLine(struct Func* f, uintptr_t pc)
     {
         std::string file;
@@ -985,6 +1114,8 @@ namespace golang::runtime
         return {file, int(line32)};
     }
 
+    // startLine returns the starting line number of the function. i.e., the line
+    // number of the func keyword.
     int32_t rec::startLine(struct Func* f)
     {
         auto fn = rec::raw(gocpp::recv(f));
@@ -996,6 +1127,12 @@ namespace golang::runtime
         return rec::funcInfo(gocpp::recv(fn)).startLine;
     }
 
+    // findmoduledatap looks up the moduledata for a PC.
+    //
+    // It is nosplit because it's part of the isgoexception
+    // implementation.
+    //
+    //go:nosplit
     struct moduledata* findmoduledatap(uintptr_t pc)
     {
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
@@ -1047,16 +1184,24 @@ namespace golang::runtime
         return (Func*)(unsafe::Pointer(f._func));
     }
 
+    // isInlined reports whether f should be re-interpreted as a *funcinl.
     bool rec::isInlined(struct _func* f)
     {
         return f->entryOff == ~ uint32_t(0);
     }
 
+    // entry returns the entry PC for f.
     uintptr_t rec::entry(struct funcInfo f)
     {
         return rec::textAddr(gocpp::recv(f.datap), f.entryOff);
     }
 
+    // findfunc looks up function metadata for a PC.
+    //
+    // It is nosplit because it's part of the isgoexception
+    // implementation.
+    //
+    //go:nosplit
     struct funcInfo findfunc(uintptr_t pc)
     {
         auto datap = findmoduledatap(pc);
@@ -1083,6 +1228,9 @@ namespace golang::runtime
         return funcInfo {(_func*)(unsafe::Pointer(& datap->pclntable[funcoff])), datap};
     }
 
+    // A srcFunc represents a logical function in the source code. This may
+    // correspond to an actual symbol in the binary text, or it may correspond to a
+    // source function that has been inlined.
     
     template<typename T> requires gocpp::GoStruct<T>
     srcFunc::operator T()
@@ -1209,18 +1357,28 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // pcvalueCacheKey returns the outermost index in a pcvalueCache to use for targetpc.
+    // It must be very cheap to calculate.
+    // For now, align to goarch.PtrSize and reduce mod the number of entries.
+    // In practice, this appears to be fairly randomly and evenly distributed.
     uintptr_t pcvalueCacheKey(uintptr_t targetpc)
     {
         return (targetpc / goarch::PtrSize) % uintptr_t(len(pcvalueCache {}.entries));
     }
 
+    // Returns the PCData value, and the PC where this value starts.
     std::tuple<int32_t, uintptr_t> pcvalue(struct funcInfo f, uint32_t off, uintptr_t targetpc, bool strict)
     {
+        // If true, when we get a cache hit, still look up the data and make sure it
+        // matches the cached contents.
         auto debugCheckCache = false;
         if(off == 0)
         {
             return {- 1, 0};
         }
+        // Check the cache. This speeds up walks of deep stacks, which
+        // tend to have the same recursive functions over and over,
+        // or repetitive stacks between goroutines.
         int32_t checkVal = {};
         uintptr_t checkPC = {};
         auto ck = pcvalueCacheKey(targetpc);
@@ -1417,6 +1575,7 @@ namespace golang::runtime
         return x;
     }
 
+    // funcMaxSPDelta returns the maximum spdelta at any point in f.
     int32_t funcMaxSPDelta(struct funcInfo f)
     {
         auto datap = f.datap;
@@ -1461,6 +1620,7 @@ namespace golang::runtime
         return r;
     }
 
+    // Like pcdatavalue, but also return the start PC of this PCData value.
     std::tuple<int32_t, uintptr_t> pcdatavalue2(struct funcInfo f, uint32_t table, uintptr_t targetpc)
     {
         if(table >= f.npcdata)
@@ -1470,6 +1630,8 @@ namespace golang::runtime
         return pcvalue(f, pcdatastart(f, table), targetpc, true);
     }
 
+    // funcdata returns a pointer to the ith funcdata for f.
+    // funcdata should be kept in sync with cmd/link:writeFuncs.
     unsafe::Pointer funcdata(struct funcInfo f, uint8_t i)
     {
         if(i < 0 || i >= f.nfuncdata)
@@ -1479,6 +1641,8 @@ namespace golang::runtime
         auto base = f.datap->gofunc;
         auto p = uintptr_t(unsafe::Pointer(& f.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f.npcdata) * 4 + uintptr_t(i) * 4;
         auto off = *(uint32_t*)(unsafe::Pointer(p));
+        // Return off == ^uint32(0) ? 0 : f.datap.gofunc + uintptr(off), but without branches.
+        // The compiler calculates mask on most architectures using conditional assignment.
         uintptr_t mask = {};
         if(off == ~ uint32_t(0))
         {
@@ -1489,6 +1653,7 @@ namespace golang::runtime
         return unsafe::Pointer(raw & mask);
     }
 
+    // step advances to the next pc, value pair in the encoded table.
     std::tuple<gocpp::slice<unsigned char>, bool> step(gocpp::slice<unsigned char> p, uintptr_t* pc, int32_t* val, bool first)
     {
         gocpp::slice<unsigned char> newp;
@@ -1516,6 +1681,7 @@ namespace golang::runtime
         return {p, true};
     }
 
+    // readvarint reads a varint from p.
     std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p)
     {
         uint32_t read;
@@ -1572,6 +1738,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    //go:nowritebarrier
     struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n)
     {
         if(stackDebug > 0 && (n < 0 || n >= stkmap->n))

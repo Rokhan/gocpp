@@ -31,7 +31,17 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // ForkLock is not used on Windows.
     sync::RWMutex ForkLock;
+    // EscapeArg rewrites command line argument s as prescribed
+    // in https://msdn.microsoft.com/en-us/library/ms880421.
+    // This function returns "" (2 double quotes) if s is empty.
+    // Alternatively, these transformations are done:
+    //   - every back slash (\) is doubled, but only if immediately
+    //     followed by double quote (");
+    //   - every double quote (") is escaped by back slash (\);
+    //   - finally, s is wrapped with double quotes (arg -> "arg"),
+    //     but only if there is space or tab inside s.
     std::string EscapeArg(std::string s)
     {
         if(len(s) == 0)
@@ -64,6 +74,8 @@ namespace golang::syscall
         return s;
     }
 
+    // appendEscapeArg escapes the string s, as per escapeArg,
+    // appends the result to b, and returns the updated slice.
     gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s)
     {
         if(len(s) == 0)
@@ -149,6 +161,8 @@ namespace golang::syscall
         return b;
     }
 
+    // makeCmdLine builds a command line out of args by escaping "special"
+    // characters and joining the arguments with spaces.
     std::string makeCmdLine(gocpp::slice<std::string> args)
     {
         gocpp::slice<unsigned char> b = {};
@@ -163,6 +177,11 @@ namespace golang::syscall
         return std::string(b);
     }
 
+    // createEnvBlock converts an array of environment strings into
+    // the representation required by CreateProcess: a sequence of NUL
+    // terminated strings followed by a nil.
+    // Last bytes are two UCS-2 NULs, or four NUL bytes.
+    // If any string contains a NUL, it returns (nil, EINVAL).
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv)
     {
         if(len(envv) == 0)
@@ -203,6 +222,7 @@ namespace golang::syscall
         return nullptr;
     }
 
+    // FullPath retrieves the full path of the specified file.
     std::tuple<std::string, struct gocpp::error> FullPath(std::string name)
     {
         std::string path;
@@ -439,6 +459,12 @@ namespace golang::syscall
             }
             if(len(attr->Dir) != 0)
             {
+                // StartProcess assumes that argv0 is relative to attr.Dir,
+                // because it implies Chdir(attr.Dir) before executing argv0.
+                // Windows CreateProcess assumes the opposite: it looks for
+                // argv0 relative to the current directory, and, only once the new
+                // process is started, it does Chdir(attr.Dir). We are adjusting
+                // for that difference here by making argv0 absolute.
                 gocpp::error err = {};
                 std::tie(argv0, err) = joinExeDirAndFName(attr->Dir, argv0);
                 if(err != nullptr)

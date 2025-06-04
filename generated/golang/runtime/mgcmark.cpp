@@ -87,6 +87,33 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // rootBlockBytes is the number of bytes to scan per data or
+    // BSS root.
+    // maxObletBytes is the maximum bytes of an object to scan at
+    // once. Larger objects will be split up into "oblets" of at
+    // most this size. Since we can scan 1–2 MB/ms, 128 KB bounds
+    // scan preemption at ~100 µs.
+    //
+    // This must be > _MaxSmallSize so that the object base is the
+    // span base.
+    // drainCheckThreshold specifies how many units of work to do
+    // between self-preemption checks in gcDrain. Assuming a scan
+    // rate of 1 MB/ms, this is ~100 µs. Lower values have higher
+    // overhead in the scan loop (the scheduler check may perform
+    // a syscall, so its overhead is nontrivial). Higher values
+    // make the system less responsive to incoming work.
+    // pagesPerSpanRoot indicates how many pages to scan from a span root
+    // at a time. Used by special root marking.
+    //
+    // Higher values improve throughput by increasing locality, but
+    // increase the minimum latency of a marking operation.
+    //
+    // Must be a multiple of the pageInUse bitmap element size and
+    // must also evenly divide pagesPerArena.
+    // gcMarkRootPrepare queues root scanning jobs (stacks, globals, and
+    // some miscellany) and initializes scanning-related state.
+    //
+    // The world must be stopped.
     void gcMarkRootPrepare()
     {
         assertWorldStopped();
@@ -125,6 +152,8 @@ namespace golang::runtime
         work.baseEnd = work.baseStacks + uint32_t(work.nStackRoots);
     }
 
+    // gcMarkRootCheck checks that all roots have been scanned. It is
+    // purely for debugging.
     void gcMarkRootCheck()
     {
         if(work.markrootNext < work.markrootJobs)
@@ -148,9 +177,22 @@ namespace golang::runtime
         });
     }
 
+    // ptrmask for an allocation containing a single pointer.
     gocpp::array<uint8_t, 1> oneptrmask = gocpp::array<uint8_t, 1> {1};
+    // markroot scans the i'th root.
+    //
+    // Preemption must be disabled (because this uses a gcWork).
+    //
+    // Returns the amount of GC work credit produced by the operation.
+    // If flushBgCredit is true, then that credit is also flushed
+    // to the background credit pool.
+    //
+    // nowritebarrier is only advisory here.
+    //
+    //go:nowritebarrier
     int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit)
     {
+        // Note: if you add a case here, please also update heapdump.go:dumproots.
         int64_t workDone = {};
         atomic::Int64* workCounter = {};
         //Go switch emulation
@@ -244,6 +286,12 @@ namespace golang::runtime
         return workDone;
     }
 
+    // markrootBlock scans the shard'th shard of the block of memory [b0,
+    // b0+n0), with the given pointer mask.
+    //
+    // Returns the amount of work done.
+    //
+    //go:nowritebarrier
     int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard)
     {
         if(rootBlockBytes % (8 * goarch::PtrSize) != 0)
@@ -266,6 +314,10 @@ namespace golang::runtime
         return int64_t(n);
     }
 
+    // markrootFreeGStacks frees stacks of dead Gs.
+    //
+    // This does not free stacks of dead Gs cached on Ps, but having a few
+    // cached stacks around isn't a problem.
     void markrootFreeGStacks()
     {
         lock(& sched.gFree.lock);
@@ -289,6 +341,9 @@ namespace golang::runtime
         unlock(& sched.gFree.lock);
     }
 
+    // markrootSpans marks roots for one shard of markArenas.
+    //
+    //go:nowritebarrier
     void markrootSpans(struct gcWork* gcw, int shard)
     {
         auto sg = mheap_.sweepgen;
@@ -341,6 +396,10 @@ namespace golang::runtime
         }
     }
 
+    // gcAssistAlloc performs GC work to make gp's assist debt positive.
+    // gp must be the calling user goroutine.
+    //
+    // This must be called with preemption enabled.
     void gcAssistAlloc(struct g* gp)
     {
         if(getg() == gp->m->g0)
@@ -475,6 +534,16 @@ namespace golang::runtime
         }
     }
 
+    // gcAssistAlloc1 is the part of gcAssistAlloc that runs on the system
+    // stack. This is a separate function to make it easier to see that
+    // we're not capturing anything from the user stack, since the user
+    // stack may move while we're in this function.
+    //
+    // gcAssistAlloc1 indicates whether this assist completed the mark
+    // phase by setting gp.param to non-nil. This can't be communicated on
+    // the stack since it may move.
+    //
+    //go:systemstack
     void gcAssistAlloc1(struct g* gp, int64_t scanWork)
     {
         gp->param = nullptr;
@@ -523,6 +592,9 @@ namespace golang::runtime
         }
     }
 
+    // gcWakeAllAssists wakes all currently blocked assists. This is used
+    // at the end of a GC cycle. gcBlackenEnabled must be false to prevent
+    // new assists from going to sleep after this point.
     void gcWakeAllAssists()
     {
         lock(& work.assistQueue.lock);
@@ -531,6 +603,10 @@ namespace golang::runtime
         unlock(& work.assistQueue.lock);
     }
 
+    // gcParkAssist puts the current goroutine on the assist queue and parks.
+    //
+    // gcParkAssist reports whether the assist is now satisfied. If it
+    // returns false, the caller must retry the assist.
     bool gcParkAssist()
     {
         lock(& work.assistQueue.lock);
@@ -556,6 +632,16 @@ namespace golang::runtime
         return true;
     }
 
+    // gcFlushBgCredit flushes scanWork units of background scan work
+    // credit. This first satisfies blocked assists on the
+    // work.assistQueue and then flushes any remaining credit to
+    // gcController.bgScanCredit.
+    //
+    // Write barriers are disallowed because this is used by gcDrain after
+    // it has ensured that all work is drained and this must preserve that
+    // condition.
+    //
+    //go:nowritebarrierrec
     void gcFlushBgCredit(int64_t scanWork)
     {
         if(rec::empty(gocpp::recv(work.assistQueue.q)))
@@ -592,6 +678,23 @@ namespace golang::runtime
         unlock(& work.assistQueue.lock);
     }
 
+    // scanstack scans gp's stack, greying all pointers found on the stack.
+    //
+    // Returns the amount of scan work performed, but doesn't update
+    // gcController.stackScanWork or flush any credit. Any background credit produced
+    // by this function should be flushed by its caller. scanstack itself can't
+    // safely flush because it may result in trying to wake up a goroutine that
+    // was just scanned, resulting in a self-deadlock.
+    //
+    // scanstack will also shrink the stack if it is safe to do so. If it
+    // is not, it schedules a stack shrink for the next synchronous safe
+    // point.
+    //
+    // scanstack is marked go:systemstack because it must not be preempted
+    // while using a workbuf.
+    //
+    //go:nowritebarrier
+    //go:systemstack
     int64_t scanstack(struct g* gp, struct gcWork* gcw)
     {
         if(readgstatus(gp) & _Gscan == 0)
@@ -631,6 +734,9 @@ namespace golang::runtime
         {
             go_throw("can't scan our own stack"s);
         }
+        // scannedSize is the amount of work we'll be reporting.
+        //
+        // It is less than the allocated size (which is hi-lo).
         uintptr_t sp = {};
         if(gp->syscallsp != 0)
         {
@@ -666,6 +772,7 @@ namespace golang::runtime
         {
             scanblock(uintptr_t(unsafe::Pointer(& gp->sched.ctxt)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
         }
+        // Scan the stack. Accumulate a list of stack objects.
         unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
@@ -767,6 +874,9 @@ namespace golang::runtime
         return int64_t(scannedSize);
     }
 
+    // Scan a stack frame: local variables and function arguments/results.
+    //
+    //go:nowritebarrier
     void scanframeworker(struct stkframe* frame, struct stackScanState* state, struct gcWork* gcw)
     {
         if(_DebugGC > 1 && frame->continpc != 0)
@@ -838,11 +948,15 @@ namespace golang::runtime
         }
     }
 
+    // gcDrainMarkWorkerIdle is a wrapper for gcDrain that exists to better account
+    // mark time in profiles.
     void gcDrainMarkWorkerIdle(struct gcWork* gcw)
     {
         gcDrain(gcw, gcDrainIdle | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
+    // gcDrainMarkWorkerDedicated is a wrapper for gcDrain that exists to better account
+    // mark time in profiles.
     void gcDrainMarkWorkerDedicated(struct gcWork* gcw, bool untilPreempt)
     {
         auto flags = gcDrainFlushBgCredit;
@@ -853,11 +967,43 @@ namespace golang::runtime
         gcDrain(gcw, flags);
     }
 
+    // gcDrainMarkWorkerFractional is a wrapper for gcDrain that exists to better account
+    // mark time in profiles.
     void gcDrainMarkWorkerFractional(struct gcWork* gcw)
     {
         gcDrain(gcw, gcDrainFractional | gcDrainUntilPreempt | gcDrainFlushBgCredit);
     }
 
+    // gcDrain scans roots and objects in work buffers, blackening grey
+    // objects until it is unable to get more work. It may return before
+    // GC is done; it's the caller's responsibility to balance work from
+    // other Ps.
+    //
+    // If flags&gcDrainUntilPreempt != 0, gcDrain returns when g.preempt
+    // is set.
+    //
+    // If flags&gcDrainIdle != 0, gcDrain returns when there is other work
+    // to do.
+    //
+    // If flags&gcDrainFractional != 0, gcDrain self-preempts when
+    // pollFractionalWorkerExit() returns true. This implies
+    // gcDrainNoBlock.
+    //
+    // If flags&gcDrainFlushBgCredit != 0, gcDrain flushes scan work
+    // credit to gcController.bgScanCredit every gcCreditSlack units of
+    // scan work.
+    //
+    // gcDrain will always return if there is a pending STW or forEachP.
+    //
+    // Disabling write barriers is necessary to ensure that after we've
+    // confirmed that we've drained gcw, that we don't accidentally end
+    // up flipping that condition by immediately adding work in the form
+    // of a write barrier buffer flush.
+    //
+    // Don't set nowritebarrierrec because it's safe for some callees to
+    // have write barriers enabled.
+    //
+    //go:nowritebarrier
     void gcDrain(struct gcWork* gcw, golang::runtime::gcDrainFlags flags)
     {
         if(! writeBarrier.enabled)
@@ -954,6 +1100,19 @@ namespace golang::runtime
         }
     }
 
+    // gcDrainN blackens grey objects until it has performed roughly
+    // scanWork units of scan work or the G is preempted. This is
+    // best-effort, so it may perform less work if it fails to get a work
+    // buffer. Otherwise, it will perform at least n units of work, but
+    // may perform more because scanning is always done in whole object
+    // increments. It returns the amount of scan work performed.
+    //
+    // The caller goroutine must be in a preemptible state (e.g.,
+    // _Gwaiting) to prevent deadlocks during stack scanning. As a
+    // consequence, this must be called on the system stack.
+    //
+    //go:nowritebarrier
+    //go:systemstack
     int64_t gcDrainN(struct gcWork* gcw, int64_t scanWork)
     {
         if(! writeBarrier.enabled)
@@ -1002,6 +1161,15 @@ namespace golang::runtime
         return workFlushed + gcw->heapScanWork;
     }
 
+    // scanblock scans b as scanobject would, but using an explicit
+    // pointer bitmap instead of the heap bitmap.
+    //
+    // This is used to scan non-heap roots, so it does not update
+    // gcw.bytesMarked or gcw.heapScanWork.
+    //
+    // If stk != nil, possible stack pointers are also reported to stk.putPtr.
+    //
+    //go:nowritebarrier
     void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk)
     {
         auto b = b0;
@@ -1038,6 +1206,12 @@ namespace golang::runtime
         }
     }
 
+    // scanobject scans the object starting at b, adding pointers to gcw.
+    // b must point to the beginning of a heap object or an oblet.
+    // scanobject consults the GC bitmap for the pointer mask and the
+    // spans for the size of the object.
+    //
+    //go:nowritebarrier
     void scanobject(uintptr_t b, struct gcWork* gcw)
     {
         sys::Prefetch(b);
@@ -1122,6 +1296,14 @@ namespace golang::runtime
         gcw->heapScanWork += int64_t(scanSize);
     }
 
+    // scanConservative scans block [b, b+n) conservatively, treating any
+    // pointer-like value in the block as a pointer.
+    //
+    // If ptrmask != nil, only words that are marked in ptrmask are
+    // considered as potential pointers.
+    //
+    // If state != nil, it's assumed that [b, b+n) is a block in the stack
+    // and may contain pointers to stack objects.
     void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* state)
     {
         if(debugScanConservative)
@@ -1199,6 +1381,11 @@ namespace golang::runtime
         }
     }
 
+    // Shade the object if it isn't already.
+    // The object is not nil and known to be in the heap.
+    // Preemption must be disabled.
+    //
+    //go:nowritebarrier
     void shade(uintptr_t b)
     {
         if(auto [obj, span, objIndex] = findObject(b, 0, 0); obj != 0)
@@ -1208,6 +1395,13 @@ namespace golang::runtime
         }
     }
 
+    // obj is the start of an object with mark mbits.
+    // If it isn't already marked, mark it and enqueue into gcw.
+    // base and off are for debugging only and could be removed.
+    //
+    // See also wbBufFlush1, which partially duplicates this logic.
+    //
+    //go:nowritebarrierrec
     void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex)
     {
         if(obj & (goarch::PtrSize - 1) != 0)
@@ -1255,6 +1449,8 @@ namespace golang::runtime
         }
     }
 
+    // gcDumpObject dumps the contents of obj for debugging and marks the
+    // field at byte offset off in obj.
     void gcDumpObject(std::string label, uintptr_t obj, uintptr_t off)
     {
         auto s = spanOf(obj);
@@ -1304,6 +1500,13 @@ namespace golang::runtime
         }
     }
 
+    // gcmarknewobject marks a newly allocated object black. obj must
+    // not contain any non-nil pointers.
+    //
+    // This is nosplit so it can manipulate a gcWork without preemption.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     void gcmarknewobject(struct mspan* span, uintptr_t obj)
     {
         if(useCheckmark)
@@ -1321,6 +1524,9 @@ namespace golang::runtime
         gcw->bytesMarked += uint64_t(span->elemsize);
     }
 
+    // gcMarkTinyAllocs greys all active tiny alloc blocks.
+    //
+    // The world must be stopped.
     void gcMarkTinyAllocs()
     {
         assertWorldStopped();

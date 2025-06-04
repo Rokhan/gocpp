@@ -20,6 +20,7 @@ namespace golang::wc
         using namespace mocklib::rec;
     }
 
+    // Test runs a test suite against f.
     void Test(std::function<gocpp::map<std::string, int> (std::string)> f)
     {
         auto ok = true;

@@ -23,6 +23,99 @@ namespace golang::time
         using namespace mocklib::rec;
     }
 
+    // These are predefined layouts for use in Time.Format and time.Parse.
+    // The reference time used in these layouts is the specific time stamp:
+    //
+    //	01/02 03:04:05PM '06 -0700
+    //
+    // (January 2, 15:04:05, 2006, in time zone seven hours west of GMT).
+    // That value is recorded as the constant named Layout, listed below. As a Unix
+    // time, this is 1136239445. Since MST is GMT-0700, the reference would be
+    // printed by the Unix date command as:
+    //
+    //	Mon Jan 2 15:04:05 MST 2006
+    //
+    // It is a regrettable historic error that the date uses the American convention
+    // of putting the numerical month before the day.
+    //
+    // The example for Time.Format demonstrates the working of the layout string
+    // in detail and is a good reference.
+    //
+    // Note that the RFC822, RFC850, and RFC1123 formats should be applied
+    // only to local times. Applying them to UTC times will use "UTC" as the
+    // time zone abbreviation, while strictly speaking those RFCs require the
+    // use of "GMT" in that case.
+    // In general RFC1123Z should be used instead of RFC1123 for servers
+    // that insist on that format, and RFC3339 should be preferred for new protocols.
+    // RFC3339, RFC822, RFC822Z, RFC1123, and RFC1123Z are useful for formatting;
+    // when used with time.Parse they do not accept all the time formats
+    // permitted by the RFCs and they do accept time formats not formally defined.
+    // The RFC3339Nano format removes trailing zeros from the seconds field
+    // and thus may not sort correctly once formatted.
+    //
+    // Most programs can use one of the defined constants as the layout passed to
+    // Format or Parse. The rest of this comment can be ignored unless you are
+    // creating a custom layout string.
+    //
+    // To define your own format, write down what the reference time would look like
+    // formatted your way; see the values of constants like ANSIC, StampMicro or
+    // Kitchen for examples. The model is to demonstrate what the reference time
+    // looks like so that the Format and Parse methods can apply the same
+    // transformation to a general time value.
+    //
+    // Here is a summary of the components of a layout string. Each element shows by
+    // example the formatting of an element of the reference time. Only these values
+    // are recognized. Text in the layout string that is not recognized as part of
+    // the reference time is echoed verbatim during Format and expected to appear
+    // verbatim in the input to Parse.
+    //
+    //	Year: "2006" "06"
+    //	Month: "Jan" "January" "01" "1"
+    //	Day of the week: "Mon" "Monday"
+    //	Day of the month: "2" "_2" "02"
+    //	Day of the year: "__2" "002"
+    //	Hour: "15" "3" "03" (PM or AM)
+    //	Minute: "4" "04"
+    //	Second: "5" "05"
+    //	AM/PM mark: "PM"
+    //
+    // Numeric time zone offsets format as follows:
+    //
+    //	"-0700"     ±hhmm
+    //	"-07:00"    ±hh:mm
+    //	"-07"       ±hh
+    //	"-070000"   ±hhmmss
+    //	"-07:00:00" ±hh:mm:ss
+    //
+    // Replacing the sign in the format with a Z triggers
+    // the ISO 8601 behavior of printing Z instead of an
+    // offset for the UTC zone. Thus:
+    //
+    //	"Z0700"      Z or ±hhmm
+    //	"Z07:00"     Z or ±hh:mm
+    //	"Z07"        Z or ±hh
+    //	"Z070000"    Z or ±hhmmss
+    //	"Z07:00:00"  Z or ±hh:mm:ss
+    //
+    // Within the format string, the underscores in "_2" and "__2" represent spaces
+    // that may be replaced by digits if the following number has multiple digits,
+    // for compatibility with fixed-width Unix time formats. A leading zero represents
+    // a zero-padded value.
+    //
+    // The formats __2 and 002 are space-padded and zero-padded
+    // three-character day of year; there is no unpadded day of year format.
+    //
+    // A comma or decimal point followed by one or more zeros represents
+    // a fractional second, printed to the given number of decimal places.
+    // A comma or decimal point followed by one or more nines represents
+    // a fractional second, printed to the given number of decimal places, with
+    // trailing zeros removed.
+    // For example "15:04:05,000" or "15:04:05.000" formats or parses with
+    // millisecond precision.
+    //
+    // Some valid layouts are invalid time values for time.Parse, due to formats
+    // such as _ for space padding and Z for zone information.
+    // Handy time stamps.
     std::string Layout = "01/02 03:04:05PM '06 -0700"s;
     std::string ANSIC = "Mon Jan _2 15:04:05 2006"s;
     std::string UnixDate = "Mon Jan _2 15:04:05 MST 2006"s;
@@ -43,7 +136,10 @@ namespace golang::time
     std::string DateOnly = "2006-01-02"s;
     std::string TimeOnly = "15:04:05"s;
     int gocpp_id_0 = 0;
+    // std0x records the std values for "01", "02", ..., "06".
     gocpp::array<int, 6> std0x = gocpp::array<int, 6> {stdZeroMonth, stdZeroDay, stdZeroHour12, stdZeroMinute, stdZeroSecond, stdYear};
+    // startsWithLowerCase reports whether the string has a lower-case letter at the beginning.
+    // Its purpose is to prevent matching strings like "Month" when looking for "Mon".
     bool startsWithLowerCase(std::string str)
     {
         if(len(str) == 0)
@@ -54,6 +150,8 @@ namespace golang::time
         return 'a' <= c && c <= 'z';
     }
 
+    // nextStdChunk finds the first occurrence of a std string in
+    // layout and returns the text before, the std string, and the text after.
     std::tuple<std::string, int, std::string> nextStdChunk(std::string layout)
     {
         std::string prefix;
@@ -251,6 +349,8 @@ namespace golang::time
     gocpp::slice<std::string> shortDayNames = gocpp::slice<std::string> {"Sun"s, "Mon"s, "Tue"s, "Wed"s, "Thu"s, "Fri"s, "Sat"s};
     gocpp::slice<std::string> shortMonthNames = gocpp::slice<std::string> {"Jan"s, "Feb"s, "Mar"s, "Apr"s, "May"s, "Jun"s, "Jul"s, "Aug"s, "Sep"s, "Oct"s, "Nov"s, "Dec"s};
     gocpp::slice<std::string> longMonthNames = gocpp::slice<std::string> {"January"s, "February"s, "March"s, "April"s, "May"s, "June"s, "July"s, "August"s, "September"s, "October"s, "November"s, "December"s};
+    // match reports whether s1 and s2 match ignoring case.
+    // It is assumed s1 and s2 are the same length.
     bool match(std::string s1, std::string s2)
     {
         for(auto i = 0; i < len(s1); i++)
@@ -282,6 +382,9 @@ namespace golang::time
         return {- 1, val, errBad};
     }
 
+    // appendInt appends the decimal form of x to b and returns the result.
+    // If the decimal form (excluding sign) is shorter than width, the result is padded with leading 0's.
+    // Duplicates functionality in strconv, but avoids dependency.
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width)
     {
         auto u = (unsigned int)(x);
@@ -309,6 +412,7 @@ namespace golang::time
                     break;
             }
         }
+        // Compute the number of decimal digits.
         int n = {};
         if(u == 0)
         {
@@ -342,7 +446,9 @@ namespace golang::time
         return b;
     }
 
+    // Never printed, just needs to be non-nil for return by atoi.
     gocpp::error errAtoi = errors::New("time: invalid number"s);
+    // Duplicates functionality in strconv, but avoids dependency.
 
     template<typename bytes>
     std::tuple<int, struct gocpp::error> atoi(bytes s)
@@ -368,6 +474,9 @@ namespace golang::time
         return {x, nullptr};
     }
 
+    // The "std" value passed to appendNano contains two packed fields: the number of
+    // digits after the decimal and the separator character (period or comma).
+    // These functions pack and unpack that variable.
     int stdFracSecond(int code, int n, int c)
     {
         if(c == '.')
@@ -391,6 +500,8 @@ namespace golang::time
         return ',';
     }
 
+    // appendNano appends a fractional second, as nanoseconds, to b
+    // and returns the result. The nanosec must be within [0, 999999999].
     gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std)
     {
         auto trim = std & stdMask == stdFracSecond9;
@@ -420,6 +531,17 @@ namespace golang::time
         return b;
     }
 
+    // String returns the time formatted using the format string
+    //
+    //	"2006-01-02 15:04:05.999999999 -0700 MST"
+    //
+    // If the time has a monotonic clock reading, the returned string
+    // includes a final field "m=±<value>", where value is the monotonic
+    // clock reading formatted as a decimal number of seconds.
+    //
+    // The returned string is meant for debugging; for a stable serialized
+    // representation, use t.MarshalText, t.MarshalBinary, or t.Format
+    // with an explicit format string.
     std::string rec::String(struct Time t)
     {
         auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST"s);
@@ -453,6 +575,8 @@ namespace golang::time
         return s;
     }
 
+    // GoString implements fmt.GoStringer and formats t to be printed in Go source
+    // code.
     std::string rec::GoString(struct Time t)
     {
         auto abs = rec::abs(gocpp::recv(t));
@@ -509,6 +633,12 @@ namespace golang::time
         return std::string(buf);
     }
 
+    // Format returns a textual representation of the time value formatted according
+    // to the layout defined by the argument. See the documentation for the
+    // constant called Layout to see how to represent the layout format.
+    //
+    // The executable example for Time.Format demonstrates the working
+    // of the layout string in detail and is a good reference.
     std::string rec::Format(struct Time t, std::string layout)
     {
         auto bufSize = 64;
@@ -527,6 +657,8 @@ namespace golang::time
         return std::string(b);
     }
 
+    // AppendFormat is like Format but appends the textual
+    // representation to b and returns the extended buffer.
     gocpp::slice<unsigned char> rec::AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout)
     {
         //Go switch emulation
@@ -806,6 +938,7 @@ namespace golang::time
     }
 
     gocpp::error errBad = errors::New("bad value for field"s);
+    // ParseError describes a problem parsing a time string.
     
     template<typename T> requires gocpp::GoStruct<T>
     ParseError::operator T()
@@ -847,6 +980,8 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // newParseError creates a new ParseError.
+    // The provided value and valueElem are cloned to avoid escaping their values.
     struct ParseError* newParseError(std::string layout, std::string value, std::string layoutElem, std::string valueElem, std::string message)
     {
         auto valueCopy = cloneString(value);
@@ -854,11 +989,15 @@ namespace golang::time
         return new ParseError {layout, valueCopy, layoutElem, valueElemCopy, message};
     }
 
+    // cloneString returns a string copy of s.
+    // Do not use strings.Clone to avoid dependency on strings package.
     std::string cloneString(std::string s)
     {
         return std::string(gocpp::slice<unsigned char>(s));
     }
 
+    // These are borrowed from unicode/utf8 and strconv and replicate behavior in
+    // that package, since we can't take a dependency on either.
     std::string lowerhex = "0123456789abcdef"s;
     std::string quote(std::string s)
     {
@@ -868,6 +1007,12 @@ namespace golang::time
         {
             if(c >= runeSelf || c < ' ')
             {
+                // This means you are asking us to parse a time.Duration or
+                // time.Location with unprintable or non-ASCII characters in it.
+                // We don't expect to hit this case very often. We could try to
+                // reproduce strconv.Quote's behavior with full fidelity but
+                // given how rarely we expect to hit these edge cases, speed and
+                // conciseness are better.
                 int width = {};
                 if(c == runeError)
                 {
@@ -901,6 +1046,7 @@ namespace golang::time
         return std::string(buf);
     }
 
+    // Error returns the string representation of a ParseError.
     std::string rec::Error(struct ParseError* e)
     {
         if(e->Message == ""s)
@@ -910,6 +1056,7 @@ namespace golang::time
         return "parsing time "s + quote(e->Value) + e->Message;
     }
 
+    // isDigit reports whether s[i] is in range and is a decimal digit.
 
     template<typename bytes>
     bool isDigit(bytes s, int i)
@@ -922,6 +1069,9 @@ namespace golang::time
         return '0' <= c && c <= '9';
     }
 
+    // getnum parses s[0:1] or s[0:2] (fixed forces s[0:2])
+    // as a decimal integer and returns the integer and the
+    // remainder of the string.
     std::tuple<int, std::string, struct gocpp::error> getnum(std::string s, bool fixed)
     {
         if(! isDigit(s, 0))
@@ -939,6 +1089,9 @@ namespace golang::time
         return {int(s[0] - '0') * 10 + int(s[1] - '0'), s.make_slice(2), nullptr};
     }
 
+    // getnum3 parses s[0:1], s[0:2], or s[0:3] (fixed forces s[0:3])
+    // as a decimal integer and returns the integer and the remainder
+    // of the string.
     std::tuple<int, std::string, struct gocpp::error> getnum3(std::string s, bool fixed)
     {
         int n = {};
@@ -963,6 +1116,8 @@ namespace golang::time
         return s;
     }
 
+    // skip removes the given prefix from value,
+    // treating runs of space characters as equivalent.
     std::tuple<std::string, struct gocpp::error> skip(std::string value, std::string prefix)
     {
         for(; len(prefix) > 0; )
@@ -987,6 +1142,48 @@ namespace golang::time
         return {value, nullptr};
     }
 
+    // Parse parses a formatted string and returns the time value it represents.
+    // See the documentation for the constant called Layout to see how to
+    // represent the format. The second argument must be parseable using
+    // the format string (layout) provided as the first argument.
+    //
+    // The example for Time.Format demonstrates the working of the layout string
+    // in detail and is a good reference.
+    //
+    // When parsing (only), the input may contain a fractional second
+    // field immediately after the seconds field, even if the layout does not
+    // signify its presence. In that case either a comma or a decimal point
+    // followed by a maximal series of digits is parsed as a fractional second.
+    // Fractional seconds are truncated to nanosecond precision.
+    //
+    // Elements omitted from the layout are assumed to be zero or, when
+    // zero is impossible, one, so parsing "3:04pm" returns the time
+    // corresponding to Jan 1, year 0, 15:04:00 UTC (note that because the year is
+    // 0, this time is before the zero Time).
+    // Years must be in the range 0000..9999. The day of the week is checked
+    // for syntax but it is otherwise ignored.
+    //
+    // For layouts specifying the two-digit year 06, a value NN >= 69 will be treated
+    // as 19NN and a value NN < 69 will be treated as 20NN.
+    //
+    // The remainder of this comment describes the handling of time zones.
+    //
+    // In the absence of a time zone indicator, Parse returns a time in UTC.
+    //
+    // When parsing a time with a zone offset like -0700, if the offset corresponds
+    // to a time zone used by the current location (Local), then Parse uses that
+    // location and zone in the returned time. Otherwise it records the time as
+    // being in a fabricated location with time fixed at the given zone offset.
+    //
+    // When parsing a time with a zone abbreviation like MST, if the zone abbreviation
+    // has a defined offset in the current location, then that offset is used.
+    // The zone abbreviation "UTC" is recognized as UTC regardless of location.
+    // If the zone abbreviation is unknown, Parse records the time as being
+    // in a fabricated location with the given zone abbreviation and a zero offset.
+    // This choice means that such a time can be parsed and reformatted with the
+    // same layout losslessly, but the exact instant used in the representation will
+    // differ by the actual zone offset. To avoid such problems, prefer time layouts
+    // that use a numeric zone offset, or use ParseInLocation.
     std::tuple<struct Time, struct gocpp::error> Parse(std::string layout, std::string value)
     {
         if(layout == RFC3339 || layout == RFC3339Nano)
@@ -999,6 +1196,11 @@ namespace golang::time
         return parse(layout, value, UTC, Local);
     }
 
+    // ParseInLocation is like Parse but differs in two important ways.
+    // First, in the absence of time zone information, Parse interprets a time as UTC;
+    // ParseInLocation interprets the time as in the given location.
+    // Second, when given a zone offset or abbreviation, Parse tries to match it
+    // against the Local location; ParseInLocation uses the given location.
     std::tuple<struct Time, struct gocpp::error> ParseInLocation(std::string layout, std::string value, struct Location* loc)
     {
         if(layout == RFC3339 || layout == RFC3339Nano)
@@ -1017,6 +1219,7 @@ namespace golang::time
         auto rangeErrString = ""s;
         auto amSet = false;
         auto pmSet = false;
+        // Time being constructed.
         int year = {};
         int month = - 1;
         int day = - 1;
@@ -1531,6 +1734,16 @@ namespace golang::time
         return {Date(year, Month(month), day, hour, min, sec, nsec, defaultLocation), nullptr};
     }
 
+    // parseTimeZone parses a time zone string and returns its length. Time zones
+    // are human-generated and unpredictable. We can't do precise error checking.
+    // On the other hand, for a correct parse there must be a time zone at the
+    // beginning of the string, so it's almost always true that there's one
+    // there. We look at the beginning of the string for a run of upper-case letters.
+    // If there are more than 5, it's an error.
+    // If there are 4 or 5 and the last is a T, it's a time zone.
+    // If there are 3, it's a time zone.
+    // Otherwise, other than special cases, it's not a time zone.
+    // GMT is special because it can have an hour offset.
     std::tuple<int, bool> parseTimeZone(std::string value)
     {
         int length;
@@ -1554,6 +1767,7 @@ namespace golang::time
             auto ok = length > 0;
             return {length, ok};
         }
+        // How many upper-case letters are there? Need at least three, at most five.
         int nUpper = {};
         for(nUpper = 0; nUpper < 6; nUpper++)
         {
@@ -1605,6 +1819,9 @@ namespace golang::time
         return {0, false};
     }
 
+    // parseGMT parses a GMT time zone. The input string is known to start "GMT".
+    // The function checks whether that is followed by a sign and a number in the
+    // range -23 through +23 excluding zero.
     int parseGMT(std::string value)
     {
         value = value.make_slice(3);
@@ -1615,6 +1832,9 @@ namespace golang::time
         return 3 + parseSignedOffset(value);
     }
 
+    // parseSignedOffset parses a signed timezone offset (e.g. "+03" or "-04").
+    // The function checks for a signed number in the range -23 through +23 excluding zero.
+    // Returns length of the found offset string or 0 otherwise.
     int parseSignedOffset(std::string value)
     {
         auto sign = value[0];
@@ -1674,6 +1894,7 @@ namespace golang::time
     }
 
     gocpp::error errLeadingInt = errors::New("time: bad [0-9]*"s);
+    // leadingInt consumes the leading [0-9]* from s.
 
     template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s)
@@ -1702,6 +1923,9 @@ namespace golang::time
         return {x, s.make_slice(i), nullptr};
     }
 
+    // leadingFraction consumes the leading [0-9]* from s.
+    // It is used only for fractions, so does not return an error on overflow,
+    // it just stops accumulating precision.
     std::tuple<uint64_t, double, std::string> leadingFraction(std::string s)
     {
         uint64_t x;
@@ -1739,6 +1963,11 @@ namespace golang::time
     }
 
     gocpp::map<std::string, uint64_t> unitMap = gocpp::map<std::string, uint64_t> {{ "ns"s, uint64_t(Nanosecond) }, { "us"s, uint64_t(Microsecond) }, { "µs"s, uint64_t(Microsecond) }, { "μs"s, uint64_t(Microsecond) }, { "ms"s, uint64_t(Millisecond) }, { "s"s, uint64_t(Second) }, { "m"s, uint64_t(Minute) }, { "h"s, uint64_t(Hour) }};
+    // ParseDuration parses a duration string.
+    // A duration string is a possibly signed sequence of
+    // decimal numbers, each with optional fraction and a unit suffix,
+    // such as "300ms", "-1.5h" or "2h45m".
+    // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
     std::tuple<time::Duration, struct gocpp::error> ParseDuration(std::string s)
     {
         auto orig = s;

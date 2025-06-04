@@ -16,6 +16,12 @@
 #include "golang/sync/runtime.h"
 #include "golang/unsafe/unsafe.h"
 
+// Package sync provides basic synchronization primitives such as mutual
+// exclusion locks. Other than the Once and WaitGroup types, most are intended
+// for use by low-level library routines. Higher-level synchronization is
+// better done via channels and communication.
+//
+// Values containing the types defined in this package should not be copied.
 namespace golang::sync
 {
     namespace rec
@@ -23,12 +29,24 @@ namespace golang::sync
         using namespace mocklib::rec;
     }
 
+    // Provided by runtime via linkname.
     void go_throw(std::string)
     /* convertBlockStmt, nil block */;
 
     void fatal(std::string)
     /* convertBlockStmt, nil block */;
 
+    // A Mutex is a mutual exclusion lock.
+    // The zero value for a Mutex is an unlocked mutex.
+    //
+    // A Mutex must not be copied after first use.
+    //
+    // In the terminology of the Go memory model,
+    // the n'th call to Unlock “synchronizes before” the m'th call to Lock
+    // for any n < m.
+    // A successful call to TryLock is equivalent to a call to Lock.
+    // A failed call to TryLock does not establish any “synchronizes before”
+    // relation at all.
     
     template<typename T> requires gocpp::GoStruct<T>
     Mutex::operator T()
@@ -61,6 +79,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // A Locker represents an object that can be locked and unlocked.
     
     template<typename T>
     Locker::Locker(T& ref)
@@ -124,6 +143,33 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // Mutex fairness.
+    //
+    // Mutex can be in 2 modes of operations: normal and starvation.
+    // In normal mode waiters are queued in FIFO order, but a woken up waiter
+    // does not own the mutex and competes with new arriving goroutines over
+    // the ownership. New arriving goroutines have an advantage -- they are
+    // already running on CPU and there can be lots of them, so a woken up
+    // waiter has good chances of losing. In such case it is queued at front
+    // of the wait queue. If a waiter fails to acquire the mutex for more than 1ms,
+    // it switches mutex to the starvation mode.
+    //
+    // In starvation mode ownership of the mutex is directly handed off from
+    // the unlocking goroutine to the waiter at the front of the queue.
+    // New arriving goroutines don't try to acquire the mutex even if it appears
+    // to be unlocked, and don't try to spin. Instead they queue themselves at
+    // the tail of the wait queue.
+    //
+    // If a waiter receives ownership of the mutex and sees that either
+    // (1) it is the last waiter in the queue, or (2) it waited for less than 1 ms,
+    // it switches mutex back to normal operation mode.
+    //
+    // Normal mode has considerably better performance as a goroutine can acquire
+    // a mutex several times in a row even if there are blocked waiters.
+    // Starvation mode is important to prevent pathological cases of tail latency.
+    // Lock locks m.
+    // If the lock is already in use, the calling goroutine
+    // blocks until the mutex is available.
     void rec::Lock(struct Mutex* m)
     {
         if(atomic::CompareAndSwapInt32(& m->state, 0, mutexLocked))
@@ -137,6 +183,11 @@ namespace golang::sync
         rec::lockSlow(gocpp::recv(m));
     }
 
+    // TryLock tries to lock m and reports whether it succeeded.
+    //
+    // Note that while correct uses of TryLock do exist, they are rare,
+    // and use of TryLock is often a sign of a deeper problem
+    // in a particular use of mutexes.
     bool rec::TryLock(struct Mutex* m)
     {
         auto old = m->state;
@@ -238,6 +289,12 @@ namespace golang::sync
         }
     }
 
+    // Unlock unlocks m.
+    // It is a run-time error if m is not locked on entry to Unlock.
+    //
+    // A locked Mutex is not associated with a particular goroutine.
+    // It is allowed for one goroutine to lock a Mutex and then
+    // arrange for another goroutine to unlock it.
     void rec::Unlock(struct Mutex* m)
     {
         if(race::Enabled)

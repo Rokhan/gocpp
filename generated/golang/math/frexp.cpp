@@ -22,6 +22,16 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Frexp breaks f into a normalized fraction
+    // and an integral power of two.
+    // It returns frac and exp satisfying f == frac × 2**exp,
+    // with the absolute value of frac in the interval [½, 1).
+    //
+    // Special cases are:
+    //
+    //	Frexp(±0) = ±0, 0
+    //	Frexp(±Inf) = ±Inf, 0
+    //	Frexp(NaN) = NaN, 0
     std::tuple<double, int> Frexp(double f)
     {
         double frac;

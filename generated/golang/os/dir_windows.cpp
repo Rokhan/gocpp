@@ -49,6 +49,7 @@ namespace golang::os
         using sync::rec::Put;
     }
 
+    // Auxiliary information if the File describes a directory
     
     template<typename T> requires gocpp::GoStruct<T>
     dirInfo::operator T()
@@ -90,6 +91,12 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // dirBufSize is the size of the dirInfo buffer.
+    // The buffer must be big enough to hold at least a single entry.
+    // The filename alone can be 512 bytes (MAX_PATH*2), and the fixed part of
+    // the FILE_ID_BOTH_DIR_INFO structure is 105 bytes, so dirBufSize
+    // should not be set below 1024 bytes (512+105+safety buffer).
+    // Windows 8.1 and earlier only works with buffer sizes up to 64 kB.
     sync::Pool dirBufPool = gocpp::Init<sync::Pool>([](auto& x) {
         x.New = []() mutable -> go_any
         {
@@ -106,6 +113,9 @@ namespace golang::os
         }
     }
 
+    // allowReadDirFileID indicates whether File.readdir should try to use FILE_ID_BOTH_DIR_INFO
+    // if the underlying file system supports it.
+    // Useful for testing purposes.
     bool allowReadDirFileID = true;
     std::tuple<gocpp::slice<std::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> rec::readdir(struct File* file, int n, golang::os::readdirMode mode)
     {
@@ -115,6 +125,11 @@ namespace golang::os
         struct gocpp::error err;
         if(file->dirinfo == nullptr)
         {
+            // vol is used by os.SameFile.
+            // It is safe to query it once and reuse the value.
+            // Hard links are not allowed to reference files in other volumes.
+            // Junctions and symbolic links can reference files and directories in other volumes,
+            // but the reparse point should still live in the parent volume.
             uint32_t vol = {};
             uint32_t flags = {};
             err = windows::GetVolumeInformationByHandle(file->pfd.Sysfd, nullptr, 0, & vol, nullptr, & flags, nullptr, 0);
@@ -204,6 +219,7 @@ namespace golang::os
                     d->go_class = windows::FileFullDirectoryInfo;
                 }
             }
+            // Drain the buffer
             bool islast = {};
             for(; n != 0 && ! islast; )
             {

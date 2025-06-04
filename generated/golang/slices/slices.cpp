@@ -14,6 +14,7 @@
 #include "golang/cmp/cmp.h"
 #include "golang/unsafe/unsafe.h"
 
+// Package slices defines various functions useful with slices of any type.
 namespace golang::slices
 {
     namespace rec
@@ -21,6 +22,11 @@ namespace golang::slices
         using namespace mocklib::rec;
     }
 
+    // Equal reports whether two slices are equal: the same length and all
+    // elements equal. If the lengths are different, Equal returns false.
+    // Otherwise, the elements are compared in increasing index order, and the
+    // comparison stops at the first unequal pair.
+    // Floating point NaNs are not considered equal.
 
     template<typename S, typename E>
     bool Equal(S s1, S s2)
@@ -39,6 +45,11 @@ namespace golang::slices
         return true;
     }
 
+    // EqualFunc reports whether two slices are equal using an equality
+    // function on each pair of elements. If the lengths are different,
+    // EqualFunc returns false. Otherwise, the elements are compared in
+    // increasing index order, and the comparison stops at the first index
+    // for which eq returns false.
 
     template<typename S1, typename S2, typename E1, typename E2>
     bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq)
@@ -58,6 +69,13 @@ namespace golang::slices
         return true;
     }
 
+    // Compare compares the elements of s1 and s2, using [cmp.Compare] on each pair
+    // of elements. The elements are compared sequentially, starting at index 0,
+    // until one element is not equal to the other.
+    // The result of comparing the first non-matching elements is returned.
+    // If both slices are equal until one of them ends, the shorter slice is
+    // considered less than the longer one.
+    // The result is 0 if s1 == s2, -1 if s1 < s2, and +1 if s1 > s2.
 
     template<typename S, typename E>
     int Compare(S s1, S s2)
@@ -81,6 +99,11 @@ namespace golang::slices
         return 0;
     }
 
+    // CompareFunc is like [Compare] but uses a custom comparison function on each
+    // pair of elements.
+    // The result is the first non-zero result of cmp; if cmp always
+    // returns 0 the result is 0 if len(s1) == len(s2), -1 if len(s1) < len(s2),
+    // and +1 if len(s1) > len(s2).
 
     template<typename S1, typename S2, typename E1, typename E2>
     int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp)
@@ -104,6 +127,8 @@ namespace golang::slices
         return 0;
     }
 
+    // Index returns the index of the first occurrence of v in s,
+    // or -1 if not present.
 
     template<typename S, typename E>
     int Index(S s, E v)
@@ -118,6 +143,8 @@ namespace golang::slices
         return - 1;
     }
 
+    // IndexFunc returns the first index i satisfying f(s[i]),
+    // or -1 if none do.
 
     template<typename S, typename E>
     int IndexFunc(S s, std::function<bool (E)> f)
@@ -132,6 +159,7 @@ namespace golang::slices
         return - 1;
     }
 
+    // Contains reports whether v is present in s.
 
     template<typename S, typename E>
     bool Contains(S s, E v)
@@ -139,6 +167,8 @@ namespace golang::slices
         return Index(s, v) >= 0;
     }
 
+    // ContainsFunc reports whether at least one
+    // element e of s satisfies f(e).
 
     template<typename S, typename E>
     bool ContainsFunc(S s, std::function<bool (E)> f)
@@ -146,6 +176,13 @@ namespace golang::slices
         return IndexFunc(s, f) >= 0;
     }
 
+    // Insert inserts the values v... into s at index i,
+    // returning the modified slice.
+    // The elements at s[i:] are shifted up to make room.
+    // In the returned slice r, r[i] == v[0],
+    // and r[i+len(v)] == value originally at r[i].
+    // Insert panics if i is out of range.
+    // This function is O(len(s) + len(v)).
 
     template<typename S, typename E>
     S Insert(S s, int i, gocpp::slice<E> v)
@@ -180,6 +217,11 @@ namespace golang::slices
         return s;
     }
 
+    // Delete removes the elements s[i:j] from s, returning the modified slice.
+    // Delete panics if j > len(s) or s[i:j] is not a valid slice of s.
+    // Delete is O(len(s)-i), so if many items must be deleted, it is better to
+    // make a single call deleting them all together than to delete one at a time.
+    // Delete zeroes the elements s[len(s)-(j-i):len(s)].
 
     template<typename S, typename E>
     S Delete(S s, int i, int j)
@@ -195,6 +237,9 @@ namespace golang::slices
         return s;
     }
 
+    // DeleteFunc removes any elements from s for which del returns true,
+    // returning the modified slice.
+    // DeleteFunc zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
     S DeleteFunc(S s, std::function<bool (E)> del)
@@ -216,6 +261,10 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+    // Replace replaces the elements s[i:j] by the given v, and returns the
+    // modified slice.
+    // Replace panics if j > len(s) or s[i:j] is not a valid slice of s.
+    // When len(v) < (j-i), Replace zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
     S Replace(S s, int i, int j, gocpp::slice<E> v)
@@ -272,6 +321,8 @@ namespace golang::slices
         return r;
     }
 
+    // Clone returns a copy of the slice.
+    // The elements are copied using assignment, so this is a shallow clone.
 
     template<typename S, typename E>
     S Clone(S s)
@@ -279,6 +330,11 @@ namespace golang::slices
         return append(s.make_slice(, 0, 0), s);
     }
 
+    // Compact replaces consecutive runs of equal elements with a single copy.
+    // This is like the uniq command found on Unix.
+    // Compact modifies the contents of the slice s and returns the modified slice,
+    // which may have a smaller length.
+    // Compact zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
     S Compact(S s)
@@ -303,6 +359,9 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+    // CompactFunc is like [Compact] but uses an equality function to compare elements.
+    // For runs of elements that compare equal, CompactFunc keeps the first one.
+    // CompactFunc zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
     S CompactFunc(S s, std::function<bool (E, E)> eq)
@@ -327,6 +386,10 @@ namespace golang::slices
         return s.make_slice(0, i);
     }
 
+    // Grow increases the slice's capacity, if necessary, to guarantee space for
+    // another n elements. After Grow(n), at least n elements can be appended
+    // to the slice without another allocation. If n is negative or too large to
+    // allocate the memory, Grow panics.
 
     template<typename S, typename E>
     S Grow(S s, int n)
@@ -342,6 +405,7 @@ namespace golang::slices
         return s;
     }
 
+    // Clip removes unused capacity from the slice, returning s[:len(s):len(s)].
 
     template<typename S, typename E>
     S Clip(S s)
@@ -349,6 +413,8 @@ namespace golang::slices
         return s.make_slice(, len(s), len(s));
     }
 
+    // rotateLeft rotates b left by n spaces.
+    // s_final[i] = s_orig[i+r], wrapping around.
 
     template<typename E>
     void rotateLeft(gocpp::slice<E> s, int r)
@@ -375,6 +441,7 @@ namespace golang::slices
         rotateLeft(s, len(s) - r);
     }
 
+    // swap swaps the contents of x and y. x and y must be equal length and disjoint.
 
     template<typename E>
     void swap(gocpp::slice<E> x, gocpp::slice<E> y)
@@ -385,6 +452,7 @@ namespace golang::slices
         }
     }
 
+    // overlaps reports whether the memory ranges a[0:len(a)] and b[0:len(b)] overlap.
 
     template<typename E>
     bool overlaps(gocpp::slice<E> a, gocpp::slice<E> b)
@@ -401,6 +469,8 @@ namespace golang::slices
         return uintptr_t(unsafe::Pointer(& a[0])) <= uintptr_t(unsafe::Pointer(& b[len(b) - 1])) + (elemSize - 1) && uintptr_t(unsafe::Pointer(& b[0])) <= uintptr_t(unsafe::Pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
 
+    // startIdx returns the index in haystack where the needle starts.
+    // prerequisite: the needle must be aliased entirely inside the haystack.
 
     template<typename E>
     int startIdx(gocpp::slice<E> haystack, gocpp::slice<E> needle)
@@ -416,6 +486,7 @@ namespace golang::slices
         gocpp::panic("needle not found"s);
     }
 
+    // Reverse reverses the elements of the slice in place.
 
     template<typename S, typename E>
     void Reverse(S s)
@@ -426,6 +497,7 @@ namespace golang::slices
         }
     }
 
+    // Concat returns a new slice concatenating the passed in slices.
 
     template<typename S, typename E>
     S Concat(gocpp::slice<S> slices)

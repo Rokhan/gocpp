@@ -36,6 +36,8 @@
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
+// Package pic implements functions that
+// display pictures on the Go playground.
 namespace golang::pic
 {
     namespace rec
@@ -46,6 +48,15 @@ namespace golang::pic
         using png::rec::Encode;
     }
 
+    // Show displays a picture defined by the function f
+    // when executed on the Go Playground.
+    //
+    // f should return a slice of length dy,
+    // each element of which is a slice of dx
+    // 8-bit unsigned int. The integers are
+    // interpreted as bluescale values,
+    // where the value 0 means full blue,
+    // and the value 255 means full white.
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f)
     {
         auto dx = 256;
@@ -67,6 +78,8 @@ namespace golang::pic
         ShowImage(m);
     }
 
+    // ShowImage displays the image m
+    // when executed on the Go Playground.
     void ShowImage(image::Image m)
     {
         gocpp::Defer defer;

@@ -21,6 +21,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // isDirectIface reports whether t is stored directly in an interface value.
     bool isDirectIface(golang::runtime::_type* t)
     {
         return t->Kind_ & kindDirectIface != 0;

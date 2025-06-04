@@ -11,6 +11,7 @@
 #include "golang/image/color/color.h"
 #include "gocpp/support.h"
 
+// Package color implements a basic color library.
 namespace golang::color
 {
     namespace rec
@@ -18,6 +19,8 @@ namespace golang::color
         using namespace mocklib::rec;
     }
 
+    // Color can convert itself to alpha-premultiplied 16-bits per channel RGBA.
+    // The conversion may be lossy.
     
     template<typename T>
     Color::Color(T& ref)
@@ -66,6 +69,11 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
+    // RGBA represents a traditional 32-bit alpha-premultiplied color, having 8
+    // bits for each of red, green, blue and alpha.
+    //
+    // An alpha-premultiplied color component C has been scaled by alpha (A), so
+    // has valid values 0 <= C <= A.
     
     template<typename T> requires gocpp::GoStruct<T>
     RGBA::operator T()
@@ -121,6 +129,11 @@ namespace golang::color
         return {r, g, b, a};
     }
 
+    // RGBA64 represents a 64-bit alpha-premultiplied color, having 16 bits for
+    // each of red, green, blue and alpha.
+    //
+    // An alpha-premultiplied color component C has been scaled by alpha (A), so
+    // has valid values 0 <= C <= A.
     
     template<typename T> requires gocpp::GoStruct<T>
     RGBA64::operator T()
@@ -168,6 +181,7 @@ namespace golang::color
         return {uint32_t(c.R), uint32_t(c.G), uint32_t(c.B), uint32_t(c.A)};
     }
 
+    // NRGBA represents a non-alpha-premultiplied 32-bit color.
     
     template<typename T> requires gocpp::GoStruct<T>
     NRGBA::operator T()
@@ -229,6 +243,8 @@ namespace golang::color
         return {r, g, b, a};
     }
 
+    // NRGBA64 represents a non-alpha-premultiplied 64-bit color,
+    // having 16 bits for each of red, green, blue and alpha.
     
     template<typename T> requires gocpp::GoStruct<T>
     NRGBA64::operator T()
@@ -286,6 +302,7 @@ namespace golang::color
         return {r, g, b, a};
     }
 
+    // Alpha represents an 8-bit alpha color.
     
     template<typename T> requires gocpp::GoStruct<T>
     Alpha::operator T()
@@ -326,6 +343,7 @@ namespace golang::color
         return {a, a, a, a};
     }
 
+    // Alpha16 represents a 16-bit alpha color.
     
     template<typename T> requires gocpp::GoStruct<T>
     Alpha16::operator T()
@@ -365,6 +383,7 @@ namespace golang::color
         return {a, a, a, a};
     }
 
+    // Gray represents an 8-bit grayscale color.
     
     template<typename T> requires gocpp::GoStruct<T>
     Gray::operator T()
@@ -405,6 +424,7 @@ namespace golang::color
         return {y, y, y, 0xffff};
     }
 
+    // Gray16 represents a 16-bit grayscale color.
     
     template<typename T> requires gocpp::GoStruct<T>
     Gray16::operator T()
@@ -444,6 +464,8 @@ namespace golang::color
         return {y, y, y, 0xffff};
     }
 
+    // Model can convert any [Color] to one from its own color model. The conversion
+    // may be lossy.
     
     template<typename T>
     Model::Model(T& ref)
@@ -492,6 +514,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
+    // ModelFunc returns a [Model] that invokes f to implement the conversion.
     struct Model ModelFunc(std::function<struct Color (Color)> f)
     {
         return new modelFunc {f};
@@ -531,6 +554,7 @@ namespace golang::color
         return rec::f(gocpp::recv(m), c);
     }
 
+    // Models for the standard color types.
     Model RGBAModel = ModelFunc(rgbaModel);
     Model RGBA64Model = ModelFunc(rgba64Model);
     Model NRGBAModel = ModelFunc(nrgbaModel);
@@ -643,6 +667,8 @@ namespace golang::color
         return Gray16 {uint16_t(y)};
     }
 
+    // Palette is a palette of colors.
+    // Convert returns the palette color closest to c in Euclidean R,G,B space.
     struct Color rec::Convert(golang::color::Palette p, struct Color c)
     {
         if(len(p) == 0)
@@ -652,6 +678,8 @@ namespace golang::color
         return p[rec::Index(gocpp::recv(p), c)];
     }
 
+    // Index returns the index of the palette color closest to c in Euclidean
+    // R,G,B,A space.
     int rec::Index(golang::color::Palette p, struct Color c)
     {
         auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));
@@ -672,12 +700,17 @@ namespace golang::color
         return ret;
     }
 
+    // sqDiff returns the squared-difference of x and y, shifted by 2 so that
+    // adding four of those won't overflow a uint32.
+    //
+    // x and y are both assumed to be in the range [0, 0xffff].
     uint32_t sqDiff(uint32_t x, uint32_t y)
     {
         auto d = x - y;
         return (d * d) >> 2;
     }
 
+    // Standard colors.
     Gray16 Black = Gray16 {0};
     Gray16 White = Gray16 {0xffff};
     Alpha16 Transparent = Alpha16 {0};

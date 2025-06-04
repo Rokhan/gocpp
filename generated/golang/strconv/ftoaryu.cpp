@@ -23,6 +23,7 @@ namespace golang::strconv
         using namespace mocklib::rec;
     }
 
+    // ryuFtoaFixed32 formats mant*(2^exp) with prec decimal digits.
     void ryuFtoaFixed32(struct decimalSlice* d, uint32_t mant, int exp, int prec)
     {
         if(prec < 0)
@@ -77,6 +78,7 @@ namespace golang::strconv
         d->dp -= q;
     }
 
+    // ryuFtoaFixed64 formats mant*(2^exp) with prec decimal digits.
     void ryuFtoaFixed64(struct decimalSlice* d, uint64_t mant, int exp, int prec)
     {
         if(prec > 18)
@@ -128,6 +130,9 @@ namespace golang::strconv
     }
 
     gocpp::array<uint64_t, 20> uint64pow10 = gocpp::array<uint64_t, 20> {1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19};
+    // formatDecimal fills d with at most prec decimal digits
+    // of mantissa m. The boolean trunc indicates whether m
+    // is truncated compared to the original number being formatted.
     void formatDecimal(struct decimalSlice* d, uint64_t m, bool trunc, bool roundUp, int prec)
     {
         auto max = uint64pow10[prec];
@@ -202,6 +207,7 @@ namespace golang::strconv
         d->dp = d->nd + trimmed;
     }
 
+    // ryuFtoaShortest formats mant*2^exp with prec decimal digits.
     void ryuFtoaShortest(struct decimalSlice* d, uint64_t mant, int exp, struct floatInfo* flt)
     {
         if(mant == 0)
@@ -222,6 +228,8 @@ namespace golang::strconv
             return;
         }
         auto q = mulByLog2Log10(- e2) + 1;
+        // We are going to multiply by 10^q using 128-bit arithmetic.
+        // The exponent is the same for all 3 numbers.
         uint64_t dl = {};
         uint64_t dc = {};
         uint64_t du = {};
@@ -300,16 +308,29 @@ namespace golang::strconv
         d->dp -= q;
     }
 
+    // mulByLog2Log10 returns math.Floor(x * log(2)/log(10)) for an integer x in
+    // the range -1600 <= x && x <= +1600.
+    //
+    // The range restriction lets us work in faster integer arithmetic instead of
+    // slower floating point arithmetic. Correctness is verified by unit tests.
     int mulByLog2Log10(int x)
     {
         return (x * 78913) >> 18;
     }
 
+    // mulByLog10Log2 returns math.Floor(x * log(10)/log(2)) for an integer x in
+    // the range -500 <= x && x <= +500.
+    //
+    // The range restriction lets us work in faster integer arithmetic instead of
+    // slower floating point arithmetic. Correctness is verified by unit tests.
     int mulByLog10Log2(int x)
     {
         return (x * 108853) >> 15;
     }
 
+    // computeBounds returns a floating-point vector (l, c, u)×2^e2
+    // where the mantissas are 55-bit (or 26-bit) integers, describing the interval
+    // represented by the input float64 or float32.
     std::tuple<uint64_t, uint64_t, uint64_t, int> computeBounds(uint64_t mant, int exp, struct floatInfo* flt)
     {
         uint64_t lower;
@@ -378,6 +399,7 @@ namespace golang::strconv
         }
     }
 
+    // ryuDigits32 emits decimal digits for a number less than 1e9.
     void ryuDigits32(struct decimalSlice* d, uint32_t lower, uint32_t central, uint32_t upper, bool c0, bool cup, int endindex)
     {
         if(upper == 0)
@@ -434,6 +456,16 @@ namespace golang::strconv
         d->dp = d->nd + trimmed;
     }
 
+    // mult64bitPow10 takes a floating-point input with a 25-bit
+    // mantissa and multiplies it with 10^q. The resulting mantissa
+    // is m*P >> 57 where P is a 64-bit element of the detailedPowersOfTen tables.
+    // It is typically 31 or 32-bit wide.
+    // The returned boolean is true if all trimmed bits were zero.
+    //
+    // That is:
+    //
+    //	m*2^e2 * round(10^q) = resM * 2^resE + ε
+    //	exact = ε == 0
     std::tuple<uint32_t, int, bool> mult64bitPow10(uint32_t m, int e2, int q)
     {
         uint32_t resM;
@@ -457,6 +489,16 @@ namespace golang::strconv
         return {uint32_t((hi << 7) | (lo >> 57)), e2, (lo << 7) == 0};
     }
 
+    // mult128bitPow10 takes a floating-point input with a 55-bit
+    // mantissa and multiplies it with 10^q. The resulting mantissa
+    // is m*P >> 119 where P is a 128-bit element of the detailedPowersOfTen tables.
+    // It is typically 63 or 64-bit wide.
+    // The returned boolean is true is all trimmed bits were zero.
+    //
+    // That is:
+    //
+    //	m*2^e2 * round(10^q) = resM * 2^resE + ε
+    //	exact = ε == 0
     std::tuple<uint64_t, int, bool> mult128bitPow10(uint64_t m, int e2, int q)
     {
         uint64_t resM;
@@ -500,6 +542,8 @@ namespace golang::strconv
         return true;
     }
 
+    // divmod1e9 computes quotient and remainder of division by 1e9,
+    // avoiding runtime uint64 division on 32-bit platforms.
     std::tuple<uint32_t, uint32_t> divmod1e9(uint64_t x)
     {
         if(! host32bit)

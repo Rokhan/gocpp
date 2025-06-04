@@ -21,39 +21,53 @@ namespace golang::runtime
     }
 
     double inf = float64frombits(0x7FF0000000000000);
+    // isNaN reports whether f is an IEEE 754 “not-a-number” value.
     bool isNaN(double f)
     {
         bool is;
         return f != f;
     }
 
+    // isFinite reports whether f is neither NaN nor an infinity.
     bool isFinite(double f)
     {
         return ! isNaN(f - f);
     }
 
+    // isInf reports whether f is an infinity.
     bool isInf(double f)
     {
         return ! isNaN(f) && ! isFinite(f);
     }
 
+    // abs returns the absolute value of x.
+    //
+    // Special cases are:
+    //
+    //	abs(±Inf) = +Inf
+    //	abs(NaN) = NaN
     double abs(double x)
     {
         auto sign = 1 << 63;
         return float64frombits(float64bits(x) &^ sign);
     }
 
+    // copysign returns a value with the magnitude
+    // of x and the sign of y.
     double copysign(double x, double y)
     {
         auto sign = 1 << 63;
         return float64frombits(float64bits(x) &^ sign | float64bits(y) & sign);
     }
 
+    // float64bits returns the IEEE 754 binary representation of f.
     uint64_t float64bits(double f)
     {
         return *(uint64_t*)(unsafe::Pointer(& f));
     }
 
+    // float64frombits returns the floating point number corresponding
+    // the IEEE 754 binary representation b.
     double float64frombits(uint64_t b)
     {
         return *(double*)(unsafe::Pointer(& b));

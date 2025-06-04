@@ -11,6 +11,9 @@
 #include "golang/unicode/utf8/utf8.h"
 #include "gocpp/support.h"
 
+// Package utf8 implements functions and constants to support text encoded in
+// UTF-8. It includes functions to translate between runes and UTF-8 byte sequences.
+// See https://en.wikipedia.org/wiki/UTF-8
 namespace golang::utf8
 {
     namespace rec
@@ -18,7 +21,17 @@ namespace golang::utf8
         using namespace mocklib::rec;
     }
 
+    // Numbers fundamental to the encoding.
+    // Code points in the surrogate range are not valid for UTF-8.
+    // The default lowest and highest continuation byte.
+    // These names of these constants are chosen to give nice alignment in the
+    // table below. The first nibble is an index into acceptRanges or F for
+    // special one-byte cases. The second nibble is the Rune length or the
+    // Status for the special one-byte case.
+    // first is information about the first byte in a UTF-8 sequence.
     gocpp::array<uint8_t, 256> first = gocpp::array<uint8_t, 256> {as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx};
+    // acceptRange gives the range of valid values for the second byte in a UTF-8
+    // sequence.
     
     template<typename T> requires gocpp::GoStruct<T>
     acceptRange::operator T()
@@ -51,6 +64,7 @@ namespace golang::utf8
         return value.PrintTo(os);
     }
 
+    // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
     gocpp::array<acceptRange, 16> acceptRanges = gocpp::Init<gocpp::array<acceptRange, 16>>([](auto& x) {
         x[0] =  {locb, hicb};
         x[1] =  {0xA0, hicb};
@@ -58,6 +72,8 @@ namespace golang::utf8
         x[3] =  {0x90, hicb};
         x[4] =  {locb, 0x8F};
     });
+    // FullRune reports whether the bytes in p begin with a full UTF-8 encoding of a rune.
+    // An invalid encoding is considered a full Rune since it will convert as a width-1 error rune.
     bool FullRune(gocpp::slice<unsigned char> p)
     {
         auto n = len(p);
@@ -83,6 +99,7 @@ namespace golang::utf8
         return false;
     }
 
+    // FullRuneInString is like FullRune but its input is a string.
     bool FullRuneInString(std::string s)
     {
         auto n = len(s);
@@ -108,6 +125,14 @@ namespace golang::utf8
         return false;
     }
 
+    // DecodeRune unpacks the first UTF-8 encoding in p and returns the rune and
+    // its width in bytes. If p is empty it returns ([RuneError], 0). Otherwise, if
+    // the encoding is invalid, it returns (RuneError, 1). Both are impossible
+    // results for correct, non-empty UTF-8.
+    //
+    // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
+    // out of range, or is not the shortest possible UTF-8 encoding for the
+    // value. No other validation is performed.
     std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p)
     {
         gocpp::rune r;
@@ -156,6 +181,14 @@ namespace golang::utf8
         return {(gocpp::rune(p0 & mask4) << 18) | (gocpp::rune(b1 & maskx) << 12) | (gocpp::rune(b2 & maskx) << 6) | gocpp::rune(b3 & maskx), 4};
     }
 
+    // DecodeRuneInString is like [DecodeRune] but its input is a string. If s is
+    // empty it returns ([RuneError], 0). Otherwise, if the encoding is invalid, it
+    // returns (RuneError, 1). Both are impossible results for correct, non-empty
+    // UTF-8.
+    //
+    // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
+    // out of range, or is not the shortest possible UTF-8 encoding for the
+    // value. No other validation is performed.
     std::tuple<gocpp::rune, int> DecodeRuneInString(std::string s)
     {
         gocpp::rune r;
@@ -204,6 +237,14 @@ namespace golang::utf8
         return {(gocpp::rune(s0 & mask4) << 18) | (gocpp::rune(s1 & maskx) << 12) | (gocpp::rune(s2 & maskx) << 6) | gocpp::rune(s3 & maskx), 4};
     }
 
+    // DecodeLastRune unpacks the last UTF-8 encoding in p and returns the rune and
+    // its width in bytes. If p is empty it returns ([RuneError], 0). Otherwise, if
+    // the encoding is invalid, it returns (RuneError, 1). Both are impossible
+    // results for correct, non-empty UTF-8.
+    //
+    // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
+    // out of range, or is not the shortest possible UTF-8 encoding for the
+    // value. No other validation is performed.
     std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p)
     {
         gocpp::rune r;
@@ -243,6 +284,14 @@ namespace golang::utf8
         return {r, size};
     }
 
+    // DecodeLastRuneInString is like [DecodeLastRune] but its input is a string. If
+    // s is empty it returns ([RuneError], 0). Otherwise, if the encoding is invalid,
+    // it returns (RuneError, 1). Both are impossible results for correct,
+    // non-empty UTF-8.
+    //
+    // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
+    // out of range, or is not the shortest possible UTF-8 encoding for the
+    // value. No other validation is performed.
     std::tuple<gocpp::rune, int> DecodeLastRuneInString(std::string s)
     {
         gocpp::rune r;
@@ -282,6 +331,8 @@ namespace golang::utf8
         return {r, size};
     }
 
+    // RuneLen returns the number of bytes required to encode the rune.
+    // It returns -1 if the rune is not a valid value to encode in UTF-8.
     int RuneLen(gocpp::rune r)
     {
         //Go switch emulation
@@ -318,6 +369,9 @@ namespace golang::utf8
         return - 1;
     }
 
+    // EncodeRune writes into p (which must be large enough) the UTF-8 encoding of the rune.
+    // If the rune is out of range, it writes the encoding of [RuneError].
+    // It returns the number of bytes written.
     int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         //Go switch emulation
@@ -363,6 +417,9 @@ namespace golang::utf8
         }
     }
 
+    // AppendRune appends the UTF-8 encoding of r to the end of p and
+    // returns the extended buffer. If the rune is out of range,
+    // it appends the encoding of [RuneError].
     gocpp::slice<unsigned char> AppendRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         if(uint32_t(r) <= rune1Max)
@@ -400,6 +457,8 @@ namespace golang::utf8
         }
     }
 
+    // RuneCount returns the number of runes in p. Erroneous and short
+    // encodings are treated as single runes of width 1 byte.
     int RuneCount(gocpp::slice<unsigned char> p)
     {
         auto np = len(p);
@@ -453,6 +512,7 @@ namespace golang::utf8
         return n;
     }
 
+    // RuneCountInString is like [RuneCount] but its input is a string.
     int RuneCountInString(std::string s)
     {
         int n;
@@ -505,11 +565,15 @@ namespace golang::utf8
         return n;
     }
 
+    // RuneStart reports whether the byte could be the first byte of an encoded,
+    // possibly invalid rune. Second and subsequent bytes always have the top two
+    // bits set to 10.
     bool RuneStart(unsigned char b)
     {
         return b & 0xC0 != 0x80;
     }
 
+    // Valid reports whether p consists entirely of valid UTF-8-encoded runes.
     bool Valid(gocpp::slice<unsigned char> p)
     {
         p = p.make_slice(, len(p), len(p));
@@ -570,6 +634,7 @@ namespace golang::utf8
         return true;
     }
 
+    // ValidString reports whether s consists entirely of valid UTF-8-encoded runes.
     bool ValidString(std::string s)
     {
         for(; len(s) >= 8; )
@@ -629,6 +694,8 @@ namespace golang::utf8
         return true;
     }
 
+    // ValidRune reports whether r can be legally encoded as UTF-8.
+    // Code points that are out of range or a surrogate half are illegal.
     bool ValidRune(gocpp::rune r)
     {
         //Go switch emulation

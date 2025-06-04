@@ -32,6 +32,27 @@ namespace golang::reflectlite
         using runtime::rec::Name;
     }
 
+    // Value is the reflection interface to a Go value.
+    //
+    // Not all methods apply to all kinds of values. Restrictions,
+    // if any, are noted in the documentation for each method.
+    // Use the Kind method to find out the kind of value before
+    // calling kind-specific methods. Calling a method
+    // inappropriate to the kind of type causes a run time panic.
+    //
+    // The zero Value represents no value.
+    // Its IsValid method returns false, its Kind method returns Invalid,
+    // its String method returns "<invalid Value>", and all other methods panic.
+    // Most functions and methods never return an invalid value.
+    // If one does, its documentation states the conditions explicitly.
+    //
+    // A Value can be used concurrently by multiple goroutines provided that
+    // the underlying Go value can be used concurrently for the equivalent
+    // direct operations.
+    //
+    // To compare two Values, compare the results of the Interface method.
+    // Using == on two Values does not compare the underlying values
+    // they represent.
     
     template<typename T> requires gocpp::GoStruct<T>
     Value::operator T()
@@ -83,6 +104,8 @@ namespace golang::reflectlite
         return (abi::Type*)(noescape(unsafe::Pointer(v.typ_)));
     }
 
+    // pointer returns the underlying pointer represented by v.
+    // v.Kind() must be Pointer, Map, Chan, Func, or UnsafePointer
     unsafe::Pointer rec::pointer(struct Value v)
     {
         if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
@@ -96,6 +119,7 @@ namespace golang::reflectlite
         return v.ptr;
     }
 
+    // packEface converts v to the empty interface.
     go_any packEface(struct Value v)
     {
         auto t = rec::typ(gocpp::recv(v));
@@ -134,6 +158,7 @@ namespace golang::reflectlite
         return i;
     }
 
+    // unpackEface converts the empty interface i to a Value.
     struct Value unpackEface(go_any i)
     {
         auto e = (emptyInterface*)(unsafe::Pointer(& i));
@@ -150,6 +175,9 @@ namespace golang::reflectlite
         return Value {t, e->word, f};
     }
 
+    // A ValueError occurs when a Value method is invoked on
+    // a Value that does not support it. Such cases are documented
+    // in the description of each method.
     
     template<typename T> requires gocpp::GoStruct<T>
     ValueError::operator T()
@@ -191,6 +219,8 @@ namespace golang::reflectlite
         return "reflect: call of "s + e->Method + " on "s + rec::String(gocpp::recv(e->Kind)) + " Value"s;
     }
 
+    // methodName returns the name of the calling method,
+    // assumed to be two stack frames above.
     std::string methodName()
     {
         auto [pc, gocpp_id_3, gocpp_id_4, gocpp_id_5] = runtime::Caller(2);
@@ -202,6 +232,7 @@ namespace golang::reflectlite
         return rec::Name(gocpp::recv(f));
     }
 
+    // emptyInterface is the header for an interface{} value.
     
     template<typename T> requires gocpp::GoStruct<T>
     emptyInterface::operator T()
@@ -234,6 +265,8 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
+    // mustBeExported panics if f records that the value was obtained using
+    // an unexported field.
     void rec::mustBeExported(golang::reflectlite::flag f)
     {
         if(f == 0)
@@ -246,6 +279,9 @@ namespace golang::reflectlite
         }
     }
 
+    // mustBeAssignable panics if f records that the value is not assignable,
+    // which is to say that either it was obtained using an unexported field
+    // or it is not addressable.
     void rec::mustBeAssignable(golang::reflectlite::flag f)
     {
         if(f == 0)
@@ -262,6 +298,11 @@ namespace golang::reflectlite
         }
     }
 
+    // CanSet reports whether the value of v can be changed.
+    // A Value can be changed only if it is addressable and was not
+    // obtained by the use of unexported struct fields.
+    // If CanSet returns false, calling Set or any type-specific
+    // setter (e.g., SetBool, SetInt) will panic.
     bool rec::CanSet(struct Value v)
     {
         return v.flag & (flagAddr | flagRO) == flagAddr;
@@ -316,6 +357,10 @@ namespace golang::reflectlite
                         }
 
 
+    // Elem returns the value that the interface v contains
+    // or that the pointer v points to.
+    // It panics if v's Kind is not Interface or Pointer.
+    // It returns the zero Value if v is nil.
     struct Value rec::Elem(struct Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
@@ -431,6 +476,13 @@ namespace golang::reflectlite
         return packEface(v);
     }
 
+    // IsNil reports whether its argument v is nil. The argument must be
+    // a chan, func, interface, map, pointer, or slice value; if it is
+    // not, IsNil panics. Note that IsNil is not always equivalent to a
+    // regular comparison with nil in Go. For example, if v was created
+    // by calling ValueOf with an uninitialized interface variable i,
+    // i==nil will be true but v.IsNil will panic as v will be the zero
+    // Value.
     bool rec::IsNil(struct Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
@@ -468,22 +520,33 @@ namespace golang::reflectlite
         gocpp::panic(new ValueError {"reflectlite.Value.IsNil"s, rec::kind(gocpp::recv(v))});
     }
 
+    // IsValid reports whether v represents a value.
+    // It returns false if v is the zero Value.
+    // If IsValid returns false, all other methods except String panic.
+    // Most functions and methods never return an invalid Value.
+    // If one does, its documentation states the conditions explicitly.
     bool rec::IsValid(struct Value v)
     {
         return v.flag != 0;
     }
 
+    // Kind returns v's Kind.
+    // If v is the zero Value (IsValid returns false), Kind returns Invalid.
     reflectlite::Kind rec::Kind(struct Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
 
+    //go:noescape
     int chanlen(unsafe::Pointer)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     int maplen(unsafe::Pointer)
     /* convertBlockStmt, nil block */;
 
+    // Len returns v's length.
+    // It panics if v's Kind is not Array, Chan, Map, Slice, or String.
     int rec::Len(struct Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
@@ -519,6 +582,7 @@ namespace golang::reflectlite
         gocpp::panic(new ValueError {"reflect.Value.Len"s, rec::kind(gocpp::recv(v))});
     }
 
+    // NumMethod returns the number of exported methods in the value's method set.
     int rec::numMethod(struct Value v)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
@@ -528,6 +592,9 @@ namespace golang::reflectlite
         return rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v))));
     }
 
+    // Set assigns x to the value v.
+    // It panics if CanSet returns false.
+    // As in Go, x's value must be assignable to v's type.
     void rec::Set(struct Value v, struct Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
@@ -548,6 +615,7 @@ namespace golang::reflectlite
         }
     }
 
+    // Type returns v's type.
     struct Type rec::Type(struct Value v)
     {
         auto f = v.flag;
@@ -558,9 +626,12 @@ namespace golang::reflectlite
         return toRType(rec::typ(gocpp::recv(v)));
     }
 
+    //go:noescape
     unsafe::Pointer unsafe_New(abi::Type*)
     /* convertBlockStmt, nil block */;
 
+    // ValueOf returns a new Value initialized to the concrete value
+    // stored in the interface i. ValueOf(nil) returns the zero Value.
     struct Value ValueOf(go_any i)
     {
         if(i == nullptr)
@@ -570,6 +641,9 @@ namespace golang::reflectlite
         return unpackEface(i);
     }
 
+    // assignTo returns a value v that can be assigned directly to typ.
+    // It panics if v is not assignable to typ.
+    // For a conversion to an interface type, target is a suggested scratch space to use.
     struct Value rec::assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target)
     {
         //Go switch emulation
@@ -609,6 +683,13 @@ namespace golang::reflectlite
         gocpp::panic(context + ": value of type "s + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type "s + rec::String(gocpp::recv(toRType(dst))));
     }
 
+    // arrayAt returns the i-th element of p,
+    // an array whose elements are eltSize bytes wide.
+    // The array pointed at by p must have at least i+1 elements:
+    // it is invalid (but impossible to check here) to pass i >= len,
+    // because then the result will point outside the array.
+    // whySafe must explain why i < len. (Passing "i < len" is fine;
+    // the benefit is to surface this assumption at the call site.)
     unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe)
     {
         return add(p, uintptr_t(i) * eltSize, "i < len"s);
@@ -617,9 +698,15 @@ namespace golang::reflectlite
     void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst)
     /* convertBlockStmt, nil block */;
 
+    // typedmemmove copies a value of type t to dst from src.
+    //
+    //go:noescape
     void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src)
     /* convertBlockStmt, nil block */;
 
+    // Dummy annotation marking that the value x escapes,
+    // for use in cases where the reflect code is so clever that
+    // the compiler cannot follow.
     void escapes(go_any x)
     {
         if(dummy.b)
@@ -669,6 +756,7 @@ namespace golang::reflectlite
 
 
     gocpp_id_8 dummy;
+    //go:nosplit
     unsafe::Pointer noescape(unsafe::Pointer p)
     {
         auto x = uintptr_t(p);

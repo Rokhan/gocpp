@@ -49,6 +49,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // traceStringTable is map of string -> unique ID that also manages
+    // writing strings out into the trace.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceStringTable::operator T()
@@ -84,6 +86,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // put adds a string to the table, emits it, and returns a unique ID for it.
     uint64_t rec::put(struct traceStringTable* t, uintptr_t gen, std::string s)
     {
         auto ss = stringStructOf(& s);
@@ -98,6 +101,7 @@ namespace golang::runtime
         return id;
     }
 
+    // emit emits a string and creates an ID for it, but doesn't add it to the table. Returns the ID.
     uint64_t rec::emit(struct traceStringTable* t, uintptr_t gen, std::string s)
     {
         auto id = rec::stealID(gocpp::recv(t->tab));
@@ -108,6 +112,11 @@ namespace golang::runtime
         return id;
     }
 
+    // writeString writes the string to t.buf.
+    //
+    // Must run on the systemstack because it may flush buffers and thus could acquire trace.lock.
+    //
+    //go:systemstack
     void rec::writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, std::string s)
     {
         if(len(s) > maxTraceStringLen)
@@ -116,6 +125,7 @@ namespace golang::runtime
         }
         lock(& t->lock);
         auto w = unsafeTraceWriter(gen, t->buf);
+        // Ensure we have a place to write to.
         bool flushed = {};
         std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
         if(flushed)
@@ -130,6 +140,15 @@ namespace golang::runtime
         unlock(& t->lock);
     }
 
+    // reset clears the string table and flushes any buffers it has.
+    //
+    // Must be called only once the caller is certain nothing else will be
+    // added to this table.
+    //
+    // Because it flushes buffers, this may acquire trace.lock and thus
+    // must run on the systemstack.
+    //
+    //go:systemstack
     void rec::reset(struct traceStringTable* t, uintptr_t gen)
     {
         if(t->buf != nullptr)

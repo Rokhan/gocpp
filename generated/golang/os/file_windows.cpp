@@ -52,6 +52,11 @@ namespace golang::os
         using windows::rec::Path;
     }
 
+    // This matches the value in syscall/syscall_windows.go.
+    // file is the real representation of *File.
+    // The extra level of indirection ensures that no clients of os
+    // can overwrite this data, which could cause the finalizer
+    // to close the wrong file descriptor.
     
     template<typename T> requires gocpp::GoStruct<T>
     file::operator T()
@@ -90,6 +95,12 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // Fd returns the Windows handle referencing the open file.
+    // If f is closed, the file descriptor becomes invalid.
+    // If f is garbage collected, a finalizer may close the file descriptor,
+    // making it invalid; see runtime.SetFinalizer for more information on when
+    // a finalizer might be run. On Unix systems this will cause the SetDeadline
+    // methods to stop working.
     uintptr_t rec::Fd(struct File* file)
     {
         if(file == nullptr)
@@ -99,6 +110,8 @@ namespace golang::os
         return uintptr_t(file->pfd.Sysfd);
     }
 
+    // newFile returns a new File with the given file handle and name.
+    // Unlike NewFile, it does not check that h is syscall.InvalidHandle.
     struct File* newFile(syscall::Handle h, std::string name, std::string kind)
     {
         if(kind == "file"s)
@@ -126,11 +139,15 @@ namespace golang::os
         return f;
     }
 
+    // newConsoleFile creates new File that will be used as console.
     struct File* newConsoleFile(syscall::Handle h, std::string name)
     {
         return newFile(h, name, "console"s);
     }
 
+    // NewFile returns a new File with the given file descriptor and
+    // name. The returned value will be nil if fd is not a valid file
+    // descriptor.
     struct File* NewFile(uintptr_t fd, std::string name)
     {
         auto h = syscall::Handle(fd);
@@ -145,7 +162,10 @@ namespace golang::os
     {
     }
 
+    // DevNull is the name of the operating system's “null device.”
+    // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
     std::string DevNull = "NUL"s;
+    // openFileNolog is the Windows implementation of OpenFile.
     std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm)
     {
         if(name == ""s)
@@ -220,6 +240,10 @@ namespace golang::os
         return err;
     }
 
+    // seek sets the offset for the next Read or Write on file to offset, interpreted
+    // according to whence: 0 means relative to the origin of the file, 1 means
+    // relative to the current offset, and 2 means relative to the end.
+    // It returns the new offset and an error, if any.
     std::tuple<int64_t, struct gocpp::error> rec::seek(struct File* f, int64_t offset, int whence)
     {
         int64_t ret;
@@ -234,6 +258,8 @@ namespace golang::os
         return {ret, err};
     }
 
+    // Truncate changes the size of the named file.
+    // If the file is a symbolic link, it changes the size of the link's target.
     struct gocpp::error Truncate(std::string name, int64_t size)
     {
         gocpp::Defer defer;
@@ -258,6 +284,8 @@ namespace golang::os
         }
     }
 
+    // Remove removes the named file or directory.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error Remove(std::string name)
     {
         auto [p, e] = syscall::UTF16PtrFromString(fixLongPath(name));
@@ -322,6 +350,9 @@ namespace golang::os
         return nullptr;
     }
 
+    // Pipe returns a connected pair of Files; reads from r return bytes written to w.
+    // It returns the files and an error, if any. The Windows handles underlying
+    // the returned files are marked as inheritable by child processes.
     std::tuple<struct File*, struct File*, struct gocpp::error> Pipe()
     {
         struct File* r;
@@ -370,6 +401,8 @@ namespace golang::os
         }
     }
 
+    // Link creates newname as a hard link to the oldname file.
+    // If there is an error, it will be of type *LinkError.
     struct gocpp::error Link(std::string oldname, std::string newname)
     {
         auto [n, err] = syscall::UTF16PtrFromString(fixLongPath(newname));
@@ -391,6 +424,10 @@ namespace golang::os
         return nullptr;
     }
 
+    // Symlink creates newname as a symbolic link to oldname.
+    // On Windows, a symlink to a non-existent oldname creates a file symlink;
+    // if oldname is later created as a directory the symlink will not work.
+    // If there is an error, it will be of type *LinkError.
     struct gocpp::error Symlink(std::string oldname, std::string newname)
     {
         oldname = fromSlash(oldname);
@@ -441,6 +478,9 @@ namespace golang::os
         return nullptr;
     }
 
+    // openSymlink calls CreateFile Windows API with FILE_FLAG_OPEN_REPARSE_POINT
+    // parameter, so that Windows does not follow symlink, if path is a symlink.
+    // openSymlink returns opened file handle.
     std::tuple<syscall::Handle, struct gocpp::error> openSymlink(std::string path)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
@@ -459,6 +499,14 @@ namespace golang::os
         return {h, nullptr};
     }
 
+    // normaliseLinkPath converts absolute paths returned by
+    // DeviceIoControl(h, FSCTL_GET_REPARSE_POINT, ...)
+    // into paths acceptable by all Windows APIs.
+    // For example, it converts
+    //
+    //	\??\C:\foo\bar into C:\foo\bar
+    //	\??\UNC\foo\bar into \\foo\bar
+    //	\??\Volume{abc}\ into C:\
     std::tuple<std::string, struct gocpp::error> normaliseLinkPath(std::string path)
     {
         gocpp::Defer defer;

@@ -31,6 +31,10 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // pageCache represents a per-p cache of pages the allocator can
+    // allocate from without a lock. More specifically, it represents
+    // a pageCachePages*pageSize chunk of memory with 0 or more free
+    // pages in it.
     
     template<typename T> requires gocpp::GoStruct<T>
     pageCache::operator T()
@@ -66,11 +70,20 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // empty reports whether the page cache has no free pages.
     bool rec::empty(struct pageCache* c)
     {
         return c->cache == 0;
     }
 
+    // alloc allocates npages from the page cache and is the main entry
+    // point for allocation.
+    //
+    // Returns a base address and the amount of scavenged memory in the
+    // allocated region in bytes.
+    //
+    // Returns a base address of zero on failure, in which case the
+    // amount of scavenged memory should be ignored.
     std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageCache* c, uintptr_t npages)
     {
         if(c->cache == 0)
@@ -88,6 +101,12 @@ namespace golang::runtime
         return rec::allocN(gocpp::recv(c), npages);
     }
 
+    // allocN is a helper which attempts to allocate npages worth of pages
+    // from the cache. It represents the general case for allocating from
+    // the page cache.
+    //
+    // Returns a base address and the amount of scavenged memory in the
+    // allocated region in bytes.
     std::tuple<uintptr_t, uintptr_t> rec::allocN(struct pageCache* c, uintptr_t npages)
     {
         auto i = findBitRange64(c->cache, (unsigned int)(npages));
@@ -102,6 +121,15 @@ namespace golang::runtime
         return {c->base + uintptr_t(i * pageSize), uintptr_t(scav) * pageSize};
     }
 
+    // flush empties out unallocated free pages in the given cache
+    // into s. Then, it clears the cache, such that empty returns
+    // true.
+    //
+    // p.mheapLock must be held.
+    //
+    // Must run on the system stack because p.mheapLock must be held.
+    //
+    //go:systemstack
     void rec::flush(struct pageCache* c, struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
@@ -131,6 +159,15 @@ namespace golang::runtime
         *c = pageCache {};
     }
 
+    // allocToCache acquires a pageCachePages-aligned chunk of free pages which
+    // may not be contiguous, and returns a pageCache structure which owns the
+    // chunk.
+    //
+    // p.mheapLock must be held.
+    //
+    // Must run on the system stack because p.mheapLock must be held.
+    //
+    //go:systemstack
     struct pageCache rec::allocToCache(struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);

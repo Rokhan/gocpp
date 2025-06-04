@@ -11,6 +11,9 @@
 #include "golang/math/const.h"
 #include "gocpp/support.h"
 
+// Package math provides basic constants and mathematical functions.
+//
+// This package does not guarantee bit-identical results across architectures.
 namespace golang::math
 {
     namespace rec
@@ -18,5 +21,10 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Mathematical constants.
+    // Floating-point limit values.
+    // Max is the largest finite value representable by the type.
+    // SmallestNonzero is the smallest positive, non-zero value representable by the type.
+    // Integer limit values.
 }
 

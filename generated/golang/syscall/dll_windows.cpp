@@ -27,6 +27,7 @@ namespace golang::syscall
         using mocklib::rec::Unlock;
     }
 
+    // DLLError describes reasons for DLL load failures.
     
     template<typename T> requires gocpp::GoStruct<T>
     DLLError::operator T()
@@ -72,21 +73,27 @@ namespace golang::syscall
         return e->Err;
     }
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     /* convertBlockStmt, nil block */;
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     /* convertBlockStmt, nil block */;
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
     /* convertBlockStmt, nil block */;
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall12(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12)
     /* convertBlockStmt, nil block */;
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15)
     /* convertBlockStmt, nil block */;
 
+    // Deprecated: Use SyscallN instead.
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18)
     /* convertBlockStmt, nil block */;
 
@@ -102,6 +109,7 @@ namespace golang::syscall
     std::tuple<uintptr_t, syscall::Errno> getprocaddress(uintptr_t handle, uint8_t* procname)
     /* convertBlockStmt, nil block */;
 
+    // A DLL implements access to a single DLL.
     
     template<typename T> requires gocpp::GoStruct<T>
     DLL::operator T()
@@ -134,6 +142,14 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // LoadDLL loads the named DLL file into memory.
+    //
+    // If name is not an absolute path and is not a known system DLL used by
+    // Go, Windows will search for the named DLL in many locations, causing
+    // potential DLL preloading attacks.
+    //
+    // Use LazyDLL in golang.org/x/sys/windows for a secure way to
+    // load system DLLs.
     std::tuple<struct DLL*, struct gocpp::error> LoadDLL(std::string name)
     {
         auto [namep, err] = UTF16PtrFromString(name);
@@ -166,6 +182,7 @@ namespace golang::syscall
         return {d, nullptr};
     }
 
+    // MustLoadDLL is like LoadDLL but panics if load operation fails.
     struct DLL* MustLoadDLL(std::string name)
     {
         auto [d, e] = LoadDLL(name);
@@ -176,6 +193,8 @@ namespace golang::syscall
         return d;
     }
 
+    // FindProc searches DLL d for procedure named name and returns *Proc
+    // if found. It returns an error if search fails.
     std::tuple<struct Proc*, struct gocpp::error> rec::FindProc(struct DLL* d, std::string name)
     {
         struct Proc* proc;
@@ -202,6 +221,7 @@ namespace golang::syscall
         return {p, nullptr};
     }
 
+    // MustFindProc is like FindProc but panics if search fails.
     struct Proc* rec::MustFindProc(struct DLL* d, std::string name)
     {
         auto [p, e] = rec::FindProc(gocpp::recv(d), name);
@@ -212,12 +232,14 @@ namespace golang::syscall
         return p;
     }
 
+    // Release unloads DLL d from memory.
     struct gocpp::error rec::Release(struct DLL* d)
     {
         struct gocpp::error err;
         return FreeLibrary(d->Handle);
     }
 
+    // A Proc implements access to a procedure inside a DLL.
     
     template<typename T> requires gocpp::GoStruct<T>
     Proc::operator T()
@@ -253,16 +275,44 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Addr returns the address of the procedure represented by p.
+    // The return value can be passed to Syscall to run the procedure.
     uintptr_t rec::Addr(struct Proc* p)
     {
         return p->addr;
     }
 
+    // Call executes procedure p with arguments a.
+    //
+    // The returned error is always non-nil, constructed from the result of GetLastError.
+    // Callers must inspect the primary return value to decide whether an error occurred
+    // (according to the semantics of the specific function being called) before consulting
+    // the error. The error always has type syscall.Errno.
+    //
+    // On amd64, Call can pass and return floating-point values. To pass
+    // an argument x with C type "float", use
+    // uintptr(math.Float32bits(x)). To pass an argument with C type
+    // "double", use uintptr(math.Float64bits(x)). Floating-point return
+    // values are returned in r2. The return value for C type "float" is
+    // math.Float32frombits(uint32(r2)). For C type "double", it is
+    // math.Float64frombits(uint64(r2)).
+    //
+    //go:uintptrescapes
     std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(struct Proc* p, gocpp::slice<uintptr_t> a)
     {
         return SyscallN(rec::Addr(gocpp::recv(p)), a);
     }
 
+    // A LazyDLL implements access to a single DLL.
+    // It will delay the load of the DLL until the first
+    // call to its Handle method or to one of its
+    // LazyProc's Addr method.
+    //
+    // LazyDLL is subject to the same DLL preloading attacks as documented
+    // on LoadDLL.
+    //
+    // Use LazyDLL in golang.org/x/sys/windows for a secure way to
+    // load system DLLs.
     
     template<typename T> requires gocpp::GoStruct<T>
     LazyDLL::operator T()
@@ -298,6 +348,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Load loads DLL file d.Name into memory. It returns an error if fails.
+    // Load will not try to load DLL, if it is already loaded into memory.
     struct gocpp::error rec::Load(struct LazyDLL* d)
     {
         gocpp::Defer defer;
@@ -325,6 +377,7 @@ namespace golang::syscall
         }
     }
 
+    // mustLoad is like Load but panics if search fails.
     void rec::mustLoad(struct LazyDLL* d)
     {
         auto e = rec::Load(gocpp::recv(d));
@@ -334,12 +387,14 @@ namespace golang::syscall
         }
     }
 
+    // Handle returns d's module handle.
     uintptr_t rec::Handle(struct LazyDLL* d)
     {
         rec::mustLoad(gocpp::recv(d));
         return uintptr_t(d->dll->Handle);
     }
 
+    // NewProc returns a LazyProc for accessing the named procedure in the DLL d.
     struct LazyProc* rec::NewProc(struct LazyDLL* d, std::string name)
     {
         return gocpp::InitPtr<LazyProc>([=](auto& x) {
@@ -348,6 +403,7 @@ namespace golang::syscall
         });
     }
 
+    // NewLazyDLL creates new LazyDLL associated with DLL file.
     struct LazyDLL* NewLazyDLL(std::string name)
     {
         return gocpp::InitPtr<LazyDLL>([=](auto& x) {
@@ -355,6 +411,8 @@ namespace golang::syscall
         });
     }
 
+    // A LazyProc implements access to a procedure inside a LazyDLL.
+    // It delays the lookup until the Addr, Call, or Find method is called.
     
     template<typename T> requires gocpp::GoStruct<T>
     LazyProc::operator T()
@@ -393,6 +451,9 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Find searches DLL for procedure named p.Name. It returns
+    // an error if search fails. Find will not search procedure,
+    // if it is already found and loaded into memory.
     struct gocpp::error rec::Find(struct LazyProc* p)
     {
         gocpp::Defer defer;
@@ -426,6 +487,7 @@ namespace golang::syscall
         }
     }
 
+    // mustFind is like Find but panics if search fails.
     void rec::mustFind(struct LazyProc* p)
     {
         auto e = rec::Find(gocpp::recv(p));
@@ -435,12 +497,18 @@ namespace golang::syscall
         }
     }
 
+    // Addr returns the address of the procedure represented by p.
+    // The return value can be passed to Syscall to run the procedure.
     uintptr_t rec::Addr(struct LazyProc* p)
     {
         rec::mustFind(gocpp::recv(p));
         return rec::Addr(gocpp::recv(p->proc));
     }
 
+    // Call executes procedure p with arguments a. See the documentation of
+    // Proc.Call for more information.
+    //
+    //go:uintptrescapes
     std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(struct LazyProc* p, gocpp::slice<uintptr_t> a)
     {
         uintptr_t r1;

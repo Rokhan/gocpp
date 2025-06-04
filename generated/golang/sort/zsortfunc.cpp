@@ -20,6 +20,7 @@ namespace golang::sort
         using namespace mocklib::rec;
     }
 
+    // insertionSort_func sorts data[a:b] using insertion sort.
     void insertionSort_func(struct lessSwap data, int a, int b)
     {
         for(auto i = a + 1; i < b; i++)
@@ -31,6 +32,8 @@ namespace golang::sort
         }
     }
 
+    // siftDown_func implements the heap property on data[lo:hi].
+    // first is an offset into the array where the root of the heap lies.
     void siftDown_func(struct lessSwap data, int lo, int hi, int first)
     {
         auto root = lo;
@@ -70,6 +73,12 @@ namespace golang::sort
         }
     }
 
+    // pdqsort_func sorts data[a:b].
+    // The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuicksort.
+    // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
+    // C++ implementation: https://github.com/orlp/pdqsort
+    // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
+    // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
     void pdqsort_func(struct lessSwap data, int a, int b, int limit)
     {
         auto maxInsertion = 12;
@@ -132,6 +141,10 @@ namespace golang::sort
         }
     }
 
+    // partition_func does one quicksort partition.
+    // Let p = data[pivot]
+    // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
+    // On return, data[newpivot] = p
     std::tuple<int, bool> partition_func(struct lessSwap data, int a, int b, int pivot)
     {
         int newpivot;
@@ -176,6 +189,8 @@ namespace golang::sort
         return {j, false};
     }
 
+    // partitionEqual_func partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
+    // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
     int partitionEqual_func(struct lessSwap data, int a, int b, int pivot)
     {
         int newpivot;
@@ -202,6 +217,7 @@ namespace golang::sort
         return i;
     }
 
+    // partialInsertionSort_func partially sorts a slice, returns true if the slice is sorted at the end.
     bool partialInsertionSort_func(struct lessSwap data, int a, int b)
     {
         auto maxSteps = 5;
@@ -248,6 +264,8 @@ namespace golang::sort
         return false;
     }
 
+    // breakPatterns_func scatters some elements around in an attempt to break some patterns
+    // that might cause imbalanced partitions in quicksort.
     void breakPatterns_func(struct lessSwap data, int a, int b)
     {
         auto length = b - a;
@@ -267,6 +285,11 @@ namespace golang::sort
         }
     }
 
+    // choosePivot_func chooses a pivot in data[a:b].
+    //
+    // [0,8): chooses a static pivot.
+    // [8,shortestNinther): uses the simple median-of-three method.
+    // [shortestNinther,∞): uses the Tukey ninther method.
     std::tuple<int, sort::sortedHint> choosePivot_func(struct lessSwap data, int a, int b)
     {
         int pivot;
@@ -309,6 +332,7 @@ namespace golang::sort
         }
     }
 
+    // order2_func returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
     std::tuple<int, int> order2_func(struct lessSwap data, int a, int b, int* swaps)
     {
         if(rec::Less(gocpp::recv(data), b, a))
@@ -319,6 +343,7 @@ namespace golang::sort
         return {a, b};
     }
 
+    // median_func returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
     int median_func(struct lessSwap data, int a, int b, int c, int* swaps)
     {
         std::tie(a, b) = order2_func(data, a, b, swaps);
@@ -327,6 +352,7 @@ namespace golang::sort
         return b;
     }
 
+    // medianAdjacent_func finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
     int medianAdjacent_func(struct lessSwap data, int a, int* swaps)
     {
         return median_func(data, a - 1, a, a + 1, swaps);
@@ -380,6 +406,25 @@ namespace golang::sort
         }
     }
 
+    // symMerge_func merges the two sorted subsequences data[a:m] and data[m:b] using
+    // the SymMerge algorithm from Pok-Son Kim and Arne Kutzner, "Stable Minimum
+    // Storage Merging by Symmetric Comparisons", in Susanne Albers and Tomasz
+    // Radzik, editors, Algorithms - ESA 2004, volume 3221 of Lecture Notes in
+    // Computer Science, pages 714-723. Springer, 2004.
+    //
+    // Let M = m-a and N = b-n. Wolog M < N.
+    // The recursion depth is bound by ceil(log(N+M)).
+    // The algorithm needs O(M*log(N/M + 1)) calls to data.Less.
+    // The algorithm needs O((M+N)*log(M)) calls to data.Swap.
+    //
+    // The paper gives O((M+N)*log(M)) as the number of assignments assuming a
+    // rotation algorithm which uses O(M+N+gcd(M+N)) assignments. The argumentation
+    // in the paper carries through for Swap operations, especially as the block
+    // swapping rotate uses only O(M+N) Swaps.
+    //
+    // symMerge assumes non-degenerate arguments: a < m && m < b.
+    // Having the caller check this condition eliminates many leaf recursion calls,
+    // which improves performance.
     void symMerge_func(struct lessSwap data, int a, int m, int b)
     {
         if(m - a == 1)
@@ -468,6 +513,10 @@ namespace golang::sort
         }
     }
 
+    // rotate_func rotates two consecutive blocks u = data[a:m] and v = data[m:b] in data:
+    // Data of the form 'x u v y' is changed to 'x v u y'.
+    // rotate performs at most b-a many calls to data.Swap,
+    // and it assumes non-degenerate arguments: a < m && m < b.
     void rotate_func(struct lessSwap data, int a, int m, int b)
     {
         auto i = m - a;

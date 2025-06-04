@@ -52,6 +52,8 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // The compiler knows that a print of a value of this type
+    // should use printhex instead of printuint (decimal).
     gocpp::slice<unsigned char> bytes(std::string s)
     {
         gocpp::slice<unsigned char> ret;
@@ -63,8 +65,17 @@ namespace golang::runtime
         return ret;
     }
 
+    // printBacklog is a circular buffer of messages written with the builtin
+    // print* functions, for use in postmortem analysis of core dumps.
     gocpp::array<unsigned char, 512> printBacklog;
     int printBacklogIndex;
+    // recordForPanic maintains a circular buffer of messages written by the
+    // runtime leading up to a process crash, allowing the messages to be
+    // extracted from a core dump.
+    //
+    // The text written during a process crash (following "panic" or "fatal
+    // error") is not saved, since the goroutine stacks will generally be readable
+    // from the runtime data structures in the core file.
     void recordForPanic(gocpp::slice<unsigned char> b)
     {
         printlock();
@@ -104,6 +115,8 @@ namespace golang::runtime
         }
     }
 
+    // write to goroutine-local buffer if diverting output,
+    // or else standard error.
     void gwrite(gocpp::slice<unsigned char> b)
     {
         if(len(b) == 0)
@@ -314,6 +327,11 @@ namespace golang::runtime
         print("("s, i.tab, ","s, i.data, ")"s);
     }
 
+    // hexdumpWords prints a word-oriented hex dump of [p, end).
+    //
+    // If mark != nil, it will be called with each printed word's address
+    // and should return a character mark to appear just before that
+    // word's value. It can return 0 to indicate no mark.
     void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark)
     {
         printlock();

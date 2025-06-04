@@ -18,6 +18,7 @@ namespace golang::itoa
         using namespace mocklib::rec;
     }
 
+    // Itoa converts val to a decimal string.
     std::string Itoa(int val)
     {
         if(val < 0)
@@ -27,6 +28,7 @@ namespace golang::itoa
         return Uitoa((unsigned int)(val));
     }
 
+    // Uitoa converts val to a decimal string.
     std::string Uitoa(unsigned int val)
     {
         if(val == 0)
@@ -47,6 +49,7 @@ namespace golang::itoa
     }
 
     std::string hex = "0123456789abcdef"s;
+    // Uitox converts val (a uint) to a hexadecimal string.
     std::string Uitox(unsigned int val)
     {
         if(val == 0)

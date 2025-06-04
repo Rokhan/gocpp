@@ -29,6 +29,81 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // A profBuf is a lock-free buffer for profiling events,
+    // safe for concurrent use by one reader and one writer.
+    // The writer may be a signal handler running without a user g.
+    // The reader is assumed to be a user g.
+    //
+    // Each logged event corresponds to a fixed size header, a list of
+    // uintptrs (typically a stack), and exactly one unsafe.Pointer tag.
+    // The header and uintptrs are stored in the circular buffer data and the
+    // tag is stored in a circular buffer tags, running in parallel.
+    // In the circular buffer data, each event takes 2+hdrsize+len(stk)
+    // words: the value 2+hdrsize+len(stk), then the time of the event, then
+    // hdrsize words giving the fixed-size header, and then len(stk) words
+    // for the stack.
+    //
+    // The current effective offsets into the tags and data circular buffers
+    // for reading and writing are stored in the high 30 and low 32 bits of r and w.
+    // The bottom bits of the high 32 are additional flag bits in w, unused in r.
+    // "Effective" offsets means the total number of reads or writes, mod 2^length.
+    // The offset in the buffer is the effective offset mod the length of the buffer.
+    // To make wraparound mod 2^length match wraparound mod length of the buffer,
+    // the length of the buffer must be a power of two.
+    //
+    // If the reader catches up to the writer, a flag passed to read controls
+    // whether the read blocks until more data is available. A read returns a
+    // pointer to the buffer data itself; the caller is assumed to be done with
+    // that data at the next read. The read offset rNext tracks the next offset to
+    // be returned by read. By definition, r ≤ rNext ≤ w (before wraparound),
+    // and rNext is only used by the reader, so it can be accessed without atomics.
+    //
+    // If the writer gets ahead of the reader, so that the buffer fills,
+    // future writes are discarded and replaced in the output stream by an
+    // overflow entry, which has size 2+hdrsize+1, time set to the time of
+    // the first discarded write, a header of all zeroed words, and a "stack"
+    // containing one word, the number of discarded writes.
+    //
+    // Between the time the buffer fills and the buffer becomes empty enough
+    // to hold more data, the overflow entry is stored as a pending overflow
+    // entry in the fields overflow and overflowTime. The pending overflow
+    // entry can be turned into a real record by either the writer or the
+    // reader. If the writer is called to write a new record and finds that
+    // the output buffer has room for both the pending overflow entry and the
+    // new record, the writer emits the pending overflow entry and the new
+    // record into the buffer. If the reader is called to read data and finds
+    // that the output buffer is empty but that there is a pending overflow
+    // entry, the reader will return a synthesized record for the pending
+    // overflow entry.
+    //
+    // Only the writer can create or add to a pending overflow entry, but
+    // either the reader or the writer can clear the pending overflow entry.
+    // A pending overflow entry is indicated by the low 32 bits of 'overflow'
+    // holding the number of discarded writes, and overflowTime holding the
+    // time of the first discarded write. The high 32 bits of 'overflow'
+    // increment each time the low 32 bits transition from zero to non-zero
+    // or vice versa. This sequence number avoids ABA problems in the use of
+    // compare-and-swap to coordinate between reader and writer.
+    // The overflowTime is only written when the low 32 bits of overflow are
+    // zero, that is, only when there is no pending overflow entry, in
+    // preparation for creating a new one. The reader can therefore fetch and
+    // clear the entry atomically using
+    //
+    //	for {
+    //		overflow = load(&b.overflow)
+    //		if uint32(overflow) == 0 {
+    //			// no pending entry
+    //			break
+    //		}
+    //		time = load(&b.overflowTime)
+    //		if cas(&b.overflow, overflow, ((overflow>>32)+1)<<32) {
+    //			// pending entry cleared
+    //			break
+    //		}
+    //	}
+    //	if uint32(overflow) > 0 {
+    //		emit entry for uint32(overflow), time
+    //	}
     
     template<typename T> requires gocpp::GoStruct<T>
     profBuf::operator T()
@@ -88,6 +163,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A profAtomic is the atomically-accessed word holding a profIndex.
+    // A profIndex is the packet tag and data counts and flags bits, described above.
     runtime::profIndex rec::load(golang::runtime::profAtomic* x)
     {
         return profIndex(atomic::Load64((uint64_t*)(x)));
@@ -113,21 +190,31 @@ namespace golang::runtime
         return uint32_t(x >> 34);
     }
 
+    // countSub subtracts two counts obtained from profIndex.dataCount or profIndex.tagCount,
+    // assuming that they are no more than 2^29 apart (guaranteed since they are never more than
+    // len(data) or len(tags) apart, respectively).
+    // tagCount wraps at 2^30, while dataCount wraps at 2^32.
+    // This function works for both.
     int countSub(uint32_t x, uint32_t y)
     {
         return int((int32_t(x - y) << 2) >> 2);
     }
 
+    // addCountsAndClearFlags returns the packed form of "x + (data, tag) - all flags".
     runtime::profIndex rec::addCountsAndClearFlags(golang::runtime::profIndex x, int data, int tag)
     {
         return profIndex((((uint64_t(x) >> 34) + uint64_t((uint32_t(tag) << 2) >> 2)) << 34) | uint64_t(uint32_t(x) + uint32_t(data)));
     }
 
+    // hasOverflow reports whether b has any overflow records pending.
     bool rec::hasOverflow(struct profBuf* b)
     {
         return uint32_t(rec::Load(gocpp::recv(b->overflow))) > 0;
     }
 
+    // takeOverflow consumes the pending overflow records, returning the overflow count
+    // and the time of the first overflow.
+    // When called by the reader, it is racing against incrementOverflow.
     std::tuple<uint32_t, uint64_t> rec::takeOverflow(struct profBuf* b)
     {
         uint32_t count;
@@ -152,6 +239,8 @@ namespace golang::runtime
         return {uint32_t(overflow), time};
     }
 
+    // incrementOverflow records a single overflow at time now.
+    // It is racing against a possible takeOverflow in the reader.
     void rec::incrementOverflow(struct profBuf* b, int64_t now)
     {
         for(; ; )
@@ -174,6 +263,8 @@ namespace golang::runtime
         }
     }
 
+    // newProfBuf returns a new profiling buffer with room for
+    // a header of hdrsize words and a buffer of at least bufwords words.
     struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
     {
         if(auto min = 2 + hdrsize + 1; bufwords < min)
@@ -201,6 +292,8 @@ namespace golang::runtime
         return b;
     }
 
+    // canWriteRecord reports whether the buffer has room
+    // for a single contiguous record with a stack of length nstk.
     bool rec::canWriteRecord(struct profBuf* b, int nstk)
     {
         auto br = rec::load(gocpp::recv(b->r));
@@ -219,6 +312,11 @@ namespace golang::runtime
         return nd >= want;
     }
 
+    // canWriteTwoRecords reports whether the buffer has room
+    // for two records with stack lengths nstk1, nstk2, in that order.
+    // Each record must be contiguous on its own, but the two
+    // records need not be contiguous (one can be at the end of the buffer
+    // and the other can wrap around and start at the beginning of the buffer).
     bool rec::canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2)
     {
         auto br = rec::load(gocpp::recv(b->r));
@@ -246,6 +344,11 @@ namespace golang::runtime
         return nd >= want;
     }
 
+    // write writes an entry to the profiling buffer b.
+    // The entry begins with a fixed hdr, which must have
+    // length b.hdrsize, followed by a variable-sized stack
+    // and a single tag pointer *tagPtr (or nil if tagPtr is nil).
+    // No write barriers allowed because this might be called from a signal handler.
     void rec::write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
     {
         if(b == nullptr)
@@ -318,6 +421,8 @@ namespace golang::runtime
         }
     }
 
+    // close signals that there will be no more writes on the buffer.
+    // Once all the data has been read from the buffer, reads will return eof=true.
     void rec::close(struct profBuf* b)
     {
         if(rec::Load(gocpp::recv(b->eof)) > 0)
@@ -328,6 +433,9 @@ namespace golang::runtime
         rec::wakeupExtra(gocpp::recv(b));
     }
 
+    // wakeupExtra must be called after setting one of the "extra"
+    // atomic fields b.overflow or b.eof.
+    // It records the change in b.w and wakes up the reader if needed.
     void rec::wakeupExtra(struct profBuf* b)
     {
         for(; ; )
@@ -346,6 +454,7 @@ namespace golang::runtime
         }
     }
 
+    // profBufReadMode specifies whether to block when no data is available to read.
     gocpp::array<unsafe::Pointer, 1> overflowTag;
     std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(struct profBuf* b, golang::runtime::profBufReadMode mode)
     {

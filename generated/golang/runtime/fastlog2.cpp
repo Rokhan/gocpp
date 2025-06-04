@@ -21,6 +21,13 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // fastlog2 implements a fast approximation to the base 2 log of a
+    // float64. This is used to compute a geometric distribution for heap
+    // sampling, without introducing dependencies into package math. This
+    // uses a very rough approximation using the float64 exponent and the
+    // first 25 bits of the mantissa. The top 5 bits of the mantissa are
+    // used to load limits from a table of constants and the rest are used
+    // to scale linearly between them.
     double fastlog2(double x)
     {
         auto fastlogScaleBits = 20;

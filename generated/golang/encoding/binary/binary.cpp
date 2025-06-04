@@ -22,6 +22,23 @@
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
 
+// Package binary implements simple translation between numbers and byte
+// sequences and encoding and decoding of varints.
+//
+// Numbers are translated by reading and writing fixed-size values.
+// A fixed-size value is either a fixed-size arithmetic
+// type (bool, int8, uint8, int16, float32, complex64, ...)
+// or an array or struct containing only fixed-size values.
+//
+// The varint functions encode and decode single integer values using
+// a variable-length encoding; smaller values require fewer bytes.
+// For a specification, see
+// https://developers.google.com/protocol-buffers/docs/encoding.
+//
+// This package favors simplicity over efficiency. Clients that require
+// high-performance serialization, especially for large data structures,
+// should look at more advanced solutions such as the [encoding/gob]
+// package or [google.golang.org/protobuf] for protocol buffers.
 namespace golang::binary
 {
     namespace rec
@@ -53,6 +70,10 @@ namespace golang::binary
         using sync::rec::Store;
     }
 
+    // A ByteOrder specifies how to convert byte slices into
+    // 16-, 32-, or 64-bit unsigned integers.
+    //
+    // It is implemented by [LittleEndian], [BigEndian], and [NativeEndian].
     
     template<typename T>
     ByteOrder::ByteOrder(T& ref)
@@ -191,6 +212,10 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
+    // AppendByteOrder specifies how to append 16-, 32-, or 64-bit unsigned integers
+    // into a byte slice.
+    //
+    // It is implemented by [LittleEndian], [BigEndian], and [NativeEndian].
     
     template<typename T>
     AppendByteOrder::AppendByteOrder(T& ref)
@@ -284,7 +309,9 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
+    // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
     littleEndian LittleEndian;
+    // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
     bigEndian BigEndian;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -492,6 +519,22 @@ namespace golang::binary
         return "binary.NativeEndian"s;
     }
 
+    // Read reads structured binary data from r into data.
+    // Data must be a pointer to a fixed-size value or a slice
+    // of fixed-size values.
+    // Bytes read from r are decoded using the specified byte order
+    // and written to successive fields of the data.
+    // When decoding boolean values, a zero byte is decoded as false, and
+    // any other non-zero byte is decoded as true.
+    // When reading into structs, the field data for fields with
+    // blank (_) field names is skipped; i.e., blank field names
+    // may be used for padding.
+    // When reading into a struct, all non-blank fields must be exported
+    // or Read may panic.
+    //
+    // The error is [io.EOF] only if no bytes were read.
+    // If an [io.EOF] happens after reading some but not all the bytes,
+    // Read returns [io.ErrUnexpectedEOF].
     struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
@@ -739,6 +782,14 @@ namespace golang::binary
         return nullptr;
     }
 
+    // Write writes the binary representation of data into w.
+    // Data must be a fixed-size value or a slice of fixed-size
+    // values, or a pointer to such data.
+    // Boolean values encode as one byte: 1 for true, and 0 for false.
+    // Bytes written to w are encoded using the specified byte order
+    // and read from successive fields of the data.
+    // When writing structs, zero values are written for fields
+    // with blank (_) field names.
     struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data)
     {
         if(auto n = intDataSize(data); n != 0)
@@ -1053,12 +1104,19 @@ namespace golang::binary
         return err;
     }
 
+    // Size returns how many bytes [Write] would generate to encode the value v, which
+    // must be a fixed-size value or a slice of fixed-size values, or a pointer to such data.
+    // If v is neither of these, Size returns -1.
     int Size(go_any v)
     {
         return dataSize(reflect::Indirect(reflect::ValueOf(v)));
     }
 
     sync::Map structSize;
+    // dataSize returns the number of bytes the actual data represented by v occupies in memory.
+    // For compound structures, it sums the sizes of the elements. Thus, for instance, for a slice
+    // it returns the length of the slice times the element size and does not count the memory
+    // occupied by the header. If the type of v is not acceptable, dataSize returns -1.
     int dataSize(reflect::Value v)
     {
         //Go switch emulation
@@ -1096,6 +1154,7 @@ namespace golang::binary
         return - 1;
     }
 
+    // sizeof returns the size >= 0 of variables for the given type or -1 if the type is not acceptable.
     int sizeof(reflect::Type t)
     {
         //Go switch emulation
@@ -1583,6 +1642,8 @@ namespace golang::binary
         e->offset += n;
     }
 
+    // intDataSize returns the size of the data required to represent the data when encoded.
+    // It returns zero if the type cannot be implemented by the fast path in Read or Write.
     int intDataSize(go_any data)
     {
         //Go type switch emulation

@@ -65,6 +65,9 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // traceInitReadCPU initializes CPU profile -> tracer state for tracing.
+    //
+    // Returns a profBuf for reading from.
     void traceInitReadCPU()
     {
         if(traceEnabled())
@@ -141,6 +144,10 @@ namespace golang::runtime
             }
 
 
+    // traceStartReadCPU creates a goroutine to start reading CPU profile
+    // data into an active trace.
+    //
+    // traceAdvanceSema must be held.
     void traceStartReadCPU()
     {
         if(! traceEnabled())
@@ -171,6 +178,9 @@ namespace golang::runtime
         trace.cpuLogDone = done;
     }
 
+    // traceStopReadCPU blocks until the trace CPU reading goroutine exits.
+    //
+    // traceAdvanceSema must be held, and tracing must be disabled.
     void traceStopReadCPU()
     {
         if(traceEnabled())
@@ -189,6 +199,19 @@ namespace golang::runtime
         rec::close(gocpp::recv(trace.cpuSleep));
     }
 
+    // traceReadCPU attempts to read from the provided profBuf[gen%2] and write
+    // into the trace. Returns true if there might be more to read or false
+    // if the profBuf is closed or the caller should otherwise stop reading.
+    //
+    // The caller is responsible for ensuring that gen does not change. Either
+    // the caller must be in a traceAcquire/traceRelease block, or must be calling
+    // with traceAdvanceSema held.
+    //
+    // No more than one goroutine may be in traceReadCPU for the same
+    // profBuf at a time.
+    //
+    // Must not run on the system stack because profBuf.read performs race
+    // operations.
     bool traceReadCPU(uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
@@ -231,6 +254,7 @@ namespace golang::runtime
                 pcBuf[nstk] = uintptr_t(stk[nstk - 1]);
             }
             auto w = unsafeTraceWriter(gen, trace.cpuBuf[gen % 2]);
+            // Ensure we have a place to write to.
             bool flushed = {};
             std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
             if(flushed)
@@ -249,6 +273,13 @@ namespace golang::runtime
         return ! eof;
     }
 
+    // traceCPUFlush flushes trace.cpuBuf[gen%2]. The caller must be certain that gen
+    // has completed and that there are no more writers to it.
+    //
+    // Must run on the systemstack because it flushes buffers and acquires trace.lock
+    // to do so.
+    //
+    //go:systemstack
     void traceCPUFlush(uintptr_t gen)
     {
         if(auto buf = trace.cpuBuf[gen % 2]; buf != nullptr)
@@ -260,6 +291,9 @@ namespace golang::runtime
         }
     }
 
+    // traceCPUSample writes a CPU profile sample stack to the execution tracer's
+    // profiling buffer. It is called from a signal handler, so is limited in what
+    // it can do. mp must be the thread that is currently stopped in a signal.
     void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk)
     {
         if(! traceEnabled())
@@ -286,6 +320,10 @@ namespace golang::runtime
             return;
         }
         auto now = traceClockNow();
+        // The "header" here is the ID of the M that was running the profiled code,
+        // followed by the IDs of the P and goroutine. (For normal CPU profiling, it's
+        // usually the number of samples with the given stack.) Near syscalls, pp
+        // may be nil. Reporting goid of 0 is fine for either g0 or a nil gp.
         gocpp::array<uint64_t, 3> hdr = {};
         if(pp != nullptr)
         {

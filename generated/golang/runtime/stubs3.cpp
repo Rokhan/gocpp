@@ -18,6 +18,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    //go:wasmimport gojs runtime.nanotime1
     int64_t nanotime1()
     /* convertBlockStmt, nil block */;
 

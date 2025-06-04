@@ -18,12 +18,15 @@ namespace golang::bytealg
         using namespace mocklib::rec;
     }
 
+    //go:noescape
     int Count(gocpp::slice<unsigned char> b, unsigned char c)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     int CountString(std::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 
+    // A backup implementation to use by assembly.
     int countGeneric(gocpp::slice<unsigned char> b, unsigned char c)
     {
         auto n = 0;

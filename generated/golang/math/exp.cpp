@@ -23,6 +23,15 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Exp returns e**x, the base-e exponential of x.
+    //
+    // Special cases are:
+    //
+    //	Exp(+Inf) = +Inf
+    //	Exp(NaN) = NaN
+    //
+    // Very large values overflow to 0 or +Inf.
+    // Very small values underflow to 1.
     double Exp(double x)
     {
         if(haveArchExp)
@@ -67,6 +76,7 @@ namespace golang::math
                     break;
             }
         }
+        // reduce; computed as r = hi - lo for extra precision.
         int k = {};
         //Go switch emulation
         {
@@ -88,6 +98,9 @@ namespace golang::math
         return expmulti(hi, lo, k);
     }
 
+    // Exp2 returns 2**x, the base-2 exponential of x.
+    //
+    // Special cases are the same as [Exp].
     double Exp2(double x)
     {
         if(haveArchExp2)
@@ -126,6 +139,8 @@ namespace golang::math
                     break;
             }
         }
+        // argument reduction; x = r×lg(e) + k with |r| ≤ ln(2)/2.
+        // computed as r = hi - lo for extra precision.
         int k = {};
         //Go switch emulation
         {
@@ -148,6 +163,7 @@ namespace golang::math
         return expmulti(hi, lo, k);
     }
 
+    // exp1 returns e**r × 2**k where r = hi - lo and |r| ≤ ln(2)/2.
     double expmulti(double hi, double lo, int k)
     {
         auto P1 = 1.66666666666666657415e-01;

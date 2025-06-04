@@ -52,6 +52,15 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // Maximum number of bytes required to encode uint64 in base-128.
+    // traceWriter is the interface for writing all trace data.
+    //
+    // This type is passed around as a value, and all of its methods return
+    // a new traceWriter. This allows for chaining together calls in a fluent-style
+    // API. This is partly stylistic, and very slightly for performance, since
+    // the compiler can destructure this value and pass it between calls as
+    // just regular arguments. However, this style is not load-bearing, and
+    // we can change it if it's deemed too error-prone.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceWriter::operator T()
@@ -78,6 +87,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // write returns an a traceWriter that writes into the current M's stream.
     struct traceWriter rec::writer(struct traceLocker tl)
     {
         return gocpp::Init<traceWriter>([=](auto& x) {
@@ -86,6 +96,13 @@ namespace golang::runtime
         });
     }
 
+    // unsafeTraceWriter produces a traceWriter that doesn't lock the trace.
+    //
+    // It should only be used in contexts where either:
+    // - Another traceLocker is held.
+    // - trace.gen is prevented from advancing.
+    //
+    // buf may be nil.
     struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf)
     {
         return gocpp::Init<traceWriter>([=](auto& x) {
@@ -96,6 +113,7 @@ namespace golang::runtime
         });
     }
 
+    // end writes the buffer back into the m.
     void rec::end(struct traceWriter w)
     {
         if(w.mp == nullptr)
@@ -105,6 +123,9 @@ namespace golang::runtime
         w.mp->trace.buf[w.gen % 2] = w.traceBuf;
     }
 
+    // ensure makes sure that at least maxSize bytes are available to write.
+    //
+    // Returns whether the buffer was flushed.
     std::tuple<struct traceWriter, bool> rec::ensure(struct traceWriter w, int maxSize)
     {
         auto refill = w.traceBuf == nullptr || ! rec::available(gocpp::recv(w), maxSize);
@@ -115,6 +136,7 @@ namespace golang::runtime
         return {w, refill};
     }
 
+    // flush puts w.traceBuf on the queue of full buffers.
     struct traceWriter rec::flush(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
@@ -130,6 +152,7 @@ namespace golang::runtime
         return w;
     }
 
+    // refill puts w.traceBuf on the queue of full buffers and refresh's w's buffer.
     struct traceWriter rec::refill(struct traceWriter w)
     {
         systemstack([=]() mutable -> void
@@ -176,6 +199,7 @@ namespace golang::runtime
         return w;
     }
 
+    // traceBufQueue is a FIFO of traceBufs.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceBufQueue::operator T()
@@ -208,6 +232,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // push queues buf into queue of buffers.
     void rec::push(struct traceBufQueue* q, struct traceBuf* buf)
     {
         buf->link = nullptr;
@@ -222,6 +247,7 @@ namespace golang::runtime
         q->tail = buf;
     }
 
+    // pop dequeues from the queue of buffers.
     struct traceBuf* rec::pop(struct traceBufQueue* q)
     {
         auto buf = q->head;
@@ -243,6 +269,7 @@ namespace golang::runtime
         return q->head == nullptr;
     }
 
+    // traceBufHeader is per-P tracing buffer.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceBufHeader::operator T()
@@ -281,6 +308,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // traceBuf is per-M tracing buffer.
+    //
+    // TODO(mknyszek): Rename traceBuf to traceBatch, since they map 1:1 with event batches.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceBuf::operator T()
@@ -313,12 +343,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // byte appends v to buf.
     void rec::byte(struct traceBuf* buf, unsigned char v)
     {
         buf->arr[buf->pos] = v;
         buf->pos++;
     }
 
+    // varint appends v to buf in little-endian-base-128 encoding.
     void rec::varint(struct traceBuf* buf, uint64_t v)
     {
         auto pos = buf->pos;
@@ -337,6 +369,9 @@ namespace golang::runtime
         buf->pos = pos;
     }
 
+    // varintReserve reserves enough space in buf to hold any varint.
+    //
+    // Space reserved this way can be filled in with the varintAt method.
     int rec::varintReserve(struct traceBuf* buf)
     {
         auto p = buf->pos;
@@ -344,6 +379,7 @@ namespace golang::runtime
         return p;
     }
 
+    // stringData appends s's data directly to buf.
     void rec::stringData(struct traceBuf* buf, std::string s)
     {
         buf->pos += copy(buf->arr.make_slice(buf->pos), s);
@@ -354,6 +390,10 @@ namespace golang::runtime
         return len(buf->arr) - buf->pos >= size;
     }
 
+    // varintAt writes varint v at byte position pos in buf. This always
+    // consumes traceBytesPerNumber bytes. This is intended for when the caller
+    // needs to reserve space for a varint but can't populate it until later.
+    // Use varintReserve to reserve this space.
     void rec::varintAt(struct traceBuf* buf, int pos, uint64_t v)
     {
         for(auto i = 0; i < traceBytesPerNumber; i++)
@@ -375,6 +415,11 @@ namespace golang::runtime
         }
     }
 
+    // traceBufFlush flushes a trace buffer.
+    //
+    // Must run on the system stack because trace.lock must be held.
+    //
+    //go:systemstack
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);

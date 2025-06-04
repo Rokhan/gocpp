@@ -18,6 +18,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // sbrk0 returns the current process brk, or 0 if not implemented.
     uintptr_t sbrk0()
     {
         return 0;

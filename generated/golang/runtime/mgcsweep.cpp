@@ -81,6 +81,7 @@ namespace golang::runtime
     }
 
     sweepdata sweep;
+    // State of background sweep.
     
     template<typename T> requires gocpp::GoStruct<T>
     sweepdata::operator T()
@@ -122,6 +123,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // sweepClass is a spanClass and one bit to represent whether we're currently
+    // sweeping partial or full spans.
     runtime::sweepClass rec::load(golang::runtime::sweepClass* s)
     {
         return sweepClass(atomic::Load((uint32_t*)(s)));
@@ -141,6 +144,10 @@ namespace golang::runtime
         atomic::Store((uint32_t*)(s), 0);
     }
 
+    // split returns the underlying span class as well as
+    // whether we're interested in the full or partial
+    // unswept lists for that class, indicated as a boolean
+    // (true means "full").
     std::tuple<runtime::spanClass, bool> rec::split(golang::runtime::sweepClass s)
     {
         runtime::spanClass spc;
@@ -148,6 +155,9 @@ namespace golang::runtime
         return {spanClass(s >> 1), s & 1 == 0};
     }
 
+    // nextSpanForSweep finds and pops the next span for sweeping from the
+    // central sweep buffers. It returns ownership of the span to the caller.
+    // Returns nil if no such span exists.
     struct mspan* rec::nextSpanForSweep(struct mheap* h)
     {
         auto sg = h->sweepgen;
@@ -174,6 +184,11 @@ namespace golang::runtime
         return nullptr;
     }
 
+    // activeSweep is a type that captures whether sweeping
+    // is done, and whether there are any outstanding sweepers.
+    //
+    // Every potential sweeper must call begin() before they look
+    // for work, and end() after they've finished sweeping.
     
     template<typename T> requires gocpp::GoStruct<T>
     activeSweep::operator T()
@@ -203,6 +218,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // begin registers a new sweeper. Returns a sweepLocker
+    // for acquiring spans for sweeping. Any outstanding sweeper blocks
+    // sweep termination.
+    //
+    // If the sweepLocker is invalid, the caller can be sure that all
+    // outstanding sweep work has been drained, so there is nothing left
+    // to sweep. Note that there may be sweepers currently running, so
+    // this does not indicate that all sweeping has completed.
+    //
+    // Even if the sweepLocker is invalid, its sweepGen is always valid.
     struct sweepLocker rec::begin(struct activeSweep* a)
     {
         for(; ; )
@@ -219,6 +244,8 @@ namespace golang::runtime
         }
     }
 
+    // end deregisters a sweeper. Must be called once for each time
+    // begin is called if the sweepLocker is valid.
     void rec::end(struct activeSweep* a, struct sweepLocker sl)
     {
         if(sl.sweepGen != mheap_.sweepgen)
@@ -248,6 +275,12 @@ namespace golang::runtime
         }
     }
 
+    // markDrained marks the active sweep cycle as having drained
+    // all remaining work. This is safe to be called concurrently
+    // with all other methods of activeSweep, though may race.
+    //
+    // Returns true if this call was the one that actually performed
+    // the mark.
     bool rec::markDrained(struct activeSweep* a)
     {
         for(; ; )
@@ -264,22 +297,35 @@ namespace golang::runtime
         }
     }
 
+    // sweepers returns the current number of active sweepers.
     uint32_t rec::sweepers(struct activeSweep* a)
     {
         return rec::Load(gocpp::recv(a->state)) &^ sweepDrainedMask;
     }
 
+    // isDone returns true if all sweep work has been drained and no more
+    // outstanding sweepers exist. That is, when the sweep phase is
+    // completely done.
     bool rec::isDone(struct activeSweep* a)
     {
         return rec::Load(gocpp::recv(a->state)) == sweepDrainedMask;
     }
 
+    // reset sets up the activeSweep for the next sweep cycle.
+    //
+    // The world must be stopped.
     void rec::reset(struct activeSweep* a)
     {
         assertWorldStopped();
         rec::Store(gocpp::recv(a->state), 0);
     }
 
+    // finishsweep_m ensures that all spans are swept.
+    //
+    // The world must be stopped. This ensures there are no sweeps in
+    // progress.
+    //
+    //go:nowritebarrier
     void finishsweep_m()
     {
         assertWorldStopped();
@@ -311,6 +357,22 @@ namespace golang::runtime
         goparkunlock(& sweep.lock, waitReasonGCSweepWait, traceBlockGCSweep, 1);
         for(; ; )
         {
+            // bgsweep attempts to be a "low priority" goroutine by intentionally
+            // yielding time. It's OK if it doesn't run, because goroutines allocating
+            // memory will sweep and ensure that all spans are swept before the next
+            // GC cycle. We really only want to run when we're idle.
+            //
+            // However, calling Gosched after each span swept produces a tremendous
+            // amount of tracing events, sometimes up to 50% of events in a trace. It's
+            // also inefficient to call into the scheduler so much because sweeping a
+            // single span is in general a very fast operation, taking as little as 30 ns
+            // on modern hardware. (See #54767.)
+            //
+            // As a result, bgsweep sweeps in batches, and only calls into the scheduler
+            // at the end of every batch. Furthermore, it only yields its time if there
+            // isn't spare idle time available on other cores. If there's available idle
+            // time, helping to sweep can reduce allocation latencies by getting ahead of
+            // the proportional sweeper and having spans ready to go for allocation.
             auto sweepBatchSize = 10;
             auto nSwept = 0;
             for(; sweepone() != ~ uintptr_t(0); )
@@ -336,6 +398,7 @@ namespace golang::runtime
         }
     }
 
+    // sweepLocker acquires sweep ownership of spans.
     
     template<typename T> requires gocpp::GoStruct<T>
     sweepLocker::operator T()
@@ -368,6 +431,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // sweepLocked represents sweep ownership of a span.
     
     template<typename T> requires gocpp::GoStruct<T>
     sweepLocked::operator T()
@@ -394,6 +458,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // tryAcquire attempts to acquire sweep ownership of span s. If it
+    // successfully acquires ownership, it blocks sweep completion.
     std::tuple<struct sweepLocked, bool> rec::tryAcquire(struct sweepLocker* l, struct mspan* s)
     {
         if(! l->valid)
@@ -411,6 +477,8 @@ namespace golang::runtime
         return {sweepLocked {s}, true};
     }
 
+    // sweepone sweeps some unswept heap span and returns the number of pages returned
+    // to the heap, or ^uintptr(0) if there was nothing to sweep.
     uintptr_t sweepone()
     {
         auto gp = getg();
@@ -476,11 +544,20 @@ namespace golang::runtime
         return npages;
     }
 
+    // isSweepDone reports whether all spans are swept.
+    //
+    // Note that this condition may transition from false to true at any
+    // time as the sweeper runs. It may transition from true to false if a
+    // GC runs; to prevent that the caller must be non-preemptible or must
+    // somehow block GC progress.
     bool isSweepDone()
     {
         return rec::isDone(gocpp::recv(sweep.active));
     }
 
+    // Returns only when span s has been swept.
+    //
+    //go:nowritebarrier
     void rec::ensureSwept(struct mspan* s)
     {
         auto gp = getg();
@@ -510,6 +587,11 @@ namespace golang::runtime
         }
     }
 
+    // sweep frees or collects finalizers for blocks not marked in the mark phase.
+    // It clears the mark bits in preparation for the next GC round.
+    // Returns true if the span was returned to heap.
+    // If preserve=true, don't return it to heap nor relink in mcentral lists;
+    // caller takes care of it.
     bool rec::sweep(struct sweepLocked* sl, bool preserve)
     {
         auto gp = getg();
@@ -758,6 +840,20 @@ namespace golang::runtime
         return false;
     }
 
+    // reportZombies reports any marked but free objects in s and throws.
+    //
+    // This generally means one of the following:
+    //
+    // 1. User code converted a pointer to a uintptr and then back
+    // unsafely, and a GC ran while the uintptr was the only reference to
+    // an object.
+    //
+    // 2. User code (or a compiler bug) constructed a bad pointer that
+    // points to a free slot, often a past-the-end pointer.
+    //
+    // 3. The GC two cycles ago missed a pointer and freed a live object,
+    // but it was still live in the last cycle, so this GC cycle found a
+    // pointer to that object and marked it.
     void rec::reportZombies(struct mspan* s)
     {
         printlock();
@@ -806,6 +902,23 @@ namespace golang::runtime
         go_throw("found pointer to free object"s);
     }
 
+    // deductSweepCredit deducts sweep credit for allocating a span of
+    // size spanBytes. This must be performed *before* the span is
+    // allocated to ensure the system has enough credit. If necessary, it
+    // performs sweeping to prevent going in to debt. If the caller will
+    // also sweep pages (e.g., for a large allocation), it can pass a
+    // non-zero callerSweepPages to leave that many pages unswept.
+    //
+    // deductSweepCredit makes a worst-case assumption that all spanBytes
+    // bytes of the ultimately allocated span will be available for object
+    // allocation.
+    //
+    // deductSweepCredit is the core of the "proportional sweep" system.
+    // It uses statistics gathered by the garbage collector to perform
+    // enough sweeping so that all pages are swept during the concurrent
+    // sweep phase between GC cycles.
+    //
+    // mheap_ must NOT be locked.
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages)
     {
         if(mheap_.sweepPagesPerByte == 0)
@@ -848,6 +961,8 @@ namespace golang::runtime
         }
     }
 
+    // clobberfree sets the memory content at x to bad content, for debugging
+    // purposes.
     void clobberfree(unsafe::Pointer x, uintptr_t size)
     {
         for(auto i = uintptr_t(0); i < size; i += 4)
@@ -856,6 +971,11 @@ namespace golang::runtime
         }
     }
 
+    // gcPaceSweeper updates the sweeper's pacing parameters.
+    //
+    // Must be called whenever the GC's pacing is updated.
+    //
+    // The world must be stopped, or mheap_.lock must be held.
     void gcPaceSweeper(uint64_t trigger)
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);

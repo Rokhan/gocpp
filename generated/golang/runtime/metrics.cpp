@@ -76,6 +76,12 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // metrics is a map of runtime/metrics keys to data used by the runtime
+    // to sample each metric's value. metricsInit indicates it has been
+    // initialized.
+    //
+    // These fields are protected by metricsSema which should be
+    // locked/unlocked with metricsLock() / metricsUnlock().
     uint32_t metricsSema = 1;
     bool metricsInit = 1;
     gocpp::map<std::string, metricData> metrics = 1;
@@ -131,6 +137,9 @@ namespace golang::runtime
         semrelease(& metricsSema);
     }
 
+    // initMetrics initializes the metrics map if it hasn't been yet.
+    //
+    // metricsSema must be held.
     void initMetrics()
     {
         if(metricsInit)
@@ -550,6 +559,7 @@ namespace golang::runtime
         out->scalar = f();
     }
 
+    //go:linkname godebug_registerMetric internal/godebug.registerMetric
     void godebug_registerMetric(std::string name, std::function<uint64_t ()> read)
     {
         metricsLock();
@@ -564,6 +574,12 @@ namespace golang::runtime
         metricsUnlock();
     }
 
+    // statDep is a dependency on a group of statistics
+    // that a metric might have.
+    // statDepSet represents a set of statDeps.
+    //
+    // Under the hood, it's a bitmap.
+    // makeStatDepSet creates a new statDepSet from a list of statDeps.
     runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps)
     {
         runtime::statDepSet s = {};
@@ -574,6 +590,7 @@ namespace golang::runtime
         return s;
     }
 
+    // difference returns set difference of s from b as a new set.
     runtime::statDepSet rec::difference(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
     {
         runtime::statDepSet c = {};
@@ -584,6 +601,7 @@ namespace golang::runtime
         return c;
     }
 
+    // union returns the union of the two sets as a new set.
     runtime::statDepSet rec::union(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
     {
         runtime::statDepSet c = {};
@@ -594,6 +612,7 @@ namespace golang::runtime
         return c;
     }
 
+    // empty returns true if there are no dependencies in the set.
     bool rec::empty(golang::runtime::statDepSet* s)
     {
         for(auto [gocpp_ignored, c] : s)
@@ -606,11 +625,17 @@ namespace golang::runtime
         return true;
     }
 
+    // has returns true if the set contains a given statDep.
     bool rec::has(golang::runtime::statDepSet* s, golang::runtime::statDep d)
     {
         return s[d / 64] & (1 << (d % 64)) != 0;
     }
 
+    // heapStatsAggregate represents memory stats obtained from the
+    // runtime. This set of stats is grouped together because they
+    // depend on each other in some way to make sense of the runtime's
+    // current heap memory use. They're also sharded across Ps, so it
+    // makes sense to grab them all at once.
     
     template<typename T> requires gocpp::GoStruct<T>
     heapStatsAggregate::operator T()
@@ -655,6 +680,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // compute populates the heapStatsAggregate with values from the runtime.
     void rec::compute(struct heapStatsAggregate* a)
     {
         rec::read(gocpp::recv(memstats.heapStats), & a->heapStatsDelta);
@@ -675,6 +701,13 @@ namespace golang::runtime
         a->numObjects = a->totalAllocs - a->totalFrees;
     }
 
+    // sysStatsAggregate represents system memory stats obtained
+    // from the runtime. This set of stats is grouped together because
+    // they're all relatively cheap to acquire and generally independent
+    // of one another and other runtime memory stats. The fact that they
+    // may be acquired at different times, especially with respect to
+    // heapStatsAggregate, means there could be some skew, but because of
+    // these stats are independent, there's no real consistency issue here.
     
     template<typename T> requires gocpp::GoStruct<T>
     sysStatsAggregate::operator T()
@@ -734,6 +767,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // compute populates the sysStatsAggregate with values from the runtime.
     void rec::compute(struct sysStatsAggregate* a)
     {
         a->stacksSys = rec::load(gocpp::recv(memstats.stacks_sys));
@@ -754,6 +788,8 @@ namespace golang::runtime
         });
     }
 
+    // cpuStatsAggregate represents CPU stats obtained from the runtime
+    // acquired together to avoid skew and inconsistencies.
     
     template<typename T> requires gocpp::GoStruct<T>
     cpuStatsAggregate::operator T()
@@ -780,11 +816,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // compute populates the cpuStatsAggregate with values from the runtime.
     void rec::compute(struct cpuStatsAggregate* a)
     {
         a->cpuStats = work.cpuStats;
     }
 
+    // gcStatsAggregate represents various GC stats obtained from the runtime
+    // acquired together to avoid skew and inconsistencies.
     
     template<typename T> requires gocpp::GoStruct<T>
     gcStatsAggregate::operator T()
@@ -823,6 +862,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // compute populates the gcStatsAggregate with values from the runtime.
     void rec::compute(struct gcStatsAggregate* a)
     {
         a->heapScan = rec::Load(gocpp::recv(gcController.heapScan));
@@ -831,11 +871,18 @@ namespace golang::runtime
         a->totalScan = a->heapScan + a->stackScan + a->globalsScan;
     }
 
+    // nsToSec takes a duration in nanoseconds and converts it to seconds as
+    // a float64.
     double nsToSec(int64_t ns)
     {
         return double(ns) / 1e9;
     }
 
+    // statAggregate is the main driver of the metrics implementation.
+    //
+    // It contains multiple aggregates of runtime statistics, as well
+    // as a set of these aggregates that it has populated. The aggregates
+    // are populated lazily by its ensure method.
     
     template<typename T> requires gocpp::GoStruct<T>
     statAggregate::operator T()
@@ -877,6 +924,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // ensure populates statistics aggregates determined by deps if they
+    // haven't yet been populated.
     void rec::ensure(struct statAggregate* a, golang::runtime::statDepSet* deps)
     {
         auto missing = rec::difference(gocpp::recv(deps), a->ensured);
@@ -918,6 +967,12 @@ namespace golang::runtime
         a->ensured = rec::union(gocpp::recv(a->ensured), missing);
     }
 
+    // metricKind is a runtime copy of runtime/metrics.ValueKind and
+    // must be kept structurally identical to that type.
+    // These values must be kept identical to their corresponding Kind* values
+    // in the runtime/metrics package.
+    // metricSample is a runtime copy of runtime/metrics.Sample and
+    // must be kept structurally identical to that type.
     
     template<typename T> requires gocpp::GoStruct<T>
     metricSample::operator T()
@@ -950,6 +1005,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // metricValue is a runtime copy of runtime/metrics.Sample and
+    // must be kept structurally identical to that type.
     
     template<typename T> requires gocpp::GoStruct<T>
     metricValue::operator T()
@@ -985,6 +1042,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // float64HistOrInit tries to pull out an existing float64Histogram
+    // from the value, but if none exists, then it allocates one with
+    // the given buckets.
     struct metricFloat64Histogram* rec::float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets)
     {
         metricFloat64Histogram* hist = {};
@@ -1006,6 +1066,8 @@ namespace golang::runtime
         return hist;
     }
 
+    // metricFloat64Histogram is a runtime copy of runtime/metrics.Float64Histogram
+    // and must be kept structurally identical to that type.
     
     template<typename T> requires gocpp::GoStruct<T>
     metricFloat64Histogram::operator T()
@@ -1038,6 +1100,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // agg is used by readMetrics, and is protected by metricsSema.
+    //
+    // Managed as a global variable because its pointer will be
+    // an argument to a dynamically-defined function, and we'd
+    // like to avoid it escaping to the heap.
     statAggregate agg;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1071,6 +1138,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // readMetricNames is the implementation of runtime/metrics.readMetricNames,
+    // used by the runtime/metrics test and otherwise unreferenced.
+    //
+    //go:linkname readMetricNames runtime/metrics_test.runtime_readMetricNames
     gocpp::slice<std::string> readMetricNames()
     {
         metricsLock();
@@ -1087,6 +1158,9 @@ namespace golang::runtime
         return list;
     }
 
+    // readMetrics is the implementation of runtime/metrics.Read.
+    //
+    //go:linkname readMetrics runtime/metrics.runtime_readMetrics
     void readMetrics(unsafe::Pointer samplesp, int len, int cap)
     {
         metricsLock();
@@ -1095,6 +1169,10 @@ namespace golang::runtime
         metricsUnlock();
     }
 
+    // readMetricsLocked is the internal, locked portion of readMetrics.
+    //
+    // Broken out for more robust testing. metricsLock must be held and
+    // initMetrics must have been called already.
     void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap)
     {
         auto sl = slice {samplesp, len, cap};

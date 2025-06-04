@@ -21,6 +21,10 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // Go names for Windows errors.
+    // Windows reserves errors >= 1<<29 for application use.
+    // Invented values to support what package os and others expects.
+    // Error strings for invented errors
     gocpp::array<std::string, 131> errors = gocpp::Init<gocpp::array<std::string, 131>>([](auto& x) {
         x[go_E2BIG - APPLICATION_ERROR] = "argument list too long"s;
         x[go_EACCES - APPLICATION_ERROR] = "permission denied"s;

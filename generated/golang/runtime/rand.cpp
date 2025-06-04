@@ -51,6 +51,9 @@ namespace golang::runtime
         using chacha8rand::rec::Reseed;
     }
 
+    // OS-specific startup can set startupRand if the OS passes
+    // random data to the process at startup time.
+    // For example Linux passes 16 bytes in the auxv vector.
     gocpp::slice<unsigned char> startupRand;
     struct gocpp_id_0
     {
@@ -100,8 +103,14 @@ namespace golang::runtime
     }
 
 
+    // globalRand holds the global random state.
+    // It is only used at startup and for creating new m's.
+    // Otherwise the per-m random state should be used
+    // by calling goodrand.
     gocpp_id_0 globalRand;
     bool readRandomFailed;
+    // randinit initializes the global random state.
+    // It must be called before any use of grand.
     void randinit()
     {
         lock(& globalRand.lock);
@@ -133,6 +142,11 @@ namespace golang::runtime
         unlock(& globalRand.lock);
     }
 
+    // readTimeRandom stretches any entropy in the current time
+    // into entropy the length of r and XORs it into r.
+    // This is a fallback for when readRandom does not read
+    // the full requested amount.
+    // Whatever entropy r already contained is preserved.
     void readTimeRandom(gocpp::slice<unsigned char> r)
     {
         auto v = uint64_t(nanotime());
@@ -154,6 +168,7 @@ namespace golang::runtime
         }
     }
 
+    // bootstrapRand returns a random uint64 from the global random generator.
     uint64_t bootstrapRand()
     {
         lock(& globalRand.lock);
@@ -172,6 +187,8 @@ namespace golang::runtime
         }
     }
 
+    // bootstrapRandReseed reseeds the bootstrap random number generator,
+    // clearing from memory any trace of previously returned random numbers.
     void bootstrapRandReseed()
     {
         lock(& globalRand.lock);
@@ -183,11 +200,17 @@ namespace golang::runtime
         unlock(& globalRand.lock);
     }
 
+    // rand32 is uint32(rand()), called from compiler-generated code.
+    //go:nosplit
     uint32_t rand32()
     {
         return uint32_t(rand());
     }
 
+    // rand returns a random uint64 from the per-m chacha8 state.
+    // Do not change signature: used via linkname from other packages.
+    //go:nosplit
+    //go:linkname rand
     uint64_t rand()
     {
         auto mp = getg()->m;
@@ -205,6 +228,7 @@ namespace golang::runtime
         }
     }
 
+    // mrandinit initializes the random state of an m.
     void mrandinit(struct m* mp)
     {
         gocpp::array<uint64_t, 4> seed = {};
@@ -217,11 +241,24 @@ namespace golang::runtime
         mp->cheaprand = rand();
     }
 
+    // randn is like rand() % n but faster.
+    // Do not change signature: used via linkname from other packages.
+    //go:nosplit
+    //go:linkname randn
     uint32_t randn(uint32_t n)
     {
         return uint32_t((uint64_t(uint32_t(rand())) * uint64_t(n)) >> 32);
     }
 
+    // cheaprand is a non-cryptographic-quality 32-bit random generator
+    // suitable for calling at very high frequency (such as during scheduling decisions)
+    // and at sensitive moments in the runtime (such as during stack unwinding).
+    // it is "cheap" in the sense of both expense and quality.
+    //
+    // cheaprand must not be exported to other packages:
+    // the rule is that other packages using runtime-provided
+    // randomness must always use rand.
+    //go:nosplit
     uint32_t cheaprand()
     {
         auto mp = getg()->m;
@@ -239,26 +276,43 @@ namespace golang::runtime
         return s0 + s1;
     }
 
+    // cheaprand64 is a non-cryptographic-quality 63-bit random generator
+    // suitable for calling at very high frequency (such as during sampling decisions).
+    // it is "cheap" in the sense of both expense and quality.
+    //
+    // cheaprand64 must not be exported to other packages:
+    // the rule is that other packages using runtime-provided
+    // randomness must always use rand.
+    //go:nosplit
     int64_t cheaprand64()
     {
         return (int64_t(cheaprand()) << 31) ^ int64_t(cheaprand());
     }
 
+    // cheaprandn is like cheaprand() % n but faster.
+    //
+    // cheaprandn must not be exported to other packages:
+    // the rule is that other packages using runtime-provided
+    // randomness must always use randn.
+    //go:nosplit
     uint32_t cheaprandn(uint32_t n)
     {
         return uint32_t((uint64_t(cheaprand()) * uint64_t(n)) >> 32);
     }
 
+    //go:linkname legacy_fastrand runtime.fastrand
     uint32_t legacy_fastrand()
     {
         return uint32_t(rand());
     }
 
+    //go:linkname legacy_fastrandn runtime.fastrandn
     uint32_t legacy_fastrandn(uint32_t n)
     {
         return randn(n);
     }
 
+    //go:linkname legacy_fastrand64 runtime.fastrand64
     uint64_t legacy_fastrand64()
     {
         return rand();

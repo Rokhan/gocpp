@@ -20,6 +20,7 @@ namespace golang::strconv
         using namespace mocklib::rec;
     }
 
+    // index returns the index of the first instance of c in s, or -1 if missing.
     int index(std::string s, unsigned char c)
     {
         return bytealg::IndexByteString(s, c);

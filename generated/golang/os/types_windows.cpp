@@ -39,6 +39,7 @@ namespace golang::os
         using syscall::rec::Nanoseconds;
     }
 
+    // A fileStat is the implementation of FileInfo returned by Stat and Lstat.
     
     template<typename T> requires gocpp::GoStruct<T>
     fileStat::operator T()
@@ -107,6 +108,8 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // newFileStatFromGetFileInformationByHandle calls GetFileInformationByHandle
+    // to gather all required information about the file handle h.
     std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(std::string path, syscall::Handle h)
     {
         struct fileStat* fs;
@@ -153,6 +156,8 @@ namespace golang::os
         }), nullptr};
     }
 
+    // newFileStatFromFileIDBothDirInfo copies all required information
+    // from windows.FILE_ID_BOTH_DIR_INFO d into the newly created fileStat.
     struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
         return gocpp::InitPtr<fileStat>([=](auto& x) {
@@ -168,6 +173,8 @@ namespace golang::os
         });
     }
 
+    // newFileStatFromFileFullDirInfo copies all required information
+    // from windows.FILE_FULL_DIR_INFO d into the newly created fileStat.
     struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
     {
         return gocpp::InitPtr<fileStat>([=](auto& x) {
@@ -181,6 +188,8 @@ namespace golang::os
         });
     }
 
+    // newFileStatFromWin32finddata copies all required information
+    // from syscall.Win32finddata d into the newly created fileStat.
     struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
     {
         auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
@@ -198,6 +207,11 @@ namespace golang::os
         return fs;
     }
 
+    // isReparseTagNameSurrogate determines whether a tag's associated
+    // reparse point is a surrogate for another named entity (for example, a mounted folder).
+    //
+    // See https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-isreparsetagnamesurrogate
+    // and https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-point-tags.
     bool rec::isReparseTagNameSurrogate(struct fileStat* fs)
     {
         return fs->ReparseTag & 0x20000000 != 0;
@@ -266,6 +280,7 @@ namespace golang::os
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(fs->LastWriteTime)));
     }
 
+    // Sys returns syscall.Win32FileAttributeData for file fs.
     go_any rec::Sys(struct fileStat* fs)
     {
         return gocpp::InitPtr<syscall::Win32FileAttributeData>([=](auto& x) {
@@ -329,6 +344,8 @@ namespace golang::os
         }
     }
 
+    // saveInfoFromPath saves full path of the file to be used by os.SameFile later,
+    // and set name from path.
     struct gocpp::error rec::saveInfoFromPath(struct fileStat* fs, std::string path)
     {
         fs->path = path;
@@ -364,6 +381,7 @@ namespace golang::os
         return fs1->vol == fs2->vol && fs1->idxhi == fs2->idxhi && fs1->idxlo == fs2->idxlo;
     }
 
+    // For testing.
     mocklib::Date atime(golang::os::FileInfo fi)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));

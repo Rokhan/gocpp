@@ -342,6 +342,10 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
+    // GetSystemDirectory retrieves the path to current location of the system
+    // directory, which is typically, though not always, `C:\Windows\System32`.
+    //
+    //go:linkname GetSystemDirectory
     std::string GetSystemDirectory()
     /* convertBlockStmt, nil block */;
 

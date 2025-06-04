@@ -18,9 +18,21 @@ namespace golang::abi
         using namespace mocklib::rec;
     }
 
+    // FuncPCABI0 returns the entry PC of the function f, which must be a
+    // direct reference of a function defined as ABI0. Otherwise it is a
+    // compile-time error.
+    //
+    // Implemented as a compile intrinsic.
     uintptr_t FuncPCABI0(std::any f)
     /* convertBlockStmt, nil block */;
 
+    // FuncPCABIInternal returns the entry PC of the function f. If f is a
+    // direct reference of a function, it must be defined as ABIInternal.
+    // Otherwise it is a compile-time error. If f is not a direct reference
+    // of a defined function, it assumes that f is a func value. Otherwise
+    // the behavior is undefined.
+    //
+    // Implemented as a compile intrinsic.
     uintptr_t FuncPCABIInternal(std::any f)
     /* convertBlockStmt, nil block */;
 

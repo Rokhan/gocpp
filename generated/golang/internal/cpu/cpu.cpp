@@ -13,6 +13,8 @@
 
 #include "golang/internal/cpu/cpu_x86.h"
 
+// Package cpu implements processor feature detection
+// used by the Go standard library.
 namespace golang::cpu
 {
     namespace rec
@@ -20,7 +22,11 @@ namespace golang::cpu
         using namespace mocklib::rec;
     }
 
+    // DebugOptions is set to true by the runtime if the OS supports reading
+    // GODEBUG early in runtime startup.
+    // This should not be changed after it is initialized.
     bool DebugOptions;
+    // CacheLinePad is used to pad structs to avoid false sharing.
     
     template<typename T> requires gocpp::GoStruct<T>
     CacheLinePad::operator T()
@@ -50,6 +56,9 @@ namespace golang::cpu
         return value.PrintTo(os);
     }
 
+    // CacheLineSize is the CPU's assumed cache line size.
+    // There is currently no runtime detection of the real cache line size
+    // so we use the constant per GOARCH CacheLinePadSize as an approximation.
     uintptr_t CacheLineSize = CacheLinePadSize;
     struct gocpp_id_0
     {
@@ -171,6 +180,10 @@ namespace golang::cpu
     }
 
 
+    // The booleans in X86 contain the correspondingly named cpuid feature bit.
+    // HasAVX and HasAVX2 are only set if the OS does support XMM and YMM registers
+    // in addition to the cpuid feature bit being set.
+    // The struct is padded to avoid false sharing.
     gocpp_id_0 X86;
     struct gocpp_id_1
     {
@@ -224,6 +237,8 @@ namespace golang::cpu
     }
 
 
+    // The booleans in ARM contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
     gocpp_id_1 ARM;
     struct gocpp_id_2
     {
@@ -301,6 +316,8 @@ namespace golang::cpu
     }
 
 
+    // The booleans in ARM64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
     gocpp_id_2 ARM64;
     struct gocpp_id_3
     {
@@ -407,6 +424,11 @@ namespace golang::cpu
     }
 
 
+    // For ppc64(le), it is safe to check only for ISA level starting on ISA v3.00,
+    // since there are no optional categories. There are some exceptions that also
+    // require kernel support to work (darn, scv), so there are feature bits for
+    // those as well. The minimum processor requirement is POWER8 (ISA 2.07).
+    // The struct is padded to avoid false sharing.
     gocpp_id_4 PPC64;
     struct gocpp_id_5
     {
@@ -533,13 +555,22 @@ namespace golang::cpu
 
 
     gocpp_id_5 S390X;
+    // Initialize examines the processor and sets the relevant variables above.
+    // This is called by the runtime package early in program initialization,
+    // before normal init functions are run. env is set by runtime if the OS supports
+    // cpu feature options in GODEBUG.
     void Initialize(std::string env)
     {
         doinit();
         processOptions(env);
     }
 
+    // options contains the cpu debug options that can be used in GODEBUG.
+    // Options are arch dependent and are added by the arch specific doinit functions.
+    // Features that are mandatory for the specific GOARCH should not be added to options
+    // (e.g. SSE2 on amd64).
     gocpp::slice<option> options;
+    // Option names should be lower case. e.g. avx instead of AVX.
     
     template<typename T> requires gocpp::GoStruct<T>
     option::operator T()
@@ -578,6 +609,12 @@ namespace golang::cpu
         return value.PrintTo(os);
     }
 
+    // processOptions enables or disables CPU feature values based on the parsed env string.
+    // The env string is expected to be of the form cpu.feature1=value1,cpu.feature2=value2...
+    // where feature names is one of the architecture specific list stored in the
+    // cpu packages options variable and values are either 'on' or 'off'.
+    // If env contains cpu.all=off then all cpu features referenced through the options
+    // variable are disabled. Other feature names and values result in warning messages.
     void processOptions(std::string env)
     {
         field:
@@ -666,6 +703,10 @@ namespace golang::cpu
         }
     }
 
+    // indexByte returns the index of the first instance of c in s,
+    // or -1 if c is not present in s.
+    // indexByte is semantically the same as [strings.IndexByte].
+    // We copy this function because "internal/cpu" should not have external dependencies.
     int indexByte(std::string s, unsigned char c)
     {
         for(auto i = 0; i < len(s); i++)

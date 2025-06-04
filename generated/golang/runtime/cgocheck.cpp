@@ -58,6 +58,14 @@ namespace golang::runtime
     }
 
     std::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"s;
+    // cgoCheckPtrWrite is called whenever a pointer is stored into memory.
+    // It throws if the program is storing an unpinned Go pointer into non-Go
+    // memory.
+    //
+    // This is called from generated code when GOEXPERIMENT=cgocheck2 is enabled.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src)
     {
         if(! mainStarted)
@@ -96,11 +104,27 @@ namespace golang::runtime
         });
     }
 
+    // cgoCheckMemmove is called when moving a block of memory.
+    // It throws if the program is copying a block that contains an unpinned Go
+    // pointer into non-Go memory.
+    //
+    // This is called from generated code when GOEXPERIMENT=cgocheck2 is enabled.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckMemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
     {
         cgoCheckMemmove2(typ, dst, src, 0, typ->Size_);
     }
 
+    // cgoCheckMemmove2 is called when moving a block of memory.
+    // dst and src point off bytes into the value to copy.
+    // size is the number of bytes to copy.
+    // It throws if the program is copying a block that contains an unpinned Go
+    // pointer into non-Go memory.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckMemmove2(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
@@ -118,6 +142,14 @@ namespace golang::runtime
         cgoCheckTypedBlock(typ, src, off, size);
     }
 
+    // cgoCheckSliceCopy is called when copying n elements of a slice.
+    // src and dst are pointers to the first element of the slice.
+    // typ is the element type of the slice.
+    // It throws if the program is copying slice elements that contain unpinned Go
+    // pointers into non-Go memory.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckSliceCopy(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
     {
         if(typ->PtrBytes == 0)
@@ -140,6 +172,12 @@ namespace golang::runtime
         }
     }
 
+    // cgoCheckTypedBlock checks the block of memory at src, for up to size bytes,
+    // and throws if it finds an unpinned Go pointer. The type of the memory is typ,
+    // and src is off bytes into that type.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckTypedBlock(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes <= off)
@@ -215,6 +253,12 @@ namespace golang::runtime
         }
     }
 
+    // cgoCheckBits checks the block of memory at src, for up to size
+    // bytes, and throws if it finds an unpinned Go pointer. The gcbits mark each
+    // pointer value. The src pointer is off bytes into the gcbits.
+    //
+    //go:nosplit
+    //go:nowritebarrier
     void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size)
     {
         auto skipMask = off / goarch::PtrSize / 8;
@@ -253,6 +297,14 @@ namespace golang::runtime
         }
     }
 
+    // cgoCheckUsingType is like cgoCheckTypedBlock, but is a last ditch
+    // fall back to look for pointers in src using the type information.
+    // We only use this when looking at a value on the stack when the type
+    // uses a GC program, because otherwise it's more efficient to use the
+    // GC bits. This is called on the system stack.
+    //
+    //go:nowritebarrier
+    //go:systemstack
     void cgoCheckUsingType(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)

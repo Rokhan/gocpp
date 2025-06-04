@@ -19,6 +19,25 @@
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
+/*
+Package zlib implements reading and writing of zlib format compressed data,
+as specified in RFC 1950.
+
+The implementation provides filters that uncompress during reading
+and compress during writing.  For example, to write compressed data
+to a buffer:
+
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write([]byte("hello, world\n"))
+	w.Close()
+
+and to read that data back:
+
+	r, err := zlib.NewReader(&b)
+	io.Copy(os.Stdout, r)
+	r.Close()
+*/
 namespace golang::zlib
 {
     namespace rec
@@ -33,6 +52,9 @@ namespace golang::zlib
         using io::rec::Write;
     }
 
+    // ErrChecksum is returned when reading ZLIB data that has an invalid checksum.
+    // ErrDictionary is returned when reading ZLIB data that has an invalid dictionary.
+    // ErrHeader is returned when reading ZLIB data that has an invalid header.
     gocpp::error ErrChecksum = errors::New("zlib: invalid checksum"s);
     gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary"s);
     gocpp::error ErrHeader = errors::New("zlib: invalid header"s);
@@ -77,6 +99,9 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
+    // Resetter resets a ReadCloser returned by [NewReader] or [NewReaderDict]
+    // to switch to a new underlying Reader. This permits reusing a ReadCloser
+    // instead of allocating a new one.
     
     template<typename T>
     Resetter::Resetter(T& ref)
@@ -125,11 +150,23 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
+    // NewReader creates a new ReadCloser.
+    // Reads from the returned ReadCloser read and decompress data from r.
+    // If r does not implement [io.ByteReader], the decompressor may read more
+    // data than necessary from r.
+    // It is the caller's responsibility to call Close on the ReadCloser when done.
+    //
+    // The [io.ReadCloser] returned by NewReader also implements [Resetter].
     std::tuple<io::ReadCloser, struct gocpp::error> NewReader(io::Reader r)
     {
         return NewReaderDict(r, nullptr);
     }
 
+    // NewReaderDict is like [NewReader] but uses a preset dictionary.
+    // NewReaderDict ignores the dictionary if the compressed data does not refer to it.
+    // If the compressed data refers to a different dictionary, NewReaderDict returns [ErrDictionary].
+    //
+    // The ReadCloser returned by NewReaderDict also implements [Resetter].
     std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         auto z = new(reader);
@@ -172,6 +209,9 @@ namespace golang::zlib
         return {n, io::go_EOF};
     }
 
+    // Calling Close does not close the wrapped [io.Reader] originally passed to [NewReader].
+    // In order for the ZLIB checksum to be verified, the reader must be
+    // fully consumed until the [io.EOF].
     struct gocpp::error rec::Close(struct reader* z)
     {
         if(z->err != nullptr && z->err != io::go_EOF)

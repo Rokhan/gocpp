@@ -20,6 +20,9 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
+    // PrimeRK is the prime base used in Rabin-Karp algorithm.
+    // HashStr returns the hash and the appropriate multiplicative
+    // factor for use in Rabin-Karp algorithm.
 
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
@@ -82,6 +85,7 @@ namespace golang::main
         return p->value;
     }
 
+    // from cmp/cmp.go
 
     template<typename T>
     T Or(gocpp::slice<T> vals)

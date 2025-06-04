@@ -20,6 +20,7 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Signbit reports whether x is negative or negative zero.
     bool Signbit(double x)
     {
         return Float64bits(x) & (1 << 63) != 0;

@@ -82,10 +82,35 @@ namespace golang::runtime
         using atomic::rec::Swap;
     }
 
+    // NOTE(rsc): Everything here could use cas if contention became an issue.
+    // profInsertLock protects changes to the start of all *bucket linked lists
+    // profBlockLock protects the contents of every blockRecord struct
+    // profMemActiveLock protects the active field of every memRecord struct
+    // profMemFutureLock is a set of locks that protect the respective elements
+    // of the future array of every memRecord struct
     mutex profInsertLock;
     mutex profBlockLock;
     mutex profMemActiveLock;
     gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    // profile types
+    // size of bucket hash table
+    // maxStack is the max depth of stack to record in bucket.
+    // Note that it's only used internally as a guard against
+    // wildly out-of-bounds slicing of the PCs that come after
+    // a bucket struct, and it could increase in the future.
+    // A bucket holds per-call-stack profiling information.
+    // The representation is a bit sleazy, inherited from C.
+    // This struct defines the bucket header. It is followed in
+    // memory by the stack words and then the actual record
+    // data, either a memRecord or a blockRecord.
+    //
+    // Per-call-stack profiling information.
+    // Lookup by hashing call stack into a linked-list hash table.
+    //
+    // None of the fields in this bucket header are modified after
+    // creation, including its next and allnext links.
+    //
+    // No heap pointers.
     
     template<typename T> requires gocpp::GoStruct<T>
     bucket::operator T()
@@ -133,6 +158,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A memRecord is the bucket data for a bucket of type memProfile,
+    // part of the memory profile.
     
     template<typename T> requires gocpp::GoStruct<T>
     memRecord::operator T()
@@ -165,6 +192,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // memRecordCycle
     
     template<typename T> requires gocpp::GoStruct<T>
     memRecordCycle::operator T()
@@ -203,6 +231,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // add accumulates b into a. It does not zero b.
     void rec::add(struct memRecordCycle* a, struct memRecordCycle* b)
     {
         a->allocs += b->allocs;
@@ -211,6 +240,8 @@ namespace golang::runtime
         a->free_bytes += b->free_bytes;
     }
 
+    // A blockRecord is the bucket data for a bucket of type blockProfile,
+    // which is used in blocking and mutex profiles.
     
     template<typename T> requires gocpp::GoStruct<T>
     blockRecord::operator T()
@@ -249,6 +280,10 @@ namespace golang::runtime
     atomic::UnsafePointer buckhash;
     mProfCycleHolder mProfCycle;
     // // *bucket
+    // mProfCycleHolder holds the global heap profile cycle number (wrapped at
+    // mProfCycleWrap, stored starting at bit 1), and a flag (stored at bit 0) to
+    // indicate whether future[cycle] in all buckets has been queued to flush into
+    // the active profile.
     
     template<typename T> requires gocpp::GoStruct<T>
     mProfCycleHolder::operator T()
@@ -278,6 +313,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // read returns the current cycle count.
     uint32_t rec::read(struct mProfCycleHolder* c)
     {
         uint32_t cycle;
@@ -286,6 +322,8 @@ namespace golang::runtime
         return cycle;
     }
 
+    // setFlushed sets the flushed flag. It returns the current cycle count and the
+    // previous value of the flushed flag.
     std::tuple<uint32_t, bool> rec::setFlushed(struct mProfCycleHolder* c)
     {
         uint32_t cycle;
@@ -303,6 +341,8 @@ namespace golang::runtime
         }
     }
 
+    // increment increases the cycle count by one, wrapping the value at
+    // mProfCycleWrap. It clears the flushed flag.
     void rec::increment(struct mProfCycleHolder* c)
     {
         for(; ; )
@@ -318,6 +358,7 @@ namespace golang::runtime
         }
     }
 
+    // newBucket allocates a bucket with the given type and number of stack entries.
     struct bucket* newBucket(golang::runtime::bucketType typ, int nstk)
     {
         auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
@@ -348,6 +389,7 @@ namespace golang::runtime
         return b;
     }
 
+    // stk returns the slice in b holding the stack.
     gocpp::slice<uintptr_t> rec::stk(struct bucket* b)
     {
         auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), gocpp::Sizeof<bucket>()));
@@ -358,6 +400,7 @@ namespace golang::runtime
         return stk.make_slice(, b->nstk, b->nstk);
     }
 
+    // mp returns the memRecord associated with the memProfile bucket b.
     struct memRecord* rec::mp(struct bucket* b)
     {
         if(b->typ != memProfile)
@@ -368,6 +411,7 @@ namespace golang::runtime
         return (memRecord*)(data);
     }
 
+    // bp returns the blockRecord associated with the blockProfile bucket b.
     struct blockRecord* rec::bp(struct bucket* b)
     {
         if(b->typ != blockProfile && b->typ != mutexProfile)
@@ -378,6 +422,7 @@ namespace golang::runtime
         return (blockRecord*)(data);
     }
 
+    // Return the bucket for stk[0:nstk], allocating new bucket if needed.
     struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
     {
         auto bh = (runtime::buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
@@ -396,6 +441,7 @@ namespace golang::runtime
             }
             unlock(& profInsertLock);
         }
+        // Hash stack.
         uintptr_t h = {};
         for(auto [gocpp_ignored, pc] : stk)
         {
@@ -471,11 +517,26 @@ namespace golang::runtime
         return true;
     }
 
+    // mProf_NextCycle publishes the next heap profile cycle and creates a
+    // fresh heap profile cycle. This operation is fast and can be done
+    // during STW. The caller must call mProf_Flush before calling
+    // mProf_NextCycle again.
+    //
+    // This is called by mark termination during STW so allocations and
+    // frees after the world is started again count towards a new heap
+    // profiling cycle.
     void mProf_NextCycle()
     {
         rec::increment(gocpp::recv(mProfCycle));
     }
 
+    // mProf_Flush flushes the events from the current heap profiling
+    // cycle into the active profile. After this it is safe to start a new
+    // heap profiling cycle with mProf_NextCycle.
+    //
+    // This is called by GC after mark termination starts the world. In
+    // contrast with mProf_NextCycle, this is somewhat expensive, but safe
+    // to do concurrently.
     void mProf_Flush()
     {
         auto [cycle, alreadyFlushed] = rec::setFlushed(gocpp::recv(mProfCycle));
@@ -491,6 +552,10 @@ namespace golang::runtime
         unlock(& profMemActiveLock);
     }
 
+    // mProf_FlushLocked flushes the events from the heap profiling cycle at index
+    // into the active profile. The caller must hold the lock for the active profile
+    // (profMemActiveLock) and for the profiling cycle at index
+    // (profMemFutureLock[index]).
     void mProf_FlushLocked(uint32_t index)
     {
         assertLockHeld(& profMemActiveLock);
@@ -505,6 +570,10 @@ namespace golang::runtime
         }
     }
 
+    // mProf_PostSweep records that all sweep frees for this GC cycle have
+    // completed. This has the effect of publishing the heap profile
+    // snapshot as of the last mark termination without advancing the heap
+    // profile cycle.
     void mProf_PostSweep()
     {
         auto cycle = rec::read(gocpp::recv(mProfCycle)) + 1;
@@ -516,6 +585,7 @@ namespace golang::runtime
         unlock(& profMemActiveLock);
     }
 
+    // Called by malloc to record a profiled block.
     void mProf_Malloc(unsafe::Pointer p, uintptr_t size)
     {
         gocpp::array<uintptr_t, maxStack> stk = {};
@@ -534,6 +604,7 @@ namespace golang::runtime
         });
     }
 
+    // Called when freeing a profiled block.
     void mProf_Free(struct bucket* b, uintptr_t size)
     {
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 1) % uint32_t(len(memRecord {}.future));
@@ -546,6 +617,12 @@ namespace golang::runtime
     }
 
     uint64_t blockprofilerate;
+    // SetBlockProfileRate controls the fraction of goroutine blocking events
+    // that are reported in the blocking profile. The profiler aims to sample
+    // an average of one blocking event per rate nanoseconds spent blocked.
+    //
+    // To include every blocking event in the profile, pass rate = 1.
+    // To turn off profiling entirely, pass rate <= 0.
     void SetBlockProfileRate(int rate)
     {
         int64_t r = {};
@@ -582,6 +659,8 @@ namespace golang::runtime
         }
     }
 
+    // blocksampled returns true for all events where cycles >= rate. Shorter
+    // events have a cycles/rate random chance of returning true.
     bool blocksampled(int64_t cycles, int64_t rate)
     {
         if(rate <= 0 || (rate > cycles && cheaprand64() % rate > cycles))
@@ -607,6 +686,64 @@ namespace golang::runtime
         saveBlockEventStack(cycles, rate, stk.make_slice(0, nstk), which);
     }
 
+    // lockTimer assists with profiling contention on runtime-internal locks.
+    //
+    // There are several steps between the time that an M experiences contention and
+    // when that contention may be added to the profile. This comes from our
+    // constraints: We need to keep the critical section of each lock small,
+    // especially when those locks are contended. The reporting code cannot acquire
+    // new locks until the M has released all other locks, which means no memory
+    // allocations and encourages use of (temporary) M-local storage.
+    //
+    // The M will have space for storing one call stack that caused contention, and
+    // for the magnitude of that contention. It will also have space to store the
+    // magnitude of additional contention the M caused, since it only has space to
+    // remember one call stack and might encounter several contention events before
+    // it releases all of its locks and is thus able to transfer the local buffer
+    // into the profile.
+    //
+    // The M will collect the call stack when it unlocks the contended lock. That
+    // minimizes the impact on the critical section of the contended lock, and
+    // matches the mutex profile's behavior for contention in sync.Mutex: measured
+    // at the Unlock method.
+    //
+    // The profile for contention on sync.Mutex blames the caller of Unlock for the
+    // amount of contention experienced by the callers of Lock which had to wait.
+    // When there are several critical sections, this allows identifying which of
+    // them is responsible.
+    //
+    // Matching that behavior for runtime-internal locks will require identifying
+    // which Ms are blocked on the mutex. The semaphore-based implementation is
+    // ready to allow that, but the futex-based implementation will require a bit
+    // more work. Until then, we report contention on runtime-internal locks with a
+    // call stack taken from the unlock call (like the rest of the user-space
+    // "mutex" profile), but assign it a duration value based on how long the
+    // previous lock call took (like the user-space "block" profile).
+    //
+    // Thus, reporting the call stacks of runtime-internal lock contention is
+    // guarded by GODEBUG for now. Set GODEBUG=runtimecontentionstacks=1 to enable.
+    //
+    // TODO(rhysh): plumb through the delay duration, remove GODEBUG, update comment
+    //
+    // The M will track this by storing a pointer to the lock; lock/unlock pairs for
+    // runtime-internal locks are always on the same M.
+    //
+    // Together, that demands several steps for recording contention. First, when
+    // finally acquiring a contended lock, the M decides whether it should plan to
+    // profile that event by storing a pointer to the lock in its "to be profiled
+    // upon unlock" field. If that field is already set, it uses the relative
+    // magnitudes to weight a random choice between itself and the other lock, with
+    // the loser's time being added to the "additional contention" field. Otherwise
+    // if the M's call stack buffer is occupied, it does the comparison against that
+    // sample's magnitude.
+    //
+    // Second, having unlocked a mutex the M checks to see if it should capture the
+    // call stack into its local buffer. Finally, when the M unlocks its last mutex,
+    // it transfers the local buffer into the profile. As part of that step, it also
+    // transfers any "additional contention" time to the profile. Any lock
+    // contention that it experiences while adding samples to the profile will be
+    // recorded later as "additional contention" and not include a call stack, to
+    // avoid an echo.
     
     template<typename T> requires gocpp::GoStruct<T>
     lockTimer::operator T()
@@ -756,6 +893,9 @@ namespace golang::runtime
         prof->cycles = cycles;
     }
 
+    // From unlock2, we might not be holding a p in this code.
+    //
+    //go:nowritebarrierrec
     void rec::recordUnlock(struct mLockProfile* prof, struct mutex* l)
     {
         if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
@@ -849,6 +989,13 @@ namespace golang::runtime
     }
 
     uint64_t mutexprofilerate;
+    // SetMutexProfileFraction controls the fraction of mutex contention events
+    // that are reported in the mutex profile. On average 1/rate events are
+    // reported. The previous rate is returned.
+    //
+    // To turn off profiling entirely, pass rate 0.
+    // To just read the current rate, pass rate < 0.
+    // (For n>1 the details of sampling may change.)
     int SetMutexProfileFraction(int rate)
     {
         if(rate < 0)
@@ -860,6 +1007,7 @@ namespace golang::runtime
         return int(old);
     }
 
+    //go:linkname mutexevent sync.event
     void mutexevent(int64_t cycles, int skip)
     {
         if(cycles < 0)
@@ -873,6 +1021,7 @@ namespace golang::runtime
         }
     }
 
+    // A StackRecord describes a single execution stack.
     
     template<typename T> requires gocpp::GoStruct<T>
     StackRecord::operator T()
@@ -902,6 +1051,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Stack returns the stack trace associated with the record,
+    // a prefix of r.Stack0.
     gocpp::slice<uintptr_t> rec::Stack(struct StackRecord* r)
     {
         for(auto [i, v] : r->Stack0)
@@ -914,8 +1065,27 @@ namespace golang::runtime
         return r->Stack0.make_slice(0);
     }
 
+    // MemProfileRate controls the fraction of memory allocations
+    // that are recorded and reported in the memory profile.
+    // The profiler aims to sample an average of
+    // one allocation per MemProfileRate bytes allocated.
+    //
+    // To include every allocated block in the profile, set MemProfileRate to 1.
+    // To turn off profiling entirely, set MemProfileRate to 0.
+    //
+    // The tools that process the memory profiles assume that the
+    // profile rate is constant across the lifetime of the program
+    // and equal to the current value. Programs that change the
+    // memory profiling rate should do so just once, as early as
+    // possible in the execution of the program (for example,
+    // at the beginning of main).
     int MemProfileRate = 512 * 1024;
+    // disableMemoryProfiling is set by the linker if runtime.MemProfile
+    // is not used and the link type guarantees nobody else could use it
+    // elsewhere.
     bool disableMemoryProfiling;
+    // A MemProfileRecord describes the live objects allocated
+    // by a particular call sequence (stack trace).
     
     template<typename T> requires gocpp::GoStruct<T>
     MemProfileRecord::operator T()
@@ -957,16 +1127,20 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // InUseBytes returns the number of bytes in use (AllocBytes - FreeBytes).
     int64_t rec::InUseBytes(struct MemProfileRecord* r)
     {
         return r->AllocBytes - r->FreeBytes;
     }
 
+    // InUseObjects returns the number of objects in use (AllocObjects - FreeObjects).
     int64_t rec::InUseObjects(struct MemProfileRecord* r)
     {
         return r->AllocObjects - r->FreeObjects;
     }
 
+    // Stack returns the stack trace associated with the record,
+    // a prefix of r.Stack0.
     gocpp::slice<uintptr_t> rec::Stack(struct MemProfileRecord* r)
     {
         for(auto [i, v] : r->Stack0)
@@ -979,6 +1153,27 @@ namespace golang::runtime
         return r->Stack0.make_slice(0);
     }
 
+    // MemProfile returns a profile of memory allocated and freed per allocation
+    // site.
+    //
+    // MemProfile returns n, the number of records in the current memory profile.
+    // If len(p) >= n, MemProfile copies the profile into p and returns n, true.
+    // If len(p) < n, MemProfile does not change p and returns n, false.
+    //
+    // If inuseZero is true, the profile includes allocation records
+    // where r.AllocBytes > 0 but r.AllocBytes == r.FreeBytes.
+    // These are sites where memory was allocated, but it has all
+    // been released back to the runtime.
+    //
+    // The returned profile may be up to two garbage collection cycles old.
+    // This is to avoid skewing the profile toward allocations; because
+    // allocations happen in real time but frees are delayed until the garbage
+    // collector performs sweeping, the profile only accounts for allocations
+    // that have had a chance to be freed by the garbage collector.
+    //
+    // Most clients should use the runtime/pprof package or
+    // the testing package's -test.memprofile flag instead
+    // of calling MemProfile directly.
     std::tuple<int, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero)
     {
         int n;
@@ -1040,6 +1235,7 @@ namespace golang::runtime
         return {n, ok};
     }
 
+    // Write b's data to r.
     void record(struct MemProfileRecord* r, struct bucket* b)
     {
         auto mp = rec::mp(gocpp::recv(b));
@@ -1078,6 +1274,8 @@ namespace golang::runtime
         unlock(& profMemActiveLock);
     }
 
+    // BlockProfileRecord describes blocking events originated
+    // at a particular call sequence (stack trace).
     
     template<typename T> requires gocpp::GoStruct<T>
     BlockProfileRecord::operator T()
@@ -1110,6 +1308,13 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // BlockProfile returns n, the number of records in the current blocking profile.
+    // If len(p) >= n, BlockProfile copies the profile into p and returns n, true.
+    // If len(p) < n, BlockProfile does not change p and returns n, false.
+    //
+    // Most clients should use the [runtime/pprof] package or
+    // the [testing] package's -test.blockprofile flag instead
+    // of calling BlockProfile directly.
     std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p)
     {
         int n;
@@ -1157,6 +1362,12 @@ namespace golang::runtime
         return {n, ok};
     }
 
+    // MutexProfile returns n, the number of records in the current mutex profile.
+    // If len(p) >= n, MutexProfile copies the profile into p and returns n, true.
+    // Otherwise, MutexProfile does not change p, and returns n, false.
+    //
+    // Most clients should use the [runtime/pprof] package
+    // instead of calling MutexProfile directly.
     std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p)
     {
         int n;
@@ -1188,6 +1399,12 @@ namespace golang::runtime
         return {n, ok};
     }
 
+    // ThreadCreateProfile returns n, the number of records in the thread creation profile.
+    // If len(p) >= n, ThreadCreateProfile copies the profile into p and returns n, true.
+    // If len(p) < n, ThreadCreateProfile does not change p and returns n, false.
+    //
+    // Most clients should use the runtime/pprof package instead
+    // of calling ThreadCreateProfile directly.
     std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p)
     {
         int n;
@@ -1210,6 +1427,7 @@ namespace golang::runtime
         return {n, ok};
     }
 
+    //go:linkname runtime_goroutineProfileWithLabels runtime/pprof.runtime_goroutineProfileWithLabels
     std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
     {
         int n;
@@ -1217,6 +1435,7 @@ namespace golang::runtime
         return goroutineProfileWithLabels(p, labels);
     }
 
+    // labels may be nil. If labels is non-nil, it must have the same length as p.
     std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
     {
         int n;
@@ -1283,6 +1502,17 @@ namespace golang::runtime
     gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](auto& x) {
         x.sema = 1;
     });
+    // goroutineProfileState indicates the status of a goroutine's stack for the
+    // current in-progress goroutine profile. Goroutines' stacks are initially
+    // "Absent" from the profile, and end up "Satisfied" by the time the profile is
+    // complete. While a goroutine's stack is being captured, its
+    // goroutineProfileState will be "InProgress" and it will not be able to run
+    // until the capture completes and the state moves to "Satisfied".
+    //
+    // Some goroutines (the finalizer goroutine, which at various times can be
+    // either a "system" or a "user" goroutine, and the goroutine that is
+    // coordinating the profile, any goroutines created during the profile) move
+    // directly to the "Satisfied" state.
     runtime::goroutineProfileState rec::Load(golang::runtime::goroutineProfileStateHolder* p)
     {
         return goroutineProfileState(rec::Load(gocpp::recv((atomic::Uint32*)(p))));
@@ -1365,6 +1595,10 @@ namespace golang::runtime
         return {n, true};
     }
 
+    // tryRecordGoroutineProfileWB asserts that write barriers are allowed and calls
+    // tryRecordGoroutineProfile.
+    //
+    //go:yeswritebarrierrec
     void tryRecordGoroutineProfileWB(struct g* gp1)
     {
         if(rec::ptr(gocpp::recv(getg()->m->p)) == nullptr)
@@ -1374,6 +1608,9 @@ namespace golang::runtime
         tryRecordGoroutineProfile(gp1, osyield);
     }
 
+    // tryRecordGoroutineProfile ensures that gp1 has the appropriate representation
+    // in the current goroutine profile: either that it should not be profiled, or
+    // that a snapshot of its call stack and labels are now in the profile.
     void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield)
     {
         if(readgstatus(gp1) == _Gdead)
@@ -1406,6 +1643,13 @@ namespace golang::runtime
         }
     }
 
+    // doRecordGoroutineProfile writes gp1's call stack and labels to an in-progress
+    // goroutine profile. Preemption is disabled.
+    //
+    // This may be called via tryRecordGoroutineProfile in two ways: by the
+    // goroutine that is coordinating the goroutine profile (running on its own
+    // stack), or from the scheduler in preparation to execute gp1 (running on the
+    // system stack).
     void doRecordGoroutineProfile(struct g* gp1)
     {
         if(readgstatus(gp1) == _Grunning)
@@ -1492,6 +1736,12 @@ namespace golang::runtime
         return {n, ok};
     }
 
+    // GoroutineProfile returns n, the number of records in the active goroutine stack profile.
+    // If len(p) >= n, GoroutineProfile copies the profile into p and returns n, true.
+    // If len(p) < n, GoroutineProfile does not change p and returns n, false.
+    //
+    // Most clients should use the [runtime/pprof] package instead
+    // of calling GoroutineProfile directly.
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p)
     {
         int n;
@@ -1510,6 +1760,10 @@ namespace golang::runtime
         }
     }
 
+    // Stack formats a stack trace of the calling goroutine into buf
+    // and returns the number of bytes written to buf.
+    // If all is true, Stack formats stack traces of all other goroutines
+    // into buf after the trace for the current goroutine.
     int Stack(gocpp::slice<unsigned char> buf, bool all)
     {
         worldStop stw = {};

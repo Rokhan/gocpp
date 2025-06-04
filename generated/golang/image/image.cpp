@@ -15,6 +15,39 @@
 #include "golang/image/color/ycbcr.h"
 #include "golang/image/geom.h"
 
+// Package image implements a basic 2-D image library.
+//
+// The fundamental interface is called [Image]. An [Image] contains colors, which
+// are described in the image/color package.
+//
+// Values of the [Image] interface are created either by calling functions such
+// as [NewRGBA] and [NewPaletted], or by calling [Decode] on an [io.Reader] containing
+// image data in a format such as GIF, JPEG or PNG. Decoding any particular
+// image format requires the prior registration of a decoder function.
+// Registration is typically automatic as a side effect of initializing that
+// format's package so that, to decode a PNG image, it suffices to have
+//
+//	import _ "image/png"
+//
+// in a program's main package. The _ means to import a package purely for its
+// initialization side effects.
+//
+// See "The Go image package" for more details:
+// https://golang.org/doc/articles/image_package.html
+//
+// # Security Considerations
+//
+// The image package can be used to parse arbitrarily large images, which can
+// cause resource exhaustion on machines which do not have enough memory to
+// store them. When operating on arbitrary images, [DecodeConfig] should be called
+// before [Decode], so that the program can decide whether the image, as defined
+// in the returned header, can be safely decoded with the available resources. A
+// call to [Decode] which produces an extremely large image, as defined in the
+// header returned by [DecodeConfig], is not considered a security issue,
+// regardless of whether the image is itself malformed or not. A call to
+// [DecodeConfig] which returns a header which does not match the image returned
+// by [Decode] may be considered a security issue, and should be reported per the
+// [Go Security Policy](https://go.dev/security/policy).
 namespace golang::image
 {
     namespace rec
@@ -25,6 +58,7 @@ namespace golang::image
         using color::rec::RGBA;
     }
 
+    // Config holds an image's color model and dimensions.
     
     template<typename T> requires gocpp::GoStruct<T>
     Config::operator T()
@@ -60,6 +94,8 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
+    // Image is a finite rectangular grid of [color.Color] values taken from a color
+    // model.
     
     template<typename T>
     Image::Image(T& ref)
@@ -138,6 +174,8 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
+    // RGBA64Image is an [Image] whose pixels can be converted directly to a
+    // color.RGBA64.
     
     template<typename T>
     RGBA64Image::RGBA64Image(T& ref)
@@ -186,6 +224,11 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
+    // PalettedImage is an image whose colors may come from a limited palette.
+    // If m is a PalettedImage and m.ColorModel() returns a [color.Palette] p,
+    // then m.At(x, y) should be equivalent to p[m.ColorIndexAt(x, y)]. If m's
+    // color model is not a color.Palette, then ColorIndexAt's behavior is
+    // undefined.
     
     template<typename T>
     PalettedImage::PalettedImage(T& ref)
@@ -234,6 +277,13 @@ namespace golang::image
         return value.PrintTo(os);
     }
 
+    // pixelBufferLength returns the length of the []uint8 typed Pix slice field
+    // for the NewXxx functions. Conceptually, this is just (bpp * width * height),
+    // but this function panics if at least one of those is negative or if the
+    // computation would overflow the int type.
+    //
+    // This panics instead of returning an error because of backwards
+    // compatibility. The NewXxx functions do not return an error.
     int pixelBufferLength(int bytesPerPixel, struct Rectangle r, std::string imageTypeName)
     {
         auto totalLength = mul3NonNeg(bytesPerPixel, rec::Dx(gocpp::recv(r)), rec::Dy(gocpp::recv(r)));
@@ -244,6 +294,7 @@ namespace golang::image
         return totalLength;
     }
 
+    // RGBA is an in-memory image whose At method returns [color.RGBA] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     RGBA::operator T()
@@ -320,6 +371,8 @@ namespace golang::image
         return color::RGBA {s[0], s[1], s[2], s[3]};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct RGBA* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
@@ -368,6 +421,8 @@ namespace golang::image
         s[3] = c->A;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct RGBA* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -383,6 +438,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct RGBA* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -405,6 +461,7 @@ namespace golang::image
         return true;
     }
 
+    // NewRGBA returns a new [RGBA] image with the given bounds.
     struct RGBA* NewRGBA(struct Rectangle r)
     {
         return gocpp::InitPtr<RGBA>([=](auto& x) {
@@ -414,6 +471,7 @@ namespace golang::image
         });
     }
 
+    // RGBA64 is an in-memory image whose At method returns [color.RGBA64] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     RGBA64::operator T()
@@ -475,6 +533,8 @@ namespace golang::image
         return color::RGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct RGBA64* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
@@ -517,6 +577,8 @@ namespace golang::image
         s[7] = uint8_t(c->A);
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct RGBA64* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -532,6 +594,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct RGBA64* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -554,6 +617,7 @@ namespace golang::image
         return true;
     }
 
+    // NewRGBA64 returns a new [RGBA64] image with the given bounds.
     struct RGBA64* NewRGBA64(struct Rectangle r)
     {
         return gocpp::InitPtr<RGBA64>([=](auto& x) {
@@ -563,6 +627,7 @@ namespace golang::image
         });
     }
 
+    // NRGBA is an in-memory image whose At method returns [color.NRGBA] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     NRGBA::operator T()
@@ -630,6 +695,8 @@ namespace golang::image
         return color::NRGBA {s[0], s[1], s[2], s[3]};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct NRGBA* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
@@ -685,6 +752,8 @@ namespace golang::image
         s[3] = c->A;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct NRGBA* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -700,6 +769,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct NRGBA* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -722,6 +792,7 @@ namespace golang::image
         return true;
     }
 
+    // NewNRGBA returns a new [NRGBA] image with the given bounds.
     struct NRGBA* NewNRGBA(struct Rectangle r)
     {
         return gocpp::InitPtr<NRGBA>([=](auto& x) {
@@ -731,6 +802,7 @@ namespace golang::image
         });
     }
 
+    // NRGBA64 is an in-memory image whose At method returns [color.NRGBA64] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     NRGBA64::operator T()
@@ -798,6 +870,8 @@ namespace golang::image
         return color::NRGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct NRGBA64* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 8;
@@ -865,6 +939,8 @@ namespace golang::image
         s[7] = uint8_t(c->A);
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct NRGBA64* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -880,6 +956,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct NRGBA64* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -902,6 +979,7 @@ namespace golang::image
         return true;
     }
 
+    // NewNRGBA64 returns a new [NRGBA64] image with the given bounds.
     struct NRGBA64* NewNRGBA64(struct Rectangle r)
     {
         return gocpp::InitPtr<NRGBA64>([=](auto& x) {
@@ -911,6 +989,7 @@ namespace golang::image
         });
     }
 
+    // Alpha is an in-memory image whose At method returns [color.Alpha] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Alpha::operator T()
@@ -978,6 +1057,8 @@ namespace golang::image
         return color::Alpha {p->Pix[i]};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct Alpha* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
@@ -1013,6 +1094,8 @@ namespace golang::image
         p->Pix[i] = c->A;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct Alpha* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1028,6 +1111,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct Alpha* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -1050,6 +1134,7 @@ namespace golang::image
         return true;
     }
 
+    // NewAlpha returns a new [Alpha] image with the given bounds.
     struct Alpha* NewAlpha(struct Rectangle r)
     {
         return gocpp::InitPtr<Alpha>([=](auto& x) {
@@ -1059,6 +1144,7 @@ namespace golang::image
         });
     }
 
+    // Alpha16 is an in-memory image whose At method returns [color.Alpha16] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Alpha16::operator T()
@@ -1125,6 +1211,8 @@ namespace golang::image
         return color::Alpha16 {(uint16_t(p->Pix[i + 0]) << 8) | uint16_t(p->Pix[i + 1])};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct Alpha16* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
@@ -1164,6 +1252,8 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c->A);
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct Alpha16* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1179,6 +1269,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct Alpha16* p)
     {
         if(rec::Empty(gocpp::recv(p->Rect)))
@@ -1201,6 +1292,7 @@ namespace golang::image
         return true;
     }
 
+    // NewAlpha16 returns a new [Alpha16] image with the given bounds.
     struct Alpha16* NewAlpha16(struct Rectangle r)
     {
         return gocpp::InitPtr<Alpha16>([=](auto& x) {
@@ -1210,6 +1302,7 @@ namespace golang::image
         });
     }
 
+    // Gray is an in-memory image whose At method returns [color.Gray] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Gray::operator T()
@@ -1277,6 +1370,8 @@ namespace golang::image
         return color::Gray {p->Pix[i]};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct Gray* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
@@ -1313,6 +1408,8 @@ namespace golang::image
         p->Pix[i] = c->Y;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct Gray* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1328,11 +1425,13 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct Gray* p)
     {
         return true;
     }
 
+    // NewGray returns a new [Gray] image with the given bounds.
     struct Gray* NewGray(struct Rectangle r)
     {
         return gocpp::InitPtr<Gray>([=](auto& x) {
@@ -1342,6 +1441,7 @@ namespace golang::image
         });
     }
 
+    // Gray16 is an in-memory image whose At method returns [color.Gray16] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Gray16::operator T()
@@ -1408,6 +1508,8 @@ namespace golang::image
         return color::Gray16 {(uint16_t(p->Pix[i + 0]) << 8) | uint16_t(p->Pix[i + 1])};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct Gray16* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 2;
@@ -1448,6 +1550,8 @@ namespace golang::image
         p->Pix[i + 1] = uint8_t(c->Y);
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct Gray16* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1463,11 +1567,13 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct Gray16* p)
     {
         return true;
     }
 
+    // NewGray16 returns a new [Gray16] image with the given bounds.
     struct Gray16* NewGray16(struct Rectangle r)
     {
         return gocpp::InitPtr<Gray16>([=](auto& x) {
@@ -1477,6 +1583,7 @@ namespace golang::image
         });
     }
 
+    // CMYK is an in-memory image whose At method returns [color.CMYK] values.
     
     template<typename T> requires gocpp::GoStruct<T>
     CMYK::operator T()
@@ -1544,6 +1651,8 @@ namespace golang::image
         return color::CMYK {s[0], s[1], s[2], s[3]};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct CMYK* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 4;
@@ -1593,6 +1702,8 @@ namespace golang::image
         s[3] = c->K;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct CMYK* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1608,11 +1719,13 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct CMYK* p)
     {
         return true;
     }
 
+    // NewCMYK returns a new CMYK image with the given bounds.
     struct CMYK* NewCMYK(struct Rectangle r)
     {
         return gocpp::InitPtr<CMYK>([=](auto& x) {
@@ -1622,6 +1735,7 @@ namespace golang::image
         });
     }
 
+    // Paletted is an in-memory image of uint8 indices into a given palette.
     
     template<typename T> requires gocpp::GoStruct<T>
     Paletted::operator T()
@@ -1704,6 +1818,8 @@ namespace golang::image
         return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
+    // PixOffset returns the index of the first element of Pix that corresponds to
+    // the pixel at (x, y).
     int rec::PixOffset(struct Paletted* p, int x, int y)
     {
         return (y - p->Rect.Min.Y) * p->Stride + (x - p->Rect.Min.X) * 1;
@@ -1749,6 +1865,8 @@ namespace golang::image
         p->Pix[i] = index;
     }
 
+    // SubImage returns an image representing the portion of the image p visible
+    // through r. The returned value shares pixels with the original image.
     struct Image rec::SubImage(struct Paletted* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
@@ -1767,6 +1885,7 @@ namespace golang::image
         });
     }
 
+    // Opaque scans the entire image and reports whether it is fully opaque.
     bool rec::Opaque(struct Paletted* p)
     {
         gocpp::array<bool, 256> present = {};
@@ -1795,6 +1914,8 @@ namespace golang::image
         return true;
     }
 
+    // NewPaletted returns a new [Paletted] image with the given width, height and
+    // palette.
     struct Paletted* NewPaletted(struct Rectangle r, color::Palette p)
     {
         return gocpp::InitPtr<Paletted>([=](auto& x) {

@@ -16,6 +16,10 @@
 #include "golang/reflect/value.h"
 #include "golang/sort/sort.h"
 
+// Package fmtsort provides a general stable ordering mechanism
+// for maps, on behalf of the fmt and text/template packages.
+// It is not guaranteed to be efficient and works only for types
+// that are valid map keys.
 namespace golang::fmtsort
 {
     namespace rec
@@ -42,6 +46,8 @@ namespace golang::fmtsort
         using reflect::rec::Value;
     }
 
+    // SortedMap represents a map's keys and values. The keys and values are
+    // aligned in index order: Value[i] is the value in the map corresponding to Key[i].
     
     template<typename T> requires gocpp::GoStruct<T>
     SortedMap::operator T()
@@ -90,6 +96,24 @@ namespace golang::fmtsort
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
     }
 
+    // Sort accepts a map and returns a SortedMap that has the same keys and
+    // values but in a stable sorted order according to the keys, modulo issues
+    // raised by unorderable key values such as NaNs.
+    //
+    // The ordering rules are more general than with Go's < operator:
+    //
+    //   - when applicable, nil compares low
+    //   - ints, floats, and strings order by <
+    //   - NaN compares less than non-NaN floats
+    //   - bool compares false before true
+    //   - complex compares real, then imag
+    //   - pointers compare by machine address
+    //   - channel values compare by machine address
+    //   - structs compare each field in turn
+    //   - arrays compare each element in turn.
+    //     Otherwise identical arrays compare by length.
+    //   - interface values compare first by reflect.Type describing the concrete type
+    //     and then by concrete value as described in the previous rules.
     struct SortedMap* Sort(reflect::Value mapValue)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
@@ -113,6 +137,10 @@ namespace golang::fmtsort
         return sorted;
     }
 
+    // compare compares two values of the same type. It returns -1, 0, 1
+    // according to whether a > b (1), a == b (0), or a < b (-1).
+    // If the types differ, it returns -1.
+    // See the comment on Sort for the comparison rules.
     int compare(reflect::Value aVal, reflect::Value bVal)
     {
         auto [aType, bType] = std::tuple{rec::Type(gocpp::recv(aVal)), rec::Type(gocpp::recv(bVal))};
@@ -341,6 +369,11 @@ namespace golang::fmtsort
         }
     }
 
+    // nilCompare checks whether either value is nil. If not, the boolean is false.
+    // If either value is nil, the boolean is true and the integer is the comparison
+    // value. The comparison is defined to be 0 if both are nil, otherwise the one
+    // nil value compares low. Both arguments must represent a chan, func,
+    // interface, map, pointer, or slice.
     std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal)
     {
         if(rec::IsNil(gocpp::recv(aVal)))
@@ -358,6 +391,7 @@ namespace golang::fmtsort
         return {0, false};
     }
 
+    // floatCompare compares two floating-point values. NaNs compare low.
     int floatCompare(double a, double b)
     {
         //Go switch emulation

@@ -72,6 +72,7 @@ namespace golang::main
 
     void main()
     {
+        // declarartion and cast extracted from reflect/value.go, line 1230
         go_any eface = {};
         unsafe::Pointer ptr = unsafe::Pointer(& eface);
         eface = *(go_any*)(ptr);

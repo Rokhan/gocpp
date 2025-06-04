@@ -20,6 +20,8 @@ namespace golang::sync
         using namespace mocklib::rec;
     }
 
+    // Approximation of notifyList in runtime/sema.go. Size and alignment must
+    // agree.
     
     template<typename T> requires gocpp::GoStruct<T>
     notifyList::operator T()

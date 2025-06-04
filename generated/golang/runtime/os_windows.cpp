@@ -75,6 +75,15 @@ namespace golang::runtime
         using atomic::rec::Add;
     }
 
+    // TODO(brainman): should not need those
+    // Following syscalls are available on every Windows PC.
+    // All these variables are set by the Windows executable
+    // loader before the Go program starts.
+    // Use ProcessPrng to generate cryptographically random data.
+    // Load ntdll.dll manually during startup, otherwise Mingw
+    // links wrong printf function to cgo executable (see issue
+    // 12030 for details).
+    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     runtime::stdFunction _AddVectoredContinueHandler;
     runtime::stdFunction _AddVectoredExceptionHandler;
     runtime::stdFunction _CloseHandle;
@@ -139,9 +148,12 @@ namespace golang::runtime
     gocpp::array<uint16_t, 13> powrprofdll = gocpp::array<uint16_t, 13> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 10> winmmdll = gocpp::array<uint16_t, 10> {'w', 'i', 'n', 'm', 'm', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 11> ws2_32dll = gocpp::array<uint16_t, 11> {'w', 's', '2', '_', '3', '2', '.', 'd', 'l', 'l', 0};
+    // Function to be called by windows CreateThread
+    // to start new os thread.
     void tstart_stdcall(struct m* newm)
     /* convertBlockStmt, nil block */;
 
+    // Init-time helper
     void wintls()
     /* convertBlockStmt, nil block */;
 
@@ -189,6 +201,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Stubs so tests can link correctly. These should never be called.
     int32_t open(unsigned char* name, int32_t mode, int32_t perm)
     {
         go_throw("unimplemented"s);
@@ -233,6 +246,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Call a Windows function with stdcall conventions,
+    // and switch to os stack during the call.
     void asmstdcall(unsafe::Pointer fn)
     /* convertBlockStmt, nil block */;
 
@@ -260,6 +275,7 @@ namespace golang::runtime
         sysDirectoryLen = l + 1;
     }
 
+    //go:linkname windows_GetSystemDirectory internal/syscall/windows.GetSystemDirectory
     std::string windows_GetSystemDirectory()
     {
         return unsafe::String(& sysDirectory[0], sysDirectoryLen);
@@ -371,16 +387,19 @@ namespace golang::runtime
         stdcall3(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(unsafe::Pointer(& params)), uintptr_t(unsafe::Pointer(& handle)));
     }
 
+    //go:nosplit
     uintptr_t getLoadLibrary()
     {
         return uintptr_t(unsafe::Pointer(_LoadLibraryW));
     }
 
+    //go:nosplit
     uintptr_t getLoadLibraryEx()
     {
         return uintptr_t(unsafe::Pointer(_LoadLibraryExW));
     }
 
+    //go:nosplit
     uintptr_t getGetProcAddress()
     {
         return uintptr_t(unsafe::Pointer(_GetProcAddress));
@@ -407,6 +426,7 @@ namespace golang::runtime
                 return int32_t(n);
             }
         }
+        // use GetSystemInfo if GetProcessAffinityMask fails
         systeminfo info = {};
         stdcall1(_GetSystemInfo, uintptr_t(unsafe::Pointer(& info)));
         return int32_t(info.dwnumberofprocessors);
@@ -419,10 +439,25 @@ namespace golang::runtime
         return uintptr_t(info.dwpagesize);
     }
 
+    // in sys_windows_386.s and sys_windows_amd64.s:
     uint32_t getlasterror()
     /* convertBlockStmt, nil block */;
 
     uint32_t timeBeginPeriodRetValue;
+    // osRelaxMinNS indicates that sysmon shouldn't osRelax if the next
+    // timer is less than 60 ms from now. Since osRelaxing may reduce
+    // timer resolution to 15.6 ms, this keeps timer error under roughly 1
+    // part in 4.
+    // osRelax is called by the scheduler when transitioning to and from
+    // all Ps being idle.
+    //
+    // Some versions of Windows have high resolution timer. For those
+    // versions osRelax is noop.
+    // For Windows versions without high resolution timer, osRelax
+    // adjusts the system-wide timer resolution. Go needs a
+    // high resolution timer while running and there's little extra cost
+    // if we're already using the CPU, but if all Ps are idle there's no
+    // need to consume extra power to drive the high-res timer.
     uint32_t osRelax(bool relax)
     {
         if(haveHighResTimer)
@@ -439,9 +474,17 @@ namespace golang::runtime
         }
     }
 
+    // haveHighResTimer indicates that the CreateWaitableTimerEx
+    // CREATE_WAITABLE_TIMER_HIGH_RESOLUTION flag is available.
     bool haveHighResTimer = false;
+    // createHighResTimer calls CreateWaitableTimerEx with
+    // CREATE_WAITABLE_TIMER_HIGH_RESOLUTION flag to create high
+    // resolution timer. createHighResTimer returns new timer
+    // handle or 0, if CreateWaitableTimerEx failed.
     uintptr_t createHighResTimer()
     {
+        // As per @jstarks, see
+        // https://github.com/golang/go/issues/8687#issuecomment-656259353
         auto _CREATE_WAITABLE_TIMER_HIGH_RESOLUTION = 0x00000002;
         auto _SYNCHRONIZE = 0x00100000;
         auto _TIMER_QUERY_STATE = 0x0001;
@@ -459,14 +502,28 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname canUseLongPaths os.canUseLongPaths
     bool canUseLongPaths;
+    // We want this to be large enough to hold the contents of sysDirectory, *plus*
+    // a slash and another component that itself is greater than MAX_PATH.
     gocpp::array<unsigned char, (_MAX_PATH + 1) * 2 + 1> longFileName;
+    // initLongPathSupport initializes the canUseLongPaths variable, which is
+    // linked into os.canUseLongPaths for determining whether or not long paths
+    // need to be fixed up. In the best case, this function is running on newer
+    // Windows 10 builds, which have a bit field member of the PEB called
+    // "IsLongPathAwareProcess." When this is set, we don't need to go through the
+    // error-prone fixup function in order to access long paths. So this init
+    // function first checks the Windows build number, sets the flag, and then
+    // tests to see if it's actually working. If everything checks out, then
+    // canUseLongPaths is set to true, and later when called, os.fixLongPath
+    // returns early without doing work.
     void initLongPathSupport()
     {
         auto IsLongPathAwareProcess = 0x80;
         auto PebBitFieldOffset = 3;
         auto OPEN_EXISTING = 3;
         auto ERROR_PATH_NOT_FOUND = 3;
+        // Check that we're ≥ 10.0.15063.
         uint32_t maj = {};
         uint32_t min = {};
         uint32_t build = {};
@@ -520,6 +577,7 @@ namespace golang::runtime
         stdcall2(_SetProcessPriorityBoost, currentProcess, 1);
     }
 
+    //go:nosplit
     int readRandom(gocpp::slice<unsigned char> r)
     {
         auto n = 0;
@@ -558,13 +616,17 @@ namespace golang::runtime
             p = p.make_slice(1);
         }
         stdcall1(_FreeEnvironmentStringsW, uintptr_t(strings));
+        // We call these all the way here, late in init, so that malloc works
+        // for the callback functions these generate.
         go_any fn = ctrlHandler;
         auto ctrlHandlerPC = compileCallback(*efaceOf(& fn), true);
         stdcall2(_SetConsoleCtrlHandler, ctrlHandlerPC, 1);
         monitorSuspendResume();
     }
 
+    // exiting is set to non-zero when the process is exiting.
     uint32_t exiting;
+    //go:nosplit
     void exit(int32_t code)
     {
         lock(& suspendLock);
@@ -572,6 +634,11 @@ namespace golang::runtime
         stdcall1(_ExitProcess, uintptr_t(code));
     }
 
+    // write1 must be nosplit because it's used as a last resort in
+    // functions like badmorestackg0. In such cases, we'll always take the
+    // ASCII path.
+    //
+    //go:nosplit
     int32_t write1(uintptr_t fd, unsafe::Pointer buf, int32_t n)
     {
         auto _STD_OUTPUT_HANDLE = ~ uintptr_t(10);
@@ -622,6 +689,8 @@ namespace golang::runtime
 
     gocpp::array<uint16_t, 1000> utf16ConsoleBack;
     mutex utf16ConsoleBackLock;
+    // writeConsole writes bufLen bytes from buf to the console File.
+    // It returns the number of bytes written.
     int writeConsole(uintptr_t handle, unsafe::Pointer buf, int32_t bufLen)
     {
         auto surr2 = (surrogateMin + surrogateMax + 1) / 2;
@@ -656,6 +725,9 @@ namespace golang::runtime
         return total;
     }
 
+    // writeConsoleUTF16 is the dedicated windows calls that correctly prints
+    // to the console regardless of the current code page. Input is utf-16 code points.
+    // The handle must be a console handle.
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b)
     {
         auto l = uint32_t(len(b));
@@ -668,6 +740,7 @@ namespace golang::runtime
         return;
     }
 
+    //go:nosplit
     int32_t semasleep(int64_t ns)
     {
         auto _WAIT_ABANDONED = 0x00000080;
@@ -743,6 +816,7 @@ namespace golang::runtime
         return - 1;
     }
 
+    //go:nosplit
     void semawakeup(struct m* mp)
     {
         if(stdcall1(_SetEvent, mp->waitsema) == 0)
@@ -755,6 +829,7 @@ namespace golang::runtime
         }
     }
 
+    //go:nosplit
     void semacreate(struct m* mp)
     {
         if(mp->waitsema != 0)
@@ -783,6 +858,12 @@ namespace golang::runtime
         }
     }
 
+    // May run with m.p==nil, so write barriers are not allowed. This
+    // function is called by newosproc0, so it is also required to
+    // operate without stack guards.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     void newosproc(struct m* mp)
     {
         auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(unsafe::Pointer(mp)), 0, 0);
@@ -799,6 +880,12 @@ namespace golang::runtime
         stdcall1(_CloseHandle, thandle);
     }
 
+    // Used by the C library build mode. On Linux this function would allocate a
+    // stack, but that's not necessary for Windows. No stack guards are present
+    // and the GC has not been initialized, so write barriers will fail.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     void newosproc0(struct m* mp, unsafe::Pointer stk)
     {
         go_throw("bad newosproc0"s);
@@ -809,26 +896,35 @@ namespace golang::runtime
         go_throw("exitThread"s);
     }
 
+    // Called to initialize a new m (including the bootstrap m).
+    // Called on the parent thread (main thread in case of bootstrap), can allocate memory.
     void mpreinit(struct m* mp)
     {
     }
 
+    //go:nosplit
     void sigsave(struct sigset* p)
     {
     }
 
+    //go:nosplit
     void msigrestore(struct sigset sigmask)
     {
     }
 
+    //go:nosplit
+    //go:nowritebarrierrec
     void clearSignalHandlers()
     {
     }
 
+    //go:nosplit
     void sigblock(bool exiting)
     {
     }
 
+    // Called to initialize a new m (including the bootstrap m).
+    // Called on the new thread, cannot allocate memory.
     void minit()
     {
         uintptr_t thandle = {};
@@ -851,6 +947,8 @@ namespace golang::runtime
             }
         }
         unlock(& mp->threadLock);
+        // Query the true stack base from the OS. Currently we're
+        // running on a small assumed stack.
         memoryBasicInformation mbi = {};
         auto res = stdcall3(_VirtualQuery, uintptr_t(unsafe::Pointer(& mbi)), uintptr_t(unsafe::Pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
@@ -871,6 +969,9 @@ namespace golang::runtime
         stackcheck();
     }
 
+    // Called from dropm to undo the effect of an minit.
+    //
+    //go:nosplit
     void unminit()
     {
         auto mp = getg()->m;
@@ -884,6 +985,10 @@ namespace golang::runtime
         mp->procid = 0;
     }
 
+    // Called from exitm, but not from drop, to undo the effect of thread-owned
+    // resources in minit, semacreate, or elsewhere. Do not take locks after calling this.
+    //
+    //go:nosplit
     void mdestroy(struct m* mp)
     {
         if(mp->highResTimer != 0)
@@ -903,9 +1008,13 @@ namespace golang::runtime
         }
     }
 
+    // asmstdcall_trampoline calls asmstdcall converting from Go to C calling convention.
     void asmstdcall_trampoline(unsafe::Pointer args)
     /* convertBlockStmt, nil block */;
 
+    // stdcall_no_g calls asmstdcall on os stack without using g.
+    //
+    //go:nosplit
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
         auto libcall = gocpp::Init<libcall>([=](auto& x) {
@@ -917,6 +1026,11 @@ namespace golang::runtime
         return libcall.r1;
     }
 
+    // Calling stdcall on os stack.
+    // May run during STW, so write barriers are not allowed.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     uintptr_t stdcall(golang::runtime::stdFunction fn)
     {
         auto gp = getg();
@@ -938,6 +1052,7 @@ namespace golang::runtime
         return mp->libcall.r1;
     }
 
+    //go:nosplit
     uintptr_t stdcall0(golang::runtime::stdFunction fn)
     {
         auto mp = getg()->m;
@@ -946,6 +1061,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0)
     {
         auto mp = getg()->m;
@@ -954,6 +1071,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1)
     {
         auto mp = getg()->m;
@@ -962,6 +1081,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
     {
         auto mp = getg()->m;
@@ -970,6 +1091,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     {
         auto mp = getg()->m;
@@ -978,6 +1101,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
     {
         auto mp = getg()->m;
@@ -986,6 +1111,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
     {
         auto mp = getg()->m;
@@ -994,6 +1121,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     {
         auto mp = getg()->m;
@@ -1002,6 +1131,8 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
+    //go:cgo_unsafe_args
     uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
     {
         auto mp = getg()->m;
@@ -1010,11 +1141,13 @@ namespace golang::runtime
         return stdcall(fn);
     }
 
+    //go:nosplit
     void osyield_no_g()
     {
         stdcall_no_g(_SwitchToThread, 0, 0);
     }
 
+    //go:nosplit
     void osyield()
     {
         systemstack([=]() mutable -> void
@@ -1023,6 +1156,7 @@ namespace golang::runtime
         });
     }
 
+    //go:nosplit
     void usleep_no_g(uint32_t us)
     {
         auto timeout = uintptr_t(us) / 1000;
@@ -1030,6 +1164,7 @@ namespace golang::runtime
         stdcall_no_g(_WaitForSingleObject, len(args), uintptr_t(noescape(unsafe::Pointer(& args[0]))));
     }
 
+    //go:nosplit
     void usleep(uint32_t us)
     {
         systemstack([=]() mutable -> void
@@ -1091,12 +1226,14 @@ namespace golang::runtime
         return 0;
     }
 
+    // called from zcallback_windows_*.s to sys_windows_*.s
     void callbackasm1()
     /* convertBlockStmt, nil block */;
 
     uintptr_t profiletimer;
     void profilem(struct m* mp, uintptr_t thread)
     {
+        // Align Context to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
@@ -1142,6 +1279,7 @@ namespace golang::runtime
                     unlock(& mp->threadLock);
                     continue;
                 }
+                // Acquire our own handle to the thread.
                 uintptr_t thread = {};
                 if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(unsafe::Pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
                 {
@@ -1199,6 +1337,8 @@ namespace golang::runtime
         atomic::Store((uint32_t*)(unsafe::Pointer(& getg()->m->profilehz)), uint32_t(hz));
     }
 
+    // suspendLock protects simultaneous SuspendThread operations from
+    // suspending each other.
     mutex suspendLock;
     void preemptM(struct m* mp)
     {
@@ -1226,6 +1366,7 @@ namespace golang::runtime
             go_throw("runtime.preemptM: duplicatehandle failed"s);
         }
         unlock(& mp->threadLock);
+        // Prepare thread context buffer. This must be aligned to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
@@ -1294,6 +1435,13 @@ namespace golang::runtime
         stdcall1(_CloseHandle, thread);
     }
 
+    // osPreemptExtEnter is called before entering external code that may
+    // call ExitProcess.
+    //
+    // This must be nosplit because it may be called from a syscall with
+    // untyped stack slots, so the stack must not be grown or scanned.
+    //
+    //go:nosplit
     void osPreemptExtEnter(struct m* mp)
     {
         for(; ! atomic::Cas(& mp->preemptExtLock, 0, 1); )
@@ -1302,6 +1450,12 @@ namespace golang::runtime
         }
     }
 
+    // osPreemptExtExit is called after returning from external code that
+    // may call ExitProcess.
+    //
+    // See osPreemptExtEnter for why this is nosplit.
+    //
+    //go:nosplit
     void osPreemptExtExit(struct m* mp)
     {
         atomic::Store(& mp->preemptExtLock, 0);

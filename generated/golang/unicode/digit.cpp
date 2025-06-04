@@ -20,6 +20,7 @@ namespace golang::unicode
         using namespace mocklib::rec;
     }
 
+    // IsDigit reports whether the rune is a decimal digit.
     bool IsDigit(gocpp::rune r)
     {
         if(r <= MaxLatin1)

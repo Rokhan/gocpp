@@ -20,113 +20,155 @@ namespace golang::atomic
         using namespace mocklib::rec;
     }
 
+    //go:nosplit
+    //go:noinline
     uint32_t Load(uint32_t* ptr)
     {
         return *ptr;
     }
 
+    //go:nosplit
+    //go:noinline
     unsafe::Pointer Loadp(unsafe::Pointer ptr)
     {
         return *(unsafe::Pointer*)(ptr);
     }
 
+    //go:nosplit
+    //go:noinline
     uint64_t Load64(uint64_t* ptr)
     {
         return *ptr;
     }
 
+    //go:nosplit
+    //go:noinline
     uint32_t LoadAcq(uint32_t* ptr)
     {
         return *ptr;
     }
 
+    //go:nosplit
+    //go:noinline
     uint64_t LoadAcq64(uint64_t* ptr)
     {
         return *ptr;
     }
 
+    //go:nosplit
+    //go:noinline
     uintptr_t LoadAcquintptr(uintptr_t* ptr)
     {
         return *ptr;
     }
 
+    //go:noescape
     uint32_t Xadd(uint32_t* ptr, int32_t delta)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint64_t Xadd64(uint64_t* ptr, int64_t delta)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uintptr_t Xadduintptr(uintptr_t* ptr, uintptr_t delta)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint32_t Xchg(uint32_t* ptr, uint32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint64_t Xchg64(uint64_t* ptr, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uintptr_t Xchguintptr(uintptr_t* ptr, uintptr_t go_new)
     /* convertBlockStmt, nil block */;
 
+    //go:nosplit
+    //go:noinline
     uint8_t Load8(uint8_t* ptr)
     {
         return *ptr;
     }
 
+    //go:noescape
     void And8(uint8_t* ptr, uint8_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void Or8(uint8_t* ptr, uint8_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void And(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void Or(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint32_t And32(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint32_t Or32(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint64_t And64(uint64_t* ptr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uint64_t Or64(uint64_t* ptr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uintptr_t Anduintptr(uintptr_t* ptr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     uintptr_t Oruintptr(uintptr_t* ptr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     bool Cas64(uint64_t* ptr, uint64_t old, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     bool CasRel(uint32_t* ptr, uint32_t old, uint32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void Store(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void Store8(uint8_t* ptr, uint8_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void Store64(uint64_t* ptr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void StoreRel(uint32_t* ptr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void StoreRel64(uint64_t* ptr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void StoreReluintptr(uintptr_t* ptr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 
+    // StorepNoWB performs *ptr = val atomically and without a write
+    // barrier.
+    //
+    // NO go:noescape annotation; see atomic_pointer.go.
     void StorepNoWB(unsafe::Pointer ptr, unsafe::Pointer val)
     /* convertBlockStmt, nil block */;
 

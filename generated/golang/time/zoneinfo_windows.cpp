@@ -33,6 +33,9 @@ namespace golang::time
     }
 
     gocpp::slice<std::string> platformZoneSources;
+    // matchZoneKey checks if stdname and dstname match the corresponding key
+    // values "MUI_Std" and MUI_Dlt" or "Std" and "Dlt" in the kname key stored
+    // under the open registry key zones.
     std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
@@ -80,6 +83,8 @@ namespace golang::time
         }
     }
 
+    // toEnglishName searches the registry for an English name of a time zone
+    // whose zone names are stdname and dstname and returns the English name.
     std::tuple<std::string, struct gocpp::error> toEnglishName(std::string stdname, std::string dstname)
     {
         gocpp::Defer defer;
@@ -113,6 +118,7 @@ namespace golang::time
         }
     }
 
+    // extractCAPS extracts capital letters from description desc.
     std::string extractCAPS(std::string desc)
     {
         gocpp::slice<gocpp::rune> short = {};
@@ -126,6 +132,7 @@ namespace golang::time
         return std::string(short);
     }
 
+    // abbrev returns the abbreviations to use for the given zone z.
     std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z)
     {
         std::string std;
@@ -149,6 +156,9 @@ namespace golang::time
         return {a.std, a.dst};
     }
 
+    // pseudoUnix returns the pseudo-Unix time (seconds since Jan 1 1970 *LOCAL TIME*)
+    // denoted by the system date+time d in the given year.
+    // It is up to the caller to convert this local time into a UTC-based time.
     int64_t pseudoUnix(int year, syscall::Systemtime* d)
     {
         auto day = 1;

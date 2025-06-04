@@ -11,6 +11,7 @@
 #include "golang/unicode/utf16/utf16.h"
 #include "gocpp/support.h"
 
+// Package utf16 implements encoding and decoding of UTF-16 sequences.
 namespace golang::utf16
 {
     namespace rec
@@ -18,11 +19,19 @@ namespace golang::utf16
         using namespace mocklib::rec;
     }
 
+    // 0xd800-0xdc00 encodes the high 10 bits of a pair.
+    // 0xdc00-0xe000 encodes the low 10 bits of a pair.
+    // the value is those 20 bits plus 0x10000.
+    // IsSurrogate reports whether the specified Unicode code point
+    // can appear in a surrogate pair.
     bool IsSurrogate(gocpp::rune r)
     {
         return surr1 <= r && r < surr3;
     }
 
+    // DecodeRune returns the UTF-16 decoding of a surrogate pair.
+    // If the pair is not a valid UTF-16 surrogate pair, DecodeRune returns
+    // the Unicode replacement code point U+FFFD.
     gocpp::rune DecodeRune(gocpp::rune r1, gocpp::rune r2)
     {
         if(surr1 <= r1 && r1 < surr2 && surr2 <= r2 && r2 < surr3)
@@ -32,6 +41,9 @@ namespace golang::utf16
         return replacementChar;
     }
 
+    // EncodeRune returns the UTF-16 surrogate pair r1, r2 for the given rune.
+    // If the rune is not a valid Unicode code point or does not need encoding,
+    // EncodeRune returns U+FFFD, U+FFFD.
     std::tuple<gocpp::rune, gocpp::rune> EncodeRune(gocpp::rune r)
     {
         gocpp::rune r1;
@@ -44,6 +56,7 @@ namespace golang::utf16
         return {surr1 + (r >> 10) & 0x3ff, surr2 + r & 0x3ff};
     }
 
+    // Encode returns the UTF-16 encoding of the Unicode code point sequence s.
     gocpp::slice<uint16_t> Encode(gocpp::slice<gocpp::rune> s)
     {
         auto n = len(s);
@@ -87,6 +100,9 @@ namespace golang::utf16
         return a.make_slice(0, n);
     }
 
+    // AppendRune appends the UTF-16 encoding of the Unicode code point r
+    // to the end of p and returns the extended buffer. If the rune is not
+    // a valid Unicode code point, it appends the encoding of U+FFFD.
     gocpp::slice<uint16_t> AppendRune(gocpp::slice<uint16_t> a, gocpp::rune r)
     {
         //Go switch emulation
@@ -110,12 +126,16 @@ namespace golang::utf16
         return append(a, replacementChar);
     }
 
+    // Decode returns the Unicode code point sequence represented
+    // by the UTF-16 encoding s.
     gocpp::slice<gocpp::rune> Decode(gocpp::slice<uint16_t> s)
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), 0, 64);
         return decode(s, buf);
     }
 
+    // decode appends to buf the Unicode code point sequence represented
+    // by the UTF-16 encoding s and return the extended buffer.
     gocpp::slice<gocpp::rune> decode(gocpp::slice<uint16_t> s, gocpp::slice<gocpp::rune> buf)
     {
         for(auto i = 0; i < len(s); i++)

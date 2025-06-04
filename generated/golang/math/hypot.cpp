@@ -23,6 +23,15 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Hypot returns [Sqrt](p*p + q*q), taking care to avoid
+    // unnecessary overflow and underflow.
+    //
+    // Special cases are:
+    //
+    //	Hypot(±Inf, q) = +Inf
+    //	Hypot(p, ±Inf) = +Inf
+    //	Hypot(NaN, q) = NaN
+    //	Hypot(p, NaN) = NaN
     double Hypot(double p, double q)
     {
         if(haveArchHypot)

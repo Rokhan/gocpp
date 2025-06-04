@@ -23,6 +23,9 @@
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
+// Package strings implements simple functions to manipulate UTF-8 encoded strings.
+//
+// For information about UTF-8 strings in Go, see https://blog.golang.org/strings.
 namespace golang::strings
 {
     namespace rec
@@ -30,6 +33,9 @@ namespace golang::strings
         using namespace mocklib::rec;
     }
 
+    // explode splits s into a slice of UTF-8 strings,
+    // one string per Unicode character up to a maximum of n (n < 0 means no limit).
+    // Invalid UTF-8 bytes are sliced individually.
     gocpp::slice<std::string> explode(std::string s, int n)
     {
         auto l = utf8::RuneCountInString(s);
@@ -51,6 +57,8 @@ namespace golang::strings
         return a;
     }
 
+    // Count counts the number of non-overlapping instances of substr in s.
+    // If substr is an empty string, Count returns 1 + the number of Unicode code points in s.
     int Count(std::string s, std::string substr)
     {
         if(len(substr) == 0)
@@ -74,26 +82,31 @@ namespace golang::strings
         }
     }
 
+    // Contains reports whether substr is within s.
     bool Contains(std::string s, std::string substr)
     {
         return Index(s, substr) >= 0;
     }
 
+    // ContainsAny reports whether any Unicode code points in chars are within s.
     bool ContainsAny(std::string s, std::string chars)
     {
         return IndexAny(s, chars) >= 0;
     }
 
+    // ContainsRune reports whether the Unicode code point r is within s.
     bool ContainsRune(std::string s, gocpp::rune r)
     {
         return IndexRune(s, r) >= 0;
     }
 
+    // ContainsFunc reports whether any Unicode code points r within s satisfy f(r).
     bool ContainsFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         return IndexFunc(s, f) >= 0;
     }
 
+    // LastIndex returns the index of the last instance of substr in s, or -1 if substr is not present in s.
     int LastIndex(std::string s, std::string substr)
     {
         auto n = len(substr);
@@ -148,11 +161,16 @@ namespace golang::strings
         return - 1;
     }
 
+    // IndexByte returns the index of the first instance of c in s, or -1 if c is not present in s.
     int IndexByte(std::string s, unsigned char c)
     {
         return bytealg::IndexByteString(s, c);
     }
 
+    // IndexRune returns the index of the first instance of the Unicode code point
+    // r, or -1 if rune is not present in s.
+    // If r is utf8.RuneError, it returns the first instance of any
+    // invalid UTF-8 byte sequence.
     int IndexRune(std::string s, gocpp::rune r)
     {
         //Go switch emulation
@@ -186,6 +204,8 @@ namespace golang::strings
         }
     }
 
+    // IndexAny returns the index of the first instance of any Unicode code point
+    // from chars in s, or -1 if no Unicode code point from chars is present in s.
     int IndexAny(std::string s, std::string chars)
     {
         if(chars == ""s)
@@ -225,6 +245,9 @@ namespace golang::strings
         return - 1;
     }
 
+    // LastIndexAny returns the index of the last instance of any Unicode code
+    // point from chars in s, or -1 if no Unicode code point from chars is
+    // present in s.
     int LastIndexAny(std::string s, std::string chars)
     {
         if(chars == ""s)
@@ -288,11 +311,14 @@ namespace golang::strings
         return - 1;
     }
 
+    // LastIndexByte returns the index of the last instance of c in s, or -1 if c is not present in s.
     int LastIndexByte(std::string s, unsigned char c)
     {
         return bytealg::LastIndexByteString(s, c);
     }
 
+    // Generic split: splits after each instance of sep,
+    // including sepSave bytes of sep in the subarrays.
     gocpp::slice<std::string> genSplit(std::string s, std::string sep, int sepSave, int n)
     {
         if(n == 0)
@@ -329,21 +355,67 @@ namespace golang::strings
         return a.make_slice(0, i + 1);
     }
 
+    // SplitN slices s into substrings separated by sep and returns a slice of
+    // the substrings between those separators.
+    //
+    // The count determines the number of substrings to return:
+    //
+    //	n > 0: at most n substrings; the last substring will be the unsplit remainder.
+    //	n == 0: the result is nil (zero substrings)
+    //	n < 0: all substrings
+    //
+    // Edge cases for s and sep (for example, empty strings) are handled
+    // as described in the documentation for [Split].
+    //
+    // To split around the first instance of a separator, see Cut.
     gocpp::slice<std::string> SplitN(std::string s, std::string sep, int n)
     {
         return genSplit(s, sep, 0, n);
     }
 
+    // SplitAfterN slices s into substrings after each instance of sep and
+    // returns a slice of those substrings.
+    //
+    // The count determines the number of substrings to return:
+    //
+    //	n > 0: at most n substrings; the last substring will be the unsplit remainder.
+    //	n == 0: the result is nil (zero substrings)
+    //	n < 0: all substrings
+    //
+    // Edge cases for s and sep (for example, empty strings) are handled
+    // as described in the documentation for SplitAfter.
     gocpp::slice<std::string> SplitAfterN(std::string s, std::string sep, int n)
     {
         return genSplit(s, sep, len(sep), n);
     }
 
+    // Split slices s into all substrings separated by sep and returns a slice of
+    // the substrings between those separators.
+    //
+    // If s does not contain sep and sep is not empty, Split returns a
+    // slice of length 1 whose only element is s.
+    //
+    // If sep is empty, Split splits after each UTF-8 sequence. If both s
+    // and sep are empty, Split returns an empty slice.
+    //
+    // It is equivalent to [SplitN] with a count of -1.
+    //
+    // To split around the first instance of a separator, see Cut.
     gocpp::slice<std::string> Split(std::string s, std::string sep)
     {
         return genSplit(s, sep, 0, - 1);
     }
 
+    // SplitAfter slices s into all substrings after each instance of sep and
+    // returns a slice of those substrings.
+    //
+    // If s does not contain sep and sep is not empty, SplitAfter returns
+    // a slice of length 1 whose only element is s.
+    //
+    // If sep is empty, SplitAfter splits after each UTF-8 sequence. If
+    // both s and sep are empty, SplitAfter returns an empty slice.
+    //
+    // It is equivalent to [SplitAfterN] with a count of -1.
     gocpp::slice<std::string> SplitAfter(std::string s, std::string sep)
     {
         return genSplit(s, sep, len(sep), - 1);
@@ -357,6 +429,9 @@ namespace golang::strings
         x['\r'] = 1;
         x[' '] = 1;
     });
+    // Fields splits the string s around each instance of one or more consecutive white space
+    // characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
+    // empty slice if s contains only white space.
     gocpp::slice<std::string> Fields(std::string s)
     {
         auto n = 0;
@@ -406,8 +481,16 @@ namespace golang::strings
         return a;
     }
 
+    // FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
+    // and returns an array of slices of s. If all code points in s satisfy f(c) or the
+    // string is empty, an empty slice is returned.
+    //
+    // FieldsFunc makes no guarantees about the order in which it calls f(c)
+    // and assumes that f always returns the same value for a given c.
     gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
+        // A span is used to record a slice of s of the form s[start:end].
+        // The start index is inclusive and the end index is exclusive.
         
         template<typename T> requires gocpp::GoStruct<T>
         span::operator T()
@@ -472,6 +555,8 @@ namespace golang::strings
         return a;
     }
 
+    // Join concatenates the elements of its first argument to create a single string. The separator
+    // string sep is placed between elements in the resulting string.
     std::string Join(gocpp::slice<std::string> elems, std::string sep)
     {
         //Go switch emulation
@@ -518,18 +603,25 @@ namespace golang::strings
         return rec::String(gocpp::recv(b));
     }
 
+    // HasPrefix reports whether the string s begins with prefix.
     bool HasPrefix(std::string s, std::string prefix)
     {
         return len(s) >= len(prefix) && s.make_slice(0, len(prefix)) == prefix;
     }
 
+    // HasSuffix reports whether the string s ends with suffix.
     bool HasSuffix(std::string s, std::string suffix)
     {
         return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
     }
 
+    // Map returns a copy of the string s with all its characters modified
+    // according to the mapping function. If mapping returns a negative value, the character is
+    // dropped from the string with no replacement.
     std::string Map(std::function<gocpp::rune (gocpp::rune)> mapping, std::string s)
     {
+        // The output buffer b is initialized on demand, the first
+        // time a character differs.
         Builder b = {};
         for(auto [i, c] : s)
         {
@@ -582,6 +674,10 @@ namespace golang::strings
         return rec::String(gocpp::recv(b));
     }
 
+    // Repeat returns a new string consisting of count copies of the string s.
+    //
+    // It panics if count is negative or if the result of (len(s) * count)
+    // overflows.
     std::string Repeat(std::string s, int count)
     {
         //Go switch emulation
@@ -613,6 +709,16 @@ namespace golang::strings
         {
             return ""s;
         }
+        // Past a certain chunk size it is counterproductive to use
+        // larger chunks as the source of the write, as when the source
+        // is too large we are basically just thrashing the CPU D-cache.
+        // So if the result length is larger than an empirically-found
+        // limit (8KB), we stop growing the source string once the limit
+        // is reached and keep reusing the same source string - that
+        // should therefore be always resident in the L1 cache - until we
+        // have completed the construction of the result.
+        // This yields significant speedups (up to +100%) in cases where
+        // the result length is large (roughly, over L2 cache size).
         auto chunkLimit = 8 * 1024;
         auto chunkMax = n;
         if(n > chunkLimit)
@@ -642,6 +748,7 @@ namespace golang::strings
         return rec::String(gocpp::recv(b));
     }
 
+    // ToUpper returns s with all Unicode letters mapped to their upper case.
     std::string ToUpper(std::string s)
     {
         auto [isASCII, hasLower] = std::tuple{true, false};
@@ -687,6 +794,7 @@ namespace golang::strings
         return Map(unicode::ToUpper, s);
     }
 
+    // ToLower returns s with all Unicode letters mapped to their lower case.
     std::string ToLower(std::string s)
     {
         auto [isASCII, hasUpper] = std::tuple{true, false};
@@ -732,26 +840,36 @@ namespace golang::strings
         return Map(unicode::ToLower, s);
     }
 
+    // ToTitle returns a copy of the string s with all Unicode letters mapped to
+    // their Unicode title case.
     std::string ToTitle(std::string s)
     {
         return Map(unicode::ToTitle, s);
     }
 
+    // ToUpperSpecial returns a copy of the string s with all Unicode letters mapped to their
+    // upper case using the case mapping specified by c.
     std::string ToUpperSpecial(unicode::SpecialCase c, std::string s)
     {
         return Map(c->ToUpper, s);
     }
 
+    // ToLowerSpecial returns a copy of the string s with all Unicode letters mapped to their
+    // lower case using the case mapping specified by c.
     std::string ToLowerSpecial(unicode::SpecialCase c, std::string s)
     {
         return Map(c->ToLower, s);
     }
 
+    // ToTitleSpecial returns a copy of the string s with all Unicode letters mapped to their
+    // Unicode title case, giving priority to the special casing rules.
     std::string ToTitleSpecial(unicode::SpecialCase c, std::string s)
     {
         return Map(c->ToTitle, s);
     }
 
+    // ToValidUTF8 returns a copy of the string s with each run of invalid UTF-8 byte sequences
+    // replaced by the replacement string, which may be empty.
     std::string ToValidUTF8(std::string s, std::string replacement)
     {
         Builder b = {};
@@ -803,6 +921,8 @@ namespace golang::strings
         return rec::String(gocpp::recv(b));
     }
 
+    // isSeparator reports whether the rune could mark a word boundary.
+    // TODO: update when package unicode captures more of the properties.
     bool isSeparator(gocpp::rune r)
     {
         if(r <= 0x7F)
@@ -839,6 +959,11 @@ namespace golang::strings
         return unicode::IsSpace(r);
     }
 
+    // Title returns a copy of the string s with all Unicode letters that begin words
+    // mapped to their Unicode title case.
+    //
+    // Deprecated: The rule Title uses for word boundaries does not handle Unicode
+    // punctuation properly. Use golang.org/x/text/cases instead.
     std::string Title(std::string s)
     {
         auto prev = ' ';
@@ -854,6 +979,8 @@ namespace golang::strings
         }, s);
     }
 
+    // TrimLeftFunc returns a slice of the string s with all leading
+    // Unicode code points c satisfying f(c) removed.
     std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         auto i = indexFunc(s, f, false);
@@ -864,6 +991,8 @@ namespace golang::strings
         return s.make_slice(i);
     }
 
+    // TrimRightFunc returns a slice of the string s with all trailing
+    // Unicode code points c satisfying f(c) removed.
     std::string TrimRightFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         auto i = lastIndexFunc(s, f, false);
@@ -879,21 +1008,30 @@ namespace golang::strings
         return s.make_slice(0, i);
     }
 
+    // TrimFunc returns a slice of the string s with all leading
+    // and trailing Unicode code points c satisfying f(c) removed.
     std::string TrimFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         return TrimRightFunc(TrimLeftFunc(s, f), f);
     }
 
+    // IndexFunc returns the index into s of the first Unicode
+    // code point satisfying f(c), or -1 if none do.
     int IndexFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         return indexFunc(s, f, true);
     }
 
+    // LastIndexFunc returns the index into s of the last
+    // Unicode code point satisfying f(c), or -1 if none do.
     int LastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f)
     {
         return lastIndexFunc(s, f, true);
     }
 
+    // indexFunc is the same as IndexFunc except that if
+    // truth==false, the sense of the predicate function is
+    // inverted.
     int indexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth)
     {
         for(auto [i, r] : s)
@@ -906,6 +1044,9 @@ namespace golang::strings
         return - 1;
     }
 
+    // lastIndexFunc is the same as LastIndexFunc except that if
+    // truth==false, the sense of the predicate function is
+    // inverted.
     int lastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth)
     {
         for(auto i = len(s); i > 0; )
@@ -920,6 +1061,16 @@ namespace golang::strings
         return - 1;
     }
 
+    // asciiSet is a 32-byte value, where each bit represents the presence of a
+    // given ASCII character in the set. The 128-bits of the lower 16 bytes,
+    // starting with the least-significant bit of the lowest word to the
+    // most-significant bit of the highest word, map to the full range of all
+    // 128 ASCII characters. The 128-bits of the upper 16 bytes will be zeroed,
+    // ensuring that any non-ASCII character will be reported as not in the set.
+    // This allocates a total of 32 bytes even though the upper half
+    // is unused to avoid bounds checks in asciiSet.contains.
+    // makeASCIISet creates a set of ASCII characters and reports whether all
+    // characters in chars are ASCII.
     std::tuple<strings::asciiSet, bool> makeASCIISet(std::string chars)
     {
         strings::asciiSet as;
@@ -936,11 +1087,14 @@ namespace golang::strings
         return {as, true};
     }
 
+    // contains reports whether c is inside the set.
     bool rec::contains(golang::strings::asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
 
+    // Trim returns a slice of the string s with all leading and
+    // trailing Unicode code points contained in cutset removed.
     std::string Trim(std::string s, std::string cutset)
     {
         if(s == ""s || cutset == ""s)
@@ -958,6 +1112,10 @@ namespace golang::strings
         return trimLeftUnicode(trimRightUnicode(s, cutset), cutset);
     }
 
+    // TrimLeft returns a slice of the string s with all leading
+    // Unicode code points contained in cutset removed.
+    //
+    // To remove a prefix, use [TrimPrefix] instead.
     std::string TrimLeft(std::string s, std::string cutset)
     {
         if(s == ""s || cutset == ""s)
@@ -1015,6 +1173,10 @@ namespace golang::strings
         return s;
     }
 
+    // TrimRight returns a slice of the string s, with all trailing
+    // Unicode code points contained in cutset removed.
+    //
+    // To remove a suffix, use [TrimSuffix] instead.
     std::string TrimRight(std::string s, std::string cutset)
     {
         if(s == ""s || cutset == ""s)
@@ -1072,6 +1234,8 @@ namespace golang::strings
         return s;
     }
 
+    // TrimSpace returns a slice of the string s, with all leading
+    // and trailing white space removed, as defined by Unicode.
     std::string TrimSpace(std::string s)
     {
         auto start = 0;
@@ -1103,6 +1267,8 @@ namespace golang::strings
         return s.make_slice(start, stop);
     }
 
+    // TrimPrefix returns s without the provided leading prefix string.
+    // If s doesn't start with prefix, s is returned unchanged.
     std::string TrimPrefix(std::string s, std::string prefix)
     {
         if(HasPrefix(s, prefix))
@@ -1112,6 +1278,8 @@ namespace golang::strings
         return s;
     }
 
+    // TrimSuffix returns s without the provided trailing suffix string.
+    // If s doesn't end with suffix, s is returned unchanged.
     std::string TrimSuffix(std::string s, std::string suffix)
     {
         if(HasSuffix(s, suffix))
@@ -1121,6 +1289,12 @@ namespace golang::strings
         return s;
     }
 
+    // Replace returns a copy of the string s with the first n
+    // non-overlapping instances of old replaced by new.
+    // If old is empty, it matches at the beginning of the string
+    // and after each UTF-8 sequence, yielding up to k+1 replacements
+    // for a k-rune string.
+    // If n < 0, there is no limit on the number of replacements.
     std::string Replace(std::string s, std::string old, std::string go_new, int n)
     {
         if(old == go_new || n == 0)
@@ -1136,6 +1310,7 @@ namespace golang::strings
         {
             n = m;
         }
+        // Apply replacements to buffer.
         Builder b = {};
         rec::Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
         auto start = 0;
@@ -1162,11 +1337,19 @@ namespace golang::strings
         return rec::String(gocpp::recv(b));
     }
 
+    // ReplaceAll returns a copy of the string s with all
+    // non-overlapping instances of old replaced by new.
+    // If old is empty, it matches at the beginning of the string
+    // and after each UTF-8 sequence, yielding up to k+1 replacements
+    // for a k-rune string.
     std::string ReplaceAll(std::string s, std::string old, std::string go_new)
     {
         return Replace(s, old, go_new, - 1);
     }
 
+    // EqualFold reports whether s and t, interpreted as UTF-8 strings,
+    // are equal under simple Unicode case-folding, which is a more general
+    // form of case-insensitivity.
     bool EqualFold(std::string s, std::string t)
     {
         auto i = 0;
@@ -1202,6 +1385,7 @@ namespace golang::strings
             {
                 return false;
             }
+            // Extract first rune from second string.
             gocpp::rune tr = {};
             if(t[0] < utf8::RuneSelf)
             {
@@ -1242,6 +1426,7 @@ namespace golang::strings
         return len(t) == 0;
     }
 
+    // Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
     int Index(std::string s, std::string substr)
     {
         auto n = len(substr);
@@ -1347,6 +1532,10 @@ namespace golang::strings
         return - 1;
     }
 
+    // Cut slices s around the first instance of sep,
+    // returning the text before and after sep.
+    // The found result reports whether sep appears in s.
+    // If sep does not appear in s, cut returns s, "", false.
     std::tuple<std::string, std::string, bool> Cut(std::string s, std::string sep)
     {
         std::string before;
@@ -1359,6 +1548,10 @@ namespace golang::strings
         return {s, ""s, false};
     }
 
+    // CutPrefix returns s without the provided leading prefix string
+    // and reports whether it found the prefix.
+    // If s doesn't start with prefix, CutPrefix returns s, false.
+    // If prefix is the empty string, CutPrefix returns s, true.
     std::tuple<std::string, bool> CutPrefix(std::string s, std::string prefix)
     {
         std::string after;
@@ -1370,6 +1563,10 @@ namespace golang::strings
         return {s.make_slice(len(prefix)), true};
     }
 
+    // CutSuffix returns s without the provided ending suffix string
+    // and reports whether it found the suffix.
+    // If s doesn't end with suffix, CutSuffix returns s, false.
+    // If suffix is the empty string, CutSuffix returns s, true.
     std::tuple<std::string, bool> CutSuffix(std::string s, std::string suffix)
     {
         std::string before;

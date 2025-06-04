@@ -18,6 +18,26 @@ namespace golang::flate
         using namespace mocklib::rec;
     }
 
+    // dictDecoder implements the LZ77 sliding dictionary as used in decompression.
+    // LZ77 decompresses data through sequences of two forms of commands:
+    //
+    //   - Literal insertions: Runs of one or more symbols are inserted into the data
+    //     stream as is. This is accomplished through the writeByte method for a
+    //     single symbol, or combinations of writeSlice/writeMark for multiple symbols.
+    //     Any valid stream must start with a literal insertion if no preset dictionary
+    //     is used.
+    //
+    //   - Backward copies: Runs of one or more symbols are copied from previously
+    //     emitted data. Backward copies come as the tuple (dist, length) where dist
+    //     determines how far back in the stream to copy from and length determines how
+    //     many bytes to copy. Note that it is valid for the length to be greater than
+    //     the distance. Since LZ77 uses forward copies, that situation is used to
+    //     perform a form of run-length encoding on repeated runs of symbols.
+    //     The writeCopy and tryWriteCopy are used to implement this command.
+    //
+    // For performance reasons, this implementation performs little to no sanity
+    // checks about the arguments. As such, the invariants documented for each
+    // method call must be respected.
     
     template<typename T> requires gocpp::GoStruct<T>
     dictDecoder::operator T()
@@ -56,6 +76,9 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // init initializes dictDecoder to have a sliding window dictionary of the given
+    // size. If a preset dict is provided, it will initialize the dictionary with
+    // the contents of dict.
     void rec::init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
     {
         *dd = gocpp::Init<dictDecoder>([=](auto& x) {
@@ -79,6 +102,7 @@ namespace golang::flate
         dd->rdPos = dd->wrPos;
     }
 
+    // histSize reports the total amount of historical data in the dictionary.
     int rec::histSize(struct dictDecoder* dd)
     {
         if(dd->full)
@@ -88,32 +112,48 @@ namespace golang::flate
         return dd->wrPos;
     }
 
+    // availRead reports the number of bytes that can be flushed by readFlush.
     int rec::availRead(struct dictDecoder* dd)
     {
         return dd->wrPos - dd->rdPos;
     }
 
+    // availWrite reports the available amount of output buffer space.
     int rec::availWrite(struct dictDecoder* dd)
     {
         return len(dd->hist) - dd->wrPos;
     }
 
+    // writeSlice returns a slice of the available buffer to write data to.
+    //
+    // This invariant will be kept: len(s) <= availWrite()
     gocpp::slice<unsigned char> rec::writeSlice(struct dictDecoder* dd)
     {
         return dd->hist.make_slice(dd->wrPos);
     }
 
+    // writeMark advances the writer pointer by cnt.
+    //
+    // This invariant must be kept: 0 <= cnt <= availWrite()
     void rec::writeMark(struct dictDecoder* dd, int cnt)
     {
         dd->wrPos += cnt;
     }
 
+    // writeByte writes a single byte to the dictionary.
+    //
+    // This invariant must be kept: 0 < availWrite()
     void rec::writeByte(struct dictDecoder* dd, unsigned char c)
     {
         dd->hist[dd->wrPos] = c;
         dd->wrPos++;
     }
 
+    // writeCopy copies a string at a given (dist, length) to the output.
+    // This returns the number of bytes copied and may be less than the requested
+    // length if the available space in the output buffer is too small.
+    //
+    // This invariant must be kept: 0 < dist <= histSize()
     int rec::writeCopy(struct dictDecoder* dd, int dist, int length)
     {
         auto dstBase = dd->wrPos;
@@ -138,6 +178,12 @@ namespace golang::flate
         return dstPos - dstBase;
     }
 
+    // tryWriteCopy tries to copy a string at a given (distance, length) to the
+    // output. This specialized version is optimized for short distances.
+    //
+    // This method is designed to be inlined for performance reasons.
+    //
+    // This invariant must be kept: 0 < dist <= histSize()
     int rec::tryWriteCopy(struct dictDecoder* dd, int dist, int length)
     {
         auto dstPos = dd->wrPos;
@@ -156,6 +202,9 @@ namespace golang::flate
         return dstPos - dstBase;
     }
 
+    // readFlush returns a slice of the historical buffer that is ready to be
+    // emitted to the user. The data returned by readFlush must be fully consumed
+    // before calling any other dictDecoder methods.
     gocpp::slice<unsigned char> rec::readFlush(struct dictDecoder* dd)
     {
         auto toRead = dd->hist.make_slice(dd->rdPos, dd->wrPos);

@@ -28,6 +28,23 @@ namespace golang::flate
         using io::rec::Write;
     }
 
+    // HuffmanOnly disables Lempel-Ziv match searching and only performs Huffman
+    // entropy encoding. This mode is useful in compressing data that has
+    // already been compressed with an LZ style algorithm (e.g. Snappy or LZ4)
+    // that lacks an entropy encoder. Compression gains are achieved when
+    // certain bytes in the input stream occur more frequently than others.
+    //
+    // Note that HuffmanOnly produces a compressed output that is
+    // RFC 1951 compliant. That is, any valid DEFLATE decompressor will
+    // continue to be able to decompress this output.
+    // The LZ77 step produces a sequence of literal tokens and <length, offset>
+    // pair tokens. The offset is also known as distance. The underlying wire
+    // format limits the range of lengths and offsets. For example, there are
+    // 256 legitimate lengths: those in the range [3, 258]. This package's
+    // compressor uses a higher minimum match length, enabling optimizations
+    // such as finding matches via 32-bit loads and compares.
+    // The maximum number of tokens we put into a single flate block, just to
+    // stop things from getting too large.
     
     template<typename T> requires gocpp::GoStruct<T>
     compressionLevel::operator T()
@@ -228,6 +245,10 @@ namespace golang::flate
         return nullptr;
     }
 
+    // fillWindow will fill the current window with the supplied
+    // dictionary and calculate all hashes.
+    // This is much faster than doing a full encode.
+    // Should only be used after a reset.
     void rec::fillWindow(struct compressor* d, gocpp::slice<unsigned char> b)
     {
         if(d->compressionLevel.level < 2)
@@ -272,6 +293,8 @@ namespace golang::flate
         d->index = n;
     }
 
+    // Try to find a match starting at index whose length is greater than prevSize.
+    // We only look at chainCount possibilities before giving up.
     std::tuple<int, int, bool> rec::findMatch(struct compressor* d, int pos, int prevHead, int prevLength, int lookahead)
     {
         int length;
@@ -337,11 +360,16 @@ namespace golang::flate
         return d->w->err;
     }
 
+    // hash4 returns a hash representation of the first 4 bytes
+    // of the supplied slice.
+    // The caller must ensure that len(b) >= 4.
     uint32_t hash4(gocpp::slice<unsigned char> b)
     {
         return ((uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24)) * hashmul) >> (32 - hashBits);
     }
 
+    // bulkHash4 will compute hashes using the same
+    // algorithm as hash4.
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst)
     {
         if(len(b) < minMatchLength)
@@ -358,6 +386,9 @@ namespace golang::flate
         }
     }
 
+    // matchLen returns the number of matching bytes in a and b
+    // up to length 'max'. Both slices must be at least 'max'
+    // bytes in size.
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max)
     {
         a = a.make_slice(0, max);
@@ -372,6 +403,9 @@ namespace golang::flate
         return max;
     }
 
+    // encSpeed will compress and store the currently added data,
+    // if enough has been accumulated or we at the end of the stream.
+    // Any error that occurred will be in d.err
     void rec::encSpeed(struct compressor* d)
     {
         if(d->windowEnd < maxStoreBlockSize)
@@ -602,6 +636,9 @@ namespace golang::flate
         }
     }
 
+    // storeHuff compresses and stores the currently added data
+    // when the d.window is full or we are at the end of the stream.
+    // Any error that occurred will be in d.err
     void rec::storeHuff(struct compressor* d)
     {
         if(d->windowEnd < len(d->window) && ! d->sync || d->windowEnd == 0)
@@ -772,6 +809,18 @@ namespace golang::flate
         return nullptr;
     }
 
+    // NewWriter returns a new [Writer] compressing data at the given level.
+    // Following zlib, levels range from 1 ([BestSpeed]) to 9 ([BestCompression]);
+    // higher levels typically run slower but compress more. Level 0
+    // ([NoCompression]) does not attempt any compression; it only adds the
+    // necessary DEFLATE framing.
+    // Level -1 ([DefaultCompression]) uses the default compression level.
+    // Level -2 ([HuffmanOnly]) will use Huffman compression only, giving
+    // a very fast compression for all types of input, but sacrificing considerable
+    // compression efficiency.
+    //
+    // If level is in the range [-2, 9] then the error returned will be nil.
+    // Otherwise the error returned will be non-nil.
     std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level)
     {
         Writer dw = {};
@@ -782,6 +831,12 @@ namespace golang::flate
         return {& dw, nullptr};
     }
 
+    // NewWriterDict is like [NewWriter] but initializes the new
+    // [Writer] with a preset dictionary. The returned [Writer] behaves
+    // as if the dictionary had been written to it without producing
+    // any compressed output. The compressed data written to w
+    // can only be decompressed by a [Reader] initialized with the
+    // same dictionary.
     std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         auto dw = new dictWriter {w};
@@ -832,6 +887,8 @@ namespace golang::flate
     }
 
     gocpp::error errWriterClosed = errors::New("flate: closed writer"s);
+    // A Writer takes data written to it and writes the compressed
+    // form of that data to an underlying writer (see [NewWriter]).
     
     template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
@@ -864,6 +921,8 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // Write writes data to w, which will eventually write the
+    // compressed form of data to its underlying writer.
     std::tuple<int, struct gocpp::error> rec::Write(struct Writer* w, gocpp::slice<unsigned char> data)
     {
         int n;
@@ -871,16 +930,29 @@ namespace golang::flate
         return rec::write(gocpp::recv(w->d), data);
     }
 
+    // Flush flushes any pending data to the underlying writer.
+    // It is useful mainly in compressed network protocols, to ensure that
+    // a remote reader has enough data to reconstruct a packet.
+    // Flush does not return until the data has been written.
+    // Calling Flush when there is no pending data still causes the [Writer]
+    // to emit a sync marker of at least 4 bytes.
+    // If the underlying writer returns an error, Flush returns that error.
+    //
+    // In the terminology of the zlib library, Flush is equivalent to Z_SYNC_FLUSH.
     struct gocpp::error rec::Flush(struct Writer* w)
     {
         return rec::syncFlush(gocpp::recv(w->d));
     }
 
+    // Close flushes and closes the writer.
     struct gocpp::error rec::Close(struct Writer* w)
     {
         return rec::close(gocpp::recv(w->d));
     }
 
+    // Reset discards the writer's state and makes it equivalent to
+    // the result of [NewWriter] or [NewWriterDict] called with dst
+    // and w's level and dictionary.
     void rec::Reset(struct Writer* w, io::Writer dst)
     {
         if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)

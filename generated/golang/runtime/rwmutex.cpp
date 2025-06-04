@@ -44,6 +44,11 @@ namespace golang::runtime
         using atomic::rec::Add;
     }
 
+    // A rwmutex is a reader/writer mutual exclusion lock.
+    // The lock can be held by an arbitrary number of readers or a single writer.
+    // This is a variant of sync.RWMutex, for the runtime package.
+    // Like mutex, rwmutex blocks the calling M.
+    // It does not interact with the goroutine scheduler.
     
     template<typename T> requires gocpp::GoStruct<T>
     rwmutex::operator T()
@@ -94,6 +99,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Lock ranking an rwmutex has two aspects:
+    //
+    // Semantic ranking: this rwmutex represents some higher level lock that
+    // protects some resource (e.g., allocmLock protects creation of new Ms). The
+    // read and write locks of that resource need to be represented in the lock
+    // rank.
+    //
+    // Internal ranking: as an implementation detail, rwmutex uses two mutexes:
+    // rLock and wLock. These have lock order requirements: wLock must be locked
+    // before rLock. This also needs to be represented in the lock rank.
+    //
+    // Semantic ranking is represented by acquiring readRank during read lock and
+    // writeRank during write lock.
+    //
+    // wLock is held for the duration of a write lock, so it uses writeRank
+    // directly, both for semantic and internal ranking. rLock is only held
+    // temporarily inside the rlock/lock methods, so it uses readRankInternal to
+    // represent internal ranking. Semantic ranking is represented by a separate
+    // acquire of readRank for the duration of a read lock.
+    //
+    // The lock ranking must document this ordering:
+    // - readRankInternal is a leaf lock.
+    // - readRank is taken before readRankInternal.
+    // - writeRank is taken before readRankInternal.
+    // - readRank is placed in the lock order wherever a read lock of this rwmutex
+    //   belongs.
+    // - writeRank is placed in the lock order wherever a write lock of this
+    //   rwmutex belongs.
     void rec::init(struct rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank)
     {
         rw->readRank = readRank;
@@ -101,6 +134,7 @@ namespace golang::runtime
         lockInit(& rw->wLock, writeRank);
     }
 
+    // rlock locks rw for reading.
     void rec::rlock(struct rwmutex* rw)
     {
         acquirem();
@@ -129,6 +163,7 @@ namespace golang::runtime
         }
     }
 
+    // runlock undoes a single rlock call on rw.
     void rec::runlock(struct rwmutex* rw)
     {
         if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
@@ -152,6 +187,7 @@ namespace golang::runtime
         releasem(getg()->m);
     }
 
+    // lock locks rw for writing.
     void rec::lock(struct rwmutex* rw)
     {
         lock(& rw->wLock);
@@ -174,6 +210,7 @@ namespace golang::runtime
         }
     }
 
+    // unlock unlocks rw for writing.
     void rec::unlock(struct rwmutex* rw)
     {
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);

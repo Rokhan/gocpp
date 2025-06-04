@@ -15,6 +15,14 @@
 #include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
+// Package io provides basic interfaces to I/O primitives.
+// Its primary job is to wrap existing implementations of such primitives,
+// such as those in package os, into shared public interfaces that
+// abstract the functionality, plus some other related primitives.
+//
+// Because these interfaces and primitives wrap lower-level operations with
+// various implementations, unless otherwise informed clients should not
+// assume they are safe for parallel execution.
 namespace golang::io
 {
     namespace rec
@@ -24,12 +32,60 @@ namespace golang::io
         using sync::rec::Put;
     }
 
+    // Seek whence values.
+    // ErrShortWrite means that a write accepted fewer bytes than requested
+    // but failed to return an explicit error.
     gocpp::error ErrShortWrite = errors::New("short write"s);
+    // errInvalidWrite means that a write returned an impossible count.
     gocpp::error errInvalidWrite = errors::New("invalid write result"s);
+    // ErrShortBuffer means that a read required a longer buffer than was provided.
     gocpp::error ErrShortBuffer = errors::New("short buffer"s);
+    // EOF is the error returned by Read when no more input is available.
+    // (Read must return EOF itself, not an error wrapping EOF,
+    // because callers will test for EOF using ==.)
+    // Functions should return EOF only to signal a graceful end of input.
+    // If the EOF occurs unexpectedly in a structured data stream,
+    // the appropriate error is either [ErrUnexpectedEOF] or some other error
+    // giving more detail.
     gocpp::error go_EOF = errors::New("EOF"s);
+    // ErrUnexpectedEOF means that EOF was encountered in the
+    // middle of reading a fixed-size block or data structure.
     gocpp::error ErrUnexpectedEOF = errors::New("unexpected EOF"s);
+    // ErrNoProgress is returned by some clients of a [Reader] when
+    // many calls to Read have failed to return any data or error,
+    // usually the sign of a broken [Reader] implementation.
     gocpp::error ErrNoProgress = errors::New("multiple Read calls return no data or error"s);
+    // Reader is the interface that wraps the basic Read method.
+    //
+    // Read reads up to len(p) bytes into p. It returns the number of bytes
+    // read (0 <= n <= len(p)) and any error encountered. Even if Read
+    // returns n < len(p), it may use all of p as scratch space during the call.
+    // If some data is available but not len(p) bytes, Read conventionally
+    // returns what is available instead of waiting for more.
+    //
+    // When Read encounters an error or end-of-file condition after
+    // successfully reading n > 0 bytes, it returns the number of
+    // bytes read. It may return the (non-nil) error from the same call
+    // or return the error (and n == 0) from a subsequent call.
+    // An instance of this general case is that a Reader returning
+    // a non-zero number of bytes at the end of the input stream may
+    // return either err == EOF or err == nil. The next Read should
+    // return 0, EOF.
+    //
+    // Callers should always process the n > 0 bytes returned before
+    // considering the error err. Doing so correctly handles I/O errors
+    // that happen after reading some bytes and also both of the
+    // allowed EOF behaviors.
+    //
+    // If len(p) == 0, Read should always return n == 0. It may return a
+    // non-nil error if some error condition is known, such as EOF.
+    //
+    // Implementations of Read are discouraged from returning a
+    // zero byte count with a nil error, except when len(p) == 0.
+    // Callers should treat a return of 0 and nil as indicating that
+    // nothing happened; in particular it does not indicate EOF.
+    //
+    // Implementations must not retain p.
     
     template<typename T>
     Reader::Reader(T& ref)
@@ -78,6 +134,15 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // Writer is the interface that wraps the basic Write method.
+    //
+    // Write writes len(p) bytes from p to the underlying data stream.
+    // It returns the number of bytes written from p (0 <= n <= len(p))
+    // and any error encountered that caused the write to stop early.
+    // Write must return a non-nil error if it returns n < len(p).
+    // Write must not modify the slice data, even temporarily.
+    //
+    // Implementations must not retain p.
     
     template<typename T>
     Writer::Writer(T& ref)
@@ -126,6 +191,10 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // Closer is the interface that wraps the basic Close method.
+    //
+    // The behavior of Close after the first call is undefined.
+    // Specific implementations may document their own behavior.
     
     template<typename T>
     Closer::Closer(T& ref)
@@ -174,6 +243,21 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // Seeker is the interface that wraps the basic Seek method.
+    //
+    // Seek sets the offset for the next Read or Write to offset,
+    // interpreted according to whence:
+    // [SeekStart] means relative to the start of the file,
+    // [SeekCurrent] means relative to the current offset, and
+    // [SeekEnd] means relative to the end
+    // (for example, offset = -2 specifies the penultimate byte of the file).
+    // Seek returns the new offset relative to the start of the
+    // file or an error, if any.
+    //
+    // Seeking to an offset before the start of the file is an error.
+    // Seeking to any positive offset may be allowed, but if the new offset exceeds
+    // the size of the underlying object the behavior of subsequent I/O operations
+    // is implementation-dependent.
     
     template<typename T>
     Seeker::Seeker(T& ref)
@@ -222,6 +306,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadWriter is the interface that groups the basic Read and Write methods.
     
     template<typename T>
     ReadWriter::ReadWriter(T& ref)
@@ -255,6 +340,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadCloser is the interface that groups the basic Read and Close methods.
     
     template<typename T>
     ReadCloser::ReadCloser(T& ref)
@@ -288,6 +374,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // WriteCloser is the interface that groups the basic Write and Close methods.
     
     template<typename T>
     WriteCloser::WriteCloser(T& ref)
@@ -321,6 +408,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadWriteCloser is the interface that groups the basic Read, Write and Close methods.
     
     template<typename T>
     ReadWriteCloser::ReadWriteCloser(T& ref)
@@ -354,6 +442,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadSeeker is the interface that groups the basic Read and Seek methods.
     
     template<typename T>
     ReadSeeker::ReadSeeker(T& ref)
@@ -387,6 +476,8 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadSeekCloser is the interface that groups the basic Read, Seek and Close
+    // methods.
     
     template<typename T>
     ReadSeekCloser::ReadSeekCloser(T& ref)
@@ -420,6 +511,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // WriteSeeker is the interface that groups the basic Write and Seek methods.
     
     template<typename T>
     WriteSeeker::WriteSeeker(T& ref)
@@ -453,6 +545,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReadWriteSeeker is the interface that groups the basic Read, Write and Seek methods.
     
     template<typename T>
     ReadWriteSeeker::ReadWriteSeeker(T& ref)
@@ -486,6 +579,13 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReaderFrom is the interface that wraps the ReadFrom method.
+    //
+    // ReadFrom reads data from r until EOF or error.
+    // The return value n is the number of bytes read.
+    // Any error except EOF encountered during the read is also returned.
+    //
+    // The [Copy] function uses [ReaderFrom] if available.
     
     template<typename T>
     ReaderFrom::ReaderFrom(T& ref)
@@ -534,6 +634,13 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // WriterTo is the interface that wraps the WriteTo method.
+    //
+    // WriteTo writes data to w until there's no more data to write or
+    // when an error occurs. The return value n is the number of bytes
+    // written. Any error encountered during the write is also returned.
+    //
+    // The Copy function uses WriterTo if available.
     
     template<typename T>
     WriterTo::WriterTo(T& ref)
@@ -582,6 +689,32 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ReaderAt is the interface that wraps the basic ReadAt method.
+    //
+    // ReadAt reads len(p) bytes into p starting at offset off in the
+    // underlying input source. It returns the number of bytes
+    // read (0 <= n <= len(p)) and any error encountered.
+    //
+    // When ReadAt returns n < len(p), it returns a non-nil error
+    // explaining why more bytes were not returned. In this respect,
+    // ReadAt is stricter than Read.
+    //
+    // Even if ReadAt returns n < len(p), it may use all of p as scratch
+    // space during the call. If some data is available but not len(p) bytes,
+    // ReadAt blocks until either all the data is available or an error occurs.
+    // In this respect ReadAt is different from Read.
+    //
+    // If the n = len(p) bytes returned by ReadAt are at the end of the
+    // input source, ReadAt may return either err == EOF or err == nil.
+    //
+    // If ReadAt is reading from an input source with a seek offset,
+    // ReadAt should not affect nor be affected by the underlying
+    // seek offset.
+    //
+    // Clients of ReadAt can execute parallel ReadAt calls on the
+    // same input source.
+    //
+    // Implementations must not retain p.
     
     template<typename T>
     ReaderAt::ReaderAt(T& ref)
@@ -630,6 +763,21 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // WriterAt is the interface that wraps the basic WriteAt method.
+    //
+    // WriteAt writes len(p) bytes from p to the underlying data stream
+    // at offset off. It returns the number of bytes written from p (0 <= n <= len(p))
+    // and any error encountered that caused the write to stop early.
+    // WriteAt must return a non-nil error if it returns n < len(p).
+    //
+    // If WriteAt is writing to a destination with a seek offset,
+    // WriteAt should not affect nor be affected by the underlying
+    // seek offset.
+    //
+    // Clients of WriteAt can execute parallel WriteAt calls on the same
+    // destination if the ranges do not overlap.
+    //
+    // Implementations must not retain p.
     
     template<typename T>
     WriterAt::WriterAt(T& ref)
@@ -678,6 +826,15 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ByteReader is the interface that wraps the ReadByte method.
+    //
+    // ReadByte reads and returns the next byte from the input or
+    // any error encountered. If ReadByte returns an error, no input
+    // byte was consumed, and the returned byte value is undefined.
+    //
+    // ReadByte provides an efficient interface for byte-at-time
+    // processing. A [Reader] that does not implement  ByteReader
+    // can be wrapped using bufio.NewReader to add this method.
     
     template<typename T>
     ByteReader::ByteReader(T& ref)
@@ -726,6 +883,14 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ByteScanner is the interface that adds the UnreadByte method to the
+    // basic ReadByte method.
+    //
+    // UnreadByte causes the next call to ReadByte to return the last byte read.
+    // If the last operation was not a successful call to ReadByte, UnreadByte may
+    // return an error, unread the last byte read (or the byte prior to the
+    // last-unread byte), or (in implementations that support the [Seeker] interface)
+    // seek to one byte before the current offset.
     
     template<typename T>
     ByteScanner::ByteScanner(T& ref)
@@ -774,6 +939,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // ByteWriter is the interface that wraps the WriteByte method.
     
     template<typename T>
     ByteWriter::ByteWriter(T& ref)
@@ -822,6 +988,11 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // RuneReader is the interface that wraps the ReadRune method.
+    //
+    // ReadRune reads a single encoded Unicode character
+    // and returns the rune and its size in bytes. If no character is
+    // available, err will be set.
     
     template<typename T>
     RuneReader::RuneReader(T& ref)
@@ -870,6 +1041,14 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // RuneScanner is the interface that adds the UnreadRune method to the
+    // basic ReadRune method.
+    //
+    // UnreadRune causes the next call to ReadRune to return the last rune read.
+    // If the last operation was not a successful call to ReadRune, UnreadRune may
+    // return an error, unread the last rune read (or the rune prior to the
+    // last-unread rune), or (in implementations that support the [Seeker] interface)
+    // seek to the start of the rune before the current offset.
     
     template<typename T>
     RuneScanner::RuneScanner(T& ref)
@@ -918,6 +1097,7 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // StringWriter is the interface that wraps the WriteString method.
     
     template<typename T>
     StringWriter::StringWriter(T& ref)
@@ -966,6 +1146,9 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // WriteString writes the contents of the string s to w, which accepts a slice of bytes.
+    // If w implements [StringWriter], [StringWriter.WriteString] is invoked directly.
+    // Otherwise, [Writer.Write] is called exactly once.
     std::tuple<int, struct gocpp::error> WriteString(struct Writer w, std::string s)
     {
         int n;
@@ -977,6 +1160,14 @@ namespace golang::io
         return rec::Write(gocpp::recv(w), gocpp::slice<unsigned char>(s));
     }
 
+    // ReadAtLeast reads from r into buf until it has read at least min bytes.
+    // It returns the number of bytes copied and an error if fewer bytes were read.
+    // The error is EOF only if no bytes were read.
+    // If an EOF happens after reading fewer than min bytes,
+    // ReadAtLeast returns [ErrUnexpectedEOF].
+    // If min is greater than the length of buf, ReadAtLeast returns [ErrShortBuffer].
+    // On return, n >= min if and only if err == nil.
+    // If r returns an error having read at least min bytes, the error is dropped.
     std::tuple<int, struct gocpp::error> ReadAtLeast(struct Reader r, gocpp::slice<unsigned char> buf, int min)
     {
         int n;
@@ -1003,6 +1194,13 @@ namespace golang::io
         return {n, err};
     }
 
+    // ReadFull reads exactly len(buf) bytes from r into buf.
+    // It returns the number of bytes copied and an error if fewer bytes were read.
+    // The error is EOF only if no bytes were read.
+    // If an EOF happens after reading some but not all the bytes,
+    // ReadFull returns [ErrUnexpectedEOF].
+    // On return, n == len(buf) if and only if err == nil.
+    // If r returns an error having read at least len(buf) bytes, the error is dropped.
     std::tuple<int, struct gocpp::error> ReadFull(struct Reader r, gocpp::slice<unsigned char> buf)
     {
         int n;
@@ -1010,6 +1208,12 @@ namespace golang::io
         return ReadAtLeast(r, buf, len(buf));
     }
 
+    // CopyN copies n bytes (or until an error) from src to dst.
+    // It returns the number of bytes copied and the earliest
+    // error encountered while copying.
+    // On return, written == n if and only if err == nil.
+    //
+    // If dst implements [ReaderFrom], the copy is implemented using it.
     std::tuple<int64_t, struct gocpp::error> CopyN(struct Writer dst, struct Reader src, int64_t n)
     {
         int64_t written;
@@ -1026,6 +1230,18 @@ namespace golang::io
         return {written, err};
     }
 
+    // Copy copies from src to dst until either EOF is reached
+    // on src or an error occurs. It returns the number of bytes
+    // copied and the first error encountered while copying, if any.
+    //
+    // A successful Copy returns err == nil, not err == EOF.
+    // Because Copy is defined to read from src until EOF, it does
+    // not treat an EOF from Read as an error to be reported.
+    //
+    // If src implements [WriterTo],
+    // the copy is implemented by calling src.WriteTo(dst).
+    // Otherwise, if dst implements [ReaderFrom],
+    // the copy is implemented by calling dst.ReadFrom(src).
     std::tuple<int64_t, struct gocpp::error> Copy(struct Writer dst, struct Reader src)
     {
         int64_t written;
@@ -1033,6 +1249,13 @@ namespace golang::io
         return copyBuffer(dst, src, nullptr);
     }
 
+    // CopyBuffer is identical to Copy except that it stages through the
+    // provided buffer (if one is required) rather than allocating a
+    // temporary one. If buf is nil, one is allocated; otherwise if it has
+    // zero length, CopyBuffer panics.
+    //
+    // If either src implements [WriterTo] or dst implements [ReaderFrom],
+    // buf will not be used to perform the copy.
     std::tuple<int64_t, struct gocpp::error> CopyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf)
     {
         int64_t written;
@@ -1044,6 +1267,8 @@ namespace golang::io
         return copyBuffer(dst, src, buf);
     }
 
+    // copyBuffer is the actual implementation of Copy and CopyBuffer.
+    // if buf is nil, one is allocated.
     std::tuple<int64_t, struct gocpp::error> copyBuffer(struct Writer dst, struct Reader src, gocpp::slice<unsigned char> buf)
     {
         int64_t written;
@@ -1110,11 +1335,18 @@ namespace golang::io
         return {written, err};
     }
 
+    // LimitReader returns a Reader that reads from r
+    // but stops with EOF after n bytes.
+    // The underlying implementation is a *LimitedReader.
     struct Reader LimitReader(struct Reader r, int64_t n)
     {
         return new LimitedReader {r, n};
     }
 
+    // A LimitedReader reads from R but limits the amount of
+    // data returned to just N bytes. Each call to Read
+    // updates N to reflect the new amount remaining.
+    // Read returns EOF when N <= 0 or when the underlying R returns EOF.
     
     template<typename T> requires gocpp::GoStruct<T>
     LimitedReader::operator T()
@@ -1164,6 +1396,8 @@ namespace golang::io
         return {n, err};
     }
 
+    // NewSectionReader returns a [SectionReader] that reads from r
+    // starting at offset off and stops with EOF after n bytes.
     struct SectionReader* NewSectionReader(struct ReaderAt r, int64_t off, int64_t n)
     {
         int64_t remaining = {};
@@ -1179,6 +1413,8 @@ namespace golang::io
         return new SectionReader {r, off, off, remaining, n};
     }
 
+    // SectionReader implements Read, Seek, and ReadAt on a section
+    // of an underlying [ReaderAt].
     
     template<typename T> requires gocpp::GoStruct<T>
     SectionReader::operator T()
@@ -1294,11 +1530,16 @@ namespace golang::io
         return rec::ReadAt(gocpp::recv(s->r), p, off);
     }
 
+    // Size returns the size of the section in bytes.
     int64_t rec::Size(struct SectionReader* s)
     {
         return s->limit - s->base;
     }
 
+    // Outer returns the underlying [ReaderAt] and offsets for the section.
+    //
+    // The returned values are the same that were passed to [NewSectionReader]
+    // when the [SectionReader] was created.
     std::tuple<struct ReaderAt, int64_t, int64_t> rec::Outer(struct SectionReader* s)
     {
         struct ReaderAt r;
@@ -1307,6 +1548,7 @@ namespace golang::io
         return {s->r, s->base, s->n};
     }
 
+    // An OffsetWriter maps writes at offset base to offset base+off in the underlying writer.
     
     template<typename T> requires gocpp::GoStruct<T>
     OffsetWriter::operator T()
@@ -1342,6 +1584,8 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // NewOffsetWriter returns an [OffsetWriter] that writes to w
+    // starting at offset off.
     struct OffsetWriter* NewOffsetWriter(struct WriterAt w, int64_t off)
     {
         return new OffsetWriter {w, off, off};
@@ -1397,6 +1641,11 @@ namespace golang::io
         return {offset - o->base, nullptr};
     }
 
+    // TeeReader returns a [Reader] that writes to w what it reads from r.
+    // All reads from r performed through it are matched with
+    // corresponding writes to w. There is no internal buffering -
+    // the write must complete before the read completes.
+    // Any error encountered while writing is reported as a read error.
     struct Reader TeeReader(struct Reader r, struct Writer w)
     {
         return new teeReader {r, w};
@@ -1449,6 +1698,8 @@ namespace golang::io
         return {n, err};
     }
 
+    // Discard is a [Writer] on which all Write calls succeed
+    // without doing anything.
     Writer Discard = discard {};
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1476,6 +1727,8 @@ namespace golang::io
         return value.PrintTo(os);
     }
 
+    // discard implements ReaderFrom as an optimization so Copy to
+    // io.Discard can avoid doing unnecessary work.
     ReaderFrom _ = discard {};
     std::tuple<int, struct gocpp::error> rec::Write(discard, gocpp::slice<unsigned char> p)
     {
@@ -1516,6 +1769,10 @@ namespace golang::io
         }
     }
 
+    // NopCloser returns a [ReadCloser] with a no-op Close method wrapping
+    // the provided [Reader] r.
+    // If r implements [WriterTo], the returned [ReadCloser] will implement [WriterTo]
+    // by forwarding calls to r.
     struct ReadCloser NopCloser(struct Reader r)
     {
         if(auto [gocpp_id_1, ok] = gocpp::getValue<WriterTo>(r); ok)
@@ -1594,6 +1851,10 @@ namespace golang::io
         return rec::WriteTo(gocpp::recv(gocpp::getValue<WriterTo>(c.Reader)), w);
     }
 
+    // ReadAll reads from r until an error or EOF and returns the data it read.
+    // A successful call returns err == nil, not err == EOF. Because ReadAll is
+    // defined to read from src until EOF, it does not treat an EOF from Read
+    // as an error to be reported.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 512);

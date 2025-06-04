@@ -51,14 +51,17 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    //go:systemstack
     void pageTraceAlloc(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }
 
+    //go:systemstack
     void pageTraceFree(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }
 
+    //go:systemstack
     void pageTraceScav(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }

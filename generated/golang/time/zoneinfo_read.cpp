@@ -27,17 +27,28 @@ namespace golang::time
         using namespace mocklib::rec;
     }
 
+    // registerLoadFromEmbeddedTZData is called by the time/tzdata package,
+    // if it is imported.
     void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f)
     {
         loadFromEmbeddedTZData = f;
     }
 
+    // loadFromEmbeddedTZData is used to load a specific tzdata file
+    // from tzdata information embedded in the binary itself.
+    // This is set when the time/tzdata package is imported,
+    // via registerLoadFromEmbeddedTzdata.
     std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
+    // maxFileSize is the max permitted size of files read by readFile.
+    // As reference, the zoneinfo.zip distributed by Go is ~350 KB,
+    // so 10MB is overkill.
     std::string rec::Error(golang::time::fileSizeError f)
     {
         return "time: file "s + std::string(f) + " is too large"s;
     }
 
+    // Copies of io.Seek* constants to avoid importing "io":
+    // Simple I/O interface to binary blob of data.
     
     template<typename T> requires gocpp::GoStruct<T>
     dataIO::operator T()
@@ -123,6 +134,7 @@ namespace golang::time
         return {p[0], true};
     }
 
+    // rest returns the rest of the data in the buffer.
     gocpp::slice<unsigned char> rec::rest(struct dataIO* d)
     {
         auto r = d->p;
@@ -130,6 +142,7 @@ namespace golang::time
         return r;
     }
 
+    // Make a string by stopping at the first NUL
     std::string byteString(gocpp::slice<unsigned char> p)
     {
         for(auto i = 0; i < len(p); i++)
@@ -143,6 +156,10 @@ namespace golang::time
     }
 
     gocpp::error errBadData = errors::New("malformed time zone information"s);
+    // LoadLocationFromTZData returns a Location with the given name
+    // initialized from the IANA Time Zone database-formatted data.
+    // The data should be in the format of a standard IANA time zone file
+    // (for example, the content of /etc/localtime on Unix systems).
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
@@ -150,6 +167,7 @@ namespace golang::time
         {
             return {nullptr, errBadData};
         }
+        // 1-byte version, then 15 bytes of padding
         int version = {};
         gocpp::slice<unsigned char> p = {};
         if(p = rec::read(gocpp::recv(d), 16); len(p) != 16)
@@ -182,6 +200,13 @@ namespace golang::time
                 }
             }
         }
+        // six big-endian 32-bit integers:
+        //	number of UTC/local indicators
+        //	number of standard/wall indicators
+        //	number of leap seconds
+        //	number of transition times
+        //	number of local time zones
+        //	number of characters of time zone abbrev strings
         auto NUTCLocal = 0;
         auto NStdWall = 1;
         auto NLeap = 2;
@@ -388,6 +413,8 @@ namespace golang::time
         return - 1;
     }
 
+    // loadTzinfoFromDirOrZip returns the contents of the file with the given name
+    // in dir. dir can either be an uncompressed zip file, or a directory.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name)
     {
         if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip"s)
@@ -401,6 +428,7 @@ namespace golang::time
         return readFile(name);
     }
 
+    // get4 returns the little-endian 32-bit value in b.
     int get4(gocpp::slice<unsigned char> b)
     {
         if(len(b) < 4)
@@ -410,6 +438,7 @@ namespace golang::time
         return int(b[0]) | (int(b[1]) << 8) | (int(b[2]) << 16) | (int(b[3]) << 24);
     }
 
+    // get2 returns the little-endian 16-bit value in b.
     int get2(gocpp::slice<unsigned char> b)
     {
         if(len(b) < 2)
@@ -419,6 +448,8 @@ namespace golang::time
         return int(b[0]) | (int(b[1]) << 8);
     }
 
+    // loadTzinfoFromZip returns the contents of the file with the given name
+    // in the given uncompressed zip file.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name)
     {
         gocpp::Defer defer;
@@ -491,7 +522,14 @@ namespace golang::time
         }
     }
 
+    // loadTzinfoFromTzdata returns the time zone information of the time zone
+    // with the given name, from a tzdata database file as they are typically
+    // found on android.
     std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (std::string file, std::string name)> loadTzinfoFromTzdata;
+    // loadTzinfo returns the time zone information of the time zone
+    // with the given name, from a given source. A source may be a
+    // timezone database directory, tzdata database file or an uncompressed
+    // zip file, containing the contents of such a directory.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source)
     {
         if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata"s)
@@ -501,6 +539,10 @@ namespace golang::time
         return loadTzinfoFromDirOrZip(source, name);
     }
 
+    // loadLocation returns the Location with the given name from one of
+    // the specified sources. See loadTzinfo for a list of supported sources.
+    // The first timezone data matching the given name that is successfully loaded
+    // and parsed is returned as a Location.
     std::tuple<struct Location*, struct gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources)
     {
         struct Location* z;
@@ -557,6 +599,10 @@ namespace golang::time
         return {nullptr, errors::New("unknown time zone "s + name)};
     }
 
+    // readFile reads and returns the content of the named file.
+    // It is a trivial implementation of os.ReadFile, reimplemented
+    // here to avoid depending on io/ioutil or os.
+    // It returns an error if name exceeds maxFileSize bytes.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name)
     {
         gocpp::Defer defer;

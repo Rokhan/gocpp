@@ -22,6 +22,9 @@ namespace golang::atomic
         using namespace mocklib::rec;
     }
 
+    // Int32 is an atomically accessed int32 value.
+    //
+    // An Int32 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Int32::operator T()
@@ -54,31 +57,58 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     int32_t rec::Load(struct Int32* i)
     {
         return Loadint32(& i->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Int32* i, int32_t value)
     {
         Storeint32(& i->value, value);
     }
 
+    // CompareAndSwap atomically compares i's value with old,
+    // and if they're equal, swaps i's value with new.
+    // It reports whether the swap ran.
+    //
+    //go:nosplit
     bool rec::CompareAndSwap(struct Int32* i, int32_t old, int32_t go_new)
     {
         return Casint32(& i->value, old, go_new);
     }
 
+    // Swap replaces i's value with new, returning
+    // i's value before the replacement.
+    //
+    //go:nosplit
     int32_t rec::Swap(struct Int32* i, int32_t go_new)
     {
         return Xchgint32(& i->value, go_new);
     }
 
+    // Add adds delta to i atomically, returning
+    // the new updated value.
+    //
+    // This operation wraps around in the usual
+    // two's-complement way.
+    //
+    //go:nosplit
     int32_t rec::Add(struct Int32* i, int32_t delta)
     {
         return Xaddint32(& i->value, delta);
     }
 
+    // Int64 is an atomically accessed int64 value.
+    //
+    // 8-byte aligned on all platforms, unlike a regular int64.
+    //
+    // An Int64 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Int64::operator T()
@@ -114,31 +144,56 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     int64_t rec::Load(struct Int64* i)
     {
         return Loadint64(& i->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Int64* i, int64_t value)
     {
         Storeint64(& i->value, value);
     }
 
+    // CompareAndSwap atomically compares i's value with old,
+    // and if they're equal, swaps i's value with new.
+    // It reports whether the swap ran.
+    //
+    //go:nosplit
     bool rec::CompareAndSwap(struct Int64* i, int64_t old, int64_t go_new)
     {
         return Casint64(& i->value, old, go_new);
     }
 
+    // Swap replaces i's value with new, returning
+    // i's value before the replacement.
+    //
+    //go:nosplit
     int64_t rec::Swap(struct Int64* i, int64_t go_new)
     {
         return Xchgint64(& i->value, go_new);
     }
 
+    // Add adds delta to i atomically, returning
+    // the new updated value.
+    //
+    // This operation wraps around in the usual
+    // two's-complement way.
+    //
+    //go:nosplit
     int64_t rec::Add(struct Int64* i, int64_t delta)
     {
         return Xaddint64(& i->value, delta);
     }
 
+    // Uint8 is an atomically accessed uint8 value.
+    //
+    // A Uint8 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uint8::operator T()
@@ -171,26 +226,49 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     uint8_t rec::Load(struct Uint8* u)
     {
         return Load8(& u->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Uint8* u, uint8_t value)
     {
         Store8(& u->value, value);
     }
 
+    // And takes value and performs a bit-wise
+    // "and" operation with the value of u, storing
+    // the result into u.
+    //
+    // The full process is performed atomically.
+    //
+    //go:nosplit
     void rec::And(struct Uint8* u, uint8_t value)
     {
         And8(& u->value, value);
     }
 
+    // Or takes value and performs a bit-wise
+    // "or" operation with the value of u, storing
+    // the result into u.
+    //
+    // The full process is performed atomically.
+    //
+    //go:nosplit
     void rec::Or(struct Uint8* u, uint8_t value)
     {
         Or8(& u->value, value);
     }
 
+    // Bool is an atomically accessed bool value.
+    //
+    // A Bool must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Bool::operator T()
@@ -220,11 +298,17 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     bool rec::Load(struct Bool* b)
     {
         return rec::Load(gocpp::recv(b->u)) != 0;
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Bool* b, bool value)
     {
         auto s = uint8_t(0);
@@ -235,6 +319,9 @@ namespace golang::atomic
         rec::Store(gocpp::recv(b->u), s);
     }
 
+    // Uint32 is an atomically accessed uint32 value.
+    //
+    // A Uint32 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uint32::operator T()
@@ -267,56 +354,125 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     uint32_t rec::Load(struct Uint32* u)
     {
         return Load(& u->value);
     }
 
+    // LoadAcquire is a partially unsynchronized version
+    // of Load that relaxes ordering constraints. Other threads
+    // may observe operations that precede this operation to
+    // occur after it, but no operation that occurs after it
+    // on this thread can be observed to occur before it.
+    //
+    // WARNING: Use sparingly and with great care.
+    //
+    //go:nosplit
     uint32_t rec::LoadAcquire(struct Uint32* u)
     {
         return LoadAcq(& u->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Uint32* u, uint32_t value)
     {
         Store(& u->value, value);
     }
 
+    // StoreRelease is a partially unsynchronized version
+    // of Store that relaxes ordering constraints. Other threads
+    // may observe operations that occur after this operation to
+    // precede it, but no operation that precedes it
+    // on this thread can be observed to occur after it.
+    //
+    // WARNING: Use sparingly and with great care.
+    //
+    //go:nosplit
     void rec::StoreRelease(struct Uint32* u, uint32_t value)
     {
         StoreRel(& u->value, value);
     }
 
+    // CompareAndSwap atomically compares u's value with old,
+    // and if they're equal, swaps u's value with new.
+    // It reports whether the swap ran.
+    //
+    //go:nosplit
     bool rec::CompareAndSwap(struct Uint32* u, uint32_t old, uint32_t go_new)
     {
         return Cas(& u->value, old, go_new);
     }
 
+    // CompareAndSwapRelease is a partially unsynchronized version
+    // of Cas that relaxes ordering constraints. Other threads
+    // may observe operations that occur after this operation to
+    // precede it, but no operation that precedes it
+    // on this thread can be observed to occur after it.
+    // It reports whether the swap ran.
+    //
+    // WARNING: Use sparingly and with great care.
+    //
+    //go:nosplit
     bool rec::CompareAndSwapRelease(struct Uint32* u, uint32_t old, uint32_t go_new)
     {
         return CasRel(& u->value, old, go_new);
     }
 
+    // Swap replaces u's value with new, returning
+    // u's value before the replacement.
+    //
+    //go:nosplit
     uint32_t rec::Swap(struct Uint32* u, uint32_t value)
     {
         return Xchg(& u->value, value);
     }
 
+    // And takes value and performs a bit-wise
+    // "and" operation with the value of u, storing
+    // the result into u.
+    //
+    // The full process is performed atomically.
+    //
+    //go:nosplit
     void rec::And(struct Uint32* u, uint32_t value)
     {
         And(& u->value, value);
     }
 
+    // Or takes value and performs a bit-wise
+    // "or" operation with the value of u, storing
+    // the result into u.
+    //
+    // The full process is performed atomically.
+    //
+    //go:nosplit
     void rec::Or(struct Uint32* u, uint32_t value)
     {
         Or(& u->value, value);
     }
 
+    // Add adds delta to u atomically, returning
+    // the new updated value.
+    //
+    // This operation wraps around in the usual
+    // two's-complement way.
+    //
+    //go:nosplit
     uint32_t rec::Add(struct Uint32* u, int32_t delta)
     {
         return Xadd(& u->value, delta);
     }
 
+    // Uint64 is an atomically accessed uint64 value.
+    //
+    // 8-byte aligned on all platforms, unlike a regular uint64.
+    //
+    // A Uint64 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uint64::operator T()
@@ -352,31 +508,56 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     uint64_t rec::Load(struct Uint64* u)
     {
         return Load64(& u->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Uint64* u, uint64_t value)
     {
         Store64(& u->value, value);
     }
 
+    // CompareAndSwap atomically compares u's value with old,
+    // and if they're equal, swaps u's value with new.
+    // It reports whether the swap ran.
+    //
+    //go:nosplit
     bool rec::CompareAndSwap(struct Uint64* u, uint64_t old, uint64_t go_new)
     {
         return Cas64(& u->value, old, go_new);
     }
 
+    // Swap replaces u's value with new, returning
+    // u's value before the replacement.
+    //
+    //go:nosplit
     uint64_t rec::Swap(struct Uint64* u, uint64_t value)
     {
         return Xchg64(& u->value, value);
     }
 
+    // Add adds delta to u atomically, returning
+    // the new updated value.
+    //
+    // This operation wraps around in the usual
+    // two's-complement way.
+    //
+    //go:nosplit
     uint64_t rec::Add(struct Uint64* u, int64_t delta)
     {
         return Xadd64(& u->value, delta);
     }
 
+    // Uintptr is an atomically accessed uintptr value.
+    //
+    // A Uintptr must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Uintptr::operator T()
@@ -409,41 +590,86 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     uintptr_t rec::Load(struct Uintptr* u)
     {
         return Loaduintptr(& u->value);
     }
 
+    // LoadAcquire is a partially unsynchronized version
+    // of Load that relaxes ordering constraints. Other threads
+    // may observe operations that precede this operation to
+    // occur after it, but no operation that occurs after it
+    // on this thread can be observed to occur before it.
+    //
+    // WARNING: Use sparingly and with great care.
+    //
+    //go:nosplit
     uintptr_t rec::LoadAcquire(struct Uintptr* u)
     {
         return LoadAcquintptr(& u->value);
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Uintptr* u, uintptr_t value)
     {
         Storeuintptr(& u->value, value);
     }
 
+    // StoreRelease is a partially unsynchronized version
+    // of Store that relaxes ordering constraints. Other threads
+    // may observe operations that occur after this operation to
+    // precede it, but no operation that precedes it
+    // on this thread can be observed to occur after it.
+    //
+    // WARNING: Use sparingly and with great care.
+    //
+    //go:nosplit
     void rec::StoreRelease(struct Uintptr* u, uintptr_t value)
     {
         StoreReluintptr(& u->value, value);
     }
 
+    // CompareAndSwap atomically compares u's value with old,
+    // and if they're equal, swaps u's value with new.
+    // It reports whether the swap ran.
+    //
+    //go:nosplit
     bool rec::CompareAndSwap(struct Uintptr* u, uintptr_t old, uintptr_t go_new)
     {
         return Casuintptr(& u->value, old, go_new);
     }
 
+    // Swap replaces u's value with new, returning
+    // u's value before the replacement.
+    //
+    //go:nosplit
     uintptr_t rec::Swap(struct Uintptr* u, uintptr_t value)
     {
         return Xchguintptr(& u->value, value);
     }
 
+    // Add adds delta to u atomically, returning
+    // the new updated value.
+    //
+    // This operation wraps around in the usual
+    // two's-complement way.
+    //
+    //go:nosplit
     uintptr_t rec::Add(struct Uintptr* u, uintptr_t delta)
     {
         return Xadduintptr(& u->value, delta);
     }
 
+    // Float64 is an atomically accessed float64 value.
+    //
+    // 8-byte aligned on all platforms, unlike a regular float64.
+    //
+    // A Float64 must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     Float64::operator T()
@@ -473,17 +699,32 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     double rec::Load(struct Float64* f)
     {
         auto r = rec::Load(gocpp::recv(f->u));
         return *(double*)(unsafe::Pointer(& r));
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
     void rec::Store(struct Float64* f, double value)
     {
         rec::Store(gocpp::recv(f->u), *(uint64_t*)(unsafe::Pointer(& value)));
     }
 
+    // UnsafePointer is an atomically accessed unsafe.Pointer value.
+    //
+    // Note that because of the atomicity guarantees, stores to values
+    // of this type never trigger a write barrier, and the relevant
+    // methods are suffixed with "NoWB" to indicate that explicitly.
+    // As a result, this type should be used carefully, and sparingly,
+    // mostly with values that do not live in the Go heap anyway.
+    //
+    // An UnsafePointer must not be copied.
     
     template<typename T> requires gocpp::GoStruct<T>
     UnsafePointer::operator T()
@@ -516,29 +757,60 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
     unsafe::Pointer rec::Load(struct UnsafePointer* u)
     {
         return Loadp(unsafe::Pointer(& u->value));
     }
 
+    // StoreNoWB updates the value atomically.
+    //
+    // WARNING: As the name implies this operation does *not*
+    // perform a write barrier on value, and so this operation may
+    // hide pointers from the GC. Use with care and sparingly.
+    // It is safe to use with values not found in the Go heap.
+    // Prefer Store instead.
+    //
+    //go:nosplit
     void rec::StoreNoWB(struct UnsafePointer* u, unsafe::Pointer value)
     {
         StorepNoWB(unsafe::Pointer(& u->value), value);
     }
 
+    // Store updates the value atomically.
     void rec::Store(struct UnsafePointer* u, unsafe::Pointer value)
     {
         storePointer(& u->value, value);
     }
 
+    // provided by runtime
+    //
+    //go:linkname storePointer
     void storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapNoWB atomically (with respect to other methods)
+    // compares u's value with old, and if they're equal,
+    // swaps u's value with new.
+    // It reports whether the swap ran.
+    //
+    // WARNING: As the name implies this operation does *not*
+    // perform a write barrier on value, and so this operation may
+    // hide pointers from the GC. Use with care and sparingly.
+    // It is safe to use with values not found in the Go heap.
+    // Prefer CompareAndSwap instead.
+    //
+    //go:nosplit
     bool rec::CompareAndSwapNoWB(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new)
     {
         return Casp1(& u->value, old, go_new);
     }
 
+    // CompareAndSwap atomically compares u's value with old,
+    // and if they're equal, swaps u's value with new.
+    // It reports whether the swap ran.
     bool rec::CompareAndSwap(struct UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new)
     {
         return casPointer(& u->value, old, go_new);
@@ -547,6 +819,7 @@ namespace golang::atomic
     bool casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
     /* convertBlockStmt, nil block */;
 
+    // Pointer is an atomic pointer of type *T.
     
     template<typename T>
     template<typename U> requires gocpp::GoStruct<U>
@@ -580,6 +853,9 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Load accesses and returns the value atomically.
+    //
+    //go:nosplit
 
     template<typename T>
     T* rec::Load(golang::atomic::Pointer<T>* p)
@@ -587,6 +863,15 @@ namespace golang::atomic
         return (T*)(rec::Load(gocpp::recv(p->u)));
     }
 
+    // StoreNoWB updates the value atomically.
+    //
+    // WARNING: As the name implies this operation does *not*
+    // perform a write barrier on value, and so this operation may
+    // hide pointers from the GC. Use with care and sparingly.
+    // It is safe to use with values not found in the Go heap.
+    // Prefer Store instead.
+    //
+    //go:nosplit
 
     template<typename T>
     void rec::StoreNoWB(golang::atomic::Pointer<T>* p, T* value)
@@ -594,6 +879,9 @@ namespace golang::atomic
         rec::StoreNoWB(gocpp::recv(p->u), unsafe::Pointer(value));
     }
 
+    // Store updates the value atomically.
+    //
+    //go:nosplit
 
     template<typename T>
     void rec::Store(golang::atomic::Pointer<T>* p, T* value)
@@ -601,6 +889,18 @@ namespace golang::atomic
         rec::Store(gocpp::recv(p->u), unsafe::Pointer(value));
     }
 
+    // CompareAndSwapNoWB atomically (with respect to other methods)
+    // compares u's value with old, and if they're equal,
+    // swaps u's value with new.
+    // It reports whether the swap ran.
+    //
+    // WARNING: As the name implies this operation does *not*
+    // perform a write barrier on value, and so this operation may
+    // hide pointers from the GC. Use with care and sparingly.
+    // It is safe to use with values not found in the Go heap.
+    // Prefer CompareAndSwap instead.
+    //
+    //go:nosplit
 
     template<typename T>
     bool rec::CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new)
@@ -608,6 +908,10 @@ namespace golang::atomic
         return rec::CompareAndSwapNoWB(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
 
+    // CompareAndSwap atomically (with respect to other methods)
+    // compares u's value with old, and if they're equal,
+    // swaps u's value with new.
+    // It reports whether the swap ran.
 
     template<typename T>
     bool rec::CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new)
@@ -615,6 +919,11 @@ namespace golang::atomic
         return rec::CompareAndSwap(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
 
+    // noCopy may be embedded into structs which must not be copied
+    // after the first use.
+    //
+    // See https://golang.org/issues/8005#issuecomment-190753527
+    // for details.
     
     template<typename T> requires gocpp::GoStruct<T>
     noCopy::operator T()
@@ -641,6 +950,7 @@ namespace golang::atomic
         return value.PrintTo(os);
     }
 
+    // Lock is a no-op used by -copylocks checker from `go vet`.
     void rec::Lock(noCopy*)
     {
     }
@@ -649,6 +959,9 @@ namespace golang::atomic
     {
     }
 
+    // align64 may be added to structs that must be 64-bit aligned.
+    // This struct is recognized by a special case in the compiler
+    // and will not work if copied to any other package.
     
     template<typename T> requires gocpp::GoStruct<T>
     align64::operator T()

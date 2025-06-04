@@ -22,13 +22,20 @@ namespace golang::strconv
         using namespace mocklib::rec;
     }
 
+    // lower(c) is a lower-case letter if and only if
+    // c is either that lower-case letter or the equivalent upper-case letter.
+    // Instead of writing c == 'x' || c == 'X' one can write lower(c) == 'x'.
+    // Note that lower of non-letters can produce other non-letters.
     unsigned char lower(unsigned char c)
     {
         return c | ('x' - 'X');
     }
 
+    // ErrRange indicates that a value is out of range for the target type.
     gocpp::error ErrRange = errors::New("value out of range"s);
+    // ErrSyntax indicates that a value does not have the right syntax for the target type.
     gocpp::error ErrSyntax = errors::New("invalid syntax"s);
+    // A NumError records a failed conversion.
     
     template<typename T> requires gocpp::GoStruct<T>
     NumError::operator T()
@@ -74,6 +81,20 @@ namespace golang::strconv
         return e->Err;
     }
 
+    // cloneString returns a string copy of x.
+    //
+    // All ParseXXX functions allow the input string to escape to the error value.
+    // This hurts strconv.ParseXXX(string(b)) calls where b is []byte since
+    // the conversion from []byte must allocate a string on the heap.
+    // If we assume errors are infrequent, then we can avoid escaping the input
+    // back to the output by copying it first. This allows the compiler to call
+    // strconv.ParseXXX without a heap allocation for most []byte to string
+    // conversions, since it can now prove that the string cannot escape Parse.
+    //
+    // TODO: Use strings.Clone instead? However, we cannot depend on "strings"
+    // since it incurs a transitive dependency on "unicode".
+    // Either move strings.Clone to an internal/bytealg or make the
+    // "strings" to "unicode" dependency lighter (see https://go.dev/issue/54098).
     std::string cloneString(std::string x)
     {
         return std::string(gocpp::slice<unsigned char>(x));
@@ -99,6 +120,10 @@ namespace golang::strconv
         return new NumError {fn, cloneString(str), errors::New("invalid bit size "s + Itoa(bitSize))};
     }
 
+    // IntSize is the size in bits of an int or uint value.
+    // ParseUint is like ParseInt but for unsigned numbers.
+    //
+    // A sign prefix is not permitted.
     std::tuple<uint64_t, struct gocpp::error> ParseUint(std::string s, int base, int bitSize)
     {
         auto fnParseUint = "ParseUint"s;
@@ -163,6 +188,8 @@ namespace golang::strconv
         {
             return {0, bitSizeError(fnParseUint, s0, bitSize)};
         }
+        // Cutoff is the smallest number such that cutoff*base > maxUint64.
+        // Use compile-time constants for common cases.
         uint64_t cutoff = {};
         //Go switch emulation
         {
@@ -235,6 +262,31 @@ namespace golang::strconv
         return {n, nullptr};
     }
 
+    // ParseInt interprets a string s in the given base (0, 2 to 36) and
+    // bit size (0 to 64) and returns the corresponding value i.
+    //
+    // The string may begin with a leading sign: "+" or "-".
+    //
+    // If the base argument is 0, the true base is implied by the string's
+    // prefix following the sign (if present): 2 for "0b", 8 for "0" or "0o",
+    // 16 for "0x", and 10 otherwise. Also, for argument base 0 only,
+    // underscore characters are permitted as defined by the Go syntax for
+    // [integer literals].
+    //
+    // The bitSize argument specifies the integer type
+    // that the result must fit into. Bit sizes 0, 8, 16, 32, and 64
+    // correspond to int, int8, int16, int32, and int64.
+    // If bitSize is below 0 or above 64, an error is returned.
+    //
+    // The errors that ParseInt returns have concrete type *NumError
+    // and include err.Num = s. If s is empty or contains invalid
+    // digits, err.Err = ErrSyntax and the returned value is 0;
+    // if the value corresponding to s cannot be represented by a
+    // signed integer of the given size, err.Err = ErrRange and the
+    // returned value is the maximum magnitude integer of the
+    // appropriate bitSize and sign.
+    //
+    // [integer literals]: https://go.dev/ref/spec#Integer_literals
     std::tuple<int64_t, struct gocpp::error> ParseInt(std::string s, int base, int bitSize)
     {
         int64_t i;
@@ -256,6 +308,7 @@ namespace golang::strconv
             neg = true;
             s = s.make_slice(1);
         }
+        // Convert unsigned and check range.
         uint64_t un = {};
         std::tie(un, err) = ParseUint(s, base, bitSize);
         if(err != nullptr && gocpp::getValue<NumError*>(err)->Err != ErrRange)
@@ -285,6 +338,7 @@ namespace golang::strconv
         return {n, nullptr};
     }
 
+    // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
     std::tuple<int, struct gocpp::error> Atoi(std::string s)
     {
         auto fnAtoi = "Atoi"s;
@@ -324,6 +378,9 @@ namespace golang::strconv
         return {int(i64), err};
     }
 
+    // underscoreOK reports whether the underscores in s are allowed.
+    // Checking them in this one function lets all the parsers skip over them simply.
+    // Underscore must appear only between digits or between a base prefix and a digit.
     bool underscoreOK(std::string s)
     {
         auto saw = '^';

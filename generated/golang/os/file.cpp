@@ -44,6 +44,41 @@
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
 
+// Package os provides a platform-independent interface to operating system
+// functionality. The design is Unix-like, although the error handling is
+// Go-like; failing calls return values of type error rather than error numbers.
+// Often, more information is available within the error. For example,
+// if a call that takes a file name fails, such as Open or Stat, the error
+// will include the failing file name when printed and will be of type
+// *PathError, which may be unpacked for more information.
+//
+// The os interface is intended to be uniform across all operating systems.
+// Features not generally available appear in the system-specific package syscall.
+//
+// Here is a simple example, opening a file and reading some of it.
+//
+//	file, err := os.Open("file.go") // For read access.
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+// If the open fails, the error string will be self-explanatory, like
+//
+//	open file.go: no such file or directory
+//
+// The file's data can then be read into a slice of bytes. Read and
+// Write take their byte counts from the length of the argument slice.
+//
+//	data := make([]byte, 100)
+//	count, err := file.Read(data)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("read %d bytes: %q\n", count, data[:count])
+//
+// Note: The maximum number of concurrent operations on a File may be limited by
+// the OS or the system. The number should be high, but exceeding it may degrade
+// performance or cause other issues.
 namespace golang::os
 {
     namespace rec
@@ -54,14 +89,30 @@ namespace golang::os
         using testlog::rec::Chdir;
     }
 
+    // Name returns the name of the file as presented to Open.
     std::string rec::Name(struct File* f)
     {
         return f->name;
     }
 
+    // Stdin, Stdout, and Stderr are open Files pointing to the standard input,
+    // standard output, and standard error file descriptors.
+    //
+    // Note that the Go runtime writes to standard error for panics and crashes;
+    // closing Stderr may cause those messages to go elsewhere, perhaps
+    // to a file opened later.
     File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin"s);
     File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout"s);
     File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr"s);
+    // Flags to OpenFile wrapping those of the underlying system. Not all
+    // flags may be implemented on a given system.
+    // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
+    // The remaining values may be or'ed in to control behavior.
+    // Seek whence values.
+    //
+    // Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
+    // LinkError records an error during a link or symlink or rename
+    // system call and the paths that caused it.
     
     template<typename T> requires gocpp::GoStruct<T>
     LinkError::operator T()
@@ -110,6 +161,9 @@ namespace golang::os
         return e->Err;
     }
 
+    // Read reads up to len(b) bytes from the File and stores them in b.
+    // It returns the number of bytes read and any error encountered.
+    // At end of file, Read returns 0, io.EOF.
     std::tuple<int, struct gocpp::error> rec::Read(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -122,6 +176,10 @@ namespace golang::os
         return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
     }
 
+    // ReadAt reads len(b) bytes from the File starting at byte offset off.
+    // It returns the number of bytes read and the error, if any.
+    // ReadAt always returns a non-nil error when n < len(b).
+    // At end of file, that error is io.EOF.
     std::tuple<int, struct gocpp::error> rec::ReadAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -153,6 +211,7 @@ namespace golang::os
         return {n, err};
     }
 
+    // ReadFrom implements io.ReaderFrom.
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct File* f, io::Reader r)
     {
         int64_t n;
@@ -169,6 +228,8 @@ namespace golang::os
         return {n, rec::wrapErr(gocpp::recv(f), "write"s, e)};
     }
 
+    // noReadFrom can be embedded alongside another type to
+    // hide the ReadFrom method of that other type.
     
     template<typename T> requires gocpp::GoStruct<T>
     noReadFrom::operator T()
@@ -195,11 +256,16 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // ReadFrom hides another ReadFrom method.
+    // It should never be called.
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(noReadFrom, io::Reader)
     {
         gocpp::panic("can't happen"s);
     }
 
+    // fileWithoutReadFrom implements all the methods of *File other
+    // than ReadFrom. This is used to permit ReadFrom to call io.Copy
+    // without leading to a recursive call to ReadFrom.
     
     template<typename T> requires gocpp::GoStruct<T>
     fileWithoutReadFrom::operator T()
@@ -233,6 +299,9 @@ namespace golang::os
         }), r);
     }
 
+    // Write writes len(b) bytes from b to the File.
+    // It returns the number of bytes written and an error, if any.
+    // Write returns a non-nil error when n != len(b).
     std::tuple<int, struct gocpp::error> rec::Write(struct File* f, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -259,6 +328,11 @@ namespace golang::os
     }
 
     gocpp::error errWriteAtInAppendMode = errors::New("os: invalid use of WriteAt on file opened with O_APPEND"s);
+    // WriteAt writes len(b) bytes to the File starting at byte offset off.
+    // It returns the number of bytes written and an error, if any.
+    // WriteAt returns a non-nil error when n != len(b).
+    //
+    // If file was opened with the O_APPEND flag, WriteAt returns an error.
     std::tuple<int, struct gocpp::error> rec::WriteAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -294,6 +368,7 @@ namespace golang::os
         return {n, err};
     }
 
+    // WriteTo implements io.WriterTo.
     std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct File* f, io::Writer w)
     {
         int64_t n;
@@ -310,6 +385,8 @@ namespace golang::os
         return genericWriteTo(f, w);
     }
 
+    // noWriteTo can be embedded alongside another type to
+    // hide the WriteTo method of that other type.
     
     template<typename T> requires gocpp::GoStruct<T>
     noWriteTo::operator T()
@@ -336,11 +413,16 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // WriteTo hides another WriteTo method.
+    // It should never be called.
     std::tuple<int64_t, struct gocpp::error> rec::WriteTo(noWriteTo, io::Writer)
     {
         gocpp::panic("can't happen"s);
     }
 
+    // fileWithoutWriteTo implements all the methods of *File other
+    // than WriteTo. This is used to permit WriteTo to call io.Copy
+    // without leading to a recursive call to WriteTo.
     
     template<typename T> requires gocpp::GoStruct<T>
     fileWithoutWriteTo::operator T()
@@ -374,6 +456,11 @@ namespace golang::os
         }));
     }
 
+    // Seek sets the offset for the next Read or Write on file to offset, interpreted
+    // according to whence: 0 means relative to the origin of the file, 1 means
+    // relative to the current offset, and 2 means relative to the end.
+    // It returns the new offset and an error, if any.
+    // The behavior of Seek on a file opened with O_APPEND is not specified.
     std::tuple<int64_t, struct gocpp::error> rec::Seek(struct File* f, int64_t offset, int whence)
     {
         int64_t ret;
@@ -394,6 +481,8 @@ namespace golang::os
         return {r, nullptr};
     }
 
+    // WriteString is like Write, but writes the contents of string s rather than
+    // a slice of bytes.
     std::tuple<int, struct gocpp::error> rec::WriteString(struct File* f, std::string s)
     {
         int n;
@@ -402,6 +491,9 @@ namespace golang::os
         return rec::Write(gocpp::recv(f), b);
     }
 
+    // Mkdir creates a new directory with the specified name and permission
+    // bits (before umask).
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm)
     {
         auto longName = fixLongPath(name);
@@ -429,6 +521,7 @@ namespace golang::os
         return nullptr;
     }
 
+    // setStickyBit adds ModeSticky to the permission bits of path, non atomic.
     struct gocpp::error setStickyBit(std::string name)
     {
         auto [fi, err] = Stat(name);
@@ -439,6 +532,8 @@ namespace golang::os
         return Chmod(name, rec::Mode(gocpp::recv(fi)) | ModeSticky);
     }
 
+    // Chdir changes the current working directory to the named directory.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error Chdir(std::string dir)
     {
         if(auto e = syscall::Chdir(dir); e != nullptr)
@@ -461,16 +556,31 @@ namespace golang::os
         return nullptr;
     }
 
+    // Open opens the named file for reading. If successful, methods on
+    // the returned file can be used for reading; the associated file
+    // descriptor has mode O_RDONLY.
+    // If there is an error, it will be of type *PathError.
     std::tuple<struct File*, struct gocpp::error> Open(std::string name)
     {
         return OpenFile(name, O_RDONLY, 0);
     }
 
+    // Create creates or truncates the named file. If the file already exists,
+    // it is truncated. If the file does not exist, it is created with mode 0666
+    // (before umask). If successful, methods on the returned File can
+    // be used for I/O; the associated file descriptor has mode O_RDWR.
+    // If there is an error, it will be of type *PathError.
     std::tuple<struct File*, struct gocpp::error> Create(std::string name)
     {
         return OpenFile(name, O_RDWR | O_CREATE | O_TRUNC, 0666);
     }
 
+    // OpenFile is the generalized open call; most users will use Open
+    // or Create instead. It opens the named file with specified flag
+    // (O_RDONLY etc.). If the file does not exist, and the O_CREATE flag
+    // is passed, it is created with mode perm (before umask). If successful,
+    // methods on the returned File can be used for I/O.
+    // If there is an error, it will be of type *PathError.
     std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm)
     {
         testlog::Open(name);
@@ -483,17 +593,30 @@ namespace golang::os
         return {f, nullptr};
     }
 
+    // lstat is overridden in tests.
     fs::FileInfo, gocpp::error> (std::string)> lstat = Lstat;
+    // Rename renames (moves) oldpath to newpath.
+    // If newpath already exists and is not a directory, Rename replaces it.
+    // OS-specific restrictions may apply when oldpath and newpath are in different directories.
+    // Even within the same directory, on non-Unix platforms Rename is not an atomic operation.
+    // If there is an error, it will be of type *LinkError.
     struct gocpp::error Rename(std::string oldpath, std::string newpath)
     {
         return rename(oldpath, newpath);
     }
 
+    // Readlink returns the destination of the named symbolic link.
+    // If there is an error, it will be of type *PathError.
+    //
+    // If the link destination is relative, Readlink returns the relative path
+    // without resolving it to an absolute one.
     std::tuple<std::string, struct gocpp::error> Readlink(std::string name)
     {
         return readlink(name);
     }
 
+    // Many functions in package syscall return a count of -1 instead of 0.
+    // Using fixCount(call()) instead of call() corrects the count.
     std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err)
     {
         if(n < 0)
@@ -503,7 +626,12 @@ namespace golang::os
         return {n, err};
     }
 
+    // checkWrapErr is the test hook to enable checking unexpected wrapped errors of poll.ErrFileClosing.
+    // It is set to true in the export_test.go for tests (including fuzz tests).
     bool checkWrapErr = false;
+    // wrapErr wraps an error that occurred during an operation on an open file.
+    // It passes io.EOF through unchanged, otherwise converts
+    // poll.ErrFileClosing to ErrClosed and wraps the error in a PathError.
     struct gocpp::error rec::wrapErr(struct File* f, std::string op, struct gocpp::error err)
     {
         if(err == nullptr || err == io::go_EOF)
@@ -526,11 +654,33 @@ namespace golang::os
         });
     }
 
+    // TempDir returns the default directory to use for temporary files.
+    //
+    // On Unix systems, it returns $TMPDIR if non-empty, else /tmp.
+    // On Windows, it uses GetTempPath, returning the first non-empty
+    // value from %TMP%, %TEMP%, %USERPROFILE%, or the Windows directory.
+    // On Plan 9, it returns /tmp.
+    //
+    // The directory is neither guaranteed to exist nor have accessible
+    // permissions.
     std::string TempDir()
     {
         return tempDir();
     }
 
+    // UserCacheDir returns the default root directory to use for user-specific
+    // cached data. Users should create their own application-specific subdirectory
+    // within this one and use that.
+    //
+    // On Unix systems, it returns $XDG_CACHE_HOME as specified by
+    // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if
+    // non-empty, else $HOME/.cache.
+    // On Darwin, it returns $HOME/Library/Caches.
+    // On Windows, it returns %LocalAppData%.
+    // On Plan 9, it returns $home/lib/cache.
+    //
+    // If the location cannot be determined (for example, $HOME is not defined),
+    // then it will return an error.
     std::tuple<std::string, struct gocpp::error> UserCacheDir()
     {
         std::string dir = {};
@@ -585,6 +735,19 @@ namespace golang::os
         return {dir, nullptr};
     }
 
+    // UserConfigDir returns the default root directory to use for user-specific
+    // configuration data. Users should create their own application-specific
+    // subdirectory within this one and use that.
+    //
+    // On Unix systems, it returns $XDG_CONFIG_HOME as specified by
+    // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if
+    // non-empty, else $HOME/.config.
+    // On Darwin, it returns $HOME/Library/Application Support.
+    // On Windows, it returns %AppData%.
+    // On Plan 9, it returns $home/lib.
+    //
+    // If the location cannot be determined (for example, $HOME is not defined),
+    // then it will return an error.
     std::tuple<std::string, struct gocpp::error> UserConfigDir()
     {
         std::string dir = {};
@@ -639,6 +802,14 @@ namespace golang::os
         return {dir, nullptr};
     }
 
+    // UserHomeDir returns the current user's home directory.
+    //
+    // On Unix, including macOS, it returns the $HOME environment variable.
+    // On Windows, it returns %USERPROFILE%.
+    // On Plan 9, it returns the $home environment variable.
+    //
+    // If the expected variable is not set in the environment, UserHomeDir
+    // returns either a platform-specific default value or a non-nil error.
     std::tuple<std::string, struct gocpp::error> UserHomeDir()
     {
         auto [env, enverr] = std::tuple{"HOME"s, "$HOME"s};
@@ -681,31 +852,87 @@ namespace golang::os
         return {""s, errors::New(enverr + " is not defined"s)};
     }
 
+    // Chmod changes the mode of the named file to mode.
+    // If the file is a symbolic link, it changes the mode of the link's target.
+    // If there is an error, it will be of type *PathError.
+    //
+    // A different subset of the mode bits are used, depending on the
+    // operating system.
+    //
+    // On Unix, the mode's permission bits, ModeSetuid, ModeSetgid, and
+    // ModeSticky are used.
+    //
+    // On Windows, only the 0200 bit (owner writable) of mode is used; it
+    // controls whether the file's read-only attribute is set or cleared.
+    // The other bits are currently unused. For compatibility with Go 1.12
+    // and earlier, use a non-zero mode. Use mode 0400 for a read-only
+    // file and 0600 for a readable+writable file.
+    //
+    // On Plan 9, the mode's permission bits, ModeAppend, ModeExclusive,
+    // and ModeTemporary are used.
     struct gocpp::error Chmod(std::string name, golang::os::FileMode mode)
     {
         return chmod(name, mode);
     }
 
+    // Chmod changes the mode of the file to mode.
+    // If there is an error, it will be of type *PathError.
     struct gocpp::error rec::Chmod(struct File* f, golang::os::FileMode mode)
     {
         return rec::chmod(gocpp::recv(f), mode);
     }
 
+    // SetDeadline sets the read and write deadlines for a File.
+    // It is equivalent to calling both SetReadDeadline and SetWriteDeadline.
+    //
+    // Only some kinds of files support setting a deadline. Calls to SetDeadline
+    // for files that do not support deadlines will return ErrNoDeadline.
+    // On most systems ordinary files do not support deadlines, but pipes do.
+    //
+    // A deadline is an absolute time after which I/O operations fail with an
+    // error instead of blocking. The deadline applies to all future and pending
+    // I/O, not just the immediately following call to Read or Write.
+    // After a deadline has been exceeded, the connection can be refreshed
+    // by setting a deadline in the future.
+    //
+    // If the deadline is exceeded a call to Read or Write or to other I/O
+    // methods will return an error that wraps ErrDeadlineExceeded.
+    // This can be tested using errors.Is(err, os.ErrDeadlineExceeded).
+    // That error implements the Timeout method, and calling the Timeout
+    // method will return true, but there are other possible errors for which
+    // the Timeout will return true even if the deadline has not been exceeded.
+    //
+    // An idle timeout can be implemented by repeatedly extending
+    // the deadline after successful Read or Write calls.
+    //
+    // A zero value for t means I/O operations will not time out.
     struct gocpp::error rec::SetDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setDeadline(gocpp::recv(f), t);
     }
 
+    // SetReadDeadline sets the deadline for future Read calls and any
+    // currently-blocked Read call.
+    // A zero value for t means Read will not time out.
+    // Not all files support setting deadlines; see SetDeadline.
     struct gocpp::error rec::SetReadDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setReadDeadline(gocpp::recv(f), t);
     }
 
+    // SetWriteDeadline sets the deadline for any future Write calls and any
+    // currently-blocked Write call.
+    // Even if Write times out, it may return n > 0, indicating that
+    // some of the data was successfully written.
+    // A zero value for t means Write will not time out.
+    // Not all files support setting deadlines; see SetDeadline.
     struct gocpp::error rec::SetWriteDeadline(struct File* f, mocklib::Date t)
     {
         return rec::setWriteDeadline(gocpp::recv(f), t);
     }
 
+    // SyscallConn returns a raw file.
+    // This implements the syscall.Conn interface.
     std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"s); err != nullptr)
@@ -715,6 +942,21 @@ namespace golang::os
         return newRawConn(f);
     }
 
+    // DirFS returns a file system (an fs.FS) for the tree of files rooted at the directory dir.
+    //
+    // Note that DirFS("/prefix") only guarantees that the Open calls it makes to the
+    // operating system will begin with "/prefix": DirFS("/prefix").Open("file") is the
+    // same as os.Open("/prefix/file"). So if /prefix/file is a symbolic link pointing outside
+    // the /prefix tree, then using DirFS does not stop the access any more than using
+    // os.Open does. Additionally, the root of the fs.FS returned for a relative path,
+    // DirFS("prefix"), will be affected by later calls to Chdir. DirFS is therefore not
+    // a general substitute for a chroot-style security mechanism when the directory tree
+    // contains arbitrary content.
+    //
+    // The directory dir must not be "".
+    //
+    // The result implements [io/fs.StatFS], [io/fs.ReadFileFS] and
+    // [io/fs.ReadDirFS].
     fs::FS DirFS(std::string dir)
     {
         return dirFS(dir);
@@ -741,6 +983,10 @@ namespace golang::os
         return {f, nullptr};
     }
 
+    // The ReadFile method calls the [ReadFile] function for the file
+    // with the given name in the directory. The function provides
+    // robust handling for small files and special file systems.
+    // Through this method, dirFS implements [io/fs.ReadFileFS].
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadFile(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
@@ -765,6 +1011,8 @@ namespace golang::os
         return {b, nullptr};
     }
 
+    // ReadDir reads the named directory, returning all its directory entries sorted
+    // by filename. Through this method, dirFS implements [io/fs.ReadDirFS].
     std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(golang::os::dirFS dir, std::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
@@ -810,6 +1058,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
+    // join returns the path for name in dir.
     std::tuple<std::string, struct gocpp::error> rec::join(golang::os::dirFS dir, std::string name)
     {
         if(dir == ""s)
@@ -832,6 +1081,10 @@ namespace golang::os
         return {std::string(dir) + std::string(PathSeparator) + name, nullptr};
     }
 
+    // ReadFile reads the named file and returns the contents.
+    // A successful call returns err == nil, not err == EOF.
+    // Because ReadFile reads the whole file, it does not treat an EOF from Read
+    // as an error to be reported.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(std::string name)
     {
         gocpp::Defer defer;
@@ -883,6 +1136,11 @@ namespace golang::os
         }
     }
 
+    // WriteFile writes data to the named file, creating it if necessary.
+    // If the file does not exist, WriteFile creates it with permissions perm (before umask);
+    // otherwise WriteFile truncates it before writing, without changing permissions.
+    // Since WriteFile requires multiple system calls to complete, a failure mid-operation
+    // can leave the file in a partially written state.
     struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm)
     {
         auto [f, err] = OpenFile(name, O_WRONLY | O_CREATE | O_TRUNC, perm);

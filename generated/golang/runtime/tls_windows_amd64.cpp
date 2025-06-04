@@ -40,6 +40,9 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // osSetupTLS is called by needm to set up TLS for non-Go threads.
+    //
+    // Defined in assembly.
     void osSetupTLS(struct m* mp)
     /* convertBlockStmt, nil block */;
 

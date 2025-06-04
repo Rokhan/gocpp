@@ -13,6 +13,11 @@
 
 #include "golang/unsafe/unsafe.h"
 
+// Package unsafeheader contains header declarations for the Go runtime's slice
+// and string implementations.
+//
+// This package allows packages that cannot import "reflect" to use types that
+// are tested to be equivalent to reflect.SliceHeader and reflect.StringHeader.
 namespace golang::unsafeheader
 {
     namespace rec
@@ -20,6 +25,12 @@ namespace golang::unsafeheader
         using namespace mocklib::rec;
     }
 
+    // Slice is the runtime representation of a slice.
+    // It cannot be used safely or portably and its representation may
+    // change in a later release.
+    //
+    // Unlike reflect.SliceHeader, its Data field is sufficient to guarantee the
+    // data it references will not be garbage collected.
     
     template<typename T> requires gocpp::GoStruct<T>
     Slice::operator T()
@@ -55,6 +66,12 @@ namespace golang::unsafeheader
         return value.PrintTo(os);
     }
 
+    // String is the runtime representation of a string.
+    // It cannot be used safely or portably and its representation may
+    // change in a later release.
+    //
+    // Unlike reflect.StringHeader, its Data field is sufficient to guarantee the
+    // data it references will not be garbage collected.
     
     template<typename T> requires gocpp::GoStruct<T>
     String::operator T()

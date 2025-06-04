@@ -35,6 +35,7 @@ namespace golang::os
         using poll::rec::RawWrite;
     }
 
+    // rawConn implements syscall.RawConn.
     
     template<typename T> requires gocpp::GoStruct<T>
     rawConn::operator T()

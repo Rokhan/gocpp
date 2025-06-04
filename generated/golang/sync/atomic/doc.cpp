@@ -13,6 +13,48 @@
 
 #include "golang/unsafe/unsafe.h"
 
+// Package atomic provides low-level atomic memory primitives
+// useful for implementing synchronization algorithms.
+//
+// These functions require great care to be used correctly.
+// Except for special, low-level applications, synchronization is better
+// done with channels or the facilities of the [sync] package.
+// Share memory by communicating;
+// don't communicate by sharing memory.
+//
+// The swap operation, implemented by the SwapT functions, is the atomic
+// equivalent of:
+//
+//	old = *addr
+//	*addr = new
+//	return old
+//
+// The compare-and-swap operation, implemented by the CompareAndSwapT
+// functions, is the atomic equivalent of:
+//
+//	if *addr == old {
+//		*addr = new
+//		return true
+//	}
+//	return false
+//
+// The add operation, implemented by the AddT functions, is the atomic
+// equivalent of:
+//
+//	*addr += delta
+//	return *addr
+//
+// The load and store operations, implemented by the LoadT and StoreT
+// functions, are the atomic equivalents of "return *addr" and
+// "*addr = val".
+//
+// In the terminology of the Go memory model, if the effect of
+// an atomic operation A is observed by atomic operation B,
+// then A “synchronizes before” B.
+// Additionally, all the atomic operations executed in a program
+// behave as though executed in some sequentially consistent order.
+// This definition provides the same semantics as
+// C++'s sequentially consistent atomics and Java's volatile variables.
 namespace golang::atomic
 {
     namespace rec
@@ -20,90 +62,162 @@ namespace golang::atomic
         using namespace mocklib::rec;
     }
 
+    // SwapInt32 atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Int32.Swap] instead.
     int32_t SwapInt32(int32_t* addr, int32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // SwapInt64 atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Int64.Swap] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     int64_t SwapInt64(int64_t* addr, int64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // SwapUint32 atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Uint32.Swap] instead.
     uint32_t SwapUint32(uint32_t* addr, uint32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // SwapUint64 atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Uint64.Swap] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     uint64_t SwapUint64(uint64_t* addr, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // SwapUintptr atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Uintptr.Swap] instead.
     uintptr_t SwapUintptr(uintptr_t* addr, uintptr_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // SwapPointer atomically stores new into *addr and returns the previous *addr value.
+    // Consider using the more ergonomic and less error-prone [Pointer.Swap] instead.
     unsafe::Pointer SwapPointer(unsafe::Pointer* addr, unsafe::Pointer go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapInt32 executes the compare-and-swap operation for an int32 value.
+    // Consider using the more ergonomic and less error-prone [Int32.CompareAndSwap] instead.
     bool CompareAndSwapInt32(int32_t* addr, int32_t old, int32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapInt64 executes the compare-and-swap operation for an int64 value.
+    // Consider using the more ergonomic and less error-prone [Int64.CompareAndSwap] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     bool CompareAndSwapInt64(int64_t* addr, int64_t old, int64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapUint32 executes the compare-and-swap operation for a uint32 value.
+    // Consider using the more ergonomic and less error-prone [Uint32.CompareAndSwap] instead.
     bool CompareAndSwapUint32(uint32_t* addr, uint32_t old, uint32_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapUint64 executes the compare-and-swap operation for a uint64 value.
+    // Consider using the more ergonomic and less error-prone [Uint64.CompareAndSwap] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     bool CompareAndSwapUint64(uint64_t* addr, uint64_t old, uint64_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapUintptr executes the compare-and-swap operation for a uintptr value.
+    // Consider using the more ergonomic and less error-prone [Uintptr.CompareAndSwap] instead.
     bool CompareAndSwapUintptr(uintptr_t* addr, uintptr_t old, uintptr_t go_new)
     /* convertBlockStmt, nil block */;
 
+    // CompareAndSwapPointer executes the compare-and-swap operation for a unsafe.Pointer value.
+    // Consider using the more ergonomic and less error-prone [Pointer.CompareAndSwap] instead.
     bool CompareAndSwapPointer(unsafe::Pointer* addr, unsafe::Pointer old, unsafe::Pointer go_new)
     /* convertBlockStmt, nil block */;
 
+    // AddInt32 atomically adds delta to *addr and returns the new value.
+    // Consider using the more ergonomic and less error-prone [Int32.Add] instead.
     int32_t AddInt32(int32_t* addr, int32_t delta)
     /* convertBlockStmt, nil block */;
 
+    // AddUint32 atomically adds delta to *addr and returns the new value.
+    // To subtract a signed positive constant value c from x, do AddUint32(&x, ^uint32(c-1)).
+    // In particular, to decrement x, do AddUint32(&x, ^uint32(0)).
+    // Consider using the more ergonomic and less error-prone [Uint32.Add] instead.
     uint32_t AddUint32(uint32_t* addr, uint32_t delta)
     /* convertBlockStmt, nil block */;
 
+    // AddInt64 atomically adds delta to *addr and returns the new value.
+    // Consider using the more ergonomic and less error-prone [Int64.Add] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     int64_t AddInt64(int64_t* addr, int64_t delta)
     /* convertBlockStmt, nil block */;
 
+    // AddUint64 atomically adds delta to *addr and returns the new value.
+    // To subtract a signed positive constant value c from x, do AddUint64(&x, ^uint64(c-1)).
+    // In particular, to decrement x, do AddUint64(&x, ^uint64(0)).
+    // Consider using the more ergonomic and less error-prone [Uint64.Add] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     uint64_t AddUint64(uint64_t* addr, uint64_t delta)
     /* convertBlockStmt, nil block */;
 
+    // AddUintptr atomically adds delta to *addr and returns the new value.
+    // Consider using the more ergonomic and less error-prone [Uintptr.Add] instead.
     uintptr_t AddUintptr(uintptr_t* addr, uintptr_t delta)
     /* convertBlockStmt, nil block */;
 
+    // LoadInt32 atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Int32.Load] instead.
     int32_t LoadInt32(int32_t* addr)
     /* convertBlockStmt, nil block */;
 
+    // LoadInt64 atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Int64.Load] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     int64_t LoadInt64(int64_t* addr)
     /* convertBlockStmt, nil block */;
 
+    // LoadUint32 atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Uint32.Load] instead.
     uint32_t LoadUint32(uint32_t* addr)
     /* convertBlockStmt, nil block */;
 
+    // LoadUint64 atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Uint64.Load] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     uint64_t LoadUint64(uint64_t* addr)
     /* convertBlockStmt, nil block */;
 
+    // LoadUintptr atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Uintptr.Load] instead.
     uintptr_t LoadUintptr(uintptr_t* addr)
     /* convertBlockStmt, nil block */;
 
+    // LoadPointer atomically loads *addr.
+    // Consider using the more ergonomic and less error-prone [Pointer.Load] instead.
     unsafe::Pointer LoadPointer(unsafe::Pointer* addr)
     /* convertBlockStmt, nil block */;
 
+    // StoreInt32 atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Int32.Store] instead.
     void StoreInt32(int32_t* addr, int32_t val)
     /* convertBlockStmt, nil block */;
 
+    // StoreInt64 atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Int64.Store] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     void StoreInt64(int64_t* addr, int64_t val)
     /* convertBlockStmt, nil block */;
 
+    // StoreUint32 atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Uint32.Store] instead.
     void StoreUint32(uint32_t* addr, uint32_t val)
     /* convertBlockStmt, nil block */;
 
+    // StoreUint64 atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Uint64.Store] instead
+    // (particularly if you target 32-bit platforms; see the bugs section).
     void StoreUint64(uint64_t* addr, uint64_t val)
     /* convertBlockStmt, nil block */;
 
+    // StoreUintptr atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Uintptr.Store] instead.
     void StoreUintptr(uintptr_t* addr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 
+    // StorePointer atomically stores val into *addr.
+    // Consider using the more ergonomic and less error-prone [Pointer.Store] instead.
     void StorePointer(unsafe::Pointer* addr, unsafe::Pointer val)
     /* convertBlockStmt, nil block */;
 

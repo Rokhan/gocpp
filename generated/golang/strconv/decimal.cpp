@@ -115,6 +115,9 @@ namespace golang::strconv
         return len(dst);
     }
 
+    // trim trailing zeros from number.
+    // (They are meaningless; the decimal point is tracked
+    // independent of the number of digits.)
     void trim(struct decimal* a)
     {
         for(; a->nd > 0 && a->d[a->nd - 1] == '0'; )
@@ -127,6 +130,7 @@ namespace golang::strconv
         }
     }
 
+    // Assign v to a.
     void rec::Assign(struct decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
@@ -149,10 +153,14 @@ namespace golang::strconv
         trim(a);
     }
 
+    // Maximum shift that we can do in one pass without overflow.
+    // A uint has 32 or 64 bits, and we have to be able to accommodate 9<<k.
+    // Binary shift right (/ 2) by k bits.  k <= maxShift to avoid overflow.
     void rightShift(struct decimal* a, unsigned int k)
     {
         auto r = 0;
         auto w = 0;
+        // Pick up enough leading digits to cover first shift.
         unsigned int n = {};
         for(; (n >> k) == 0; r++)
         {
@@ -237,6 +245,7 @@ namespace golang::strconv
     }
 
     gocpp::slice<leftCheat> leftcheats = gocpp::slice<leftCheat> { {0, ""s},  {1, "5"s},  {1, "25"s},  {1, "125"s},  {2, "625"s},  {2, "3125"s},  {2, "15625"s},  {3, "78125"s},  {3, "390625"s},  {3, "1953125"s},  {4, "9765625"s},  {4, "48828125"s},  {4, "244140625"s},  {4, "1220703125"s},  {5, "6103515625"s},  {5, "30517578125"s},  {5, "152587890625"s},  {6, "762939453125"s},  {6, "3814697265625"s},  {6, "19073486328125"s},  {7, "95367431640625"s},  {7, "476837158203125"s},  {7, "2384185791015625"s},  {7, "11920928955078125"s},  {8, "59604644775390625"s},  {8, "298023223876953125"s},  {8, "1490116119384765625"s},  {9, "7450580596923828125"s},  {9, "37252902984619140625"s},  {9, "186264514923095703125"s},  {10, "931322574615478515625"s},  {10, "4656612873077392578125"s},  {10, "23283064365386962890625"s},  {10, "116415321826934814453125"s},  {11, "582076609134674072265625"s},  {11, "2910383045673370361328125"s},  {11, "14551915228366851806640625"s},  {12, "72759576141834259033203125"s},  {12, "363797880709171295166015625"s},  {12, "1818989403545856475830078125"s},  {13, "9094947017729282379150390625"s},  {13, "45474735088646411895751953125"s},  {13, "227373675443232059478759765625"s},  {13, "1136868377216160297393798828125"s},  {14, "5684341886080801486968994140625"s},  {14, "28421709430404007434844970703125"s},  {14, "142108547152020037174224853515625"s},  {15, "710542735760100185871124267578125"s},  {15, "3552713678800500929355621337890625"s},  {15, "17763568394002504646778106689453125"s},  {16, "88817841970012523233890533447265625"s},  {16, "444089209850062616169452667236328125"s},  {16, "2220446049250313080847263336181640625"s},  {16, "11102230246251565404236316680908203125"s},  {17, "55511151231257827021181583404541015625"s},  {17, "277555756156289135105907917022705078125"s},  {17, "1387778780781445675529539585113525390625"s},  {18, "6938893903907228377647697925567626953125"s},  {18, "34694469519536141888238489627838134765625"s},  {18, "173472347597680709441192448139190673828125"s},  {19, "867361737988403547205962240695953369140625"s}};
+    // Is the leading prefix of b lexicographically less than s?
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, std::string s)
     {
         for(auto i = 0; i < len(s); i++)
@@ -253,6 +262,7 @@ namespace golang::strconv
         return false;
     }
 
+    // Binary shift left (* 2) by k bits.  k <= maxShift to avoid overflow.
     void leftShift(struct decimal* a, unsigned int k)
     {
         auto delta = leftcheats[k].delta;
@@ -262,6 +272,7 @@ namespace golang::strconv
         }
         auto r = a->nd;
         auto w = a->nd + delta;
+        // Pick up a digit, put down a digit.
         unsigned int n = {};
         for(r--; r >= 0; r--)
         {
@@ -305,6 +316,7 @@ namespace golang::strconv
         trim(a);
     }
 
+    // Binary shift left (k > 0) or right (k < 0).
     void rec::Shift(struct decimal* a, int k)
     {
         //Go switch emulation
@@ -337,6 +349,7 @@ namespace golang::strconv
         }
     }
 
+    // If we chop a at nd digits, should we round up?
     bool shouldRoundUp(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
@@ -354,6 +367,10 @@ namespace golang::strconv
         return a->d[nd] >= '5';
     }
 
+    // Round a to nd digits (or fewer).
+    // If nd is zero, it means we're rounding
+    // just to the left of the digits, as in
+    // 0.09 -> 0.1.
     void rec::Round(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
@@ -370,6 +387,7 @@ namespace golang::strconv
         }
     }
 
+    // Round a down to nd digits (or fewer).
     void rec::RoundDown(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
@@ -380,6 +398,7 @@ namespace golang::strconv
         trim(a);
     }
 
+    // Round a up to nd digits (or fewer).
     void rec::RoundUp(struct decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
@@ -401,6 +420,8 @@ namespace golang::strconv
         a->dp++;
     }
 
+    // Extract integer part, rounded appropriately.
+    // No guarantees about overflow.
     uint64_t rec::RoundedInteger(struct decimal* a)
     {
         if(a->dp > 20)

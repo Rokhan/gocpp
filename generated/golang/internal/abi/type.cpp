@@ -20,6 +20,15 @@ namespace golang::abi
         using namespace mocklib::rec;
     }
 
+    // Type is the runtime representation of a Go type.
+    //
+    // Be careful about accessing this type at build time, as the version
+    // of this type in the compiler/linker may not have the same layout
+    // as the version in the target binary, due to pointer width
+    // differences and any experiments. Use cmd/compile/internal/rttype
+    // or the functions in compiletype.go to access this type instead.
+    // (TODO: this admonition applies to every type in this package.
+    // Put it in some shared location?)
     
     template<typename T> requires gocpp::GoStruct<T>
     Type::operator T()
@@ -79,6 +88,41 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // A Kind represents the specific kind of type that a Type represents.
+    // The zero Kind is not a valid kind.
+    // TODO (khr, drchase) why aren't these in TFlag?  Investigate, fix if possible.
+    // TFlag is used by a Type to signal what extra type information is
+    // available in the memory directly following the Type value.
+    // TFlagUncommon means that there is a data with a type, UncommonType,
+    // just beyond the shared-per-type common data.  That is, the data
+    // for struct types will store their UncommonType at one offset, the
+    // data for interface types will store their UncommonType at a different
+    // offset.  UncommonType is always accessed via a pointer that is computed
+    // using trust-us-we-are-the-implementors pointer arithmetic.
+    //
+    // For example, if t.Kind() == Struct and t.tflag&TFlagUncommon != 0,
+    // then t has UncommonType data and it can be accessed as:
+    //
+    //	type structTypeUncommon struct {
+    //		structType
+    //		u UncommonType
+    //	}
+    //	u := &(*structTypeUncommon)(unsafe.Pointer(t)).u
+    // TFlagExtraStar means the name in the str field has an
+    // extraneous '*' prefix. This is because for most types T in
+    // a program, the type *T also exists and reusing the str data
+    // saves binary size.
+    // TFlagNamed means the type has a name.
+    // TFlagRegularMemory means that equal and hash functions can treat
+    // this type as a single region of t.size bytes.
+    // TFlagUnrolledBitmap marks special types that are unrolled-bitmap
+    // versions of types with GC programs.
+    // These types need to be deallocated when the underlying object
+    // is freed.
+    // NameOff is the offset to a name from moduledata.types.  See resolveNameOff in runtime.
+    // TypeOff is the offset to a type from moduledata.types.  See resolveTypeOff in runtime.
+    // TextOff is an offset from the top of a text section.  See (rtype).textOff in runtime.
+    // String returns the name of k.
     std::string rec::String(golang::abi::Kind k)
     {
         if(int(k) < len(kindNames))
@@ -132,11 +176,13 @@ namespace golang::abi
         return t->PtrBytes != 0;
     }
 
+    // IfaceIndir reports whether t is stored indirectly in an interface value.
     bool rec::IfaceIndir(struct Type* t)
     {
         return t->Kind_ & KindDirectIface == 0;
     }
 
+    // isDirectIface reports whether t is stored directly in an interface value.
     bool rec::IsDirectIface(struct Type* t)
     {
         return t->Kind_ & KindDirectIface != 0;
@@ -147,6 +193,7 @@ namespace golang::abi
         return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
 
+    // Method on non-interface type
     
     template<typename T> requires gocpp::GoStruct<T>
     Method::operator T()
@@ -185,6 +232,10 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // UncommonType is present only for defined types or types with methods
+    // (if T is a defined type, the uncommonTypes for T and *T have methods).
+    // Using a pointer to this struct reduces the overall size required
+    // to describe a non-defined type with no methods.
     
     template<typename T> requires gocpp::GoStruct<T>
     UncommonType::operator T()
@@ -244,11 +295,19 @@ namespace golang::abi
         return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"s)).make_slice(, t->Xcount, t->Xcount);
     }
 
+    // addChecked returns p+x.
+    //
+    // The whySafe string is ignored, so that the function still inlines
+    // as efficiently as p+x, but all call sites should use the string to
+    // record why the addition is safe, which is to say why the addition
+    // does not cause x to advance to the very end of p's allocation
+    // and therefore point incorrectly at the next block in memory.
     unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe)
     {
         return unsafe::Pointer(uintptr_t(p) + x);
     }
 
+    // Imethod represents a method on an interface type
     
     template<typename T> requires gocpp::GoStruct<T>
     Imethod::operator T()
@@ -281,6 +340,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // ArrayType represents a fixed array type.
     
     template<typename T> requires gocpp::GoStruct<T>
     ArrayType::operator T()
@@ -316,6 +376,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // Len returns the length of t if t is an array type, otherwise 0
     int rec::Len(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
@@ -330,6 +391,7 @@ namespace golang::abi
         return t;
     }
 
+    // ChanType represents a channel type
     
     template<typename T> requires gocpp::GoStruct<T>
     ChanType::operator T()
@@ -391,6 +453,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // ChanDir returns the direction of t if t is a channel type, otherwise InvalidDir (0).
     abi::ChanDir rec::ChanDir(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
@@ -401,6 +464,7 @@ namespace golang::abi
         return InvalidDir;
     }
 
+    // Uncommon returns a pointer to T's "uncommon" data if there is any, otherwise nil
     struct UncommonType* rec::Uncommon(struct Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
@@ -684,6 +748,7 @@ namespace golang::abi
         }
     }
 
+    // Elem returns the element type for t if t is an array, channel, map, pointer, or slice, otherwise nil.
     struct Type* rec::Elem(struct Type* t)
     {
         //Go switch emulation
@@ -722,6 +787,7 @@ namespace golang::abi
         return nullptr;
     }
 
+    // StructType returns t cast to a *StructType, or nil if its tag does not match.
     struct StructType* rec::StructType(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
@@ -731,6 +797,7 @@ namespace golang::abi
         return (StructType*)(unsafe::Pointer(t));
     }
 
+    // MapType returns t cast to a *MapType, or nil if its tag does not match.
     struct MapType* rec::MapType(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Map)
@@ -740,6 +807,7 @@ namespace golang::abi
         return (MapType*)(unsafe::Pointer(t));
     }
 
+    // ArrayType returns t cast to a *ArrayType, or nil if its tag does not match.
     struct ArrayType* rec::ArrayType(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
@@ -749,6 +817,7 @@ namespace golang::abi
         return (ArrayType*)(unsafe::Pointer(t));
     }
 
+    // FuncType returns t cast to a *FuncType, or nil if its tag does not match.
     struct FuncType* rec::FuncType(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
@@ -758,6 +827,7 @@ namespace golang::abi
         return (FuncType*)(unsafe::Pointer(t));
     }
 
+    // InterfaceType returns t cast to a *InterfaceType, or nil if its tag does not match.
     struct InterfaceType* rec::InterfaceType(struct Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Interface)
@@ -767,11 +837,13 @@ namespace golang::abi
         return (InterfaceType*)(unsafe::Pointer(t));
     }
 
+    // Size returns the size of data with type t.
     uintptr_t rec::Size(struct Type* t)
     {
         return t->Size_;
     }
 
+    // Align returns the alignment of data with type t.
     int rec::Align(struct Type* t)
     {
         return int(t->Align_);
@@ -834,6 +906,7 @@ namespace golang::abi
         return len(rec::ExportedMethods(gocpp::recv(t)));
     }
 
+    // NumMethod returns the number of interface methods in the type's method set.
     int rec::NumMethod(struct InterfaceType* t)
     {
         return len(t->Methods);
@@ -889,6 +962,8 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // Note: flag values must match those used in the TMAP case
+    // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
     bool rec::IndirectKey(struct MapType* mt)
     {
         return mt->Flags & 1 != 0;
@@ -952,6 +1027,17 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // funcType represents a function type.
+    //
+    // A *Type for each in and out parameter is stored in an array that
+    // directly follows the funcType (and possibly its uncommonType). So
+    // a function type with one method, one input, and one output is:
+    //
+    //	struct {
+    //		funcType
+    //		uncommonType
+    //		[2]*rtype    // [0] is in, [1] is out
+    //	}
     
     template<typename T> requires gocpp::GoStruct<T>
     FuncType::operator T()
@@ -1168,31 +1254,40 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
+    // DataChecked does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
+    // be safe for the reason in whySafe (which can appear in a backtrace, etc.)
     unsigned char* rec::DataChecked(struct Name n, int off, std::string whySafe)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
+    // Data does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
+    // be safe because the runtime made the call (other packages use DataChecked)
     unsigned char* rec::Data(struct Name n, int off)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"s));
     }
 
+    // IsExported returns "is n exported?"
     bool rec::IsExported(struct Name n)
     {
         return (*n.Bytes) & (1 << 0) != 0;
     }
 
+    // HasTag returns true iff there is tag data following this name
     bool rec::HasTag(struct Name n)
     {
         return (*n.Bytes) & (1 << 1) != 0;
     }
 
+    // IsEmbedded returns true iff n is embedded (an anonymous field).
     bool rec::IsEmbedded(struct Name n)
     {
         return (*n.Bytes) & (1 << 3) != 0;
     }
 
+    // ReadVarint parses a varint as encoded by encoding/binary.
+    // It returns the number of encoded bytes and the encoded value.
     std::tuple<int, int> rec::ReadVarint(struct Name n, int off)
     {
         auto v = 0;
@@ -1207,6 +1302,7 @@ namespace golang::abi
         }
     }
 
+    // IsBlank indicates whether n is "_".
     bool rec::IsBlank(struct Name n)
     {
         if(n.Bytes == nullptr)
@@ -1217,6 +1313,9 @@ namespace golang::abi
         return l == 1 && *rec::Data(gocpp::recv(n), 2) == '_';
     }
 
+    // writeVarint writes n to buf in varint form. Returns the
+    // number of bytes written. n must be nonnegative.
+    // Writes at most 10 bytes.
     int writeVarint(gocpp::slice<unsigned char> buf, int n)
     {
         for(auto i = 0; ; i++)
@@ -1232,6 +1331,7 @@ namespace golang::abi
         }
     }
 
+    // Name returns the tag string for n, or empty if there is none.
     std::string rec::Name(struct Name n)
     {
         if(n.Bytes == nullptr)
@@ -1242,6 +1342,7 @@ namespace golang::abi
         return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"s), l);
     }
 
+    // Tag returns the tag string for n, or empty if there is none.
     std::string rec::Tag(struct Name n)
     {
         if(! rec::HasTag(gocpp::recv(n)))

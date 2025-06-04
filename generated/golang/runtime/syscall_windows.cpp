@@ -103,6 +103,7 @@ namespace golang::runtime
     }
 
 
+    // cbs stores all registered Go callbacks.
     gocpp_id_0 cbs;
     void cbsLock()
     {
@@ -122,6 +123,7 @@ namespace golang::runtime
         unlock(& cbs.lock);
     }
 
+    // winCallback records information about a registered Go callback.
     
     template<typename T> requires gocpp::GoStruct<T>
     winCallback::operator T()
@@ -157,6 +159,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // abiPartKind is the action an abiPart should take.
+    // abiPart encodes a step in translating between calling ABIs.
     
     template<typename T> requires gocpp::GoStruct<T>
     abiPart::operator T()
@@ -212,6 +216,11 @@ namespace golang::runtime
         return false;
     }
 
+    // abiDesc specifies how to translate from a C frame to a Go
+    // frame. This does not specify how to translate back because
+    // the result is always a uintptr. If the C ABI is fastcall,
+    // this assumes the four fastcall registers were first spilled
+    // to the shadow space.
     
     template<typename T> requires gocpp::GoStruct<T>
     abiDesc::operator T()
@@ -296,6 +305,12 @@ namespace golang::runtime
         p->srcStackSize += goarch::PtrSize;
     }
 
+    // tryRegAssignArg tries to register-assign a value of type t.
+    // If this type is nested in an aggregate type, then offset is the
+    // offset of this type within its parent type.
+    // Assumes t.size <= goarch.PtrSize and t.size != 0.
+    //
+    // Returns whether the assignment succeeded.
     bool rec::tryRegAssignArg(struct abiDesc* p, golang::runtime::_type* t, uintptr_t offset)
     {
         //Go switch emulation
@@ -366,6 +381,11 @@ namespace golang::runtime
         gocpp::panic("compileCallback: type "s + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks"s);
     }
 
+    // assignReg attempts to assign a single register for an
+    // argument with the given size, at the given offset into the
+    // value in the C ABI space.
+    //
+    // Returns whether the assignment was successful.
     bool rec::assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset)
     {
         if(p->dstRegisters >= intArgRegs)
@@ -417,6 +437,15 @@ namespace golang::runtime
     void callbackasm()
     /* convertBlockStmt, nil block */;
 
+    // callbackasmAddr returns address of runtime.callbackasm
+    // function adjusted by i.
+    // On x86 and amd64, runtime.callbackasm is a series of CALL instructions,
+    // and we want callback to arrive at
+    // correspondent call instruction instead of start of
+    // runtime.callbackasm.
+    // On ARM, runtime.callbackasm is a series of mov and branch instructions.
+    // R12 is loaded with the callback index. Each entry is two instructions,
+    // hence 8 bytes.
     uintptr_t callbackasmAddr(int i)
     {
         int entrySize = {};
@@ -446,6 +475,14 @@ namespace golang::runtime
         return abi::FuncPCABI0(callbackasm) + uintptr_t(i * entrySize);
     }
 
+    // compileCallback converts a Go function fn into a C function pointer
+    // that can be passed to Windows APIs.
+    //
+    // On 386, if cdecl is true, the returned C function will use the
+    // cdecl calling convention; otherwise, it will use stdcall. On amd64,
+    // it always uses fastcall. On arm, it always uses the ARM convention.
+    //
+    //go:linkname compileCallback syscall.compileCallback
     uintptr_t compileCallback(struct eface fn, bool cdecl)
     {
         uintptr_t code;
@@ -458,6 +495,7 @@ namespace golang::runtime
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
         }
         auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
+        // Check arguments and construct ABI translation.
         abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {
@@ -487,6 +525,8 @@ namespace golang::runtime
         {
             gocpp::panic("compileCallback: function argument frame too large"s);
         }
+        // For cdecl, the callee is responsible for popping its
+        // arguments from the C stack.
         uintptr_t retPop = {};
         if(cdecl)
         {
@@ -555,10 +595,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // callbackWrap is called by callbackasm to invoke a registered C callback.
     void callbackWrap(struct callbackArgs* a)
     {
         auto c = cbs.ctxt[a->index];
         a->retPop = c.retPop;
+        // Convert from C to Go ABI.
         abi::RegArgs regs = {};
         gocpp::array<unsigned char, callbackMaxFrame> frame = {};
         auto goArgs = unsafe::Pointer(& frame);
@@ -643,6 +685,9 @@ namespace golang::runtime
         }
 
 
+    //go:linkname syscall_loadsystemlibrary syscall.loadsystemlibrary
+    //go:nosplit
+    //go:cgo_unsafe_args
     std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename)
     {
         uintptr_t handle;
@@ -664,6 +709,9 @@ namespace golang::runtime
         return {handle, err};
     }
 
+    //go:linkname syscall_loadlibrary syscall.loadlibrary
+    //go:nosplit
+    //go:cgo_unsafe_args
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename)
     {
         gocpp::Defer defer;
@@ -692,6 +740,9 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname syscall_getprocaddress syscall.getprocaddress
+    //go:nosplit
+    //go:cgo_unsafe_args
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname)
     {
         gocpp::Defer defer;
@@ -720,6 +771,8 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname syscall_Syscall syscall.Syscall
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     {
         uintptr_t r1;
@@ -728,6 +781,8 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3);
     }
 
+    //go:linkname syscall_Syscall6 syscall.Syscall6
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall6(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     {
         uintptr_t r1;
@@ -736,6 +791,8 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6);
     }
 
+    //go:linkname syscall_Syscall9 syscall.Syscall9
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall9(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
     {
         uintptr_t r1;
@@ -744,6 +801,8 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 
+    //go:linkname syscall_Syscall12 syscall.Syscall12
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall12(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12)
     {
         uintptr_t r1;
@@ -752,6 +811,8 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
     }
 
+    //go:linkname syscall_Syscall15 syscall.Syscall15
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall15(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15)
     {
         uintptr_t r1;
@@ -760,6 +821,8 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
     }
 
+    //go:linkname syscall_Syscall18 syscall.Syscall18
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_Syscall18(uintptr_t fn, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18)
     {
         uintptr_t r1;
@@ -768,6 +831,13 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
     }
 
+    // maxArgs should be divisible by 2, as Windows stack
+    // must be kept 16-byte aligned on syscall entry.
+    //
+    // Although it only permits maximum 42 parameters, it
+    // is arguably large enough.
+    //go:linkname syscall_SyscallN syscall.SyscallN
+    //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
     {
         gocpp::Defer defer;
@@ -777,6 +847,8 @@ namespace golang::runtime
             uintptr_t r2;
             uintptr_t err;
             auto nargs = len(args);
+            // asmstdcall expects it can access the first 4 arguments
+            // to load them into registers.
             gocpp::array<uintptr_t, 4> tmp = {};
             //Go switch emulation
             {

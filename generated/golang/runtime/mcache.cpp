@@ -72,6 +72,12 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // Per-thread (in Go, per-P) cache for small objects.
+    // This includes a small object cache and local allocation stats.
+    // No locking needed because it is per-thread (per-P).
+    //
+    // mcaches are allocated from non-GC'd memory, so any heap pointers
+    // must be specially handled.
     
     template<typename T> requires gocpp::GoStruct<T>
     mcache::operator T()
@@ -125,6 +131,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A gclink is a node in a linked list of blocks, like mlink,
+    // but it is opaque to the garbage collector.
+    // The GC does not trace the pointers during collection,
+    // and the compiler does not emit write barriers for assignments
+    // of gclinkptr values. Code should store references to gclinks
+    // as gclinkptr, not as *gclink.
     
     template<typename T> requires gocpp::GoStruct<T>
     gclink::operator T()
@@ -154,6 +166,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A gclinkptr is a pointer to a gclink, but it is opaque
+    // to the garbage collector.
+    // ptr returns the *gclink form of p.
+    // The result should be used for accessing fields, not stored
+    // in other data structures.
     struct gclink* rec::ptr(golang::runtime::gclinkptr p)
     {
         return (gclink*)(unsafe::Pointer(p));
@@ -191,6 +208,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // dummy mspan that contains no free objects.
     mspan emptymspan;
     struct mcache* allocmcache()
     {
@@ -210,6 +228,12 @@ namespace golang::runtime
         return c;
     }
 
+    // freemcache releases resources associated with this
+    // mcache and puts the object onto a free list.
+    //
+    // In some cases there is no way to simply release
+    // resources, such as statistics, so donate them to
+    // a different mcache (the recipient).
     void freemcache(struct mcache* c)
     {
         systemstack([=]() mutable -> void
@@ -222,6 +246,10 @@ namespace golang::runtime
         });
     }
 
+    // getMCache is a convenience function which tries to obtain an mcache.
+    //
+    // Returns nil if we're not bootstrapping or we don't have a P. The caller's
+    // P must not change, so we must be in a non-preemptible state.
     struct mcache* getMCache(struct m* mp)
     {
         auto pp = rec::ptr(gocpp::recv(mp->p));
@@ -237,6 +265,11 @@ namespace golang::runtime
         return c;
     }
 
+    // refill acquires a new span of span class spc for c. This span will
+    // have at least one free object. The current span in c must be full.
+    //
+    // Must run in a non-preemptible context since otherwise the owner of
+    // c could change.
     void rec::refill(struct mcache* c, golang::runtime::spanClass spc)
     {
         auto s = c->alloc[spc];
@@ -281,6 +314,7 @@ namespace golang::runtime
         c->alloc[spc] = s;
     }
 
+    // allocLarge allocates a span for a large object.
     struct mspan* rec::allocLarge(struct mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
@@ -345,6 +379,9 @@ namespace golang::runtime
         rec::update(gocpp::recv(gcController), dHeapLive, scanAlloc);
     }
 
+    // prepareForSweep flushes c if the system has entered a new sweep phase
+    // since c was populated. This must happen between the sweep phase
+    // starting and the first allocation from c.
     void rec::prepareForSweep(struct mcache* c)
     {
         auto sg = mheap_.sweepgen;

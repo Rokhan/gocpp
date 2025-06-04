@@ -20,6 +20,7 @@ namespace golang::color
         using namespace mocklib::rec;
     }
 
+    // RGBToYCbCr converts an RGB triple to a Y'CbCr triple.
     std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b)
     {
         auto r1 = int32_t(r);
@@ -47,6 +48,7 @@ namespace golang::color
         return {uint8_t(yy), uint8_t(cb), uint8_t(cr)};
     }
 
+    // YCbCrToRGB converts a Y'CbCr triple to an RGB triple.
     std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr)
     {
         auto yy1 = int32_t(y) * 0x10101;
@@ -82,6 +84,17 @@ namespace golang::color
         return {uint8_t(r), uint8_t(g), uint8_t(b)};
     }
 
+    // YCbCr represents a fully opaque 24-bit Y'CbCr color, having 8 bits each for
+    // one luma and two chroma components.
+    //
+    // JPEG, VP8, the MPEG family and other codecs use this color model. Such
+    // codecs often use the terms YUV and Y'CbCr interchangeably, but strictly
+    // speaking, the term YUV applies only to analog video signals, and Y' (luma)
+    // is Y (luminance) after applying gamma correction.
+    //
+    // Conversion between RGB and Y'CbCr is lossy and there are multiple, slightly
+    // different formulae for converting between the two. This package follows
+    // the JFIF specification at https://www.w3.org/Graphics/JPEG/jfif3.pdf.
     
     template<typename T> requires gocpp::GoStruct<T>
     YCbCr::operator T()
@@ -152,6 +165,7 @@ namespace golang::color
         return {uint32_t(r), uint32_t(g), uint32_t(b), 0xffff};
     }
 
+    // YCbCrModel is the [Model] for Y'CbCr colors.
     Model YCbCrModel = ModelFunc(yCbCrModel);
     struct Color yCbCrModel(struct Color c)
     {
@@ -164,6 +178,8 @@ namespace golang::color
         return YCbCr {y, u, v};
     }
 
+    // NYCbCrA represents a non-alpha-premultiplied Y'CbCr-with-alpha color, having
+    // 8 bits each for one luma, two chroma and one alpha component.
     
     template<typename T> requires gocpp::GoStruct<T>
     NYCbCrA::operator T()
@@ -229,6 +245,8 @@ namespace golang::color
         return {uint32_t(r) * a / 0xffff, uint32_t(g) * a / 0xffff, uint32_t(b) * a / 0xffff, a};
     }
 
+    // NYCbCrAModel is the [Model] for non-alpha-premultiplied Y'CbCr-with-alpha
+    // colors.
     Model NYCbCrAModel = ModelFunc(nYCbCrAModel);
     struct Color nYCbCrAModel(struct Color c)
     {
@@ -269,6 +287,7 @@ namespace golang::color
         }), uint8_t(a >> 8)};
     }
 
+    // RGBToCMYK converts an RGB triple to a CMYK quadruple.
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b)
     {
         auto rr = uint32_t(r);
@@ -293,6 +312,7 @@ namespace golang::color
         return {uint8_t(c), uint8_t(m), uint8_t(y), uint8_t(0xff - w)};
     }
 
+    // CMYKToRGB converts a [CMYK] quadruple to an RGB triple.
     std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k)
     {
         auto w = 0xffff - uint32_t(k) * 0x101;
@@ -302,6 +322,10 @@ namespace golang::color
         return {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8)};
     }
 
+    // CMYK represents a fully opaque CMYK color, having 8 bits for each of cyan,
+    // magenta, yellow and black.
+    //
+    // It is not associated with any particular color profile.
     
     template<typename T> requires gocpp::GoStruct<T>
     CMYK::operator T()
@@ -349,6 +373,7 @@ namespace golang::color
         return {r, g, b, 0xffff};
     }
 
+    // CMYKModel is the [Model] for CMYK colors.
     Model CMYKModel = ModelFunc(cmykModel);
     struct Color cmykModel(struct Color c)
     {

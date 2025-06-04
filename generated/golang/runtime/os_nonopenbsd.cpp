@@ -27,10 +27,14 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // osStackAlloc performs OS-specific initialization before s is used
+    // as stack memory.
     void osStackAlloc(struct mspan* s)
     {
     }
 
+    // osStackFree undoes the effect of osStackAlloc before s is returned
+    // to the heap.
     void osStackFree(struct mspan* s)
     {
     }

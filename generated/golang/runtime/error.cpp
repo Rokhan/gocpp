@@ -33,6 +33,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // The Error interface identifies a run time error.
     
     template<typename T>
     Error::Error(T& ref)
@@ -81,6 +82,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A TypeAssertionError explains a failed type assertion.
     
     template<typename T> requires gocpp::GoStruct<T>
     TypeAssertionError::operator T()
@@ -155,6 +157,11 @@ namespace golang::runtime
         return "interface conversion: "s + cs + " is not "s + as + ": missing method "s + e->missingMethod;
     }
 
+    // itoa converts val to a decimal representation. The result is
+    // written somewhere within buf and the location of the result is returned.
+    // buf must be at least 20 bytes.
+    //
+    //go:nosplit
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val)
     {
         auto i = len(buf) - 1;
@@ -168,6 +175,7 @@ namespace golang::runtime
         return buf.make_slice(i);
     }
 
+    // An errorString represents a runtime error described by a single string.
     void rec::RuntimeError(golang::runtime::errorString e)
     {
     }
@@ -218,11 +226,19 @@ namespace golang::runtime
         return "runtime error: "s + e.msg;
     }
 
+    // Addr returns the memory address where a fault occurred.
+    // The address provided is best-effort.
+    // The veracity of the result may depend on the platform.
+    // Errors providing this method will only be returned as
+    // a result of using [runtime/debug.SetPanicOnFault].
     uintptr_t rec::Addr(struct errorAddressString e)
     {
         return e.addr;
     }
 
+    // plainError represents a runtime error described a string without
+    // the prefix "runtime error: " after invoking errorString.Error().
+    // See Issue #14965.
     void rec::RuntimeError(golang::runtime::plainError e)
     {
     }
@@ -232,6 +248,7 @@ namespace golang::runtime
         return std::string(e);
     }
 
+    // A boundsError represents an indexing or slicing operation gone wrong.
     
     template<typename T> requires gocpp::GoStruct<T>
     boundsError::operator T()
@@ -270,6 +287,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // boundsErrorFmts provide error text for various out-of-bounds panics.
+    // Note: if you change these strings, you should adjust the size of the buffer
+    // in boundsError.Error below as well.
     gocpp::array<std::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<std::string, 9>>([](auto& x) {
         x[boundsIndex] = "index out of range [%x] with length %y"s;
         x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y"s;
@@ -281,6 +301,7 @@ namespace golang::runtime
         x[boundsSlice3C] = "slice bounds out of range [%x:%y:]"s;
         x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"s;
     });
+    // boundsNegErrorFmts are overriding formats if x is negative. In this case there's no need to report y.
     gocpp::array<std::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<std::string, 8>>([](auto& x) {
         x[boundsIndex] = "index out of range [%x]"s;
         x[boundsSliceAlen] = "slice bounds out of range [:%x]"s;
@@ -393,6 +414,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // printany prints an argument passed to panic.
+    // If panic is called with a value that has a String or Error method,
+    // it has already been converted into a string by preprintpanics.
     void printany(go_any i)
     {
         //Go type switch emulation
@@ -622,6 +646,10 @@ namespace golang::runtime
         }
     }
 
+    // panicwrap generates a panic for a call to a wrapped value method
+    // with a nil pointer receiver.
+    //
+    // It is called from the generated wrapper code.
     void panicwrap()
     {
         auto pc = getcallerpc();

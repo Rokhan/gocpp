@@ -20,6 +20,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Called from compiled code; declared for vet; do NOT call from Go.
     void gcWriteBarrierCX()
     /* convertBlockStmt, nil block */;
 
@@ -41,12 +42,15 @@ namespace golang::runtime
     void gcWriteBarrierR9()
     /* convertBlockStmt, nil block */;
 
+    // stackcheck checks that SP is in range [g->stack.lo, g->stack.hi).
     void stackcheck()
     /* convertBlockStmt, nil block */;
 
+    // Called from assembly only; declared for go vet.
     void settls()
     /* convertBlockStmt, nil block */;
 
+    // Retpolines, used by -spectre=ret flag in cmd/asm, cmd/compile.
     void retpolineAX()
     /* convertBlockStmt, nil block */;
 
@@ -92,18 +96,26 @@ namespace golang::runtime
     void retpolineR15()
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     void asmcgocall_no_g(unsafe::Pointer fn, unsafe::Pointer arg)
     /* convertBlockStmt, nil block */;
 
+    //go:systemstack
     void asmcgocall_landingpad()
     /* convertBlockStmt, nil block */;
 
+    // Used by reflectcall and the reflect package.
+    //
+    // Spills/loads arguments in registers to/from an internal/abi.RegArgs
+    // respectively. Does not follow the Go ABI.
     void spillArgs()
     /* convertBlockStmt, nil block */;
 
     void unspillArgs()
     /* convertBlockStmt, nil block */;
 
+    // getfp returns the frame pointer register of its caller or 0 if not implemented.
+    // TODO: Make this a compiler intrinsic
     uintptr_t getfp()
     /* convertBlockStmt, nil block */;
 

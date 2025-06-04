@@ -26,6 +26,7 @@ namespace golang::poll
         using namespace mocklib::rec;
     }
 
+    // Fsync wraps syscall.Fsync.
     struct gocpp::error rec::Fsync(struct FD* fd)
     {
         gocpp::Defer defer;

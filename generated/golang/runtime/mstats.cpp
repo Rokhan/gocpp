@@ -193,6 +193,7 @@ namespace golang::runtime
     }
 
 
+    // A MemStats records statistics about the memory allocator.
     
     template<typename T> requires gocpp::GoStruct<T>
     MemStats::operator T()
@@ -329,6 +330,12 @@ namespace golang::runtime
         }
     }
 
+    // ReadMemStats populates m with memory allocator statistics.
+    //
+    // The returned memory allocator statistics are up to date as of the
+    // call to ReadMemStats. This is in contrast with a heap profile,
+    // which is a snapshot as of the most recently completed garbage
+    // collection cycle.
     void ReadMemStats(struct MemStats* m)
     {
         _ = m->Alloc;
@@ -340,6 +347,9 @@ namespace golang::runtime
         startTheWorld(stw);
     }
 
+    // doubleCheckReadMemStats controls a double-check mode for ReadMemStats that
+    // ensures consistency between the values that ReadMemStats is using and the
+    // runtime-internal stats.
     bool doubleCheckReadMemStats = false;
     struct gocpp_id_1
         {
@@ -385,16 +395,21 @@ namespace golang::runtime
         }
 
 
+    // readmemstats_m populates stats for internal runtime values.
+    //
+    // The world must be stopped.
     void readmemstats_m(struct MemStats* stats)
     {
         assertWorldStopped();
         systemstack(flushallmcaches);
+        // Collect consistent stats, which are the source-of-truth in some cases.
         heapStatsDelta consStats = {};
         rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
         auto totalAlloc = consStats.largeAlloc;
         auto nMalloc = consStats.largeAllocCount;
         auto totalFree = consStats.largeFree;
         auto nFree = consStats.largeFreeCount;
+        // Collect per-sizeclass stats.
         gocpp::array<gocpp_id_1, _NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
@@ -494,6 +509,7 @@ namespace golang::runtime
         copy(stats->BySize.make_slice(0), bySize.make_slice(0));
     }
 
+    //go:linkname readGCStats runtime/debug.readGCStats
     void readGCStats(gocpp::slice<uint64_t>* pauses)
     {
         systemstack([=]() mutable -> void
@@ -502,6 +518,10 @@ namespace golang::runtime
         });
     }
 
+    // readGCStats_m must be called on the system stack because it acquires the heap
+    // lock. See mheap for details.
+    //
+    //go:systemstack
     void readGCStats_m(gocpp::slice<uint64_t>* pauses)
     {
         auto p = *pauses;
@@ -529,6 +549,11 @@ namespace golang::runtime
         *pauses = p.make_slice(0, n + n + 3);
     }
 
+    // flushmcache flushes the mcache of allp[i].
+    //
+    // The world must be stopped.
+    //
+    //go:nowritebarrier
     void flushmcache(int i)
     {
         assertWorldStopped();
@@ -542,6 +567,11 @@ namespace golang::runtime
         stackcache_clear(c);
     }
 
+    // flushallmcaches flushes the mcaches of all Ps.
+    //
+    // The world must be stopped.
+    //
+    //go:nowritebarrier
     void flushallmcaches()
     {
         assertWorldStopped();
@@ -551,11 +581,24 @@ namespace golang::runtime
         }
     }
 
+    // sysMemStat represents a global system statistic that is managed atomically.
+    //
+    // This type must structurally be a uint64 so that mstats aligns with MemStats.
+    // load atomically reads the value of the stat.
+    //
+    // Must be nosplit as it is called in runtime initialization, e.g. newosproc0.
+    //
+    //go:nosplit
     uint64_t rec::load(golang::runtime::sysMemStat* s)
     {
         return atomic::Load64((uint64_t*)(s));
     }
 
+    // add atomically adds the sysMemStat by n.
+    //
+    // Must be nosplit as it is called in runtime initialization, e.g. newosproc0.
+    //
+    //go:nosplit
     void rec::add(golang::runtime::sysMemStat* s, int64_t n)
     {
         auto val = atomic::Xadd64((uint64_t*)(s), n);
@@ -566,6 +609,9 @@ namespace golang::runtime
         }
     }
 
+    // heapStatsDelta contains deltas of various runtime memory statistics
+    // that need to be updated together in order for them to be kept
+    // consistent with one another.
     
     template<typename T> requires gocpp::GoStruct<T>
     heapStatsDelta::operator T()
@@ -631,6 +677,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // merge adds in the deltas from b into a.
     void rec::merge(struct heapStatsDelta* a, struct heapStatsDelta* b)
     {
         a->committed += b->committed;
@@ -654,6 +701,13 @@ namespace golang::runtime
         }
     }
 
+    // consistentHeapStats represents a set of various memory statistics
+    // whose updates must be viewed completely to get a consistent
+    // state of the world.
+    //
+    // To write updates to memory stats use the acquire and release
+    // methods. To obtain a consistent global snapshot of these statistics,
+    // use read.
     
     template<typename T> requires gocpp::GoStruct<T>
     consistentHeapStats::operator T()
@@ -689,6 +743,23 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // acquire returns a heapStatsDelta to be updated. In effect,
+    // it acquires the shard for writing. release must be called
+    // as soon as the relevant deltas are updated.
+    //
+    // The returned heapStatsDelta must be updated atomically.
+    //
+    // The caller's P must not change between acquire and
+    // release. This also means that the caller should not
+    // acquire a P or release its P in between. A P also must
+    // not acquire a given consistentHeapStats if it hasn't
+    // yet released it.
+    //
+    // nosplit because a stack growth in this function could
+    // lead to a stack allocation that could reenter the
+    // function.
+    //
+    //go:nosplit
     struct heapStatsDelta* rec::acquire(struct consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
@@ -708,6 +779,20 @@ namespace golang::runtime
         return & m->stats[gen];
     }
 
+    // release indicates that the writer is done modifying
+    // the delta. The value returned by the corresponding
+    // acquire must no longer be accessed or modified after
+    // release is called.
+    //
+    // The caller's P must not change between acquire and
+    // release. This also means that the caller should not
+    // acquire a P or release its P in between.
+    //
+    // nosplit because a stack growth in this function could
+    // lead to a stack allocation that causes another acquire
+    // before this operation has completed.
+    //
+    //go:nosplit
     void rec::release(struct consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
@@ -725,6 +810,10 @@ namespace golang::runtime
         }
     }
 
+    // unsafeRead aggregates the delta for this shard into out.
+    //
+    // Unsafe because it does so without any synchronization. The
+    // world must be stopped.
     void rec::unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         assertWorldStopped();
@@ -734,6 +823,10 @@ namespace golang::runtime
         }
     }
 
+    // unsafeClear clears the shard.
+    //
+    // Unsafe because the world must be stopped and values should
+    // be donated elsewhere before clearing.
     void rec::unsafeClear(struct consistentHeapStats* m)
     {
         assertWorldStopped();
@@ -743,6 +836,13 @@ namespace golang::runtime
         }
     }
 
+    // read takes a globally consistent snapshot of m
+    // and puts the aggregated value in out. Even though out is a
+    // heapStatsDelta, the resulting values should be complete and
+    // valid statistic values.
+    //
+    // Not safe to call concurrently. The world must be stopped
+    // or metricsSema must be held.
     void rec::read(struct consistentHeapStats* m, struct heapStatsDelta* out)
     {
         auto mp = acquirem();
@@ -826,8 +926,15 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // accumulate takes a cpuStats and adds in the current state of all GC CPU
+    // counters.
+    //
+    // gcMarkPhase indicates that we're in the mark phase and that certain counter
+    // values should be used.
     void rec::accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase)
     {
+        // N.B. Mark termination and sweep termination pauses are
+        // accumulated in work.cpuStats at the end of their respective pauses.
         int64_t markAssistCpu = {};
         int64_t markDedicatedCpu = {};
         int64_t markFractionalCpu = {};

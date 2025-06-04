@@ -18,9 +18,11 @@ namespace golang::bytealg
         using namespace mocklib::rec;
     }
 
+    //go:noescape
     int IndexByte(gocpp::slice<unsigned char> b, unsigned char c)
     /* convertBlockStmt, nil block */;
 
+    //go:noescape
     int IndexByteString(std::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 

@@ -21,11 +21,15 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
+    // Walk walks the tree t sending all values
+    // from the tree to the channel ch.
     void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
         gocpp::panic("Not implemented"s);
     }
 
+    // Same determines whether the trees
+    // t1 and t2 contain the same values.
     bool Same(tree::Tree* t1, tree::Tree* t2)
     {
         gocpp::panic("Not implemented"s);

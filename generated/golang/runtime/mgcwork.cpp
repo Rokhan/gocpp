@@ -64,6 +64,12 @@ namespace golang::runtime
         using atomic::rec::Add;
     }
 
+    // workbufAlloc is the number of bytes to allocate at a time
+    // for new workbufs. This must be a multiple of pageSize and
+    // should be a multiple of _WorkbufSize.
+    //
+    // Larger values reduce workbuf allocation overhead. Smaller
+    // values reduce heap fragmentation.
     void init()
     {
         if(workbufAlloc % pageSize != 0 || workbufAlloc % _WorkbufSize != 0)
@@ -72,6 +78,19 @@ namespace golang::runtime
         }
     }
 
+    // A gcWork provides the interface to produce and consume work for the
+    // garbage collector.
+    //
+    // A gcWork can be used on the stack as follows:
+    //
+    //	(preemption must be disabled)
+    //	gcw := &getg().m.p.ptr().gcw
+    //	.. call gcw.put() to produce and gcw.tryGet() to consume ..
+    //
+    // It's important that any use of gcWork during the mark phase prevent
+    // the garbage collector from transitioning to mark termination since
+    // gcWork may locally hold GC work buffers. This can be done by
+    // disabling preemption (systemstack or acquirem).
     
     template<typename T> requires gocpp::GoStruct<T>
     gcWork::operator T()
@@ -124,6 +143,10 @@ namespace golang::runtime
         w->wbuf2 = wbuf2;
     }
 
+    // put enqueues a pointer for the garbage collector to trace.
+    // obj must point to the beginning of a heap object or an oblet.
+    //
+    //go:nowritebarrierrec
     void rec::put(struct gcWork* w, uintptr_t obj)
     {
         auto flushed = false;
@@ -157,6 +180,10 @@ namespace golang::runtime
         }
     }
 
+    // putFast does a put and reports whether it can be done quickly
+    // otherwise it returns false and the caller needs to call put.
+    //
+    //go:nowritebarrierrec
     bool rec::putFast(struct gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
@@ -169,6 +196,10 @@ namespace golang::runtime
         return true;
     }
 
+    // putBatch performs a put on every pointer in obj. See put for
+    // constraints on these pointers.
+    //
+    //go:nowritebarrierrec
     void rec::putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj)
     {
         if(len(obj) == 0)
@@ -202,6 +233,13 @@ namespace golang::runtime
         }
     }
 
+    // tryGet dequeues a pointer for the garbage collector to trace.
+    //
+    // If there are no pointers remaining in this gcWork or in the global
+    // queue, tryGet returns 0.  Note that there may still be pointers in
+    // other gcWork instances or other caches.
+    //
+    //go:nowritebarrierrec
     uintptr_t rec::tryGet(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
@@ -230,6 +268,11 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
+    // tryGetFast dequeues a pointer for the garbage collector to trace
+    // if one is readily available. Otherwise it returns 0 and
+    // the caller is expected to call tryGet().
+    //
+    //go:nowritebarrierrec
     uintptr_t rec::tryGetFast(struct gcWork* w)
     {
         auto wbuf = w->wbuf1;
@@ -241,6 +284,13 @@ namespace golang::runtime
         return wbuf->obj[wbuf->nobj];
     }
 
+    // dispose returns any cached pointers to the global queue.
+    // The buffers are being put on the full queue so that the
+    // write barriers will not simply reacquire them before the
+    // GC can inspect them. This helps reduce the mutator's
+    // ability to hide pointers during the concurrent mark phase.
+    //
+    //go:nowritebarrierrec
     void rec::dispose(struct gcWork* w)
     {
         if(auto wbuf = w->wbuf1; wbuf != nullptr)
@@ -279,6 +329,10 @@ namespace golang::runtime
         }
     }
 
+    // balance moves some work that's cached in this gcWork back on the
+    // global queue.
+    //
+    //go:nowritebarrierrec
     void rec::balance(struct gcWork* w)
     {
         if(w->wbuf1 == nullptr)
@@ -307,6 +361,9 @@ namespace golang::runtime
         }
     }
 
+    // empty reports whether w has no mark work available.
+    //
+    //go:nowritebarrierrec
     bool rec::empty(struct gcWork* w)
     {
         return w->wbuf1 == nullptr || (w->wbuf1->nobj == 0 && w->wbuf2->nobj == 0);
@@ -392,6 +449,10 @@ namespace golang::runtime
         }
     }
 
+    // getempty pops an empty work buffer off the work.empty list,
+    // allocating new buffers if none are available.
+    //
+    //go:nowritebarrier
     struct workbuf* getempty()
     {
         workbuf* b = {};
@@ -407,6 +468,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
         if(b == nullptr)
         {
+            // Allocate more workbufs.
             mspan* s = {};
             if(work.wbufSpans.free.first != nullptr)
             {
@@ -451,18 +513,31 @@ namespace golang::runtime
         return b;
     }
 
+    // putempty puts a workbuf onto the work.empty list.
+    // Upon entry this goroutine owns b. The lfstack.push relinquishes ownership.
+    //
+    //go:nowritebarrier
     void putempty(struct workbuf* b)
     {
         rec::checkempty(gocpp::recv(b));
         rec::push(gocpp::recv(work.empty), & b->node);
     }
 
+    // putfull puts the workbuf on the work.full list for the GC.
+    // putfull accepts partially full buffers so the GC can avoid competing
+    // with the mutators for ownership of partially full buffers.
+    //
+    //go:nowritebarrier
     void putfull(struct workbuf* b)
     {
         rec::checknonempty(gocpp::recv(b));
         rec::push(gocpp::recv(work.full), & b->node);
     }
 
+    // trygetfull tries to get a full or partially empty workbuffer.
+    // If one is not immediately available return nil.
+    //
+    //go:nowritebarrier
     struct workbuf* trygetfull()
     {
         auto b = (workbuf*)(rec::pop(gocpp::recv(work.full)));
@@ -474,6 +549,7 @@ namespace golang::runtime
         return b;
     }
 
+    //go:nowritebarrier
     struct workbuf* handoff(struct workbuf* b)
     {
         auto b1 = getempty();
@@ -485,6 +561,9 @@ namespace golang::runtime
         return b1;
     }
 
+    // prepareFreeWorkbufs moves busy workbuf spans to free list so they
+    // can be freed to the heap. This must only be called when all
+    // workbufs are on the empty list.
     void prepareFreeWorkbufs()
     {
         lock(& work.wbufSpans.lock);
@@ -497,6 +576,8 @@ namespace golang::runtime
         unlock(& work.wbufSpans.lock);
     }
 
+    // freeSomeWbufs frees some workbufs back to the heap and returns
+    // true if it should be called again to free more.
     bool freeSomeWbufs(bool preemptible)
     {
         auto batchSize = 64;

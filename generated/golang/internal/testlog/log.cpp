@@ -13,6 +13,9 @@
 
 #include "golang/sync/atomic/value.h"
 
+// Package testlog provides a back-channel communication path
+// between tests and package os, so that cmd/go can see which
+// environment variables and files a test consults.
 namespace golang::testlog
 {
     namespace rec
@@ -22,6 +25,10 @@ namespace golang::testlog
         using atomic::rec::Store;
     }
 
+    // Interface is the interface required of test loggers.
+    // The os package will invoke the interface's methods to indicate that
+    // it is inspecting the given environment variables or files.
+    // Multiple goroutines may call these methods simultaneously.
     
     template<typename T>
     Interface::Interface(T& ref)
@@ -115,7 +122,15 @@ namespace golang::testlog
         return value.PrintTo(os);
     }
 
+    // logger is the current logger Interface.
+    // We use an atomic.Value in case test startup
+    // is racing with goroutines started during init.
+    // That must not cause a race detector failure,
+    // although it will still result in limited visibility
+    // into exactly what those goroutines do.
     atomic::Value logger;
+    // SetLogger sets the test logger implementation for the current process.
+    // It must be called only once, at process startup.
     void SetLogger(struct Interface impl)
     {
         if(rec::Load(gocpp::recv(logger)) != nullptr)
@@ -125,6 +140,8 @@ namespace golang::testlog
         rec::Store(gocpp::recv(logger), & impl);
     }
 
+    // Logger returns the current test logger implementation.
+    // It returns nil if there is no logger.
     struct Interface Logger()
     {
         auto impl = rec::Load(gocpp::recv(logger));
@@ -135,6 +152,7 @@ namespace golang::testlog
         return *gocpp::getValue<Interface*>(impl);
     }
 
+    // Getenv calls Logger().Getenv, if a logger has been set.
     void Getenv(std::string name)
     {
         if(auto log = Logger(); log != nullptr)
@@ -143,6 +161,7 @@ namespace golang::testlog
         }
     }
 
+    // Open calls Logger().Open, if a logger has been set.
     void Open(std::string name)
     {
         if(auto log = Logger(); log != nullptr)
@@ -151,6 +170,7 @@ namespace golang::testlog
         }
     }
 
+    // Stat calls Logger().Stat, if a logger has been set.
     void Stat(std::string name)
     {
         if(auto log = Logger(); log != nullptr)

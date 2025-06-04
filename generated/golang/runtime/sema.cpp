@@ -52,6 +52,16 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // A semaRoot holds a balanced tree of sudog with distinct addresses (s.elem).
+    // Each of those sudog may in turn point (through s.waitlink) to a list
+    // of other sudogs waiting on the same address.
+    // The operations on the inner lists of sudogs with the same address
+    // are all O(1). The scanning of the top-level semaRoot list is O(log n),
+    // where n is the number of distinct addresses with goroutines blocked
+    // on them that hash to the given semaRoot.
+    // See golang.org/issue/17953 for a program that worked badly
+    // before we introduced the second level of list, and
+    // BenchmarkSemTable/OneAddrCollision/* for a benchmark that exercises this.
     
     template<typename T> requires gocpp::GoStruct<T>
     semaRoot::operator T()
@@ -88,6 +98,7 @@ namespace golang::runtime
     }
 
     semTable semtable;
+    // Prime to not correlate with any user patterns.
     struct gocpp_id_0
     {
         semaRoot root;
@@ -133,36 +144,43 @@ namespace golang::runtime
         return & t[(uintptr_t(unsafe::Pointer(addr)) >> 3) % semTabSize].root;
     }
 
+    //go:linkname sync_runtime_Semacquire sync.runtime_Semacquire
     void sync_runtime_Semacquire(uint32_t* addr)
     {
         semacquire1(addr, false, semaBlockProfile, 0, waitReasonSemacquire);
     }
 
+    //go:linkname poll_runtime_Semacquire internal/poll.runtime_Semacquire
     void poll_runtime_Semacquire(uint32_t* addr)
     {
         semacquire1(addr, false, semaBlockProfile, 0, waitReasonSemacquire);
     }
 
+    //go:linkname sync_runtime_Semrelease sync.runtime_Semrelease
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes)
     {
         semrelease1(addr, handoff, skipframes);
     }
 
+    //go:linkname sync_runtime_SemacquireMutex sync.runtime_SemacquireMutex
     void sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncMutexLock);
     }
 
+    //go:linkname sync_runtime_SemacquireRWMutexR sync.runtime_SemacquireRWMutexR
     void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncRWMutexRLock);
     }
 
+    //go:linkname sync_runtime_SemacquireRWMutex sync.runtime_SemacquireRWMutex
     void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes)
     {
         semacquire1(addr, lifo, semaBlockProfile | semaMutexProfile, skipframes, waitReasonSyncRWMutexLock);
     }
 
+    //go:linkname poll_runtime_Semrelease internal/poll.runtime_Semrelease
     void poll_runtime_Semrelease(uint32_t* addr)
     {
         semrelease(addr);
@@ -177,6 +195,7 @@ namespace golang::runtime
         goready(s->g, traceskip);
     }
 
+    // Called from runtime.
     void semacquire(uint32_t* addr)
     {
         semacquire1(addr, false, 0, 0, waitReasonSemacquire);
@@ -307,6 +326,7 @@ namespace golang::runtime
         }
     }
 
+    // queue adds s to the blocked goroutines in semaRoot.
     void rec::queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
     {
         s->g = getg();
@@ -401,6 +421,13 @@ namespace golang::runtime
         }
     }
 
+    // dequeue searches for and finds the first goroutine
+    // in semaRoot blocked on addr.
+    // If the sudog was being profiled, dequeue returns the time
+    // at which it was woken up as now. Otherwise now is 0.
+    // If there are additional entries in the wait list, dequeue
+    // returns tailtime set to the last entry's acquiretime.
+    // Otherwise tailtime is found.acquiretime.
     std::tuple<struct sudog*, int64_t, int64_t> rec::dequeue(struct semaRoot* root, uint32_t* addr)
     {
         struct sudog* found;
@@ -502,6 +529,8 @@ namespace golang::runtime
         return {s, now, tailtime};
     }
 
+    // rotateLeft rotates the tree rooted at node x.
+    // turning (x a (y b c)) into (y (x a b) c).
     void rec::rotateLeft(struct semaRoot* root, struct sudog* x)
     {
         auto p = x->parent;
@@ -534,6 +563,8 @@ namespace golang::runtime
         }
     }
 
+    // rotateRight rotates the tree rooted at node y.
+    // turning (y (x a b) c) into (x a (y b c)).
     void rec::rotateRight(struct semaRoot* root, struct sudog* y)
     {
         auto p = y->parent;
@@ -566,6 +597,9 @@ namespace golang::runtime
         }
     }
 
+    // notifyList is a ticket-based notification list used to implement sync.Cond.
+    //
+    // It must be kept in sync with the sync package.
     
     template<typename T> requires gocpp::GoStruct<T>
     notifyList::operator T()
@@ -607,16 +641,27 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // less checks if a < b, considering a & b running counts that may overflow the
+    // 32-bit range, and that their "unwrapped" difference is always less than 2^31.
     bool less(uint32_t a, uint32_t b)
     {
         return int32_t(a - b) < 0;
     }
 
+    // notifyListAdd adds the caller to a notify list such that it can receive
+    // notifications. The caller must eventually call notifyListWait to wait for
+    // such a notification, passing the returned ticket number.
+    //
+    //go:linkname notifyListAdd sync.runtime_notifyListAdd
     uint32_t notifyListAdd(struct notifyList* l)
     {
         return rec::Add(gocpp::recv(l->wait), 1) - 1;
     }
 
+    // notifyListWait waits for a notification. If one has been sent since
+    // notifyListAdd was called, it returns immediately. Otherwise, it blocks.
+    //
+    //go:linkname notifyListWait sync.runtime_notifyListWait
     void notifyListWait(struct notifyList* l, uint32_t t)
     {
         lockWithRank(& l->lock, lockRankNotifyList);
@@ -652,6 +697,9 @@ namespace golang::runtime
         releaseSudog(s);
     }
 
+    // notifyListNotifyAll notifies all entries in the list.
+    //
+    //go:linkname notifyListNotifyAll sync.runtime_notifyListNotifyAll
     void notifyListNotifyAll(struct notifyList* l)
     {
         if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
@@ -673,6 +721,9 @@ namespace golang::runtime
         }
     }
 
+    // notifyListNotifyOne notifies one entry in the list.
+    //
+    //go:linkname notifyListNotifyOne sync.runtime_notifyListNotifyOne
     void notifyListNotifyOne(struct notifyList* l)
     {
         if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
@@ -713,6 +764,7 @@ namespace golang::runtime
         unlock(& l->lock);
     }
 
+    //go:linkname notifyListCheck sync.runtime_notifyListCheck
     void notifyListCheck(uintptr_t sz)
     {
         if(sz != gocpp::Sizeof<notifyList>())
@@ -722,6 +774,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname sync_nanotime sync.runtime_nanotime
     int64_t sync_nanotime()
     {
         return nanotime();

@@ -22,6 +22,10 @@ namespace golang::sync
         using namespace mocklib::rec;
     }
 
+    // OnceFunc returns a function that invokes f only once. The returned function
+    // may be called concurrently.
+    //
+    // If f panics, the returned function will panic with the same value on every call.
     std::function<void ()> OnceFunc(std::function<void ()> f)
     {
         Once once = {};
@@ -59,6 +63,10 @@ namespace golang::sync
         };
     }
 
+    // OnceValue returns a function that invokes f only once and returns the value
+    // returned by f. The returned function may be called concurrently.
+    //
+    // If f panics, the returned function will panic with the same value on every call.
 
     template<typename T>
     std::function<T ()> OnceValue(std::function<T ()> f)
@@ -100,6 +108,10 @@ namespace golang::sync
         };
     }
 
+    // OnceValues returns a function that invokes f only once and returns the values
+    // returned by f. The returned function may be called concurrently.
+    //
+    // If f panics, the returned function will panic with the same value on every call.
 
     template<typename T1, typename T2>
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f)

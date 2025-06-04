@@ -24,6 +24,8 @@
 #include "golang/unicode/letter.h"
 #include "golang/unicode/utf8/utf8.h"
 
+// Package bytes implements functions for the manipulation of byte slices.
+// It is analogous to the facilities of the [strings] package.
 namespace golang::bytes
 {
     namespace rec
@@ -31,16 +33,24 @@ namespace golang::bytes
         using namespace mocklib::rec;
     }
 
+    // Equal reports whether a and b
+    // are the same length and contain the same bytes.
+    // A nil argument is equivalent to an empty slice.
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
         return std::string(a) == std::string(b);
     }
 
+    // Compare returns an integer comparing two byte slices lexicographically.
+    // The result will be 0 if a == b, -1 if a < b, and +1 if a > b.
+    // A nil argument is equivalent to an empty slice.
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
         return bytealg::Compare(a, b);
     }
 
+    // explode splits s into a slice of UTF-8 sequences, one per Unicode code point (still slices of bytes),
+    // up to a maximum of n byte slices. Invalid UTF-8 sequences are chopped into individual bytes.
     gocpp::slice<gocpp::slice<unsigned char>> explode(gocpp::slice<unsigned char> s, int n)
     {
         if(n <= 0 || n > len(s))
@@ -66,6 +76,8 @@ namespace golang::bytes
         return a.make_slice(0, na);
     }
 
+    // Count counts the number of non-overlapping instances of sep in s.
+    // If sep is an empty slice, Count returns 1 + the number of UTF-8-encoded code points in s.
     int Count(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         if(len(sep) == 0)
@@ -89,26 +101,31 @@ namespace golang::bytes
         }
     }
 
+    // Contains reports whether subslice is within b.
     bool Contains(gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> subslice)
     {
         return Index(b, subslice) != - 1;
     }
 
+    // ContainsAny reports whether any of the UTF-8-encoded code points in chars are within b.
     bool ContainsAny(gocpp::slice<unsigned char> b, std::string chars)
     {
         return IndexAny(b, chars) >= 0;
     }
 
+    // ContainsRune reports whether the rune is contained in the UTF-8-encoded byte slice b.
     bool ContainsRune(gocpp::slice<unsigned char> b, gocpp::rune r)
     {
         return IndexRune(b, r) >= 0;
     }
 
+    // ContainsFunc reports whether any of the UTF-8-encoded code points r within b satisfy f(r).
     bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune)> f)
     {
         return IndexFunc(b, f) >= 0;
     }
 
+    // IndexByte returns the index of the first instance of c in b, or -1 if c is not present in b.
     int IndexByte(gocpp::slice<unsigned char> b, unsigned char c)
     {
         return bytealg::IndexByte(b, c);
@@ -126,6 +143,7 @@ namespace golang::bytes
         return - 1;
     }
 
+    // LastIndex returns the index of the last instance of sep in s, or -1 if sep is not present in s.
     int LastIndex(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         auto n = len(sep);
@@ -159,11 +177,17 @@ namespace golang::bytes
         return bytealg::LastIndexRabinKarp(s, sep);
     }
 
+    // LastIndexByte returns the index of the last instance of c in s, or -1 if c is not present in s.
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c)
     {
         return bytealg::LastIndexByte(s, c);
     }
 
+    // IndexRune interprets s as a sequence of UTF-8-encoded code points.
+    // It returns the byte index of the first occurrence in s of the given rune.
+    // It returns -1 if rune is not present in s.
+    // If r is utf8.RuneError, it returns the first instance of any
+    // invalid UTF-8 byte sequence.
     int IndexRune(gocpp::slice<unsigned char> s, gocpp::rune r)
     {
         //Go switch emulation
@@ -201,6 +225,10 @@ namespace golang::bytes
         }
     }
 
+    // IndexAny interprets s as a sequence of UTF-8-encoded Unicode code points.
+    // It returns the byte index of the first occurrence in s of any of the Unicode
+    // code points in chars. It returns -1 if chars is empty or if there is no code
+    // point in common.
     int IndexAny(gocpp::slice<unsigned char> s, std::string chars)
     {
         if(chars == ""s)
@@ -294,6 +322,10 @@ namespace golang::bytes
         return - 1;
     }
 
+    // LastIndexAny interprets s as a sequence of UTF-8-encoded Unicode code
+    // points. It returns the byte index of the last occurrence in s of any of
+    // the Unicode code points in chars. It returns -1 if chars is empty or if
+    // there is no code point in common.
     int LastIndexAny(gocpp::slice<unsigned char> s, std::string chars)
     {
         if(chars == ""s)
@@ -397,6 +429,8 @@ namespace golang::bytes
         return - 1;
     }
 
+    // Generic split: splits after each instance of sep,
+    // including sepSave bytes of sep in the subslices.
     gocpp::slice<gocpp::slice<unsigned char>> genSplit(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep, int sepSave, int n)
     {
         if(n == 0)
@@ -433,21 +467,49 @@ namespace golang::bytes
         return a.make_slice(0, i + 1);
     }
 
+    // SplitN slices s into subslices separated by sep and returns a slice of
+    // the subslices between those separators.
+    // If sep is empty, SplitN splits after each UTF-8 sequence.
+    // The count determines the number of subslices to return:
+    //
+    //	n > 0: at most n subslices; the last subslice will be the unsplit remainder.
+    //	n == 0: the result is nil (zero subslices)
+    //	n < 0: all subslices
+    //
+    // To split around the first instance of a separator, see Cut.
     gocpp::slice<gocpp::slice<unsigned char>> SplitN(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep, int n)
     {
         return genSplit(s, sep, 0, n);
     }
 
+    // SplitAfterN slices s into subslices after each instance of sep and
+    // returns a slice of those subslices.
+    // If sep is empty, SplitAfterN splits after each UTF-8 sequence.
+    // The count determines the number of subslices to return:
+    //
+    //	n > 0: at most n subslices; the last subslice will be the unsplit remainder.
+    //	n == 0: the result is nil (zero subslices)
+    //	n < 0: all subslices
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfterN(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep, int n)
     {
         return genSplit(s, sep, len(sep), n);
     }
 
+    // Split slices s into all subslices separated by sep and returns a slice of
+    // the subslices between those separators.
+    // If sep is empty, Split splits after each UTF-8 sequence.
+    // It is equivalent to SplitN with a count of -1.
+    //
+    // To split around the first instance of a separator, see Cut.
     gocpp::slice<gocpp::slice<unsigned char>> Split(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         return genSplit(s, sep, 0, - 1);
     }
 
+    // SplitAfter slices s into all subslices after each instance of sep and
+    // returns a slice of those subslices.
+    // If sep is empty, SplitAfter splits after each UTF-8 sequence.
+    // It is equivalent to SplitAfterN with a count of -1.
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfter(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         return genSplit(s, sep, len(sep), - 1);
@@ -461,6 +523,10 @@ namespace golang::bytes
         x['\r'] = 1;
         x[' '] = 1;
     });
+    // Fields interprets s as a sequence of UTF-8-encoded code points.
+    // It splits the slice s around each instance of one or more consecutive white space
+    // characters, as defined by unicode.IsSpace, returning a slice of subslices of s or an
+    // empty slice if s contains only white space.
     gocpp::slice<gocpp::slice<unsigned char>> Fields(gocpp::slice<unsigned char> s)
     {
         auto n = 0;
@@ -510,8 +576,17 @@ namespace golang::bytes
         return a;
     }
 
+    // FieldsFunc interprets s as a sequence of UTF-8-encoded code points.
+    // It splits the slice s at each run of code points c satisfying f(c) and
+    // returns a slice of subslices of s. If all code points in s satisfy f(c), or
+    // len(s) == 0, an empty slice is returned.
+    //
+    // FieldsFunc makes no guarantees about the order in which it calls f(c)
+    // and assumes that f always returns the same value for a given c.
     gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune)> f)
     {
+        // A span is used to record a slice of s of the form s[start:end].
+        // The start index is inclusive and the end index is exclusive.
         
         template<typename T> requires gocpp::GoStruct<T>
         span::operator T()
@@ -583,6 +658,8 @@ namespace golang::bytes
         return a;
     }
 
+    // Join concatenates the elements of s to create a new byte slice. The separator
+    // sep is placed between elements in the resulting slice.
     gocpp::slice<unsigned char> Join(gocpp::slice<gocpp::slice<unsigned char>> s, gocpp::slice<unsigned char> sep)
     {
         if(len(s) == 0)
@@ -620,16 +697,22 @@ namespace golang::bytes
         return b;
     }
 
+    // HasPrefix reports whether the byte slice s begins with prefix.
     bool HasPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix)
     {
         return len(s) >= len(prefix) && Equal(s.make_slice(0, len(prefix)), prefix);
     }
 
+    // HasSuffix reports whether the byte slice s ends with suffix.
     bool HasSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix)
     {
         return len(s) >= len(suffix) && Equal(s.make_slice(len(s) - len(suffix)), suffix);
     }
 
+    // Map returns a copy of the byte slice s with all its characters modified
+    // according to the mapping function. If mapping returns a negative value, the character is
+    // dropped from the byte slice with no replacement. The characters in s and the
+    // output are interpreted as UTF-8-encoded code points.
     gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s));
@@ -651,6 +734,10 @@ namespace golang::bytes
         return b;
     }
 
+    // Repeat returns a new byte slice consisting of count copies of b.
+    //
+    // It panics if count is negative or if the result of (len(b) * count)
+    // overflows.
     gocpp::slice<unsigned char> Repeat(gocpp::slice<unsigned char> b, int count)
     {
         if(count == 0)
@@ -670,6 +757,16 @@ namespace golang::bytes
         {
             return gocpp::slice<unsigned char> {};
         }
+        // Past a certain chunk size it is counterproductive to use
+        // larger chunks as the source of the write, as when the source
+        // is too large we are basically just thrashing the CPU D-cache.
+        // So if the result length is larger than an empirically-found
+        // limit (8KB), we stop growing the source string once the limit
+        // is reached and keep reusing the same source string - that
+        // should therefore be always resident in the L1 cache - until we
+        // have completed the construction of the result.
+        // This yields significant speedups (up to +100%) in cases where
+        // the result length is large (roughly, over L2 cache size).
         auto chunkLimit = 8 * 1024;
         auto chunkMax = n;
         if(chunkMax > chunkLimit)
@@ -694,6 +791,8 @@ namespace golang::bytes
         return nb;
     }
 
+    // ToUpper returns a copy of the byte slice s with all Unicode letters mapped to
+    // their upper case.
     gocpp::slice<unsigned char> ToUpper(gocpp::slice<unsigned char> s)
     {
         auto [isASCII, hasLower] = std::tuple{true, false};
@@ -728,6 +827,8 @@ namespace golang::bytes
         return Map(unicode::ToUpper, s);
     }
 
+    // ToLower returns a copy of the byte slice s with all Unicode letters mapped to
+    // their lower case.
     gocpp::slice<unsigned char> ToLower(gocpp::slice<unsigned char> s)
     {
         auto [isASCII, hasUpper] = std::tuple{true, false};
@@ -762,26 +863,35 @@ namespace golang::bytes
         return Map(unicode::ToLower, s);
     }
 
+    // ToTitle treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their title case.
     gocpp::slice<unsigned char> ToTitle(gocpp::slice<unsigned char> s)
     {
         return Map(unicode::ToTitle, s);
     }
 
+    // ToUpperSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
+    // upper case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToUpperSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
         return Map(c->ToUpper, s);
     }
 
+    // ToLowerSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
+    // lower case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToLowerSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
         return Map(c->ToLower, s);
     }
 
+    // ToTitleSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
+    // title case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToTitleSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
         return Map(c->ToTitle, s);
     }
 
+    // ToValidUTF8 treats s as UTF-8-encoded bytes and returns a copy with each run of bytes
+    // representing invalid UTF-8 replaced with the bytes in replacement, which may be empty.
     gocpp::slice<unsigned char> ToValidUTF8(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> replacement)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + len(replacement));
@@ -814,6 +924,8 @@ namespace golang::bytes
         return b;
     }
 
+    // isSeparator reports whether the rune could mark a word boundary.
+    // TODO: update when package unicode captures more of the properties.
     bool isSeparator(gocpp::rune r)
     {
         if(r <= 0x7F)
@@ -850,6 +962,11 @@ namespace golang::bytes
         return unicode::IsSpace(r);
     }
 
+    // Title treats s as UTF-8-encoded bytes and returns a copy with all Unicode letters that begin
+    // words mapped to their title case.
+    //
+    // Deprecated: The rule Title uses for word boundaries does not handle Unicode
+    // punctuation properly. Use golang.org/x/text/cases instead.
     gocpp::slice<unsigned char> Title(gocpp::slice<unsigned char> s)
     {
         auto prev = ' ';
@@ -865,6 +982,8 @@ namespace golang::bytes
         }, s);
     }
 
+    // TrimLeftFunc treats s as UTF-8-encoded bytes and returns a subslice of s by slicing off
+    // all leading UTF-8-encoded code points c that satisfy f(c).
     gocpp::slice<unsigned char> TrimLeftFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f)
     {
         auto i = indexFunc(s, f, false);
@@ -875,6 +994,8 @@ namespace golang::bytes
         return s.make_slice(i);
     }
 
+    // TrimRightFunc returns a subslice of s by slicing off all trailing
+    // UTF-8-encoded code points c that satisfy f(c).
     gocpp::slice<unsigned char> TrimRightFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f)
     {
         auto i = lastIndexFunc(s, f, false);
@@ -890,11 +1011,15 @@ namespace golang::bytes
         return s.make_slice(0, i);
     }
 
+    // TrimFunc returns a subslice of s by slicing off all leading and trailing
+    // UTF-8-encoded code points c that satisfy f(c).
     gocpp::slice<unsigned char> TrimFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f)
     {
         return TrimRightFunc(TrimLeftFunc(s, f), f);
     }
 
+    // TrimPrefix returns s without the provided leading prefix string.
+    // If s doesn't start with prefix, s is returned unchanged.
     gocpp::slice<unsigned char> TrimPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix)
     {
         if(HasPrefix(s, prefix))
@@ -904,6 +1029,8 @@ namespace golang::bytes
         return s;
     }
 
+    // TrimSuffix returns s without the provided trailing suffix string.
+    // If s doesn't end with suffix, s is returned unchanged.
     gocpp::slice<unsigned char> TrimSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix)
     {
         if(HasSuffix(s, suffix))
@@ -913,16 +1040,25 @@ namespace golang::bytes
         return s;
     }
 
+    // IndexFunc interprets s as a sequence of UTF-8-encoded code points.
+    // It returns the byte index in s of the first Unicode
+    // code point satisfying f(c), or -1 if none do.
     int IndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f)
     {
         return indexFunc(s, f, true);
     }
 
+    // LastIndexFunc interprets s as a sequence of UTF-8-encoded code points.
+    // It returns the byte index in s of the last Unicode
+    // code point satisfying f(c), or -1 if none do.
     int LastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f)
     {
         return lastIndexFunc(s, f, true);
     }
 
+    // indexFunc is the same as IndexFunc except that if
+    // truth==false, the sense of the predicate function is
+    // inverted.
     int indexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth)
     {
         auto start = 0;
@@ -943,6 +1079,9 @@ namespace golang::bytes
         return - 1;
     }
 
+    // lastIndexFunc is the same as LastIndexFunc except that if
+    // truth==false, the sense of the predicate function is
+    // inverted.
     int lastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth)
     {
         for(auto i = len(s); i > 0; )
@@ -961,6 +1100,16 @@ namespace golang::bytes
         return - 1;
     }
 
+    // asciiSet is a 32-byte value, where each bit represents the presence of a
+    // given ASCII character in the set. The 128-bits of the lower 16 bytes,
+    // starting with the least-significant bit of the lowest word to the
+    // most-significant bit of the highest word, map to the full range of all
+    // 128 ASCII characters. The 128-bits of the upper 16 bytes will be zeroed,
+    // ensuring that any non-ASCII character will be reported as not in the set.
+    // This allocates a total of 32 bytes even though the upper half
+    // is unused to avoid bounds checks in asciiSet.contains.
+    // makeASCIISet creates a set of ASCII characters and reports whether all
+    // characters in chars are ASCII.
     std::tuple<bytes::asciiSet, bool> makeASCIISet(std::string chars)
     {
         bytes::asciiSet as;
@@ -977,11 +1126,15 @@ namespace golang::bytes
         return {as, true};
     }
 
+    // contains reports whether c is inside the set.
     bool rec::contains(golang::bytes::asciiSet* as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
 
+    // containsRune is a simplified version of strings.ContainsRune
+    // to avoid importing the strings package.
+    // We avoid bytes.ContainsRune to avoid allocating a temporary copy of s.
     bool containsRune(std::string s, gocpp::rune r)
     {
         for(auto [gocpp_ignored, c] : s)
@@ -994,6 +1147,8 @@ namespace golang::bytes
         return false;
     }
 
+    // Trim returns a subslice of s by slicing off all leading and
+    // trailing UTF-8-encoded code points contained in cutset.
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, std::string cutset)
     {
         if(len(s) == 0)
@@ -1015,6 +1170,8 @@ namespace golang::bytes
         return trimLeftUnicode(trimRightUnicode(s, cutset), cutset);
     }
 
+    // TrimLeft returns a subslice of s by slicing off all leading
+    // UTF-8-encoded code points contained in cutset.
     gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, std::string cutset)
     {
         if(len(s) == 0)
@@ -1088,6 +1245,8 @@ namespace golang::bytes
         return s;
     }
 
+    // TrimRight returns a subslice of s by slicing off all trailing
+    // UTF-8-encoded code points that are contained in cutset.
     gocpp::slice<unsigned char> TrimRight(gocpp::slice<unsigned char> s, std::string cutset)
     {
         if(len(s) == 0 || cutset == ""s)
@@ -1145,6 +1304,8 @@ namespace golang::bytes
         return s;
     }
 
+    // TrimSpace returns a subslice of s by slicing off all leading and
+    // trailing white space, as defined by Unicode.
     gocpp::slice<unsigned char> TrimSpace(gocpp::slice<unsigned char> s)
     {
         auto start = 0;
@@ -1180,6 +1341,8 @@ namespace golang::bytes
         return s.make_slice(start, stop);
     }
 
+    // Runes interprets s as a sequence of UTF-8-encoded code points.
+    // It returns a slice of runes (Unicode code points) equivalent to s.
     gocpp::slice<gocpp::rune> Runes(gocpp::slice<unsigned char> s)
     {
         auto t = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), utf8::RuneCount(s));
@@ -1194,6 +1357,12 @@ namespace golang::bytes
         return t;
     }
 
+    // Replace returns a copy of the slice s with the first n
+    // non-overlapping instances of old replaced by new.
+    // If old is empty, it matches at the beginning of the slice
+    // and after each UTF-8 sequence, yielding up to k+1 replacements
+    // for a k-rune slice.
+    // If n < 0, there is no limit on the number of replacements.
     gocpp::slice<unsigned char> Replace(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> old, gocpp::slice<unsigned char> go_new, int n)
     {
         auto m = 0;
@@ -1235,11 +1404,19 @@ namespace golang::bytes
         return t.make_slice(0, w);
     }
 
+    // ReplaceAll returns a copy of the slice s with all
+    // non-overlapping instances of old replaced by new.
+    // If old is empty, it matches at the beginning of the slice
+    // and after each UTF-8 sequence, yielding up to k+1 replacements
+    // for a k-rune slice.
     gocpp::slice<unsigned char> ReplaceAll(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> old, gocpp::slice<unsigned char> go_new)
     {
         return Replace(s, old, go_new, - 1);
     }
 
+    // EqualFold reports whether s and t, interpreted as UTF-8 strings,
+    // are equal under simple Unicode case-folding, which is a more general
+    // form of case-insensitivity.
     bool EqualFold(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> t)
     {
         auto i = 0;
@@ -1271,6 +1448,7 @@ namespace golang::bytes
         t = t.make_slice(i);
         for(; len(s) != 0 && len(t) != 0; )
         {
+            // Extract first rune from each.
             gocpp::rune sr = {};
             gocpp::rune tr = {};
             if(s[0] < utf8::RuneSelf)
@@ -1321,6 +1499,7 @@ namespace golang::bytes
         return len(s) == len(t);
     }
 
+    // Index returns the index of the first instance of sep in s, or -1 if sep is not present in s.
     int Index(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         auto n = len(sep);
@@ -1426,6 +1605,12 @@ namespace golang::bytes
         return - 1;
     }
 
+    // Cut slices s around the first instance of sep,
+    // returning the text before and after sep.
+    // The found result reports whether sep appears in s.
+    // If sep does not appear in s, cut returns s, nil, false.
+    //
+    // Cut returns slices of the original slice s, not copies.
     std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>, bool> Cut(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
         gocpp::slice<unsigned char> before;
@@ -1438,6 +1623,9 @@ namespace golang::bytes
         return {s, nullptr, false};
     }
 
+    // Clone returns a copy of b[:len(b)].
+    // The result may have additional unused capacity.
+    // Clone(nil) returns nil.
     gocpp::slice<unsigned char> Clone(gocpp::slice<unsigned char> b)
     {
         if(b == nullptr)
@@ -1447,6 +1635,12 @@ namespace golang::bytes
         return append(gocpp::slice<unsigned char> {}, b);
     }
 
+    // CutPrefix returns s without the provided leading prefix byte slice
+    // and reports whether it found the prefix.
+    // If s doesn't start with prefix, CutPrefix returns s, false.
+    // If prefix is the empty byte slice, CutPrefix returns s, true.
+    //
+    // CutPrefix returns slices of the original slice s, not copies.
     std::tuple<gocpp::slice<unsigned char>, bool> CutPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix)
     {
         gocpp::slice<unsigned char> after;
@@ -1458,6 +1652,12 @@ namespace golang::bytes
         return {s.make_slice(len(prefix)), true};
     }
 
+    // CutSuffix returns s without the provided ending suffix byte slice
+    // and reports whether it found the suffix.
+    // If s doesn't end with suffix, CutSuffix returns s, false.
+    // If suffix is the empty byte slice, CutSuffix returns s, true.
+    //
+    // CutSuffix returns slices of the original slice s, not copies.
     std::tuple<gocpp::slice<unsigned char>, bool> CutSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix)
     {
         gocpp::slice<unsigned char> before;

@@ -20,6 +20,8 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Copysign returns a value with the magnitude of f
+    // and the sign of sign.
     double Copysign(double f, double sign)
     {
         auto signBit = 1 << 63;

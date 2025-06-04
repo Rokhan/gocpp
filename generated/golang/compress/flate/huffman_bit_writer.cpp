@@ -25,10 +25,25 @@ namespace golang::flate
         using io::rec::Write;
     }
 
+    // The largest offset code.
+    // The special code used to mark the end of a block.
+    // The first length code.
+    // The number of codegen codes.
+    // bufferFlushSize indicates the buffer size
+    // after which bytes are flushed to the writer.
+    // Should preferably be a multiple of 6, since
+    // we accumulate 6 bytes between writes to the buffer.
+    // bufferSize is the actual output byte buffer size.
+    // It must have additional headroom for a flush
+    // which can contain up to 8 bytes.
+    // The number of extra bits needed by length code X - LENGTH_CODES_START.
     gocpp::slice<int8_t> lengthExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
+    // The length indicated by length code X - LENGTH_CODES_START.
     gocpp::slice<uint32_t> lengthBase = gocpp::slice<uint32_t> {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 255};
+    // offset code word extra bits.
     gocpp::slice<int8_t> offsetExtraBits = gocpp::slice<int8_t> {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
     gocpp::slice<uint32_t> offsetBase = gocpp::slice<uint32_t> {0x000000, 0x000001, 0x000002, 0x000003, 0x000004, 0x000006, 0x000008, 0x00000c, 0x000010, 0x000018, 0x000020, 0x000030, 0x000040, 0x000060, 0x000080, 0x0000c0, 0x000100, 0x000180, 0x000200, 0x000300, 0x000400, 0x000600, 0x000800, 0x000c00, 0x001000, 0x001800, 0x002000, 0x003000, 0x004000, 0x006000};
+    // The odd order in which the codegen code sizes are written.
     gocpp::slice<uint32_t> codegenOrder = gocpp::slice<uint32_t> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -208,6 +223,18 @@ namespace golang::flate
         rec::write(gocpp::recv(w), bytes);
     }
 
+    // RFC 1951 3.2.7 specifies a special run-length encoding for specifying
+    // the literal and offset lengths arrays (which are concatenated into a single
+    // array).  This method generates that run-length encoding.
+    //
+    // The result is written into the codegen array, and the frequencies
+    // of each code is written into the codegenFreq array.
+    // Codes 0-15 are single byte codes. Codes 16-18 are followed by additional
+    // information. Code badCode is an end marker
+    //
+    //	numLiterals      The number of literals in literalEncoding
+    //	numOffsets       The number of offsets in offsetEncoding
+    //	litenc, offenc   The literal and offset encoder to use
     void rec::generateCodegen(struct huffmanBitWriter* w, int numLiterals, int numOffsets, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc)
     {
         for(auto [i, gocpp_ignored] : w->codegenFreq)
@@ -297,6 +324,7 @@ namespace golang::flate
         codegen[outIndex] = badCode;
     }
 
+    // dynamicSize returns the size of dynamically encoded data in bits.
     std::tuple<int, int> rec::dynamicSize(struct huffmanBitWriter* w, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc, int extraBits)
     {
         int size;
@@ -311,11 +339,15 @@ namespace golang::flate
         return {size, numCodegens};
     }
 
+    // fixedSize returns the size of dynamically encoded data in bits.
     int rec::fixedSize(struct huffmanBitWriter* w, int extraBits)
     {
         return 3 + rec::bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) + rec::bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) + extraBits;
     }
 
+    // storedSize calculates the stored size, including header.
+    // The function returns the size in bits and whether the block
+    // fits inside a single block.
     std::tuple<int, bool> rec::storedSize(struct huffmanBitWriter* w, gocpp::slice<unsigned char> in)
     {
         if(in == nullptr)
@@ -360,6 +392,11 @@ namespace golang::flate
         }
     }
 
+    // Write the header of a dynamic Huffman block to the output stream.
+    //
+    //	numLiterals  The number of literals specified in codegen
+    //	numOffsets   The number of offsets specified in codegen
+    //	numCodegens  The number of codegens used in codegen
     void rec::writeDynamicHeader(struct huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof)
     {
         if(w->err != nullptr)
@@ -439,6 +476,7 @@ namespace golang::flate
         {
             return;
         }
+        // Indicate that we are a fixed Huffman block
         int32_t value = 2;
         if(isEof)
         {
@@ -447,6 +485,11 @@ namespace golang::flate
         rec::writeBits(gocpp::recv(w), value, 3);
     }
 
+    // writeBlock will write a block of tokens with the smallest encoding.
+    // The original input can be supplied, and if the huffman encoded data
+    // is larger than the original bytes, the data will be written as a
+    // stored block.
+    // If the input is nil, the tokens will always be Huffman encoded.
     void rec::writeBlock(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
@@ -468,9 +511,12 @@ namespace golang::flate
                 extraBits += int(w->offsetFreq[offsetCode]) * int(offsetExtraBits[offsetCode]);
             }
         }
+        // Figure out smallest code.
+        // Fixed Huffman baseline.
         auto literalEncoding = fixedLiteralEncoding;
         auto offsetEncoding = fixedOffsetEncoding;
         auto size = rec::fixedSize(gocpp::recv(w), extraBits);
+        // Dynamic Huffman?
         int numCodegens = {};
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
         rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
@@ -498,6 +544,11 @@ namespace golang::flate
         rec::writeTokens(gocpp::recv(w), tokens, literalEncoding->codes, offsetEncoding->codes);
     }
 
+    // writeBlockDynamic encodes a block using a dynamic Huffman table.
+    // This should be used if the symbols used have a disproportionate
+    // histogram distribution.
+    // If input is supplied and the compression savings are below 1/16th of the
+    // input size the block is stored.
     void rec::writeBlockDynamic(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
@@ -519,6 +570,10 @@ namespace golang::flate
         rec::writeTokens(gocpp::recv(w), tokens, w->literalEncoding->codes, w->offsetEncoding->codes);
     }
 
+    // indexTokens indexes a slice of tokens, and updates
+    // literalFreq and offsetFreq, and generates literalEncoding
+    // and offsetEncoding.
+    // The number of literal and offset tokens is returned.
     std::tuple<int, int> rec::indexTokens(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens)
     {
         int numLiterals;
@@ -563,6 +618,8 @@ namespace golang::flate
         return {numLiterals, numOffsets};
     }
 
+    // writeTokens writes a slice of tokens to the output.
+    // codes for literal and offset encoding must be supplied.
     void rec::writeTokens(struct huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
     {
         if(w->err != nullptr)
@@ -597,6 +654,8 @@ namespace golang::flate
         }
     }
 
+    // huffOffset is a static offset encoder used for huffman only encoding.
+    // It can be reused since we will not be encoding offset values.
     huffmanEncoder* huffOffset;
     void init()
     {
@@ -606,6 +665,9 @@ namespace golang::flate
         rec::generate(gocpp::recv(huffOffset), offsetFreq, 15);
     }
 
+    // writeBlockHuff encodes a block of bytes as either
+    // Huffman encoded literals or uncompressed bytes if the
+    // results only gains very little from compression.
     void rec::writeBlockHuff(struct huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
@@ -622,6 +684,8 @@ namespace golang::flate
         w->offsetFreq[0] = 1;
         auto numOffsets = 1;
         rec::generate(gocpp::recv(w->literalEncoding), w->literalFreq, 15);
+        // Figure out smallest code.
+        // Always use dynamic Huffman or Store
         int numCodegens = {};
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, huffOffset);
         rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
@@ -670,6 +734,9 @@ namespace golang::flate
         rec::writeCode(gocpp::recv(w), encoding[endBlockMarker]);
     }
 
+    // histogram accumulates a histogram of b in h.
+    //
+    // len(h) must be >= 256, and h's elements must be all zeroes.
     void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h)
     {
         h = h.make_slice(0, 256);

@@ -22,6 +22,7 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Inf returns positive infinity if sign >= 0, negative infinity if sign < 0.
     double Inf(int sign)
     {
         uint64_t v = {};
@@ -36,22 +37,30 @@ namespace golang::math
         return Float64frombits(v);
     }
 
+    // NaN returns an IEEE 754 “not-a-number” value.
     double NaN()
     {
         return Float64frombits(uvnan);
     }
 
+    // IsNaN reports whether f is an IEEE 754 “not-a-number” value.
     bool IsNaN(double f)
     {
         bool is;
         return f != f;
     }
 
+    // IsInf reports whether f is an infinity, according to sign.
+    // If sign > 0, IsInf reports whether f is positive infinity.
+    // If sign < 0, IsInf reports whether f is negative infinity.
+    // If sign == 0, IsInf reports whether f is either infinity.
     bool IsInf(double f, int sign)
     {
         return sign >= 0 && f > MaxFloat64 || sign <= 0 && f < - MaxFloat64;
     }
 
+    // normalize returns a normal number y and exponent exp
+    // satisfying x == y × 2**exp. It assumes x is finite and non-zero.
     std::tuple<double, int> normalize(double x)
     {
         double y;

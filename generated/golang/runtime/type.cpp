@@ -43,6 +43,7 @@ namespace golang::runtime
         using abi::rec::Uncommon;
     }
 
+    // rtype is a wrapper that allows us to define additional methods.
     
     template<typename T> requires gocpp::GoStruct<T>
     rtype::operator T()
@@ -116,6 +117,10 @@ namespace golang::runtime
         return s.make_slice(i + 1);
     }
 
+    // pkgpath returns the path of the package where t was defined, if
+    // available. This is not the same as the reflect package's PkgPath
+    // method, in that it returns the package path for struct and interface
+    // types, not just named types.
     std::string rec::pkgpath(struct rtype t)
     {
         if(auto u = rec::uncommon(gocpp::recv(t)); u != nullptr)
@@ -191,6 +196,19 @@ namespace golang::runtime
     }
 
 
+    // reflectOffs holds type offsets defined at run time by the reflect package.
+    //
+    // When a type is defined at run time, its *rtype data lives on the heap.
+    // There are a wide range of possible addresses the heap may use, that
+    // may not be representable as a 32-bit offset. Moreover the GC may
+    // one day start moving heap memory, in which case there is no stable
+    // offset that can be defined.
+    //
+    // To provide stable offsets, we add pin *rtype objects in a global map
+    // and treat the offset as an identifier. We use negative offsets that
+    // do not overlap with any compile-time module offsets.
+    //
+    // Entries are created by reflect.addReflectOff.
     gocpp_id_0 reflectOffs;
     void reflectOffsLock()
     {
@@ -391,6 +409,8 @@ namespace golang::runtime
                         }
 
 
+    // typelinksinit scans the types from extra modules and builds the
+    // moduledata typemap used to de-duplicate type pointers.
     void typelinksinit()
     {
         if(firstmoduledata.next == nullptr)
@@ -550,6 +570,18 @@ namespace golang::runtime
         }
 
 
+    // typesEqual reports whether two types are equal.
+    //
+    // Everywhere in the runtime and reflect packages, it is assumed that
+    // there is exactly one *_type per Go type, so that pointer equality
+    // can be used to test if types are equal. There is one place that
+    // breaks this assumption: buildmode=shared. In this case a type can
+    // appear as two different pieces of memory. This is hidden from the
+    // runtime and reflect package by the per-module typemap built in
+    // typelinksinit. It uses typesEqual to map types from later modules
+    // back into earlier ones.
+    //
+    // Only typelinksinit needs this function.
     bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen)
     {
         auto tp = _typePair {t, v};

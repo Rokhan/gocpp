@@ -21,6 +21,7 @@ namespace golang::tree
         using namespace mocklib::rec;
     }
 
+    // A Tree is a binary tree with integer values.
     
     template<typename T> requires gocpp::GoStruct<T>
     Tree::operator T()
@@ -56,6 +57,7 @@ namespace golang::tree
         return value.PrintTo(os);
     }
 
+    // New returns a new, random binary tree holding the values k, 2k, ..., 10k.
     struct Tree* New(int k)
     {
         Tree* t = {};

@@ -23,6 +23,7 @@ namespace golang::flate
         using namespace mocklib::rec;
     }
 
+    // hcode is a huffman code with a bit code and bit length.
     
     template<typename T> requires gocpp::GoStruct<T>
     hcode::operator T()
@@ -128,6 +129,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // A levelInfo describes the state of the constructed tree for a given depth.
     
     template<typename T> requires gocpp::GoStruct<T>
     levelInfo::operator T()
@@ -169,6 +171,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // set sets the code and length of an hcode.
     void rec::set(struct hcode* h, uint16_t code, uint16_t length)
     {
         h->len = length;
@@ -187,6 +190,7 @@ namespace golang::flate
         });
     }
 
+    // Generates a HuffmanCode corresponding to the fixed literal table.
     struct huffmanEncoder* generateFixedLiteralEncoding()
     {
         auto h = newHuffmanEncoder(maxNumLit);
@@ -259,6 +263,20 @@ namespace golang::flate
         return total;
     }
 
+    // bitCounts computes the number of literals assigned to each bit size in the Huffman encoding.
+    // It is only called when list.length >= 3.
+    // The cases of 0, 1, and 2 literals are handled by special case code.
+    //
+    // list is an array of the literals with non-zero frequencies
+    // and their associated frequencies. The array is in order of increasing
+    // frequency and has as its last element a special element with frequency
+    // MaxInt32.
+    //
+    // maxBits is the maximum number of bits that should be used to encode any literal.
+    // It must be less than 16.
+    //
+    // bitCounts returns an integer slice in which slice[i] indicates the number of literals
+    // that should be encoded in i bits.
     gocpp::slice<int32_t> rec::bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
     {
         if(maxBits >= maxBitsLimit)
@@ -272,7 +290,15 @@ namespace golang::flate
         {
             maxBits = n - 1;
         }
+        // Create information about each of the levels.
+        // A bogus "Level 0" whose sole purpose is so that
+        // level1.prev.needed==0.  This makes level1.nextPairFreq
+        // be a legitimate value that never gets chosen.
         gocpp::array<levelInfo, maxBitsLimit> levels = {};
+        // leafCounts[i] counts the number of literals at the left
+        // of ancestors of the rightmost node at level i.
+        // leafCounts[i][j] is the number of literals at the left
+        // of the level j ancestor.
         gocpp::array<gocpp::array<int32_t, maxBitsLimit>, maxBitsLimit> leafCounts = {};
         for(auto level = int32_t(1); level <= maxBits; level++)
         {
@@ -346,6 +372,8 @@ namespace golang::flate
         return bitCount;
     }
 
+    // Look at the leaves and assign them a bit count and an encoding as specified
+    // in RFC 1951 3.2.2
     void rec::assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
     {
         auto code = uint16_t(0);
@@ -370,6 +398,10 @@ namespace golang::flate
         }
     }
 
+    // Update this Huffman Code object to be the minimum code for the specified frequency count.
+    //
+    // freq is an array of frequencies, in which freq[i] gives the frequency of literal i.
+    // maxBits  The maximum number of bits to use for any literal.
     void rec::generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
     {
         if(h->freqcache == nullptr)

@@ -20,8 +20,15 @@ namespace golang::unicode
         using namespace mocklib::rec;
     }
 
+    // Bit masks for each code point under U+0100, for fast lookup.
+    // GraphicRanges defines the set of graphic characters according to Unicode.
     gocpp::slice<RangeTable*> GraphicRanges = gocpp::slice<RangeTable*> {L, M, N, P, S, Zs};
+    // PrintRanges defines the set of printable characters according to Go.
+    // ASCII space, U+0020, is handled separately.
     gocpp::slice<RangeTable*> PrintRanges = gocpp::slice<RangeTable*> {L, M, N, P, S};
+    // IsGraphic reports whether the rune is defined as a Graphic by Unicode.
+    // Such characters include letters, marks, numbers, punctuation, symbols, and
+    // spaces, from categories [L], [M], [N], [P], [S], [Zs].
     bool IsGraphic(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -31,6 +38,11 @@ namespace golang::unicode
         return In(r, GraphicRanges);
     }
 
+    // IsPrint reports whether the rune is defined as printable by Go. Such
+    // characters include letters, marks, numbers, punctuation, symbols, and the
+    // ASCII space character, from categories [L], [M], [N], [P], [S] and the ASCII space
+    // character. This categorization is the same as [IsGraphic] except that the
+    // only spacing character is ASCII space, U+0020.
     bool IsPrint(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -40,6 +52,8 @@ namespace golang::unicode
         return In(r, PrintRanges);
     }
 
+    // IsOneOf reports whether the rune is a member of one of the ranges.
+    // The function "In" provides a nicer signature and should be used in preference to IsOneOf.
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r)
     {
         for(auto [gocpp_ignored, inside] : ranges)
@@ -52,6 +66,7 @@ namespace golang::unicode
         return false;
     }
 
+    // In reports whether the rune is a member of one of the ranges.
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges)
     {
         for(auto [gocpp_ignored, inside] : ranges)
@@ -64,6 +79,9 @@ namespace golang::unicode
         return false;
     }
 
+    // IsControl reports whether the rune is a control character.
+    // The [C] ([Other]) Unicode category includes more code points
+    // such as surrogates; use [Is](C, r) to test for them.
     bool IsControl(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -73,6 +91,7 @@ namespace golang::unicode
         return false;
     }
 
+    // IsLetter reports whether the rune is a letter (category [L]).
     bool IsLetter(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -82,11 +101,13 @@ namespace golang::unicode
         return isExcludingLatin(Letter, r);
     }
 
+    // IsMark reports whether the rune is a mark character (category [M]).
     bool IsMark(gocpp::rune r)
     {
         return isExcludingLatin(Mark, r);
     }
 
+    // IsNumber reports whether the rune is a number (category [N]).
     bool IsNumber(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -96,6 +117,8 @@ namespace golang::unicode
         return isExcludingLatin(Number, r);
     }
 
+    // IsPunct reports whether the rune is a Unicode punctuation character
+    // (category [P]).
     bool IsPunct(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -105,6 +128,14 @@ namespace golang::unicode
         return Is(Punct, r);
     }
 
+    // IsSpace reports whether the rune is a space character as defined
+    // by Unicode's White Space property; in the Latin-1 space
+    // this is
+    //
+    //	'\t', '\n', '\v', '\f', '\r', ' ', U+0085 (NEL), U+00A0 (NBSP).
+    //
+    // Other definitions of spacing characters are set by category
+    // Z and property [Pattern_White_Space].
     bool IsSpace(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -140,6 +171,7 @@ namespace golang::unicode
         return isExcludingLatin(White_Space, r);
     }
 
+    // IsSymbol reports whether the rune is a symbolic character.
     bool IsSymbol(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)

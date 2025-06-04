@@ -77,11 +77,52 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // A malloc header is functionally a single type pointer, but
+    // we need to use 8 here to ensure 8-byte alignment of allocations
+    // on 32-bit platforms. It's wasteful, but a lot of code relies on
+    // 8-byte alignment for 8-byte atomics.
+    // The minimum object size that has a malloc header, exclusive.
+    //
+    // The size of this value controls overheads from the malloc header.
+    // The minimum size is bound by writeHeapBitsSmall, which assumes that the
+    // pointer bitmap for objects of a size smaller than this doesn't cross
+    // more than one pointer-word boundary. This sets an upper-bound on this
+    // value at the number of bits in a uintptr, multiplied by the pointer
+    // size in bytes.
+    //
+    // We choose a value here that has a natural cutover point in terms of memory
+    // overheads. This value just happens to be the maximum possible value this
+    // can be.
+    //
+    // A span with heap bits in it will have 128 bytes of heap bits on 64-bit
+    // platforms, and 256 bytes of heap bits on 32-bit platforms. The first size
+    // class where malloc headers match this overhead for 64-bit platforms is
+    // 512 bytes (8 KiB / 512 bytes * 8 bytes-per-header = 128 bytes of overhead).
+    // On 32-bit platforms, this same point is the 256 byte size class
+    // (8 KiB / 256 bytes * 8 bytes-per-header = 256 bytes of overhead).
+    //
+    // Guaranteed to be exactly at a size class boundary. The reason this value is
+    // an exclusive minimum is subtle. Suppose we're allocating a 504-byte object
+    // and its rounded up to 512 bytes for the size class. If minSizeForMallocHeader
+    // is 512 and an inclusive minimum, then a comparison against minSizeForMallocHeader
+    // by the two values would produce different results. In other words, the comparison
+    // would not be invariant to size-class rounding. Eschewing this property means a
+    // more complex check or possibly storing additional state to determine whether a
+    // span has malloc headers.
+    // heapBitsInSpan returns true if the size of an object implies its ptr/scalar
+    // data is stored at the end of the span, and is accessible via span.heapBits.
+    //
+    // Note: this works for both rounded-up sizes (span.elemsize) and unrounded
+    // type sizes because minSizeForMallocHeader is guaranteed to be at a size
+    // class boundary.
+    //
+    //go:nosplit
     bool heapBitsInSpan(uintptr_t userSize)
     {
         return userSize <= minSizeForMallocHeader;
     }
 
+    // heapArenaPtrScalar contains the per-heapArena pointer/scalar metadata for the GC.
     
     template<typename T> requires gocpp::GoStruct<T>
     heapArenaPtrScalar::operator T()
@@ -108,6 +149,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // typePointers is an iterator over the pointers in a heap object.
+    //
+    // Iteration through this type implements the tiling algorithm described at the
+    // top of this file.
     
     template<typename T> requires gocpp::GoStruct<T>
     typePointers::operator T()
@@ -146,6 +191,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // typePointersOf returns an iterator over all heap pointers in the range [addr, addr+size).
+    //
+    // addr and addr+size must be in the range [span.base(), span.limit).
+    //
+    // Note: addr+size must be passed as the limit argument to the iterator's next method on
+    // each iteration. This slightly awkward API is to allow typePointers to be destructured
+    // by the compiler.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     struct typePointers rec::typePointersOf(struct mspan* span, uintptr_t addr, uintptr_t size)
     {
         auto base = rec::objBase(gocpp::recv(span), addr);
@@ -157,6 +213,14 @@ namespace golang::runtime
         return rec::fastForward(gocpp::recv(tp), addr - tp.addr, addr + size);
     }
 
+    // typePointersOfUnchecked is like typePointersOf, but assumes addr is the base
+    // of an allocation slot in a span (the start of the object if no header, the
+    // header otherwise). It returns an iterator that generates all pointers
+    // in the range [addr, addr+span.elemsize).
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     struct typePointers rec::typePointersOfUnchecked(struct mspan* span, uintptr_t addr)
     {
         auto doubleCheck = false;
@@ -178,6 +242,7 @@ namespace golang::runtime
                 x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr);
             });
         }
+        // All of these objects have a header.
         runtime::_type* typ = {};
         if(rec::sizeclass(gocpp::recv(spc)) != 0)
         {
@@ -197,6 +262,16 @@ namespace golang::runtime
         });
     }
 
+    // typePointersOfType is like typePointersOf, but assumes addr points to one or more
+    // contiguous instances of the provided type. The provided type must not be nil and
+    // it must not have its type metadata encoded as a gcprog.
+    //
+    // It returns an iterator that tiles typ.GCData starting from addr. It's the caller's
+    // responsibility to limit iteration.
+    //
+    // nosplit because its callers are nosplit and require all their callees to be nosplit.
+    //
+    //go:nosplit
     struct typePointers rec::typePointersOfType(struct mspan* span, abi::Type* typ, uintptr_t addr)
     {
         auto doubleCheck = false;
@@ -217,12 +292,33 @@ namespace golang::runtime
         });
     }
 
+    // nextFast is the fast path of next. nextFast is written to be inlineable and,
+    // as the name implies, fast.
+    //
+    // Callers that are performance-critical should iterate using the following
+    // pattern:
+    //
+    //	for {
+    //		var addr uintptr
+    //		if tp, addr = tp.nextFast(); addr == 0 {
+    //			if tp, addr = tp.next(limit); addr == 0 {
+    //				break
+    //			}
+    //		}
+    //		// Use addr.
+    //		...
+    //	}
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     std::tuple<struct typePointers, uintptr_t> rec::nextFast(struct typePointers tp)
     {
         if(tp.mask == 0)
         {
             return {tp, 0};
         }
+        // BSFQ
         int i = {};
         if(goarch::PtrSize == 8)
         {
@@ -236,6 +332,14 @@ namespace golang::runtime
         return {tp, tp.addr + uintptr_t(i) * goarch::PtrSize};
     }
 
+    // next advances the pointers iterator, returning the updated iterator and
+    // the address of the next pointer.
+    //
+    // limit must be the same each time it is passed to next.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     std::tuple<struct typePointers, uintptr_t> rec::next(struct typePointers tp, uintptr_t limit)
     {
         for(; ; )
@@ -270,6 +374,13 @@ namespace golang::runtime
         }
     }
 
+    // fastForward moves the iterator forward by n bytes. n must be a multiple
+    // of goarch.PtrSize. limit must be the same limit passed to next for this
+    // iterator.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nosplit
     struct typePointers rec::fastForward(struct typePointers tp, uintptr_t n, uintptr_t limit)
     {
         auto target = tp.addr + n;
@@ -320,11 +431,58 @@ namespace golang::runtime
         return tp;
     }
 
+    // objBase returns the base pointer for the object containing addr in span.
+    //
+    // Assumes that addr points into a valid part of span (span.base() <= addr < span.limit).
+    //
+    //go:nosplit
     uintptr_t rec::objBase(struct mspan* span, uintptr_t addr)
     {
         return rec::base(gocpp::recv(span)) + rec::objIndex(gocpp::recv(span), addr) * span->elemsize;
     }
 
+    // bulkBarrierPreWrite executes a write barrier
+    // for every pointer slot in the memory range [src, src+size),
+    // using pointer/scalar information from [dst, dst+size).
+    // This executes the write barriers necessary before a memmove.
+    // src, dst, and size must be pointer-aligned.
+    // The range [dst, dst+size) must lie within a single object.
+    // It does not perform the actual writes.
+    //
+    // As a special case, src == 0 indicates that this is being used for a
+    // memclr. bulkBarrierPreWrite will pass 0 for the src of each write
+    // barrier.
+    //
+    // Callers should call bulkBarrierPreWrite immediately before
+    // calling memmove(dst, src, size). This function is marked nosplit
+    // to avoid being preempted; the GC must not stop the goroutine
+    // between the memmove and the execution of the barriers.
+    // The caller is also responsible for cgo pointer checks if this
+    // may be writing Go pointers into non-Go memory.
+    //
+    // Pointer data is not maintained for allocations containing
+    // no pointers at all; any caller of bulkBarrierPreWrite must first
+    // make sure the underlying allocation contains pointers, usually
+    // by checking typ.PtrBytes.
+    //
+    // The typ argument is the type of the space at src and dst (and the
+    // element type if src and dst refer to arrays) and it is optional.
+    // If typ is nil, the barrier will still behave as expected and typ
+    // is used purely as an optimization. However, it must be used with
+    // care.
+    //
+    // If typ is not nil, then src and dst must point to one or more values
+    // of type typ. The caller must ensure that the ranges [src, src+size)
+    // and [dst, dst+size) refer to one or more whole values of type src and
+    // dst (leaving off the pointerless tail of the space is OK). If this
+    // precondition is not followed, this function will fail to scan the
+    // right pointers.
+    //
+    // When in doubt, pass nil for typ. That is safe and will always work.
+    //
+    // Callers must perform cgo checks if goexperiment.CgoCheck2.
+    //
+    //go:nosplit
     void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ)
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
@@ -362,6 +520,7 @@ namespace golang::runtime
             return;
         }
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
+        // Double-check that the bitmaps generated in the two possible paths match.
         auto doubleCheck = false;
         if(doubleCheck)
         {
@@ -408,6 +567,20 @@ namespace golang::runtime
         }
     }
 
+    // bulkBarrierPreWriteSrcOnly is like bulkBarrierPreWrite but
+    // does not execute write barriers for [dst, dst+size).
+    //
+    // In addition to the requirements of bulkBarrierPreWrite
+    // callers need to ensure [dst, dst+size) is zeroed.
+    //
+    // This is used for special cases where e.g. dst was just
+    // created and zeroed with malloc.
+    //
+    // The type of the space can be provided purely as an optimization.
+    // See bulkBarrierPreWrite's comment for more details -- use this
+    // optimization with great care.
+    //
+    //go:nosplit
     void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ)
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
@@ -420,6 +593,7 @@ namespace golang::runtime
         }
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         auto s = spanOf(dst);
+        // Double-check that the bitmaps generated in the two possible paths match.
         auto doubleCheck = false;
         if(doubleCheck)
         {
@@ -447,6 +621,11 @@ namespace golang::runtime
         }
     }
 
+    // initHeapBits initializes the heap bitmap for a span.
+    //
+    // TODO(mknyszek): This should set the heap bits for single pointer
+    // allocations eagerly to avoid calling heapSetType at allocation time,
+    // just to write one bit.
     void rec::initHeapBits(struct mspan* s, bool forceClear)
     {
         if((! rec::noscan(gocpp::recv(s->spanclass)) && heapBitsInSpan(s->elemsize)) || s->isUserArenaChunk)
@@ -459,6 +638,8 @@ namespace golang::runtime
         }
     }
 
+    // bswapIfBigEndian swaps the byte order of the uintptr on goarch.BigEndian platforms,
+    // and leaves it alone elsewhere.
     uintptr_t bswapIfBigEndian(uintptr_t x)
     {
         if(goarch::BigEndian)
@@ -521,6 +702,8 @@ namespace golang::runtime
         return h;
     }
 
+    // write appends the pointerness of the next valid pointer slots
+    // using the low valid bits of bits. 1=pointer, 0=scalar.
     struct writeUserArenaHeapBits rec::write(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid)
     {
         if(h.valid + valid <= ptrBits)
@@ -541,6 +724,7 @@ namespace golang::runtime
         return h;
     }
 
+    // Add padding of size bytes.
     struct writeUserArenaHeapBits rec::pad(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t size)
     {
         if(size == 0)
@@ -556,6 +740,8 @@ namespace golang::runtime
         return rec::write(gocpp::recv(h), s, 0, words);
     }
 
+    // Flush the bits that have been written, and add zeros as needed
+    // to cover the full object [addr, addr+size).
     void rec::flush(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size)
     {
         auto offset = addr - rec::base(gocpp::recv(s));
@@ -606,6 +792,20 @@ namespace golang::runtime
         }
     }
 
+    // heapBits returns the heap ptr/scalar bits stored at the end of the span for
+    // small object spans and heap arena spans.
+    //
+    // Note that the uintptr of each element means something different for small object
+    // spans and for heap arena spans. Small object spans are easy: they're never interpreted
+    // as anything but uintptr, so they're immune to differences in endianness. However, the
+    // heapBits for user arena spans is exposed through a dummy type descriptor, so the byte
+    // ordering needs to match the same byte ordering the compiler would emit. The compiler always
+    // emits the bitmap data in little endian byte ordering, so on big endian platforms these
+    // uintptrs will have their byte orders swapped from what they normally would be.
+    //
+    // heapBitsInSpan(span.elemsize) or span.isUserArenaChunk must be true.
+    //
+    //go:nosplit
     gocpp::slice<uintptr_t> rec::heapBits(struct mspan* span)
     {
         auto doubleCheck = false;
@@ -627,6 +827,9 @@ namespace golang::runtime
         return heapBitsSlice(rec::base(gocpp::recv(span)), span->npages * pageSize);
     }
 
+    // Helper for constructing a slice for the span's heap bits.
+    //
+    //go:nosplit
     gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize)
     {
         auto bitmapSize = spanSize / goarch::PtrSize / 8;
@@ -636,6 +839,12 @@ namespace golang::runtime
         return *(gocpp::slice<uintptr_t>*)(unsafe::Pointer(& sl));
     }
 
+    // heapBitsSmallForAddr loads the heap bits for the object stored at addr from span.heapBits.
+    //
+    // addr must be the base pointer of an object in the span. heapBitsInSpan(span.elemsize)
+    // must be true.
+    //
+    //go:nosplit
     uintptr_t rec::heapBitsSmallForAddr(struct mspan* span, uintptr_t addr)
     {
         auto spanSize = span->npages * pageSize;
@@ -661,6 +870,13 @@ namespace golang::runtime
         return read;
     }
 
+    // writeHeapBitsSmall writes the heap bits for small objects whose ptr/scalar data is
+    // stored as a bitmap at the end of the span.
+    //
+    // Assumes dataSize is <= ptrBits*goarch.PtrSize. x must be a pointer into the span.
+    // heapBitsInSpan(dataSize) must be true. dataSize must be >= typ.Size_.
+    //
+    //go:nosplit
     uintptr_t rec::writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ)
     {
         uintptr_t scanSize;
@@ -717,10 +933,27 @@ namespace golang::runtime
         return scanSize;
     }
 
+    // For !goexperiment.AllocHeaders.
     void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ)
     {
     }
 
+    // heapSetType records that the new allocation [x, x+size)
+    // holds in [x, x+dataSize) one or more values of type typ.
+    // (The number of values is given by dataSize / typ.Size.)
+    // If dataSize < size, the fragment [x+dataSize, x+size) is
+    // recorded as non-pointer data.
+    // It is known that the type has pointers somewhere;
+    // malloc does not call heapSetType when there are no pointers.
+    //
+    // There can be read-write races between heapSetType and things
+    // that read the heap metadata like scanobject. However, since
+    // heapSetType is only used for objects that have not yet been
+    // made reachable, readers will ignore bits being modified by this
+    // function. This does mean this function cannot transiently modify
+    // shared memory that belongs to neighboring objects. Also, on weakly-ordered
+    // machines, callers must execute a store/store (publication) barrier
+    // between calling this function and making the object reachable.
     uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span)
     {
         uintptr_t scanSize;
@@ -951,6 +1184,7 @@ namespace golang::runtime
         go_throw("heapSetType: pointer entry not correct"s);
     }
 
+    //go:nosplit
     void doubleCheckTypePointersOfType(struct mspan* s, golang::runtime::_type* typ, uintptr_t addr, uintptr_t size)
     {
         if(typ == nullptr || typ->Kind_ & kindGCProg != 0)
@@ -1022,6 +1256,9 @@ namespace golang::runtime
         println();
     }
 
+    // Returns GC type info for the pointer stored in ep for testing.
+    // If ep points to the stack, only static live information will be returned
+    // (i.e. not for objects which are only dynamically live stack objects).
     gocpp::slice<unsigned char> getgcmask(go_any ep)
     {
         gocpp::slice<unsigned char> mask;
@@ -1168,6 +1405,10 @@ namespace golang::runtime
         return mask;
     }
 
+    // userArenaHeapBitsSetType is the equivalent of heapSetType but for
+    // non-slice-backing-store Go values allocated in a user arena chunk. It
+    // sets up the type metadata for the value with type typ allocated at address ptr.
+    // base is the base address of the arena chunk.
     void userArenaHeapBitsSetType(golang::runtime::_type* typ, unsafe::Pointer ptr, struct mspan* s)
     {
         auto base = rec::base(gocpp::recv(s));
@@ -1196,6 +1437,7 @@ namespace golang::runtime
             memclrNoHeapPointers(ptr, (gcProgBits + 7) / 8);
         }
         s->largeType->PtrBytes = uintptr_t(ptr) - base + typ->PtrBytes;
+        // Double-check that the bitmap was written out correctly.
         auto doubleCheck = false;
         if(doubleCheck)
         {
@@ -1203,11 +1445,13 @@ namespace golang::runtime
         }
     }
 
+    // For !goexperiment.AllocHeaders, to pass TestIntendedInlining.
     void writeHeapBitsForAddr()
     {
         gocpp::panic("not implemented"s);
     }
 
+    // For !goexperiment.AllocHeaders.
     
     template<typename T> requires gocpp::GoStruct<T>
     heapBits::operator T()
@@ -1234,16 +1478,25 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // For !goexperiment.AllocHeaders.
+    //
+    //go:nosplit
     struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size)
     {
         gocpp::panic("not implemented"s);
     }
 
+    // For !goexperiment.AllocHeaders.
+    //
+    //go:nosplit
     std::tuple<struct heapBits, uintptr_t> rec::next(struct heapBits h)
     {
         gocpp::panic("not implemented"s);
     }
 
+    // For !goexperiment.AllocHeaders.
+    //
+    //go:nosplit
     std::tuple<struct heapBits, uintptr_t> rec::nextFast(struct heapBits h)
     {
         gocpp::panic("not implemented"s);

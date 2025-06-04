@@ -81,11 +81,20 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // arena_newArena is a wrapper around newUserArena.
+    //
+    //go:linkname arena_newArena arena.runtime_arena_newArena
     unsafe::Pointer arena_newArena()
     {
         return unsafe::Pointer(newUserArena());
     }
 
+    // arena_arena_New is a wrapper around (*userArena).new, except that typ
+    // is an any (must be a *_type, still) and typ must be a type descriptor
+    // for a pointer to the type to actually be allocated, i.e. pass a *T
+    // to allocate a T. This is necessary because this function returns a *T.
+    //
+    //go:linkname arena_arena_New arena.runtime_arena_arena_New
     go_any arena_arena_New(unsafe::Pointer arena, go_any typ)
     {
         auto t = (runtime::_type*)(efaceOf(& typ)->data);
@@ -102,16 +111,26 @@ namespace golang::runtime
         return result;
     }
 
+    // arena_arena_Slice is a wrapper around (*userArena).slice.
+    //
+    //go:linkname arena_arena_Slice arena.runtime_arena_arena_Slice
     void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap)
     {
         rec::slice(gocpp::recv(((userArena*)(arena))), slice, cap);
     }
 
+    // arena_arena_Free is a wrapper around (*userArena).free.
+    //
+    //go:linkname arena_arena_Free arena.runtime_arena_arena_Free
     void arena_arena_Free(unsafe::Pointer arena)
     {
         rec::free(gocpp::recv(((userArena*)(arena))));
     }
 
+    // arena_heapify takes a value that lives in an arena and makes a copy
+    // of it on the heap. Values that don't live in an arena are returned unmodified.
+    //
+    //go:linkname arena_heapify arena.runtime_arena_heapify
     go_any arena_heapify(go_any s)
     {
         unsafe::Pointer v = {};
@@ -145,6 +164,7 @@ namespace golang::runtime
         {
             return s;
         }
+        // Heap-allocate storage for a copy.
         go_any x = {};
         //Go switch emulation
         {
@@ -183,6 +203,12 @@ namespace golang::runtime
         return x;
     }
 
+    // userArenaChunkBytes is the size of a user arena chunk.
+    // userArenaChunkPages is the number of pages a user arena chunk uses.
+    // userArenaChunkMaxAllocBytes is the maximum size of an object that can
+    // be allocated from an arena. This number is chosen to cap worst-case
+    // fragmentation of user arenas to 25%. Larger allocations are redirected
+    // to the heap.
     void init()
     {
         if(userArenaChunkPages * pageSize != userArenaChunkBytes)
@@ -210,6 +236,8 @@ namespace golang::runtime
         lockInit(& userArenaState.lock, lockRankUserArenaState);
     }
 
+    // userArenaChunkReserveBytes returns the amount of additional bytes to reserve for
+    // heap metadata.
     uintptr_t userArenaChunkReserveBytes()
     {
         if(goexperiment::AllocHeaders)
@@ -257,6 +285,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // newUserArena creates a new userArena ready to be used.
     struct userArena* newUserArena()
     {
         auto a = new(userArena);
@@ -268,11 +297,23 @@ namespace golang::runtime
         return a;
     }
 
+    // new allocates a new object of the provided type into the arena, and returns
+    // its pointer.
+    //
+    // This operation is not safe to call concurrently with other operations on the
+    // same arena.
     unsafe::Pointer rec::go_new(struct userArena* a, golang::runtime::_type* typ)
     {
         return rec::alloc(gocpp::recv(a), typ, - 1);
     }
 
+    // slice allocates a new slice backing store. slice must be a pointer to a slice
+    // (i.e. *[]T), because userArenaSlice will update the slice directly.
+    //
+    // cap determines the capacity of the slice backing store and must be non-negative.
+    //
+    // This operation is not safe to call concurrently with other operations on the
+    // same arena.
     void rec::slice(struct userArena* a, go_any sl, int cap)
     {
         if(cap < 0)
@@ -294,6 +335,12 @@ namespace golang::runtime
         *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
+    // free returns the userArena's chunks back to mheap and marks it as defunct.
+    //
+    // Must be called at most once for any given arena.
+    //
+    // This operation is not safe to call concurrently with other operations on the
+    // same arena.
     void rec::free(struct userArena* a)
     {
         if(rec::Load(gocpp::recv(a->defunct)))
@@ -334,6 +381,10 @@ namespace golang::runtime
         a->refs = nullptr;
     }
 
+    // alloc reserves space in the current chunk or calls refill and reserves space
+    // in a new chunk. If cap is negative, the type will be taken literally, otherwise
+    // it will be considered as an element type for a slice backing store with capacity
+    // cap.
     unsafe::Pointer rec::alloc(struct userArena* a, golang::runtime::_type* typ, int cap)
     {
         auto s = a->active;
@@ -350,6 +401,8 @@ namespace golang::runtime
         return x;
     }
 
+    // refill inserts the current arena chunk onto the full list and obtains a new
+    // one, either from the partial list or allocating a new one, both from mheap.
     struct mspan* rec::refill(struct userArena* a)
     {
         auto s = a->active;
@@ -463,6 +516,8 @@ namespace golang::runtime
 
 
     gocpp_id_0 userArenaState;
+    // userArenaNextFree reserves space in the user arena for an item of the specified
+    // type. If cap is not -1, this is for an array of cap elements of type t.
     unsafe::Pointer rec::userArenaNextFree(struct mspan* s, golang::runtime::_type* typ, int cap)
     {
         auto size = typ->Size_;
@@ -553,6 +608,9 @@ namespace golang::runtime
         return ptr;
     }
 
+    // userArenaHeapBitsSetSliceType is the equivalent of heapBitsSetType but for
+    // Go slice backing store values allocated in a user arena chunk. It sets up the
+    // heap bitmap for n consecutive values with type typ allocated at address ptr.
     void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, unsafe::Pointer ptr, struct mspan* s)
     {
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
@@ -566,6 +624,9 @@ namespace golang::runtime
         }
     }
 
+    // newUserArenaChunk allocates a user arena chunk, which maps to a single
+    // heap arena and single span. Returns a pointer to the base of the chunk
+    // (this is really important: we need to keep the chunk alive) and the span.
     std::tuple<unsafe::Pointer, struct mspan*> newUserArenaChunk()
     {
         if(gcphase == _GCmarktermination)
@@ -583,6 +644,7 @@ namespace golang::runtime
             go_throw("malloc during signal"s);
         }
         mp->mallocing = 1;
+        // Allocate a new user arena.
         mspan* span = {};
         systemstack([=]() mutable -> void
         {
@@ -660,11 +722,26 @@ namespace golang::runtime
         return {x, span};
     }
 
+    // isUnusedUserArenaChunk indicates that the arena chunk has been set to fault
+    // and doesn't contain any scannable memory anymore. However, it might still be
+    // mSpanInUse as it sits on the quarantine list, since it needs to be swept.
+    //
+    // This is not safe to execute unless the caller has ownership of the mspan or
+    // the world is stopped (preemption is prevented while the relevant state changes).
+    //
+    // This is really only meant to be used by accounting tests in the runtime to
+    // distinguish when a span shouldn't be counted (since mSpanInUse might not be
+    // enough).
     bool rec::isUnusedUserArenaChunk(struct mspan* s)
     {
         return s->isUserArenaChunk && s->spanclass == makeSpanClass(0, true);
     }
 
+    // setUserArenaChunkToFault sets the address space for the user arena chunk to fault
+    // and releases any underlying memory resources.
+    //
+    // Must be in a non-preemptible state to ensure the consistency of statistics
+    // exported to MemStats.
     void rec::setUserArenaChunkToFault(struct mspan* s)
     {
         if(! s->isUserArenaChunk)
@@ -698,6 +775,7 @@ namespace golang::runtime
         });
     }
 
+    // inUserArenaChunk returns true if p points to a user arena chunk.
     bool inUserArenaChunk(uintptr_t p)
     {
         auto s = spanOf(p);
@@ -708,6 +786,13 @@ namespace golang::runtime
         return s->isUserArenaChunk;
     }
 
+    // freeUserArenaChunk releases the user arena represented by s back to the runtime.
+    //
+    // x must be a live pointer within s.
+    //
+    // The runtime will set the user arena to fault once it's safe (the GC is no longer running)
+    // and then once the user arena is no longer referenced by the application, will allow it to
+    // be reused.
     void freeUserArenaChunk(struct mspan* s, unsafe::Pointer x)
     {
         if(! s->isUserArenaChunk)
@@ -754,6 +839,15 @@ namespace golang::runtime
         releasem(mp);
     }
 
+    // allocUserArenaChunk attempts to reuse a free user arena chunk represented
+    // as a span.
+    //
+    // Must be in a non-preemptible state to ensure the consistency of statistics
+    // exported to MemStats.
+    //
+    // Acquires the heap lock. Must run on the system stack for that reason.
+    //
+    //go:systemstack
     struct mspan* rec::allocUserArenaChunk(struct mheap* h)
     {
         mspan* s = {};

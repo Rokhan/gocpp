@@ -16,6 +16,27 @@
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 
+// Package syscall contains an interface to the low-level operating system
+// primitives. The details vary depending on the underlying system, and
+// by default, godoc will display the syscall documentation for the current
+// system. If you want godoc to display syscall documentation for another
+// system, set $GOOS and $GOARCH to the desired system. For example, if
+// you want to view documentation for freebsd/arm on linux/amd64, set $GOOS
+// to freebsd and $GOARCH to arm.
+// The primary use of syscall is inside other packages that provide a more
+// portable interface to the system, such as "os", "time" and "net".  Use
+// those packages rather than this one if you can.
+// For details of the functions and data types in this package consult
+// the manuals for the appropriate operating system.
+// These calls return err == nil to indicate success; otherwise
+// err is an operating system error describing the failure.
+// On most systems, that error has type syscall.Errno.
+//
+// NOTE: Most of the functions, types, and constants defined in
+// this package are also available in the [golang.org/x/sys] package.
+// That package has more system call support than this one,
+// and most new code should prefer that package where possible.
+// See https://golang.org/s/go1.4-syscall for more information.
 namespace golang::syscall
 {
     namespace rec
@@ -23,6 +44,11 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // StringByteSlice converts a string to a NUL-terminated []byte,
+    // If s contains a NUL byte this function panics instead of
+    // returning an error.
+    //
+    // Deprecated: Use ByteSliceFromString instead.
     gocpp::slice<unsigned char> StringByteSlice(std::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
@@ -33,6 +59,9 @@ namespace golang::syscall
         return a;
     }
 
+    // ByteSliceFromString returns a NUL-terminated slice of bytes
+    // containing the text of s. If s contains a NUL byte at any
+    // location, it returns (nil, EINVAL).
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
@@ -44,11 +73,19 @@ namespace golang::syscall
         return {a, nullptr};
     }
 
+    // StringBytePtr returns a pointer to a NUL-terminated array of bytes.
+    // If s contains a NUL byte this function panics instead of returning
+    // an error.
+    //
+    // Deprecated: Use BytePtrFromString instead.
     unsigned char* StringBytePtr(std::string s)
     {
         return & StringByteSlice(s)[0];
     }
 
+    // BytePtrFromString returns a pointer to a NUL-terminated array of
+    // bytes containing the text of s. If s contains a NUL byte at any
+    // location, it returns (nil, EINVAL).
     std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
@@ -59,7 +96,10 @@ namespace golang::syscall
         return {& a[0], nullptr};
     }
 
+    // Single-word zero for use when we need a valid pointer to 0 bytes.
+    // See mksyscall.pl.
     uintptr_t _zero;
+    // Unix returns the time stored in ts as seconds plus nanoseconds.
     std::tuple<int64_t, int64_t> rec::Unix(struct Timespec* ts)
     {
         int64_t sec;
@@ -67,6 +107,7 @@ namespace golang::syscall
         return {int64_t(ts->Sec), int64_t(ts->Nsec)};
     }
 
+    // Unix returns the time stored in tv as seconds plus nanoseconds.
     std::tuple<int64_t, int64_t> rec::Unix(struct Timeval* tv)
     {
         int64_t sec;
@@ -74,11 +115,13 @@ namespace golang::syscall
         return {int64_t(tv->Sec), int64_t(tv->Usec) * 1000};
     }
 
+    // Nano returns the time stored in ts as nanoseconds.
     int64_t rec::Nano(struct Timespec* ts)
     {
         return int64_t(ts->Sec) * 1e9 + int64_t(ts->Nsec);
     }
 
+    // Nano returns the time stored in tv as nanoseconds.
     int64_t rec::Nano(struct Timeval* tv)
     {
         return int64_t(tv->Sec) * 1e9 + int64_t(tv->Usec) * 1000;
@@ -90,6 +133,7 @@ namespace golang::syscall
     void Exit(int code)
     /* convertBlockStmt, nil block */;
 
+    // runtimeSetenv and runtimeUnsetenv are provided by the runtime.
     void runtimeSetenv(std::string k, std::string v)
     /* convertBlockStmt, nil block */;
 

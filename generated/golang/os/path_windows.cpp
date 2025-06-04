@@ -18,11 +18,14 @@ namespace golang::os
         using namespace mocklib::rec;
     }
 
+    // IsPathSeparator reports whether c is a directory separator character.
     bool IsPathSeparator(uint8_t c)
     {
         return c == '\\' || c == '/';
     }
 
+    // basename removes trailing slashes and the leading
+    // directory name and drive letter from path name.
     std::string basename(std::string name)
     {
         if(len(name) == 2 && name[1] == ':')
@@ -109,6 +112,7 @@ namespace golang::os
 
     std::string fromSlash(std::string path)
     {
+        // Replace each '/' with '\\' if present
         gocpp::slice<unsigned char> pathbuf = {};
         int lastSlash = {};
         for(auto [i, b] : path)
@@ -153,7 +157,17 @@ namespace golang::os
         return vol + dir;
     }
 
+    // This is set via go:linkname on runtime.canUseLongPaths, and is true when the OS
+    // supports opting into proper long path handling without the need for fixups.
     bool canUseLongPaths;
+    // fixLongPath returns the extended-length (\\?\-prefixed) form of
+    // path when needed, in order to avoid the default 260 character file
+    // path limit imposed by Windows. If path is not easily converted to
+    // the extended-length form (for example, if path is a relative path
+    // or contains .. elements), or is short enough, fixLongPath returns
+    // path unmodified.
+    //
+    // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
     std::string fixLongPath(std::string path)
     {
         if(canUseLongPaths)

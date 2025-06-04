@@ -74,26 +74,53 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // addb returns the byte pointer p+n.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     unsigned char* addb(unsigned char* p, uintptr_t n)
     {
         return (unsigned char*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + n));
     }
 
+    // subtractb returns the byte pointer p-n.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     unsigned char* subtractb(unsigned char* p, uintptr_t n)
     {
         return (unsigned char*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) - n));
     }
 
+    // add1 returns the byte pointer p+1.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     unsigned char* add1(unsigned char* p)
     {
         return (unsigned char*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + 1));
     }
 
+    // subtract1 returns the byte pointer p-1.
+    //
+    // nosplit because it is used during write barriers and must not be preempted.
+    //
+    //go:nowritebarrier
+    //go:nosplit
     unsigned char* subtract1(unsigned char* p)
     {
         return (unsigned char*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) - 1));
     }
 
+    // markBits provides access to the mark bit for an object in the heap.
+    // bytep points to the byte holding the mark bit.
+    // mask is a byte with a single bit set that can be &ed with *bytep
+    // to see if the bit has been set.
+    // *m.byte&m.mask != 0 indicates the mark bit is set.
+    // index can be used along with span information to generate
+    // the address of the object in the heap.
+    // We maintain one set of mark bits for allocation and one for
+    // marking purposes.
     
     template<typename T> requires gocpp::GoStruct<T>
     markBits::operator T()
@@ -129,12 +156,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    //go:nosplit
     struct markBits rec::allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), allocBitIndex);
         return markBits {bytep, mask, allocBitIndex};
     }
 
+    // refillAllocCache takes 8 bytes s.allocBits starting at whichByte
+    // and negates them so that ctz (count trailing zeros) instructions
+    // can be used. It then places these 8 bytes into the cached 64 bit
+    // s.allocCache.
     void rec::refillAllocCache(struct mspan* s, uint16_t whichByte)
     {
         auto bytes = (gocpp::array<uint8_t, 8>*)(unsafe::Pointer(rec::bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
@@ -150,6 +182,10 @@ namespace golang::runtime
         s->allocCache = ~ aCache;
     }
 
+    // nextFreeIndex returns the index of the next free object in s at
+    // or after s.freeindex.
+    // There are hardware instructions that can be used to make this
+    // faster if profiling warrants it.
     uint16_t rec::nextFreeIndex(struct mspan* s)
     {
         auto sfreeindex = s->freeindex;
@@ -194,6 +230,11 @@ namespace golang::runtime
         return result;
     }
 
+    // isFree reports whether the index'th object in s is unallocated.
+    //
+    // The caller must ensure s.state is mSpanInUse, and there must have
+    // been no preemption points since ensuring this (which could allow a
+    // GC transition, which would allow the state to change).
     bool rec::isFree(struct mspan* s, uintptr_t index)
     {
         if(index < uintptr_t(s->freeIndexForScan))
@@ -204,6 +245,14 @@ namespace golang::runtime
         return *bytep & mask == 0;
     }
 
+    // divideByElemSize returns n/s.elemsize.
+    // n must be within [0, s.npages*_PageSize),
+    // or may be exactly s.npages*_PageSize
+    // if s.elemsize is from sizeclasses.go.
+    //
+    // nosplit, because it is called by objIndex, which is nosplit
+    //
+    //go:nosplit
     uintptr_t rec::divideByElemSize(struct mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
@@ -216,6 +265,9 @@ namespace golang::runtime
         return q;
     }
 
+    // nosplit, because it is called by other nosplit code like findObject
+    //
+    //go:nosplit
     uintptr_t rec::objIndex(struct mspan* s, uintptr_t p)
     {
         return rec::divideByElemSize(gocpp::recv(s), p - rec::base(gocpp::recv(s)));
@@ -239,26 +291,31 @@ namespace golang::runtime
         return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
+    // isMarked reports whether mark bit m is set.
     bool rec::isMarked(struct markBits m)
     {
         return *m.bytep & m.mask != 0;
     }
 
+    // setMarked sets the marked bit in the markbits, atomically.
     void rec::setMarked(struct markBits m)
     {
         atomic::Or8(m.bytep, m.mask);
     }
 
+    // setMarkedNonAtomic sets the marked bit in the markbits, non-atomically.
     void rec::setMarkedNonAtomic(struct markBits m)
     {
         *m.bytep |= m.mask;
     }
 
+    // clearMarked clears the marked bit in the markbits, atomically.
     void rec::clearMarked(struct markBits m)
     {
         atomic::And8(m.bytep, ~ m.mask);
     }
 
+    // markBitsForSpan returns the markBits for the span base address base.
     struct markBits markBitsForSpan(uintptr_t base)
     {
         struct markBits mbits;
@@ -270,6 +327,7 @@ namespace golang::runtime
         return mbits;
     }
 
+    // advance advances the markBits to the next object in the span.
     void rec::advance(struct markBits* m)
     {
         if(m->mask == (1 << 7))
@@ -284,6 +342,9 @@ namespace golang::runtime
         m->index++;
     }
 
+    // clobberdeadPtr is a special value that is used by the compiler to
+    // clobber dead stack slots, when -clobberdead flag is set.
+    // badPointer throws bad pointer in heap panic.
     void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         printlock();
@@ -311,6 +372,21 @@ namespace golang::runtime
         go_throw("found bad pointer in Go heap (incorrect use of unsafe or cgo?)"s);
     }
 
+    // findObject returns the base address for the heap object containing
+    // the address p, the object's span, and the index of the object in s.
+    // If p does not point into a heap object, it returns base == 0.
+    //
+    // If p points is an invalid heap pointer and debug.invalidptr != 0,
+    // findObject panics.
+    //
+    // refBase and refOff optionally give the base address of the object
+    // in which the pointer p was found and the byte offset at which it
+    // was found. These are used for error reporting.
+    //
+    // It is nosplit so it is safe for p to be a pointer to the current goroutine's stack.
+    // Since p is a uintptr, it would not be adjusted if the stack were to move.
+    //
+    //go:nosplit
     std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         uintptr_t base;
@@ -342,11 +418,22 @@ namespace golang::runtime
         return {base, s, objIndex};
     }
 
+    // reflect_verifyNotInHeapPtr reports whether converting the not-in-heap pointer into a unsafe.Pointer is ok.
+    //
+    //go:linkname reflect_verifyNotInHeapPtr reflect.verifyNotInHeapPtr
     bool reflect_verifyNotInHeapPtr(uintptr_t p)
     {
         return spanOf(p) == nullptr && p != clobberdeadPtr;
     }
 
+    // bulkBarrierBitmap executes write barriers for copying from [src,
+    // src+size) to [dst, dst+size) using a 1-bit pointer bitmap. src is
+    // assumed to start maskOffset bytes into the data covered by the
+    // bitmap in bits (which may not be a multiple of 8).
+    //
+    // This is used by bulkBarrierPreWrite for writes to data and BSS.
+    //
+    //go:nosplit
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits)
     {
         auto word = maskOffset / goarch::PtrSize;
@@ -385,6 +472,23 @@ namespace golang::runtime
         }
     }
 
+    // typeBitsBulkBarrier executes a write barrier for every
+    // pointer that would be copied from [src, src+size) to [dst,
+    // dst+size) by a memmove using the type bitmap to locate those
+    // pointer slots.
+    //
+    // The type typ must correspond exactly to [src, src+size) and [dst, dst+size).
+    // dst, src, and size must be pointer-aligned.
+    // The type typ must have a plain bitmap, not a GC program.
+    // The only use of this function is in channel sends, and the
+    // 64 kB channel element limit takes care of this for us.
+    //
+    // Must not be preempted because it typically runs right before memmove,
+    // and the GC must observe them as an atomic action.
+    //
+    // Callers must perform cgo checks if goexperiment.CgoCheck2.
+    //
+    //go:nosplit
     void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
     {
         if(typ == nullptr)
@@ -430,6 +534,8 @@ namespace golang::runtime
         }
     }
 
+    // countAlloc returns the number of objects allocated in span s by
+    // scanning the mark bitmap.
     int rec::countAlloc(struct mspan* s)
     {
         auto count = 0;
@@ -442,6 +548,8 @@ namespace golang::runtime
         return count;
     }
 
+    // Read the bytes starting at the aligned pointer p into a uintptr.
+    // Read is little-endian.
     uintptr_t readUintptr(unsigned char* p)
     {
         auto x = *(uintptr_t*)(unsafe::Pointer(p));
@@ -497,6 +605,9 @@ namespace golang::runtime
 
 
     gocpp_id_0 debugPtrmask;
+    // progToPointerMask returns the 1-bit pointer mask output by the GC program prog.
+    // size the size of the region described by prog, in bytes.
+    // The resulting bitvector will have no more than size/goarch.PtrSize bits.
     struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch::PtrSize + 7) / 8;
@@ -510,9 +621,11 @@ namespace golang::runtime
         return bitvector {int32_t(n), & x[0]};
     }
 
+    // runGCProg returns the number of 1-bit entries written to memory.
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst)
     {
         auto dstStart = dst;
+        // Bits waiting to be written to memory.
         uintptr_t bits = {};
         uintptr_t nbits = {};
         auto p = prog;
@@ -684,6 +797,11 @@ namespace golang::runtime
         return totalBits;
     }
 
+    // materializeGCProg allocates space for the (1-bit) pointer bitmask
+    // for an object of size ptrdata.  Then it fills that space with the
+    // pointer bitmask specified by the program prog.
+    // The bitmask starts at s.startAddr.
+    // The result must be deallocated with dematerializeGCProg.
     struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
     {
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch::PtrSize);
@@ -755,6 +873,10 @@ namespace golang::runtime
         }
     }
 
+    // reflect_gcbits returns the GC type info for x, for testing.
+    // The result is the bitmap entries (0 or 1), one entry per byte.
+    //
+    //go:linkname reflect_gcbits reflect.gcbits
     gocpp::slice<unsigned char> reflect_gcbits(go_any x)
     {
         return getgcmask(x);

@@ -18,6 +18,24 @@
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 
+// Package registry provides access to the Windows registry.
+//
+// Here is a simple example, opening a registry key and reading a string value from it.
+//
+//	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.QUERY_VALUE)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	defer k.Close()
+//
+//	s, _, err := k.GetStringValue("SystemRoot")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("Windows system root is %q\n", s)
+//
+// NOTE: This package is a copy of golang.org/x/sys/windows/registry
+// with KeyInfo.ModTime removed to prevent dependency cycles.
 namespace golang::registry
 {
     namespace rec
@@ -25,11 +43,28 @@ namespace golang::registry
         using namespace mocklib::rec;
     }
 
+    // Registry key security and access rights.
+    // See https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
+    // for details.
+    // Key is a handle to an open Windows registry key.
+    // Keys can be obtained by calling OpenKey; there are
+    // also some predefined root keys such as CURRENT_USER.
+    // Keys can be used directly in the Windows API.
+    // Windows defines some predefined root keys that are always open.
+    // An application can use these keys as entry points to the registry.
+    // Normally these keys are used in OpenKey to open new keys,
+    // but they can also be used anywhere a Key is required.
+    // Close closes open key k.
     struct gocpp::error rec::Close(golang::registry::Key k)
     {
         return syscall::RegCloseKey(syscall::Handle(k));
     }
 
+    // OpenKey opens a new key with path name relative to key k.
+    // It accepts any open key, including CURRENT_USER and others,
+    // and returns the new key and an error.
+    // The access parameter specifies desired access rights to the
+    // key to be opened.
     std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, std::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
@@ -46,6 +81,7 @@ namespace golang::registry
         return {Key(subkey), nullptr};
     }
 
+    // ReadSubKeyNames returns the names of subkeys of key k.
     std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::ReadSubKeyNames(golang::registry::Key k)
     {
         gocpp::Defer defer;
@@ -94,6 +130,11 @@ namespace golang::registry
         }
     }
 
+    // CreateKey creates a key named path under open key k.
+    // CreateKey returns the new key and a boolean flag that reports
+    // whether the key already existed.
+    // The access parameter specifies the access rights for the key
+    // to be created.
     std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, std::string path, uint32_t access)
     {
         registry::Key newk;
@@ -109,11 +150,13 @@ namespace golang::registry
         return {Key(h), d == _REG_OPENED_EXISTING_KEY, nullptr};
     }
 
+    // DeleteKey deletes the subkey path of key k and its values.
     struct gocpp::error DeleteKey(golang::registry::Key k, std::string path)
     {
         return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
     }
 
+    // A KeyInfo describes the statistics of a key. It is returned by Stat.
     
     template<typename T> requires gocpp::GoStruct<T>
     KeyInfo::operator T()
@@ -158,6 +201,7 @@ namespace golang::registry
         return value.PrintTo(os);
     }
 
+    // Stat retrieves information about the open key k.
     std::tuple<struct KeyInfo*, struct gocpp::error> rec::Stat(golang::registry::Key k)
     {
         KeyInfo ki = {};

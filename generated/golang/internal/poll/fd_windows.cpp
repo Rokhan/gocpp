@@ -45,6 +45,10 @@ namespace golang::poll
     gocpp::error initErr;
     uint64_t ioSync;
     bool useSetFileCompletionNotificationModes;
+    // checkSetFileCompletionNotificationModes verifies that
+    // SetFileCompletionNotificationModes Windows API is present
+    // on the system and is safe to use.
+    // See https://support.microsoft.com/kb/2568167 for details.
     void checkSetFileCompletionNotificationModes()
     {
         auto err = syscall::LoadSetFileCompletionNotificationModes();
@@ -82,6 +86,7 @@ namespace golang::poll
         checkSetFileCompletionNotificationModes();
     }
 
+    // operation contains superset of data necessary to perform all async IO.
     
     template<typename T> requires gocpp::GoStruct<T>
     operation::operator T()
@@ -195,6 +200,8 @@ namespace golang::poll
         }
     }
 
+    // ClearBufs clears all pointers to Buffers parameter captured
+    // by InitBufs, so it can be released by garbage collector.
     void rec::ClearBufs(struct operation* o)
     {
         for(auto [i, gocpp_ignored] : o->bufs)
@@ -220,6 +227,10 @@ namespace golang::poll
         }
     }
 
+    // execIO executes a single IO operation o. It submits and cancels
+    // IO in the current thread for systems where Windows CancelIoEx API
+    // is available. Alternatively, it passes the request onto
+    // runtime netpoll and waits for completion or cancels request.
     std::tuple<int, struct gocpp::error> execIO(struct operation* o, std::function<struct gocpp::error (struct operation* o)> submit)
     {
         if(o->fd->pd.runtimeCtx == 0)
@@ -306,6 +317,8 @@ namespace golang::poll
         return {int(o->qty), nullptr};
     }
 
+    // FD is a file descriptor. The net and os packages embed this type in
+    // a larger type representing a network connection or OS file.
     
     template<typename T> requires gocpp::GoStruct<T>
     FD::operator T()
@@ -380,7 +393,14 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
+    // fileKind describes the kind of file.
+    // logInitFD is set by tests to enable file descriptor initialization logging.
     std::function<void (std::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
+    // Init initializes the FD. The Sysfd field should already be set.
+    // This can be called multiple times on a single FD.
+    // The net argument is a network name from the net package (e.g., "tcp"),
+    // or "file" or "console" or "dir".
+    // Set pollable to true if fd should be managed by runtime netpoll.
     std::tuple<std::string, struct gocpp::error> rec::Init(struct FD* fd, std::string net, bool pollable)
     {
         if(initErr != nullptr)
@@ -543,6 +563,8 @@ namespace golang::poll
         return err;
     }
 
+    // Close closes the FD. The underlying file descriptor is closed by
+    // the destroy method when there are no remaining references.
     struct gocpp::error rec::Close(struct FD* fd)
     {
         if(! rec::increfAndClose(gocpp::recv(fd->fdmu)))
@@ -559,6 +581,10 @@ namespace golang::poll
         return err;
     }
 
+    // Windows ReadFile and WSARecv use DWORD (uint32) parameter to pass buffer length.
+    // This prevents us reading blocks larger than 4GB.
+    // See golang.org/issue/26923.
+    // Read implements io.Reader.
     std::tuple<int, struct gocpp::error> rec::Read(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
@@ -629,6 +655,9 @@ namespace golang::poll
     }
 
     std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole = syscall::ReadConsole;
+    // readConsole reads utf16 characters from console File,
+    // encodes them into utf8 and stores them in buffer b.
+    // It returns the number of utf8 bytes read and an error, if any.
     std::tuple<int, struct gocpp::error> rec::readConsole(struct FD* fd, gocpp::slice<unsigned char> b)
     {
         if(len(b) == 0)
@@ -708,6 +737,7 @@ namespace golang::poll
         return {i, nullptr};
     }
 
+    // Pread emulates the Unix pread system call.
     std::tuple<int, struct gocpp::error> rec::Pread(struct FD* fd, gocpp::slice<unsigned char> b, int64_t off)
     {
         gocpp::Defer defer;
@@ -760,6 +790,7 @@ namespace golang::poll
         }
     }
 
+    // ReadFrom wraps the recvfrom network call.
     std::tuple<int, syscall::Sockaddr, struct gocpp::error> rec::ReadFrom(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
@@ -803,6 +834,7 @@ namespace golang::poll
         }
     }
 
+    // ReadFromInet4 wraps the recvfrom network call for IPv4.
     std::tuple<int, struct gocpp::error> rec::ReadFromInet4(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
@@ -846,6 +878,7 @@ namespace golang::poll
         }
     }
 
+    // ReadFromInet6 wraps the recvfrom network call for IPv6.
     std::tuple<int, struct gocpp::error> rec::ReadFromInet6(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
@@ -889,6 +922,7 @@ namespace golang::poll
         }
     }
 
+    // Write implements io.Writer.
     std::tuple<int, struct gocpp::error> rec::Write(struct FD* fd, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
@@ -968,6 +1002,8 @@ namespace golang::poll
         }
     }
 
+    // writeConsole writes len(b) bytes to the console File.
+    // It returns the number of bytes written and an error, if any.
     std::tuple<int, struct gocpp::error> rec::writeConsole(struct FD* fd, gocpp::slice<unsigned char> b)
     {
         auto n = len(b);
@@ -988,6 +1024,9 @@ namespace golang::poll
             fd->lastbits = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(b));
             copy(fd->lastbits, b);
         }
+        // syscall.WriteConsole seems to fail, if given large buffer.
+        // So limit the buffer to 16000 characters. This number was
+        // discovered by experimenting with syscall.WriteConsole.
         auto maxWrite = 16000;
         for(; len(runes) > 0; )
         {
@@ -1013,6 +1052,7 @@ namespace golang::poll
         return {n, nullptr};
     }
 
+    // Pwrite emulates the Unix pwrite system call.
     std::tuple<int, struct gocpp::error> rec::Pwrite(struct FD* fd, gocpp::slice<unsigned char> buf, int64_t off)
     {
         gocpp::Defer defer;
@@ -1065,6 +1105,7 @@ namespace golang::poll
         }
     }
 
+    // Writev emulates the Unix writev system call.
     std::tuple<int64_t, struct gocpp::error> rec::Writev(struct FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf)
     {
         gocpp::Defer defer;
@@ -1100,6 +1141,7 @@ namespace golang::poll
         }
     }
 
+    // WriteTo wraps the sendto network call.
     std::tuple<int, struct gocpp::error> rec::WriteTo(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
@@ -1151,6 +1193,7 @@ namespace golang::poll
         }
     }
 
+    // WriteToInet4 is WriteTo, specialized for syscall.SockaddrInet4.
     std::tuple<int, struct gocpp::error> rec::WriteToInet4(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
@@ -1200,6 +1243,7 @@ namespace golang::poll
         }
     }
 
+    // WriteToInet6 is WriteTo, specialized for syscall.SockaddrInet6.
     std::tuple<int, struct gocpp::error> rec::WriteToInet6(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
@@ -1249,6 +1293,9 @@ namespace golang::poll
         }
     }
 
+    // Call ConnectEx. This doesn't need any locking, since it is only
+    // called when the descriptor is first created. This is here rather
+    // than in the net package so that it can use fd.wop.
     struct gocpp::error rec::ConnectEx(struct FD* fd, syscall::Sockaddr ra)
     {
         auto o = & fd->wop;
@@ -1282,6 +1329,8 @@ namespace golang::poll
         return {""s, nullptr};
     }
 
+    // Accept handles accepting a socket. The sysSocket parameter is used
+    // to allocate the net socket.
     std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, std::string, struct gocpp::error> rec::Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket)
     {
         gocpp::Defer defer;
@@ -1336,6 +1385,7 @@ namespace golang::poll
         }
     }
 
+    // Seek wraps syscall.Seek.
     std::tuple<int64_t, struct gocpp::error> rec::Seek(struct FD* fd, int64_t offset, int whence)
     {
         gocpp::Defer defer;
@@ -1360,6 +1410,7 @@ namespace golang::poll
         }
     }
 
+    // Fchmod updates syscall.ByHandleFileInformation.Fileattributes when needed.
     struct gocpp::error rec::Fchmod(struct FD* fd, uint32_t mode)
     {
         gocpp::Defer defer;
@@ -1398,6 +1449,7 @@ namespace golang::poll
         }
     }
 
+    // Fchdir wraps syscall.Fchdir.
     struct gocpp::error rec::Fchdir(struct FD* fd)
     {
         gocpp::Defer defer;
@@ -1416,6 +1468,7 @@ namespace golang::poll
         }
     }
 
+    // GetFileType wraps syscall.GetFileType.
     std::tuple<uint32_t, struct gocpp::error> rec::GetFileType(struct FD* fd)
     {
         gocpp::Defer defer;
@@ -1434,6 +1487,7 @@ namespace golang::poll
         }
     }
 
+    // GetFileInformationByHandle wraps GetFileInformationByHandle.
     struct gocpp::error rec::GetFileInformationByHandle(struct FD* fd, syscall::ByHandleFileInformation* data)
     {
         gocpp::Defer defer;
@@ -1452,6 +1506,7 @@ namespace golang::poll
         }
     }
 
+    // RawRead invokes the user-defined function f for a read operation.
     struct gocpp::error rec::RawRead(struct FD* fd, std::function<bool (uintptr_t)> f)
     {
         gocpp::Defer defer;
@@ -1494,6 +1549,7 @@ namespace golang::poll
         }
     }
 
+    // RawWrite invokes the user-defined function f for a write operation.
     struct gocpp::error rec::RawWrite(struct FD* fd, std::function<bool (uintptr_t)> f)
     {
         gocpp::Defer defer;
@@ -1592,6 +1648,7 @@ namespace golang::poll
         }
     }
 
+    // ReadMsg wraps the WSARecvMsg network call.
     std::tuple<int, int, int, syscall::Sockaddr, struct gocpp::error> rec::ReadMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags)
     {
         gocpp::Defer defer;
@@ -1633,6 +1690,7 @@ namespace golang::poll
         }
     }
 
+    // ReadMsgInet4 is ReadMsg, but specialized to return a syscall.SockaddrInet4.
     std::tuple<int, int, int, struct gocpp::error> rec::ReadMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4)
     {
         gocpp::Defer defer;
@@ -1673,6 +1731,7 @@ namespace golang::poll
         }
     }
 
+    // ReadMsgInet6 is ReadMsg, but specialized to return a syscall.SockaddrInet6.
     std::tuple<int, int, int, struct gocpp::error> rec::ReadMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6)
     {
         gocpp::Defer defer;
@@ -1713,6 +1772,7 @@ namespace golang::poll
         }
     }
 
+    // WriteMsg wraps the WSASendMsg network call.
     std::tuple<int, int, struct gocpp::error> rec::WriteMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa)
     {
         gocpp::Defer defer;
@@ -1755,6 +1815,7 @@ namespace golang::poll
         }
     }
 
+    // WriteMsgInet4 is WriteMsg specialized for syscall.SockaddrInet4.
     std::tuple<int, int, struct gocpp::error> rec::WriteMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa)
     {
         gocpp::Defer defer;
@@ -1790,6 +1851,7 @@ namespace golang::poll
         }
     }
 
+    // WriteMsgInet6 is WriteMsg specialized for syscall.SockaddrInet6.
     std::tuple<int, int, struct gocpp::error> rec::WriteMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa)
     {
         gocpp::Defer defer;

@@ -85,6 +85,31 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // concurrentSweep is a debug flag. Disabling this flag
+    // ensures all spans are swept while the world is stopped.
+    // debugScanConservative enables debug logging for stack
+    // frames that are scanned conservatively.
+    // sweepMinHeapDistance is a lower bound on the heap distance
+    // (in bytes) reserved for concurrent sweeping between GC
+    // cycles.
+    // heapObjectsCanMove always returns false in the current garbage collector.
+    // It exists for go4.org/unsafe/assume-no-moving-gc, which is an
+    // unfortunate idea that had an even more unfortunate implementation.
+    // Every time a new Go release happened, the package stopped building,
+    // and the authors had to add a new file with a new //go:build line, and
+    // then the entire ecosystem of packages with that as a dependency had to
+    // explicitly update to the new version. Many packages depend on
+    // assume-no-moving-gc transitively, through paths like
+    // inet.af/netaddr -> go4.org/intern -> assume-no-moving-gc.
+    // This was causing a significant amount of friction around each new
+    // release, so we added this bool for the package to //go:linkname
+    // instead. The bool is still unfortunate, but it's not as bad as
+    // breaking the ecosystem on every new release.
+    //
+    // If the Go garbage collector ever does move heap objects, we can set
+    // this to true to break all the programs using assume-no-moving-gc.
+    //
+    //go:linkname heapObjectsCanMove
     bool heapObjectsCanMove()
     {
         return false;
@@ -105,6 +130,10 @@ namespace golang::runtime
         lockInit(& work.wbufSpans.lock, lockRankWbufSpans);
     }
 
+    // gcenable is called after the bulk of the runtime initialization,
+    // just before we're about to start letting user code run.
+    // It kicks off the background sweeper goroutine, the background
+    // scavenger goroutine, and enables GC.
     void gcenable()
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 2);
@@ -115,6 +144,8 @@ namespace golang::runtime
         memstats.enablegc = true;
     }
 
+    // Garbage collector phase.
+    // Indicates to write barrier and synchronization task to perform.
     uint32_t gcphase;
     struct gocpp_id_0
     {
@@ -160,15 +191,52 @@ namespace golang::runtime
     }
 
 
+    // The compiler knows about this variable.
+    // If you change it, you must change builtin/runtime.go, too.
+    // If you change the first four bytes, you must also change the write
+    // barrier insertion code.
     gocpp_id_0 writeBarrier;
+    // gcBlackenEnabled is 1 if mutator assists and background mark
+    // workers are allowed to blacken objects. This must only be set when
+    // gcphase == _GCmark.
     uint32_t gcBlackenEnabled;
+    //go:nosplit
     void setGCPhase(uint32_t x)
     {
         atomic::Store(& gcphase, x);
         writeBarrier.enabled = gcphase == _GCmark || gcphase == _GCmarktermination;
     }
 
+    // gcMarkWorkerMode represents the mode that a concurrent mark worker
+    // should operate in.
+    //
+    // Concurrent marking happens through four different mechanisms. One
+    // is mutator assists, which happen in response to allocations and are
+    // not scheduled. The other three are variations in the per-P mark
+    // workers and are distinguished by gcMarkWorkerMode.
+    // gcMarkWorkerNotWorker indicates that the next scheduled G is not
+    // starting work and the mode should be ignored.
+    // gcMarkWorkerDedicatedMode indicates that the P of a mark
+    // worker is dedicated to running that mark worker. The mark
+    // worker should run without preemption.
+    // gcMarkWorkerFractionalMode indicates that a P is currently
+    // running the "fractional" mark worker. The fractional worker
+    // is necessary when GOMAXPROCS*gcBackgroundUtilization is not
+    // an integer and using only dedicated workers would result in
+    // utilization too far from the target of gcBackgroundUtilization.
+    // The fractional worker should run until it is preempted and
+    // will be scheduled to pick up the fractional part of
+    // GOMAXPROCS*gcBackgroundUtilization.
+    // gcMarkWorkerIdleMode indicates that a P is running the mark
+    // worker because it has nothing else to do. The idle worker
+    // should run until it is preempted and account its time
+    // against gcController.idleMarkTime.
+    // gcMarkWorkerModeStrings are the strings labels of gcMarkWorkerModes
+    // to use in execution traces.
     gocpp::array<std::string, 4> gcMarkWorkerModeStrings = gocpp::array<std::string, 4> {"Not worker"s, "GC (dedicated)"s, "GC (fractional)"s, "GC (idle)"s};
+    // pollFractionalWorkerExit reports whether a fractional mark worker
+    // should self-preempt. It assumes it is called from the fractional
+    // worker.
     bool pollFractionalWorkerExit()
     {
         auto now = nanotime();
@@ -437,6 +505,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // GC runs a garbage collection and blocks the caller until the
+    // garbage collection is complete. It may also block the entire
+    // program.
     void GC()
     {
         auto n = rec::Load(gocpp::recv(work.cycles));
@@ -463,6 +534,8 @@ namespace golang::runtime
         releasem(mp);
     }
 
+    // gcWaitOnMark blocks until GC finishes the Nth mark phase. If GC has
+    // already completed this mark phase, it returns immediately.
     void gcWaitOnMark(uint32_t n)
     {
         for(; ; )
@@ -483,6 +556,9 @@ namespace golang::runtime
         }
     }
 
+    // gcMode indicates how concurrent a GC cycle should be.
+    // A gcTrigger is a predicate for starting a GC cycle. Specifically,
+    // it is an exit condition for the _GCoff phase.
     
     template<typename T> requires gocpp::GoStruct<T>
     gcTrigger::operator T()
@@ -518,6 +594,18 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // gcTriggerHeap indicates that a cycle should be started when
+    // the heap size reaches the trigger heap size computed by the
+    // controller.
+    // gcTriggerTime indicates that a cycle should be started when
+    // it's been more than forcegcperiod nanoseconds since the
+    // previous GC cycle.
+    // gcTriggerCycle indicates that a cycle should be started if
+    // we have not yet started cycle number gcTrigger.n (relative
+    // to work.cycles).
+    // test reports whether the trigger condition is satisfied, meaning
+    // that the exit condition for the _GCoff phase has been met. The exit
+    // condition should be tested when allocating.
     bool rec::test(struct gcTrigger t)
     {
         if(! memstats.enablegc || rec::Load(gocpp::recv(panicking)) != 0 || gcphase != _GCoff)
@@ -553,6 +641,12 @@ namespace golang::runtime
         return true;
     }
 
+    // gcStart starts the GC. It transitions from _GCoff to _GCmark (if
+    // debug.gcstoptheworld == 0) or performs all of GC (if
+    // debug.gcstoptheworld != 0).
+    //
+    // This may return without performing this transition in some cases,
+    // such as when called on a system stack or with locks held.
     void gcStart(struct gcTrigger trigger)
     {
         auto mp = acquirem();
@@ -653,7 +747,34 @@ namespace golang::runtime
         semrelease(& work.startSema);
     }
 
+    // gcMarkDoneFlushed counts the number of P's with flushed work.
+    //
+    // Ideally this would be a captured local in gcMarkDone, but forEachP
+    // escapes its callback closure, so it can't capture anything.
+    //
+    // This is protected by markDoneSema.
     uint32_t gcMarkDoneFlushed;
+    // gcMarkDone transitions the GC from mark to mark termination if all
+    // reachable objects have been marked (that is, there are no grey
+    // objects and can be no more in the future). Otherwise, it flushes
+    // all local work to the global queues where it can be discovered by
+    // other workers.
+    //
+    // This should be called when all local mark work has been drained and
+    // there are no remaining workers. Specifically, when
+    //
+    //	work.nwait == work.nproc && !gcMarkWorkAvailable(p)
+    //
+    // The calling context must be preemptible.
+    //
+    // Flushing local work is important because idle Ps may have local
+    // work queued. This is the only way to make that work visible and
+    // drive GC to completion.
+    //
+    // It is explicitly okay to have write barriers in this function. If
+    // it does transition to mark termination, then all reachable objects
+    // have been marked, so the write barrier cannot shade any more
+    // objects.
     void gcMarkDone()
     {
         semacquire(& work.markDoneSema);
@@ -722,6 +843,8 @@ namespace golang::runtime
         gcMarkTermination(stw);
     }
 
+    // World must be stopped and mark assists and background workers must be
+    // disabled.
     void gcMarkTermination(struct worldStop stw)
     {
         setGCPhase(_GCmarktermination);
@@ -895,6 +1018,10 @@ namespace golang::runtime
         }
     }
 
+    // gcBgMarkStartWorkers prepares background mark worker goroutines. These
+    // goroutines will not run until the mark phase, but they must be started while
+    // the work is not stopped and from a regular G stack. The caller must hold
+    // worldsema.
     void gcBgMarkStartWorkers()
     {
         for(; gcBgMarkWorkerCount < gomaxprocs; )
@@ -906,12 +1033,16 @@ namespace golang::runtime
         }
     }
 
+    // gcBgMarkPrepare sets up state for background marking.
+    // Mutator assists must not yet be enabled.
     void gcBgMarkPrepare()
     {
         work.nproc = ~ uint32_t(0);
         work.nwait = ~ uint32_t(0);
     }
 
+    // gcBgMarkWorkerNode is an entry in the gcBgMarkWorkerPool. It points to a single
+    // gcBgMarkWorker goroutine.
     
     template<typename T> requires gocpp::GoStruct<T>
     gcBgMarkWorkerNode::operator T()
@@ -1057,6 +1188,9 @@ namespace golang::runtime
         }
     }
 
+    // gcMarkWorkAvailable reports whether executing a mark worker
+    // on p is potentially useful. p may be nil, in which case it only
+    // checks the global sources of work.
     bool gcMarkWorkAvailable(struct p* p)
     {
         if(p != nullptr && ! rec::empty(gocpp::recv(p->gcw)))
@@ -1074,6 +1208,9 @@ namespace golang::runtime
         return false;
     }
 
+    // gcMark runs the mark (or, for concurrent GC, mark termination)
+    // All gcWork caches must be empty.
+    // STW is in effect at this point.
     void gcMark(int64_t startTime)
     {
         if(debug.allocfreetrace > 0)
@@ -1143,6 +1280,14 @@ namespace golang::runtime
         rec::resetLive(gocpp::recv(gcController), work.bytesMarked);
     }
 
+    // gcSweep must be called on the system stack because it acquires the heap
+    // lock. See mheap for details.
+    //
+    // Returns true if the heap was fully swept by this function.
+    //
+    // The world must be stopped.
+    //
+    //go:systemstack
     bool gcSweep(golang::runtime::gcMode mode)
     {
         assertWorldStopped();
@@ -1189,6 +1334,16 @@ namespace golang::runtime
         return false;
     }
 
+    // gcResetMarkState resets global state prior to marking (concurrent
+    // or STW) and resets the stack scan state of all Gs.
+    //
+    // This is safe to do without the world stopped because any Gs created
+    // during or after this will start out in the reset state.
+    //
+    // gcResetMarkState must be called on the system stack because it acquires
+    // the heap lock. See mheap for details.
+    //
+    //go:systemstack
     void gcResetMarkState()
     {
         forEachG([=](struct g* gp) mutable -> void
@@ -1213,11 +1368,13 @@ namespace golang::runtime
 
     std::function<void ()> poolcleanup;
     gocpp::slice<unsafe::Pointer> boringCaches;
+    //go:linkname sync_runtime_registerPoolCleanup sync.runtime_registerPoolCleanup
     void sync_runtime_registerPoolCleanup(std::function<void ()> f)
     {
         poolcleanup = f;
     }
 
+    //go:linkname boring_registerCache crypto/internal/boring/bcache.registerCache
     void boring_registerCache(unsafe::Pointer p)
     {
         boringCaches = append(boringCaches, p);
@@ -1244,6 +1401,8 @@ namespace golang::runtime
         sched.sudogcache = nullptr;
         unlock(& sched.sudoglock);
         lock(& sched.deferlock);
+        // disconnect cached list before dropping it on the floor,
+        // so that a dangling ref to one entry does not pin all of them.
         _defer* d = {};
         _defer* dlink = {};
         for(d = sched.deferpool; d != nullptr; d = dlink)
@@ -1255,6 +1414,7 @@ namespace golang::runtime
         unlock(& sched.deferlock);
     }
 
+    // itoaDiv formats val/(10**dec) into buf.
     gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec)
     {
         auto i = len(buf) - 1;
@@ -1274,6 +1434,7 @@ namespace golang::runtime
         return buf.make_slice(i);
     }
 
+    // fmtNSAsMS nicely formats ns nanoseconds as milliseconds.
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns)
     {
         if(ns >= 10e6)
@@ -1295,12 +1456,22 @@ namespace golang::runtime
         return itoaDiv(buf, x, dec);
     }
 
+    // gcTestMoveStackOnNextCall causes the stack to be moved on a call
+    // immediately following the call to this. It may not work correctly
+    // if any other work appears after this call (such as returning).
+    // Typically the following call should be marked go:noinline so it
+    // performs a stack check.
+    //
+    // In rare cases this may not cause the stack to move, specifically if
+    // there's a preemption between this call and the next.
     void gcTestMoveStackOnNextCall()
     {
         auto gp = getg();
         gp->stackguard0 = stackForceMove;
     }
 
+    // gcTestIsReachable performs a GC and returns a bit set where bit i
+    // is set if ptrs[i] is reachable.
     uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs)
     {
         uint64_t mask;
@@ -1344,6 +1515,14 @@ namespace golang::runtime
         return mask;
     }
 
+    // gcTestPointerClass returns the category of what p points to, one of:
+    // "heap", "stack", "data", "bss", "other". This is useful for checking
+    // that a test is doing what it's intended to do.
+    //
+    // This is nosplit simply to avoid extra pointer shuffling that may
+    // complicate a test.
+    //
+    //go:nosplit
     std::string gcTestPointerClass(unsafe::Pointer p)
     {
         auto p2 = uintptr_t(noescape(p));

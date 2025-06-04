@@ -20,7 +20,13 @@ namespace golang::bytealg
         using namespace mocklib::rec;
     }
 
+    // Offsets into internal/cpu records for use in assembly.
+    // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
+    // If MaxLen is not 0, make sure MaxLen >= 4.
     int MaxLen;
+    // PrimeRK is the prime base used in Rabin-Karp algorithm.
+    // HashStr returns the hash and the appropriate multiplicative
+    // factor for use in Rabin-Karp algorithm.
 
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
@@ -43,6 +49,8 @@ namespace golang::bytealg
         return {hash, pow};
     }
 
+    // HashStrRev returns the hash of the reverse of sep and the
+    // appropriate multiplicative factor for use in Rabin-Karp algorithm.
 
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStrRev(T sep)
@@ -65,6 +73,8 @@ namespace golang::bytealg
         return {hash, pow};
     }
 
+    // IndexRabinKarp uses the Rabin-Karp search algorithm to return the index of the
+    // first occurrence of sep in s, or -1 if not present.
 
     template<typename T>
     int IndexRabinKarp(T s, T sep)
@@ -94,6 +104,8 @@ namespace golang::bytealg
         return - 1;
     }
 
+    // LastIndexRabinKarp uses the Rabin-Karp search algorithm to return the last index of the
+    // occurrence of sep in s, or -1 if not present.
 
     template<typename T>
     int LastIndexRabinKarp(T s, T sep)
@@ -123,6 +135,9 @@ namespace golang::bytealg
         return - 1;
     }
 
+    // MakeNoZero makes a slice of length and capacity n without zeroing the bytes.
+    // It is the caller's responsibility to ensure uninitialized bytes
+    // do not leak to the end user.
     gocpp::slice<unsigned char> MakeNoZero(int n)
     /* convertBlockStmt, nil block */;
 

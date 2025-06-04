@@ -22,6 +22,8 @@ namespace golang::os
         using namespace mocklib::rec;
     }
 
+    // Expand replaces ${var} or $var in the string based on the mapping function.
+    // For example, os.ExpandEnv(s) is equivalent to os.Expand(s, os.Getenv).
     std::string Expand(std::string s, std::function<std::string (std::string)> mapping)
     {
         gocpp::slice<unsigned char> buf = {};
@@ -59,11 +61,16 @@ namespace golang::os
         return std::string(buf) + s.make_slice(i);
     }
 
+    // ExpandEnv replaces ${var} or $var in the string according to the values
+    // of the current environment variables. References to undefined
+    // variables are replaced by the empty string.
     std::string ExpandEnv(std::string s)
     {
         return Expand(s, Getenv);
     }
 
+    // isShellSpecialVar reports whether the character identifies a special
+    // shell variable such as $*.
     bool isShellSpecialVar(uint8_t c)
     {
         //Go switch emulation
@@ -113,11 +120,15 @@ namespace golang::os
         return false;
     }
 
+    // isAlphaNum reports whether the byte is an ASCII letter, number, or underscore.
     bool isAlphaNum(uint8_t c)
     {
         return c == '_' || '0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z';
     }
 
+    // getShellName returns the name that begins the string and the number of bytes
+    // consumed to extract it. If the name is enclosed in {}, it's part of a ${}
+    // expansion and two more bytes are needed than the length of the name.
     std::tuple<std::string, int> getShellName(std::string s)
     {
         //Go switch emulation
@@ -150,6 +161,7 @@ namespace golang::os
                     break;
             }
         }
+        // Scan alphanumerics.
         int i = {};
         for(i = 0; i < len(s) && isAlphaNum(s[i]); i++)
         {
@@ -157,6 +169,9 @@ namespace golang::os
         return {s.make_slice(0, i), i};
     }
 
+    // Getenv retrieves the value of the environment variable named by the key.
+    // It returns the value, which will be empty if the variable is not present.
+    // To distinguish between an empty value and an unset value, use LookupEnv.
     std::string Getenv(std::string key)
     {
         testlog::Getenv(key);
@@ -164,12 +179,19 @@ namespace golang::os
         return v;
     }
 
+    // LookupEnv retrieves the value of the environment variable named
+    // by the key. If the variable is present in the environment the
+    // value (which may be empty) is returned and the boolean is true.
+    // Otherwise the returned value will be empty and the boolean will
+    // be false.
     std::tuple<std::string, bool> LookupEnv(std::string key)
     {
         testlog::Getenv(key);
         return syscall::Getenv(key);
     }
 
+    // Setenv sets the value of the environment variable named by the key.
+    // It returns an error, if any.
     struct gocpp::error Setenv(std::string key, std::string value)
     {
         auto err = syscall::Setenv(key, value);
@@ -180,16 +202,20 @@ namespace golang::os
         return nullptr;
     }
 
+    // Unsetenv unsets a single environment variable.
     struct gocpp::error Unsetenv(std::string key)
     {
         return syscall::Unsetenv(key);
     }
 
+    // Clearenv deletes all environment variables.
     void Clearenv()
     {
         syscall::Clearenv();
     }
 
+    // Environ returns a copy of strings representing the environment,
+    // in the form "key=value".
     gocpp::slice<std::string> Environ()
     {
         return syscall::Environ();

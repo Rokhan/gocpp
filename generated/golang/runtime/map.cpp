@@ -88,11 +88,30 @@ namespace golang::runtime
     }
 
 
+    // Maximum number of key/elem pairs a bucket can hold.
+    // Maximum average load of a bucket that triggers growth is bucketCnt*13/16 (about 80% full)
+    // Because of minimum alignment rules, bucketCnt is known to be at least 8.
+    // Represent as loadFactorNum/loadFactorDen, to allow integer math.
+    // Maximum key or elem size to keep inline (instead of mallocing per element).
+    // Must fit in a uint8.
+    // Fast versions cannot handle big elems - the cutoff size for
+    // fast versions in cmd/compile/internal/gc/walk.go must be at most this elem.
+    // data offset should be the size of the bmap struct, but needs to be
+    // aligned correctly. For amd64p32 this means 64-bit alignment
+    // even though pointers are 32 bit.
+    // Possible tophash values. We reserve a few possibilities for special marks.
+    // Each bucket (including its overflow buckets, if any) will have either all or none of its
+    // entries in the evacuated* states (except during the evacuate() method, which only happens
+    // during map writes and thus no one else can observe the map during that time).
+    // flags
+    // sentinel bucket ID for iterator checks
+    // isEmpty reports whether the given tophash array entry represents an empty bucket entry.
     bool isEmpty(uint8_t x)
     {
         return x <= emptyOne;
     }
 
+    // A header for a Go map.
     
     template<typename T> requires gocpp::GoStruct<T>
     hmap::operator T()
@@ -146,6 +165,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // mapextra holds fields that are not present on all maps.
     
     template<typename T> requires gocpp::GoStruct<T>
     mapextra::operator T()
@@ -181,6 +201,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A bucket for a Go map.
     
     template<typename T> requires gocpp::GoStruct<T>
     bmap::operator T()
@@ -210,6 +231,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // A hash iteration structure.
+    // If you modify hiter, also change cmd/compile/internal/reflectdata/reflect.go
+    // and reflect/value.go to match the layout of this structure.
     
     template<typename T> requires gocpp::GoStruct<T>
     hiter::operator T()
@@ -281,16 +305,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // bucketShift returns 1<<b, optimized for code generation.
     uintptr_t bucketShift(uint8_t b)
     {
         return uintptr_t(1) << (b & (goarch::PtrSize * 8 - 1));
     }
 
+    // bucketMask returns 1<<b - 1, optimized for code generation.
     uintptr_t bucketMask(uint8_t b)
     {
         return bucketShift(b) - 1;
     }
 
+    // tophash calculates the tophash value for hash.
     uint8_t tophash(uintptr_t hash)
     {
         auto top = uint8_t(hash >> (goarch::PtrSize * 8 - 8));
@@ -322,6 +349,13 @@ namespace golang::runtime
         return add(unsafe::Pointer(b), dataOffset);
     }
 
+    // incrnoverflow increments h.noverflow.
+    // noverflow counts the number of overflow buckets.
+    // This is used to trigger same-size map growth.
+    // See also tooManyOverflowBuckets.
+    // To keep hmap small, noverflow is a uint16.
+    // When there are few buckets, noverflow is an exact count.
+    // When there are many buckets, noverflow is an approximate count.
     void rec::incrnoverflow(struct hmap* h)
     {
         if(h->B < 16)
@@ -387,6 +421,9 @@ namespace golang::runtime
         return makemap(t, int(hint), h);
     }
 
+    // makemap_small implements Go map creation for make(map[k]v) and
+    // make(map[k]v, hint) when hint is known to be at most bucketCnt
+    // at compile time and the map needs to be allocated on the heap.
     struct hmap* makemap_small()
     {
         auto h = new(hmap);
@@ -394,6 +431,11 @@ namespace golang::runtime
         return h;
     }
 
+    // makemap implements Go map creation for make(map[k]v, hint).
+    // If the compiler has determined that the map or the first bucket
+    // can be created on the stack, h and/or bucket may be non-nil.
+    // If h != nil, the map can be created directly in h.
+    // If h.buckets != nil, bucket pointed to can be used as the first bucket.
     struct hmap* makemap(golang::runtime::maptype* t, int hint, struct hmap* h)
     {
         auto [mem, overflow] = math::MulUintptr(uintptr_t(hint), t->Bucket->Size_);
@@ -425,6 +467,12 @@ namespace golang::runtime
         return h;
     }
 
+    // makeBucketArray initializes a backing array for map buckets.
+    // 1<<b is the minimum number of buckets to allocate.
+    // dirtyalloc should either be nil or a bucket array previously
+    // allocated by makeBucketArray with the same t and b parameters.
+    // If dirtyalloc is nil a new backing array will be alloced and
+    // otherwise dirtyalloc will be cleared and reused as backing array.
     std::tuple<unsafe::Pointer, struct bmap*> makeBucketArray(golang::runtime::maptype* t, uint8_t b, unsafe::Pointer dirtyalloc)
     {
         unsafe::Pointer buckets;
@@ -467,6 +515,11 @@ namespace golang::runtime
         return {buckets, nextOverflow};
     }
 
+    // mapaccess1 returns a pointer to h[key].  Never returns nil, instead
+    // it will return a reference to the zero object for the elem type if
+    // the key is not in the map.
+    // NOTE: The returned pointer may keep the whole map live, so don't
+    // hold onto it for very long.
     unsafe::Pointer mapaccess1(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(raceenabled && h != nullptr)
@@ -633,6 +686,7 @@ namespace golang::runtime
         return {unsafe::Pointer(& zeroVal[0]), false};
     }
 
+    // returns both key and elem. Used by map iterator.
     std::tuple<unsafe::Pointer, unsafe::Pointer> mapaccessK(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(h == nullptr || h->count == 0)
@@ -713,6 +767,7 @@ namespace golang::runtime
         return {e, true};
     }
 
+    // Like mapaccess, but allocates a slot for the key if it is not present in the map.
     unsafe::Pointer mapassign(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         if(h == nullptr)
@@ -988,6 +1043,10 @@ namespace golang::runtime
         h->flags &^= hashWriting;
     }
 
+    // mapiterinit initializes the hiter struct used for ranging over maps.
+    // The hiter struct pointed to by 'it' is allocated on the stack
+    // by the compilers order pass or on the heap by reflect_mapiterinit.
+    // Both need to have zeroed hiter since the struct contains pointers.
     void mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it)
     {
         if(raceenabled && h != nullptr)
@@ -1141,6 +1200,7 @@ namespace golang::runtime
         goto next;
     }
 
+    // mapclear deletes all keys from a map.
     void mapclear(golang::runtime::maptype* t, struct hmap* h)
     {
         if(raceenabled && h != nullptr)
@@ -1239,11 +1299,15 @@ namespace golang::runtime
         }
     }
 
+    // overLoadFactor reports whether count items placed in 1<<B buckets is over loadFactor.
     bool overLoadFactor(int count, uint8_t B)
     {
         return count > bucketCnt && uintptr_t(count) > loadFactorNum * (bucketShift(B) / loadFactorDen);
     }
 
+    // tooManyOverflowBuckets reports whether noverflow buckets is too many for a map with 1<<B buckets.
+    // Note that most of these overflow buckets must be in sparse use;
+    // if use was dense, then we'd have already triggered regular map growth.
     bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B)
     {
         if(B > 15)
@@ -1253,16 +1317,19 @@ namespace golang::runtime
         return noverflow >= (uint16_t(1) << (B & 15));
     }
 
+    // growing reports whether h is growing. The growth may be to the same size or bigger.
     bool rec::growing(struct hmap* h)
     {
         return h->oldbuckets != nullptr;
     }
 
+    // sameSizeGrow reports whether the current growth is to a map of the same size.
     bool rec::sameSizeGrow(struct hmap* h)
     {
         return h->flags & sameSizeGrow != 0;
     }
 
+    // noldbuckets calculates the number of buckets prior to the current map growth.
     uintptr_t rec::noldbuckets(struct hmap* h)
     {
         auto oldB = h->B;
@@ -1273,6 +1340,7 @@ namespace golang::runtime
         return bucketShift(oldB);
     }
 
+    // oldbucketmask provides a mask that can be applied to calculate n % noldbuckets().
     uintptr_t rec::oldbucketmask(struct hmap* h)
     {
         return rec::noldbuckets(gocpp::recv(h)) - 1;
@@ -1293,6 +1361,7 @@ namespace golang::runtime
         return evacuated(b);
     }
 
+    // evacDst is an evacuation destination.
     
     template<typename T> requires gocpp::GoStruct<T>
     evacDst::operator T()
@@ -1337,6 +1406,7 @@ namespace golang::runtime
         auto newbit = rec::noldbuckets(gocpp::recv(h));
         if(! evacuated(b))
         {
+            // xy contains the x and y (low and high) evacuation destinations.
             gocpp::array<evacDst, 2> xy = {};
             auto x = & xy[0];
             x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
@@ -1459,6 +1529,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname reflect_makemap reflect.makemap
     struct hmap* reflect_makemap(golang::runtime::maptype* t, int cap)
     {
         if(t->Key->Equal == nullptr)
@@ -1504,6 +1575,7 @@ namespace golang::runtime
         return makemap(t, cap, nullptr);
     }
 
+    //go:linkname reflect_mapaccess reflect.mapaccess
     unsafe::Pointer reflect_mapaccess(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         auto [elem, ok] = mapaccess2(t, h, key);
@@ -1514,6 +1586,7 @@ namespace golang::runtime
         return elem;
     }
 
+    //go:linkname reflect_mapaccess_faststr reflect.mapaccess_faststr
     unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key)
     {
         auto [elem, ok] = mapaccess2_faststr(t, h, key);
@@ -1524,48 +1597,57 @@ namespace golang::runtime
         return elem;
     }
 
+    //go:linkname reflect_mapassign reflect.mapassign0
     void reflect_mapassign(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer elem)
     {
         auto p = mapassign(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
+    //go:linkname reflect_mapassign_faststr reflect.mapassign_faststr0
     void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key, unsafe::Pointer elem)
     {
         auto p = mapassign_faststr(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
+    //go:linkname reflect_mapdelete reflect.mapdelete
     void reflect_mapdelete(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
     {
         mapdelete(t, h, key);
     }
 
+    //go:linkname reflect_mapdelete_faststr reflect.mapdelete_faststr
     void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key)
     {
         mapdelete_faststr(t, h, key);
     }
 
+    //go:linkname reflect_mapiterinit reflect.mapiterinit
     void reflect_mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it)
     {
         mapiterinit(t, h, it);
     }
 
+    //go:linkname reflect_mapiternext reflect.mapiternext
     void reflect_mapiternext(struct hiter* it)
     {
         mapiternext(it);
     }
 
+    //go:linkname reflect_mapiterkey reflect.mapiterkey
     unsafe::Pointer reflect_mapiterkey(struct hiter* it)
     {
         return it->key;
     }
 
+    //go:linkname reflect_mapiterelem reflect.mapiterelem
     unsafe::Pointer reflect_mapiterelem(struct hiter* it)
     {
         return it->elem;
     }
 
+    //go:linkname reflect_maplen reflect.maplen
     int reflect_maplen(struct hmap* h)
     {
         if(h == nullptr)
@@ -1580,11 +1662,13 @@ namespace golang::runtime
         return h->count;
     }
 
+    //go:linkname reflect_mapclear reflect.mapclear
     void reflect_mapclear(golang::runtime::maptype* t, struct hmap* h)
     {
         mapclear(t, h);
     }
 
+    //go:linkname reflectlite_maplen internal/reflectlite.maplen
     int reflectlite_maplen(struct hmap* h)
     {
         if(h == nullptr)
@@ -1600,9 +1684,17 @@ namespace golang::runtime
     }
 
     gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+    // mapinitnoop is a no-op function known the Go linker; if a given global
+    // map (of the right size) is determined to be dead, the linker will
+    // rewrite the relocation (from the package init func) from the outlined
+    // map init function to this symbol. Defined in assembly so as to avoid
+    // complications with instrumentation (coverage, etc).
     void mapinitnoop()
     /* convertBlockStmt, nil block */;
 
+    // mapclone for implementing maps.Clone
+    //
+    //go:linkname mapclone maps.clone
     go_any mapclone(go_any m)
     {
         auto e = efaceOf(& m);
@@ -1610,6 +1702,8 @@ namespace golang::runtime
         return m;
     }
 
+    // moveToBmap moves a bucket from src to dst. It returns the destination bucket or new destination bucket if it overflows
+    // and the pos that the next key/value will be written, if pos == bucketCnt means needs to written in overflow bucket.
     std::tuple<struct bmap*, int> moveToBmap(golang::runtime::maptype* t, struct hmap* h, struct bmap* dst, int pos, struct bmap* src)
     {
         for(auto i = 0; i < bucketCnt; i++)
@@ -1771,6 +1865,9 @@ namespace golang::runtime
         return dst;
     }
 
+    // keys for implementing maps.keys
+    //
+    //go:linkname keys maps.keys
     void keys(go_any m, unsafe::Pointer p)
     {
         auto e = efaceOf(& m);
@@ -1844,6 +1941,9 @@ namespace golang::runtime
         }
     }
 
+    // values for implementing maps.values
+    //
+    //go:linkname values maps.values
     void values(go_any m, unsafe::Pointer p)
     {
         auto e = efaceOf(& m);

@@ -23,13 +23,21 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // faketime is the simulated time in nanoseconds since 1970 for the
+    // playground.
+    //
+    // Zero means not to use faketime.
     int64_t faketime;
+    //go:nosplit
     int64_t nanotime()
     {
         return nanotime1();
     }
 
     std::function<int32_t (uintptr_t fd, unsafe::Pointer p, int32_t n)> overrideWrite;
+    // write must be nosplit on Windows (see write1)
+    //
+    //go:nosplit
     int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n)
     {
         if(overrideWrite != nullptr)

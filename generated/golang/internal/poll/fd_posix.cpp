@@ -27,6 +27,8 @@ namespace golang::poll
         using namespace mocklib::rec;
     }
 
+    // eofError returns io.EOF when fd is available for reading end of
+    // file.
     struct gocpp::error rec::eofError(struct FD* fd, int n, struct gocpp::error err)
     {
         if(n == 0 && err == nullptr && fd->ZeroReadIsEOF)
@@ -36,6 +38,7 @@ namespace golang::poll
         return err;
     }
 
+    // Shutdown wraps syscall.Shutdown.
     struct gocpp::error rec::Shutdown(struct FD* fd, int how)
     {
         gocpp::Defer defer;
@@ -54,6 +57,7 @@ namespace golang::poll
         }
     }
 
+    // Fchown wraps syscall.Fchown.
     struct gocpp::error rec::Fchown(struct FD* fd, int uid, int gid)
     {
         gocpp::Defer defer;
@@ -75,6 +79,7 @@ namespace golang::poll
         }
     }
 
+    // Ftruncate wraps syscall.Ftruncate.
     struct gocpp::error rec::Ftruncate(struct FD* fd, int64_t size)
     {
         gocpp::Defer defer;
@@ -96,6 +101,8 @@ namespace golang::poll
         }
     }
 
+    // RawControl invokes the user-defined function f for a non-IO
+    // operation.
     struct gocpp::error rec::RawControl(struct FD* fd, std::function<void (uintptr_t)> f)
     {
         gocpp::Defer defer;
@@ -115,6 +122,13 @@ namespace golang::poll
         }
     }
 
+    // ignoringEINTR makes a function call and repeats it if it returns
+    // an EINTR error. This appears to be required even though we install all
+    // signal handlers with SA_RESTART: see #22838, #38033, #38836, #40846.
+    // Also #20400 and #36644 are issues in which a signal handler is
+    // installed without setting SA_RESTART. None of these are the common case,
+    // but there are enough of them that it seems that we can't avoid
+    // an EINTR loop.
     struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn)
     {
         for(; ; )

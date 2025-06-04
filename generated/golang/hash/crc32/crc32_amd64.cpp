@@ -23,12 +23,24 @@ namespace golang::crc32
         using namespace mocklib::rec;
     }
 
+    // castagnoliSSE42 is defined in crc32_amd64.s and uses the SSE 4.2 CRC32
+    // instruction.
+    //
+    //go:noescape
     uint32_t castagnoliSSE42(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
+    // castagnoliSSE42Triple is defined in crc32_amd64.s and uses the SSE 4.2 CRC32
+    // instruction.
+    //
+    //go:noescape
     std::tuple<uint32_t, uint32_t, uint32_t> castagnoliSSE42Triple(uint32_t crcA, uint32_t crcB, uint32_t crcC, gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> c, uint32_t rounds)
     /* convertBlockStmt, nil block */;
 
+    // ieeeCLMUL is defined in crc_amd64.s and uses the PCLMULQDQ
+    // instruction as well as SSE 4.1.
+    //
+    //go:noescape
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
@@ -47,6 +59,12 @@ namespace golang::crc32
         }
         castagnoliSSE42TableK1 = new(sse42Table);
         castagnoliSSE42TableK2 = new(sse42Table);
+        // See description in updateCastagnoli.
+        //    t[0][i] = CRC(i000, O)
+        //    t[1][i] = CRC(0i00, O)
+        //    t[2][i] = CRC(00i0, O)
+        //    t[3][i] = CRC(000i, O)
+        // where O is a sequence of K zeros.
         gocpp::array<unsigned char, castagnoliK2> tmp = {};
         for(auto b = 0; b < 4; b++)
         {
@@ -59,6 +77,9 @@ namespace golang::crc32
         }
     }
 
+    // castagnoliShift computes the CRC32-C of K1 or K2 zeroes (depending on the
+    // table given) with the given initial crc value. This corresponds to
+    // CRC(crc, O) in the description in updateCastagnoli.
     uint32_t castagnoliShift(golang::crc32::sse42Table* table, uint32_t crc)
     {
         return table[3][crc >> 24] ^ table[2][(crc >> 16) & 0xFF] ^ table[1][(crc >> 8) & 0xFF] ^ table[0][crc & 0xFF];

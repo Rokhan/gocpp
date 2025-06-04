@@ -97,7 +97,192 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // _64bit = 1 on 64-bit systems, 0 on 32-bit systems
+    // Tiny allocator parameters, see "Tiny allocator" comment in malloc.go.
+    // Per-P, per order stack segment cache size.
+    // Number of orders that get caching. Order 0 is FixedStack
+    // and each successive order is twice as large.
+    // We want to cache 2KB, 4KB, 8KB, and 16KB stacks. Larger stacks
+    // will be allocated directly.
+    // Since FixedStack is different on different systems, we
+    // must vary NumStackOrders to keep the same maximum cached size.
+    //   OS               | FixedStack | NumStackOrders
+    //   -----------------+------------+---------------
+    //   linux/darwin/bsd | 2KB        | 4
+    //   windows/32       | 4KB        | 3
+    //   windows/64       | 8KB        | 2
+    //   plan9            | 4KB        | 3
+    // heapAddrBits is the number of bits in a heap address. On
+    // amd64, addresses are sign-extended beyond heapAddrBits. On
+    // other arches, they are zero-extended.
+    //
+    // On most 64-bit platforms, we limit this to 48 bits based on a
+    // combination of hardware and OS limitations.
+    //
+    // amd64 hardware limits addresses to 48 bits, sign-extended
+    // to 64 bits. Addresses where the top 16 bits are not either
+    // all 0 or all 1 are "non-canonical" and invalid. Because of
+    // these "negative" addresses, we offset addresses by 1<<47
+    // (arenaBaseOffset) on amd64 before computing indexes into
+    // the heap arenas index. In 2017, amd64 hardware added
+    // support for 57 bit addresses; however, currently only Linux
+    // supports this extension and the kernel will never choose an
+    // address above 1<<47 unless mmap is called with a hint
+    // address above 1<<47 (which we never do).
+    //
+    // arm64 hardware (as of ARMv8) limits user addresses to 48
+    // bits, in the range [0, 1<<48).
+    //
+    // ppc64, mips64, and s390x support arbitrary 64 bit addresses
+    // in hardware. On Linux, Go leans on stricter OS limits. Based
+    // on Linux's processor.h, the user address space is limited as
+    // follows on 64-bit architectures:
+    //
+    // Architecture  Name              Maximum Value (exclusive)
+    // ---------------------------------------------------------------------
+    // amd64         TASK_SIZE_MAX     0x007ffffffff000 (47 bit addresses)
+    // arm64         TASK_SIZE_64      0x01000000000000 (48 bit addresses)
+    // ppc64{,le}    TASK_SIZE_USER64  0x00400000000000 (46 bit addresses)
+    // mips64{,le}   TASK_SIZE64       0x00010000000000 (40 bit addresses)
+    // s390x         TASK_SIZE         1<<64 (64 bit addresses)
+    //
+    // These limits may increase over time, but are currently at
+    // most 48 bits except on s390x. On all architectures, Linux
+    // starts placing mmap'd regions at addresses that are
+    // significantly below 48 bits, so even if it's possible to
+    // exceed Go's 48 bit limit, it's extremely unlikely in
+    // practice.
+    //
+    // On 32-bit platforms, we accept the full 32-bit address
+    // space because doing so is cheap.
+    // mips32 only has access to the low 2GB of virtual memory, so
+    // we further limit it to 31 bits.
+    //
+    // On ios/arm64, although 64-bit pointers are presumably
+    // available, pointers are truncated to 33 bits in iOS <14.
+    // Furthermore, only the top 4 GiB of the address space are
+    // actually available to the application. In iOS >=14, more
+    // of the address space is available, and the OS can now
+    // provide addresses outside of those 33 bits. Pick 40 bits
+    // as a reasonable balance between address space usage by the
+    // page allocator, and flexibility for what mmap'd regions
+    // we'll accept for the heap. We can't just move to the full
+    // 48 bits because this uses too much address space for older
+    // iOS versions.
+    // TODO(mknyszek): Once iOS <14 is deprecated, promote ios/arm64
+    // to a 48-bit address space like every other arm64 platform.
+    //
+    // WebAssembly currently has a limit of 4GB linear memory.
+    // maxAlloc is the maximum size of an allocation. On 64-bit,
+    // it's theoretically possible to allocate 1<<heapAddrBits bytes. On
+    // 32-bit, however, this is one less than 1<<32 because the
+    // number of bytes in the address space doesn't actually fit
+    // in a uintptr.
+    // heapArenaBytes is the size of a heap arena. The heap
+    // consists of mappings of size heapArenaBytes, aligned to
+    // heapArenaBytes. The initial heap mapping is one arena.
+    //
+    // This is currently 64MB on 64-bit non-Windows and 4MB on
+    // 32-bit and on Windows. We use smaller arenas on Windows
+    // because all committed memory is charged to the process,
+    // even if it's not touched. Hence, for processes with small
+    // heaps, the mapped arena space needs to be commensurate.
+    // This is particularly important with the race detector,
+    // since it significantly amplifies the cost of committed
+    // memory.
+    // logHeapArenaBytes is log_2 of heapArenaBytes. For clarity,
+    // prefer using heapArenaBytes where possible (we need the
+    // constant to compute some other constants).
+    // heapArenaBitmapWords is the size of each heap arena's bitmap in uintptrs.
+    // arenaL1Bits is the number of bits of the arena number
+    // covered by the first level arena map.
+    //
+    // This number should be small, since the first level arena
+    // map requires PtrSize*(1<<arenaL1Bits) of space in the
+    // binary's BSS. It can be zero, in which case the first level
+    // index is effectively unused. There is a performance benefit
+    // to this, since the generated code can be more efficient,
+    // but comes at the cost of having a large L2 mapping.
+    //
+    // We use the L1 map on 64-bit Windows because the arena size
+    // is small, but the address space is still 48 bits, and
+    // there's a high cost to having a large L2.
+    // arenaL2Bits is the number of bits of the arena number
+    // covered by the second level arena index.
+    //
+    // The size of each arena map allocation is proportional to
+    // 1<<arenaL2Bits, so it's important that this not be too
+    // large. 48 bits leads to 32MB arena index allocations, which
+    // is about the practical threshold.
+    // arenaL1Shift is the number of bits to shift an arena frame
+    // number by to compute an index into the first level arena map.
+    // arenaBits is the total bits in a combined arena map index.
+    // This is split between the index into the L1 arena map and
+    // the L2 arena map.
+    // arenaBaseOffset is the pointer value that corresponds to
+    // index 0 in the heap arena map.
+    //
+    // On amd64, the address space is 48 bits, sign extended to 64
+    // bits. This offset lets us handle "negative" addresses (or
+    // high addresses if viewed as unsigned).
+    //
+    // On aix/ppc64, this offset allows to keep the heapAddrBits to
+    // 48. Otherwise, it would be 60 in order to handle mmap addresses
+    // (in range 0x0a00000000000000 - 0x0afffffffffffff). But in this
+    // case, the memory reserved in (s *pageAlloc).init for chunks
+    // is causing important slowdowns.
+    //
+    // On other platforms, the user address space is contiguous
+    // and starts at 0, so no offset is necessary.
+    // A typed version of this constant that will make it into DWARF (for viewcore).
+    // Max number of threads to run garbage collection.
+    // 2, 3, and 4 are all plausible maximums depending
+    // on the hardware details of the machine. The garbage
+    // collector scales well to 32 cpus.
+    // minLegalPointer is the smallest possible legal pointer.
+    // This is the smallest possible architectural page size,
+    // since we assume that the first page is never mapped.
+    //
+    // This should agree with minZeroPage in the compiler.
+    // minHeapForMetadataHugePages sets a threshold on when certain kinds of
+    // heap metadata, currently the arenas map L2 entries and page alloc bitmap
+    // mappings, are allowed to be backed by huge pages. If the heap goal ever
+    // exceeds this threshold, then huge pages are enabled.
+    //
+    // These numbers are chosen with the assumption that huge pages are on the
+    // order of a few MiB in size.
+    //
+    // The kind of metadata this applies to has a very low overhead when compared
+    // to address space used, but their constant overheads for small heaps would
+    // be very high if they were to be backed by huge pages (e.g. a few MiB makes
+    // a huge difference for an 8 MiB heap, but barely any difference for a 1 GiB
+    // heap). The benefit of huge pages is also not worth it for small heaps,
+    // because only a very, very small part of the metadata is used for small heaps.
+    //
+    // N.B. If the heap goal exceeds the threshold then shrinks to a very small size
+    // again, then huge pages will still be enabled for this mapping. The reason is that
+    // there's no point unless we're also returning the physical memory for these
+    // metadata mappings back to the OS. That would be quite complex to do in general
+    // as the heap is likely fragmented after a reduction in heap size.
+    // physPageSize is the size in bytes of the OS's physical pages.
+    // Mapping and unmapping operations must be done at multiples of
+    // physPageSize.
+    //
+    // This must be set by the OS init code (typically in osinit) before
+    // mallocinit.
     uintptr_t physPageSize;
+    // physHugePageSize is the size in bytes of the OS's default physical huge
+    // page size whose allocation is opaque to the application. It is assumed
+    // and verified to be a power of two.
+    //
+    // If set, this must be set by the OS init code (typically in osinit) before
+    // mallocinit. However, setting it at all is optional, and leaving the default
+    // value is always safe (though potentially less efficient).
+    //
+    // Since physHugePageSize is always assumed to be a power of two,
+    // physHugePageShift is defined as physHugePageSize == 1 << physHugePageShift.
+    // The purpose of physHugePageShift is to avoid doing divisions in
+    // performance critical functions.
     uintptr_t physHugePageSize;
     unsigned int physHugePageShift;
     void mallocinit()
@@ -279,6 +464,22 @@ namespace golang::runtime
         rec::Store(gocpp::recv(gcController.memoryLimit), maxInt64);
     }
 
+    // sysAlloc allocates heap arena space for at least n bytes. The
+    // returned pointer is always heapArenaBytes-aligned and backed by
+    // h.arenas metadata. The returned size is always a multiple of
+    // heapArenaBytes. sysAlloc returns nil on failure.
+    // There is no corresponding free function.
+    //
+    // hintList is a list of hint addresses for where to allocate new
+    // heap arenas. It must be non-nil.
+    //
+    // register indicates whether the heap arena should be registered
+    // in allArenas.
+    //
+    // sysAlloc returns a memory region in the Reserved state. This region must
+    // be transitioned to Prepared and then Ready before use.
+    //
+    // h must be locked.
     std::tuple<unsafe::Pointer, uintptr_t> rec::sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
     {
         unsafe::Pointer v;
@@ -448,6 +649,9 @@ namespace golang::runtime
         return {v, size};
     }
 
+    // sysReserveAligned is like sysReserve, but the returned pointer is
+    // aligned to align bytes. It may reserve either n or n+align bytes,
+    // so it returns the size that was reserved.
     std::tuple<unsafe::Pointer, uintptr_t> sysReserveAligned(unsafe::Pointer v, uintptr_t size, uintptr_t align)
     {
         auto retries = 0;
@@ -497,6 +701,19 @@ namespace golang::runtime
         }
     }
 
+    // enableMetadataHugePages enables huge pages for various sources of heap metadata.
+    //
+    // A note on latency: for sufficiently small heaps (<10s of GiB) this function will take constant
+    // time, but may take time proportional to the size of the mapped heap beyond that.
+    //
+    // This function is idempotent.
+    //
+    // The heap lock must not be held over this operation, since it will briefly acquire
+    // the heap lock.
+    //
+    // Must be called on the system stack because it acquires the heap lock.
+    //
+    //go:systemstack
     void rec::enableMetadataHugePages(struct mheap* h)
     {
         rec::enableChunkHugePages(gocpp::recv(h->pages));
@@ -519,7 +736,10 @@ namespace golang::runtime
         }
     }
 
+    // base address for all 0-byte allocations
     uintptr_t zerobase;
+    // nextFreeFast returns the next free object if one is quickly available.
+    // Otherwise it returns 0.
     runtime::gclinkptr nextFreeFast(struct mspan* s)
     {
         auto theBit = sys::TrailingZeros64(s->allocCache);
@@ -542,6 +762,15 @@ namespace golang::runtime
         return 0;
     }
 
+    // nextFree returns the next free object from the cached span if one is available.
+    // Otherwise it refills the cache with a span with an available object and
+    // returns that object along with a flag indicating that this was a heavy
+    // weight allocation. If it is a heavy weight allocation the caller must
+    // determine whether a new GC cycle needs to be started or if the GC is active
+    // whether this goroutine needs to assist the GC.
+    //
+    // Must run in a non-preemptible context since otherwise the owner of
+    // c could change.
     std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(struct mcache* c, golang::runtime::spanClass spc)
     {
         runtime::gclinkptr v;
@@ -576,6 +805,9 @@ namespace golang::runtime
         return {v, s, shouldhelpgc};
     }
 
+    // Allocate an object of size bytes.
+    // Small objects are allocated from the per-P cache's free lists.
+    // Large objects (> 32 kB) are allocated straight from the heap.
     unsafe::Pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero)
     {
         if(gcphase == _GCmarktermination)
@@ -863,6 +1095,12 @@ namespace golang::runtime
         return x;
     }
 
+    // deductAssistCredit reduces the current G's assist credit
+    // by size bytes, and assists the GC if necessary.
+    //
+    // Caller must be preemptible.
+    //
+    // Returns the G for which the assist credit was accounted.
     struct g* deductAssistCredit(uintptr_t size)
     {
         g* assistG = {};
@@ -882,9 +1120,18 @@ namespace golang::runtime
         return assistG;
     }
 
+    // memclrNoHeapPointersChunked repeatedly calls memclrNoHeapPointers
+    // on chunks of the buffer to be zeroed, with opportunities for preemption
+    // along the way.  memclrNoHeapPointers contains no safepoints and also
+    // cannot be preemptively scheduled, so this provides a still-efficient
+    // block copy that can also be preempted on a reasonable granularity.
+    //
+    // Use this with care; if the data being cleared is tagged to contain
+    // pointers, this allows the GC to run before it is all cleared.
     void memclrNoHeapPointersChunked(uintptr_t size, unsafe::Pointer x)
     {
         auto v = uintptr_t(x);
+        // got this from benchmarking. 128k is too small, 512k is too large.
         auto chunkBytes = 256 * 1024;
         auto vsize = v + size;
         for(auto voff = v; voff < vsize; voff = voff + chunkBytes)
@@ -902,21 +1149,27 @@ namespace golang::runtime
         }
     }
 
+    // implementation of new builtin
+    // compiler (both frontend and SSA backend) knows the signature
+    // of this function.
     unsafe::Pointer newobject(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
+    //go:linkname reflect_unsafe_New reflect.unsafe_New
     unsafe::Pointer reflect_unsafe_New(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
+    //go:linkname reflectlite_unsafe_New internal/reflectlite.unsafe_New
     unsafe::Pointer reflectlite_unsafe_New(golang::runtime::_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
+    // newarray allocates an array of n elements of type typ.
     unsafe::Pointer newarray(golang::runtime::_type* typ, int n)
     {
         if(n == 1)
@@ -931,6 +1184,7 @@ namespace golang::runtime
         return mallocgc(mem, typ, true);
     }
 
+    //go:linkname reflect_unsafe_NewArray reflect.unsafe_NewArray
     unsafe::Pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n)
     {
         return newarray(typ, n);
@@ -947,6 +1201,13 @@ namespace golang::runtime
         mProf_Malloc(x, size);
     }
 
+    // nextSample returns the next sampling point for heap profiling. The goal is
+    // to sample allocations on average every MemProfileRate bytes, but with a
+    // completely random distribution over the allocation timeline; this
+    // corresponds to a Poisson process with parameter MemProfileRate. In Poisson
+    // processes, the distance between two samples follows the exponential
+    // distribution (exp(MemProfileRate)), so the best return value is a random
+    // number taken from an exponential distribution whose mean is MemProfileRate.
     uintptr_t nextSample()
     {
         if(MemProfileRate == 1)
@@ -963,6 +1224,8 @@ namespace golang::runtime
         return uintptr_t(fastexprand(MemProfileRate));
     }
 
+    // fastexprand returns a random number from an exponential distribution with
+    // the specified mean.
     int32_t fastexprand(int mean)
     {
         //Go switch emulation
@@ -980,6 +1243,14 @@ namespace golang::runtime
                     break;
             }
         }
+        // Take a random sample of the exponential distribution exp(-mean*x).
+        // The probability distribution function is mean*exp(-mean*x), so the CDF is
+        // p = 1 - exp(-mean*x), so
+        // q = 1 - p == exp(-mean*x)
+        // log_e(q) = -mean*x
+        // -log_e(q)/mean = x
+        // x = -log_e(q) * mean
+        // x = log_2(q) * (-log_e(2)) * mean    ; Using log_2 for efficiency
         auto randomBitCount = 26;
         auto q = cheaprandn(1 << randomBitCount) + 1;
         auto qlog = fastlog2(double(q)) - randomBitCount;
@@ -991,6 +1262,8 @@ namespace golang::runtime
         return int32_t(qlog * (minusLog2 * double(mean))) + 1;
     }
 
+    // nextSampleNoFP is similar to nextSample, but uses older,
+    // simpler code to avoid floating point.
     uintptr_t nextSampleNoFP()
     {
         auto rate = MemProfileRate;
@@ -1070,7 +1343,21 @@ namespace golang::runtime
 
 
     gocpp_id_0 globalAlloc;
+    // persistentChunkSize is the number of bytes we allocate when we grow
+    // a persistentAlloc.
+    // persistentChunks is a list of all the persistent chunks we have
+    // allocated. The list is maintained through the first word in the
+    // persistent chunk. This is updated atomically.
     notInHeap* persistentChunks;
+    // Wrapper around sysAlloc that can allocate small chunks.
+    // There is no associated free operation.
+    // Intended for things like function/type/debug-related persistent data.
+    // If align is 0, uses default align (currently 8).
+    // The returned memory will be zeroed.
+    // sysStat must be non-nil.
+    //
+    // Consider marking persistentalloc'd types not in heap by embedding
+    // runtime/internal/sys.NotInHeap.
     unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         notInHeap* p = {};
@@ -1081,6 +1368,10 @@ namespace golang::runtime
         return unsafe::Pointer(p);
     }
 
+    // Must run on system stack because stack growth can (re)invoke it.
+    // See issue 9174.
+    //
+    //go:systemstack
     struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
@@ -1156,6 +1447,11 @@ namespace golang::runtime
         return p;
     }
 
+    // inPersistentAlloc reports whether p points to memory allocated by
+    // persistentalloc. This must be nosplit because it is called by the
+    // cgo checker code, which is called by the write barrier code.
+    //
+    //go:nosplit
     bool inPersistentAlloc(uintptr_t p)
     {
         auto chunk = atomic::Loaduintptr((uintptr_t*)(unsafe::Pointer(& persistentChunks)));
@@ -1170,6 +1466,11 @@ namespace golang::runtime
         return false;
     }
 
+    // linearAlloc is a simple linear allocator that pre-reserves a region
+    // of memory and then optionally maps that region into the Ready state
+    // as needed.
+    //
+    // The caller is responsible for locking.
     
     template<typename T> requires gocpp::GoStruct<T>
     linearAlloc::operator T()
@@ -1240,6 +1541,14 @@ namespace golang::runtime
         return unsafe::Pointer(p);
     }
 
+    // notInHeap is off-heap memory allocated by a lower-level allocator
+    // like sysAlloc or persistentAlloc.
+    //
+    // In general, it's better to use real types which embed
+    // runtime/internal/sys.NotInHeap, but this serves as a generic type
+    // for situations where that isn't possible (like in the allocators).
+    //
+    // TODO: Use this as the return type of sysAlloc, persistentAlloc, etc?
     
     template<typename T> requires gocpp::GoStruct<T>
     notInHeap::operator T()
@@ -1274,6 +1583,8 @@ namespace golang::runtime
         return (notInHeap*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + bytes));
     }
 
+    // computeRZlog computes the size of the redzone.
+    // Refer to the implementation of the compiler-rt.
     uintptr_t computeRZlog(uintptr_t userSize)
     {
         //Go switch emulation

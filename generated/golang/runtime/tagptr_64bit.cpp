@@ -25,6 +25,34 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // addrBits is the number of bits needed to represent a virtual address.
+    //
+    // See heapAddrBits for a table of address space sizes on
+    // various architectures. 48 bits is enough for all
+    // architectures except s390x.
+    //
+    // On AMD64, virtual addresses are 48-bit (or 57-bit) numbers sign extended to 64.
+    // We shift the address left 16 to eliminate the sign extended part and make
+    // room in the bottom for the count.
+    //
+    // On s390x, virtual addresses are 64-bit. There's not much we
+    // can do about this, so we just hope that the kernel doesn't
+    // get to really high addresses and panic if it does.
+    // In addition to the 16 bits taken from the top, we can take 3 from the
+    // bottom, because node must be pointer-aligned, giving a total of 19 bits
+    // of count.
+    // On AIX, 64-bit addresses are split into 36-bit segment number and 28-bit
+    // offset in segment.  Segment numbers in the range 0x0A0000000-0x0AFFFFFFF(LSA)
+    // are available for mmap.
+    // We assume all tagged addresses are from memory allocated with mmap.
+    // We use one bit to distinguish between the two ranges.
+    // riscv64 SV57 mode gives 56 bits of userspace VA.
+    // tagged pointer code supports it,
+    // but broader support for SV57 mode is incomplete,
+    // and there may be other issues (see #54104).
+    // The number of bits stored in the numeric tag of a taggedPointer
+    // taggedPointerPack created a taggedPointer from a pointer and a tag.
+    // Tag bits that don't fit in the result are discarded.
     runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
     {
         if(GOOS == "aix"s)
@@ -42,6 +70,7 @@ namespace golang::runtime
         return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - addrBits)) | uint64_t(tag & ((1 << tagBits) - 1)));
     }
 
+    // Pointer returns the pointer from a taggedPointer.
     unsafe::Pointer rec::pointer(golang::runtime::taggedPointer tp)
     {
         if(GOARCH == "amd64"s)
@@ -59,6 +88,7 @@ namespace golang::runtime
         return unsafe::Pointer(uintptr_t((tp >> tagBits) << 3));
     }
 
+    // Tag returns the tag from a taggedPointer.
     uintptr_t rec::tag(golang::runtime::taggedPointer tp)
     {
         return uintptr_t(tp & ((1 << taggedPointerBits) - 1));

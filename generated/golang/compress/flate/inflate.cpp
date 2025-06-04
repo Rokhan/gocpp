@@ -22,6 +22,9 @@
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
+// Package flate implements the DEFLATE compressed data format, described in
+// RFC 1951.  The gzip and zlib packages implement access to DEFLATE-based file
+// formats.
 namespace golang::flate
 {
     namespace rec
@@ -32,18 +35,27 @@ namespace golang::flate
         using sync::rec::Do;
     }
 
+    // The next three numbers come from the RFC section 3.2.7, with the
+    // additional proviso in section 3.2.5 which implies that distance codes
+    // 30 and 31 should never occur in compressed data.
+    // Initialize the fixedHuffmanDecoder only once upon first use.
     sync::Once fixedOnce;
     huffmanDecoder fixedHuffmanDecoder;
+    // A CorruptInputError reports the presence of corrupt input at a given offset.
     std::string rec::Error(golang::flate::CorruptInputError e)
     {
         return "flate: corrupt input before offset "s + strconv::FormatInt(int64_t(e), 10);
     }
 
+    // An InternalError reports an error in the flate code itself.
     std::string rec::Error(golang::flate::InternalError e)
     {
         return "flate: internal error: "s + std::string(e);
     }
 
+    // A ReadError reports an error encountered while reading input.
+    //
+    // Deprecated: No longer returned.
     
     template<typename T> requires gocpp::GoStruct<T>
     ReadError::operator T()
@@ -81,6 +93,9 @@ namespace golang::flate
         return "flate: read error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
+    // A WriteError reports an error encountered while writing output.
+    //
+    // Deprecated: No longer returned.
     
     template<typename T> requires gocpp::GoStruct<T>
     WriteError::operator T()
@@ -118,6 +133,9 @@ namespace golang::flate
         return "flate: write error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
     }
 
+    // Resetter resets a ReadCloser returned by [NewReader] or [NewReaderDict]
+    // to switch to a new underlying [Reader]. This permits reusing a ReadCloser
+    // instead of allocating a new one.
     
     template<typename T>
     Resetter::Resetter(T& ref)
@@ -204,13 +222,23 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // Initialize Huffman decoding tables from array of code lengths.
+    // Following this function, h is guaranteed to be initialized into a complete
+    // tree (i.e., neither over-subscribed nor under-subscribed). The exception is a
+    // degenerate case where the tree has only a single symbol with length 1. Empty
+    // trees are permitted.
     bool rec::init(struct huffmanDecoder* h, gocpp::slice<int> lengths)
     {
+        // Sanity enables additional runtime tests during Huffman
+        // table construction. It's intended to be used during
+        // development to supplement the currently ad-hoc unit tests.
         auto sanity = false;
         if(h->min != 0)
         {
             *h = huffmanDecoder {};
         }
+        // Count number of codes of each length,
+        // compute min and max length.
         gocpp::array<int, maxCodeLen> count = {};
         int min = {};
         int max = {};
@@ -335,6 +363,9 @@ namespace golang::flate
         return true;
     }
 
+    // The actual read interface needed by [NewReader].
+    // If the passed in io.Reader does not also have ReadByte,
+    // the [NewReader] will introduce its own buffering.
     
     template<typename T>
     Reader::Reader(T& ref)
@@ -368,6 +399,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // Decompress state.
     
     template<typename T> requires gocpp::GoStruct<T>
     decompressor::operator T()
@@ -595,6 +627,7 @@ namespace golang::flate
                 i++;
                 continue;
             }
+            // Repeat previous length or zero.
             int rep = {};
             unsigned int nb = {};
             int b = {};
@@ -662,6 +695,10 @@ namespace golang::flate
         return nullptr;
     }
 
+    // Decode a single Huffman block from f.
+    // hl and hd are the Huffman states for the lit/length values
+    // and the distance values, respectively. If hd == nil, using the
+    // fixed distance encoding associated with fixed Huffman blocks.
     void rec::huffmanBlock(struct decompressor* f)
     {
         auto stateInit = 0;
@@ -851,6 +888,7 @@ namespace golang::flate
         }
     }
 
+    // Copy a single uncompressed data block from input to output.
     void rec::dataBlock(struct decompressor* f)
     {
         f->nb = 0;
@@ -879,6 +917,8 @@ namespace golang::flate
         rec::copyData(gocpp::recv(f));
     }
 
+    // copyData copies f.copyLen bytes from the underlying reader into f.hist.
+    // It pauses for reads when f.hist is full.
     void rec::copyData(struct decompressor* f)
     {
         auto buf = rec::writeSlice(gocpp::recv(f->dict));
@@ -917,6 +957,7 @@ namespace golang::flate
         f->step = (*decompressor)->nextBlock;
     }
 
+    // noEOF returns err, unless err == io.EOF, in which case it returns io.ErrUnexpectedEOF.
     struct gocpp::error noEOF(struct gocpp::error e)
     {
         if(e == io::go_EOF)
@@ -939,6 +980,7 @@ namespace golang::flate
         return nullptr;
     }
 
+    // Read the next Huffman-encoded symbol from f according to h.
     std::tuple<int, struct gocpp::error> rec::huffSym(struct decompressor* f, struct huffmanDecoder* h)
     {
         auto n = (unsigned int)(h->min);
@@ -1004,6 +1046,7 @@ namespace golang::flate
     {
         rec::Do(gocpp::recv(fixedOnce), [=]() mutable -> void
         {
+            // These come from the RFC section 3.2.6.
             gocpp::array<int, 288> bits = {};
             for(auto i = 0; i < 144; i++)
             {
@@ -1039,6 +1082,14 @@ namespace golang::flate
         return nullptr;
     }
 
+    // NewReader returns a new ReadCloser that can be used
+    // to read the uncompressed version of r.
+    // If r does not also implement [io.ByteReader],
+    // the decompressor may read more data than necessary from r.
+    // The reader returns [io.EOF] after the final block in the DEFLATE stream has
+    // been encountered. Any trailing data after the final block is ignored.
+    //
+    // The [io.ReadCloser] returned by NewReader also implements [Resetter].
     io::ReadCloser NewReader(io::Reader r)
     {
         fixedHuffmanDecoderInit();
@@ -1051,6 +1102,13 @@ namespace golang::flate
         return & f;
     }
 
+    // NewReaderDict is like [NewReader] but initializes the reader
+    // with a preset dictionary. The returned [Reader] behaves as if
+    // the uncompressed data stream started with the given dictionary,
+    // which has already been read. NewReaderDict is typically used
+    // to read data compressed by NewWriterDict.
+    //
+    // The ReadCloser returned by NewReaderDict also implements [Resetter].
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         fixedHuffmanDecoderInit();

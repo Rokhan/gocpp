@@ -23,6 +23,9 @@
 #include "golang/image/png/paeth.h"
 #include "golang/io/io.h"
 
+// Package png implements a PNG image decoder and encoder.
+//
+// The PNG specification is at https://www.w3.org/TR/PNG/.
 namespace golang::png
 {
     namespace rec
@@ -43,6 +46,8 @@ namespace golang::png
         using io::rec::Write;
     }
 
+    // Color type, as per the PNG spec.
+    // A cb is a combination of color type and bit depth.
     bool cbPaletted(int cb)
     {
         return cbP1 <= cb && cb <= cbP8;
@@ -53,6 +58,9 @@ namespace golang::png
         return cb == cbTC8 || cb == cbTC16;
     }
 
+    // Filter type, as per the PNG spec.
+    // Interlace type.
+    // interlaceScan defines the placement and size of a pass for Adam7 interlacing.
     
     template<typename T> requires gocpp::GoStruct<T>
     interlaceScan::operator T()
@@ -91,7 +99,15 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // interlacing defines Adam7 interlacing, with 7 passes of reduced images.
+    // See https://www.w3.org/TR/PNG/#8Interlace
     gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> { {8, 8, 0, 0},  {8, 8, 4, 0},  {4, 8, 0, 4},  {4, 4, 2, 0},  {2, 4, 0, 2},  {2, 2, 1, 0},  {1, 2, 0, 1}};
+    // Decoding stage.
+    // The PNG specification says that the IHDR, PLTE (if present), tRNS (if
+    // present), IDAT and IEND chunks must appear in that order. There may be
+    // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
+    // have any other chunks between them).
+    // https://www.w3.org/TR/PNG/#5ChunkOrdering
     std::string pngHeader = "\x89PNG\r\n\x1a\n"s;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -161,12 +177,14 @@ namespace golang::png
         return value.PrintTo(os);
     }
 
+    // A FormatError reports that the input is not a valid PNG.
     std::string rec::Error(golang::png::FormatError e)
     {
         return "png: invalid format: "s + std::string(e);
     }
 
     FormatError chunkOrderError = FormatError("chunk out of order"s);
+    // An UnsupportedError reports that the input uses a valid but unimplemented PNG feature.
     std::string rec::Error(golang::png::UnsupportedError e)
     {
         return "png: unsupported feature: "s + std::string(e);
@@ -504,6 +522,15 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
+    // Read presents one or more IDAT chunks as one continuous stream (minus the
+    // intermediate chunk headers and footers). If the PNG data looked like:
+    //
+    //	... len0 IDAT xxx crc0 len1 IDAT yy crc1 len2 IEND crc2
+    //
+    // then this reader presents xxxyy. For well-formed PNG data, the decoder state
+    // immediately before the first Read call is that d.r is positioned between the
+    // first IDAT and xxx, and the decoder state immediately after the last Read
+    // call is that d.r is positioned between yy and crc1.
     std::tuple<int, struct gocpp::error> rec::Read(struct decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
@@ -538,6 +565,7 @@ namespace golang::png
         return {n, err};
     }
 
+    // decode decodes the IDAT data into an image.
     std::tuple<image::Image, struct gocpp::error> rec::decode(struct decoder* d)
     {
         gocpp::Defer defer;
@@ -604,6 +632,7 @@ namespace golang::png
         }
     }
 
+    // readImagePass reads a single image pass, sized according to the pass number.
     std::tuple<image::Image, struct gocpp::error> rec::readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
@@ -1133,6 +1162,7 @@ namespace golang::png
         return {img, nullptr};
     }
 
+    // mergePassInto merges a single pass into a full sized image.
     void rec::mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass)
     {
         auto p = interlacing[pass];
@@ -1360,6 +1390,7 @@ namespace golang::png
         {
             return FormatError(mocklib::Sprintf("Bad chunk length: %d"s, length));
         }
+        // Ignore this chunk (of a known length).
         gocpp::array<unsigned char, 4096> ignored = {};
         for(; length > 0; )
         {
@@ -1401,6 +1432,8 @@ namespace golang::png
         return nullptr;
     }
 
+    // Decode reads a PNG image from r and returns it as an [image.Image].
+    // The type of Image returned depends on the PNG contents.
     std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([=](auto& x) {
@@ -1429,6 +1462,8 @@ namespace golang::png
         return {d->img, nullptr};
     }
 
+    // DecodeConfig returns the color model and dimensions of a PNG image without
+    // decoding the entire image.
     std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r)
     {
         auto d = gocpp::InitPtr<decoder>([=](auto& x) {

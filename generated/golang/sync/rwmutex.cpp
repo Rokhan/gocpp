@@ -27,6 +27,25 @@ namespace golang::sync
         using atomic::rec::Load;
     }
 
+    // A RWMutex is a reader/writer mutual exclusion lock.
+    // The lock can be held by an arbitrary number of readers or a single writer.
+    // The zero value for a RWMutex is an unlocked mutex.
+    //
+    // A RWMutex must not be copied after first use.
+    //
+    // If any goroutine calls Lock while the lock is already held by
+    // one or more readers, concurrent calls to RLock will block until
+    // the writer has acquired (and released) the lock, to ensure that
+    // the lock eventually becomes available to the writer.
+    // Note that this prohibits recursive read-locking.
+    //
+    // In the terminology of the Go memory model,
+    // the n'th call to Unlock “synchronizes before” the m'th call to Lock
+    // for any n < m, just as for Mutex.
+    // For any call to RLock, there exists an n such that
+    // the n'th call to Unlock “synchronizes before” that call to RLock,
+    // and the corresponding call to RUnlock “synchronizes before”
+    // the n+1'th call to Lock.
     
     template<typename T> requires gocpp::GoStruct<T>
     RWMutex::operator T()
@@ -68,6 +87,11 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // RLock locks rw for reading.
+    //
+    // It should not be used for recursive read locking; a blocked Lock
+    // call excludes new readers from acquiring the lock. See the
+    // documentation on the RWMutex type.
     void rec::RLock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -86,6 +110,11 @@ namespace golang::sync
         }
     }
 
+    // TryRLock tries to lock rw for reading and reports whether it succeeded.
+    //
+    // Note that while correct uses of TryRLock do exist, they are rare,
+    // and use of TryRLock is often a sign of a deeper problem
+    // in a particular use of mutexes.
     bool rec::TryRLock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -116,6 +145,10 @@ namespace golang::sync
         }
     }
 
+    // RUnlock undoes a single RLock call;
+    // it does not affect other simultaneous readers.
+    // It is a run-time error if rw is not locked for reading
+    // on entry to RUnlock.
     void rec::RUnlock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -147,6 +180,9 @@ namespace golang::sync
         }
     }
 
+    // Lock locks rw for writing.
+    // If the lock is already locked for reading or writing,
+    // Lock blocks until the lock is available.
     void rec::Lock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -168,6 +204,11 @@ namespace golang::sync
         }
     }
 
+    // TryLock tries to lock rw for writing and reports whether it succeeded.
+    //
+    // Note that while correct uses of TryLock do exist, they are rare,
+    // and use of TryLock is often a sign of a deeper problem
+    // in a particular use of mutexes.
     bool rec::TryLock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -201,6 +242,12 @@ namespace golang::sync
         return true;
     }
 
+    // Unlock unlocks rw for writing. It is a run-time error if rw is
+    // not locked for writing on entry to Unlock.
+    //
+    // As with Mutexes, a locked RWMutex is not associated with a particular
+    // goroutine. One goroutine may RLock (Lock) a RWMutex and then
+    // arrange for another goroutine to RUnlock (Unlock) it.
     void rec::Unlock(struct RWMutex* rw)
     {
         if(race::Enabled)
@@ -226,12 +273,22 @@ namespace golang::sync
         }
     }
 
+    // syscall_hasWaitingReaders reports whether any goroutine is waiting
+    // to acquire a read lock on rw. This exists because syscall.ForkLock
+    // is an RWMutex, and we can't change that without breaking compatibility.
+    // We don't need or want RWMutex semantics for ForkLock, and we use
+    // this private API to avoid having to change the type of ForkLock.
+    // For more details see the syscall package.
+    //
+    //go:linkname syscall_hasWaitingReaders syscall.hasWaitingReaders
     bool syscall_hasWaitingReaders(struct RWMutex* rw)
     {
         auto r = rec::Load(gocpp::recv(rw->readerCount));
         return r < 0 && r + rwmutexMaxReaders > 0;
     }
 
+    // RLocker returns a Locker interface that implements
+    // the Lock and Unlock methods by calling rw.RLock and rw.RUnlock.
     struct Locker rec::RLocker(struct RWMutex* rw)
     {
         return (rlocker*)(rw);

@@ -18,6 +18,10 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Numbers fundamental to the encoding.
+    // Code points in the surrogate range are not valid for UTF-8.
+    // The default lowest and highest continuation byte.
+    // countrunes returns the number of runes in s.
     int countrunes(std::string s)
     {
         auto n = 0;
@@ -28,6 +32,15 @@ namespace golang::runtime
         return n;
     }
 
+    // decoderune returns the non-ASCII rune at the start of
+    // s[k:] and the index after the rune in s.
+    //
+    // decoderune assumes that caller has checked that
+    // the to be decoded rune is a non-ASCII rune.
+    //
+    // If the string appears to be incomplete or decoding problems
+    // are encountered (runeerror, k + 1) is returned to ensure
+    // progress when decoderune is used to iterate over a string.
     std::tuple<gocpp::rune, int> decoderune(std::string s, int k)
     {
         gocpp::rune r;
@@ -84,6 +97,8 @@ namespace golang::runtime
         return {runeError, k + 1};
     }
 
+    // encoderune writes into p (which must be large enough) the UTF-8 encoding of the rune.
+    // It returns the number of bytes written.
     int encoderune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
         //Go switch emulation

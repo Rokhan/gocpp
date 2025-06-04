@@ -67,6 +67,10 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // A checkmarksMap stores the GC marks in "checkmarks" mode. It is a
+    // per-arena bitmap with a bit for every word in the arena. The mark
+    // is stored on the bit corresponding to the first word of the marked
+    // allocation.
     
     template<typename T> requires gocpp::GoStruct<T>
     checkmarksMap::operator T()
@@ -99,7 +103,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // If useCheckmark is true, marking of an object uses the checkmark
+    // bits instead of the standard mark bits.
     bool useCheckmark = false;
+    // startCheckmarks prepares for the checkmarks phase.
+    //
+    // The world must be stopped.
     void startCheckmarks()
     {
         assertWorldStopped();
@@ -127,6 +136,7 @@ namespace golang::runtime
         useCheckmark = true;
     }
 
+    // endCheckmarks ends the checkmarks phase.
     void endCheckmarks()
     {
         if(gcMarkWorkAvailable(nullptr))
@@ -136,6 +146,9 @@ namespace golang::runtime
         useCheckmark = false;
     }
 
+    // setCheckmark throws if marking object is a checkmarks violation,
+    // and otherwise sets obj's checkmark. It returns true if obj was
+    // already checkmarked.
     bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits)
     {
         if(! rec::isMarked(gocpp::recv(mbits)))

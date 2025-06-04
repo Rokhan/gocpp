@@ -56,6 +56,7 @@ namespace golang::main
     }
 
 
+    // Array of struct
     struct gocpp_id_1
     {
         int value;

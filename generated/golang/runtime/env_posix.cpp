@@ -41,6 +41,8 @@ namespace golang::runtime
         return ""s;
     }
 
+    // envKeyEqual reports whether a == b, with ASCII-only case insensitivity
+    // on Windows. The two strings must have the same length.
     bool envKeyEqual(std::string a, std::string b)
     {
         if(GOOS == "windows"s)
@@ -70,6 +72,7 @@ namespace golang::runtime
 
     unsafe::Pointer _cgo_setenv;
     unsafe::Pointer _cgo_unsetenv;
+    // Update the C environment if cgo is loaded.
     void setenv_c(std::string k, std::string v)
     {
         if(_cgo_setenv == nullptr)
@@ -80,6 +83,7 @@ namespace golang::runtime
         asmcgocall(_cgo_setenv, unsafe::Pointer(& arg));
     }
 
+    // Update the C environment if cgo is loaded.
     void unsetenv_c(std::string k)
     {
         if(_cgo_unsetenv == nullptr)

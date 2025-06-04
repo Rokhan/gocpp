@@ -26,6 +26,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // Buffer for pointers found during stack tracing.
+    // Must be smaller than or equal to workbuf.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackWorkBuf::operator T()
@@ -58,6 +60,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Header declaration must come after the buf declaration above, because of issue #14620.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackWorkBufHdr::operator T()
@@ -90,6 +93,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Buffer for stack objects found on a goroutine stack.
+    // Must be smaller than or equal to workbuf.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackObjectBuf::operator T()
@@ -166,6 +171,8 @@ namespace golang::runtime
         }
     }
 
+    // A stackObject represents a variable on the stack that has had
+    // its address taken.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackObject::operator T()
@@ -210,11 +217,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // obj.r = r, but with no write barrier.
+    //
+    //go:nowritebarrier
     void rec::setRecord(struct stackObject* obj, struct stackObjectRecord* r)
     {
         *(uintptr_t*)(unsafe::Pointer(& obj->r)) = uintptr_t(unsafe::Pointer(r));
     }
 
+    // A stackScanState keeps track of the state used during the GC walk
+    // of a goroutine.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackScanState::operator T()
@@ -268,6 +280,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Add p as a potential pointer to a stack object.
+    // p must be a stack address.
     void rec::putPtr(struct stackScanState* s, uintptr_t p, bool conservative)
     {
         if(p < s->stack.lo || p >= s->stack.hi)
@@ -307,6 +321,11 @@ namespace golang::runtime
         buf->nobj++;
     }
 
+    // Remove and return a potential pointer to a stack object.
+    // Returns 0 if there are no more pointers available.
+    //
+    // This prefers non-conservative pointers so we scan stack objects
+    // precisely if there are any non-conservative pointers to them.
     std::tuple<uintptr_t, bool> rec::getPtr(struct stackScanState* s)
     {
         uintptr_t p;
@@ -343,6 +362,7 @@ namespace golang::runtime
         return {0, false};
     }
 
+    // addObject adds a stack object at addr of type typ to the set of stack objects.
     void rec::addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
     {
         auto x = s->tail;
@@ -373,11 +393,19 @@ namespace golang::runtime
         s->nobjs++;
     }
 
+    // buildIndex initializes s.root to a binary search tree.
+    // It should be called after all addObject calls but before
+    // any call of findObject.
     void rec::buildIndex(struct stackScanState* s)
     {
         std::tie(s->root, gocpp_id_0, gocpp_id_1) = binarySearchTree(s->head, 0, s->nobjs);
     }
 
+    // Build a binary search tree with the n objects in the list
+    // x.obj[idx], x.obj[idx+1], ..., x.next.obj[0], ...
+    // Returns the root of that tree, and the buf+idx of the nth object after x.obj[idx].
+    // (The first object that was not included in the binary search tree.)
+    // If n == 0, returns nil, x.
     std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n)
     {
         struct stackObject* root;
@@ -403,6 +431,8 @@ namespace golang::runtime
         return {root, x, idx};
     }
 
+    // findObject returns the stack object containing address a, if any.
+    // Must have called buildIndex previously.
     struct stackObject* rec::findObject(struct stackScanState* s, uintptr_t a)
     {
         auto off = uint32_t(a - s->stack.lo);

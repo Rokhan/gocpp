@@ -22,6 +22,11 @@ namespace golang::flate
         using namespace mocklib::rec;
     }
 
+    // Reset the buffer offset when reaching this.
+    // Offsets are stored between blocks as int32 values.
+    // Since the offset we are checking against is at the beginning
+    // of the buffer, we need to subtract the current and input
+    // buffer to not risk overflowing the int32.
     uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)
     {
         b = b.make_slice(i, i + 4, len(b));
@@ -39,6 +44,10 @@ namespace golang::flate
         return (u * 0x1e35a7bd) >> tableShift;
     }
 
+    // These constants are defined by the Snappy implementation so that its
+    // assembly implementation can fast-path some 16-bytes-at-a-time copies. They
+    // aren't necessary in the pure Go implementation, as we don't use those same
+    // optimizations, but using the same thresholds doesn't really hurt.
     
     template<typename T> requires gocpp::GoStruct<T>
     tableEntry::operator T()
@@ -71,6 +80,8 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
+    // deflateFast maintains the table for matches,
+    // and the previous byte block for cross block matching.
     
     template<typename T> requires gocpp::GoStruct<T>
     deflateFast::operator T()
@@ -114,6 +125,8 @@ namespace golang::flate
         });
     }
 
+    // encode encodes a block given in src and appends tokens
+    // to dst and returns the result.
     gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
     {
         if(e->cur >= bufferReset)
@@ -217,6 +230,9 @@ namespace golang::flate
         return dst;
     }
 
+    // matchLen returns the match length between src[s:] and src[t:].
+    // t can be negative to indicate the match is starting in e.prev.
+    // We assume that src[s-4:s] and src[t-4:t] already match.
     int32_t rec::matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
     {
         auto s1 = int(s) + maxMatchLength - 4;
@@ -274,6 +290,8 @@ namespace golang::flate
         return int32_t(len(a)) + n;
     }
 
+    // Reset resets the encoding history.
+    // This ensures that no matches are made to the previous block.
     void rec::reset(struct deflateFast* e)
     {
         e->prev = e->prev.make_slice(0, 0);
@@ -284,6 +302,10 @@ namespace golang::flate
         }
     }
 
+    // shiftOffsets will shift down all match offset.
+    // This is only called in rare situations to prevent integer overflow.
+    //
+    // See https://golang.org/issue/18636 and https://github.com/golang/go/issues/34121.
     void rec::shiftOffsets(struct deflateFast* e)
     {
         if(len(e->prev) == 0)

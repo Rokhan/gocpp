@@ -62,6 +62,57 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // tracebackInnerFrames is the number of innermost frames to print in a
+    // stack trace. The total maximum frames is tracebackInnerFrames +
+    // tracebackOuterFrames.
+    // tracebackOuterFrames is the number of outermost frames to print in a
+    // stack trace.
+    // unwindFlags control the behavior of various unwinders.
+    // unwindPrintErrors indicates that if unwinding encounters an error, it
+    // should print a message and stop without throwing. This is used for things
+    // like stack printing, where it's better to get incomplete information than
+    // to crash. This is also used in situations where everything may not be
+    // stopped nicely and the stack walk may not be able to complete, such as
+    // during profiling signals or during a crash.
+    //
+    // If neither unwindPrintErrors or unwindSilentErrors are set, unwinding
+    // performs extra consistency checks and throws on any error.
+    //
+    // Note that there are a small number of fatal situations that will throw
+    // regardless of unwindPrintErrors or unwindSilentErrors.
+    // unwindSilentErrors silently ignores errors during unwinding.
+    // unwindTrap indicates that the initial PC and SP are from a trap, not a
+    // return PC from a call.
+    //
+    // The unwindTrap flag is updated during unwinding. If set, frame.pc is the
+    // address of a faulting instruction instead of the return address of a
+    // call. It also means the liveness at pc may not be known.
+    //
+    // TODO: Distinguish frame.continpc, which is really the stack map PC, from
+    // the actual continuation PC, which is computed differently depending on
+    // this flag and a few other things.
+    // unwindJumpStack indicates that, if the traceback is on a system stack, it
+    // should resume tracing at the user stack when the system stack is
+    // exhausted.
+    // An unwinder iterates the physical stack frames of a Go sack.
+    //
+    // Typical use of an unwinder looks like:
+    //
+    //	var u unwinder
+    //	for u.init(gp, 0); u.valid(); u.next() {
+    //		// ... use frame info in u ...
+    //	}
+    //
+    // Implementation note: This is carefully structured to be pointer-free because
+    // tracebacks happen in places that disallow write barriers (e.g., signals).
+    // Even if this is stack-allocated, its pointer-receiver methods don't know that
+    // their receiver is on the stack, so they still emit write barriers. Here we
+    // address that by carefully avoiding any pointers in this type. Another
+    // approach would be to split this into a mutable part that's passed by pointer
+    // but contains no pointers itself and an immutable part that's passed and
+    // returned by value and can contain pointers. We could potentially hide that
+    // we're doing that in trivial methods that are inlined into the caller that has
+    // the stack allocation, but that's fragile.
     
     template<typename T> requires gocpp::GoStruct<T>
     unwinder::operator T()
@@ -103,6 +154,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // init initializes u to start unwinding gp's stack and positions the
+    // iterator on gp's innermost frame. gp must not be the current G.
+    //
+    // A single unwinder can be reused for multiple unwinds.
     void rec::init(struct unwinder* u, struct g* gp, golang::runtime::unwindFlags flags)
     {
         rec::initAt(gocpp::recv(u), ~ uintptr_t(0), ~ uintptr_t(0), ~ uintptr_t(0), gp, flags);
@@ -192,6 +247,27 @@ namespace golang::runtime
         return u->frame.pc != 0;
     }
 
+    // resolveInternal fills in u.frame based on u.frame.fn, pc, and sp.
+    //
+    // innermost indicates that this is the first resolve on this stack. If
+    // innermost is set, isSyscall indicates that the PC/SP was retrieved from
+    // gp.syscall*; this is otherwise ignored.
+    //
+    // On entry, u.frame contains:
+    //   - fn is the running function.
+    //   - pc is the PC in the running function.
+    //   - sp is the stack pointer at that program counter.
+    //   - For the innermost frame on LR machines, lr is the program counter that called fn.
+    //
+    // On return, u.frame contains:
+    //   - fp is the stack pointer of the caller.
+    //   - lr is the program counter that called fn.
+    //   - varp, argp, and continpc are populated for the current frame.
+    //
+    // If fn is a stack-jumping function, resolveInternal can change the entire
+    // frame state to follow that stack jump.
+    //
+    // This is internal to unwinder.
     void rec::resolveInternal(struct unwinder* u, bool innermost, bool isSyscall)
     {
         auto frame = & u->frame;
@@ -385,6 +461,9 @@ namespace golang::runtime
         rec::resolveInternal(gocpp::recv(u), false, false);
     }
 
+    // finishInternal is an unwinder-internal helper called after the stack has been
+    // exhausted. It sets the unwinder to an invalid state and checks that it
+    // successfully unwound the entire stack.
     void rec::finishInternal(struct unwinder* u)
     {
         u->frame.pc = 0;
@@ -397,6 +476,16 @@ namespace golang::runtime
         }
     }
 
+    // symPC returns the PC that should be used for symbolizing the current frame.
+    // Specifically, this is the PC of the last instruction executed in this frame.
+    //
+    // If this frame did a normal call, then frame.pc is a return PC, so this will
+    // return frame.pc-1, which points into the CALL instruction. If the frame was
+    // interrupted by a signal (e.g., profiler, segv, etc) then frame.pc is for the
+    // trapped instruction, so this returns frame.pc. See issue #34123. Finally,
+    // frame.pc can be at function entry when the frame is initialized without
+    // actually running code, like in runtime.mstart, in which case this returns
+    // frame.pc because that's the best we can do.
     uintptr_t rec::symPC(struct unwinder* u)
     {
         if(u->flags & unwindTrap == 0 && u->frame.pc > rec::entry(gocpp::recv(u->frame.fn)))
@@ -406,6 +495,10 @@ namespace golang::runtime
         return u->frame.pc;
     }
 
+    // cgoCallers populates pcBuf with the cgo callers of the current frame using
+    // the registered cgo unwinder. It returns the number of PCs written to pcBuf.
+    // If the current frame is not a cgo frame or if there's no registered cgo
+    // unwinder, it returns 0.
     int rec::cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
         if(cgoTraceback == nullptr || u->frame.fn.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
@@ -425,6 +518,15 @@ namespace golang::runtime
         return len(pcBuf);
     }
 
+    // tracebackPCs populates pcBuf with the return addresses for each frame from u
+    // and returns the number of PCs written to pcBuf. The returned PCs correspond
+    // to "logical frames" rather than "physical frames"; that is if A is inlined
+    // into B, this will still return a PCs for both A and B. This also includes PCs
+    // generated by the cgo unwinder, if one is registered.
+    //
+    // If skip != 0, this skips this many logical frames.
+    //
+    // Callers should set the unwindSilentErrors flag on u.
     int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf)
     {
         gocpp::array<uintptr_t, 32> cgoBuf = {};
@@ -459,8 +561,13 @@ namespace golang::runtime
         return n;
     }
 
+    // printArgs prints function arguments in traceback.
     void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc)
     {
+        // The "instruction" of argument printing is encoded in _FUNCDATA_ArgInfo.
+        // See cmd/compile/internal/ssagen.emitArgInfo for the description of the
+        // encoding.
+        // These constants need to be in sync with the compiler.
         auto _endSeq = 0xff;
         auto _startAgg = 0xfe;
         auto _endAgg = 0xfd;
@@ -583,6 +690,9 @@ namespace golang::runtime
         }
     }
 
+    // funcNamePiecesForPrint returns the function name for printing to the user.
+    // It returns three pieces so it doesn't need an allocation for string
+    // concatenation.
     std::tuple<std::string, std::string, std::string> funcNamePiecesForPrint(std::string name)
     {
         auto i = bytealg::IndexByteString(name, '[');
@@ -602,12 +712,15 @@ namespace golang::runtime
         return {name.make_slice(0, i), "[...]"s, name.make_slice(j + 1)};
     }
 
+    // funcNameForPrint returns the function name for printing to the user.
     std::string funcNameForPrint(std::string name)
     {
         auto [a, b, c] = funcNamePiecesForPrint(name);
         return a + b + c;
     }
 
+    // printFuncName prints a function name. name is the function name in
+    // the binary's func data table.
     void printFuncName(std::string name)
     {
         if(name == "runtime.gopanic"s)
@@ -657,6 +770,14 @@ namespace golang::runtime
         traceback1(pc, sp, lr, gp, 0);
     }
 
+    // tracebacktrap is like traceback but expects that the PC and SP were obtained
+    // from a trap, not from gp->sched or gp->syscallpc/gp->syscallsp or getcallerpc/getcallersp.
+    // Because they are from a trap instead of from a saved pair,
+    // the initial PC must not be rewound to the previous instruction.
+    // (All the saved pairs record a PC that is a return address, so we
+    // rewind it into the CALL instruction.)
+    // If gp.m.libcall{g,pc,sp} information is available, it uses that information in preference to
+    // the pc/sp/lr passed in.
     void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp)
     {
         if(gp->m->libcallsp != 0)
@@ -730,6 +851,11 @@ namespace golang::runtime
         }
     }
 
+    // traceback2 prints a stack trace starting at u. It skips the first "skip"
+    // logical frames, after which it prints at most "max" logical frames. It
+    // returns n, which is the number of logical frames skipped and printed, and
+    // lastN, which is the number of logical frames skipped or printed just in the
+    // physical frame that u references.
     std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max)
     {
         int n;
@@ -848,6 +974,8 @@ namespace golang::runtime
         return {n, 0};
     }
 
+    // printAncestorTraceback prints the traceback of the given ancestor.
+    // TODO: Unify this with gentraceback and CallersFrames.
     void printAncestorTraceback(struct ancestorInfo ancestor)
     {
         print("[originating from goroutine "s, ancestor.goid, "]:\n"s);
@@ -870,6 +998,10 @@ namespace golang::runtime
         }
     }
 
+    // printAncestorTracebackFuncInfo prints the given function info at a given pc
+    // within an ancestor traceback. The precision of this info is reduced
+    // due to only have access to the pcs at the time of the caller
+    // goroutine being created.
     void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc)
     {
         auto [u, uf] = newInlineUnwinder(f, pc);
@@ -906,6 +1038,8 @@ namespace golang::runtime
         return tracebackPCs(& u, skip, pcbuf);
     }
 
+    // showframe reports whether the frame with the given characteristics should
+    // be printed during a traceback.
     bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID)
     {
         auto mp = getg()->m;
@@ -916,6 +1050,8 @@ namespace golang::runtime
         return showfuncinfo(sf, firstFrame, calleeID);
     }
 
+    // showfuncinfo reports whether a function with the given characteristics should
+    // be printed during a traceback.
     bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID)
     {
         auto [level, gocpp_id_8, gocpp_id_9] = gotraceback();
@@ -935,12 +1071,17 @@ namespace golang::runtime
         return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime."s) || isExportedRuntime(name));
     }
 
+    // isExportedRuntime reports whether name is an exported runtime function.
+    // It is only for runtime functions, so ASCII A-Z is fine.
+    // TODO: this handles exported functions but not exported methods.
     bool isExportedRuntime(std::string name)
     {
         auto n = len("runtime."s);
         return len(name) > n && name.make_slice(0, n) == "runtime."s && 'A' <= name[n] && name[n] <= 'Z';
     }
 
+    // elideWrapperCalling reports whether a wrapper function that called
+    // function id should be elided from stack traces.
     bool elideWrapperCalling(abi::FuncID id)
     {
         return ! (id == abi::FuncID_gopanic || id == abi::FuncID_sigpanic || id == abi::FuncID_panicwrap);
@@ -962,6 +1103,7 @@ namespace golang::runtime
         auto gpstatus = readgstatus(gp);
         auto isScan = gpstatus & _Gscan != 0;
         gpstatus &^= _Gscan;
+        // Basic string status
         std::string status = {};
         if(0 <= gpstatus && gpstatus < uint32_t(len(gStatusStrings)))
         {
@@ -975,6 +1117,7 @@ namespace golang::runtime
         {
             status = rec::String(gocpp::recv(gp->waitreason));
         }
+        // approx time the G is blocked, in minutes
         int64_t waitfor = {};
         if((gpstatus == _Gwaiting || gpstatus == _Gsyscall) && gp->waitsince != 0)
         {
@@ -1039,6 +1182,9 @@ namespace golang::runtime
         });
     }
 
+    // tracebackHexdump hexdumps part of stk around frame.sp and frame.fp
+    // for debugging purposes. If the address bad is included in the
+    // hexdumped range, it will mark it as well.
     void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad)
     {
         auto expand = 32 * goarch::PtrSize;
@@ -1096,6 +1242,14 @@ namespace golang::runtime
         });
     }
 
+    // isSystemGoroutine reports whether the goroutine g must be omitted
+    // in stack dumps and deadlock detector. This is any goroutine that
+    // starts at a runtime.* entry point, except for runtime.main,
+    // runtime.handleAsyncEvent (wasm only) and sometimes runtime.runfinq.
+    //
+    // If fixed is true, any goroutine that can vary between user and
+    // system (that is, the finalizer goroutine) is considered a user
+    // goroutine.
     bool isSystemGoroutine(struct g* gp, bool fixed)
     {
         auto f = findfunc(gp->startpc);
@@ -1118,6 +1272,167 @@ namespace golang::runtime
         return hasPrefix(funcname(f), "runtime."s);
     }
 
+    // SetCgoTraceback records three C functions to use to gather
+    // traceback information from C code and to convert that traceback
+    // information into symbolic information. These are used when printing
+    // stack traces for a program that uses cgo.
+    //
+    // The traceback and context functions may be called from a signal
+    // handler, and must therefore use only async-signal safe functions.
+    // The symbolizer function may be called while the program is
+    // crashing, and so must be cautious about using memory.  None of the
+    // functions may call back into Go.
+    //
+    // The context function will be called with a single argument, a
+    // pointer to a struct:
+    //
+    //	struct {
+    //		Context uintptr
+    //	}
+    //
+    // In C syntax, this struct will be
+    //
+    //	struct {
+    //		uintptr_t Context;
+    //	};
+    //
+    // If the Context field is 0, the context function is being called to
+    // record the current traceback context. It should record in the
+    // Context field whatever information is needed about the current
+    // point of execution to later produce a stack trace, probably the
+    // stack pointer and PC. In this case the context function will be
+    // called from C code.
+    //
+    // If the Context field is not 0, then it is a value returned by a
+    // previous call to the context function. This case is called when the
+    // context is no longer needed; that is, when the Go code is returning
+    // to its C code caller. This permits the context function to release
+    // any associated resources.
+    //
+    // While it would be correct for the context function to record a
+    // complete a stack trace whenever it is called, and simply copy that
+    // out in the traceback function, in a typical program the context
+    // function will be called many times without ever recording a
+    // traceback for that context. Recording a complete stack trace in a
+    // call to the context function is likely to be inefficient.
+    //
+    // The traceback function will be called with a single argument, a
+    // pointer to a struct:
+    //
+    //	struct {
+    //		Context    uintptr
+    //		SigContext uintptr
+    //		Buf        *uintptr
+    //		Max        uintptr
+    //	}
+    //
+    // In C syntax, this struct will be
+    //
+    //	struct {
+    //		uintptr_t  Context;
+    //		uintptr_t  SigContext;
+    //		uintptr_t* Buf;
+    //		uintptr_t  Max;
+    //	};
+    //
+    // The Context field will be zero to gather a traceback from the
+    // current program execution point. In this case, the traceback
+    // function will be called from C code.
+    //
+    // Otherwise Context will be a value previously returned by a call to
+    // the context function. The traceback function should gather a stack
+    // trace from that saved point in the program execution. The traceback
+    // function may be called from an execution thread other than the one
+    // that recorded the context, but only when the context is known to be
+    // valid and unchanging. The traceback function may also be called
+    // deeper in the call stack on the same thread that recorded the
+    // context. The traceback function may be called multiple times with
+    // the same Context value; it will usually be appropriate to cache the
+    // result, if possible, the first time this is called for a specific
+    // context value.
+    //
+    // If the traceback function is called from a signal handler on a Unix
+    // system, SigContext will be the signal context argument passed to
+    // the signal handler (a C ucontext_t* cast to uintptr_t). This may be
+    // used to start tracing at the point where the signal occurred. If
+    // the traceback function is not called from a signal handler,
+    // SigContext will be zero.
+    //
+    // Buf is where the traceback information should be stored. It should
+    // be PC values, such that Buf[0] is the PC of the caller, Buf[1] is
+    // the PC of that function's caller, and so on.  Max is the maximum
+    // number of entries to store.  The function should store a zero to
+    // indicate the top of the stack, or that the caller is on a different
+    // stack, presumably a Go stack.
+    //
+    // Unlike runtime.Callers, the PC values returned should, when passed
+    // to the symbolizer function, return the file/line of the call
+    // instruction.  No additional subtraction is required or appropriate.
+    //
+    // On all platforms, the traceback function is invoked when a call from
+    // Go to C to Go requests a stack trace. On linux/amd64, linux/ppc64le,
+    // linux/arm64, and freebsd/amd64, the traceback function is also invoked
+    // when a signal is received by a thread that is executing a cgo call.
+    // The traceback function should not make assumptions about when it is
+    // called, as future versions of Go may make additional calls.
+    //
+    // The symbolizer function will be called with a single argument, a
+    // pointer to a struct:
+    //
+    //	struct {
+    //		PC      uintptr // program counter to fetch information for
+    //		File    *byte   // file name (NUL terminated)
+    //		Lineno  uintptr // line number
+    //		Func    *byte   // function name (NUL terminated)
+    //		Entry   uintptr // function entry point
+    //		More    uintptr // set non-zero if more info for this PC
+    //		Data    uintptr // unused by runtime, available for function
+    //	}
+    //
+    // In C syntax, this struct will be
+    //
+    //	struct {
+    //		uintptr_t PC;
+    //		char*     File;
+    //		uintptr_t Lineno;
+    //		char*     Func;
+    //		uintptr_t Entry;
+    //		uintptr_t More;
+    //		uintptr_t Data;
+    //	};
+    //
+    // The PC field will be a value returned by a call to the traceback
+    // function.
+    //
+    // The first time the function is called for a particular traceback,
+    // all the fields except PC will be 0. The function should fill in the
+    // other fields if possible, setting them to 0/nil if the information
+    // is not available. The Data field may be used to store any useful
+    // information across calls. The More field should be set to non-zero
+    // if there is more information for this PC, zero otherwise. If More
+    // is set non-zero, the function will be called again with the same
+    // PC, and may return different information (this is intended for use
+    // with inlined functions). If More is zero, the function will be
+    // called with the next PC value in the traceback. When the traceback
+    // is complete, the function will be called once more with PC set to
+    // zero; this may be used to free any information. Each call will
+    // leave the fields of the struct set to the same values they had upon
+    // return, except for the PC field when the More field is zero. The
+    // function must not keep a copy of the struct pointer between calls.
+    //
+    // When calling SetCgoTraceback, the version argument is the version
+    // number of the structs that the functions expect to receive.
+    // Currently this must be zero.
+    //
+    // The symbolizer function may be nil, in which case the results of
+    // the traceback function will be displayed as numbers. If the
+    // traceback function is nil, the symbolizer function will never be
+    // called. The context function may be nil, in which case the
+    // traceback function will only be called with the context field set
+    // to zero.  If the context function is nil, then calls from Go to C
+    // to Go will not show a traceback for the C portion of the call stack.
+    //
+    // SetCgoTraceback should be called only once, ideally from an init function.
     void SetCgoTraceback(int version, unsafe::Pointer traceback, unsafe::Pointer context, unsafe::Pointer symbolizer)
     {
         if(version != 0)
@@ -1140,6 +1455,7 @@ namespace golang::runtime
     unsafe::Pointer cgoTraceback;
     unsafe::Pointer cgoContext;
     unsafe::Pointer cgoSymbolizer;
+    // cgoTracebackArg is the type passed to cgoTraceback.
     
     template<typename T> requires gocpp::GoStruct<T>
     cgoTracebackArg::operator T()
@@ -1178,6 +1494,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // cgoContextArg is the type passed to the context function.
     
     template<typename T> requires gocpp::GoStruct<T>
     cgoContextArg::operator T()
@@ -1207,6 +1524,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // cgoSymbolizerArg is the type passed to cgoSymbolizer.
     
     template<typename T> requires gocpp::GoStruct<T>
     cgoSymbolizerArg::operator T()
@@ -1254,6 +1572,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // printCgoTraceback prints a traceback of callers.
     void printCgoTraceback(cgoCallers* callers)
     {
         if(cgoSymbolizer == nullptr)
@@ -1287,6 +1606,9 @@ namespace golang::runtime
         callCgoSymbolizer(& arg);
     }
 
+    // printOneCgoTraceback prints the traceback of a single cgo caller.
+    // This can print more than one line because of inlining.
+    // It returns the "stop" result of commitFrame.
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg)
     {
         arg->pc = pc;
@@ -1323,6 +1645,7 @@ namespace golang::runtime
         }
     }
 
+    // callCgoSymbolizer calls the cgoSymbolizer function.
     void callCgoSymbolizer(struct cgoSymbolizerArg* arg)
     {
         auto call = cgocall;
@@ -1341,6 +1664,7 @@ namespace golang::runtime
         call(cgoSymbolizer, noescape(unsafe::Pointer(arg)));
     }
 
+    // cgoContextPCs gets the PC values from a cgo traceback.
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf)
     {
         if(cgoTraceback == nullptr)

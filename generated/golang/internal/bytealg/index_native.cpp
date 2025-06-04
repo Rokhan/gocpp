@@ -18,9 +18,17 @@ namespace golang::bytealg
         using namespace mocklib::rec;
     }
 
+    // Index returns the index of the first instance of b in a, or -1 if b is not present in a.
+    // Requires 2 <= len(b) <= MaxLen.
+    //
+    //go:noescape
     int Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
 
+    // IndexString returns the index of the first instance of b in a, or -1 if b is not present in a.
+    // Requires 2 <= len(b) <= MaxLen.
+    //
+    //go:noescape
     int IndexString(std::string a, std::string b)
     /* convertBlockStmt, nil block */;
 

@@ -25,6 +25,30 @@ namespace golang::sync
         using atomic::rec::Swap;
     }
 
+    // Map is like a Go map[any]any but is safe for concurrent use
+    // by multiple goroutines without additional locking or coordination.
+    // Loads, stores, and deletes run in amortized constant time.
+    //
+    // The Map type is specialized. Most code should use a plain Go map instead,
+    // with separate locking or coordination, for better type safety and to make it
+    // easier to maintain other invariants along with the map content.
+    //
+    // The Map type is optimized for two common use cases: (1) when the entry for a given
+    // key is only ever written once but read many times, as in caches that only grow,
+    // or (2) when multiple goroutines read, write, and overwrite entries for disjoint
+    // sets of keys. In these two cases, use of a Map may significantly reduce lock
+    // contention compared to a Go map paired with a separate Mutex or RWMutex.
+    //
+    // The zero Map is empty and ready for use. A Map must not be copied after first use.
+    //
+    // In the terminology of the Go memory model, Map arranges that a write operation
+    // “synchronizes before” any read operation that observes the effect of the write, where
+    // read and write operations are defined as follows.
+    // Load, LoadAndDelete, LoadOrStore, Swap, CompareAndSwap, and CompareAndDelete
+    // are read operations; Delete, LoadAndDelete, Store, and Swap are write operations;
+    // LoadOrStore is a write operation when it returns loaded set to false;
+    // CompareAndSwap is a write operation when it returns swapped set to true;
+    // and CompareAndDelete is a write operation when it returns deleted set to true.
     
     template<typename T> requires gocpp::GoStruct<T>
     Map::operator T()
@@ -63,6 +87,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // readOnly is an immutable struct stored atomically in the Map.read field.
     
     template<typename T> requires gocpp::GoStruct<T>
     readOnly::operator T()
@@ -95,7 +120,10 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // expunged is an arbitrary pointer that marks entries which have been deleted
+    // from the dirty map.
     go_any* expunged = new(go_any);
+    // An entry is a slot in the map corresponding to a particular key.
     
     template<typename T> requires gocpp::GoStruct<T>
     entry::operator T()
@@ -141,6 +169,9 @@ namespace golang::sync
         return readOnly {};
     }
 
+    // Load returns the value stored in the map for a key, or nil if no
+    // value is present.
+    // The ok result indicates whether value was found in the map.
     std::tuple<go_any, bool> rec::Load(struct Map* m, go_any key)
     {
         go_any value;
@@ -178,11 +209,18 @@ namespace golang::sync
         return {*p, true};
     }
 
+    // Store sets the value for a key.
     void rec::Store(struct Map* m, go_any key, go_any value)
     {
         std::tie(gocpp_id_0, gocpp_id_1) = rec::Swap(gocpp::recv(m), key, value);
     }
 
+    // tryCompareAndSwap compare the entry with the given old value and swaps
+    // it with a new value if the entry is equal to the old value, and the entry
+    // has not been expunged.
+    //
+    // If the entry is expunged, tryCompareAndSwap returns false and leaves
+    // the entry unchanged.
     bool rec::tryCompareAndSwap(struct entry* e, go_any old, go_any go_new)
     {
         auto p = rec::Load(gocpp::recv(e->p));
@@ -205,17 +243,27 @@ namespace golang::sync
         }
     }
 
+    // unexpungeLocked ensures that the entry is not marked as expunged.
+    //
+    // If the entry was previously expunged, it must be added to the dirty map
+    // before m.mu is unlocked.
     bool rec::unexpungeLocked(struct entry* e)
     {
         bool wasExpunged;
         return rec::CompareAndSwap(gocpp::recv(e->p), expunged, nullptr);
     }
 
+    // swapLocked unconditionally swaps a value into the entry.
+    //
+    // The entry must be known not to be expunged.
     go_any* rec::swapLocked(struct entry* e, go_any* i)
     {
         return rec::Swap(gocpp::recv(e->p), i);
     }
 
+    // LoadOrStore returns the existing value for the key if present.
+    // Otherwise, it stores and returns the given value.
+    // The loaded result is true if the value was loaded, false if stored.
     std::tuple<go_any, bool> rec::LoadOrStore(struct Map* m, go_any key, go_any value)
     {
         go_any actual;
@@ -262,6 +310,11 @@ namespace golang::sync
         return {actual, loaded};
     }
 
+    // tryLoadOrStore atomically loads or stores a value if the entry is not
+    // expunged.
+    //
+    // If the entry is expunged, tryLoadOrStore leaves the entry unchanged and
+    // returns with ok==false.
     std::tuple<go_any, bool, bool> rec::tryLoadOrStore(struct entry* e, go_any i)
     {
         go_any actual;
@@ -295,6 +348,8 @@ namespace golang::sync
         }
     }
 
+    // LoadAndDelete deletes the value for a key, returning the previous value if any.
+    // The loaded result reports whether the key was present.
     std::tuple<go_any, bool> rec::LoadAndDelete(struct Map* m, go_any key)
     {
         go_any value;
@@ -321,6 +376,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
+    // Delete deletes the value for a key.
     void rec::Delete(struct Map* m, go_any key)
     {
         rec::LoadAndDelete(gocpp::recv(m), key);
@@ -344,6 +400,10 @@ namespace golang::sync
         }
     }
 
+    // trySwap swaps a value if the entry has not been expunged.
+    //
+    // If the entry is expunged, trySwap returns false and leaves the entry
+    // unchanged.
     std::tuple<go_any*, bool> rec::trySwap(struct entry* e, go_any* i)
     {
         for(; ; )
@@ -360,6 +420,8 @@ namespace golang::sync
         }
     }
 
+    // Swap swaps the value for a key and returns the previous value if any.
+    // The loaded result reports whether the key was present.
     std::tuple<go_any, bool> rec::Swap(struct Map* m, go_any key, go_any value)
     {
         go_any previous;
@@ -415,6 +477,9 @@ namespace golang::sync
         return {previous, loaded};
     }
 
+    // CompareAndSwap swaps the old and new values for key
+    // if the value stored in the map is equal to old.
+    // The old value must be of a comparable type.
     bool rec::CompareAndSwap(struct Map* m, go_any key, go_any old, go_any go_new)
     {
         gocpp::Defer defer;
@@ -452,6 +517,11 @@ namespace golang::sync
         }
     }
 
+    // CompareAndDelete deletes the entry for key if its value is equal to old.
+    // The old value must be of a comparable type.
+    //
+    // If there is no current value for key in the map, CompareAndDelete
+    // returns false (even if the old value is the nil interface value).
     bool rec::CompareAndDelete(struct Map* m, go_any key, go_any old)
     {
         bool deleted;
@@ -484,6 +554,17 @@ namespace golang::sync
         return false;
     }
 
+    // Range calls f sequentially for each key and value present in the map.
+    // If f returns false, range stops the iteration.
+    //
+    // Range does not necessarily correspond to any consistent snapshot of the Map's
+    // contents: no key will be visited more than once, but if the value for any key
+    // is stored or deleted concurrently (including by f), Range may reflect any
+    // mapping for that key from any point during the Range call. Range does not
+    // block other methods on the receiver; even f itself may call any method on m.
+    //
+    // Range may be O(N) with the number of elements in the map even if f returns
+    // false after a constant number of calls.
     void rec::Range(struct Map* m, std::function<bool (go_any key, go_any value)> f)
     {
         auto read = rec::loadReadOnly(gocpp::recv(m));

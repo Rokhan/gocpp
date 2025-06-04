@@ -22,6 +22,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // // lockRankStruct is embedded in mutex, but is empty when staticklockranking is
+    // disabled (the default)
     
     template<typename T> requires gocpp::GoStruct<T>
     lockRankStruct::operator T()
@@ -62,6 +64,9 @@ namespace golang::runtime
         lock2(l);
     }
 
+    // This function may be called in nosplit context and thus must be nosplit.
+    //
+    //go:nosplit
     void acquireLockRank(golang::runtime::lockRank rank)
     {
     }
@@ -71,6 +76,9 @@ namespace golang::runtime
         unlock2(l);
     }
 
+    // This function may be called in nosplit context and thus must be nosplit.
+    //
+    //go:nosplit
     void releaseLockRank(golang::runtime::lockRank rank)
     {
     }
@@ -79,26 +87,32 @@ namespace golang::runtime
     {
     }
 
+    //go:nosplit
     void assertLockHeld(struct mutex* l)
     {
     }
 
+    //go:nosplit
     void assertRankHeld(golang::runtime::lockRank r)
     {
     }
 
+    //go:nosplit
     void worldStopped()
     {
     }
 
+    //go:nosplit
     void worldStarted()
     {
     }
 
+    //go:nosplit
     void assertWorldStopped()
     {
     }
 
+    //go:nosplit
     void assertWorldStoppedOrLockHeld(struct mutex* l)
     {
     }

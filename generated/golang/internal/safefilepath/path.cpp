@@ -14,6 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/safefilepath/path_windows.h"
 
+// Package safefilepath manipulates operating-system file paths.
 namespace golang::safefilepath
 {
     namespace rec
@@ -22,6 +23,11 @@ namespace golang::safefilepath
     }
 
     gocpp::error errInvalidPath = errors::New("invalid path"s);
+    // FromFS converts a slash-separated path into an operating-system path.
+    //
+    // FromFS returns an error if the path cannot be represented by the operating
+    // system. For example, paths containing '\' and ':' characters are rejected
+    // on Windows.
     std::tuple<std::string, struct gocpp::error> FromFS(std::string path)
     {
         return fromFS(path);

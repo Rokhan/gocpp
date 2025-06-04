@@ -34,6 +34,9 @@ namespace golang::poll
         using time::rec::IsZero;
     }
 
+    // runtimeNano returns the current value of the runtime clock in nanoseconds.
+    //
+    //go:linkname runtimeNano runtime.nanotime
     int64_t runtimeNano()
     /* convertBlockStmt, nil block */;
 
@@ -116,6 +119,7 @@ namespace golang::poll
         pd->runtimeCtx = 0;
     }
 
+    // Evict evicts fd from the pending list, unblocking any I/O running on fd.
     void rec::evict(struct pollDesc* pd)
     {
         if(pd->runtimeCtx == 0)
@@ -179,6 +183,8 @@ namespace golang::poll
         return pd->runtimeCtx != 0;
     }
 
+    // Error values returned by runtime_pollReset and runtime_pollWait.
+    // These must match the values in runtime/netpoll.go.
     struct gocpp::error convertErr(int res, bool isFile)
     {
         //Go switch emulation
@@ -209,16 +215,19 @@ namespace golang::poll
         gocpp::panic("unreachable"s);
     }
 
+    // SetDeadline sets the read and write deadlines associated with fd.
     struct gocpp::error rec::SetDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r' + 'w');
     }
 
+    // SetReadDeadline sets the read deadline associated with fd.
     struct gocpp::error rec::SetReadDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r');
     }
 
+    // SetWriteDeadline sets the write deadline associated with fd.
     struct gocpp::error rec::SetWriteDeadline(struct FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'w');
@@ -256,6 +265,8 @@ namespace golang::poll
         }
     }
 
+    // IsPollDescriptor reports whether fd is the descriptor being used by the poller.
+    // This is only used for testing.
     bool IsPollDescriptor(uintptr_t fd)
     {
         return runtime_isPollServerDescriptor(fd);

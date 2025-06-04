@@ -43,6 +43,21 @@ namespace golang::runtime
         using atomic::rec::CompareAndSwap;
     }
 
+    // A coro represents extra concurrency without extra parallelism,
+    // as would be needed for a coroutine implementation.
+    // The coro does not represent a specific coroutine, only the ability
+    // to do coroutine-style control transfers.
+    // It can be thought of as like a special channel that always has
+    // a goroutine blocked on it. If another goroutine calls coroswitch(c),
+    // the caller becomes the goroutine blocked in c, and the goroutine
+    // formerly blocked in c starts running.
+    // These switches continue until a call to coroexit(c),
+    // which ends the use of the coro by releasing the blocked
+    // goroutine in c and exiting the current goroutine.
+    //
+    // Coros are heap allocated and garbage collected, so that user code
+    // can hold a pointer to a coro without causing potential dangling
+    // pointer errors.
     
     template<typename T> requires gocpp::GoStruct<T>
     coro::operator T()
@@ -75,6 +90,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // newcoro creates a new coro containing a
+    // goroutine blocked waiting to run f
+    // and returns that coro.
     struct coro* newcoro(std::function<void (coro*)> f)
     {
         auto c = new(coro);
@@ -94,6 +112,9 @@ namespace golang::runtime
         return c;
     }
 
+    // corostart is the entry func for a new coroutine.
+    // It runs the coroutine user function f passed to corostart
+    // and then calls coroexit to remove the extra concurrency.
     void corostart()
     {
         auto gp = getg();
@@ -103,6 +124,8 @@ namespace golang::runtime
         coroexit(c);
     }
 
+    // coroexit is like coroswitch but closes the coro
+    // and exits the current goroutine
     void coroexit(struct coro* c)
     {
         auto gp = getg();
@@ -111,6 +134,8 @@ namespace golang::runtime
         mcall(coroswitch_m);
     }
 
+    // coroswitch switches to the goroutine blocked on c
+    // and then blocks the current goroutine on c.
     void coroswitch(struct coro* c)
     {
         auto gp = getg();
@@ -118,6 +143,18 @@ namespace golang::runtime
         mcall(coroswitch_m);
     }
 
+    // coroswitch_m is the implementation of coroswitch
+    // that runs on the m stack.
+    //
+    // Note: Coroutine switches are expected to happen at
+    // an order of magnitude (or more) higher frequency
+    // than regular goroutine switches, so this path is heavily
+    // optimized to remove unnecessary work.
+    // The fast path here is three CAS: the one at the top on gp.atomicstatus,
+    // the one in the middle to choose the next g,
+    // and the one at the bottom on gnext.atomicstatus.
+    // It is important not to add more atomic operations or other
+    // expensive operations to the fast path.
     void coroswitch_m(struct g* gp)
     {
         auto c = gp->coroarg;
@@ -139,6 +176,8 @@ namespace golang::runtime
             }
             setMNoWB(& gp->m, nullptr);
         }
+        // The goroutine stored in c is the one to run next.
+        // Swap it with ourselves.
         g* gnext = {};
         for(; ; )
         {

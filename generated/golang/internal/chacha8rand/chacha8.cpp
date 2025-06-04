@@ -11,6 +11,9 @@
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "gocpp/support.h"
 
+// Package chacha8rand implements a pseudorandom generator
+// based on ChaCha8. It is used by both runtime and math/rand/v2
+// and must have no dependencies.
 namespace golang::chacha8rand
 {
     namespace rec
@@ -18,9 +21,15 @@ namespace golang::chacha8rand
         using namespace mocklib::rec;
     }
 
+    // block is the chacha8rand block function.
     void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter)
     /* convertBlockStmt, nil block */;
 
+    // A State holds the state for a single random generator.
+    // It must be used from one goroutine at a time.
+    // If used by multiple goroutines at a time, the goroutines
+    // may see the same random values, but the code will not
+    // crash or cause out-of-bounds memory accesses.
     
     template<typename T> requires gocpp::GoStruct<T>
     State::operator T()
@@ -62,6 +71,14 @@ namespace golang::chacha8rand
         return value.PrintTo(os);
     }
 
+    // Next returns the next random value, along with a boolean
+    // indicating whether one was available.
+    // If one is not available, the caller should call Refill
+    // and then repeat the call to Next.
+    //
+    // Next is //go:nosplit to allow its use in the runtime
+    // with per-m data without holding the per-m lock.
+    //go:nosplit
     std::tuple<uint64_t, bool> rec::Next(struct State* s)
     {
         auto i = s->i;
@@ -73,11 +90,13 @@ namespace golang::chacha8rand
         return {s->buf[i & 31], true};
     }
 
+    // Init seeds the State with the given seed value.
     void rec::Init(struct State* s, gocpp::array<unsigned char, 32> seed)
     {
         rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
     }
 
+    // Init64 seeds the state with the given seed value.
     void rec::Init64(struct State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
@@ -87,6 +106,9 @@ namespace golang::chacha8rand
         s->n = chunk;
     }
 
+    // Refill refills the state with more random values.
+    // After a call to Refill, an immediate call to Next will succeed
+    // (unless multiple goroutines are incorrectly sharing a state).
     void rec::Refill(struct State* s)
     {
         s->c += ctrInc;
@@ -107,6 +129,10 @@ namespace golang::chacha8rand
         }
     }
 
+    // Reseed reseeds the state with new random values.
+    // After a call to Reseed, any previously returned random values
+    // have been erased from the memory of the state and cannot be
+    // recovered.
     void rec::Reseed(struct State* s)
     {
         gocpp::array<uint64_t, 4> seed = {};
@@ -126,6 +152,11 @@ namespace golang::chacha8rand
         rec::Init64(gocpp::recv(s), seed);
     }
 
+    // Marshal marshals the state into a byte slice.
+    // Marshal and Unmarshal are functions, not methods,
+    // so that they will not be linked into the runtime
+    // when it uses the State struct, since the runtime
+    // does not need these.
     gocpp::slice<unsigned char> Marshal(struct State* s)
     {
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 6 * 8);
@@ -170,6 +201,7 @@ namespace golang::chacha8rand
         return "invalid ChaCha8 encoding"s;
     }
 
+    // Unmarshal unmarshals the state from a byte slice.
     struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data)
     {
         if(len(data) != 6 * 8 || std::string(data.make_slice(0, 8)) != "chacha8:"s)
@@ -196,12 +228,14 @@ namespace golang::chacha8rand
         return nullptr;
     }
 
+    // binary.bigEndian.Uint64, copied to avoid dependency
     uint64_t beUint64(gocpp::slice<unsigned char> b)
     {
         _ = b[7];
         return uint64_t(b[7]) | (uint64_t(b[6]) << 8) | (uint64_t(b[5]) << 16) | (uint64_t(b[4]) << 24) | (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
     }
 
+    // binary.bigEndian.PutUint64, copied to avoid dependency
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];
@@ -215,12 +249,14 @@ namespace golang::chacha8rand
         b[7] = (unsigned char)(v);
     }
 
+    // binary.littleEndian.Uint64, copied to avoid dependency
     uint64_t leUint64(gocpp::slice<unsigned char> b)
     {
         _ = b[7];
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
+    // binary.littleEndian.PutUint64, copied to avoid dependency
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
         _ = b[7];

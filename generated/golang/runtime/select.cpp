@@ -53,6 +53,9 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // Select case descriptor.
+    // Known to compiler.
+    // Changes here must also be made in src/cmd/compile/internal/walk/select.go's scasetype.
     
     template<typename T> requires gocpp::GoStruct<T>
     scase::operator T()
@@ -123,6 +126,10 @@ namespace golang::runtime
     {
         gp->activeStackChans = true;
         rec::Store(gocpp::recv(gp->parkingOnChan), false);
+        // This must not access gp's stack (see gopark). In
+        // particular, it must not access the *hselect. That's okay,
+        // because by the time this is called, gp.waiting has all
+        // channels in lock order.
         hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
@@ -144,6 +151,21 @@ namespace golang::runtime
         gopark(nullptr, nullptr, waitReasonSelectNoCases, traceBlockForever, 1);
     }
 
+    // selectgo implements the select statement.
+    //
+    // cas0 points to an array of type [ncases]scase, and order0 points to
+    // an array of type [2*ncases]uint16 where ncases must be <= 65536.
+    // Both reside on the goroutine's stack (regardless of any escaping in
+    // selectgo).
+    //
+    // For race detector builds, pc0 points to an array of type
+    // [ncases]uintptr (also on the stack); for other builds, it's set to
+    // nil.
+    //
+    // selectgo returns the index of the chosen scase, which matches the
+    // ordinal position of its respective select{recv,send,default} call.
+    // Also, if the chosen scase was a receive operation, it reports whether
+    // a value was received.
     std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
     {
         if(debugSelect)
@@ -156,6 +178,9 @@ namespace golang::runtime
         auto scases = cas1.make_slice(, ncases, ncases);
         auto pollorder = order1.make_slice(, ncases, ncases);
         auto lockorder = order1.make_slice(ncases).make_slice(, ncases, ncases);
+        // Even when raceenabled is true, there might be select
+        // statements in packages compiled without -race (e.g.,
+        // ensureSigM in runtime/signal_unix.go).
         gocpp::slice<uintptr_t> pcs = {};
         if(raceenabled && pc0 != nullptr)
         {
@@ -250,6 +275,7 @@ namespace golang::runtime
         sudog* sgnext = {};
         unsafe::Pointer qp = {};
         sudog** nextp = {};
+        // pass 1 - look for something already waiting
         int casi = {};
         scase* cas = {};
         bool caseSuccess = {};
@@ -558,6 +584,8 @@ namespace golang::runtime
         return uintptr_t(unsafe::Pointer(c));
     }
 
+    // A runtimeSelect is a single case passed to rselect.
+    // This must match ../reflect/value.go:/runtimeSelect
     
     template<typename T> requires gocpp::GoStruct<T>
     runtimeSelect::operator T()
@@ -596,6 +624,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // These values must match ../reflect/value.go:/SelectDir.
+    //go:linkname reflect_rselect reflect.rselect
     std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases)
     {
         if(len(cases) == 0)

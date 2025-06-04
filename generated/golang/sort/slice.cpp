@@ -26,6 +26,18 @@ namespace golang::sort
         using reflectlite::rec::Len;
     }
 
+    // Slice sorts the slice x given the provided less function.
+    // It panics if x is not a slice.
+    //
+    // The sort is not guaranteed to be stable: equal elements
+    // may be reversed from their original order.
+    // For a stable sort, use [SliceStable].
+    //
+    // The less function must satisfy the same requirements as
+    // the Interface type's Less method.
+    //
+    // Note: in many situations, the newer [slices.SortFunc] function is more
+    // ergonomic and runs faster.
     void Slice(go_any x, std::function<bool (int i, int j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
@@ -35,6 +47,15 @@ namespace golang::sort
         pdqsort_func(lessSwap {less, swap}, 0, length, limit);
     }
 
+    // SliceStable sorts the slice x using the provided less
+    // function, keeping equal elements in their original order.
+    // It panics if x is not a slice.
+    //
+    // The less function must satisfy the same requirements as
+    // the Interface type's Less method.
+    //
+    // Note: in many situations, the newer [slices.SortStableFunc] function is more
+    // ergonomic and runs faster.
     void SliceStable(go_any x, std::function<bool (int i, int j)> less)
     {
         auto rv = reflectlite::ValueOf(x);
@@ -42,6 +63,11 @@ namespace golang::sort
         stable_func(lessSwap {less, swap}, rec::Len(gocpp::recv(rv)));
     }
 
+    // SliceIsSorted reports whether the slice x is sorted according to the provided less function.
+    // It panics if x is not a slice.
+    //
+    // Note: in many situations, the newer [slices.IsSortedFunc] function is more
+    // ergonomic and runs faster.
     bool SliceIsSorted(go_any x, std::function<bool (int i, int j)> less)
     {
         auto rv = reflectlite::ValueOf(x);

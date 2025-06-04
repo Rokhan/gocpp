@@ -99,12 +99,42 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // suspendG suspends goroutine gp at a safe-point and returns the
+    // state of the suspended goroutine. The caller gets read access to
+    // the goroutine until it calls resumeG.
+    //
+    // It is safe for multiple callers to attempt to suspend the same
+    // goroutine at the same time. The goroutine may execute between
+    // subsequent successful suspend operations. The current
+    // implementation grants exclusive access to the goroutine, and hence
+    // multiple callers will serialize. However, the intent is to grant
+    // shared read access, so please don't depend on exclusive access.
+    //
+    // This must be called from the system stack and the user goroutine on
+    // the current M (if any) must be in a preemptible state. This
+    // prevents deadlocks where two goroutines attempt to suspend each
+    // other and both are in non-preemptible states. There are other ways
+    // to resolve this deadlock, but this seems simplest.
+    //
+    // TODO(austin): What if we instead required this to be called from a
+    // user goroutine? Then we could deschedule the goroutine while
+    // waiting instead of blocking the thread. If two goroutines tried to
+    // suspend each other, one of them would win and the other wouldn't
+    // complete the suspend until it was resumed. We would have to be
+    // careful that they couldn't actually queue up suspend for each other
+    // and then both be suspended. This would also avoid the need for a
+    // kernel context switch in the synchronous case because we could just
+    // directly schedule the waiter. The context switch is unavoidable in
+    // the signal case.
+    //
+    //go:systemstack
     struct suspendGState suspendG(struct g* gp)
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
             go_throw("suspendG from non-preemptible goroutine"s);
         }
+        // See https://golang.org/cl/21503 for justification of the yield delay.
         auto yieldDelay = 10 * 1000;
         int64_t nextYield = {};
         auto stopped = false;
@@ -210,6 +240,8 @@ namespace golang::runtime
         }
     }
 
+    // resumeG undoes the effects of suspendG, allowing the suspended
+    // goroutine to continue from its current safe-point.
     void resumeG(struct suspendGState state)
     {
         if(state.dead)
@@ -244,14 +276,26 @@ namespace golang::runtime
         }
     }
 
+    // canPreemptM reports whether mp is in a state that is safe to preempt.
+    //
+    // It is nosplit because it has nosplit callers.
+    //
+    //go:nosplit
     bool canPreemptM(struct m* mp)
     {
         return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
     }
 
+    // asyncPreempt saves all user registers and calls asyncPreempt2.
+    //
+    // When stack scanning encounters an asyncPreempt frame, it scans that
+    // frame and its parent frame conservatively.
+    //
+    // asyncPreempt is implemented in assembly.
     void asyncPreempt()
     /* convertBlockStmt, nil block */;
 
+    //go:nosplit
     void asyncPreempt2()
     {
         auto gp = getg();
@@ -267,6 +311,8 @@ namespace golang::runtime
         gp->asyncSafePoint = false;
     }
 
+    // asyncPreemptStack is the bytes of stack space required to inject an
+    // asyncPreempt call.
     uintptr_t asyncPreemptStack = ~ uintptr_t(0);
     void init()
     {
@@ -282,11 +328,29 @@ namespace golang::runtime
         }
     }
 
+    // wantAsyncPreempt returns whether an asynchronous preemption is
+    // queued for gp.
     bool wantAsyncPreempt(struct g* gp)
     {
         return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
     }
 
+    // isAsyncSafePoint reports whether gp at instruction PC is an
+    // asynchronous safe point. This indicates that:
+    //
+    // 1. It's safe to suspend gp and conservatively scan its stack and
+    // registers. There are no potentially hidden pointer values and it's
+    // not in the middle of an atomic sequence like a write barrier.
+    //
+    // 2. gp has enough stack space to inject the asyncPreempt call.
+    //
+    // 3. It's generally safe to interact with the runtime, even if we're
+    // in a signal handler stopped here. For example, there are no runtime
+    // locks held, so acquiring a runtime lock won't self-deadlock.
+    //
+    // In some cases the PC is safe for asynchronous preemption but it
+    // also needs to adjust the resumption PC. The new PC is returned in
+    // the second result.
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
     {
         auto mp = gp->m;

@@ -22,6 +22,9 @@ namespace golang::strings
         using namespace mocklib::rec;
     }
 
+    // A Builder is used to efficiently build a string using [Builder.Write] methods.
+    // It minimizes memory copying. The zero value is ready to use.
+    // Do not copy a non-zero Builder.
     
     template<typename T> requires gocpp::GoStruct<T>
     Builder::operator T()
@@ -54,6 +57,14 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
+    // noescape hides a pointer from escape analysis. It is the identity function
+    // but escape analysis doesn't think the output depends on the input.
+    // noescape is inlined and currently compiles down to zero instructions.
+    // USE CAREFULLY!
+    // This was copied from the runtime; see issues 23382 and 7921.
+    //
+    //go:nosplit
+    //go:nocheckptr
     unsafe::Pointer noescape(unsafe::Pointer p)
     {
         auto x = uintptr_t(p);
@@ -73,27 +84,35 @@ namespace golang::strings
         }
     }
 
+    // String returns the accumulated string.
     std::string rec::String(struct Builder* b)
     {
         return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
     }
 
+    // Len returns the number of accumulated bytes; b.Len() == len(b.String()).
     int rec::Len(struct Builder* b)
     {
         return len(b->buf);
     }
 
+    // Cap returns the capacity of the builder's underlying byte slice. It is the
+    // total space allocated for the string being built and includes any bytes
+    // already written.
     int rec::Cap(struct Builder* b)
     {
         return cap(b->buf);
     }
 
+    // Reset resets the [Builder] to be empty.
     void rec::Reset(struct Builder* b)
     {
         b->addr = nullptr;
         b->buf = nullptr;
     }
 
+    // grow copies the buffer to a new, larger buffer so that there are at least n
+    // bytes of capacity beyond len(b.buf).
     void rec::grow(struct Builder* b, int n)
     {
         auto buf = bytealg::MakeNoZero(2 * cap(b->buf) + n).make_slice(0, len(b->buf));
@@ -101,6 +120,9 @@ namespace golang::strings
         b->buf = buf;
     }
 
+    // Grow grows b's capacity, if necessary, to guarantee space for
+    // another n bytes. After Grow(n), at least n bytes can be written to b
+    // without another allocation. If n is negative, Grow panics.
     void rec::Grow(struct Builder* b, int n)
     {
         rec::copyCheck(gocpp::recv(b));
@@ -114,6 +136,8 @@ namespace golang::strings
         }
     }
 
+    // Write appends the contents of p to b's buffer.
+    // Write always returns len(p), nil.
     std::tuple<int, struct gocpp::error> rec::Write(struct Builder* b, gocpp::slice<unsigned char> p)
     {
         rec::copyCheck(gocpp::recv(b));
@@ -121,6 +145,8 @@ namespace golang::strings
         return {len(p), nullptr};
     }
 
+    // WriteByte appends the byte c to b's buffer.
+    // The returned error is always nil.
     struct gocpp::error rec::WriteByte(struct Builder* b, unsigned char c)
     {
         rec::copyCheck(gocpp::recv(b));
@@ -128,6 +154,8 @@ namespace golang::strings
         return nullptr;
     }
 
+    // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
+    // It returns the length of r and a nil error.
     std::tuple<int, struct gocpp::error> rec::WriteRune(struct Builder* b, gocpp::rune r)
     {
         rec::copyCheck(gocpp::recv(b));
@@ -136,6 +164,8 @@ namespace golang::strings
         return {len(b->buf) - n, nullptr};
     }
 
+    // WriteString appends the contents of s to b's buffer.
+    // It returns the length of s and a nil error.
     std::tuple<int, struct gocpp::error> rec::WriteString(struct Builder* b, std::string s)
     {
         rec::copyCheck(gocpp::recv(b));

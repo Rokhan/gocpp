@@ -38,6 +38,10 @@ namespace golang::zlib
         using io::rec::Write;
     }
 
+    // These constants are copied from the flate package, so that code that imports
+    // "compress/zlib" does not also have to import "compress/flate".
+    // A Writer takes data written to it and writes the compressed
+    // form of that data to an underlying writer (see NewWriter).
     
     template<typename T> requires gocpp::GoStruct<T>
     Writer::operator T()
@@ -88,17 +92,33 @@ namespace golang::zlib
         return value.PrintTo(os);
     }
 
+    // NewWriter creates a new Writer.
+    // Writes to the returned Writer are compressed and written to w.
+    //
+    // It is the caller's responsibility to call Close on the Writer when done.
+    // Writes may be buffered and not flushed until Close.
     struct Writer* NewWriter(io::Writer w)
     {
         auto [z, gocpp_id_1] = NewWriterLevelDict(w, DefaultCompression, nullptr);
         return z;
     }
 
+    // NewWriterLevel is like NewWriter but specifies the compression level instead
+    // of assuming DefaultCompression.
+    //
+    // The compression level can be DefaultCompression, NoCompression, HuffmanOnly
+    // or any integer value between BestSpeed and BestCompression inclusive.
+    // The error returned will be nil if the level is valid.
     std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level)
     {
         return NewWriterLevelDict(w, level, nullptr);
     }
 
+    // NewWriterLevelDict is like NewWriterLevel but specifies a dictionary to
+    // compress with.
+    //
+    // The dictionary may be nil. If not, its contents should not be modified until
+    // the Writer is closed.
     std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         if(level < HuffmanOnly || level > BestCompression)
@@ -112,6 +132,9 @@ namespace golang::zlib
         }), nullptr};
     }
 
+    // Reset clears the state of the Writer z such that it is equivalent to its
+    // initial state from NewWriterLevel or NewWriterLevelDict, but instead writing
+    // to w.
     void rec::Reset(struct Writer* z, io::Writer w)
     {
         z->w = w;
@@ -128,6 +151,7 @@ namespace golang::zlib
         z->wroteHeader = false;
     }
 
+    // writeHeader writes the ZLIB header.
     struct gocpp::error rec::writeHeader(struct Writer* z)
     {
         struct gocpp::error err;
@@ -205,6 +229,9 @@ namespace golang::zlib
         return nullptr;
     }
 
+    // Write writes a compressed form of p to the underlying io.Writer. The
+    // compressed bytes are not necessarily flushed until the Writer is closed or
+    // explicitly flushed.
     std::tuple<int, struct gocpp::error> rec::Write(struct Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
@@ -231,6 +258,7 @@ namespace golang::zlib
         return {n, err};
     }
 
+    // Flush flushes the Writer to its underlying io.Writer.
     struct gocpp::error rec::Flush(struct Writer* z)
     {
         if(! z->wroteHeader)
@@ -245,6 +273,8 @@ namespace golang::zlib
         return z->err;
     }
 
+    // Close closes the Writer, flushing any unwritten data to the underlying
+    // io.Writer, but does not close the underlying io.Writer.
     struct gocpp::error rec::Close(struct Writer* z)
     {
         if(! z->wroteHeader)

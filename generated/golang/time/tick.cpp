@@ -22,6 +22,8 @@ namespace golang::time
         using namespace mocklib::rec;
     }
 
+    // A Ticker holds a channel that delivers “ticks” of a clock
+    // at intervals.
     
     template<typename T> requires gocpp::GoStruct<T>
     Ticker::operator T()
@@ -54,6 +56,12 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // NewTicker returns a new Ticker containing a channel that will send
+    // the current time on the channel after each tick. The period of the
+    // ticks is specified by the duration argument. The ticker will adjust
+    // the time interval or drop ticks to make up for slow receivers.
+    // The duration d must be greater than zero; if not, NewTicker will
+    // panic. Stop the ticker to release associated resources.
     struct Ticker* NewTicker(golang::time::Duration d)
     {
         if(d <= 0)
@@ -74,11 +82,17 @@ namespace golang::time
         return t;
     }
 
+    // Stop turns off a ticker. After Stop, no more ticks will be sent.
+    // Stop does not close the channel, to prevent a concurrent goroutine
+    // reading from the channel from seeing an erroneous "tick".
     void rec::Stop(struct Ticker* t)
     {
         stopTimer(& t->r);
     }
 
+    // Reset stops a ticker and resets its period to the specified duration.
+    // The next tick will arrive after the new period elapses. The duration d
+    // must be greater than zero; if not, Reset will panic.
     void rec::Reset(struct Ticker* t, golang::time::Duration d)
     {
         if(d <= 0)
@@ -92,6 +106,11 @@ namespace golang::time
         modTimer(& t->r, when(d), int64_t(d), t->r.f, t->r.arg, t->r.seq);
     }
 
+    // Tick is a convenience wrapper for NewTicker providing access to the ticking
+    // channel only. While Tick is useful for clients that have no need to shut down
+    // the Ticker, be aware that without a way to shut it down the underlying
+    // Ticker cannot be recovered by the garbage collector; it "leaks".
+    // Unlike NewTicker, Tick will return nil if d <= 0.
     gocpp::channel<Time> Tick(golang::time::Duration d)
     {
         if(d <= 0)

@@ -30,6 +30,14 @@ namespace golang::time
         using sync::rec::Do;
     }
 
+    // A Location maps time instants to the zone in use at that time.
+    // Typically, the Location represents the collection of time offsets
+    // in use in a geographical area. For many Locations the time offset varies
+    // depending on whether daylight savings time is in use at the time instant.
+    //
+    // Location is used to provide a time zone in a printed Time value and for
+    // calculations involving intervals that may cross daylight savings time
+    // boundaries.
     
     template<typename T> requires gocpp::GoStruct<T>
     Location::operator T()
@@ -77,6 +85,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // A zone represents a single time zone such as CET.
     
     template<typename T> requires gocpp::GoStruct<T>
     zone::operator T()
@@ -112,6 +121,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // A zoneTrans represents a single time zone transition.
     
     template<typename T> requires gocpp::GoStruct<T>
     zoneTrans::operator T()
@@ -150,11 +160,25 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // alpha and omega are the beginning and end of time for zone
+    // transitions.
+    // UTC represents Universal Coordinated Time (UTC).
     Location* UTC = & utcLoc;
+    // utcLoc is separate so that get can refer to &utcLoc
+    // and ensure that it never returns a nil *Location,
+    // even if a badly behaved client has changed UTC.
     Location utcLoc = gocpp::Init<Location>([](auto& x) {
         x.name = "UTC"s;
     });
+    // Local represents the system's local time zone.
+    // On Unix systems, Local consults the TZ environment
+    // variable to find the time zone to use. No TZ means
+    // use the system default /etc/localtime.
+    // TZ="" means use UTC.
+    // TZ="foo" means use file foo in the system timezone directory.
     Location* Local = & localLoc;
+    // localLoc is separate so that initLocal can initialize
+    // it even if a client has changed Local.
     Location localLoc;
     sync::Once localOnce;
     struct Location* rec::get(struct Location* l)
@@ -170,6 +194,8 @@ namespace golang::time
         return l;
     }
 
+    // String returns a descriptive name for the time zone information,
+    // corresponding to the name argument to LoadLocation or FixedZone.
     std::string rec::String(struct Location* l)
     {
         return rec::get(gocpp::recv(l))->name;
@@ -177,8 +203,12 @@ namespace golang::time
 
     gocpp::slice<Location*> unnamedFixedZones;
     sync::Once unnamedFixedZonesOnce;
+    // FixedZone returns a Location that always uses
+    // the given zone name and offset (seconds east of UTC).
     struct Location* FixedZone(std::string name, int offset)
     {
+        // Most calls to FixedZone have an unnamed zone with an offset by the hour.
+        // Optimize for that case by returning the same *Location for a given hour.
         auto hoursBeforeUTC = 12;
         auto hoursAfterUTC = 14;
         auto hour = offset / 60 / 60;
@@ -210,6 +240,13 @@ namespace golang::time
         return l;
     }
 
+    // lookup returns information about the time zone in use at an
+    // instant in time expressed as seconds since January 1, 1970 00:00:00 UTC.
+    //
+    // The returned information gives the name of the zone (such as "CET"),
+    // the start and end times bracketing sec when that zone is in effect,
+    // the offset in seconds east of UTC (such as -5*60*60), and whether
+    // the daylight savings is being observed at that time.
     std::tuple<std::string, int, int64_t, int64_t, bool> rec::lookup(struct Location* l, int64_t sec)
     {
         std::string name;
@@ -286,6 +323,21 @@ namespace golang::time
         return {name, offset, start, end, isDST};
     }
 
+    // lookupFirstZone returns the index of the time zone to use for times
+    // before the first transition time, or when there are no transition
+    // times.
+    //
+    // The reference implementation in localtime.c from
+    // https://www.iana.org/time-zones/repository/releases/tzcode2013g.tar.gz
+    // implements the following algorithm for these cases:
+    //  1. If the first zone is unused by the transitions, use it.
+    //  2. Otherwise, if there are transition times, and the first
+    //     transition is to a zone in daylight time, find the first
+    //     non-daylight-time zone before and closest to the first transition
+    //     zone.
+    //  3. Otherwise, use the first zone that is not daylight time, if
+    //     there is one.
+    //  4. Otherwise, use the first zone.
     int rec::lookupFirstZone(struct Location* l)
     {
         if(! rec::firstZoneUsed(gocpp::recv(l)))
@@ -312,6 +364,8 @@ namespace golang::time
         return 0;
     }
 
+    // firstZoneUsed reports whether the first zone is used by some
+    // transition.
     bool rec::firstZoneUsed(struct Location* l)
     {
         for(auto [gocpp_ignored, tx] : l->tx)
@@ -324,6 +378,12 @@ namespace golang::time
         return false;
     }
 
+    // tzset takes a timezone string like the one found in the TZ environment
+    // variable, the time of the last time zone transition expressed as seconds
+    // since January 1, 1970 00:00:00 UTC, and a time expressed the same way.
+    // We call this a tzset string since in C the function tzset reads TZ.
+    // The return values are as for lookup, plus ok which reports whether the
+    // parse succeeded.
     std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec)
     {
         std::string name;
@@ -419,6 +479,8 @@ namespace golang::time
         }
     }
 
+    // tzsetName returns the timezone name at the start of the tzset string s,
+    // and the remainder of s, and reports whether the parsing is OK.
     std::tuple<std::string, std::string, bool> tzsetName(std::string s)
     {
         if(len(s) == 0)
@@ -489,6 +551,9 @@ namespace golang::time
         }
     }
 
+    // tzsetOffset returns the timezone offset at the start of the tzset string s,
+    // and the remainder of s, and reports whether the parsing is OK.
+    // The timezone offset is returned as a number of seconds.
     std::tuple<int, std::string, bool> tzsetOffset(std::string s)
     {
         int offset;
@@ -509,6 +574,8 @@ namespace golang::time
             s = s.make_slice(1);
             neg = true;
         }
+        // The tzdata code permits values up to 24 * 7 here,
+        // although POSIX does not.
         int hours = {};
         std::tie(hours, s, ok) = tzsetNum(s, 0, 24 * 7);
         if(! ok)
@@ -553,6 +620,8 @@ namespace golang::time
         return {off, s, true};
     }
 
+    // ruleKind is the kinds of rules that can be seen in a tzset string.
+    // rule is a rule read from a tzset string.
     
     template<typename T> requires gocpp::GoStruct<T>
     rule::operator T()
@@ -594,6 +663,8 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
+    // tzsetRule parses a rule from a tzset string.
+    // It returns the rule, and the remainder of the string, and reports success.
     std::tuple<struct rule, std::string, bool> tzsetRule(std::string s)
     {
         rule r = {};
@@ -666,6 +737,9 @@ namespace golang::time
         return {r, s, true};
     }
 
+    // tzsetNum parses a number from a tzset string.
+    // It returns the number, and the remainder of the string, and reports success.
+    // The number must be between min and max.
     std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max)
     {
         int num;
@@ -700,6 +774,9 @@ namespace golang::time
         return {num, ""s, true};
     }
 
+    // tzruleTime takes a year, a rule, and a timezone offset,
+    // and returns the number of seconds since the start of the year
+    // that the rule takes effect.
     int tzruleTime(int year, struct rule r, int off)
     {
         int s = {};
@@ -761,6 +838,9 @@ namespace golang::time
         return s + r.time - off;
     }
 
+    // lookupName returns information about the time zone with
+    // the given name (such as "EST") at the given pseudo-Unix time
+    // (what the given time of day would be in UTC).
     std::tuple<int, bool> rec::lookupName(struct Location* l, std::string name, int64_t unix)
     {
         int offset;
@@ -792,6 +872,21 @@ namespace golang::time
     gocpp::error errLocation = errors::New("time: invalid location name"s);
     std::string* zoneinfo;
     sync::Once zoneinfoOnce;
+    // LoadLocation returns the Location with the given name.
+    //
+    // If the name is "" or "UTC", LoadLocation returns UTC.
+    // If the name is "Local", LoadLocation returns Local.
+    //
+    // Otherwise, the name is taken to be a location name corresponding to a file
+    // in the IANA Time Zone database, such as "America/New_York".
+    //
+    // LoadLocation looks for the IANA Time Zone database in the following
+    // locations in order:
+    //
+    //   - the directory or uncompressed zip file named by the ZONEINFO environment variable
+    //   - on a Unix system, the system standard installation location
+    //   - $GOROOT/lib/time/zoneinfo.zip
+    //   - the time/tzdata package, if it was imported
     std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name)
     {
         if(name == ""s || name == "UTC"s)
@@ -840,6 +935,7 @@ namespace golang::time
         return {nullptr, firstErr};
     }
 
+    // containsDotDot reports whether s contains "..".
     bool containsDotDot(std::string s)
     {
         if(len(s) < 2)

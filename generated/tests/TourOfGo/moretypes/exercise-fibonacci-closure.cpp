@@ -20,6 +20,8 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
+    // fibonacci is a function that returns
+    // a function that returns an int.
     std::function<int ()> fibonacci()
     {
         auto f0 = 0;

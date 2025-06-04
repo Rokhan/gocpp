@@ -25,6 +25,7 @@ namespace golang::fmt
 
     std::string ldigits = "0123456789abcdefx"s;
     std::string udigits = "0123456789ABCDEFX"s;
+    // flags placed in a separate struct for easy clearing.
     
     template<typename T> requires gocpp::GoStruct<T>
     fmtFlags::operator T()
@@ -78,6 +79,8 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
+    // A fmt is the raw formatter used by Printf etc.
+    // It prints into a buffer that must be set up separately.
     
     template<typename T> requires gocpp::GoStruct<T>
     fmt::operator T()
@@ -127,6 +130,7 @@ namespace golang::fmt
         rec::clearflags(gocpp::recv(f));
     }
 
+    // writePadding generates n bytes of padding.
     void rec::writePadding(struct fmt* f, int n)
     {
         if(n <= 0)
@@ -154,6 +158,7 @@ namespace golang::fmt
         *f->buf = buf.make_slice(0, newLen);
     }
 
+    // pad appends b to f.buf, padded on left (!f.minus) or right (f.minus).
     void rec::pad(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(! f->widPresent || f->wid == 0)
@@ -174,6 +179,7 @@ namespace golang::fmt
         }
     }
 
+    // padString appends s to f.buf, padded on left (!f.minus) or right (f.minus).
     void rec::padString(struct fmt* f, std::string s)
     {
         if(! f->widPresent || f->wid == 0)
@@ -194,6 +200,7 @@ namespace golang::fmt
         }
     }
 
+    // fmtBoolean formats a boolean.
     void rec::fmtBoolean(struct fmt* f, bool v)
     {
         if(v)
@@ -206,6 +213,7 @@ namespace golang::fmt
         }
     }
 
+    // fmtUnicode formats a uint64 as "U+0078" or with f.sharp set as "U+0078 'x'".
     void rec::fmtUnicode(struct fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
@@ -257,6 +265,7 @@ namespace golang::fmt
         f->zero = oldZero;
     }
 
+    // fmtInteger formats signed and unsigned integers.
     void rec::fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
     {
         auto negative = isSigned && int64_t(u) < 0;
@@ -414,6 +423,7 @@ namespace golang::fmt
         f->zero = oldZero;
     }
 
+    // truncateString truncates the string s to the specified precision, if present.
     std::string rec::truncateString(struct fmt* f, std::string s)
     {
         if(f->precPresent)
@@ -431,6 +441,7 @@ namespace golang::fmt
         return s;
     }
 
+    // truncate truncates the byte slice b as a string of the specified precision, if present.
     gocpp::slice<unsigned char> rec::truncate(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         if(f->precPresent)
@@ -454,18 +465,21 @@ namespace golang::fmt
         return b;
     }
 
+    // fmtS formats a string.
     void rec::fmtS(struct fmt* f, std::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
         rec::padString(gocpp::recv(f), s);
     }
 
+    // fmtBs formats the byte slice b as if it was formatted as string with fmtS.
     void rec::fmtBs(struct fmt* f, gocpp::slice<unsigned char> b)
     {
         b = rec::truncate(gocpp::recv(f), b);
         rec::pad(gocpp::recv(f), b);
     }
 
+    // fmtSbx formats a string or byte slice as a hexadecimal encoding of its bytes.
     void rec::fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
     {
         auto length = len(b);
@@ -539,16 +553,21 @@ namespace golang::fmt
         }
     }
 
+    // fmtSx formats a string as a hexadecimal encoding of its bytes.
     void rec::fmtSx(struct fmt* f, std::string s, std::string digits)
     {
         rec::fmtSbx(gocpp::recv(f), s, nullptr, digits);
     }
 
+    // fmtBx formats a byte slice as a hexadecimal encoding of its bytes.
     void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
     {
         rec::fmtSbx(gocpp::recv(f), ""s, b, digits);
     }
 
+    // fmtQ formats a string as a double-quoted, escaped Go string constant.
+    // If f.sharp is set a raw (backquoted) string may be returned instead
+    // if the string does not contain any control characters other than tab.
     void rec::fmtQ(struct fmt* f, std::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
@@ -568,6 +587,8 @@ namespace golang::fmt
         }
     }
 
+    // fmtC formats an integer as a Unicode character.
+    // If the character is not valid Unicode, it will print '\ufffd'.
     void rec::fmtC(struct fmt* f, uint64_t c)
     {
         auto r = gocpp::rune(c);
@@ -579,6 +600,8 @@ namespace golang::fmt
         rec::pad(gocpp::recv(f), utf8::AppendRune(buf, r));
     }
 
+    // fmtQc formats an integer as a single-quoted, escaped Go character constant.
+    // If the character is not valid Unicode, it will print '\ufffd'.
     void rec::fmtQc(struct fmt* f, uint64_t c)
     {
         auto r = gocpp::rune(c);
@@ -597,6 +620,8 @@ namespace golang::fmt
         }
     }
 
+    // fmtFloat formats a float64. It assumes that verb is a valid format specifier
+    // for strconv.AppendFloat and therefore fits into a byte.
     void rec::fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
         if(f->precPresent)
@@ -653,6 +678,8 @@ namespace golang::fmt
                         break;
                 }
             }
+            // Buffer pre-allocated with enough room for
+            // exponent notations of the form "e+123" or "p-1023".
             gocpp::array<unsigned char, 6> tailBuf = {};
             auto tail = tailBuf.make_slice(0, 0);
             auto hasDecimalPoint = false;

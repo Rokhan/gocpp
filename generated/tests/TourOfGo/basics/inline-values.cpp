@@ -36,6 +36,7 @@ namespace golang::main
     }
 
     main::ints smallPrimes = main::ints {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+    // fakeFetcher is Fetcher that returns canned results.
     
     template<typename T> requires gocpp::GoStruct<T>
     fakeResult::operator T()

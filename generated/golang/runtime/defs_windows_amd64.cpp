@@ -226,6 +226,7 @@ namespace golang::runtime
         return uintptr_t(c->rsp);
     }
 
+    // AMD64 does not have link register, so this returns 0.
     uintptr_t rec::lr(struct context* c)
     {
         return 0;

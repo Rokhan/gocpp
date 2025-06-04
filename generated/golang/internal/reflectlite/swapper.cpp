@@ -27,6 +27,10 @@ namespace golang::reflectlite
         using abi::rec::Size;
     }
 
+    // Swapper returns a function that swaps the elements in the provided
+    // slice.
+    //
+    // Swapper panics if the provided interface is not a slice.
     std::function<void (int i, int j)> Swapper(go_any slice)
     {
         auto v = ValueOf(slice);

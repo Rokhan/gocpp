@@ -57,6 +57,24 @@ namespace golang::runtime
         using atomic::rec::Swap;
     }
 
+    // Error codes returned by runtime_pollReset and runtime_pollWait.
+    // These must match the values in internal/poll/fd_poll_runtime.go.
+    // pollDesc contains 2 binary semaphores, rg and wg, to park reader and writer
+    // goroutines respectively. The semaphore can be in the following states:
+    //
+    //	pdReady - io readiness notification is pending;
+    //	          a goroutine consumes the notification by changing the state to pdNil.
+    //	pdWait - a goroutine prepares to park on the semaphore, but not yet parked;
+    //	         the goroutine commits to park by changing the state to G pointer,
+    //	         or, alternatively, concurrent io notification changes the state to pdReady,
+    //	         or, alternatively, concurrent timeout/close changes the state to pdNil.
+    //	G pointer - the goroutine is blocked on the semaphore;
+    //	            io notification or timeout/close changes the state to pdReady or pdNil respectively
+    //	            and unparks the goroutine.
+    //	pdNil - none of the above.
+    // Network poller descriptor.
+    //
+    // No heap pointers.
     
     template<typename T> requires gocpp::GoStruct<T>
     pollDesc::operator T()
@@ -134,6 +152,10 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // pollInfo is the bits needed by netpollcheckerr, stored atomically,
+    // mostly duplicating state that is manipulated under lock in pollDesc.
+    // The one exception is the pollEventErr bit, which is maintained only
+    // in the pollInfo.
     bool rec::closing(golang::runtime::pollInfo i)
     {
         return i & pollClosing != 0;
@@ -154,11 +176,19 @@ namespace golang::runtime
         return i & pollExpiredWriteDeadline != 0;
     }
 
+    // info returns the pollInfo corresponding to pd.
     runtime::pollInfo rec::info(struct pollDesc* pd)
     {
         return pollInfo(rec::Load(gocpp::recv(pd->atomicInfo)));
     }
 
+    // publishInfo updates pd.atomicInfo (returned by pd.info)
+    // using the other values in pd.
+    // It must be called while holding pd.lock,
+    // and it must be called after changing anything
+    // that might affect the info bits.
+    // In practice this means after changing closing
+    // or changing rd or wd from < 0 to >= 0.
     void rec::publishInfo(struct pollDesc* pd)
     {
         uint32_t info = {};
@@ -182,6 +212,9 @@ namespace golang::runtime
         }
     }
 
+    // setEventErr sets the result of pd.info().eventErr() to b.
+    // We only change the error bit if seq == 0 or if seq matches pollFDSeq
+    // (issue #59545).
     void rec::setEventErr(struct pollDesc* pd, bool b, uintptr_t seq)
     {
         auto mSeq = uint32_t(seq & pollFDSeqMask);
@@ -238,6 +271,7 @@ namespace golang::runtime
     atomic::Uint32 netpollInited;
     pollCache pollcache;
     atomic::Uint32 netpollWaiters;
+    //go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit
     void poll_runtime_pollServerInit()
     {
         netpollGenericInit();
@@ -263,11 +297,14 @@ namespace golang::runtime
         return rec::Load(gocpp::recv(netpollInited)) != 0;
     }
 
+    // poll_runtime_isPollServerDescriptor reports whether fd is a
+    // descriptor being used by netpoll.
     bool poll_runtime_isPollServerDescriptor(uintptr_t fd)
     {
         return netpollIsPollDescriptor(fd);
     }
 
+    //go:linkname poll_runtime_pollOpen internal/poll.runtime_pollOpen
     std::tuple<struct pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
     {
         auto pd = rec::alloc(gocpp::recv(pollcache));
@@ -307,6 +344,7 @@ namespace golang::runtime
         return {pd, 0};
     }
 
+    //go:linkname poll_runtime_pollClose internal/poll.runtime_pollClose
     void poll_runtime_pollClose(struct pollDesc* pd)
     {
         if(! pd->closing)
@@ -341,6 +379,11 @@ namespace golang::runtime
         unlock(& c->lock);
     }
 
+    // poll_runtime_pollReset, which is internal/poll.runtime_pollReset,
+    // prepares a descriptor for polling in mode, which is 'r' or 'w'.
+    // This returns an error code; the codes are defined above.
+    //
+    //go:linkname poll_runtime_pollReset internal/poll.runtime_pollReset
     int poll_runtime_pollReset(struct pollDesc* pd, int mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
@@ -360,6 +403,12 @@ namespace golang::runtime
         return pollNoError;
     }
 
+    // poll_runtime_pollWait, which is internal/poll.runtime_pollWait,
+    // waits for a descriptor to be ready for reading or writing,
+    // according to mode, which is 'r' or 'w'.
+    // This returns an error code; the codes are defined above.
+    //
+    //go:linkname poll_runtime_pollWait internal/poll.runtime_pollWait
     int poll_runtime_pollWait(struct pollDesc* pd, int mode)
     {
         auto errcode = netpollcheckerr(pd, int32_t(mode));
@@ -382,6 +431,7 @@ namespace golang::runtime
         return pollNoError;
     }
 
+    //go:linkname poll_runtime_pollWaitCanceled internal/poll.runtime_pollWaitCanceled
     void poll_runtime_pollWaitCanceled(struct pollDesc* pd, int mode)
     {
         for(; ! netpollblock(pd, int32_t(mode), true); )
@@ -389,6 +439,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname poll_runtime_pollSetDeadline internal/poll.runtime_pollSetDeadline
     void poll_runtime_pollSetDeadline(struct pollDesc* pd, int64_t d, int mode)
     {
         lock(& pd->lock);
@@ -493,6 +544,7 @@ namespace golang::runtime
         netpollAdjustWaiters(delta);
     }
 
+    //go:linkname poll_runtime_pollUnblock internal/poll.runtime_pollUnblock
     void poll_runtime_pollUnblock(struct pollDesc* pd)
     {
         lock(& pd->lock);
@@ -531,6 +583,17 @@ namespace golang::runtime
         netpollAdjustWaiters(delta);
     }
 
+    // netpollready is called by the platform-specific netpoll function.
+    // It declares that the fd associated with pd is ready for I/O.
+    // The toRun argument is used to build a list of goroutines to return
+    // from netpoll. The mode argument is 'r', 'w', or 'r'+'w' to indicate
+    // whether the fd is ready for reading or writing or both.
+    //
+    // This returns a delta to apply to netpollWaiters.
+    //
+    // This may run while the world is stopped, so write barriers are not allowed.
+    //
+    //go:nowritebarrier
     int32_t netpollready(struct gList* toRun, struct pollDesc* pd, int32_t mode)
     {
         auto delta = int32_t(0);
@@ -588,6 +651,10 @@ namespace golang::runtime
         goready(gp, traceskip + 1);
     }
 
+    // returns true if IO is ready, or false if timed out or closed
+    // waitio - wait only for completed IO, ignore errors
+    // Concurrent calls to netpollblock in the same mode are forbidden, as pollDesc
+    // can hold only a single waiting goroutine for each mode.
     bool netpollblock(struct pollDesc* pd, int32_t mode, bool waitio)
     {
         auto gpp = & pd->rg;
@@ -622,6 +689,12 @@ namespace golang::runtime
         return old == pdReady;
     }
 
+    // netpollunblock moves either pd.rg (if mode == 'r') or
+    // pd.wg (if mode == 'w') into the pdReady state.
+    // This returns any goroutine blocked on pd.{rg,wg}.
+    // It adds any adjustment to netpollWaiters to *delta;
+    // this adjustment should be applied after the goroutine has
+    // been marked ready.
     struct g* netpollunblock(struct pollDesc* pd, int32_t mode, bool ioready, int32_t* delta)
     {
         auto gpp = & pd->rg;
@@ -724,11 +797,13 @@ namespace golang::runtime
         netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, false, true);
     }
 
+    // netpollAnyWaiters reports whether any goroutines are waiting for I/O.
     bool netpollAnyWaiters()
     {
         return rec::Load(gocpp::recv(netpollWaiters)) > 0;
     }
 
+    // netpollAdjustWaiters adds delta to netpollWaiters.
     void netpollAdjustWaiters(int32_t delta)
     {
         if(delta != 0)
@@ -763,6 +838,11 @@ namespace golang::runtime
         return pd;
     }
 
+    // makeArg converts pd to an interface{}.
+    // makeArg does not do any allocation. Normally, such
+    // a conversion requires an allocation because pointers to
+    // types which embed runtime/internal/sys.NotInHeap (which pollDesc is)
+    // must be stored in interfaces indirectly. See issue 42076.
     go_any rec::makeArg(struct pollDesc* pd)
     {
         go_any i;

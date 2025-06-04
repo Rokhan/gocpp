@@ -238,9 +238,15 @@ namespace golang::runtime
     }
 
 
+    // trace is global tracing context.
     gocpp_id_0 trace;
     uint32_t traceAdvanceSema = 1;
     uint32_t traceShutdownSema = 1;
+    // StartTrace enables tracing for the current process.
+    // While tracing, the data will be buffered and available via [ReadTrace].
+    // StartTrace returns an error if tracing is already enabled.
+    // Most clients should use the [runtime/trace] package or the [testing] package's
+    // -test.trace flag instead of calling StartTrace directly.
     struct gocpp::error StartTrace()
     {
         if(traceEnabled() || traceShuttingDown())
@@ -289,11 +295,18 @@ namespace golang::runtime
         return nullptr;
     }
 
+    // StopTrace stops tracing, if it was previously enabled.
+    // StopTrace only returns after all the reads for the trace have completed.
     void StopTrace()
     {
         traceAdvance(true);
     }
 
+    // traceAdvance moves tracing to the next generation, and cleans up the current generation,
+    // ensuring that it's flushed out before returning. If stopTrace is true, it disables tracing
+    // altogether instead of advancing to the next generation.
+    //
+    // traceAdvanceSema must not be held.
     void traceAdvance(bool stopTrace)
     {
         semacquire(& traceAdvanceSema);
@@ -304,6 +317,7 @@ namespace golang::runtime
             return;
         }
         traceFrequency(gen);
+        // Collect all the untraced Gs.
         
         template<typename T> requires gocpp::GoStruct<T>
         untracedG::operator T()
@@ -431,6 +445,12 @@ namespace golang::runtime
             mToFlush = mp;
         }
         unlock(& sched.lock);
+        // Iterate over our snapshot, flushing every buffer until we're done.
+        //
+        // Because trace writers read the generation while the seqlock is
+        // held, we can be certain that when there are no writers there are
+        // also no stale generation values left. Therefore, it's safe to flush
+        // any buffers that remain in that generation's slot.
         auto debugDeadlock = false;
         systemstack([=]() mutable -> void
         {
@@ -584,6 +604,9 @@ namespace golang::runtime
         return gen + 1;
     }
 
+    // traceRegisterLabelsAndReasons re-registers mark worker labels and
+    // goroutine stop/block reasons in the string table for the provided
+    // generation. Note: the provided generation must not have started yet.
     void traceRegisterLabelsAndReasons(uintptr_t gen)
     {
         for(auto [i, label] : gcMarkWorkerModeStrings.make_slice(0))
@@ -600,6 +623,11 @@ namespace golang::runtime
         }
     }
 
+    // ReadTrace returns the next chunk of binary tracing data, blocking until data
+    // is available. If tracing is turned off and all the data accumulated while it
+    // was on has been returned, ReadTrace returns nil. The caller must copy the
+    // returned data before calling ReadTrace again.
+    // ReadTrace must be called from one goroutine at a time.
     gocpp::slice<unsigned char> ReadTrace()
     {
         top:
@@ -635,6 +663,10 @@ namespace golang::runtime
         return buf;
     }
 
+    // readTrace0 is ReadTrace's continuation on g0. This must run on the
+    // system stack because it acquires trace.lock.
+    //
+    //go:systemstack
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0()
     {
         gocpp::Defer defer;
@@ -723,6 +755,12 @@ namespace golang::runtime
         }
     }
 
+    // traceReader returns the trace reader that should be woken up, if any.
+    // Callers should first check (traceEnabled() || traceShuttingDown()).
+    //
+    // This must run on the system stack because it acquires trace.lock.
+    //
+    //go:systemstack
     struct g* traceReader()
     {
         auto gp = traceReaderAvailable();
@@ -733,6 +771,9 @@ namespace golang::runtime
         return gp;
     }
 
+    // traceReaderAvailable returns the trace reader if it is not currently
+    // scheduled and should be. Callers should first check that
+    // (traceEnabled() || traceShuttingDown()) is true.
     struct g* traceReaderAvailable()
     {
         if(rec::Load(gocpp::recv(trace.flushedGen)) == rec::Load(gocpp::recv(trace.readerGen)) || rec::Load(gocpp::recv(trace.workAvailable)) || rec::Load(gocpp::recv(trace.shutdown)))
@@ -742,6 +783,7 @@ namespace golang::runtime
         return nullptr;
     }
 
+    // Trace advancer goroutine.
     traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -866,6 +908,7 @@ namespace golang::runtime
             }
 
 
+    // start starts a new traceAdvancer.
     void rec::start(struct traceAdvancerState* s)
     {
         s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>());
@@ -881,6 +924,7 @@ namespace golang::runtime
         }(); });
     }
 
+    // stop stops a traceAdvancer and blocks until it exits.
     void rec::stop(struct traceAdvancerState* s)
     {
         rec::wake(gocpp::recv(s->timer));
@@ -889,6 +933,8 @@ namespace golang::runtime
         rec::close(gocpp::recv(s->timer));
     }
 
+    // traceAdvancePeriod is the approximate period between
+    // new generations.
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_5::operator T()
@@ -916,6 +962,11 @@ namespace golang::runtime
     }
 
 
+    // wakeableSleep manages a wakeable goroutine sleep.
+    //
+    // Users of this type must call init before first use and
+    // close to free up resources. Once close is called, init
+    // must be called before another use.
     
     template<typename T> requires gocpp::GoStruct<T>
     wakeableSleep::operator T()
@@ -983,6 +1034,7 @@ namespace golang::runtime
         }
 
 
+    // newWakeableSleep initializes a new wakeableSleep and returns it.
     struct wakeableSleep* newWakeableSleep()
     {
         auto s = new(wakeableSleep);
@@ -997,6 +1049,11 @@ namespace golang::runtime
         return s;
     }
 
+    // sleep sleeps for the provided duration in nanoseconds or until
+    // another goroutine calls wake.
+    //
+    // Must not be called by more than one goroutine at a time and
+    // must not be called concurrently with close.
     void rec::sleep(struct wakeableSleep* s, int64_t ns)
     {
         resetTimer(s->timer, nanotime() + ns);
@@ -1047,6 +1104,9 @@ namespace golang::runtime
                 }
 
 
+    // wake awakens any goroutine sleeping on the timer.
+    //
+    // Safe for concurrent use with all other methods.
     void rec::wake(struct wakeableSleep* s)
     {
         lock(& s->lock);
@@ -1077,6 +1137,13 @@ namespace golang::runtime
         unlock(& s->lock);
     }
 
+    // close wakes any goroutine sleeping on the timer and prevents
+    // further sleeping on it.
+    //
+    // Once close is called, the wakeableSleep must no longer be used.
+    //
+    // It must only be called once no goroutine is sleeping on the
+    // timer *and* nothing else will call wake concurrently.
     void rec::close(struct wakeableSleep* s)
     {
         lock(& s->lock);

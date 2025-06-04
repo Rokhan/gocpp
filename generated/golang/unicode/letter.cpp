@@ -13,6 +13,8 @@
 
 #include "golang/unicode/graphic.h"
 
+// Package unicode provides data and functions to test some properties of
+// Unicode code points.
 namespace golang::unicode
 {
     namespace rec
@@ -20,6 +22,11 @@ namespace golang::unicode
         using namespace mocklib::rec;
     }
 
+    // RangeTable defines a set of Unicode code points by listing the ranges of
+    // code points within the set. The ranges are listed in two slices
+    // to save space: a slice of 16-bit ranges and a slice of 32-bit ranges.
+    // The two slices must be in sorted order and non-overlapping.
+    // Also, R32 should contain only values >= 0x10000 (1<<16).
     
     template<typename T> requires gocpp::GoStruct<T>
     RangeTable::operator T()
@@ -55,6 +62,8 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // Range16 represents of a range of 16-bit Unicode code points. The range runs from Lo to Hi
+    // inclusive and has the specified stride.
     
     template<typename T> requires gocpp::GoStruct<T>
     Range16::operator T()
@@ -90,6 +99,9 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // Range32 represents of a range of Unicode code points and is used when one or
+    // more of the values will not fit in 16 bits. The range runs from Lo to Hi
+    // inclusive and has the specified stride. Lo and Hi must always be >= 1<<16.
     
     template<typename T> requires gocpp::GoStruct<T>
     Range32::operator T()
@@ -125,6 +137,18 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // CaseRange represents a range of Unicode code points for simple (one
+    // code point to one code point) case conversion.
+    // The range runs from Lo to Hi inclusive, with a fixed stride of 1. Deltas
+    // are the number to add to the code point to reach the code point for a
+    // different case for that character. They may be negative. If zero, it
+    // means the character is in the corresponding case. There is a special
+    // case representing sequences of alternating corresponding Upper and Lower
+    // pairs. It appears with a fixed Delta of
+    //
+    //	{UpperLower, UpperLower, UpperLower}
+    //
+    // The constant UpperLower has an otherwise impossible delta value.
     
     template<typename T> requires gocpp::GoStruct<T>
     CaseRange::operator T()
@@ -160,7 +184,16 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // SpecialCase represents language-specific case mappings such as Turkish.
+    // Methods of SpecialCase customize (by overriding) the standard mappings.
+    // Indices into the Delta arrays inside CaseRanges for case mapping.
     // // to make the CaseRanges text shorter
+    // If the Delta field of a [CaseRange] is UpperLower, it means
+    // this CaseRange represents a sequence of the form (say)
+    // [Upper] [Lower] [Upper] [Lower].
+    // linearMax is the maximum size table for linear search for non-Latin1 rune.
+    // Derived by running 'go test -calibrate'.
+    // is16 reports whether r is in the sorted slice of 16-bit ranges.
     bool is16(gocpp::slice<Range16> ranges, uint16_t r)
     {
         if(len(ranges) <= linearMax || r <= MaxLatin1)
@@ -201,6 +234,7 @@ namespace golang::unicode
         return false;
     }
 
+    // is32 reports whether r is in the sorted slice of 32-bit ranges.
     bool is32(gocpp::slice<Range32> ranges, uint32_t r)
     {
         if(len(ranges) <= linearMax)
@@ -241,6 +275,7 @@ namespace golang::unicode
         return false;
     }
 
+    // Is reports whether the rune is in the specified table of ranges.
     bool Is(struct RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
@@ -271,6 +306,7 @@ namespace golang::unicode
         return false;
     }
 
+    // IsUpper reports whether the rune is an upper case letter.
     bool IsUpper(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -280,6 +316,7 @@ namespace golang::unicode
         return isExcludingLatin(Upper, r);
     }
 
+    // IsLower reports whether the rune is a lower case letter.
     bool IsLower(gocpp::rune r)
     {
         if(uint32_t(r) <= MaxLatin1)
@@ -289,6 +326,7 @@ namespace golang::unicode
         return isExcludingLatin(Lower, r);
     }
 
+    // IsTitle reports whether the rune is a title case letter.
     bool IsTitle(gocpp::rune r)
     {
         if(r <= MaxLatin1)
@@ -298,6 +336,8 @@ namespace golang::unicode
         return isExcludingLatin(Title, r);
     }
 
+    // to maps the rune using the specified case mapping.
+    // It additionally reports whether caseRange contained a mapping for r.
     std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange)
     {
         gocpp::rune mappedRune;
@@ -333,12 +373,14 @@ namespace golang::unicode
         return {r, false};
     }
 
+    // To maps the rune to the specified case: [UpperCase], [LowerCase], or [TitleCase].
     gocpp::rune To(int _case, gocpp::rune r)
     {
         std::tie(r, gocpp_id_0) = to(_case, r, CaseRanges);
         return r;
     }
 
+    // ToUpper maps the rune to upper case.
     gocpp::rune ToUpper(gocpp::rune r)
     {
         if(r <= MaxASCII)
@@ -352,6 +394,7 @@ namespace golang::unicode
         return To(UpperCase, r);
     }
 
+    // ToLower maps the rune to lower case.
     gocpp::rune ToLower(gocpp::rune r)
     {
         if(r <= MaxASCII)
@@ -365,6 +408,7 @@ namespace golang::unicode
         return To(LowerCase, r);
     }
 
+    // ToTitle maps the rune to title case.
     gocpp::rune ToTitle(gocpp::rune r)
     {
         if(r <= MaxASCII)
@@ -378,6 +422,7 @@ namespace golang::unicode
         return To(TitleCase, r);
     }
 
+    // ToUpper maps the rune to upper case giving priority to the special mapping.
     gocpp::rune rec::ToUpper(golang::unicode::SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(UpperCase, r, gocpp::slice<CaseRange>(special));
@@ -388,6 +433,7 @@ namespace golang::unicode
         return r1;
     }
 
+    // ToTitle maps the rune to title case giving priority to the special mapping.
     gocpp::rune rec::ToTitle(golang::unicode::SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(TitleCase, r, gocpp::slice<CaseRange>(special));
@@ -398,6 +444,7 @@ namespace golang::unicode
         return r1;
     }
 
+    // ToLower maps the rune to lower case giving priority to the special mapping.
     gocpp::rune rec::ToLower(golang::unicode::SpecialCase special, gocpp::rune r)
     {
         auto [r1, hadMapping] = to(LowerCase, r, gocpp::slice<CaseRange>(special));
@@ -408,6 +455,10 @@ namespace golang::unicode
         return r1;
     }
 
+    // caseOrbit is defined in tables.go as []foldPair. Right now all the
+    // entries fit in uint16, so use uint16. If that changes, compilation
+    // will fail (the constants in the composite literal will not fit in uint16)
+    // and the types here can change to uint32.
     
     template<typename T> requires gocpp::GoStruct<T>
     foldPair::operator T()
@@ -440,6 +491,24 @@ namespace golang::unicode
         return value.PrintTo(os);
     }
 
+    // SimpleFold iterates over Unicode code points equivalent under
+    // the Unicode-defined simple case folding. Among the code points
+    // equivalent to rune (including rune itself), SimpleFold returns the
+    // smallest rune > r if one exists, or else the smallest rune >= 0.
+    // If r is not a valid Unicode code point, SimpleFold(r) returns r.
+    //
+    // For example:
+    //
+    //	SimpleFold('A') = 'a'
+    //	SimpleFold('a') = 'A'
+    //
+    //	SimpleFold('K') = 'k'
+    //	SimpleFold('k') = '\u212A' (Kelvin symbol, K)
+    //	SimpleFold('\u212A') = 'K'
+    //
+    //	SimpleFold('1') = '1'
+    //
+    //	SimpleFold(-2) = -2
     gocpp::rune SimpleFold(gocpp::rune r)
     {
         if(r < 0 || r > MaxRune)

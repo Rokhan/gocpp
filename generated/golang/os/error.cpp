@@ -24,6 +24,12 @@ namespace golang::os
         using syscall::rec::Is;
     }
 
+    // Portable analogs of some common system call errors.
+    //
+    // Errors returned from this package may be tested against these errors
+    // with errors.Is.
+    // ErrInvalid indicates an invalid argument.
+    // Methods on File will return this error when the receiver is nil.
     gocpp::error ErrInvalid = fs::ErrInvalid;
     gocpp::error ErrPermission = fs::ErrPermission;
     gocpp::error ErrExist = fs::ErrExist;
@@ -36,6 +42,13 @@ namespace golang::os
         return poll::ErrNoDeadline;
     }
 
+    // errDeadlineExceeded returns the value for os.ErrDeadlineExceeded.
+    // This error comes from the internal/poll package, which is also
+    // used by package net. Doing it this way ensures that the net
+    // package will return os.ErrDeadlineExceeded for an exceeded deadline,
+    // as documented by net.Conn.SetDeadline, without requiring any extra
+    // work in the net package and without requiring the internal/poll
+    // package to import os (which it can't, because that would be circular).
     struct gocpp::error errDeadlineExceeded()
     {
         return poll::ErrDeadlineExceeded;
@@ -89,6 +102,8 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
+    // PathError records an error and the operation and file path that caused it.
+    // SyscallError records an error from a specific system call.
     
     template<typename T> requires gocpp::GoStruct<T>
     SyscallError::operator T()
@@ -131,12 +146,16 @@ namespace golang::os
         return e->Err;
     }
 
+    // Timeout reports whether this error represents a timeout.
     bool rec::Timeout(struct SyscallError* e)
     {
         auto [t, ok] = gocpp::getValue<timeout>(e->Err);
         return ok && rec::Timeout(gocpp::recv(t));
     }
 
+    // NewSyscallError returns, as an error, a new SyscallError
+    // with the given system call name and error details.
+    // As a convenience, if err is nil, NewSyscallError returns nil.
     struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err)
     {
         if(err == nullptr)
@@ -146,21 +165,47 @@ namespace golang::os
         return new SyscallError {syscall, err};
     }
 
+    // IsExist returns a boolean indicating whether the error is known to report
+    // that a file or directory already exists. It is satisfied by ErrExist as
+    // well as some syscall errors.
+    //
+    // This function predates errors.Is. It only supports errors returned by
+    // the os package. New code should use errors.Is(err, fs.ErrExist).
     bool IsExist(struct gocpp::error err)
     {
         return underlyingErrorIs(err, ErrExist);
     }
 
+    // IsNotExist returns a boolean indicating whether the error is known to
+    // report that a file or directory does not exist. It is satisfied by
+    // ErrNotExist as well as some syscall errors.
+    //
+    // This function predates errors.Is. It only supports errors returned by
+    // the os package. New code should use errors.Is(err, fs.ErrNotExist).
     bool IsNotExist(struct gocpp::error err)
     {
         return underlyingErrorIs(err, ErrNotExist);
     }
 
+    // IsPermission returns a boolean indicating whether the error is known to
+    // report that permission is denied. It is satisfied by ErrPermission as well
+    // as some syscall errors.
+    //
+    // This function predates errors.Is. It only supports errors returned by
+    // the os package. New code should use errors.Is(err, fs.ErrPermission).
     bool IsPermission(struct gocpp::error err)
     {
         return underlyingErrorIs(err, ErrPermission);
     }
 
+    // IsTimeout returns a boolean indicating whether the error is known
+    // to report that a timeout occurred.
+    //
+    // This function predates errors.Is, and the notion of whether an
+    // error indicates a timeout can be ambiguous. For example, the Unix
+    // error EWOULDBLOCK sometimes indicates a timeout and sometimes does not.
+    // New code should use errors.Is with a value appropriate to the call
+    // returning the error, such as os.ErrDeadlineExceeded.
     bool IsTimeout(struct gocpp::error err)
     {
         auto [terr, ok] = gocpp::getValue<timeout>(underlyingError(err));
@@ -178,6 +223,7 @@ namespace golang::os
         return ok && rec::Is(gocpp::recv(e), target);
     }
 
+    // underlyingError returns the underlying error for known os error types.
     struct gocpp::error underlyingError(struct gocpp::error err)
     {
         //Go type switch emulation

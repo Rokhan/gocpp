@@ -27,6 +27,41 @@ namespace golang::sync
         using namespace mocklib::rec;
     }
 
+    // A Pool is a set of temporary objects that may be individually saved and
+    // retrieved.
+    //
+    // Any item stored in the Pool may be removed automatically at any time without
+    // notification. If the Pool holds the only reference when this happens, the
+    // item might be deallocated.
+    //
+    // A Pool is safe for use by multiple goroutines simultaneously.
+    //
+    // Pool's purpose is to cache allocated but unused items for later reuse,
+    // relieving pressure on the garbage collector. That is, it makes it easy to
+    // build efficient, thread-safe free lists. However, it is not suitable for all
+    // free lists.
+    //
+    // An appropriate use of a Pool is to manage a group of temporary items
+    // silently shared among and potentially reused by concurrent independent
+    // clients of a package. Pool provides a way to amortize allocation overhead
+    // across many clients.
+    //
+    // An example of good use of a Pool is in the fmt package, which maintains a
+    // dynamically-sized store of temporary output buffers. The store scales under
+    // load (when many goroutines are actively printing) and shrinks when
+    // quiescent.
+    //
+    // On the other hand, a free list maintained as part of a short-lived object is
+    // not a suitable use for a Pool, since the overhead does not amortize well in
+    // that scenario. It is more efficient to have such objects implement their own
+    // free list.
+    //
+    // A Pool must not be copied after first use.
+    //
+    // In the terminology of the Go memory model, a call to Put(x) “synchronizes before”
+    // a call to Get returning that same value x.
+    // Similarly, a call to New returning x “synchronizes before”
+    // a call to Get returning that same value x.
     
     template<typename T> requires gocpp::GoStruct<T>
     Pool::operator T()
@@ -71,6 +106,7 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // Local per-P Pool appendix.
     
     template<typename T> requires gocpp::GoStruct<T>
     poolLocalInternal::operator T()
@@ -132,10 +168,17 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
+    // from runtime
+    //go:linkname runtime_randn runtime.randn
     uint32_t runtime_randn(uint32_t n)
     /* convertBlockStmt, nil block */;
 
     gocpp::array<uint64_t, 128> poolRaceHash;
+    // poolRaceAddr returns an address to use as the synchronization point
+    // for race detector logic. We don't use the actual pointer stored in x
+    // directly, for fear of conflicting with other synchronization on that address.
+    // Instead, we hash the pointer to get an index into poolRaceHash.
+    // See discussion on golang.org/cl/31589.
     unsafe::Pointer poolRaceAddr(go_any x)
     {
         auto ptr = uintptr_t((gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& x))[1]);
@@ -143,6 +186,7 @@ namespace golang::sync
         return unsafe::Pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
+    // Put adds x to the pool.
     void rec::Put(struct Pool* p, go_any x)
     {
         if(x == nullptr)
@@ -174,6 +218,14 @@ namespace golang::sync
         }
     }
 
+    // Get selects an arbitrary item from the Pool, removes it from the
+    // Pool, and returns it to the caller.
+    // Get may choose to ignore the pool and treat it as empty.
+    // Callers should not assume any relation between values passed to Put and
+    // the values returned by Get.
+    //
+    // If Get would otherwise return nil and p.New is non-nil, Get returns
+    // the result of calling p.New.
     go_any rec::Get(struct Pool* p)
     {
         if(race::Enabled)
@@ -243,6 +295,9 @@ namespace golang::sync
         return nullptr;
     }
 
+    // pin pins the current goroutine to P, disables preemption and
+    // returns poolLocal pool for the P and the P's id.
+    // Caller must call runtime_procUnpin() when done with the pool.
     std::tuple<struct poolLocal*, int> rec::pin(struct Pool* p)
     {
         if(p == nullptr)
@@ -307,6 +362,11 @@ namespace golang::sync
         std::tie(oldPools, allPools) = std::tuple{allPools, nullptr};
     }
 
+    // allPools is the set of pools that have non-empty primary
+    // caches. Protected by either 1) allPoolsMu and pinning or 2)
+    // STW.
+    // oldPools is the set of pools that may have non-empty victim
+    // caches. Protected by STW.
     Mutex allPoolsMu;
     gocpp::slice<Pool*> allPools;
     gocpp::slice<Pool*> oldPools;
@@ -321,6 +381,7 @@ namespace golang::sync
         return (poolLocal*)(lp);
     }
 
+    // Implemented in runtime.
     void runtime_registerPoolCleanup(std::function<void ()> cleanup)
     /* convertBlockStmt, nil block */;
 
@@ -330,9 +391,11 @@ namespace golang::sync
     void runtime_procUnpin()
     /* convertBlockStmt, nil block */;
 
+    //go:linkname runtime_LoadAcquintptr runtime/internal/atomic.LoadAcquintptr
     uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr)
     /* convertBlockStmt, nil block */;
 
+    //go:linkname runtime_StoreReluintptr runtime/internal/atomic.StoreReluintptr
     uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val)
     /* convertBlockStmt, nil block */;
 

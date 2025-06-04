@@ -20,6 +20,8 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // MulUintptr returns a * b and whether the multiplication overflowed.
+    // On supported platforms this is an intrinsic lowered by the compiler.
     std::tuple<uintptr_t, bool> MulUintptr(uintptr_t a, uintptr_t b)
     {
         if(a | b < (1 << (4 * goarch::PtrSize)) || a == 0)
@@ -30,6 +32,11 @@ namespace golang::math
         return {a * b, overflow};
     }
 
+    // Mul64 returns the 128-bit product of x and y: (hi, lo) = x * y
+    // with the product bits' upper half returned in hi and the lower
+    // half returned in lo.
+    // This is a copy from math/bits.Mul64
+    // On supported platforms this is an intrinsic lowered by the compiler.
     std::tuple<uint64_t, uint64_t> Mul64(uint64_t x, uint64_t y)
     {
         uint64_t hi;
@@ -49,6 +56,12 @@ namespace golang::math
         return {hi, lo};
     }
 
+    // Add64 returns the sum with carry of x, y and carry: sum = x + y + carry.
+    // The carry input must be 0 or 1; otherwise the behavior is undefined.
+    // The carryOut output is guaranteed to be 0 or 1.
+    //
+    // This function's execution time does not depend on the inputs.
+    // On supported platforms this is an intrinsic lowered by the compiler.
     std::tuple<uint64_t, uint64_t> Add64(uint64_t x, uint64_t y, uint64_t carry)
     {
         uint64_t sum;

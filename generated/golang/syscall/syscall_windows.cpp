@@ -36,6 +36,11 @@ namespace golang::syscall
         using sync::rec::Do;
     }
 
+    // StringToUTF16 returns the UTF-16 encoding of the UTF-8 string s,
+    // with a terminating NUL added. If s contains a NUL byte this
+    // function panics instead of returning an error.
+    //
+    // Deprecated: Use UTF16FromString instead.
     gocpp::slice<uint16_t> StringToUTF16(std::string s)
     {
         auto [a, err] = UTF16FromString(s);
@@ -46,6 +51,10 @@ namespace golang::syscall
         return a;
     }
 
+    // UTF16FromString returns the UTF-16 encoding of the UTF-8 string
+    // s, with a terminating NUL added. If s contains a NUL byte at any
+    // location, it returns (nil, EINVAL). Unpaired surrogates
+    // are encoded using WTF-8.
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> UTF16FromString(std::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
@@ -57,6 +66,9 @@ namespace golang::syscall
         return {append(buf, 0), nullptr};
     }
 
+    // UTF16ToString returns the UTF-8 encoding of the UTF-16 sequence s,
+    // with a terminating NUL removed. Unpaired surrogates are decoded
+    // using WTF-8 instead of UTF-8 encoding.
     std::string UTF16ToString(gocpp::slice<uint16_t> s)
     {
         auto maxLen = 0;
@@ -90,6 +102,8 @@ namespace golang::syscall
         return unsafe::String(unsafe::SliceData(buf), len(buf));
     }
 
+    // utf16PtrToString is like UTF16ToString, but takes *uint16
+    // as a parameter instead of []uint16.
     std::string utf16PtrToString(uint16_t* p)
     {
         if(p == nullptr)
@@ -106,11 +120,21 @@ namespace golang::syscall
         return UTF16ToString(unsafe::Slice(p, n));
     }
 
+    // StringToUTF16Ptr returns pointer to the UTF-16 encoding of
+    // the UTF-8 string s, with a terminating NUL added. If s
+    // contains a NUL byte this function panics instead of
+    // returning an error.
+    //
+    // Deprecated: Use UTF16PtrFromString instead.
     uint16_t* StringToUTF16Ptr(std::string s)
     {
         return & StringToUTF16(s)[0];
     }
 
+    // UTF16PtrFromString returns pointer to the UTF-16 encoding of
+    // the UTF-8 string s, with a terminating NUL added. If s
+    // contains a NUL byte at any location, it returns (nil, EINVAL).
+    // Unpaired surrogates are encoded using WTF-8.
     std::tuple<uint16_t*, struct gocpp::error> UTF16PtrFromString(std::string s)
     {
         auto [a, err] = UTF16FromString(s);
@@ -121,11 +145,22 @@ namespace golang::syscall
         return {& a[0], nullptr};
     }
 
+    // Errno is the Windows error number.
+    //
+    // Errno values can be tested against error values using errors.Is.
+    // For example:
+    //
+    //	_, _, err := syscall.Syscall(...)
+    //	if errors.Is(err, fs.ErrNotExist) ...
     uint32_t langid(uint16_t pri, uint16_t sub)
     {
         return (uint32_t(sub) << 10) | uint32_t(pri);
     }
 
+    // FormatMessage is deprecated (msgsrc should be uintptr, not uint32, but can
+    // not be changed due to the Go 1 compatibility guarantee).
+    //
+    // Deprecated: Use FormatMessage from golang.org/x/sys/windows instead.
     std::tuple<uint32_t, struct gocpp::error> FormatMessage(uint32_t flags, uint32_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args)
     {
         uint32_t n;
@@ -140,6 +175,7 @@ namespace golang::syscall
         {
             return errors[idx];
         }
+        // ask windows for the remaining errors
         uint32_t flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_IGNORE_INSERTS;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 300);
         auto [n, err] = formatMessage(flags, 0, uint32_t(e), langid(LANG_ENGLISH, SUBLANG_ENGLISH_US), b, nullptr);
@@ -196,14 +232,27 @@ namespace golang::syscall
         return e == go_EAGAIN || e == go_EWOULDBLOCK || e == go_ETIMEDOUT;
     }
 
+    // Implemented in runtime/syscall_windows.go.
     uintptr_t compileCallback(go_any fn, bool cleanstack)
     /* convertBlockStmt, nil block */;
 
+    // NewCallback converts a Go function to a function pointer conforming to the stdcall calling convention.
+    // This is useful when interoperating with Windows code requiring callbacks.
+    // The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
+    // Only a limited number of callbacks may be created in a single Go process, and any memory allocated
+    // for these callbacks is never released.
+    // Between NewCallback and NewCallbackCDecl, at least 1024 callbacks can always be created.
     uintptr_t NewCallback(go_any fn)
     {
         return compileCallback(fn, true);
     }
 
+    // NewCallbackCDecl converts a Go function to a function pointer conforming to the cdecl calling convention.
+    // This is useful when interoperating with Windows code requiring callbacks.
+    // The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
+    // Only a limited number of callbacks may be created in a single Go process, and any memory allocated
+    // for these callbacks is never released.
+    // Between NewCallback and NewCallbackCDecl, at least 1024 callbacks can always be created.
     uintptr_t NewCallbackCDecl(go_any fn)
     {
         return compileCallback(fn, false);
@@ -408,6 +457,8 @@ namespace golang::syscall
 
     int64_t ioSync;
     LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx"s);
+    // setFilePointerEx calls SetFilePointerEx.
+    // See https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex
     struct gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
     {
         syscall::Errno e1 = {};
@@ -682,6 +733,7 @@ namespace golang::syscall
         }
     }
 
+    // This matches the value in os/file_windows.go.
     struct gocpp::error UtimesNano(std::string path, gocpp::slice<Timespec> ts)
     {
         gocpp::Defer defer;
@@ -763,6 +815,8 @@ namespace golang::syscall
         return rec::Find(gocpp::recv(procSetFileCompletionNotificationModes));
     }
 
+    // For testing: clients can set this flag to force
+    // creation of IPv6 sockets to return EAFNOSUPPORT.
     bool SocketDisableIPv6;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1461,6 +1515,7 @@ namespace golang::syscall
         return connectEx(fd, ptr, n, sendBuf, sendDataLen, bytesSent, overlapped);
     }
 
+    // Invented structures to support what package os expects.
     
     template<typename T> requires gocpp::GoStruct<T>
     Rusage::operator T()
@@ -1573,6 +1628,8 @@ namespace golang::syscall
         return - 1;
     }
 
+    // Timespec is an invented structure on Windows, but here for
+    // consistency with the syscall package for other operating systems.
     
     template<typename T> requires gocpp::GoStruct<T>
     Timespec::operator T()
@@ -1817,6 +1874,14 @@ namespace golang::syscall
     {
         syscall::Handle handle;
         struct gocpp::error err;
+        // NOTE(rsc): The Win32finddata struct is wrong for the system call:
+        // the two paths are each one uint16 short. Use the correct struct,
+        // a win32finddata1, and then copy the results out.
+        // There is no loss of expressivity here, because the final
+        // uint16, if it is used, is supposed to be a NUL, and Go doesn't need that.
+        // For Go 1.1, we might avoid the allocation of win32finddata1 here
+        // by adding a final Bug [2]uint16 field to the struct and then
+        // adjusting the fields in the result directly.
         win32finddata1 data1 = {};
         std::tie(handle, err) = findFirstFile1(name, & data1);
         if(err == nullptr)
@@ -1922,6 +1987,7 @@ namespace golang::syscall
         return SetCurrentDirectory(& path[0]);
     }
 
+    // TODO(brainman): fix all needed for os
     struct gocpp::error Link(std::string oldpath, std::string newpath)
     {
         struct gocpp::error err;
@@ -2011,6 +2077,7 @@ namespace golang::syscall
         return rec::Find(gocpp::recv(procCreateSymbolicLinkW));
     }
 
+    // Readlink returns the destination of the named symbolic link.
     std::tuple<int, struct gocpp::error> Readlink(std::string path, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
@@ -2098,11 +2165,13 @@ namespace golang::syscall
         }
     }
 
+    // Deprecated: CreateIoCompletionPort has the wrong function signature. Use x/sys/windows.CreateIoCompletionPort.
     std::tuple<syscall::Handle, struct gocpp::error> CreateIoCompletionPort(golang::syscall::Handle filehandle, golang::syscall::Handle cphandle, uint32_t key, uint32_t threadcnt)
     {
         return createIoCompletionPort(filehandle, cphandle, uintptr_t(key), threadcnt);
     }
 
+    // Deprecated: GetQueuedCompletionStatus has the wrong function signature. Use x/sys/windows.GetQueuedCompletionStatus.
     struct gocpp::error GetQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uint32_t* key, struct Overlapped** overlapped, uint32_t timeout)
     {
         uintptr_t ukey = {};
@@ -2124,11 +2193,15 @@ namespace golang::syscall
         return err;
     }
 
+    // Deprecated: PostQueuedCompletionStatus has the wrong function signature. Use x/sys/windows.PostQueuedCompletionStatus.
     struct gocpp::error PostQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t qty, uint32_t key, struct Overlapped* overlapped)
     {
         return postQueuedCompletionStatus(cphandle, qty, uintptr_t(key), overlapped);
     }
 
+    // newProcThreadAttributeList allocates new PROC_THREAD_ATTRIBUTE_LIST, with
+    // the requested maximum number of attributes, which must be cleaned up by
+    // deleteProcThreadAttributeList.
     std::tuple<struct _PROC_THREAD_ATTRIBUTE_LIST*, struct gocpp::error> newProcThreadAttributeList(uint32_t maxAttrCount)
     {
         uintptr_t size = {};
@@ -2150,6 +2223,30 @@ namespace golang::syscall
         return {al, nullptr};
     }
 
+    // RegEnumKeyEx enumerates the subkeys of an open registry key.
+    // Each call retrieves information about one subkey. name is
+    // a buffer that should be large enough to hold the name of the
+    // subkey plus a null terminating character. nameLen is its
+    // length. On return, nameLen will contain the actual length of the
+    // subkey.
+    //
+    // Should name not be large enough to hold the subkey, this function
+    // will return ERROR_MORE_DATA, and must be called again with an
+    // appropriately sized buffer.
+    //
+    // reserved must be nil. class and classLen behave like name and nameLen
+    // but for the class of the subkey, except that they are optional.
+    // lastWriteTime, if not nil, will be populated with the time the subkey
+    // was last written.
+    //
+    // The caller must enumerate all subkeys in order. That is
+    // RegEnumKeyEx must be called with index starting at 0, incrementing
+    // the index until the function returns ERROR_NO_MORE_ITEMS, or with
+    // the index of the last subkey (obtainable from RegQueryInfoKey),
+    // decrementing until index 0 is enumerated.
+    //
+    // Successive calls to this API must happen on the same OS thread,
+    // so call runtime.LockOSThread before calling this function.
     struct gocpp::error RegEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, struct Filetime* lastWriteTime)
     {
         struct gocpp::error regerrno;

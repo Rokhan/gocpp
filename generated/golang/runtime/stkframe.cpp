@@ -37,6 +37,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // A stkframe holds information about a single physical stack frame.
     
     template<typename T> requires gocpp::GoStruct<T>
     stkframe::operator T()
@@ -87,6 +88,8 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // reflectMethodValue is a partial duplicate of reflect.makeFuncImpl
+    // and reflect.methodValue.
     
     template<typename T> requires gocpp::GoStruct<T>
     reflectMethodValue::operator T()
@@ -122,6 +125,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // argBytes returns the argument frame size for a call to frame.fn.
     uintptr_t rec::argBytes(struct stkframe* frame)
     {
         if(frame->fn.args != abi::ArgsSizeUnknown)
@@ -132,6 +136,18 @@ namespace golang::runtime
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
 
+    // argMapInternal is used internally by stkframe to fetch special
+    // argument maps.
+    //
+    // argMap.n is always populated with the size of the argument map.
+    //
+    // argMap.bytedata is only populated for dynamic argument maps (used
+    // by reflect). If the caller requires the argument map, it should use
+    // this if non-nil, and otherwise fetch the argument map using the
+    // current PC.
+    //
+    // hasReflectStackObj indicates that this frame also has a reflect
+    // function stack object, which the caller must synthesize.
     std::tuple<struct bitvector, bool> rec::argMapInternal(struct stkframe* frame)
     {
         struct bitvector argMap;
@@ -190,6 +206,8 @@ namespace golang::runtime
         return {argMap, hasReflectStackObj};
     }
 
+    // getStackMap returns the locals and arguments live pointer maps, and
+    // stack object list for frame.
     std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> rec::getStackMap(struct stkframe* frame, bool debug)
     {
         struct bitvector locals;
@@ -256,6 +274,7 @@ namespace golang::runtime
                 print("      no locals to adjust\n"s);
             }
         }
+        // Arguments. First fetch frame size and special-case argument maps.
         bool isReflect = {};
         std::tie(args, isReflect) = rec::argMapInternal(gocpp::recv(frame));
         if(args.n > 0 && args.bytedata == nullptr)

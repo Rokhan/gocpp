@@ -30,6 +30,8 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // traceRegionAlloc is a non-thread-safe region allocator.
+    // It holds a linked list of traceRegionAllocBlock.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceRegionAlloc::operator T()
@@ -62,6 +64,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // traceRegionAllocBlock is a block in traceRegionAlloc.
+    //
+    // traceRegionAllocBlock is allocated from non-GC'd memory, so it must not
+    // contain heap pointers. Writes to pointers to traceRegionAllocBlocks do
+    // not need write barriers.
     
     template<typename T> requires gocpp::GoStruct<T>
     traceRegionAllocBlock::operator T()
@@ -97,6 +104,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // alloc allocates n-byte block.
     struct notInHeap* rec::alloc(struct traceRegionAlloc* a, uintptr_t n)
     {
         n = alignUp(n, goarch::PtrSize);
@@ -120,6 +128,7 @@ namespace golang::runtime
         return (notInHeap*)(unsafe::Pointer(p));
     }
 
+    // drop frees all previously allocated memory and resets the allocator.
     void rec::drop(struct traceRegionAlloc* a)
     {
         for(; a->head != nullptr; )

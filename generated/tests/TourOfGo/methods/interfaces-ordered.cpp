@@ -22,6 +22,7 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
+    // type declaration first to help the current version of gocpp
     
     template<typename T>
     Abser::Abser(T& ref)

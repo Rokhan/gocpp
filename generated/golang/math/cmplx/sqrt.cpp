@@ -24,6 +24,8 @@ namespace golang::cmplx
         using namespace mocklib::rec;
     }
 
+    // Sqrt returns the square root of x.
+    // The result r is chosen so that real(r) ≥ 0 and imag(r) has the same sign as imag(x).
     struct gocpp::complex128 Sqrt(struct gocpp::complex128 x)
     {
         if(imag(x) == 0)

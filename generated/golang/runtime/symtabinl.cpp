@@ -27,6 +27,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.
     
     template<typename T> requires gocpp::GoStruct<T>
     inlinedCall::operator T()
@@ -68,6 +69,19 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // An inlineUnwinder iterates over the stack of inlined calls at a PC by
+    // decoding the inline table. The last step of iteration is always the frame of
+    // the physical function, so there's always at least one frame.
+    //
+    // This is typically used as:
+    //
+    //	for u, uf := newInlineUnwinder(...); uf.valid(); uf = u.next(uf) { ... }
+    //
+    // Implementation note: This is used in contexts that disallow write barriers.
+    // Hence, the constructor returns this by value and pointer receiver methods
+    // must not mutate pointer fields. Also, we keep the mutable state in a separate
+    // struct mostly to keep both structs SSA-able, which generates much better
+    // code.
     
     template<typename T> requires gocpp::GoStruct<T>
     inlineUnwinder::operator T()
@@ -100,6 +114,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // An inlineFrame is a position in an inlineUnwinder.
     
     template<typename T> requires gocpp::GoStruct<T>
     inlineFrame::operator T()
@@ -132,6 +147,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // newInlineUnwinder creates an inlineUnwinder initially set to the inner-most
+    // inlined frame at PC. PC should be a "call PC" (not a "return PC").
+    //
+    // This unwinder uses non-strict handling of PC because it's assumed this is
+    // only ever used for symbolic debugging. If things go really wrong, it'll just
+    // fall back to the outermost frame.
     std::tuple<struct inlineUnwinder, struct inlineFrame> newInlineUnwinder(struct funcInfo f, uintptr_t pc)
     {
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
@@ -165,6 +186,7 @@ namespace golang::runtime
         return uf.pc != 0;
     }
 
+    // next returns the frame representing uf's logical caller.
     struct inlineFrame rec::next(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
@@ -176,11 +198,13 @@ namespace golang::runtime
         return rec::resolveInternal(gocpp::recv(u), rec::entry(gocpp::recv(u->f)) + uintptr_t(parentPc));
     }
 
+    // isInlined returns whether uf is an inlined frame.
     bool rec::isInlined(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         return uf.index >= 0;
     }
 
+    // srcFunc returns the srcFunc representing the given frame.
     struct srcFunc rec::srcFunc(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         if(uf.index < 0)
@@ -191,6 +215,12 @@ namespace golang::runtime
         return srcFunc {u->f.datap, t->nameOff, t->startLine, t->funcID};
     }
 
+    // fileLine returns the file name and line number of the call within the given
+    // frame. As a convenience, for the innermost frame, it returns the file and
+    // line of the PC this unwinder was started at (often this is a call to another
+    // physical function).
+    //
+    // It returns "?", 0 if something goes wrong.
     std::tuple<std::string, int> rec::fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
     {
         std::string file;

@@ -59,6 +59,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
+    // REPARSE_DATA_BUFFER_HEADER is a common part of REPARSE_DATA_BUFFER structure.
     
     template<typename T> requires gocpp::GoStruct<T>
     REPARSE_DATA_BUFFER_HEADER::operator T()
@@ -138,6 +139,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
+    // Path returns path stored in rb.
     std::string rec::Path(struct SymbolicLinkReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;
@@ -186,6 +188,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
+    // Path returns path stored in rb.
     std::string rec::Path(struct MountPointReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;

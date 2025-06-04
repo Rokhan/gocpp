@@ -97,6 +97,8 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    // This method means type T implements the interface I,
+    // but we don't need to explicitly declare that it does so.
     void rec::M(struct T t)
     {
         mocklib::Println(t.S);

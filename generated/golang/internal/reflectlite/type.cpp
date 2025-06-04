@@ -15,6 +15,8 @@
 #include "golang/internal/reflectlite/value.h"
 #include "golang/unsafe/unsafe.h"
 
+// Package reflectlite implements lightweight version of reflect, not using
+// any package except for "runtime", "unsafe", and "internal/abi"
 namespace golang::reflectlite
 {
     namespace rec
@@ -50,6 +52,17 @@ namespace golang::reflectlite
         using abi::rec::Uncommon;
     }
 
+    // Type is the representation of a Go type.
+    //
+    // Not all methods apply to all kinds of types. Restrictions,
+    // if any, are noted in the documentation for each method.
+    // Use the Kind method to find out the kind of type before
+    // calling kind-specific methods. Calling a method
+    // inappropriate to the kind of type causes a run-time panic.
+    //
+    // Type values are comparable, such as with the == operator,
+    // so they can be used as map keys.
+    // Two Type values are equal if they represent identical types.
     
     template<typename T>
     Type::Type(T& ref)
@@ -248,6 +261,9 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
+    // A Kind represents the specific kind of type that a Type represents.
+    // The zero Kind is not a valid kind.
+    // Import-and-export these constants as necessary
     
     template<typename T> requires gocpp::GoStruct<T>
     rtype::operator T()
@@ -274,6 +290,13 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
+    // uncommonType is present only for defined types or types with methods
+    // (if T is a defined type, the uncommonTypes for T and *T have methods).
+    // Using a pointer to this struct reduces the overall size required
+    // to describe a non-defined type with no methods.
+    // arrayType represents a fixed array type.
+    // chanType represents a channel type.
+    // mapType represents a map type.
     
     template<typename T> requires gocpp::GoStruct<T>
     mapType::operator T()
@@ -324,6 +347,32 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
+    // ptrType represents a pointer type.
+    // sliceType represents a slice type.
+    // structType represents a struct type.
+    // name is an encoded type name with optional extra data.
+    //
+    // The first byte is a bit field containing:
+    //
+    //	1<<0 the name is exported
+    //	1<<1 tag data follows the name
+    //	1<<2 pkgPath nameOff follows the name and tag
+    //
+    // The next two bytes are the data length:
+    //
+    //	l := uint16(data[1])<<8 | uint16(data[2])
+    //
+    // Bytes [3:3+l] are the string data.
+    //
+    // If tag data follows then bytes 3+l and 3+l+1 are the tag length,
+    // with the data following.
+    //
+    // If the import path follows, then 4 bytes at the end of
+    // the data form a nameOff. The import path is only set for concrete
+    // methods that are defined in a different package than their type.
+    //
+    // If a name starts with "*", then the exported bit represents
+    // whether the pointed to type is exported.
     
     template<typename T> requires gocpp::GoStruct<T>
     name::operator T()
@@ -373,6 +422,8 @@ namespace golang::reflectlite
         return (*n.bytes) & (1 << 3) != 0;
     }
 
+    // readVarint parses a varint as encoded by encoding/binary.
+    // It returns the number of encoded bytes and the encoded value.
     std::tuple<int, int> rec::readVarint(struct name n, int off)
     {
         auto v = 0;
@@ -427,9 +478,19 @@ namespace golang::reflectlite
         return rec::name(gocpp::recv(pkgPathName));
     }
 
+    // resolveNameOff resolves a name offset from a base pointer.
+    // The (*rtype).nameOff method is a convenience wrapper for this function.
+    // Implemented in the runtime package.
+    //
+    //go:noescape
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     /* convertBlockStmt, nil block */;
 
+    // resolveTypeOff resolves an *rtype offset from a base type.
+    // The (*rtype).typeOff method is a convenience wrapper for this function.
+    // Implemented in the runtime package.
+    //
+    //go:noescape
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
@@ -621,11 +682,20 @@ namespace golang::reflectlite
         return toType(rec::OutSlice(gocpp::recv(tt))[i]);
     }
 
+    // add returns p+x.
+    //
+    // The whySafe string is ignored, so that the function still inlines
+    // as efficiently as p+x, but all call sites should use the string to
+    // record why the addition is safe, which is to say why the addition
+    // does not cause x to advance to the very end of p's allocation
+    // and therefore point incorrectly at the next block in memory.
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe)
     {
         return unsafe::Pointer(uintptr_t(p) + x);
     }
 
+    // TypeOf returns the reflection Type that represents the dynamic type of i.
+    // If i is a nil interface value, TypeOf returns nil.
     struct Type TypeOf(go_any i)
     {
         auto eface = *(emptyInterface*)(unsafe::Pointer(& i));
@@ -661,6 +731,7 @@ namespace golang::reflectlite
         return t.Equal != nullptr;
     }
 
+    // implements reports whether the type V implements the interface type T.
     bool implements(abi::Type* T, abi::Type* V)
     {
         auto t = rec::InterfaceType(gocpp::recv(T));
@@ -752,6 +823,11 @@ namespace golang::reflectlite
         return false;
     }
 
+    // directlyAssignable reports whether a value x of type V can be directly
+    // assigned (using memmove) to a value of type T.
+    // https://golang.org/doc/go_spec.html#Assignability
+    // Ignoring the interface rules (implemented elsewhere)
+    // and the ideal constant rules (no ideal constants at run time).
     bool directlyAssignable(abi::Type* T, abi::Type* V)
     {
         if(T == V)
@@ -899,6 +975,11 @@ namespace golang::reflectlite
         return false;
     }
 
+    // toType converts from a *rtype to a Type that can be returned
+    // to the client of package reflect. In gc, the only concern is that
+    // a nil *rtype must be replaced by a nil Type, but in gccgo this
+    // function takes care of ensuring that multiple *rtype for the same
+    // type are coalesced into a single Type.
     struct Type toType(abi::Type* t)
     {
         if(t == nullptr)
@@ -908,6 +989,7 @@ namespace golang::reflectlite
         return toRType(t);
     }
 
+    // ifaceIndir reports whether t is stored indirectly in an interface value.
     bool ifaceIndir(abi::Type* t)
     {
         return t->Kind_ & abi::KindDirectIface == 0;

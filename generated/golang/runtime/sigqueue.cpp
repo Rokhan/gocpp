@@ -97,7 +97,21 @@ namespace golang::runtime
     }
 
 
+    // sig handles communication between the signal handler and os/signal.
+    // Other than the inuse and recv fields, the fields are accessed atomically.
+    //
+    // The wanted and ignored fields are only written by one goroutine at
+    // a time; access is controlled by the handlers Mutex in os/signal.
+    // The fields are only read by that one goroutine and by the signal handler.
+    // We access them atomically to minimize the race between setting them
+    // in the goroutine calling os/signal and the signal handler,
+    // which may be running in a different thread. That race is unavoidable,
+    // as there is no connection between handling a signal and receiving one,
+    // but atomic instructions should minimize it.
     gocpp_id_0 sig;
+    // sigsend delivers a signal from sighandler to the internal signal delivery queue.
+    // It reports whether the signal was sent. If not, the caller typically crashes the program.
+    // It runs from the signal handler, so it's limited in what it can do.
     bool sigsend(uint32_t s)
     {
         auto bit = uint32_t(1) << (unsigned int)(s & 31);
@@ -173,6 +187,10 @@ namespace golang::runtime
         return true;
     }
 
+    // Called to receive the next queued signal.
+    // Must only be called from a single goroutine at a time.
+    //
+    //go:linkname signal_recv os/signal.signal_recv
     uint32_t signal_recv()
     {
         for(; ; )
@@ -234,6 +252,15 @@ namespace golang::runtime
         }
     }
 
+    // signalWaitUntilIdle waits until the signal delivery mechanism is idle.
+    // This is used to ensure that we do not drop a signal notification due
+    // to a race between disabling a signal and receiving a signal.
+    // This assumes that signal delivery has already been disabled for
+    // the signal(s) in question, and here we are just waiting to make sure
+    // that all the signals have been delivered to the user channels
+    // by the os/signal package.
+    //
+    //go:linkname signalWaitUntilIdle os/signal.signalWaitUntilIdle
     void signalWaitUntilIdle()
     {
         for(; rec::Load(gocpp::recv(sig.delivering)) != 0; )
@@ -246,6 +273,9 @@ namespace golang::runtime
         }
     }
 
+    // Must only be called from a single goroutine at a time.
+    //
+    //go:linkname signal_enable os/signal.signal_enable
     void signal_enable(uint32_t s)
     {
         if(! sig.inuse)
@@ -273,6 +303,9 @@ namespace golang::runtime
         sigenable(s);
     }
 
+    // Must only be called from a single goroutine at a time.
+    //
+    //go:linkname signal_disable os/signal.signal_disable
     void signal_disable(uint32_t s)
     {
         if(s >= uint32_t(len(sig.wanted) * 32))
@@ -285,6 +318,9 @@ namespace golang::runtime
         atomic::Store(& sig.wanted[s / 32], w);
     }
 
+    // Must only be called from a single goroutine at a time.
+    //
+    //go:linkname signal_ignore os/signal.signal_ignore
     void signal_ignore(uint32_t s)
     {
         if(s >= uint32_t(len(sig.wanted) * 32))
@@ -300,6 +336,11 @@ namespace golang::runtime
         atomic::Store(& sig.ignored[s / 32], i);
     }
 
+    // sigInitIgnored marks the signal as already ignored. This is called at
+    // program start by initsig. In a shared library initsig is called by
+    // libpreinit, so the runtime may not be initialized yet.
+    //
+    //go:nosplit
     void sigInitIgnored(uint32_t s)
     {
         auto i = sig.ignored[s / 32];
@@ -307,6 +348,9 @@ namespace golang::runtime
         atomic::Store(& sig.ignored[s / 32], i);
     }
 
+    // Checked by signal handlers.
+    //
+    //go:linkname signal_ignored os/signal.signal_ignored
     bool signal_ignored(uint32_t s)
     {
         auto i = atomic::Load(& sig.ignored[s / 32]);

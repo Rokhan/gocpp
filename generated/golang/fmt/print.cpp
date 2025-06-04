@@ -62,6 +62,8 @@ namespace golang::fmt
         using sync::rec::Put;
     }
 
+    // Strings for use with buffer.WriteString.
+    // This is less overhead than using buffer.Write with byte arrays.
     std::string commaSpaceString = ", "s;
     std::string nilAngleString = "<nil>"s;
     std::string nilParenString = "(nil)"s;
@@ -76,6 +78,9 @@ namespace golang::fmt
     std::string badPrecString = "%!(BADPREC)"s;
     std::string noVerbString = "%!(NOVERB)"s;
     std::string invReflectString = "<invalid reflect.Value>"s;
+    // State represents the printer state passed to custom formatters.
+    // It provides access to the io.Writer interface plus information about
+    // the flags and options for the operand's format specifier.
     
     template<typename T>
     State::State(T& ref)
@@ -169,6 +174,9 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
+    // Formatter is implemented by any value that has a Format method.
+    // The implementation controls how State and rune are interpreted,
+    // and may call Sprint() or Fprint(f) etc. to generate its output.
     
     template<typename T>
     Formatter::Formatter(T& ref)
@@ -217,6 +225,11 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
+    // Stringer is implemented by any value that has a String method,
+    // which defines the “native” format for that value.
+    // The String method is used to print values passed as an operand
+    // to any format that accepts a string or to an unformatted printer
+    // such as Print.
     
     template<typename T>
     Stringer::Stringer(T& ref)
@@ -265,6 +278,10 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
+    // GoStringer is implemented by any value that has a GoString method,
+    // which defines the Go syntax for that value.
+    // The GoString method is used to print values passed as an operand
+    // to a %#v format.
     
     template<typename T>
     GoStringer::GoStringer(T& ref)
@@ -313,6 +330,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
+    // FormatString returns a string representing the fully qualified formatting
+    // directive captured by the State, followed by the argument verb. (State does not
+    // itself contain the verb.) The result has a leading percent sign followed by any
+    // flags, the width, and the precision. Missing flags, width, and precision are
+    // omitted. This function allows a Formatter to reconstruct the original
+    // directive triggering the call to Format.
     std::string FormatString(struct State state, gocpp::rune verb)
     {
         gocpp::array<unsigned char, 16> tmp = {};
@@ -337,6 +360,7 @@ namespace golang::fmt
         return std::string(b);
     }
 
+    // Use simple []byte instead of bytes.Buffer to avoid large dependency.
     void rec::write(golang::fmt::buffer* b, gocpp::slice<unsigned char> p)
     {
         *b = append(*b, p);
@@ -357,6 +381,7 @@ namespace golang::fmt
         *b = utf8::AppendRune(*b, r);
     }
 
+    // pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
     
     template<typename T> requires gocpp::GoStruct<T>
     pp::operator T()
@@ -419,6 +444,7 @@ namespace golang::fmt
             return new(pp);
         };
     });
+    // newPrinter allocates a new pp struct or grabs a cached one.
     struct pp* newPrinter()
     {
         auto p = gocpp::getValue<pp*>(rec::Get(gocpp::recv(ppFree)));
@@ -429,6 +455,7 @@ namespace golang::fmt
         return p;
     }
 
+    // free saves used pp structs in ppFree; avoids an allocation per invocation.
     void rec::free(struct pp* p)
     {
         if(cap(p->buf) > 64 * 1024)
@@ -496,6 +523,8 @@ namespace golang::fmt
         return false;
     }
 
+    // Implement Write so we can call Fprintf on a pp (through State), for
+    // recursive use in custom verbs.
     std::tuple<int, struct gocpp::error> rec::Write(struct pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
@@ -504,6 +533,8 @@ namespace golang::fmt
         return {len(b), nullptr};
     }
 
+    // Implement WriteString so that we can call io.WriteString
+    // on a pp (through state), for efficiency.
     std::tuple<int, struct gocpp::error> rec::WriteString(struct pp* p, std::string s)
     {
         int ret;
@@ -512,6 +543,8 @@ namespace golang::fmt
         return {len(s), nullptr};
     }
 
+    // Fprintf formats according to a format specifier and writes to w.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
     {
         int n;
@@ -523,6 +556,8 @@ namespace golang::fmt
         return {n, err};
     }
 
+    // Printf formats according to a format specifier and writes to standard output.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Printf(std::string format, gocpp::slice<go_any> a)
     {
         int n;
@@ -530,6 +565,7 @@ namespace golang::fmt
         return Fprintf(os::Stdout, format, a);
     }
 
+    // Sprintf formats according to a format specifier and returns the resulting string.
     std::string Sprintf(std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -539,6 +575,8 @@ namespace golang::fmt
         return s;
     }
 
+    // Appendf formats according to a format specifier, appends the result to the byte
+    // slice, and returns the updated slice.
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, std::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -548,6 +586,9 @@ namespace golang::fmt
         return b;
     }
 
+    // Fprint formats using the default formats for its operands and writes to w.
+    // Spaces are added between operands when neither is a string.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
@@ -559,6 +600,9 @@ namespace golang::fmt
         return {n, err};
     }
 
+    // Print formats using the default formats for its operands and writes to standard output.
+    // Spaces are added between operands when neither is a string.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Print(gocpp::slice<go_any> a)
     {
         int n;
@@ -566,6 +610,8 @@ namespace golang::fmt
         return Fprint(os::Stdout, a);
     }
 
+    // Sprint formats using the default formats for its operands and returns the resulting string.
+    // Spaces are added between operands when neither is a string.
     std::string Sprint(gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -575,6 +621,8 @@ namespace golang::fmt
         return s;
     }
 
+    // Append formats using the default formats for its operands, appends the result to
+    // the byte slice, and returns the updated slice.
     gocpp::slice<unsigned char> Append(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -584,6 +632,9 @@ namespace golang::fmt
         return b;
     }
 
+    // Fprintln formats using the default formats for its operands and writes to w.
+    // Spaces are always added between operands and a newline is appended.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
@@ -595,6 +646,9 @@ namespace golang::fmt
         return {n, err};
     }
 
+    // Println formats using the default formats for its operands and writes to standard output.
+    // Spaces are always added between operands and a newline is appended.
+    // It returns the number of bytes written and any write error encountered.
     std::tuple<int, struct gocpp::error> Println(gocpp::slice<go_any> a)
     {
         int n;
@@ -602,6 +656,8 @@ namespace golang::fmt
         return Fprintln(os::Stdout, a);
     }
 
+    // Sprintln formats using the default formats for its operands and returns the resulting string.
+    // Spaces are always added between operands and a newline is appended.
     std::string Sprintln(gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -611,6 +667,9 @@ namespace golang::fmt
         return s;
     }
 
+    // Appendln formats using the default formats for its operands, appends the result
+    // to the byte slice, and returns the updated slice. Spaces are always added
+    // between operands and a newline is appended.
     gocpp::slice<unsigned char> Appendln(gocpp::slice<unsigned char> b, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
@@ -620,6 +679,9 @@ namespace golang::fmt
         return b;
     }
 
+    // getField gets the i'th field of the struct value.
+    // If the field itself is a non-nil interface, return a value for
+    // the thing inside the interface, not the interface itself.
     reflect::Value getField(reflect::Value v, int i)
     {
         auto val = rec::Field(gocpp::recv(v), i);
@@ -630,12 +692,15 @@ namespace golang::fmt
         return val;
     }
 
+    // tooLarge reports whether the magnitude of the integer is
+    // too large to be used as a formatting width or precision.
     bool tooLarge(int x)
     {
         int max = 1e6;
         return x > max || x < - max;
     }
 
+    // parsenum converts ASCII to integer.  num is 0 (and isnum is false) if no number present.
     std::tuple<int, bool, int> parsenum(std::string s, int start, int end)
     {
         int num;
@@ -722,6 +787,8 @@ namespace golang::fmt
         }
     }
 
+    // fmt0x64 formats a uint64 in hexadecimal and prefixes it with 0x or
+    // not, as requested, by temporarily setting the sharp flag.
     void rec::fmt0x64(struct pp* p, uint64_t v, bool leading0x)
     {
         auto sharp = p->fmt.sharp;
@@ -730,6 +797,7 @@ namespace golang::fmt
         p->fmt.sharp = sharp;
     }
 
+    // fmtInteger formats a signed or unsigned integer.
     void rec::fmtInteger(struct pp* p, uint64_t v, bool isSigned, gocpp::rune verb)
     {
         //Go switch emulation
@@ -790,6 +858,8 @@ namespace golang::fmt
         }
     }
 
+    // fmtFloat formats a float. The default precision for each verb
+    // is specified as last argument in the call to fmt_float.
     void rec::fmtFloat(struct pp* p, double v, int size, gocpp::rune verb)
     {
         //Go switch emulation
@@ -833,6 +903,9 @@ namespace golang::fmt
         }
     }
 
+    // fmtComplex formats a complex number v with
+    // r = real(v) and j = imag(v) as (r+ji) using
+    // fmtFloat for r and j formatting.
     void rec::fmtComplex(struct pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb)
     {
         //Go switch emulation
@@ -1399,6 +1472,8 @@ namespace golang::fmt
         }
     }
 
+    // printValue is similar to printArg but starts with a reflect value, not an interface{} value.
+    // It does not handle 'p' and 'T' verbs because these should have been already handled by printArg.
     void rec::printValue(struct pp* p, reflect::Value value, gocpp::rune verb, int depth)
     {
         if(depth > 0 && rec::IsValid(gocpp::recv(value)) && rec::CanInterface(gocpp::recv(value)))
@@ -1702,6 +1777,7 @@ namespace golang::fmt
         }
     }
 
+    // intFromArg gets the argNumth element of a. On return, isInt reports whether the argument has integer type.
     std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum)
     {
         int num;
@@ -1771,6 +1847,12 @@ namespace golang::fmt
         return {num, isInt, newArgNum};
     }
 
+    // parseArgNumber returns the value of the bracketed number, minus 1
+    // (explicit argument numbers are one-indexed but we want zero-indexed).
+    // The opening bracket is known to be present at format[0].
+    // The returned values are the index, the number of bytes to consume
+    // up to the closing paren, if present, and whether the number parsed
+    // ok. The bytes to consume will be 1 if no closing paren is present.
     std::tuple<int, int, bool> parseArgNumber(std::string format)
     {
         int index;
@@ -1795,6 +1877,9 @@ namespace golang::fmt
         return {0, 1, false};
     }
 
+    // argNumber returns the next argument to evaluate, which is either the value of the passed-in
+    // argNum or the value of the bracketed integer that begins format[i:]. It also returns
+    // the new value of i, that is, the index of the next byte of the format to process.
     std::tuple<int, int, bool> rec::argNumber(struct pp* p, int argNum, std::string format, int i, int numArgs)
     {
         int newArgNum;
@@ -2073,6 +2158,8 @@ namespace golang::fmt
         }
     }
 
+    // doPrintln is like doPrint but always adds a space between arguments
+    // and a newline after the last argument.
     void rec::doPrintln(struct pp* p, gocpp::slice<go_any> a)
     {
         for(auto [argNum, arg] : a)

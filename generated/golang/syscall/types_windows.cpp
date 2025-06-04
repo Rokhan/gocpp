@@ -20,6 +20,9 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
+    // Windows errors.
+    // Invented values to support what package os expects.
+    // More invented values for signals
     gocpp::array<std::string, 16> signals = gocpp::Init<gocpp::array<std::string, 16>>([](auto& x) {
         x[1] = "hangup"s;
         x[2] = "interrupt"s;
@@ -37,6 +40,10 @@ namespace golang::syscall
         x[14] = "alarm clock"s;
         x[15] = "terminated"s;
     });
+    // flags for CreateToolhelp32Snapshot
+    // do not reorder
+    // do not reorder
+    // wincrypt.h
     gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"s);
     gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"s);
     gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"s);
@@ -72,6 +79,13 @@ namespace golang::syscall
     }
 
 
+    // Pointer represents a pointer to an arbitrary Windows type.
+    //
+    // Pointer-typed fields may point to one of many different types. It's
+    // up to the caller to provide a pointer to the appropriate type, cast
+    // to Pointer. The caller must obey the unsafe.Pointer rules while
+    // doing so.
+    // Invented values to support what package os expects.
     
     template<typename T> requires gocpp::GoStruct<T>
     Timeval::operator T()
@@ -263,6 +277,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Nanoseconds returns Filetime ft in nanoseconds
+    // since Epoch (00:00:00 UTC, January 1, 1970).
     int64_t rec::Nanoseconds(struct Filetime* ft)
     {
         auto nsec = (int64_t(ft->HighDateTime) << 32) + int64_t(ft->LowDateTime);
@@ -337,6 +353,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // This is the actual system call structure.
+    // Win32finddata is what we committed to in Go 1.
     
     template<typename T> requires gocpp::GoStruct<T>
     win32finddata1::operator T()
@@ -507,6 +525,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // ShowWindow constants
+    // winuser.h
     
     template<typename T> requires gocpp::GoStruct<T>
     StartupInfo::operator T()
@@ -868,6 +888,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // Invented values to support what package os expects.
     
     template<typename T> requires gocpp::GoStruct<T>
     Hostent::operator T()
@@ -944,6 +965,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // flags inside DNSRecord.Dw
     
     template<typename T> requires gocpp::GoStruct<T>
     DNSSRVData::operator T()
@@ -2019,6 +2041,8 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
+    // do not reorder
+    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     AddrinfoW::operator T()

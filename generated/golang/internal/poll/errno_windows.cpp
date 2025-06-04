@@ -22,6 +22,8 @@ namespace golang::poll
     }
 
     gocpp::error errERROR_IO_PENDING = syscall::Errno(syscall::ERROR_IO_PENDING);
+    // errnoErr returns common boxed Errno values, to prevent
+    // allocations at runtime.
     struct gocpp::error errnoErr(syscall::Errno e)
     {
         //Go switch emulation

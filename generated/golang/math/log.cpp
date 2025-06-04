@@ -23,6 +23,14 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Log returns the natural logarithm of x.
+    //
+    // Special cases are:
+    //
+    //	Log(+Inf) = +Inf
+    //	Log(0) = -Inf
+    //	Log(x < 0) = NaN
+    //	Log(NaN) = NaN
     double Log(double x)
     {
         if(haveArchLog)

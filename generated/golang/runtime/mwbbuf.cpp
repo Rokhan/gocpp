@@ -59,6 +59,15 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
+    // testSmallBuf forces a small write barrier buffer to stress write
+    // barrier flushing.
+    // wbBuf is a per-P buffer of pointers queued by the write barrier.
+    // This buffer is flushed to the GC workbufs when it fills up and on
+    // various GC transitions.
+    //
+    // This is closely related to a "sequential store buffer" (SSB),
+    // except that SSBs are usually used for maintaining remembered sets,
+    // while this is used for marking.
     
     template<typename T> requires gocpp::GoStruct<T>
     wbBuf::operator T()
@@ -94,6 +103,18 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // wbBufEntries is the maximum number of pointers that can be
+    // stored in the write barrier buffer.
+    //
+    // This trades latency for throughput amortization. Higher
+    // values amortize flushing overhead more, but increase the
+    // latency of flushing. Higher values also increase the cache
+    // footprint of the buffer.
+    //
+    // TODO: What is the latency cost of this? Tune this value.
+    // Maximum number of entries that we need to ask from the
+    // buffer in a single call.
+    // reset empties b by resetting its next and end pointers.
     void rec::reset(struct wbBuf* b)
     {
         auto start = uintptr_t(unsafe::Pointer(& b->buf[0]));
@@ -112,16 +133,44 @@ namespace golang::runtime
         }
     }
 
+    // discard resets b's next pointer, but not its end pointer.
+    //
+    // This must be nosplit because it's called by wbBufFlush.
+    //
+    //go:nosplit
     void rec::discard(struct wbBuf* b)
     {
         b->next = uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
+    // empty reports whether b contains no pointers.
     bool rec::empty(struct wbBuf* b)
     {
         return b->next == uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
+    // getX returns space in the write barrier buffer to store X pointers.
+    // getX will flush the buffer if necessary. Callers should use this as:
+    //
+    //	buf := &getg().m.p.ptr().wbBuf
+    //	p := buf.get2()
+    //	p[0], p[1] = old, new
+    //	... actual memory write ...
+    //
+    // The caller must ensure there are no preemption points during the
+    // above sequence. There must be no preemption points while buf is in
+    // use because it is a per-P resource. There must be no preemption
+    // points between the buffer put and the write to memory because this
+    // could allow a GC phase change, which could result in missed write
+    // barriers.
+    //
+    // getX must be nowritebarrierrec to because write barriers here would
+    // corrupt the write barrier buffer. It (and everything it calls, if
+    // it called anything) has to be nosplit to avoid scheduling on to a
+    // different P and a different buffer.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     gocpp::array<uintptr_t, 1>* rec::get1(struct wbBuf* b)
     {
         if(b->next + goarch::PtrSize > b->end)
@@ -133,6 +182,8 @@ namespace golang::runtime
         return p;
     }
 
+    //go:nowritebarrierrec
+    //go:nosplit
     gocpp::array<uintptr_t, 2>* rec::get2(struct wbBuf* b)
     {
         if(b->next + 2 * goarch::PtrSize > b->end)
@@ -144,6 +195,21 @@ namespace golang::runtime
         return p;
     }
 
+    // wbBufFlush flushes the current P's write barrier buffer to the GC
+    // workbufs.
+    //
+    // This must not have write barriers because it is part of the write
+    // barrier implementation.
+    //
+    // This and everything it calls must be nosplit because 1) the stack
+    // contains untyped slots from gcWriteBarrier and 2) there must not be
+    // a GC safe point between the write barrier test in the caller and
+    // flushing the buffer.
+    //
+    // TODO: A "go:nosplitrec" annotation would be perfect for this.
+    //
+    //go:nowritebarrierrec
+    //go:nosplit
     void wbBufFlush()
     {
         if(getg()->m->dying > 0)
@@ -157,6 +223,16 @@ namespace golang::runtime
         });
     }
 
+    // wbBufFlush1 flushes p's write barrier buffer to the GC work queue.
+    //
+    // This must not have write barriers because it is part of the write
+    // barrier implementation, so this may lead to infinite loops or
+    // buffer corruption.
+    //
+    // This must be non-preemptible because it uses the P's workbuf.
+    //
+    //go:nowritebarrierrec
+    //go:systemstack
     void wbBufFlush1(struct p* pp)
     {
         auto start = uintptr_t(unsafe::Pointer(& pp->wbBuf.buf[0]));

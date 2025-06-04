@@ -77,6 +77,59 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // gcGoalUtilization is the goal CPU utilization for
+    // marking as a fraction of GOMAXPROCS.
+    //
+    // Increasing the goal utilization will shorten GC cycles as the GC
+    // has more resources behind it, lessening costs from the write barrier,
+    // but comes at the cost of increasing mutator latency.
+    // gcBackgroundUtilization is the fixed CPU utilization for background
+    // marking. It must be <= gcGoalUtilization. The difference between
+    // gcGoalUtilization and gcBackgroundUtilization will be made up by
+    // mark assists. The scheduler will aim to use within 50% of this
+    // goal.
+    //
+    // As a general rule, there's little reason to set gcBackgroundUtilization
+    // < gcGoalUtilization. One reason might be in mostly idle applications,
+    // where goroutines are unlikely to assist at all, so the actual
+    // utilization will be lower than the goal. But this is moot point
+    // because the idle mark workers already soak up idle CPU resources.
+    // These two values are still kept separate however because they are
+    // distinct conceptually, and in previous iterations of the pacer the
+    // distinction was more important.
+    // gcCreditSlack is the amount of scan work credit that can
+    // accumulate locally before updating gcController.heapScanWork and,
+    // optionally, gcController.bgScanCredit. Lower values give a more
+    // accurate assist ratio and make it more likely that assists will
+    // successfully steal background credit. Higher values reduce memory
+    // contention.
+    // gcAssistTimeSlack is the nanoseconds of mutator assist time that
+    // can accumulate on a P before updating gcController.assistTime.
+    // gcOverAssistWork determines how many extra units of scan work a GC
+    // assist does when an assist happens. This amortizes the cost of an
+    // assist by pre-paying for this many bytes of future allocations.
+    // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
+    // maxStackScanSlack is the bytes of stack space allocated or freed
+    // that can accumulate on a P before updating gcController.stackSize.
+    // memoryLimitMinHeapGoalHeadroom is the minimum amount of headroom the
+    // pacer gives to the heap goal when operating in the memory-limited regime.
+    // That is, it'll reduce the heap goal by this many extra bytes off of the
+    // base calculation, at minimum.
+    // memoryLimitHeapGoalHeadroomPercent is how headroom the memory-limit-based
+    // heap goal should have as a percent of the maximum possible heap goal allowed
+    // to maintain the memory limit.
+    // gcController implements the GC pacing controller that determines
+    // when to trigger concurrent garbage collection and how much marking
+    // work to do in mutator assists and background marking.
+    //
+    // It calculates the ratio between the allocation rate (in terms of CPU
+    // time) and the GC scan throughput to determine the heap size at which to
+    // trigger a GC cycle such that no GC assists are required to finish on time.
+    // This algorithm thus optimizes GC CPU utilization to the dedicated background
+    // mark utilization of 25% of GOMAXPROCS by minimizing GC assists.
+    // GOMAXPROCS. The high-level design of this algorithm is documented
+    // at https://github.com/golang/proposal/blob/master/design/44167-gc-pacer-redesign.md.
+    // See https://golang.org/s/go15gcpacing for additional historical context.
     gcControllerState gcController;
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -230,6 +283,9 @@ namespace golang::runtime
         rec::commit(gocpp::recv(c), true);
     }
 
+    // startCycle resets the GC controller's state and computes estimates
+    // for a new GC cycle. The caller must hold worldsema and the world
+    // must be stopped.
     void rec::startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
     {
         rec::Store(gocpp::recv(c->heapScanWork), 0);
@@ -293,6 +349,28 @@ namespace golang::runtime
         }
     }
 
+    // revise updates the assist ratio during the GC cycle to account for
+    // improved estimates. This should be called whenever gcController.heapScan,
+    // gcController.heapLive, or if any inputs to gcController.heapGoal are
+    // updated. It is safe to call concurrently, but it may race with other
+    // calls to revise.
+    //
+    // The result of this race is that the two assist ratio values may not line
+    // up or may be stale. In practice this is OK because the assist ratio
+    // moves slowly throughout a GC cycle, and the assist ratio is a best-effort
+    // heuristic anyway. Furthermore, no part of the heuristic depends on
+    // the two assist ratio values being exact reciprocals of one another, since
+    // the two values are used to convert values from different sources.
+    //
+    // The worst case result of this raciness is that we may miss a larger shift
+    // in the ratio (say, if we decide to pace more aggressively against the
+    // hard heap goal) but even this "hard goal" is best-effort (see #40460).
+    // The dedicated GC should ensure we don't exceed the hard goal by too much
+    // in the rare case we do exceed it.
+    //
+    // It should only be called when gcBlackenEnabled != 0 (because this
+    // is when assists are enabled and the necessary statistics are
+    // available).
     void rec::revise(struct gcControllerState* c)
     {
         auto gcPercent = rec::Load(gocpp::recv(c->gcPercent));
@@ -320,6 +398,9 @@ namespace golang::runtime
         }
         if(int64_t(live) > heapGoal)
         {
+            // We're already past our heap goal, even the extrapolated one.
+            // Leave ourselves some extra runway, so in the worst case we
+            // finish by that point.
             auto maxOvershoot = 1.1;
             heapGoal = int64_t(double(heapGoal) * maxOvershoot);
             scanWorkExpected = maxScanWork;
@@ -340,6 +421,9 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->assistBytesPerWork), assistBytesPerWork);
     }
 
+    // endCycle computes the consMark estimate for the next cycle.
+    // userForced indicates whether the current GC cycle was forced
+    // by the application.
     void rec::endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced)
     {
         gcController.lastHeapGoal = rec::heapGoal(gocpp::recv(c));
@@ -384,6 +468,11 @@ namespace golang::runtime
         }
     }
 
+    // enlistWorker encourages another dedicated mark worker to start on
+    // another P if there are spare worker slots. It is used by putfull
+    // when more work is made available.
+    //
+    //go:nowritebarrier
     void rec::enlistWorker(struct gcControllerState* c)
     {
         if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
@@ -419,6 +508,8 @@ namespace golang::runtime
         }
     }
 
+    // findRunnableGCWorker returns a background mark worker for pp if it
+    // should be run. This must only be called when gcBlackenEnabled != 0.
     std::tuple<struct g*, int64_t> rec::findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
@@ -488,6 +579,11 @@ namespace golang::runtime
         return {gp, now};
     }
 
+    // resetLive sets up the controller state for the next mark phase after the end
+    // of the previous one. Must be called after endCycle and before commit, before
+    // the world is started.
+    //
+    // The world must be stopped.
     void rec::resetLive(struct gcControllerState* c, uint64_t bytesMarked)
     {
         c->heapMarked = bytesMarked;
@@ -504,6 +600,12 @@ namespace golang::runtime
         }
     }
 
+    // markWorkerStop must be called whenever a mark worker stops executing.
+    //
+    // It updates mark work accounting in the controller by a duration of
+    // work in nanoseconds and other bookkeeping.
+    //
+    // Safe to execute at any time.
     void rec::markWorkerStop(struct gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration)
     {
         //Go switch emulation
@@ -578,12 +680,17 @@ namespace golang::runtime
         rec::Add(gocpp::recv(c->globalsScan), amount);
     }
 
+    // heapGoal returns the current heap goal.
     uint64_t rec::heapGoal(struct gcControllerState* c)
     {
         auto [goal, gocpp_id_1] = rec::heapGoalInternal(gocpp::recv(c));
         return goal;
     }
 
+    // heapGoalInternal is the implementation of heapGoal which returns additional
+    // information that is necessary for computing the trigger.
+    //
+    // The returned minTrigger is always <= goal.
     std::tuple<uint64_t, uint64_t> rec::heapGoalInternal(struct gcControllerState* c)
     {
         uint64_t goal;
@@ -601,6 +708,18 @@ namespace golang::runtime
                 goal = sweepDistTrigger;
             }
             minTrigger = sweepDistTrigger;
+            // Ensure that the heap goal is at least a little larger than
+            // the point at which we triggered. This may not be the case if GC
+            // start is delayed or if the allocation that pushed gcController.heapLive
+            // over trigger is large or if the trigger is really close to
+            // GOGC. Assist is proportional to this distance, so enforce a
+            // minimum distance, even if it means going over the GOGC goal
+            // by a tiny bit.
+            //
+            // Ignore this if we're in the memory limit regime: we'd prefer to
+            // have the GC respond hard about how close we are to the goal than to
+            // push the goal back in such a manner that it could cause us to exceed
+            // the memory limit.
             auto minRunway = 64 << 10;
             if(c->triggered != ~ uint64_t(0) && goal < c->triggered + minRunway)
             {
@@ -610,8 +729,10 @@ namespace golang::runtime
         return {goal, minTrigger};
     }
 
+    // memoryLimitHeapGoal returns a heap goal derived from memoryLimit.
     uint64_t rec::memoryLimitHeapGoal(struct gcControllerState* c)
     {
+        // Start by pulling out some values we'll need. Be careful about overflow.
         uint64_t heapFree = {};
         uint64_t heapAlloc = {};
         uint64_t mappedReady = {};
@@ -627,6 +748,7 @@ namespace golang::runtime
         }
         auto memoryLimit = uint64_t(rec::Load(gocpp::recv(c->memoryLimit)));
         auto nonHeapMemory = mappedReady - heapFree - heapAlloc;
+        // Compute term 2.
         uint64_t overage = {};
         if(mappedReady > memoryLimit)
         {
@@ -657,6 +779,26 @@ namespace golang::runtime
         return goal;
     }
 
+    // These constants determine the bounds on the GC trigger as a fraction
+    // of heap bytes allocated between the start of a GC (heapLive == heapMarked)
+    // and the end of a GC (heapLive == heapGoal).
+    //
+    // The constants are obscured in this way for efficiency. The denominator
+    // of the fraction is always a power-of-two for a quick division, so that
+    // the numerator is a single constant integer multiplication.
+    // The minimum trigger constant was chosen empirically: given a sufficiently
+    // fast/scalable allocator with 48 Ps that could drive the trigger ratio
+    // to <0.05, this constant causes applications to retain the same peak
+    // RSS compared to not having this allocator.
+    // The maximum trigger constant is chosen somewhat arbitrarily, but the
+    // current constant has served us well over the years.
+    // trigger returns the current point at which a GC should trigger along with
+    // the heap goal.
+    //
+    // The returned value may be compared against heapLive to determine whether
+    // the GC should trigger. Thus, the GC trigger condition should be (but may
+    // not be, in the case of small movements for efficiency) checked whenever
+    // the heap goal may change.
     std::tuple<uint64_t, uint64_t> rec::trigger(struct gcControllerState* c)
     {
         auto [goal, minTrigger] = rec::heapGoalInternal(gocpp::recv(c));
@@ -679,6 +821,7 @@ namespace golang::runtime
             maxTrigger = goal - defaultHeapMinimum;
         }
         maxTrigger = gocpp::max(maxTrigger, minTrigger);
+        // Compute the trigger from our bounds and the runway stored by commit.
         uint64_t trigger = {};
         auto runway = rec::Load(gocpp::recv(c->runway));
         if(runway > goal)
@@ -700,6 +843,23 @@ namespace golang::runtime
         return {trigger, goal};
     }
 
+    // commit recomputes all pacing parameters needed to derive the
+    // trigger and the heap goal. Namely, the gcPercent-based heap goal,
+    // and the amount of runway we want to give the GC this cycle.
+    //
+    // This can be called any time. If GC is the in the middle of a
+    // concurrent phase, it will adjust the pacing of that phase.
+    //
+    // isSweepDone should be the result of calling isSweepDone(),
+    // unless we're testing or we know we're executing during a GC cycle.
+    //
+    // This depends on gcPercent, gcController.heapMarked, and
+    // gcController.heapLive. These must be up to date.
+    //
+    // Callers must call gcControllerState.revise after calling this
+    // function if the GC is enabled.
+    //
+    // mheap_.lock must be held or the world must be stopped.
     void rec::commit(struct gcControllerState* c, bool isSweepDone)
     {
         if(! c->test)
@@ -727,6 +887,10 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->runway), uint64_t((c->consMark * (1 - gcGoalUtilization) / (gcGoalUtilization)) * double(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)))));
     }
 
+    // setGCPercent updates gcPercent. commit must be called after.
+    // Returns the old value of gcPercent.
+    //
+    // The world must be stopped, or mheap_.lock must be held.
     int32_t rec::setGCPercent(struct gcControllerState* c, int32_t in)
     {
         if(! c->test)
@@ -743,6 +907,7 @@ namespace golang::runtime
         return out;
     }
 
+    //go:linkname setGCPercent runtime/debug.setGCPercent
     int32_t setGCPercent(int32_t in)
     {
         int32_t out;
@@ -774,6 +939,10 @@ namespace golang::runtime
         return 100;
     }
 
+    // setMemoryLimit updates memoryLimit. commit must be called after
+    // Returns the old value of memoryLimit.
+    //
+    // The world must be stopped, or mheap_.lock must be held.
     int64_t rec::setMemoryLimit(struct gcControllerState* c, int64_t in)
     {
         if(! c->test)
@@ -788,6 +957,7 @@ namespace golang::runtime
         return out;
     }
 
+    //go:linkname setMemoryLimit runtime/debug.setMemoryLimit
     int64_t setMemoryLimit(int64_t in)
     {
         int64_t out;
@@ -822,6 +992,16 @@ namespace golang::runtime
         return n;
     }
 
+    // addIdleMarkWorker attempts to add a new idle mark worker.
+    //
+    // If this returns true, the caller must become an idle mark worker unless
+    // there's no background mark worker goroutines in the pool. This case is
+    // harmless because there are already background mark workers running.
+    // If this returns false, the caller must NOT become an idle mark worker.
+    //
+    // nosplit because it may be called without a P.
+    //
+    //go:nosplit
     bool rec::addIdleMarkWorker(struct gcControllerState* c)
     {
         for(; ; )
@@ -845,6 +1025,14 @@ namespace golang::runtime
         }
     }
 
+    // needIdleMarkWorker is a hint as to whether another idle mark worker is needed.
+    //
+    // The caller must still call addIdleMarkWorker to become one. This is mainly
+    // useful for a quick check before an expensive operation.
+    //
+    // nosplit because it may be called without a P.
+    //
+    //go:nosplit
     bool rec::needIdleMarkWorker(struct gcControllerState* c)
     {
         auto p = rec::Load(gocpp::recv(c->idleMarkWorkers));
@@ -852,6 +1040,7 @@ namespace golang::runtime
         return n < max;
     }
 
+    // removeIdleMarkWorker must be called when a new idle mark worker stops executing.
     void rec::removeIdleMarkWorker(struct gcControllerState* c)
     {
         for(; ; )
@@ -871,6 +1060,11 @@ namespace golang::runtime
         }
     }
 
+    // setMaxIdleMarkWorkers sets the maximum number of idle mark workers allowed.
+    //
+    // This method is optimistic in that it does not wait for the number of
+    // idle mark workers to reduce to max before returning; it assumes the workers
+    // will deschedule themselves.
     void rec::setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max)
     {
         for(; ; )
@@ -890,6 +1084,15 @@ namespace golang::runtime
         }
     }
 
+    // gcControllerCommit is gcController.commit, but passes arguments from live
+    // (non-test) data. It also updates any consumers of the GC pacing, such as
+    // sweep pacing and the background scavenger.
+    //
+    // Calls gcController.commit.
+    //
+    // The heap lock must be held, so this must be executed on the system stack.
+    //
+    //go:systemstack
     void gcControllerCommit()
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);

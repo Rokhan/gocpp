@@ -18,23 +18,32 @@ namespace golang::flate
         using namespace mocklib::rec;
     }
 
+    // 2 bits:   type   0 = literal  1=EOF  2=Match   3=Unused
+    // 8 bits:   xlength = length - MIN_MATCH_LENGTH
+    // 22 bits   xoffset = offset - MIN_OFFSET_SIZE, or literal
+    // The length code for length X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
+    // is lengthCodes[length - MIN_MATCH_LENGTH]
     gocpp::array<uint32_t, 256> lengthCodes = gocpp::array<uint32_t, 256> {0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28};
     gocpp::array<uint32_t, 256> offsetCodes = gocpp::array<uint32_t, 256> {0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15};
+    // Convert a literal into a literal token.
     flate::token literalToken(uint32_t literal)
     {
         return token(literalType + literal);
     }
 
+    // Convert a < xlength, xoffset > pair into a match token.
     flate::token matchToken(uint32_t xlength, uint32_t xoffset)
     {
         return token(matchType + (xlength << lengthShift) + xoffset);
     }
 
+    // Returns the literal of a literal token.
     uint32_t rec::literal(golang::flate::token t)
     {
         return uint32_t(t - literalType);
     }
 
+    // Returns the extra offset of a match token.
     uint32_t rec::offset(golang::flate::token t)
     {
         return uint32_t(t) & offsetMask;
@@ -50,6 +59,7 @@ namespace golang::flate
         return lengthCodes[len];
     }
 
+    // Returns the offset code corresponding to a specific offset.
     uint32_t offsetCode(uint32_t off)
     {
         if(off < uint32_t(len(offsetCodes)))

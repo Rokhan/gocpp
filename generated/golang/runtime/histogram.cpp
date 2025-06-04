@@ -25,6 +25,68 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
+    // For the time histogram type, we use an HDR histogram.
+    // Values are placed in buckets based solely on the most
+    // significant set bit. Thus, buckets are power-of-2 sized.
+    // Values are then placed into sub-buckets based on the value of
+    // the next timeHistSubBucketBits most significant bits. Thus,
+    // sub-buckets are linear within a bucket.
+    //
+    // Therefore, the number of sub-buckets (timeHistNumSubBuckets)
+    // defines the error. This error may be computed as
+    // 1/timeHistNumSubBuckets*100%. For example, for 16 sub-buckets
+    // per bucket the error is approximately 6%.
+    //
+    // The number of buckets (timeHistNumBuckets), on the
+    // other hand, defines the range. To avoid producing a large number
+    // of buckets that are close together, especially for small numbers
+    // (e.g. 1, 2, 3, 4, 5 ns) that aren't very useful, timeHistNumBuckets
+    // is defined in terms of the least significant bit (timeHistMinBucketBits)
+    // that needs to be set before we start bucketing and the most
+    // significant bit (timeHistMaxBucketBits) that we bucket before we just
+    // dump it into a catch-all bucket.
+    //
+    // As an example, consider the configuration:
+    //
+    //    timeHistMinBucketBits = 9
+    //    timeHistMaxBucketBits = 48
+    //    timeHistSubBucketBits = 2
+    //
+    // Then:
+    //
+    //    011000001
+    //    ^--
+    //    │ ^
+    //    │ └---- Next 2 bits -> sub-bucket 3
+    //    └------- Bit 9 unset -> bucket 0
+    //
+    //    110000001
+    //    ^--
+    //    │ ^
+    //    │ └---- Next 2 bits -> sub-bucket 2
+    //    └------- Bit 9 set -> bucket 1
+    //
+    //    1000000010
+    //    ^-- ^
+    //    │ ^ └-- Lower bits ignored
+    //    │ └---- Next 2 bits -> sub-bucket 0
+    //    └------- Bit 10 set -> bucket 2
+    //
+    // Following this pattern, bucket 38 will have the bit 46 set. We don't
+    // have any buckets for higher values, so we spill the rest into an overflow
+    // bucket containing values of 2^47-1 nanoseconds or approx. 1 day or more.
+    // This range is more than enough to handle durations produced by the runtime.
+    // Two extra buckets, one for underflow, one for overflow.
+    // timeHistogram represents a distribution of durations in
+    // nanoseconds.
+    //
+    // The accuracy and range of the histogram is defined by the
+    // timeHistSubBucketBits and timeHistNumBuckets constants.
+    //
+    // It is an HDR histogram with exponentially-distributed
+    // buckets and linearly distributed sub-buckets.
+    //
+    // The histogram is safe for concurrent reads and writes.
     
     template<typename T> requires gocpp::GoStruct<T>
     timeHistogram::operator T()
@@ -60,6 +122,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // record adds the given duration to the distribution.
+    //
+    // Disallow preemptions and stack growths because this function
+    // may run in sensitive locations.
+    //
+    //go:nosplit
     void rec::record(struct timeHistogram* h, int64_t duration)
     {
         if(duration < 0)
@@ -67,6 +135,13 @@ namespace golang::runtime
             rec::Add(gocpp::recv(h->underflow), 1);
             return;
         }
+        // bucketBit is the target bit for the bucket which is usually the
+        // highest 1 bit, but if we're less than the minimum, is the highest
+        // 1 bit of the minimum (which will be zero in the duration).
+        //
+        // bucket is the bucket index, which is the bucketBit minus the
+        // highest bit of the minimum, plus one to leave room for the catch-all
+        // bucket for samples lower than the minimum.
         unsigned int bucketBit = {};
         unsigned int bucket = {};
         if(auto l = sys::Len64(uint64_t(duration)); l < timeHistMinBucketBits)
@@ -88,6 +163,7 @@ namespace golang::runtime
         rec::Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
     }
 
+    // write dumps the histogram to the passed metricValue as a float64 histogram.
     void rec::write(struct timeHistogram* h, struct metricValue* out)
     {
         auto hist = rec::float64HistOrInit(gocpp::recv(out), timeHistBuckets);
@@ -111,6 +187,9 @@ namespace golang::runtime
         return *(double*)(unsafe::Pointer(& inf));
     }
 
+    // timeHistogramMetricsBuckets generates a slice of boundaries for
+    // the timeHistogram. These boundaries are represented in seconds,
+    // not nanoseconds like the timeHistogram represents durations.
     gocpp::slice<double> timeHistogramMetricsBuckets()
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), timeHistTotalBuckets + 1);

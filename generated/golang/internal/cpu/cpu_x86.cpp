@@ -20,15 +20,22 @@ namespace golang::cpu
         using namespace mocklib::rec;
     }
 
+    // cpuid is implemented in cpu_x86.s.
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg)
     /* convertBlockStmt, nil block */;
 
+    // xgetbv with ecx = 0 is implemented in cpu_x86.s.
     std::tuple<uint32_t, uint32_t> xgetbv()
     /* convertBlockStmt, nil block */;
 
+    // getGOAMD64level is implemented in cpu_x86.s. Returns number in [1,4].
     int32_t getGOAMD64level()
     /* convertBlockStmt, nil block */;
 
+    // edx bits
+    // ecx bits
+    // ebx bits
+    // edx bits for CPUID 0x80000001
     uint32_t maxExtendedFunctionInformation;
     void doinit()
     {
@@ -160,6 +167,9 @@ namespace golang::cpu
         return hwc & value != 0;
     }
 
+    // Name returns the CPU name given by the vendor.
+    // If the CPU name can not be determined an
+    // empty string is returned.
     std::string Name()
     {
         if(maxExtendedFunctionInformation < 0x80000004)

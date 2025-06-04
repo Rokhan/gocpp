@@ -24,6 +24,12 @@ namespace golang::fs
         using time::rec::Format;
     }
 
+    // FormatFileInfo returns a formatted version of info for human readability.
+    // Implementations of [FileInfo] can call this from a String method.
+    // The output for a file named "hello.go", 100 bytes, mode 0o644, created
+    // January 1, 1970 at noon is
+    //
+    //	-rw-r--r-- 100 1970-01-01 12:00:00 hello.go
     std::string FormatFileInfo(struct FileInfo info)
     {
         auto name = rec::Name(gocpp::recv(info));
@@ -63,6 +69,12 @@ namespace golang::fs
         return std::string(b);
     }
 
+    // FormatDirEntry returns a formatted version of dir for human readability.
+    // Implementations of [DirEntry] can call this from a String method.
+    // The outputs for a directory named subdir and a file named hello.go are:
+    //
+    //	d subdir/
+    //	- hello.go
     std::string FormatDirEntry(struct DirEntry dir)
     {
         auto name = rec::Name(gocpp::recv(dir));

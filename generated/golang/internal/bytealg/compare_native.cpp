@@ -18,9 +18,11 @@ namespace golang::bytealg
         using namespace mocklib::rec;
     }
 
+    //go:noescape
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     /* convertBlockStmt, nil block */;
 
+    //go:linkname abigen_runtime_cmpstring runtime.cmpstring
     int abigen_runtime_cmpstring(std::string a, std::string b)
     /* convertBlockStmt, nil block */;
 

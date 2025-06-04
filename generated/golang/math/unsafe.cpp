@@ -20,21 +20,35 @@ namespace golang::math
         using namespace mocklib::rec;
     }
 
+    // Float32bits returns the IEEE 754 binary representation of f,
+    // with the sign bit of f and the result in the same bit position.
+    // Float32bits(Float32frombits(x)) == x.
     uint32_t Float32bits(double f)
     {
         return *(uint32_t*)(unsafe::Pointer(& f));
     }
 
+    // Float32frombits returns the floating-point number corresponding
+    // to the IEEE 754 binary representation b, with the sign bit of b
+    // and the result in the same bit position.
+    // Float32frombits(Float32bits(x)) == x.
     double Float32frombits(uint32_t b)
     {
         return *(float*)(unsafe::Pointer(& b));
     }
 
+    // Float64bits returns the IEEE 754 binary representation of f,
+    // with the sign bit of f and the result in the same bit position,
+    // and Float64bits(Float64frombits(x)) == x.
     uint64_t Float64bits(double f)
     {
         return *(uint64_t*)(unsafe::Pointer(& f));
     }
 
+    // Float64frombits returns the floating-point number corresponding
+    // to the IEEE 754 binary representation b, with the sign bit of b
+    // and the result in the same bit position.
+    // Float64frombits(Float64bits(x)) == x.
     double Float64frombits(uint64_t b)
     {
         return *(double*)(unsafe::Pointer(& b));

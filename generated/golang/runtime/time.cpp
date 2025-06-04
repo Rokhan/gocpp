@@ -64,6 +64,8 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // Package time knows the layout of this structure.
+    // If this struct changes, adjust ../time/sleep.go:/runtimeTimer.
     
     template<typename T> requires gocpp::GoStruct<T>
     timer::operator T()
@@ -114,6 +116,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
+    // Values for the timer status field.
+    // Timer has no status set yet.
+    // Waiting for timer to fire.
+    // The timer is in some P's heap.
+    // Running the timer function.
+    // A timer will only have this status briefly.
+    // The timer is deleted and should be removed.
+    // It should not be run, but it is still in some P's heap.
+    // The timer is being removed.
+    // The timer will only have this status briefly.
+    // The timer has been stopped.
+    // It is not in any P's heap.
+    // The timer is being modified.
+    // The timer will only have this status briefly.
+    // The timer has been modified to an earlier time.
+    // The new when value is in the nextwhen field.
+    // The timer is in some P's heap, possibly in the wrong place.
+    // The timer has been modified to the same or a later time.
+    // The new when value is in the nextwhen field.
+    // The timer is in some P's heap, possibly in the wrong place.
+    // The timer has been modified and is being moved.
+    // The timer will only have this status briefly.
+    // maxWhen is the maximum value for timer's when field.
+    // verifyTimers can be set to true to add debugging checks that the
+    // timer heaps are valid.
+    // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.
+    //
+    //go:linkname timeSleep time.Sleep
     void timeSleep(int64_t ns)
     {
         if(ns <= 0)
@@ -137,6 +167,10 @@ namespace golang::runtime
         gopark(resetForSleep, unsafe::Pointer(t), waitReasonSleep, traceBlockSleep, 1);
     }
 
+    // resetForSleep is called after the goroutine is parked for timeSleep.
+    // We can't call resettimer in timeSleep itself because if this is a short
+    // sleep and there are many goroutines then the P can wind up running the
+    // timer function, goroutineReady, before the goroutine has been parked.
     bool resetForSleep(struct g* gp, unsafe::Pointer ut)
     {
         auto t = (timer*)(ut);
@@ -144,6 +178,9 @@ namespace golang::runtime
         return true;
     }
 
+    // startTimer adds t to the timer heap.
+    //
+    //go:linkname startTimer time.startTimer
     void startTimer(struct timer* t)
     {
         if(raceenabled)
@@ -153,11 +190,20 @@ namespace golang::runtime
         addtimer(t);
     }
 
+    // stopTimer stops a timer.
+    // It reports whether t was stopped before being run.
+    //
+    //go:linkname stopTimer time.stopTimer
     bool stopTimer(struct timer* t)
     {
         return deltimer(t);
     }
 
+    // resetTimer resets an inactive timer, adding it to the heap.
+    //
+    // Reports whether the timer was modified before it was run.
+    //
+    //go:linkname resetTimer time.resetTimer
     bool resetTimer(struct timer* t, int64_t when)
     {
         if(raceenabled)
@@ -167,16 +213,25 @@ namespace golang::runtime
         return resettimer(t, when);
     }
 
+    // modTimer modifies an existing timer.
+    //
+    //go:linkname modTimer time.modTimer
     void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
     {
         modtimer(t, when, period, f, arg, seq);
     }
 
+    // Ready the goroutine arg.
     void goroutineReady(go_any arg, uintptr_t seq)
     {
         goready(gocpp::getValue<g*>(arg), 0);
     }
 
+    // Note: this changes some unsynchronized operations to synchronized operations
+    // addtimer adds a timer to the current P.
+    // This should only be called with a newly created timer.
+    // That avoids the risk of changing the when field of a timer in some P's heap,
+    // which could cause the heap to become unsorted.
     void addtimer(struct timer* t)
     {
         if(t->when <= 0)
@@ -203,6 +258,8 @@ namespace golang::runtime
         releasem(mp);
     }
 
+    // doaddtimer adds t to the current P's heap.
+    // The caller must have locked the timers for pp.
     void doaddtimer(struct p* pp, struct timer* t)
     {
         if(rec::Load(gocpp::recv(netpollInited)) == 0)
@@ -224,6 +281,10 @@ namespace golang::runtime
         rec::Add(gocpp::recv(pp->numTimers), 1);
     }
 
+    // deltimer deletes the timer t. It may be on some other P, so we can't
+    // actually remove it from the timers heap. We can only mark it as deleted.
+    // It will be removed in due course by the P whose heap it is on.
+    // Reports whether the timer was removed before it was run.
     bool deltimer(struct timer* t)
     {
         for(; ; )
@@ -305,6 +366,10 @@ namespace golang::runtime
         }
     }
 
+    // dodeltimer removes timer i from the current P's heap.
+    // We are locked on the P when this is called.
+    // It returns the smallest changed index in pp.timers.
+    // The caller must have locked the timers for pp.
     int dodeltimer(struct p* pp, int i)
     {
         if(auto t = pp->timers[i]; rec::ptr(gocpp::recv(t->pp)) != pp)
@@ -340,6 +405,10 @@ namespace golang::runtime
         return smallestChanged;
     }
 
+    // dodeltimer0 removes timer 0 from the current P's heap.
+    // We are locked on the P when this is called.
+    // It reports whether it saw no problems due to races.
+    // The caller must have locked the timers for pp.
     void dodeltimer0(struct p* pp)
     {
         if(auto t = pp->timers[0]; rec::ptr(gocpp::recv(t->pp)) != pp)
@@ -369,6 +438,9 @@ namespace golang::runtime
         }
     }
 
+    // modtimer modifies an existing timer.
+    // This is called by the netpoll code or time.Ticker.Reset or time.Timer.Reset.
+    // Reports whether the timer was modified before it was run.
     bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
     {
         if(when <= 0)
@@ -499,11 +571,20 @@ namespace golang::runtime
         return pending;
     }
 
+    // resettimer resets the time when a timer should fire.
+    // If used for an inactive timer, the timer will become active.
+    // This should be called instead of addtimer if the timer value has been,
+    // or may have been, used previously.
+    // Reports whether the timer was modified before it was run.
     bool resettimer(struct timer* t, int64_t when)
     {
         return modtimer(t, when, t->period, t->f, t->arg, t->seq);
     }
 
+    // cleantimers cleans up the head of the timer queue. This speeds up
+    // programs that create and delete timers; leaving them in the heap
+    // slows down addtimer. Reports whether no timer problems were found.
+    // The caller must have locked the timers for pp.
     void cleantimers(struct p* pp)
     {
         auto gp = getg();
@@ -566,6 +647,10 @@ namespace golang::runtime
         }
     }
 
+    // moveTimers moves a slice of timers to pp. The slice has been taken
+    // from a different P.
+    // This is currently called when the world is stopped, but the caller
+    // is expected to have locked the timers for pp.
     void moveTimers(struct p* pp, gocpp::slice<timer*> timers)
     {
         for(auto [gocpp_ignored, t] : timers)
@@ -653,6 +738,11 @@ namespace golang::runtime
         }
     }
 
+    // adjusttimers looks through the timers in the current P's heap for
+    // any timers that have been modified to run earlier, and puts them in
+    // the correct place in the heap. While looking for those timers,
+    // it also moves timers that have been modified to run later,
+    // and removes deleted timers. The caller must have locked the timers for pp.
     void adjusttimers(struct p* pp, int64_t now)
     {
         auto first = rec::Load(gocpp::recv(pp->timerModifiedEarliest));
@@ -741,6 +831,8 @@ namespace golang::runtime
         }
     }
 
+    // addAdjustedTimers adds any timers we adjusted in adjusttimers
+    // back to the timer heap.
     void addAdjustedTimers(struct p* pp, gocpp::slice<timer*> moved)
     {
         for(auto [gocpp_ignored, t] : moved)
@@ -753,6 +845,12 @@ namespace golang::runtime
         }
     }
 
+    // nobarrierWakeTime looks at P's timers and returns the time when we
+    // should wake up the netpoller. It returns 0 if there are no timers.
+    // This function is invoked when dropping a P, and must run without
+    // any write barriers.
+    //
+    //go:nowritebarrierrec
     int64_t nobarrierWakeTime(struct p* pp)
     {
         auto next = rec::Load(gocpp::recv(pp->timer0When));
@@ -764,6 +862,14 @@ namespace golang::runtime
         return next;
     }
 
+    // runtimer examines the first timer in timers. If it is ready based on now,
+    // it runs the timer and removes or updates it.
+    // Returns 0 if it ran a timer, -1 if there are no more timers, or the time
+    // when the first timer should run.
+    // The caller must have locked the timers for pp.
+    // If a timer is run, this will temporarily unlock the timers.
+    //
+    //go:systemstack
     int64_t runtimer(struct p* pp, int64_t now)
     {
         for(; ; )
@@ -852,6 +958,11 @@ namespace golang::runtime
         }
     }
 
+    // runOneTimer runs a single timer.
+    // The caller must have locked the timers for pp.
+    // This will temporarily unlock the timers while running the timer function.
+    //
+    //go:systemstack
     void runOneTimer(struct p* pp, struct timer* t, int64_t now)
     {
         if(raceenabled)
@@ -908,6 +1019,15 @@ namespace golang::runtime
         }
     }
 
+    // clearDeletedTimers removes all deleted timers from the P's timer heap.
+    // This is used to avoid clogging up the heap if the program
+    // starts a lot of long-running timers and then stops them.
+    // For example, this can happen via context.WithTimeout.
+    //
+    // This is the only function that walks through the entire timer heap,
+    // other than moveTimers which only runs when the world is stopped.
+    //
+    // The caller must have locked the timers for pp.
     void clearDeletedTimers(struct p* pp)
     {
         rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
@@ -1015,6 +1135,9 @@ namespace golang::runtime
         }
     }
 
+    // verifyTimerHeap verifies that the timer heap is in a valid state.
+    // This is only for debugging, and is only called if verifyTimers is true.
+    // The caller must have locked the timers.
     void verifyTimerHeap(struct p* pp)
     {
         for(auto [i, t] : pp->timers)
@@ -1037,6 +1160,8 @@ namespace golang::runtime
         }
     }
 
+    // updateTimer0When sets the P's timer0When field.
+    // The caller must have locked the timers for pp.
     void updateTimer0When(struct p* pp)
     {
         if(len(pp->timers) == 0)
@@ -1049,6 +1174,9 @@ namespace golang::runtime
         }
     }
 
+    // updateTimerModifiedEarliest updates the recorded nextwhen field of the
+    // earlier timerModifiedEarier value.
+    // The timers for pp will not be locked.
     void updateTimerModifiedEarliest(struct p* pp, int64_t nextwhen)
     {
         for(; ; )
@@ -1065,6 +1193,9 @@ namespace golang::runtime
         }
     }
 
+    // timeSleepUntil returns the time when the next timer should fire. Returns
+    // maxWhen if there are no timers.
+    // This is only called by sysmon and checkdead.
     int64_t timeSleepUntil()
     {
         auto next = int64_t(maxWhen);
@@ -1090,6 +1221,9 @@ namespace golang::runtime
         return next;
     }
 
+    // siftupTimer puts the timer at position i in the right place
+    // in the heap by moving it up toward the top of the heap.
+    // It returns the smallest changed index.
     int siftupTimer(gocpp::slice<timer*> t, int i)
     {
         if(i >= len(t))
@@ -1119,6 +1253,8 @@ namespace golang::runtime
         return i;
     }
 
+    // siftdownTimer puts the timer at position i in the right place
+    // in the heap by moving it down toward the bottom of the heap.
     void siftdownTimer(gocpp::slice<timer*> t, int i)
     {
         auto n = len(t);
@@ -1173,6 +1309,10 @@ namespace golang::runtime
         }
     }
 
+    // badTimer is called if the timer data structures have been corrupted,
+    // presumably due to racy use by the program. We panic here rather than
+    // panicking due to invalid slice access while holding locks.
+    // See issue #25686.
     void badTimer()
     {
         go_throw("timer data corruption"s);

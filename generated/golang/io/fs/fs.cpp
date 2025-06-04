@@ -15,6 +15,12 @@
 #include "golang/time/zoneinfo.h"
 #include "golang/unicode/utf8/utf8.h"
 
+// Package fs defines basic interfaces to a file system.
+// A file system can be provided by the host operating system
+// but also by other packages.
+//
+// See the [testing/fstest] package for support with testing
+// implementations of file systems.
 namespace golang::fs
 {
     namespace rec
@@ -22,6 +28,14 @@ namespace golang::fs
         using namespace mocklib::rec;
     }
 
+    // An FS provides access to a hierarchical file system.
+    //
+    // The FS interface is the minimum implementation required of the file system.
+    // A file system may implement additional interfaces,
+    // such as [ReadFileFS], to provide additional or optimized functionality.
+    //
+    // [testing/fstest.TestFS] may be used to test implementations of an FS for
+    // correctness.
     
     template<typename T>
     FS::FS(T& ref)
@@ -70,6 +84,19 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
+    // ValidPath reports whether the given path name
+    // is valid for use in a call to Open.
+    //
+    // Path names passed to open are UTF-8-encoded,
+    // unrooted, slash-separated sequences of path elements, like “x/y/z”.
+    // Path names must not contain an element that is “.” or “..” or the empty string,
+    // except for the special case that the root directory is named “.”.
+    // Paths must not start or end with a slash: “/x” and “x/” are invalid.
+    //
+    // Note that paths are slash-separated on all systems, even Windows.
+    // Paths containing other characters such as backslash and colon
+    // are accepted as valid, but those characters must never be
+    // interpreted by an [FS] implementation as path element separators.
     bool ValidPath(std::string name)
     {
         if(! utf8::ValidString(name))
@@ -100,6 +127,10 @@ namespace golang::fs
         }
     }
 
+    // A File provides access to a single file.
+    // The File interface is the minimum implementation required of the file.
+    // Directory files should also implement [ReadDirFile].
+    // A file may implement [io.ReaderAt] or [io.Seeker] as optimizations.
     
     template<typename T>
     File::File(T& ref)
@@ -178,6 +209,8 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
+    // A DirEntry is an entry read from a directory
+    // (using the [ReadDir] function or a [ReadDirFile]'s ReadDir method).
     
     template<typename T>
     DirEntry::DirEntry(T& ref)
@@ -271,6 +304,10 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
+    // A ReadDirFile is a directory file whose entries can be read with the ReadDir method.
+    // Every directory file should implement this interface.
+    // (It is permissible for any file to implement this interface,
+    // but if so ReadDir should return an error for non-directories.)
     
     template<typename T>
     ReadDirFile::ReadDirFile(T& ref)
@@ -319,6 +356,9 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
+    // Generic file system errors.
+    // Errors returned by file systems can be tested against these errors
+    // using [errors.Is].
     gocpp::error ErrInvalid = errInvalid();
     gocpp::error ErrPermission = errPermission();
     gocpp::error ErrExist = errExist();
@@ -349,6 +389,7 @@ namespace golang::fs
         return oserror::ErrClosed;
     }
 
+    // A FileInfo describes a file and is returned by [Stat].
     
     template<typename T>
     FileInfo::FileInfo(T& ref)
@@ -472,6 +513,19 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
+    // A FileMode represents a file's mode and permission bits.
+    // The bits have the same definition on all systems, so that
+    // information about files can be moved from one system
+    // to another portably. Not all bits apply to all systems.
+    // The only required bit is [ModeDir] for directories.
+    // The defined file mode bits are the most significant bits of the [FileMode].
+    // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
+    // The values of these bits should be considered part of the public API and
+    // may be used in wire protocols or disk representations: they must not be
+    // changed, although new bits might be added.
+    // The single letters are the abbreviations
+    // used by the String method's formatting.
+    // Mask for the type bits. For regular files, none will be set.
     std::string rec::String(golang::fs::FileMode m)
     {
         auto str = "dalTLDpSugct?"s;
@@ -506,26 +560,33 @@ namespace golang::fs
         return std::string(buf.make_slice(0, w));
     }
 
+    // IsDir reports whether m describes a directory.
+    // That is, it tests for the [ModeDir] bit being set in m.
     bool rec::IsDir(golang::fs::FileMode m)
     {
         return m & ModeDir != 0;
     }
 
+    // IsRegular reports whether m describes a regular file.
+    // That is, it tests that no mode type bits are set.
     bool rec::IsRegular(golang::fs::FileMode m)
     {
         return m & ModeType == 0;
     }
 
+    // Perm returns the Unix permission bits in m (m & [ModePerm]).
     fs::FileMode rec::Perm(golang::fs::FileMode m)
     {
         return m & ModePerm;
     }
 
+    // Type returns type bits in m (m & [ModeType]).
     fs::FileMode rec::Type(golang::fs::FileMode m)
     {
         return m & ModeType;
     }
 
+    // PathError records an error and the operation and file path that caused it.
     
     template<typename T> requires gocpp::GoStruct<T>
     PathError::operator T()
@@ -620,6 +681,7 @@ namespace golang::fs
         }
 
 
+    // Timeout reports whether this error represents a timeout.
     bool rec::Timeout(struct PathError* e)
     {
         auto [t, ok] = gocpp::getValue<gocpp_id_0>(e->Err);

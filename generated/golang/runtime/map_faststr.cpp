@@ -490,6 +490,7 @@ namespace golang::runtime
         auto newbit = rec::noldbuckets(gocpp::recv(h));
         if(! evacuated(b))
         {
+            // xy contains the x and y (low and high) evacuation destinations.
             gocpp::array<evacDst, 2> xy = {};
             auto x = & xy[0];
             x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));

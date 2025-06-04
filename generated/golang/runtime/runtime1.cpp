@@ -56,8 +56,22 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
+    // Keep a cached value to make gotraceback fast,
+    // since we call it on every call to gentraceback.
+    // The cached value is a uint32 in which the low bits
+    // are the "crash" and "all" settings and the remaining
+    // bits are the traceback value (0 off, 1 on, 2 include system).
     uint32_t traceback_cache = 2 << tracebackShift;
     uint32_t traceback_env;
+    // gotraceback returns the current traceback settings.
+    //
+    // If level is 0, suppress all tracebacks.
+    // If level is 1, show tracebacks, but exclude runtime frames.
+    // If level is 2, show tracebacks including runtime frames.
+    // If all is set, print all goroutine stacks. Otherwise, print just the current goroutine.
+    // If crash is set, crash (core dump, etc) after tracebacking.
+    //
+    //go:nosplit
     std::tuple<int32_t, bool, bool> gotraceback()
     {
         int32_t level;
@@ -85,6 +99,9 @@ namespace golang::runtime
 
     int32_t argc;
     unsigned char** argv;
+    // nosplit for use in linux startup sysargs.
+    //
+    //go:nosplit
     unsigned char* argv_index(unsigned char** argv, int32_t i)
     {
         return *(unsigned char**)(add(unsafe::Pointer(argv), uintptr_t(i) * goarch::PtrSize));
@@ -129,6 +146,8 @@ namespace golang::runtime
         return envs;
     }
 
+    // TODO: These should be locals in testAtomic64, but we don't 8-byte
+    // align stack variables on 386.
     uint64_t test_z64;
     uint64_t test_x64;
     void testAtomic64()
@@ -588,6 +607,10 @@ namespace golang::runtime
     }
 
 
+    // Holds variables parsed from GODEBUG env var,
+    // except for "memprofilerate" since there is an
+    // existing int var for that value, which may
+    // already have an initial value.
     gocpp_id_0 debug;
     gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {gocpp::Init<>([](auto& x) {
         x.name = "allocfreetrace"s;
@@ -704,6 +727,8 @@ namespace golang::runtime
         traceback_env = traceback_cache;
     }
 
+    // reparsedebugvars reparses the runtime's debug variables
+    // because the environment variable has been changed to env.
     void reparsedebugvars(std::string env)
     {
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
@@ -718,6 +743,16 @@ namespace golang::runtime
         }
     }
 
+    // parsegodebug parses the godebug string, updating variables listed in dbgvars.
+    // If seen == nil, this is startup time and we process the string left to right
+    // overwriting older settings with newer ones.
+    // If seen != nil, $GODEBUG has changed and we are doing an
+    // incremental update. To avoid flapping in the case where a value is
+    // set multiple times (perhaps in the default and the environment,
+    // or perhaps twice in the environment), we process the string right-to-left
+    // and only change values not already seen. After doing this for both
+    // the environment and the default settings, the caller must also call
+    // cleargodebug(seen) to reset any now-unset values back to their defaults.
     void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen)
     {
         for(auto p = godebug; p != ""s; )
@@ -800,6 +835,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname setTraceback runtime/debug.SetTraceback
     void setTraceback(std::string level)
     {
         uint32_t t = {};
@@ -856,6 +892,13 @@ namespace golang::runtime
         atomic::Store(& traceback_cache, t);
     }
 
+    // Poor mans 64-bit division.
+    // This is a very special function, do not use it if you are not sure what you are doing.
+    // int64 division is lowered into _divv() call on 386, which does not fit into nosplit functions.
+    // Handles overflow in a time-specific manner.
+    // This keeps us within no-split stack limits on 32-bit processors.
+    //
+    //go:nosplit
     int32_t timediv(int64_t v, int32_t div, int32_t* rem)
     {
         auto res = int32_t(0);
@@ -882,6 +925,7 @@ namespace golang::runtime
         return res;
     }
 
+    //go:nosplit
     struct m* acquirem()
     {
         auto gp = getg();
@@ -889,6 +933,7 @@ namespace golang::runtime
         return gp->m;
     }
 
+    //go:nosplit
     void releasem(struct m* mp)
     {
         auto gp = getg();
@@ -899,6 +944,7 @@ namespace golang::runtime
         }
     }
 
+    //go:linkname reflect_typelinks reflect.typelinks
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks()
     {
         auto modules = activeModules();
@@ -912,31 +958,49 @@ namespace golang::runtime
         return {sections, ret};
     }
 
+    // reflect_resolveNameOff resolves a name offset from a base pointer.
+    //
+    //go:linkname reflect_resolveNameOff reflect.resolveNameOff
     unsafe::Pointer reflect_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     {
         return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
+    // reflect_resolveTypeOff resolves an *rtype offset from a base type.
+    //
+    //go:linkname reflect_resolveTypeOff reflect.resolveTypeOff
     unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
         return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
+    // reflect_resolveTextOff resolves a function pointer offset from a base type.
+    //
+    //go:linkname reflect_resolveTextOff reflect.resolveTextOff
     unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
     {
         return rec::textOff(gocpp::recv(toRType((runtime::_type*)(rtype))), textOff(off));
     }
 
+    // reflectlite_resolveNameOff resolves a name offset from a base pointer.
+    //
+    //go:linkname reflectlite_resolveNameOff internal/reflectlite.resolveNameOff
     unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
     {
         return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
+    // reflectlite_resolveTypeOff resolves an *rtype offset from a base type.
+    //
+    //go:linkname reflectlite_resolveTypeOff internal/reflectlite.resolveTypeOff
     unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
     {
         return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
+    // reflect_addReflectOff adds a pointer to the reflection offset lookup map.
+    //
+    //go:linkname reflect_addReflectOff reflect.addReflectOff
     int32_t reflect_addReflectOff(unsafe::Pointer ptr)
     {
         reflectOffsLock();

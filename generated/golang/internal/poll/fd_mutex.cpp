@@ -27,6 +27,9 @@ namespace golang::poll
         using namespace mocklib::rec;
     }
 
+    // fdMutex is a specialized synchronization primitive that manages
+    // lifetime of an fd and serializes access to Read, Write and Close
+    // methods on FD.
     
     template<typename T> requires gocpp::GoStruct<T>
     fdMutex::operator T()
@@ -62,7 +65,16 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
+    // fdMutex.state is organized as follows:
+    // 1 bit - whether FD is closed, if set all subsequent lock operations will fail.
+    // 1 bit - lock for read operations.
+    // 1 bit - lock for write operations.
+    // 20 bits - total number of references (read+write+misc).
+    // 20 bits - number of outstanding read waiters.
+    // 20 bits - number of outstanding write waiters.
     std::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"s;
+    // incref adds a reference to mu.
+    // It reports whether mu is available for reading or writing.
     bool rec::incref(struct fdMutex* mu)
     {
         for(; ; )
@@ -84,6 +96,8 @@ namespace golang::poll
         }
     }
 
+    // increfAndClose sets the state of mu to closed.
+    // It returns false if the file was already closed.
     bool rec::increfAndClose(struct fdMutex* mu)
     {
         for(; ; )
@@ -116,6 +130,8 @@ namespace golang::poll
         }
     }
 
+    // decref removes a reference from mu.
+    // It reports whether there is no remaining reference.
     bool rec::decref(struct fdMutex* mu)
     {
         for(; ; )
@@ -133,6 +149,8 @@ namespace golang::poll
         }
     }
 
+    // lock adds a reference to mu and locks mu.
+    // It reports whether mu is available for reading or writing.
     bool rec::rwlock(struct fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
@@ -188,6 +206,8 @@ namespace golang::poll
         }
     }
 
+    // unlock removes a reference from mu and unlocks mu.
+    // It reports whether there is no remaining reference.
     bool rec::rwunlock(struct fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
@@ -231,12 +251,15 @@ namespace golang::poll
         }
     }
 
+    // Implemented in runtime package.
     void runtime_Semacquire(uint32_t* sema)
     /* convertBlockStmt, nil block */;
 
     void runtime_Semrelease(uint32_t* sema)
     /* convertBlockStmt, nil block */;
 
+    // incref adds a reference to fd.
+    // It returns an error when fd cannot be used.
     struct gocpp::error rec::incref(struct FD* fd)
     {
         if(! rec::incref(gocpp::recv(fd->fdmu)))
@@ -246,6 +269,9 @@ namespace golang::poll
         return nullptr;
     }
 
+    // decref removes a reference from fd.
+    // It also closes fd when the state of fd is set to closed and there
+    // is no remaining reference.
     struct gocpp::error rec::decref(struct FD* fd)
     {
         if(rec::decref(gocpp::recv(fd->fdmu)))
@@ -255,6 +281,8 @@ namespace golang::poll
         return nullptr;
     }
 
+    // readLock adds a reference to fd and locks fd for reading.
+    // It returns an error when fd cannot be used for reading.
     struct gocpp::error rec::readLock(struct FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), true))
@@ -264,6 +292,9 @@ namespace golang::poll
         return nullptr;
     }
 
+    // readUnlock removes a reference from fd and unlocks fd for reading.
+    // It also closes fd when the state of fd is set to closed and there
+    // is no remaining reference.
     void rec::readUnlock(struct FD* fd)
     {
         if(rec::rwunlock(gocpp::recv(fd->fdmu), true))
@@ -272,6 +303,8 @@ namespace golang::poll
         }
     }
 
+    // writeLock adds a reference to fd and locks fd for writing.
+    // It returns an error when fd cannot be used for writing.
     struct gocpp::error rec::writeLock(struct FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), false))
@@ -281,6 +314,9 @@ namespace golang::poll
         return nullptr;
     }
 
+    // writeUnlock removes a reference from fd and unlocks fd for writing.
+    // It also closes fd when the state of fd is set to closed and there
+    // is no remaining reference.
     void rec::writeUnlock(struct FD* fd)
     {
         if(rec::rwunlock(gocpp::recv(fd->fdmu), false))

@@ -15,6 +15,7 @@
 #include "golang/sort/sort_impl_go121.h"
 #include "golang/sort/zsortinterface.h"
 
+// Package sort provides primitives for sorting slices and user-defined collections.
 namespace golang::sort
 {
     namespace rec
@@ -22,6 +23,8 @@ namespace golang::sort
         using namespace mocklib::rec;
     }
 
+    // An implementation of Interface can be sorted by the routines in this package.
+    // The methods refer to elements of the underlying collection by integer index.
     
     template<typename T>
     Interface::Interface(T& ref)
@@ -100,6 +103,12 @@ namespace golang::sort
         return value.PrintTo(os);
     }
 
+    // Sort sorts data in ascending order as determined by the Less method.
+    // It makes one call to data.Len to determine n and O(n*log(n)) calls to
+    // data.Less and data.Swap. The sort is not guaranteed to be stable.
+    //
+    // Note: in many situations, the newer [slices.SortFunc] function is more
+    // ergonomic and runs faster.
     void Sort(struct Interface data)
     {
         auto n = rec::Len(gocpp::recv(data));
@@ -112,6 +121,7 @@ namespace golang::sort
     }
 
     // // hint for pdqsort when choosing the pivot
+    // xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
     uint64_t rec::Next(golang::sort::xorshift* r)
     {
         *r ^= *r << 13;
@@ -126,6 +136,9 @@ namespace golang::sort
         return (unsigned int)(1 << shift);
     }
 
+    // lessSwap is a pair of Less and Swap function for use with the
+    // auto-generated func-optimized variant of sort.go in
+    // zfuncversion.go.
     
     template<typename T> requires gocpp::GoStruct<T>
     lessSwap::operator T()
@@ -184,16 +197,22 @@ namespace golang::sort
         return value.PrintTo(os);
     }
 
+    // Less returns the opposite of the embedded implementation's Less method.
     bool rec::Less(struct reverse r, int i, int j)
     {
         return rec::Less(gocpp::recv(r.Interface), j, i);
     }
 
+    // Reverse returns the reverse order for data.
     struct Interface Reverse(struct Interface data)
     {
         return new reverse {data};
     }
 
+    // IsSorted reports whether data is sorted.
+    //
+    // Note: in many situations, the newer [slices.IsSortedFunc] function is more
+    // ergonomic and runs faster.
     bool IsSorted(struct Interface data)
     {
         auto n = rec::Len(gocpp::recv(data));
@@ -207,6 +226,7 @@ namespace golang::sort
         return true;
     }
 
+    // IntSlice attaches the methods of Interface to []int, sorting in increasing order.
     int rec::Len(golang::sort::IntSlice x)
     {
         return len(x);
@@ -222,16 +242,25 @@ namespace golang::sort
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
+    // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::IntSlice x)
     {
         Sort(x);
     }
 
+    // Float64Slice implements Interface for a []float64, sorting in increasing order,
+    // with not-a-number (NaN) values ordered before other values.
     int rec::Len(golang::sort::Float64Slice x)
     {
         return len(x);
     }
 
+    // Less reports whether x[i] should be ordered before x[j], as required by the sort Interface.
+    // Note that floating-point comparison by itself is not a transitive relation: it does not
+    // report a consistent ordering for not-a-number (NaN) values.
+    // This implementation of Less places NaN values before any others, by using:
+    //
+    //	x[i] < x[j] || (math.IsNaN(x[i]) && !math.IsNaN(x[j]))
     bool rec::Less(golang::sort::Float64Slice x, int i, int j)
     {
         return x[i] < x[j] || (isNaN(x[i]) && ! isNaN(x[j]));
@@ -242,16 +271,19 @@ namespace golang::sort
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
+    // isNaN is a copy of math.IsNaN to avoid a dependency on the math package.
     bool isNaN(double f)
     {
         return f != f;
     }
 
+    // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::Float64Slice x)
     {
         Sort(x);
     }
 
+    // StringSlice attaches the methods of Interface to []string, sorting in increasing order.
     int rec::Len(golang::sort::StringSlice x)
     {
         return len(x);
@@ -267,41 +299,70 @@ namespace golang::sort
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
+    // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::StringSlice x)
     {
         Sort(x);
     }
 
+    // Ints sorts a slice of ints in increasing order.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Ints(gocpp::slice<int> x)
     {
         intsImpl(x);
     }
 
+    // Float64s sorts a slice of float64s in increasing order.
+    // Not-a-number (NaN) values are ordered before other values.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Float64s(gocpp::slice<double> x)
     {
         float64sImpl(x);
     }
 
+    // Strings sorts a slice of strings in increasing order.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.Sort].
     void Strings(gocpp::slice<std::string> x)
     {
         stringsImpl(x);
     }
 
+    // IntsAreSorted reports whether the slice x is sorted in increasing order.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool IntsAreSorted(gocpp::slice<int> x)
     {
         return intsAreSortedImpl(x);
     }
 
+    // Float64sAreSorted reports whether the slice x is sorted in increasing order,
+    // with not-a-number (NaN) values before any other values.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool Float64sAreSorted(gocpp::slice<double> x)
     {
         return float64sAreSortedImpl(x);
     }
 
+    // StringsAreSorted reports whether the slice x is sorted in increasing order.
+    //
+    // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
     bool StringsAreSorted(gocpp::slice<std::string> x)
     {
         return stringsAreSortedImpl(x);
     }
 
+    // Stable sorts data in ascending order as determined by the Less method,
+    // while keeping the original order of equal elements.
+    //
+    // It makes one call to data.Len to determine n, O(n*log(n)) calls to
+    // data.Less and O(n*log(n)*log(n)) calls to data.Swap.
+    //
+    // Note: in many situations, the newer slices.SortStableFunc function is more
+    // ergonomic and runs faster.
     void Stable(struct Interface data)
     {
         stable(data, rec::Len(gocpp::recv(data)));

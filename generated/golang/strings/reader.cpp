@@ -22,6 +22,10 @@ namespace golang::strings
         using namespace mocklib::rec;
     }
 
+    // A Reader implements the [io.Reader], [io.ReaderAt], [io.ByteReader], [io.ByteScanner],
+    // [io.RuneReader], [io.RuneScanner], [io.Seeker], and [io.WriterTo] interfaces by reading
+    // from a string.
+    // The zero value for Reader operates like a Reader of an empty string.
     
     template<typename T> requires gocpp::GoStruct<T>
     Reader::operator T()
@@ -57,6 +61,8 @@ namespace golang::strings
         return value.PrintTo(os);
     }
 
+    // Len returns the number of bytes of the unread portion of the
+    // string.
     int rec::Len(struct Reader* r)
     {
         if(r->i >= int64_t(len(r->s)))
@@ -66,11 +72,16 @@ namespace golang::strings
         return int(int64_t(len(r->s)) - r->i);
     }
 
+    // Size returns the original length of the underlying string.
+    // Size is the number of bytes available for reading via [Reader.ReadAt].
+    // The returned value is always the same and is not affected by calls
+    // to any other method.
     int64_t rec::Size(struct Reader* r)
     {
         return int64_t(len(r->s));
     }
 
+    // Read implements the [io.Reader] interface.
     std::tuple<int, struct gocpp::error> rec::Read(struct Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
@@ -85,6 +96,7 @@ namespace golang::strings
         return {n, err};
     }
 
+    // ReadAt implements the [io.ReaderAt] interface.
     std::tuple<int, struct gocpp::error> rec::ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
@@ -105,6 +117,7 @@ namespace golang::strings
         return {n, err};
     }
 
+    // ReadByte implements the [io.ByteReader] interface.
     std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(struct Reader* r)
     {
         r->prevRune = - 1;
@@ -117,6 +130,7 @@ namespace golang::strings
         return {b, nullptr};
     }
 
+    // UnreadByte implements the [io.ByteScanner] interface.
     struct gocpp::error rec::UnreadByte(struct Reader* r)
     {
         if(r->i <= 0)
@@ -128,6 +142,7 @@ namespace golang::strings
         return nullptr;
     }
 
+    // ReadRune implements the [io.RuneReader] interface.
     std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(struct Reader* r)
     {
         gocpp::rune ch;
@@ -149,6 +164,7 @@ namespace golang::strings
         return {ch, size, err};
     }
 
+    // UnreadRune implements the [io.RuneScanner] interface.
     struct gocpp::error rec::UnreadRune(struct Reader* r)
     {
         if(r->i <= 0)
@@ -164,6 +180,7 @@ namespace golang::strings
         return nullptr;
     }
 
+    // Seek implements the [io.Seeker] interface.
     std::tuple<int64_t, struct gocpp::error> rec::Seek(struct Reader* r, int64_t offset, int whence)
     {
         r->prevRune = - 1;
@@ -199,6 +216,7 @@ namespace golang::strings
         return {abs, nullptr};
     }
 
+    // WriteTo implements the [io.WriterTo] interface.
     std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* r, io::Writer w)
     {
         int64_t n;
@@ -223,11 +241,14 @@ namespace golang::strings
         return {n, err};
     }
 
+    // Reset resets the [Reader] to be reading from s.
     void rec::Reset(struct Reader* r, std::string s)
     {
         *r = Reader {s, 0, - 1};
     }
 
+    // NewReader returns a new [Reader] reading from s.
+    // It is similar to [bytes.NewBufferString] but more efficient and non-writable.
     struct Reader* NewReader(std::string s)
     {
         return new Reader {s, 0, - 1};

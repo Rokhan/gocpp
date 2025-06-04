@@ -193,6 +193,7 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 
 	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, UsesTag, ".h")
 
+	cv.ConvertDoc(cv.astFile.Doc)
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(out, "{\n")
@@ -473,6 +474,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	var allOutPlaces [][]place
 	var pkgInfos []*pkgInfo
 	var allCppOut, allHppOut, allFwdOut []string
+
 	for _, decl := range cv.astFile.Decls {
 		var outPlaces []place
 		var cppOut, hppOut, fwdOut string
@@ -597,6 +599,22 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	return
+}
+
+// Still need to generate "Doc" comments for Fields
+// Still need to generate comment stored in "Comments" field
+func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
+	if doc == nil {
+		return
+	}
+
+	out := cv.cpp.out
+	for _, comment := range doc.List {
+		text := strings.TrimSpace(comment.Text)
+		if text != "" {
+			fmt.Fprintf(out, "%s%s\n", cv.cpp.Indent(), text)
+		}
+	}
 }
 
 func (cv *cppConverter) getFullReceiverName(rec ast.SelectorExpr) *string {
@@ -1083,6 +1101,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 			usedNames[cppName] = true
 			param.names = append(param.names, cppName)
 		}
+		param.doc = field.Doc
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		params = append(params, param)
 	}
@@ -1151,11 +1170,13 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
+		cv.ConvertDoc(d.Doc)
 		for _, place := range cv.convertSpecs(d.Specs, d.Tok, isNameSpace, ";\n") {
 			cv.printOrKeepPlace(place, &outPlaces, &pkgInfos)
 		}
 
 	case *ast.FuncDecl:
+		cv.ConvertDoc(d.Doc)
 		ctx := ctContext{inDeclaration: true, namespace: cv.namespace}
 		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
@@ -1226,7 +1247,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			}
 			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType, last.names[0]))
 			callParams1 := strings.Join(strs1, ", ")
-			variadicParams1 := append(variadicParams, typeName{last.names, mkCppType("Args...", nil), false})
+			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, mkCppType("Args...", nil), false})
 
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
@@ -1238,7 +1259,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			paramName := "value" // TODO, chose name to avoid name conflict
 			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType, paramName, last.names[0]))
 			callParams2 := strings.Join(strs2, ", ")
-			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, mkCppType(last.Type.eltType, nil), false}, typeName{last.names, mkCppType("Args...", nil), false})
+			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, mkCppType(last.Type.eltType, nil), false}, typeName{last.names, nil, mkCppType("Args...", nil), false})
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
@@ -1957,6 +1978,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 	for _, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
+			cv.ConvertDoc(s.Doc)
 			if s.Comment != nil {
 				for _, comment := range s.Comment.List {
 					result = append(result, inlineStrf(s, "// %s\n", comment.Text)...)
@@ -1970,6 +1992,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 			}
 
 		case *ast.ValueSpec:
+			cv.ConvertDoc(s.Doc)
 			if len(s.Values) != 0 {
 				values = s.Values
 
@@ -2083,6 +2106,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 			}
 
 		case *ast.ImportSpec:
+			cv.ConvertDoc(s.Doc)
 			// Check doc here https://pkg.go.dev/golang.org/x/tools/go/packages
 			pkg := cv.typeInfo.PkgNameOf(s).Imported()
 

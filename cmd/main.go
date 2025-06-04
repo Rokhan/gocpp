@@ -3466,7 +3466,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		return ExprPrintf("*%s", cv.convertExpr(n.X))
 
 	case *ast.TypeAssertExpr:
-		return ExprPrintf("gocpp::getValue<%s>(%s)", cv.convertExprCppType(n.Type), cv.convertExpr(n.X))
+		return ExprPrintf("gocpp::getValue<%s>(%s)", cv.convertTypeExpr(n.Type, ctContext{}), cv.convertExpr(n.X))
 
 	default:
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))

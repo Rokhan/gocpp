@@ -2048,6 +2048,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						name := GetCppName(s.Names[i].Name)
 
 						if len(values) == 0 {
+							result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else if tok == token.CONST && exprType.canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {

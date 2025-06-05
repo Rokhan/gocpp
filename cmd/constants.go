@@ -62,8 +62,14 @@ var cppKeyWordsMapping = map[string]string{
 	"typeid":    "go_typeid",    // keyword
 	"unsigned":  "go_unsigned",  // keyword
 	"while":     "go_while",     // keyword
+	"break":     "go_break",     // keyword
+	"case":      "go_case",      // keyword
 
-	"EOF":     "go_EOF",     // Macro of <cstdio>
+	"EOF":    "go_EOF",    // Macro of <cstdio>
+	"stdin":  "go_stdin",  // Macro of <cstdio>
+	"stdout": "go_stdout", // Macro of <cstdio>
+	"stderr": "go_stderr", // Macro of <cstdio>
+
 	"SIGHUP":  "go_SIGHUP",  // Unix Macro
 	"SIGINT":  "go_SIGINT",  // Unix Macro
 	"SIGQUIT": "go_SIGQUIT", // Unix Macro

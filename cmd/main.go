@@ -1101,11 +1101,14 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 			usedNames[cppName] = true
 			param.names = append(param.names, cppName)
 		}
-		if len(field.Names) == 0 && ctx.ensureHasName {
-			param.names = append(param.names, "_")
-		}
 		param.doc = field.Doc
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
+		if len(field.Names) == 0 && ctx.ensureHasTypeName {
+			param.names = append(param.names, param.Type.eltType)
+		}
+		if len(field.Names) == 0 && ctx.ensureHasBlankName {
+			param.names = append(param.names, "_")
+		}
 		params = append(params, param)
 	}
 
@@ -2399,9 +2402,10 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 }
 
 type ctContext struct {
-	inDeclaration bool
-	ensureHasName bool
-	namespace     string
+	inDeclaration      bool
+	ensureHasTypeName  bool
+	ensureHasBlankName bool
+	namespace          string
 }
 
 // Maybe merge this function with "convertExprType" in future ?
@@ -2474,6 +2478,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	case *ast.StarExpr:
 		typeExpr := cv.convertTypeExpr(n.X, ctx)
 		cppType := mkCppPtrType(ExprPrintf("%s*", typeExpr))
+		cppType.eltType = typeExpr.str
 		cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
 		cppType.isStruct = typeExpr.isStruct
 		return cppType
@@ -2658,7 +2663,7 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms []string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
-	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, namespace: cv.namespace})
+	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
@@ -2844,7 +2849,7 @@ func getAnotherTemplateParamName(excludedNames []string) string {
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms []string, param genStructParam) string {
 	buf := new(bytes.Buffer)
-	methods := cv.readMethods(node.Methods, ctContext{ensureHasName: true})
+	methods := cv.readMethods(node.Methods, ctContext{ensureHasBlankName: true})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {

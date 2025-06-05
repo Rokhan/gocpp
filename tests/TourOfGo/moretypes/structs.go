@@ -13,6 +13,12 @@ type Vertex struct {
 type Empty struct{}
 type Dummy struct{ i int }
 
+type Dummy2 struct {
+	Dummy
+	Vertex
+	i int
+}
+
 type Person struct {
 	identity *struct {
 		firstName string
@@ -47,6 +53,9 @@ func main() {
 
 	p1 = nil
 	fmt.Println(p1)
+
+	dd := Dummy2{d, Vertex{}, 3}
+	fmt.Println(dd)
 
 	//var p2 *Dummy = &v1
 	//fmt.Println(p2)

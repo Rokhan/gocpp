@@ -315,7 +315,7 @@ func (cv *cppConverter) InitAndParse() {
 		parsedFile, err := parser.ParseFile(cv.shared.fileSet, cv.inputName, nil, parser.ParseComments)
 		cv.astFile = parsedFile
 		if err != nil {
-			panic(err)
+			cv.Panicf("%v", err)
 		}
 	}
 }
@@ -337,26 +337,26 @@ func (cv *cppConverter) endScope() {
 	cv.scopes.Remove(cv.scopes.Back())
 }
 
-func (cv *cppConverter) DeclareVar(name string, isPtr bool) {
+func (cv *cppConverter) declareVar(name string, isPtr bool) {
 	scope := cv.scopes.Back().Value.(scope)
 	scope.vars[name] = isPtr
 }
 
-func (cv *cppConverter) DeclareType(name string) {
+func (cv *cppConverter) declareType(name string) {
 	scope := cv.scopes.Back().Value.(scope)
 	scope.types[name] = true
 }
 
-func (cv *cppConverter) DeclareVars(params typeNames) {
+func (cv *cppConverter) declareVars(params typeNames) {
 	for _, param := range params {
 		for _, name := range param.names {
-			cv.DeclareVar(name, param.Type.isPtr)
+			cv.declareVar(name, param.Type.isPtr)
 		}
 	}
 }
 
 // FIXME : manage composed names like A.B.C
-func (cv *cppConverter) IsPtr(name string) bool {
+func (cv *cppConverter) isPtr(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
 		scope := elt.Value.(scope)
 		value, ok := scope.vars[name]
@@ -367,7 +367,7 @@ func (cv *cppConverter) IsPtr(name string) bool {
 	return false
 }
 
-func (cv *cppConverter) IsLocalType(name string) bool {
+func (cv *cppConverter) isLocalType(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
 		scope := elt.Value.(scope)
 		value, ok := scope.types[name]
@@ -785,7 +785,7 @@ func (cv *cppConverter) topoSort(headerElts []*place, getter func(place) string,
 
 		// TODO, find a better way to detect cycles
 		if maxIndex > 10000 {
-			Panicf("BUG: max index reached in topoSort, maxIndex: %d\n", maxIndex)
+			cv.Panicf("BUG: max index reached in topoSort, maxIndex: %d\n", maxIndex)
 		}
 	}
 
@@ -1192,7 +1192,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		outNames, outTypes := cv.getResultInfos(d.Type)
 		resultType := buildOutType(outTypes)
 
-		cv.DeclareVars(params)
+		cv.declareVars(params)
 		typenames := []string{}
 		for _, param := range params {
 			for _, place := range param.Type.defs {
@@ -1292,10 +1292,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		fmt.Fprintf(cv.cpp.out, "\n")
 
 	case *ast.BadDecl:
-		panic("convertDecls[BadDecl] Not implemented")
+		cv.Panicf("convertDecls[BadDecl] Not implemented")
 
 	default:
-		panic("convertDecls, unmanaged subtype")
+		cv.Panicf("convertDecls, unmanaged subtype")
 	}
 	return
 }
@@ -1375,7 +1375,7 @@ func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr, outNames []string) 
 		if outNames != nil {
 			switch len(outNames) {
 			case 0:
-				panic("convertReturnExprs, len(outNames) == 0")
+				cv.Panicf("convertReturnExprs, len(outNames) == 0")
 			case 1:
 				return ExprPrintf("return %s", outNames[0])
 			default:
@@ -1389,6 +1389,8 @@ func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr, outNames []string) 
 	default:
 		return ExprPrintf("return {%s}", cv.convertExprs(exprs))
 	}
+
+	panic("convertReturnExprs, Unreachable code reached")
 }
 
 func (cv *cppConverter) convertAssignRightExprs(exprs []ast.Expr) cppExpr {
@@ -2199,7 +2201,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		if isNamespace {
 			return mkCppType("", append(cppType.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
 		} else {
-			cv.DeclareType(name)
+			cv.declareType(name)
 			return mkCppType("", append(cppType.defs, inlineStr(usingDec, node)))
 		}
 
@@ -2429,7 +2431,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		isParam, _ := cv.isParam(n)
 		identType = mkCppType(GetCppType(n.Name), nil)
 		if isTD && !isParam {
-			if !cv.IsLocalType(identType.str) {
+			if !cv.isLocalType(identType.str) {
 				if pkg != ctx.namespace {
 					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 				} else {
@@ -3341,7 +3343,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			outNames, outTypes := cv.getResultInfos(n.Type)
 			resultType := buildOutType(outTypes)
 
-			cv.DeclareVars(params)
+			cv.declareVars(params)
 
 			captureExpr := cv.getCaptureExpr()
 
@@ -3459,7 +3461,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertExpr(n.Sel)))
 		} else {
 			// TODO: use only IsExprPtr ?
-			if cv.IsPtr(name.str) || cv.IsExprPtr(n.X) {
+			if cv.isPtr(name.str) || cv.IsExprPtr(n.X) {
 				return GetCppExprFunc(ExprPrintf("%s->%s", name, cv.convertExpr(n.Sel)))
 			} else {
 				return GetCppExprFunc(ExprPrintf("%s.%s", name, cv.convertExpr(n.Sel)))
@@ -3757,7 +3759,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 	for pkgName, files := range astFiles {
 		if err := parentCv.LoadAndCheckDefs(pkgName, shared.fileSet, files...); err != nil {
-			panic(err) // type error
+			parentCv.Panicf("%v", err) // type error
 		}
 
 		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgName)

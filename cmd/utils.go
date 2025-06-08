@@ -727,7 +727,7 @@ type cppExpr struct {
 }
 
 func (expr cppExpr) toCppType() cppType {
-	return cppType{expr, false, false, false, "", true}
+	return cppType{expr, false, false, false, nil, true}
 }
 
 func mkCppExpr(str string) cppExpr {
@@ -739,21 +739,30 @@ type cppType struct {
 	isPtr      bool // is type a pointer ?
 	isStruct   bool // is the name of a stuct or an interface
 	isEllipsis bool // is type created by an ellipsis
-	eltType    string
+	eltType    *cppType
 
 	canFwd bool // Can go in forward header
 }
 
+// build a name based on type
+func (ct cppType) getTypeBasedName() string {
+	if ct.eltType != nil {
+		return ct.eltType.getTypeBasedName()
+	}
+	str, _ := Last(strings.Split(ct.str, "::"))
+	return str
+}
+
 func mkCppType(str string, defs []place) cppType {
-	return cppType{cppExpr{str, defs, nil}, false, false, false, "", true}
+	return cppType{cppExpr{str, defs, nil}, false, false, false, nil, true}
 }
 
-func mkCppPtrType(expr cppExpr) cppType {
-	return cppType{expr, true, false, false, "", true}
-}
+// func mkCppPtrType(expr cppExpr) cppType {
+// 	return cppType{expr, true, false, false, nil, true}
+// }
 
-func mkCppEllipsis(expr cppExpr, eltType string) cppType {
-	return cppType{expr, false, false, true, eltType, true}
+func mkCppEllipsis(expr cppExpr, eltType cppType) cppType {
+	return cppType{expr, false, false, true, &eltType, true}
 }
 
 type cppExprWritter[TWritter io.Writer] struct {

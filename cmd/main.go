@@ -378,6 +378,17 @@ func (cv *cppConverter) isLocalType(name string) bool {
 	return false
 }
 
+func (cv *cppConverter) isAmbiguousName(name string) bool {
+	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
+		scope := elt.Value.(scope)
+		_, ok := scope.vars[name]
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
 func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
 	goType := cv.convertExprToType(expr)
 
@@ -1093,7 +1104,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 	if fields == nil {
 		return
 	}
-
+	cv.startScope()
 	usedNames := make(map[string]bool)
 
 	for _, field := range fields.List {
@@ -1106,13 +1117,18 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 		param.doc = field.Doc
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		if len(field.Names) == 0 && ctx.ensureHasTypeName {
-			param.names = append(param.names, param.Type.eltType)
+			newName := param.Type.getTypeBasedName()
+			param.names = append(param.names, newName)
 		}
 		if len(field.Names) == 0 && ctx.ensureHasBlankName {
 			param.names = append(param.names, "_")
 		}
 		params = append(params, param)
+		for _, name := range param.names {
+			cv.declareVar(name, false)
+		}
 	}
+	cv.endScope()
 
 	counter := 1
 	for i := range params {
@@ -1253,7 +1269,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			for _, params := range variadicParams {
 				strs = append(strs, params.names...)
 			}
-			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType, last.names[0]))
+			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType.str, last.names[0]))
 			callParams1 := strings.Join(strs1, ", ")
 			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, mkCppType("Args...", nil), false})
 
@@ -1265,9 +1281,9 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			appendStrf(&funcDef, "}\n")
 
 			paramName := "value" // TODO, chose name to avoid name conflict
-			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType, paramName, last.names[0]))
+			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType.str, paramName, last.names[0]))
 			callParams2 := strings.Join(strs2, ", ")
-			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, mkCppType(last.Type.eltType, nil), false}, typeName{last.names, nil, mkCppType("Args...", nil), false})
+			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, nil, mkCppType("Args...", nil), false})
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
@@ -2374,6 +2390,10 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 		}
 	}
 
+	if pkg != nil {
+		return false, pkg.Name()
+	}
+
 	return false, ""
 }
 
@@ -2438,6 +2458,8 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 					identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
 				}
 			}
+		} else if cv.isAmbiguousName(identType.str) {
+			identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 		} else {
 			cv.checkStructType(n, &identType)
 		}
@@ -2479,15 +2501,14 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		namespace := cv.convertExpr(n.X)
 		field := cv.convertTypeExpr(n.Sel, ctx)
 		typeName := GetCppExprFunc(ExprPrintf("%s::%s", namespace, field))
-		// TODO: Check this. Why mkCppPtrType and not mkCppType ?
-		cppType := mkCppPtrType(typeName)
+		cppType := cppType{cppExpr: cppExpr{str: typeName.str}, canFwd: true}
 		cppType.isStruct = field.isStruct
 		return cppType
 
 	case *ast.StarExpr:
 		typeExpr := cv.convertTypeExpr(n.X, ctx)
-		cppType := mkCppPtrType(ExprPrintf("%s*", typeExpr))
-		cppType.eltType = typeExpr.str
+		cppType := cppType{cppExpr: ExprPrintf("%s*", typeExpr), canFwd: true, isPtr: true}
+		cppType.eltType = &typeExpr
 		cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
 		cppType.isStruct = typeExpr.isStruct
 		return cppType
@@ -2533,7 +2554,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 				defs = append(defs, outlineStr(structDef, node))
 			}
 
-			return mkCppPtrType(cppExpr{name, defs, nil})
+			return cppType{cppExpr: cppExpr{name, defs, nil}, isPtr: true, canFwd: true}
 		}
 
 	case *ast.Ellipsis:
@@ -2592,7 +2613,7 @@ func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType, ctx ctContext)
 
 func (cv *cppConverter) convertEllipsisTypeExpr(node *ast.Ellipsis, ctx ctContext) cppType {
 	elt := cv.convertTypeExpr(node.Elt, ctx)
-	return mkCppEllipsis(ExprPrintf("gocpp::slice<%s>", elt), elt.str)
+	return mkCppEllipsis(ExprPrintf("gocpp::slice<%s>", elt), elt)
 }
 
 func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType, ctx ctContext) cppType {
@@ -2601,6 +2622,8 @@ func (cv *cppConverter) convertChanTypeExpr(node *ast.ChanType, ctx ctContext) c
 }
 
 func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) cppType {
+	ctx.ensureHasBlankName = true
+	ctx.ensureHasTypeName = false
 	params := cv.readFieldsCtx(node.Params, ctx)
 	_, outTypes := cv.getResultInfos(node)
 	resultType := buildOutType(outTypes)

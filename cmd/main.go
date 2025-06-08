@@ -551,6 +551,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	// Try to compute dependencies for header to avoid to specify them at each "headerStr" call
 	for _, headerElt := range headerElts {
+		initialOrder := headerElt.depInfo.initialOrder
 		switch spec := headerElt.node.(type) {
 		case *ast.TypeSpec:
 			headerElt.depInfo = cv.getTypeDepInfo(spec)
@@ -560,6 +561,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		case *ast.StructType:
 			headerElt.depInfo = cv.getStructDepInfo(spec)
 		}
+		headerElt.depInfo.initialOrder = initialOrder
 	}
 
 	// TODO: change 'includeFwdHeaderDependencies' name as it is not only for fwd header

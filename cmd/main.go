@@ -925,10 +925,10 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *
 		// usedType.Pkg().Path() doesn't return the full path, using value stored when loading packages
 		pkgPath, ok := cv.shared.packagePaths[file]
 		if ok {
-			return &pkgInfo{pkg.Name(), pkgPath, file, tag, GoFiles}
+			return &pkgInfo{pkg.Name(), CleanPath(pkgPath), file, tag, GoFiles}
 		} else {
 			cv.Logf("  -> pkgPath is null, file: %v\n", file)
-			return &pkgInfo{pkg.Name(), pkg.Path(), file, tag, GoFiles}
+			return &pkgInfo{pkg.Name(), CleanPath(pkg.Path()), file, tag, GoFiles}
 		}
 	} else {
 		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v, tag:%v ---\n", file, usedType.Name(), tag)
@@ -2116,8 +2116,13 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 
 		case *ast.ImportSpec:
 			cv.ConvertDoc(s.Doc)
+
 			// Check doc here https://pkg.go.dev/golang.org/x/tools/go/packages
-			pkg := cv.typeInfo.PkgNameOf(s).Imported()
+			pkgName := cv.typeInfo.PkgNameOf(s)
+			if pkgName == nil {
+				cv.Panicf("convertSpecs, can't get package name for import spec: %v, input: %v", s, cv.Position(s))
+			}
+			pkg := pkgName.Imported()
 
 			cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles}
 
@@ -3597,7 +3602,7 @@ func (cv *cppConverter) Position(expr ast.Node) token.Position {
 }
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
-func (cv *cppConverter) LoadAndCheckDefs(path string, fset *token.FileSet, files ...*ast.File) error {
+func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, files ...*ast.File) error {
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if cv.typeInfo == nil {
 		cv.typeInfo = &types.Info{
@@ -3608,11 +3613,54 @@ func (cv *cppConverter) LoadAndCheckDefs(path string, fset *token.FileSet, files
 		}
 	}
 
-	_, err := conf.Check(path, fset, files, cv.typeInfo)
+	_, err := conf.Check(pkgPath, fset, files, cv.typeInfo)
 	if err != nil {
 		return err // type error
 	}
 	return nil
+}
+
+func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) []*ast.File {
+
+	if pkgPath == "main" {
+		return files
+	}
+
+	cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles}
+
+	pkgFiles := [](*ast.File){}
+	pkgs, err := packages.Load(cfg, pkgPath)
+	if err != nil {
+		cv.Panicf("load: %v\n", err)
+	}
+	if packages.PrintErrors(pkgs) > 0 {
+		cv.Panicf("addPkgDependencies, packages.PrintErrors(pkgs) > 0, pkgPath: %s\n", pkgPath)
+	}
+
+	for parsedFile, astFile := range cv.shared.parsedFiles {
+		cv.Logf("addPkgDependencies, parsed file %s, %v\n", parsedFile, cv.Position(astFile))
+	}
+
+	for _, pkg := range pkgs {
+		for _, file := range pkg.GoFiles {
+			file = CleanPath(file)
+			if _, done := cv.shared.parsedFiles[file]; done {
+				cv.Logf("addPkgDependencies, file %s already parsed, skipping\n", file)
+				continue
+			}
+			parsedFile, err := parser.ParseFile(cv.shared.fileSet, file, nil, parser.ParseComments)
+			pkgFiles = append(pkgFiles, parsedFile)
+			if err != nil {
+				cv.Panicf("addPkgDependencies, parser.ParseFile failed: %v", err)
+			}
+		}
+	}
+
+	files = append(pkgFiles, files...)
+	for _, file := range files {
+		cv.Logf("addPkgDependencies, file %s, %v\n", file.Name.Name, cv.Position(file.Name))
+	}
+	return files
 }
 
 func (cv *cppConverter) PrintDefsUsage() {
@@ -3803,8 +3851,12 @@ func main() {
 	cv.tryRecover = false
 
 	cv.InitAndParse()
+	cv.shared.parsedFiles[cv.inputName] = cv.astFile
 
-	if err := cv.LoadAndCheckDefs(cv.astFile.Name.Name, fset, cv.astFile); err != nil {
+	pkgPath := cv.astFile.Name.Name
+	astFiles := cv.addPkgDependencies(pkgPath, cv.astFile)
+
+	if err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...); err != nil {
 		panic(err) // type error
 	}
 

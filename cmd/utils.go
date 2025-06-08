@@ -189,6 +189,7 @@ func JoinWithSuffix(elements []string, separator string) string {
 }
 
 // clean and join path function that keeps unix style paths on all platforms
+// TODO, use a specific type for clean paths
 func CleanPath(path string) string {
 	path = filepath.Clean(path)
 	path = strings.ReplaceAll(path, "\\", "/") // convert to unix path
@@ -233,6 +234,7 @@ func createOutputExt(outdir, name, ext string) outFile {
 }
 
 func createOutput(outdir, name string) outFile {
+	outdir = CleanPath(outdir)
 	var outName = JoinPath(outdir, name)
 	var outDir = path.Dir(outName)
 
@@ -671,7 +673,7 @@ func includeStr(str string, depInfo depInfo) place {
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, pkgPath, filePath, UnknwonTag, pkgType}, node, nil}
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknwonTag, pkgType}, node, nil}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {

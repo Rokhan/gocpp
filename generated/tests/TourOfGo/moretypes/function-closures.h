@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::function<int (int)> adder();
+    std::function<int (int _1)> adder();
     void main();
 
     namespace rec

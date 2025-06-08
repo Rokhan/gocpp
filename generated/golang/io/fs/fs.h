@@ -14,72 +14,6 @@
 
 namespace golang::fs
 {
-    extern gocpp::error ErrNotExist;
-    struct File : gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        File(){}
-        File(File& i) = default;
-        File(const File& i) = default;
-        File& operator=(File& i) = default;
-        File& operator=(const File& i) = default;
-
-        template<typename T>
-        File(T& ref);
-
-        template<typename T>
-        File(const T& ref);
-
-        template<typename T>
-        File(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IFile
-        {
-            virtual std::tuple<struct FileInfo, struct gocpp::error> vStat() = 0;
-            virtual std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char>) = 0;
-            virtual struct gocpp::error vClose() = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct FileImpl : IFile
-        {
-            explicit FileImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<struct FileInfo, struct gocpp::error> vStat() override;
-
-            std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char>) override;
-
-            struct gocpp::error vClose() override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IFile> value;
-    };
-
-    namespace rec
-    {
-        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<struct File, false>& self);
-        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<struct File>& self);
-
-        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char>);
-        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char>);
-
-        struct gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self);
-        struct gocpp::error Close(const gocpp::ObjRecv<struct File>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct File& value);
-    extern gocpp::error ErrClosed;
     struct FS : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -132,6 +66,141 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct FS& value);
+    bool ValidPath(std::string name);
+    struct File : gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        File(){}
+        File(File& i) = default;
+        File(const File& i) = default;
+        File& operator=(File& i) = default;
+        File& operator=(const File& i) = default;
+
+        template<typename T>
+        File(T& ref);
+
+        template<typename T>
+        File(const T& ref);
+
+        template<typename T>
+        File(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IFile
+        {
+            virtual std::tuple<struct FileInfo, struct gocpp::error> vStat() = 0;
+            virtual std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> _1) = 0;
+            virtual struct gocpp::error vClose() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct FileImpl : IFile
+        {
+            explicit FileImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<struct FileInfo, struct gocpp::error> vStat() override;
+
+            std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> _1) override;
+
+            struct gocpp::error vClose() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IFile> value;
+    };
+
+    namespace rec
+    {
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::PtrRecv<struct File, false>& self);
+        std::tuple<struct FileInfo, struct gocpp::error> Stat(const gocpp::ObjRecv<struct File>& self);
+
+        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1);
+
+        struct gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self);
+        struct gocpp::error Close(const gocpp::ObjRecv<struct File>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct File& value);
+    struct DirEntry : gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        DirEntry(){}
+        DirEntry(DirEntry& i) = default;
+        DirEntry(const DirEntry& i) = default;
+        DirEntry& operator=(DirEntry& i) = default;
+        DirEntry& operator=(const DirEntry& i) = default;
+
+        template<typename T>
+        DirEntry(T& ref);
+
+        template<typename T>
+        DirEntry(const T& ref);
+
+        template<typename T>
+        DirEntry(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IDirEntry
+        {
+            virtual std::string vName() = 0;
+            virtual bool vIsDir() = 0;
+            virtual fs::FileMode vType() = 0;
+            virtual std::tuple<struct FileInfo, struct gocpp::error> vInfo() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct DirEntryImpl : IDirEntry
+        {
+            explicit DirEntryImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::string vName() override;
+
+            bool vIsDir() override;
+
+            fs::FileMode vType() override;
+
+            std::tuple<struct FileInfo, struct gocpp::error> vInfo() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IDirEntry> value;
+    };
+
+    namespace rec
+    {
+        std::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        std::string Name(const gocpp::ObjRecv<struct DirEntry>& self);
+
+        bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self);
+
+        fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self);
+
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<struct DirEntry>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
     struct ReadDirFile : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -187,24 +256,13 @@ namespace golang::fs
     extern gocpp::error ErrInvalid;
     extern gocpp::error ErrPermission;
     extern gocpp::error ErrExist;
-    struct PathError
-    {
-        std::string Op;
-        std::string Path;
-        gocpp::error Err;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct PathError& value);
+    extern gocpp::error ErrNotExist;
+    extern gocpp::error ErrClosed;
+    struct gocpp::error errInvalid();
+    struct gocpp::error errPermission();
+    struct gocpp::error errExist();
+    struct gocpp::error errNotExist();
+    struct gocpp::error errClosed();
     struct FileInfo : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -287,82 +345,24 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct FileInfo& value);
-    struct DirEntry : gocpp::Interface
+    struct PathError
     {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
+        std::string Op;
+        std::string Path;
+        gocpp::error Err;
 
-        DirEntry(){}
-        DirEntry(DirEntry& i) = default;
-        DirEntry(const DirEntry& i) = default;
-        DirEntry& operator=(DirEntry& i) = default;
-        DirEntry& operator=(const DirEntry& i) = default;
+        using isGoStruct = void;
 
-        template<typename T>
-        DirEntry(T& ref);
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
 
-        template<typename T>
-        DirEntry(const T& ref);
-
-        template<typename T>
-        DirEntry(T* ptr);
-
-        using isGoInterface = void;
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IDirEntry
-        {
-            virtual std::string vName() = 0;
-            virtual bool vIsDir() = 0;
-            virtual fs::FileMode vType() = 0;
-            virtual std::tuple<struct FileInfo, struct gocpp::error> vInfo() = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct DirEntryImpl : IDirEntry
-        {
-            explicit DirEntryImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::string vName() override;
-
-            bool vIsDir() override;
-
-            fs::FileMode vType() override;
-
-            std::tuple<struct FileInfo, struct gocpp::error> vInfo() override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IDirEntry> value;
     };
 
-    namespace rec
-    {
-        std::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        std::string Name(const gocpp::ObjRecv<struct DirEntry>& self);
-
-        bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self);
-
-        fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self);
-
-        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<struct DirEntry>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
-    bool ValidPath(std::string name);
-    struct gocpp::error errInvalid();
-    struct gocpp::error errPermission();
-    struct gocpp::error errExist();
-    struct gocpp::error errNotExist();
-    struct gocpp::error errClosed();
+    std::ostream& operator<<(std::ostream& os, const struct PathError& value);
     struct gocpp_id_0 : gocpp::Interface
     {
         using gocpp::Interface::operator==;

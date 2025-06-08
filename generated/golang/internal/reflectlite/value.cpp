@@ -60,6 +60,7 @@ namespace golang::reflectlite
         T result;
         result.typ_ = this->typ_;
         result.ptr = this->ptr;
+        result.flag = this->flag;
         return result;
     }
 
@@ -68,6 +69,7 @@ namespace golang::reflectlite
     {
         if (typ_ != ref.typ_) return false;
         if (ptr != ref.ptr) return false;
+        if (flag != ref.flag) return false;
         return true;
     }
 
@@ -76,6 +78,7 @@ namespace golang::reflectlite
         os << '{';
         os << "" << typ_;
         os << " " << ptr;
+        os << " " << flag;
         os << '}';
         return os;
     }

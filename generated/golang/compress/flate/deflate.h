@@ -38,6 +38,11 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compressionLevel& value);
+    uint32_t hash4(gocpp::slice<unsigned char> b);
+    void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
+    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
+    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
+    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
     struct dictWriter
     {
         io::Writer w;
@@ -55,18 +60,14 @@ namespace golang::flate
 
     std::ostream& operator<<(std::ostream& os, const struct dictWriter& value);
     extern gocpp::error errWriterClosed;
-    uint32_t hash4(gocpp::slice<unsigned char> b);
-    void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
-    int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
     extern gocpp::slice<compressionLevel> levels;
     struct compressor
     {
+        compressionLevel compressionLevel;
         huffmanBitWriter* w;
-        std::function<void (gocpp::slice<unsigned char>, gocpp::slice<uint32_t>)> bulkHasher;
-        std::function<int (compressor*, gocpp::slice<unsigned char>)> fill;
-        std::function<void (compressor*)> step;
+        std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher;
+        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill;
+        std::function<void (struct compressor* _1)> step;
         bool sync;
         deflateFast* bestSpeed;
         int chainHead;

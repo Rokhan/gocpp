@@ -14,6 +14,7 @@
 
 namespace golang::sync
 {
+    struct Cond* NewCond(struct Locker l);
     struct noCopy
     {
 
@@ -29,7 +30,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
-    struct Cond* NewCond(struct Locker l);
     struct Cond
     {
         /* noCopy noCopy; [Known incomplete type] */

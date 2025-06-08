@@ -185,6 +185,7 @@ namespace golang::color
     NYCbCrA::operator T()
     {
         T result;
+        result.YCbCr = this->YCbCr;
         result.A = this->A;
         return result;
     }
@@ -192,6 +193,7 @@ namespace golang::color
     template<typename T> requires gocpp::GoStruct<T>
     bool NYCbCrA::operator==(const T& ref) const
     {
+        if (YCbCr != ref.YCbCr) return false;
         if (A != ref.A) return false;
         return true;
     }
@@ -199,7 +201,8 @@ namespace golang::color
     std::ostream& NYCbCrA::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << A;
+        os << "" << YCbCr;
+        os << " " << A;
         os << '}';
         return os;
     }

@@ -33,6 +33,38 @@
 
 namespace golang::runtime
 {
+    struct semaRoot
+    {
+        mutex lock;
+        sudog* treap;
+        atomic::Uint32 nwait;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
+    extern semTable semtable;
+    void sync_runtime_Semacquire(uint32_t* addr);
+    void poll_runtime_Semacquire(uint32_t* addr);
+    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
+    void sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes);
+    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes);
+    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes);
+    void poll_runtime_Semrelease(uint32_t* addr);
+    void readyWithTime(struct sudog* s, int traceskip);
+    void semacquire(uint32_t* addr);
+    void semacquire1(uint32_t* addr, bool lifo, golang::runtime::semaProfileFlags profile, int skipframes, golang::runtime::waitReason reason);
+    void semrelease(uint32_t* addr);
+    void semrelease1(uint32_t* addr, bool handoff, int skipframes);
+    bool cansemacquire(uint32_t* addr);
     struct notifyList
     {
         atomic::Uint32 wait;
@@ -53,37 +85,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
-    struct semaRoot
-    {
-        mutex lock;
-        sudog* treap;
-        atomic::Uint32 nwait;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    void sync_runtime_Semacquire(uint32_t* addr);
-    void poll_runtime_Semacquire(uint32_t* addr);
-    void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
-    void sync_runtime_SemacquireMutex(uint32_t* addr, bool lifo, int skipframes);
-    void sync_runtime_SemacquireRWMutexR(uint32_t* addr, bool lifo, int skipframes);
-    void sync_runtime_SemacquireRWMutex(uint32_t* addr, bool lifo, int skipframes);
-    void poll_runtime_Semrelease(uint32_t* addr);
-    void readyWithTime(struct sudog* s, int traceskip);
-    void semacquire(uint32_t* addr);
-    void semacquire1(uint32_t* addr, bool lifo, golang::runtime::semaProfileFlags profile, int skipframes, golang::runtime::waitReason reason);
-    void semrelease(uint32_t* addr);
-    void semrelease1(uint32_t* addr, bool handoff, int skipframes);
-    bool cansemacquire(uint32_t* addr);
     bool less(uint32_t a, uint32_t b);
     uint32_t notifyListAdd(struct notifyList* l);
     void notifyListWait(struct notifyList* l, uint32_t t);

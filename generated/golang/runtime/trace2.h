@@ -39,23 +39,6 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_2
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    extern uint32_t traceAdvanceSema;
-    extern uint32_t traceShutdownSema;
     struct gocpp_id_1
     {
 
@@ -71,6 +54,32 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    extern uint32_t traceAdvanceSema;
+    extern uint32_t traceShutdownSema;
+    struct gocpp::error StartTrace();
+    void StopTrace();
+    void traceAdvance(bool stopTrace);
+    uintptr_t traceNextGen(uintptr_t gen);
+    void traceRegisterLabelsAndReasons(uintptr_t gen);
+    gocpp::slice<unsigned char> ReadTrace();
+    std::tuple<gocpp::slice<unsigned char>, bool> readTrace0();
+    struct g* traceReader();
+    struct g* traceReaderAvailable();
+    struct gocpp_id_2
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
     struct gocpp_id_5
     {
 
@@ -86,15 +95,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
-    struct gocpp::error StartTrace();
-    void StopTrace();
-    void traceAdvance(bool stopTrace);
-    uintptr_t traceNextGen(uintptr_t gen);
-    void traceRegisterLabelsAndReasons(uintptr_t gen);
-    gocpp::slice<unsigned char> ReadTrace();
-    std::tuple<gocpp::slice<unsigned char>, bool> readTrace0();
-    struct g* traceReader();
-    struct g* traceReaderAvailable();
     struct wakeableSleep* newWakeableSleep();
     struct traceAdvancerState
     {
@@ -131,6 +131,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
+    extern gocpp_id_0 trace;
+    extern traceAdvancerState traceAdvancer;
 
     namespace rec
     {

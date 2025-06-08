@@ -37,29 +37,6 @@
 
 namespace golang::runtime
 {
-    extern gocpp::error overflowError;
-    extern gocpp::error memoryError;
-    extern gocpp::error rangeExitError;
-    extern gocpp::error floatError;
-    struct PanicNilError
-    {
-        gocpp::array<PanicNilError*, 0> _1;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
-    extern gocpp::error shiftError;
-    extern godebugInc* panicnil;
-    extern gocpp::error divideError;
     void panicCheck1(uintptr_t pc, std::string msg);
     void panicCheck2(std::string err);
     void goPanicIndex(int x, int y);
@@ -96,13 +73,19 @@ namespace golang::runtime
     void panicSlice3C(int x, int y);
     void panicSlice3CU(unsigned int x, int y);
     void panicSliceConvert(int x, int y);
+    extern gocpp::error shiftError;
     void panicshift();
+    extern gocpp::error divideError;
     void panicdivide();
+    extern gocpp::error overflowError;
     void panicoverflow();
+    extern gocpp::error floatError;
     void panicfloat();
+    extern gocpp::error memoryError;
     void panicmem();
     void panicmemAddr(uintptr_t addr);
     void deferproc(std::function<void ()> fn);
+    extern gocpp::error rangeExitError;
     void panicrangeexit();
     go_any deferrangefunc();
     struct _defer* badDefer();
@@ -117,16 +100,38 @@ namespace golang::runtime
     void preprintpanics(struct _panic* p);
     void printpanics(struct _panic* p);
     std::tuple<uint32_t, unsafe::Pointer> readvarintUnsafe(unsafe::Pointer fd);
+    struct PanicNilError
+    {
+        gocpp::array<PanicNilError*, 0> _1;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
+    extern godebugInc* panicnil;
     void gopanic(go_any e);
     go_any gorecover(uintptr_t argp);
     void sync_throw(std::string s);
     void sync_fatal(std::string s);
     void go_throw(std::string s);
     void fatal(std::string s);
+    extern atomic::Uint32 runningPanicDefers;
+    extern atomic::Uint32 panicking;
+    extern mutex paniclk;
     void recovery(struct g* gp);
     void fatalthrow(golang::runtime::throwType t);
     void fatalpanic(struct _panic* msgs);
     bool startpanic_m();
+    extern bool didothers;
+    extern mutex deadlock;
     bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);
     bool canpanic();
     bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr);

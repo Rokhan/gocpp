@@ -45,6 +45,7 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct efaceWords& value);
+    extern unsigned char firstStoreInProgress;
     int runtime_procPin();
     void runtime_procUnpin();
 

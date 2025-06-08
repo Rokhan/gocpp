@@ -12,6 +12,9 @@
 
 namespace golang::main
 {
+    extern bool c;
+    extern bool python;
+    extern bool java;
     extern int ii;
     extern int jj;
     extern int kk;

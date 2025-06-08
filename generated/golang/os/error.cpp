@@ -219,7 +219,7 @@ namespace golang::os
         {
             return true;
         }
-        auto [e, ok] = gocpp::getValue<syscall::Errno>(err);
+        auto [e, ok] = gocpp::getValue<os::syscallErrorType>(err);
         return ok && rec::Is(gocpp::recv(e), target);
     }
 

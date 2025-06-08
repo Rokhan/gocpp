@@ -271,18 +271,24 @@ namespace golang::os
     fileWithoutReadFrom::operator T()
     {
         T result;
+        result.noReadFrom = this->noReadFrom;
+        result.File = this->File;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool fileWithoutReadFrom::operator==(const T& ref) const
     {
+        if (noReadFrom != ref.noReadFrom) return false;
+        if (File != ref.File) return false;
         return true;
     }
 
     std::ostream& fileWithoutReadFrom::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << noReadFrom;
+        os << " " << File;
         os << '}';
         return os;
     }
@@ -428,18 +434,24 @@ namespace golang::os
     fileWithoutWriteTo::operator T()
     {
         T result;
+        result.noWriteTo = this->noWriteTo;
+        result.File = this->File;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool fileWithoutWriteTo::operator==(const T& ref) const
     {
+        if (noWriteTo != ref.noWriteTo) return false;
+        if (File != ref.File) return false;
         return true;
     }
 
     std::ostream& fileWithoutWriteTo::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << noWriteTo;
+        os << " " << File;
         os << '}';
         return os;
     }
@@ -977,7 +989,7 @@ namespace golang::os
         std::tie(f, err) = Open(fullname);
         if(err != nullptr)
         {
-            gocpp::getValue<fs::PathError*>(err)->Path = name;
+            gocpp::getValue<os::PathError*>(err)->Path = name;
             return {nullptr, err};
         }
         return {f, nullptr};
@@ -1002,7 +1014,7 @@ namespace golang::os
         std::tie(b, err) = ReadFile(fullname);
         if(err != nullptr)
         {
-            if(auto [e, ok] = gocpp::getValue<fs::PathError*>(err); ok)
+            if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
             {
                 e->Path = name;
             }
@@ -1028,7 +1040,7 @@ namespace golang::os
         std::tie(entries, err) = ReadDir(fullname);
         if(err != nullptr)
         {
-            if(auto [e, ok] = gocpp::getValue<fs::PathError*>(err); ok)
+            if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
             {
                 e->Path = name;
             }
@@ -1052,7 +1064,7 @@ namespace golang::os
         std::tie(f, err) = Stat(fullname);
         if(err != nullptr)
         {
-            gocpp::getValue<fs::PathError*>(err)->Path = name;
+            gocpp::getValue<os::PathError*>(err)->Path = name;
             return {nullptr, err};
         }
         return {f, nullptr};

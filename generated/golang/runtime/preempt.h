@@ -51,12 +51,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct suspendGState& value);
-    extern uintptr_t asyncPreemptStack;
     struct suspendGState suspendG(struct g* gp);
     void resumeG(struct suspendGState state);
     bool canPreemptM(struct m* mp);
     void asyncPreempt();
     void asyncPreempt2();
+    extern uintptr_t asyncPreemptStack;
     void init();
     bool wantAsyncPreempt(struct g* gp);
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr);

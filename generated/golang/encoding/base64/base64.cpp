@@ -290,7 +290,7 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(base64::encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -343,7 +343,7 @@ namespace golang::base64
 
     // Close flushes any pending output from the encoder.
     // It is an error to call Write after calling Close.
-    struct gocpp::error rec::Close(struct encoder* e)
+    struct gocpp::error rec::Close(base64::encoder* e)
     {
         if(e->err == nullptr && e->nbuf > 0)
         {
@@ -361,7 +361,7 @@ namespace golang::base64
     // partially written blocks.
     io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w)
     {
-        return gocpp::InitPtr<encoder>([=](auto& x) {
+        return gocpp::InitPtr<base64::encoder>([=](auto& x) {
             x.enc = enc;
             x.w = w;
         });

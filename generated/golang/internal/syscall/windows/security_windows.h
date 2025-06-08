@@ -30,6 +30,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LUID& value);
+    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
     struct SID_AND_ATTRIBUTES
     {
         syscall::SID* Sid;
@@ -107,7 +108,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
-    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
     std::string GetSystemDirectory();
     struct LUID_AND_ATTRIBUTES
     {

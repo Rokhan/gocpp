@@ -21,7 +21,7 @@ namespace golang::abi
         uint8_t Align_;
         uint8_t FieldAlign_;
         uint8_t Kind_;
-        std::function<bool (unsafe::Pointer, unsafe::Pointer)> Equal;
+        std::function<bool (unsafe::Pointer _1, unsafe::Pointer _2)> Equal;
         unsigned char* GCData;
         golang::abi::NameOff Str;
         golang::abi::TypeOff PtrToThis;
@@ -78,6 +78,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UncommonType& value);
+    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Imethod
     {
         golang::abi::NameOff Name;
@@ -111,13 +112,14 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Name& value);
-    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
     struct Name NewName(std::string n, std::string tag, bool exported, bool embedded);
-    struct FuncType
+    struct ArrayType
     {
-        uint16_t InCount;
-        uint16_t OutCount;
+        Type Type;
+        abi::Type* Elem;
+        abi::Type* Slice;
+        uintptr_t Len;
 
         using isGoStruct = void;
 
@@ -130,13 +132,50 @@ namespace golang::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
+    std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
+    struct ChanType
+    {
+        Type Type;
+        abi::Type* Elem;
+        golang::abi::ChanDir Dir;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ChanType& value);
+    struct InterfaceType
+    {
+        Type Type;
+        /* Name PkgPath; [Known incomplete type] */
+        gocpp::slice<Imethod> Methods;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
     struct MapType
     {
-        Type* Key;
-        Type* Elem;
-        Type* Bucket;
-        std::function<uintptr_t (unsafe::Pointer, uintptr_t)> Hasher;
+        Type Type;
+        abi::Type* Key;
+        abi::Type* Elem;
+        abi::Type* Bucket;
+        std::function<uintptr_t (unsafe::Pointer _1, uintptr_t _2)> Hasher;
         uint8_t KeySize;
         uint8_t ValueSize;
         uint16_t BucketSize;
@@ -156,7 +195,8 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct MapType& value);
     struct SliceType
     {
-        Type* Elem;
+        Type Type;
+        abi::Type* Elem;
 
         using isGoStruct = void;
 
@@ -170,10 +210,11 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SliceType& value);
-    struct InterfaceType
+    struct FuncType
     {
-        /* Name PkgPath; [Known incomplete type] */
-        gocpp::slice<Imethod> Methods;
+        Type Type;
+        uint16_t InCount;
+        uint16_t OutCount;
 
         using isGoStruct = void;
 
@@ -186,10 +227,11 @@ namespace golang::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
+    std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
     struct PtrType
     {
-        Type* Elem;
+        Type Type;
+        abi::Type* Elem;
 
         using isGoStruct = void;
 
@@ -221,43 +263,9 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
-    struct ChanType
-    {
-        Type* Elem;
-        golang::abi::ChanDir Dir;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ChanType& value);
-    struct ArrayType
-    {
-        Type* Elem;
-        Type* Slice;
-        uintptr_t Len;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     struct StructType
     {
+        Type Type;
         /* Name PkgPath; [Known incomplete type] */
         gocpp::slice<StructField> Fields;
 
@@ -275,6 +283,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct StructType& value);
     struct structTypeUncommon
     {
+        StructType StructType;
         UncommonType u;
 
         using isGoStruct = void;

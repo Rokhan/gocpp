@@ -74,18 +74,21 @@ namespace golang::runtime
     gTraceState::operator T()
     {
         T result;
+        result.traceSchedResourceState = this->traceSchedResourceState;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool gTraceState::operator==(const T& ref) const
     {
+        if (traceSchedResourceState != ref.traceSchedResourceState) return false;
         return true;
     }
 
     std::ostream& gTraceState::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << traceSchedResourceState;
         os << '}';
         return os;
     }
@@ -143,6 +146,7 @@ namespace golang::runtime
     pTraceState::operator T()
     {
         T result;
+        result.traceSchedResourceState = this->traceSchedResourceState;
         result.mSyscallID = this->mSyscallID;
         result.maySweep = this->maySweep;
         result.inSweep = this->inSweep;
@@ -154,6 +158,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool pTraceState::operator==(const T& ref) const
     {
+        if (traceSchedResourceState != ref.traceSchedResourceState) return false;
         if (mSyscallID != ref.mSyscallID) return false;
         if (maySweep != ref.maySweep) return false;
         if (inSweep != ref.inSweep) return false;
@@ -165,7 +170,8 @@ namespace golang::runtime
     std::ostream& pTraceState::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << mSyscallID;
+        os << "" << traceSchedResourceState;
+        os << " " << mSyscallID;
         os << " " << maySweep;
         os << " " << inSweep;
         os << " " << swept;

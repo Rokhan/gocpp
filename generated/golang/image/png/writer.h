@@ -51,7 +51,7 @@ namespace golang::png
         struct IEncoderBufferPool
         {
             virtual struct EncoderBuffer* vGet() = 0;
-            virtual void vPut(EncoderBuffer*) = 0;
+            virtual void vPut(struct EncoderBuffer* _1) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -64,7 +64,7 @@ namespace golang::png
 
             struct EncoderBuffer* vGet() override;
 
-            void vPut(EncoderBuffer*) override;
+            void vPut(struct EncoderBuffer* _1) override;
 
             StoreT value;
         };
@@ -77,8 +77,8 @@ namespace golang::png
         struct EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self);
         struct EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self);
 
-        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer*);
-        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer*);
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, struct EncoderBuffer* _1);
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, struct EncoderBuffer* _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);

@@ -106,6 +106,7 @@ namespace golang::runtime
     int64_t setMemoryLimit(int64_t in);
     int64_t readGOMEMLIMIT();
     void gcControllerCommit();
+    extern gcControllerState gcController;
 
     namespace rec
     {

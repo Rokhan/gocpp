@@ -22,7 +22,7 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    double compute(std::function<double (double, double)> fn)
+    double compute(std::function<double (double _1, double _2)> fn)
     {
         return fn(3, 4);
     }

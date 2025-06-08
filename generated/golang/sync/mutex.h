@@ -12,6 +12,8 @@
 
 namespace golang::sync
 {
+    void go_throw(std::string);
+    void fatal(std::string);
     struct Mutex
     {
         int32_t state;
@@ -87,8 +89,6 @@ namespace golang::sync
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Locker& value);
-    void go_throw(std::string);
-    void fatal(std::string);
 
     namespace rec
     {

@@ -49,7 +49,7 @@ namespace golang::runtime
         golang::runtime::puintptr pp;
         int64_t when;
         int64_t period;
-        std::function<void (go_any, uintptr_t)> f;
+        std::function<void (go_any _1, uintptr_t _2)> f;
         go_any arg;
         uintptr_t seq;
         int64_t nextwhen;
@@ -72,14 +72,14 @@ namespace golang::runtime
     void startTimer(struct timer* t);
     bool stopTimer(struct timer* t);
     bool resetTimer(struct timer* t, int64_t when);
-    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq);
+    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
     void goroutineReady(go_any arg, uintptr_t seq);
     void addtimer(struct timer* t);
     void doaddtimer(struct p* pp, struct timer* t);
     bool deltimer(struct timer* t);
     int dodeltimer(struct p* pp, int i);
     void dodeltimer0(struct p* pp);
-    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq);
+    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
     bool resettimer(struct timer* t, int64_t when);
     void cleantimers(struct p* pp);
     void moveTimers(struct p* pp, gocpp::slice<timer*> timers);

@@ -68,6 +68,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackfreelist& value);
+    extern mspan emptymspan;
     struct mcache* allocmcache();
     void freemcache(struct mcache* c);
     struct mcache* getMCache(struct m* mp);

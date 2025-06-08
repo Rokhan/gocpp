@@ -11,9 +11,64 @@
 
 namespace golang::color
 {
-    struct Alpha16
+    struct Color : gocpp::Interface
     {
-        uint16_t A;
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Color(){}
+        Color(Color& i) = default;
+        Color(const Color& i) = default;
+        Color& operator=(Color& i) = default;
+        Color& operator=(const Color& i) = default;
+
+        template<typename T>
+        Color(T& ref);
+
+        template<typename T>
+        Color(const T& ref);
+
+        template<typename T>
+        Color(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IColor
+        {
+            virtual std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct ColorImpl : IColor
+        {
+            explicit ColorImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IColor> value;
+    };
+
+    namespace rec
+    {
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct Color, false>& self);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct Color>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Color& value);
+    struct RGBA
+    {
+        uint8_t R;
+        uint8_t G;
+        uint8_t B;
+        uint8_t A;
 
         using isGoStruct = void;
 
@@ -26,23 +81,7 @@ namespace golang::color
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
-    struct Gray16
-    {
-        uint16_t Y;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
+    std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
     struct RGBA64
     {
         uint16_t R;
@@ -116,12 +155,9 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
-    struct RGBA
+    struct Alpha16
     {
-        uint8_t R;
-        uint8_t G;
-        uint8_t B;
-        uint8_t A;
+        uint16_t A;
 
         using isGoStruct = void;
 
@@ -134,7 +170,7 @@ namespace golang::color
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
+    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
     struct Gray
     {
         uint8_t Y;
@@ -151,58 +187,22 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray& value);
-    struct Color : gocpp::Interface
+    struct Gray16
     {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
+        uint16_t Y;
 
-        Color(){}
-        Color(Color& i) = default;
-        Color(const Color& i) = default;
-        Color& operator=(Color& i) = default;
-        Color& operator=(const Color& i) = default;
+        using isGoStruct = void;
 
-        template<typename T>
-        Color(T& ref);
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
 
-        template<typename T>
-        Color(const T& ref);
-
-        template<typename T>
-        Color(T* ptr);
-
-        using isGoInterface = void;
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IColor
-        {
-            virtual std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct ColorImpl : IColor
-        {
-            explicit ColorImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IColor> value;
     };
 
-    namespace rec
-    {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct Color, false>& self);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct Color>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Color& value);
+    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
     struct Model : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -255,7 +255,7 @@ namespace golang::color
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
-    struct Model ModelFunc(std::function<struct Color (Color)> f);
+    struct Model ModelFunc(std::function<struct Color (struct Color _1)> f);
     struct Color rgbaModel(struct Color c);
     struct Color rgba64Model(struct Color c);
     struct Color nrgbaModel(struct Color c);
@@ -265,13 +265,9 @@ namespace golang::color
     struct Color grayModel(struct Color c);
     struct Color gray16Model(struct Color c);
     uint32_t sqDiff(uint32_t x, uint32_t y);
-    extern Model NRGBA64Model;
-    extern Model NRGBAModel;
-    extern Model RGBA64Model;
-    extern Model RGBAModel;
     struct modelFunc
     {
-        std::function<struct Color (Color)> f;
+        std::function<struct Color (struct Color _1)> f;
 
         using isGoStruct = void;
 
@@ -285,10 +281,14 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
+    extern Model RGBAModel;
+    extern Model RGBA64Model;
+    extern Model NRGBAModel;
+    extern Model NRGBA64Model;
     extern Model AlphaModel;
-    extern Model Gray16Model;
-    extern Model GrayModel;
     extern Model Alpha16Model;
+    extern Model GrayModel;
+    extern Model Gray16Model;
     extern Gray16 Black;
     extern Gray16 White;
     extern Alpha16 Transparent;

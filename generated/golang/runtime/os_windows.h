@@ -32,11 +32,72 @@
 
 namespace golang::runtime
 {
+    extern runtime::stdFunction _AddVectoredContinueHandler;
+    extern runtime::stdFunction _AddVectoredExceptionHandler;
+    extern runtime::stdFunction _CloseHandle;
+    extern runtime::stdFunction _CreateEventA;
+    extern runtime::stdFunction _CreateFileA;
+    extern runtime::stdFunction _CreateIoCompletionPort;
+    extern runtime::stdFunction _CreateThread;
+    extern runtime::stdFunction _CreateWaitableTimerA;
+    extern runtime::stdFunction _CreateWaitableTimerExW;
+    extern runtime::stdFunction _DuplicateHandle;
+    extern runtime::stdFunction _ExitProcess;
+    extern runtime::stdFunction _FreeEnvironmentStringsW;
+    extern runtime::stdFunction _GetConsoleMode;
+    extern runtime::stdFunction _GetCurrentThreadId;
+    extern runtime::stdFunction _GetEnvironmentStringsW;
+    extern runtime::stdFunction _GetErrorMode;
+    extern runtime::stdFunction _GetProcAddress;
+    extern runtime::stdFunction _GetProcessAffinityMask;
+    extern runtime::stdFunction _GetQueuedCompletionStatusEx;
+    extern runtime::stdFunction _GetStdHandle;
+    extern runtime::stdFunction _GetSystemDirectoryA;
+    extern runtime::stdFunction _GetSystemInfo;
+    extern runtime::stdFunction _GetThreadContext;
+    extern runtime::stdFunction _SetThreadContext;
+    extern runtime::stdFunction _LoadLibraryExW;
+    extern runtime::stdFunction _LoadLibraryW;
+    extern runtime::stdFunction _PostQueuedCompletionStatus;
+    extern runtime::stdFunction _QueryPerformanceCounter;
+    extern runtime::stdFunction _RaiseFailFastException;
+    extern runtime::stdFunction _ResumeThread;
+    extern runtime::stdFunction _RtlLookupFunctionEntry;
+    extern runtime::stdFunction _RtlVirtualUnwind;
+    extern runtime::stdFunction _SetConsoleCtrlHandler;
+    extern runtime::stdFunction _SetErrorMode;
+    extern runtime::stdFunction _SetEvent;
+    extern runtime::stdFunction _SetProcessPriorityBoost;
+    extern runtime::stdFunction _SetThreadPriority;
+    extern runtime::stdFunction _SetUnhandledExceptionFilter;
+    extern runtime::stdFunction _SetWaitableTimer;
+    extern runtime::stdFunction _SuspendThread;
+    extern runtime::stdFunction _SwitchToThread;
+    extern runtime::stdFunction _TlsAlloc;
+    extern runtime::stdFunction _VirtualAlloc;
+    extern runtime::stdFunction _VirtualFree;
+    extern runtime::stdFunction _VirtualQuery;
+    extern runtime::stdFunction _WaitForSingleObject;
+    extern runtime::stdFunction _WaitForMultipleObjects;
+    extern runtime::stdFunction _WerGetFlags;
+    extern runtime::stdFunction _WerSetFlags;
+    extern runtime::stdFunction _WriteConsoleW;
+    extern runtime::stdFunction _WriteFile;
+    extern runtime::stdFunction _;
+    extern runtime::stdFunction _ProcessPrng;
+    extern runtime::stdFunction _RtlGetCurrentPeb;
+    extern runtime::stdFunction _RtlGetNtVersionNumbers;
+    extern runtime::stdFunction _timeBeginPeriod;
+    extern runtime::stdFunction _timeEndPeriod;
+    extern runtime::stdFunction _WSAGetOverlappedResult;
+    extern runtime::stdFunction _;
     extern gocpp::array<uint16_t, 21> bcryptprimitivesdll;
     extern gocpp::array<uint16_t, 10> ntdlldll;
     extern gocpp::array<uint16_t, 13> powrprofdll;
     extern gocpp::array<uint16_t, 10> winmmdll;
     extern gocpp::array<uint16_t, 11> ws2_32dll;
+    void tstart_stdcall(struct m* newm);
+    void wintls();
     struct mOS
     {
         mutex threadLock;
@@ -58,6 +119,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
+    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
+    int32_t closefd(int32_t fd);
+    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n);
     struct sigset
     {
 
@@ -73,14 +137,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
-    extern bool haveHighResTimer;
-    void tstart_stdcall(struct m* newm);
-    void wintls();
-    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
-    int32_t closefd(int32_t fd);
-    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n);
     void asmstdcall(unsafe::Pointer fn);
+    extern unsafe::Pointer asmstdcallAddr;
     runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
+    extern gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
+    extern uintptr_t sysDirectoryLen;
     void initSysDirectory();
     std::string windows_GetSystemDirectory();
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
@@ -92,15 +153,22 @@ namespace golang::runtime
     int32_t getproccount();
     uintptr_t getPageSize();
     uint32_t getlasterror();
+    extern uint32_t timeBeginPeriodRetValue;
     uint32_t osRelax(bool relax);
+    extern bool haveHighResTimer;
     uintptr_t createHighResTimer();
     void initHighResTimer();
+    extern bool canUseLongPaths;
+    extern gocpp::array<unsigned char, (_MAX_PATH + 1) * 2 + 1> longFileName;
     void initLongPathSupport();
     void osinit();
     int readRandom(gocpp::slice<unsigned char> r);
     void goenvs();
+    extern uint32_t exiting;
     void exit(int32_t code);
     int32_t write1(uintptr_t fd, unsafe::Pointer buf, int32_t n);
+    extern gocpp::array<uint16_t, 1000> utf16ConsoleBack;
+    extern mutex utf16ConsoleBackLock;
     int writeConsole(uintptr_t handle, unsafe::Pointer buf, int32_t bufLen);
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
     int32_t semasleep(int64_t ns);
@@ -135,11 +203,13 @@ namespace golang::runtime
     void usleep(uint32_t us);
     uintptr_t ctrlHandler(uint32_t _type);
     void callbackasm1();
+    extern uintptr_t profiletimer;
     void profilem(struct m* mp, uintptr_t thread);
     struct g* gFromSP(struct m* mp, uintptr_t sp);
     void profileLoop();
     void setProcessCPUProfiler(int32_t hz);
     void setThreadCPUProfiler(int32_t hz);
+    extern mutex suspendLock;
     void preemptM(struct m* mp);
     void osPreemptExtEnter(struct m* mp);
     void osPreemptExtExit(struct m* mp);

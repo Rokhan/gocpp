@@ -12,7 +12,7 @@
 
 namespace golang::os
 {
-    std::string Expand(std::string s, std::function<std::string (std::string)> mapping);
+    std::string Expand(std::string s, std::function<std::string (std::string _1)> mapping);
     std::string ExpandEnv(std::string s);
     bool isShellSpecialVar(uint8_t c);
     bool isAlphaNum(uint8_t c);

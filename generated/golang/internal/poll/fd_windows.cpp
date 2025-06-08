@@ -1507,7 +1507,7 @@ namespace golang::poll
     }
 
     // RawRead invokes the user-defined function f for a read operation.
-    struct gocpp::error rec::RawRead(struct FD* fd, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::RawRead(struct FD* fd, std::function<bool (uintptr_t _1)> f)
     {
         gocpp::Defer defer;
         try
@@ -1550,7 +1550,7 @@ namespace golang::poll
     }
 
     // RawWrite invokes the user-defined function f for a write operation.
-    struct gocpp::error rec::RawWrite(struct FD* fd, std::function<bool (uintptr_t)> f)
+    struct gocpp::error rec::RawWrite(struct FD* fd, std::function<bool (uintptr_t _1)> f)
     {
         gocpp::Defer defer;
         try

@@ -144,6 +144,7 @@ namespace golang::sync
     poolLocal::operator T()
     {
         T result;
+        result.poolLocalInternal = this->poolLocalInternal;
         result.pad = this->pad;
         return result;
     }
@@ -151,6 +152,7 @@ namespace golang::sync
     template<typename T> requires gocpp::GoStruct<T>
     bool poolLocal::operator==(const T& ref) const
     {
+        if (poolLocalInternal != ref.poolLocalInternal) return false;
         if (pad != ref.pad) return false;
         return true;
     }
@@ -158,7 +160,8 @@ namespace golang::sync
     std::ostream& poolLocal::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << pad;
+        os << "" << poolLocalInternal;
+        os << " " << pad;
         os << '}';
         return os;
     }

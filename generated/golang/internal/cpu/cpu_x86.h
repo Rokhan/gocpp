@@ -15,6 +15,7 @@ namespace golang::cpu
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> cpuid(uint32_t eaxArg, uint32_t ecxArg);
     std::tuple<uint32_t, uint32_t> xgetbv();
     int32_t getGOAMD64level();
+    extern uint32_t maxExtendedFunctionInformation;
     void doinit();
     bool isSet(uint32_t hwc, uint32_t value);
     std::string Name();

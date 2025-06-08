@@ -15,7 +15,6 @@
 
 namespace golang::errors
 {
-    extern reflectlite::Type errorType;
     struct gocpp::error Unwrap(struct gocpp::error err);
     struct gocpp_id_0 : gocpp::Interface
     {
@@ -97,7 +96,7 @@ namespace golang::errors
 
         struct Igocpp_id_1
         {
-            virtual bool vIs(gocpp::error) = 0;
+            virtual bool vIs(struct gocpp::error _1) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -108,7 +107,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            bool vIs(gocpp::error) override;
+            bool vIs(struct gocpp::error _1) override;
 
             StoreT value;
         };
@@ -118,8 +117,8 @@ namespace golang::errors
 
     namespace rec
     {
-        bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error);
-        bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error);
+        bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, struct gocpp::error _1);
+        bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, struct gocpp::error _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
@@ -255,7 +254,7 @@ namespace golang::errors
 
         struct Igocpp_id_5
         {
-            virtual bool vAs(go_any) = 0;
+            virtual bool vAs(go_any _1) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -266,7 +265,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            bool vAs(go_any) override;
+            bool vAs(go_any _1) override;
 
             StoreT value;
         };
@@ -276,8 +275,8 @@ namespace golang::errors
 
     namespace rec
     {
-        bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any);
-        bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any);
+        bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any _1);
+        bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
@@ -385,6 +384,7 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+    extern reflectlite::Type errorType;
 
     namespace rec
     {

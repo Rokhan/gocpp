@@ -149,7 +149,7 @@ namespace golang::runtime
                     v = stringStructOf((std::string*)(e->data))->str;
                     break;
                 case 1:
-                    v = (slice*)(e->data)->array;
+                    v = (runtime::slice*)(e->data)->array;
                     break;
                 case 2:
                     v = e->data;
@@ -182,10 +182,10 @@ namespace golang::runtime
                     x = s2;
                     break;
                 case 1:
-                    auto len = (slice*)(e->data)->len;
+                    auto len = (runtime::slice*)(e->data)->len;
                     auto et = (runtime::slicetype*)(unsafe::Pointer(t))->Elem;
                     auto sl = new(slice);
-                    *sl = slice {makeslicecopy(et, len, len, (slice*)(e->data)->array), len, len};
+                    *sl = runtime::slice {makeslicecopy(et, len, len, (runtime::slice*)(e->data)->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
                     xe->data = unsafe::Pointer(sl);
@@ -332,7 +332,7 @@ namespace golang::runtime
             gocpp::panic("slice of non-ptr-to-slice type"s);
         }
         typ = (runtime::slicetype*)(unsafe::Pointer(typ))->Elem;
-        *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
+        *((runtime::slice*)(i->data)) = runtime::slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
     // free returns the userArena's chunks back to mheap and marks it as defunct.
@@ -447,6 +447,7 @@ namespace golang::runtime
     liveUserArenaChunk::operator T()
     {
         T result;
+        result.mspan = this->mspan;
         result.x = this->x;
         return result;
     }
@@ -454,6 +455,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool liveUserArenaChunk::operator==(const T& ref) const
     {
+        if (mspan != ref.mspan) return false;
         if (x != ref.x) return false;
         return true;
     }
@@ -461,7 +463,8 @@ namespace golang::runtime
     std::ostream& liveUserArenaChunk::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << x;
+        os << "" << mspan;
+        os << " " << x;
         os << '}';
         return os;
     }

@@ -11,6 +11,7 @@
 
 namespace golang::utf8
 {
+    extern gocpp::array<uint8_t, 256> first;
     struct acceptRange
     {
         uint8_t lo;
@@ -28,7 +29,6 @@ namespace golang::utf8
     };
 
     std::ostream& operator<<(std::ostream& os, const struct acceptRange& value);
-    extern gocpp::array<uint8_t, 256> first;
     bool FullRune(gocpp::slice<unsigned char> p);
     bool FullRuneInString(std::string s);
     std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p);

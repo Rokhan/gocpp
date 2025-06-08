@@ -93,7 +93,7 @@ namespace golang::runtime
     // newcoro creates a new coro containing a
     // goroutine blocked waiting to run f
     // and returns that coro.
-    struct coro* newcoro(std::function<void (coro*)> f)
+    struct coro* newcoro(std::function<void (struct coro* _1)> f)
     {
         auto c = new(coro);
         c->f = f;

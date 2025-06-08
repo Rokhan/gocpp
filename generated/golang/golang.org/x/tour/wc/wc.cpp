@@ -21,7 +21,7 @@ namespace golang::wc
     }
 
     // Test runs a test suite against f.
-    void Test(std::function<gocpp::map<std::string, int> (std::string)> f)
+    void Test(std::function<gocpp::map<std::string, int> (std::string _1)> f)
     {
         auto ok = true;
         for(auto [gocpp_ignored, c] : testCases)

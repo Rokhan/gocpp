@@ -33,6 +33,9 @@
 
 namespace golang::runtime
 {
+    extern gocpp::slice<unsigned char> startupRand;
+    extern gocpp_id_0 globalRand;
+    extern bool readRandomFailed;
     void randinit();
     void readTimeRandom(gocpp::slice<unsigned char> r);
     uint64_t bootstrapRand();

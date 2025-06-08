@@ -33,6 +33,10 @@
 
 namespace golang::runtime
 {
+    extern atomic::Uint32 fingStatus;
+    extern mutex finlock;
+    extern g* fing;
+    extern gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     struct finalizer
     {
         /* funcval* fn; [Known incomplete type] */
@@ -56,7 +60,7 @@ namespace golang::runtime
     extern gocpp::array<unsigned char, 5> finalizer1;
     void lockRankMayQueueFinalizer();
     void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
-    void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback);
+    void iterate_finq(std::function<void (struct funcval* _1, unsafe::Pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback);
     struct g* wakefing();
     void createfing();
     bool finalizercommit(struct g* gp, unsafe::Pointer lock);
@@ -86,6 +90,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct finblock& value);
+    extern finblock* finq;
+    extern finblock* finc;
+    extern finblock* allfin;
 
     namespace rec
     {

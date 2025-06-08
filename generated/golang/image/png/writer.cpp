@@ -119,9 +119,9 @@ namespace golang::png
         return rec::Get(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    void EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vPut(EncoderBuffer*)
+    void EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vPut(struct EncoderBuffer* _1)
     {
-        return rec::Put(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Put(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
     namespace rec
@@ -136,14 +136,14 @@ namespace golang::png
             return self.obj.value->vGet();
         }
 
-        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer*)
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, struct EncoderBuffer* _1)
         {
-            return self.ptr->value->vPut();
+            return self.ptr->value->vPut(_1);
         }
 
-        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer*)
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, struct EncoderBuffer* _1)
         {
-            return self.obj.value->vPut();
+            return self.obj.value->vPut(_1);
         }
     }
 

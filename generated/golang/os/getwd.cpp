@@ -44,6 +44,7 @@ namespace golang::os
 
     struct gocpp_id_0
     {
+        mocklib::Mutex Mutex;
         std::string dir;
 
         using isGoStruct = void;
@@ -52,6 +53,7 @@ namespace golang::os
         operator T()
         {
             T result;
+            result.Mutex = this->Mutex;
             result.dir = this->dir;
             return result;
         }
@@ -59,6 +61,7 @@ namespace golang::os
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
+            if (Mutex != ref.Mutex) return false;
             if (dir != ref.dir) return false;
             return true;
         }
@@ -66,7 +69,8 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << dir;
+            os << "" << Mutex;
+            os << " " << dir;
             os << '}';
             return os;
         }

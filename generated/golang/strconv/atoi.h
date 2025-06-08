@@ -12,6 +12,7 @@
 
 namespace golang::strconv
 {
+    unsigned char lower(unsigned char c);
     extern gocpp::error ErrRange;
     extern gocpp::error ErrSyntax;
     struct NumError
@@ -32,7 +33,6 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NumError& value);
-    unsigned char lower(unsigned char c);
     std::string cloneString(std::string x);
     struct NumError* syntaxError(std::string fn, std::string str);
     struct NumError* rangeError(std::string fn, std::string str);

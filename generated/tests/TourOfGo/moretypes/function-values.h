@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    double compute(std::function<double (double, double)> fn);
+    double compute(std::function<double (double _1, double _2)> fn);
     void main();
 
     namespace rec

@@ -400,6 +400,7 @@ namespace golang::runtime
         result.heap0 = this->heap0;
         result.heap1 = this->heap1;
         result.heap2 = this->heap2;
+        result.cpuStats = this->cpuStats;
         return result;
     }
 
@@ -448,6 +449,7 @@ namespace golang::runtime
         if (heap0 != ref.heap0) return false;
         if (heap1 != ref.heap1) return false;
         if (heap2 != ref.heap2) return false;
+        if (cpuStats != ref.cpuStats) return false;
         return true;
     }
 
@@ -496,6 +498,7 @@ namespace golang::runtime
         os << " " << heap0;
         os << " " << heap1;
         os << " " << heap2;
+        os << " " << cpuStats;
         os << '}';
         return os;
     }

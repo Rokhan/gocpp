@@ -7,6 +7,7 @@
 namespace golang::main
 {
     struct Abser;
+    struct dummy;
     using MyFloat = double;
     struct Vertex;
 }

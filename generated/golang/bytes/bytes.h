@@ -13,7 +13,6 @@
 
 namespace golang::bytes
 {
-    extern gocpp::array<uint8_t, 256> asciiSpace;
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     gocpp::slice<gocpp::slice<unsigned char>> explode(gocpp::slice<unsigned char> s, int n);
@@ -21,7 +20,7 @@ namespace golang::bytes
     bool Contains(gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> subslice);
     bool ContainsAny(gocpp::slice<unsigned char> b, std::string chars);
     bool ContainsRune(gocpp::slice<unsigned char> b, gocpp::rune r);
-    bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune)> f);
+    bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune _1)> f);
     int IndexByte(gocpp::slice<unsigned char> b, unsigned char c);
     int indexBytePortable(gocpp::slice<unsigned char> s, unsigned char c);
     int LastIndex(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
@@ -34,8 +33,9 @@ namespace golang::bytes
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfterN(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep, int n);
     gocpp::slice<gocpp::slice<unsigned char>> Split(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
     gocpp::slice<gocpp::slice<unsigned char>> SplitAfter(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep);
+    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<gocpp::slice<unsigned char>> Fields(gocpp::slice<unsigned char> s);
-    gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune)> f);
+    gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune _1)> f);
     gocpp::slice<unsigned char> Join(gocpp::slice<gocpp::slice<unsigned char>> s, gocpp::slice<unsigned char> sep);
     bool HasPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix);
     bool HasSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix);

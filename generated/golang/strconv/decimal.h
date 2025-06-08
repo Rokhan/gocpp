@@ -31,6 +31,9 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
+    int digitZero(gocpp::slice<unsigned char> dst);
+    void trim(struct decimal* a);
+    void rightShift(struct decimal* a, unsigned int k);
     struct leftCheat
     {
         int delta;
@@ -48,9 +51,6 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct leftCheat& value);
-    int digitZero(gocpp::slice<unsigned char> dst);
-    void trim(struct decimal* a);
-    void rightShift(struct decimal* a, unsigned int k);
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, std::string s);
     void leftShift(struct decimal* a, unsigned int k);
     bool shouldRoundUp(struct decimal* a, int nd);

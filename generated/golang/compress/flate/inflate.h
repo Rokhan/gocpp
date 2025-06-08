@@ -18,6 +18,7 @@
 
 namespace golang::flate
 {
+    extern sync::Once fixedOnce;
     struct ReadError
     {
         int64_t Offset;
@@ -174,6 +175,7 @@ namespace golang::flate
     void fixedHuffmanDecoderInit();
     io::ReadCloser NewReader(io::Reader r);
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
+    extern huffmanDecoder fixedHuffmanDecoder;
     struct decompressor
     {
         Reader r;
@@ -187,7 +189,7 @@ namespace golang::flate
         gocpp::array<int, numCodes>* codebits;
         dictDecoder dict;
         gocpp::array<unsigned char, 4> buf;
-        std::function<void (decompressor*)> step;
+        std::function<void (struct decompressor* _1)> step;
         int stepState;
         bool final;
         gocpp::error err;

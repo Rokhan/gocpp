@@ -49,6 +49,7 @@ namespace golang::flate
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
     struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
+    extern huffmanEncoder* huffOffset;
     void init();
     void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h);
 

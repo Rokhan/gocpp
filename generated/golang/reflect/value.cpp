@@ -95,6 +95,7 @@ namespace golang::reflect
         T result;
         result.typ_ = this->typ_;
         result.ptr = this->ptr;
+        result.flag = this->flag;
         return result;
     }
 
@@ -103,6 +104,7 @@ namespace golang::reflect
     {
         if (typ_ != ref.typ_) return false;
         if (ptr != ref.ptr) return false;
+        if (flag != ref.flag) return false;
         return true;
     }
 
@@ -111,6 +113,7 @@ namespace golang::reflect
         os << '{';
         os << "" << typ_;
         os << " " << ptr;
+        os << " " << flag;
         os << '}';
         return os;
     }
@@ -1385,7 +1388,7 @@ namespace golang::reflect
     }
 
     // funcName returns the name of f, for use in error messages.
-    std::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value>)> f)
+    std::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f)
     {
         auto pc = *(uintptr_t*)(unsafe::Pointer(& f));
         auto rf = runtime::FuncForPC(pc);
@@ -1712,7 +1715,7 @@ namespace golang::reflect
     // that satisfies the match function.
     // It panics if v's Kind is not [Struct].
     // It returns the zero Value if no field was found.
-    struct Value rec::FieldByNameFunc(struct Value v, std::function<bool (std::string)> match)
+    struct Value rec::FieldByNameFunc(struct Value v, std::function<bool (std::string _1)> match)
     {
         if(auto [f, ok] = rec::FieldByNameFunc(gocpp::recv(toRType(rec::typ(gocpp::recv(v)))), match); ok)
         {
@@ -4784,7 +4787,7 @@ namespace golang::reflect
 
     // convertOp returns the function to convert a value of type src
     // to a value of type dst. If the conversion is illegal, convertOp returns nil.
-    std::function<struct Value (Value, Type)> convertOp(abi::Type* dst, abi::Type* src)
+    std::function<struct Value (struct Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src)
     {
         //Go switch emulation
         {

@@ -68,6 +68,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
     struct poolChainElt
     {
+        poolDequeue poolDequeue;
         poolChainElt* next;
         poolChainElt* prev;
 

@@ -37,6 +37,12 @@
 
 namespace golang::runtime
 {
+    uint64_t heapRetained();
+    void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
+    extern gocpp_id_0 scavenge;
+    void bgscavenge(gocpp::channel<int> c);
+    void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
+    uint64_t fillAligned(uint64_t x, unsigned int m);
     struct atomicScavChunkData
     {
         atomic::Uint64 value;
@@ -58,6 +64,7 @@ namespace golang::runtime
         uint16_t inUse;
         uint16_t lastInUse;
         uint32_t gen;
+        golang::runtime::scavChunkFlags scavChunkFlags;
 
         using isGoStruct = void;
 
@@ -71,6 +78,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
+    struct scavChunkData unpackScavChunkData(uint64_t sc);
     struct piController
     {
         double kp;
@@ -94,12 +102,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
-    uint64_t heapRetained();
-    void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
-    void bgscavenge(gocpp::channel<int> c);
-    void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
-    uint64_t fillAligned(uint64_t x, unsigned int m);
-    struct scavChunkData unpackScavChunkData(uint64_t sc);
     struct scavengerState
     {
         mutex lock;
@@ -153,6 +155,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
+    extern scavengerState scavenger;
 
     namespace rec
     {

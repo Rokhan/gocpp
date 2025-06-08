@@ -13,7 +13,8 @@
 
 namespace golang::color
 {
-    extern Model NYCbCrAModel;
+    std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b);
+    std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr);
     struct YCbCr
     {
         uint8_t Y;
@@ -33,6 +34,11 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct YCbCr& value);
     extern Model YCbCrModel;
+    struct Color yCbCrModel(struct Color c);
+    extern Model NYCbCrAModel;
+    struct Color nYCbCrAModel(struct Color c);
+    std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b);
+    std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
     struct CMYK
     {
         uint8_t C;
@@ -53,15 +59,10 @@ namespace golang::color
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
     extern Model CMYKModel;
-    std::tuple<uint8_t, uint8_t, uint8_t> RGBToYCbCr(uint8_t r, uint8_t g, uint8_t b);
-    std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr);
-    struct Color yCbCrModel(struct Color c);
-    struct Color nYCbCrAModel(struct Color c);
-    std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b);
-    std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
     struct Color cmykModel(struct Color c);
     struct NYCbCrA
     {
+        YCbCr YCbCr;
         uint8_t A;
 
         using isGoStruct = void;

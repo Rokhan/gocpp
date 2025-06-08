@@ -46,18 +46,21 @@ namespace golang::os
     File::operator T()
     {
         T result;
+        result.file = this->file;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool File::operator==(const T& ref) const
     {
+        if (file != ref.file) return false;
         return true;
     }
 
     std::ostream& File::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << file;
         os << '}';
         return os;
     }

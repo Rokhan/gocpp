@@ -46,6 +46,25 @@
 
 namespace golang::runtime
 {
+    extern uintptr_t physPageSize;
+    extern uintptr_t physHugePageSize;
+    extern unsigned int physHugePageShift;
+    void mallocinit();
+    std::tuple<unsafe::Pointer, uintptr_t> sysReserveAligned(unsafe::Pointer v, uintptr_t size, uintptr_t align);
+    extern uintptr_t zerobase;
+    runtime::gclinkptr nextFreeFast(struct mspan* s);
+    unsafe::Pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero);
+    struct g* deductAssistCredit(uintptr_t size);
+    void memclrNoHeapPointersChunked(uintptr_t size, unsafe::Pointer x);
+    unsafe::Pointer newobject(golang::runtime::_type* typ);
+    unsafe::Pointer reflect_unsafe_New(golang::runtime::_type* typ);
+    unsafe::Pointer reflectlite_unsafe_New(golang::runtime::_type* typ);
+    unsafe::Pointer newarray(golang::runtime::_type* typ, int n);
+    unsafe::Pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n);
+    void profilealloc(struct m* mp, unsafe::Pointer x, uintptr_t size);
+    uintptr_t nextSample();
+    int32_t fastexprand(int mean);
+    uintptr_t nextSampleNoFP();
     struct persistentAlloc
     {
         notInHeap* base;
@@ -63,22 +82,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct persistentAlloc& value);
-    struct notInHeap
-    {
-        sys::NotInHeap _1;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
+    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
+    bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
         uintptr_t next;
@@ -98,25 +104,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct linearAlloc& value);
-    void mallocinit();
-    std::tuple<unsafe::Pointer, uintptr_t> sysReserveAligned(unsafe::Pointer v, uintptr_t size, uintptr_t align);
-    runtime::gclinkptr nextFreeFast(struct mspan* s);
-    unsafe::Pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero);
-    struct g* deductAssistCredit(uintptr_t size);
-    void memclrNoHeapPointersChunked(uintptr_t size, unsafe::Pointer x);
-    unsafe::Pointer newobject(golang::runtime::_type* typ);
-    unsafe::Pointer reflect_unsafe_New(golang::runtime::_type* typ);
-    unsafe::Pointer reflectlite_unsafe_New(golang::runtime::_type* typ);
-    unsafe::Pointer newarray(golang::runtime::_type* typ, int n);
-    unsafe::Pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n);
-    void profilealloc(struct m* mp, unsafe::Pointer x, uintptr_t size);
-    uintptr_t nextSample();
-    int32_t fastexprand(int mean);
-    uintptr_t nextSampleNoFP();
-    unsafe::Pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
-    bool inPersistentAlloc(uintptr_t p);
+    struct notInHeap
+    {
+        sys::NotInHeap _1;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
     uintptr_t computeRZlog(uintptr_t userSize);
+    extern gocpp_id_0 globalAlloc;
+    extern notInHeap* persistentChunks;
 
     namespace rec
     {

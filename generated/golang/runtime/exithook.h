@@ -12,6 +12,7 @@
 
 namespace golang::runtime
 {
+    void addExitHook(std::function<void ()> f, bool runOnNonZeroExit);
     struct exitHook
     {
         std::function<void ()> f;
@@ -29,8 +30,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct exitHook& value);
-    void addExitHook(std::function<void ()> f, bool runOnNonZeroExit);
     void runExitHooks(int exitCode);
+    extern gocpp_id_0 exitHooks;
 
     namespace rec
     {

@@ -15,25 +15,8 @@
 
 namespace golang::runtime
 {
-    struct callbackArgs
-    {
-        uintptr_t index;
-        unsafe::Pointer args;
-        uintptr_t result;
-        uintptr_t retPop;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
+    void cbsLock();
+    void cbsUnlock();
     struct abiPart
     {
         golang::runtime::abiPartKind kind;
@@ -71,11 +54,28 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
-    void cbsLock();
-    void cbsUnlock();
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
     uintptr_t compileCallback(struct eface fn, bool cdecl);
+    struct callbackArgs
+    {
+        uintptr_t index;
+        unsafe::Pointer args;
+        uintptr_t result;
+        uintptr_t retPop;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
     void callbackWrap(struct callbackArgs* a);
     std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename);
@@ -138,6 +138,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
+    extern gocpp_id_0 cbs;
 
     namespace rec
     {

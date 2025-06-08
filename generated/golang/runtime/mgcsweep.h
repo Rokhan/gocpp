@@ -63,6 +63,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
+    void finishsweep_m();
+    void bgsweep(gocpp::channel<int> c);
     struct sweepLocker
     {
         uint32_t sweepGen;
@@ -82,6 +84,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sweepLocker& value);
     struct sweepLocked
     {
+        mspan* mspan;
 
         using isGoStruct = void;
 
@@ -95,8 +98,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
-    void finishsweep_m();
-    void bgsweep(gocpp::channel<int> c);
     uintptr_t sweepone();
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
@@ -122,6 +123,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
+    extern sweepdata sweep;
 
     namespace rec
     {

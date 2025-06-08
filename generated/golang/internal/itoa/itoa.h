@@ -11,9 +11,9 @@
 
 namespace golang::itoa
 {
-    extern std::string hex;
     std::string Itoa(int val);
     std::string Uitoa(unsigned int val);
+    extern std::string hex;
     std::string Uitox(unsigned int val);
 
     namespace rec

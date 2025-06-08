@@ -29,7 +29,7 @@ namespace golang::time
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,
     // if it is imported.
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string)> f)
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string _1)> f)
     {
         loadFromEmbeddedTZData = f;
     }

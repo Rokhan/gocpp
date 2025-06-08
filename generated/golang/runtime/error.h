@@ -84,6 +84,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
+    gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
     struct errorAddressString
     {
         std::string msg;
@@ -122,6 +123,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
     extern gocpp::array<std::string, 9> boundsErrorFmts;
     extern gocpp::array<std::string, 8> boundsNegErrorFmts;
+    gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
     struct stringer : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -174,8 +176,6 @@ namespace golang::runtime
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
-    gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
-    gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
     void printany(go_any i);
     void printanycustomtype(go_any i);
     void panicwrap();

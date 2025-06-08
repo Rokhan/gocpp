@@ -12,8 +12,8 @@
 
 namespace golang::wc
 {
+    void Test(std::function<gocpp::map<std::string, int> (std::string _1)> f);
     extern gocpp::slice<gocpp_id_0> testCases;
-    void Test(std::function<gocpp::map<std::string, int> (std::string)> f);
 
     namespace rec
     {

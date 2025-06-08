@@ -73,6 +73,7 @@ namespace golang::godebug
         T result;
         result.name = this->name;
         result.once = this->once;
+        result.setting = this->setting;
         return result;
     }
 
@@ -81,6 +82,7 @@ namespace golang::godebug
     {
         if (name != ref.name) return false;
         if (once != ref.once) return false;
+        if (setting != ref.setting) return false;
         return true;
     }
 
@@ -89,6 +91,7 @@ namespace golang::godebug
         os << '{';
         os << "" << name;
         os << " " << once;
+        os << " " << setting;
         os << '}';
         return os;
     }
@@ -260,7 +263,7 @@ namespace golang::godebug
             }
         });
         auto v = *rec::Load(gocpp::recv(s->value));
-        if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & stderr))
+        if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & go_stderr))
         {
             return ""s;
         }
@@ -292,7 +295,7 @@ namespace golang::godebug
     // (due to use of os.Setenv, for example).
     //
     //go:linkname setUpdate
-    void setUpdate(std::function<void (std::string, std::string)> update)
+    void setUpdate(std::function<void (std::string _1, std::string _2)> update)
     /* convertBlockStmt, nil block */;
 
     // registerMetric is provided by package runtime.
@@ -314,7 +317,7 @@ namespace golang::godebug
     // since it cannot import godebug.
     //
     //go:linkname setNewIncNonDefault
-    void setNewIncNonDefault(std::function<std::function<void ()> (std::string)> newIncNonDefault)
+    void setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault)
     /* convertBlockStmt, nil block */;
 
     void init()
@@ -433,7 +436,7 @@ namespace golang::godebug
         return value.PrintTo(os);
     }
 
-    runtimeStderr stderr;
+    runtimeStderr go_stderr;
     std::tuple<int, struct gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)

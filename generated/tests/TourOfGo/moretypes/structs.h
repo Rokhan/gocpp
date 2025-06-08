@@ -112,6 +112,24 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void inlineStructDef(gocpp_id_1 dummy);
     void main();
+    struct Dummy2
+    {
+        Dummy Dummy;
+        Vertex Vertex;
+        int i;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Dummy2& value);
 
     namespace rec
     {

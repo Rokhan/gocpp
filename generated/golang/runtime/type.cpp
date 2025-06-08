@@ -49,18 +49,21 @@ namespace golang::runtime
     rtype::operator T()
     {
         T result;
+        result.Type = this->Type;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool rtype::operator==(const T& ref) const
     {
+        if (Type != ref.Type) return false;
         return true;
     }
 
     std::ostream& rtype::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Type;
         os << '}';
         return os;
     }

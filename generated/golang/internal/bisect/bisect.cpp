@@ -715,21 +715,21 @@ namespace golang::bisect
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char>)
+    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> _1)
     {
-        return rec::Write(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Write(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vWrite();
+            return self.ptr->value->vWrite(_1);
         }
 
-        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vWrite();
+            return self.obj.value->vWrite(_1);
         }
     }
 

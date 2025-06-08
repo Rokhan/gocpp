@@ -70,6 +70,55 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    // Check interface declaration with method with nameless parameter
+    
+    template<typename T>
+    dummy::dummy(T& ref)
+    {
+        value.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    dummy::dummy(const T& ref)
+    {
+        value.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    dummy::dummy(T* ptr)
+    {
+        value.reset(new dummyImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& dummy::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename StoreT>
+    bool dummy::dummyImpl<T, StoreT>::vAs(go_any _1)
+    {
+        return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
+    }
+
+    namespace rec
+    {
+        bool As(const gocpp::PtrRecv<struct dummy, false>& self, go_any _1)
+        {
+            return self.ptr->value->vAs(_1);
+        }
+
+        bool As(const gocpp::ObjRecv<struct dummy>& self, go_any _1)
+        {
+            return self.obj.value->vAs(_1);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct dummy& value)
+    {
+        return value.PrintTo(os);
+    }
+
     void main()
     {
         Abser a = {};

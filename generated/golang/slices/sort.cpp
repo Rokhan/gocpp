@@ -204,7 +204,7 @@ namespace golang::slices
     // cmp(a, t) < 0 and cmp(b, t) >= 0, then a must precede b in the slice.
 
     template<typename S, typename T, typename E>
-    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp)
+    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E _1, T _2)> cmp)
     {
         auto n = len(x);
         auto [i, j] = std::tuple{0, n};

@@ -30,6 +30,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
     struct limiterEvent
     {
         atomic::Uint64 stamp;
@@ -46,7 +47,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
-    runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
     struct gcCPULimiterState
     {
         atomic::Uint32 lock;
@@ -75,6 +75,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
+    extern gcCPULimiterState gcCPULimiter;
 
     namespace rec
     {

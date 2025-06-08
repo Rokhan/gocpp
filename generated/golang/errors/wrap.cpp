@@ -147,21 +147,21 @@ namespace golang::errors
             }
 
             template<typename T, typename StoreT>
-            bool gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vIs(gocpp::error)
+            bool gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vIs(struct gocpp::error _1)
             {
-                return rec::Is(gocpp::PtrRecv<T, false>(value.get()));
+                return rec::Is(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
             namespace rec
             {
-                bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error)
+                bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, struct gocpp::error _1)
                 {
-                    return self.ptr->value->vIs();
+                    return self.ptr->value->vIs(_1);
                 }
 
-                bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error)
+                bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, struct gocpp::error _1)
                 {
-                    return self.obj.value->vIs();
+                    return self.obj.value->vIs(_1);
                 }
             }
 
@@ -389,21 +389,21 @@ namespace golang::errors
             }
 
             template<typename T, typename StoreT>
-            bool gocpp_id_5::gocpp_id_5Impl<T, StoreT>::vAs(go_any)
+            bool gocpp_id_5::gocpp_id_5Impl<T, StoreT>::vAs(go_any _1)
             {
-                return rec::As(gocpp::PtrRecv<T, false>(value.get()));
+                return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
             namespace rec
             {
-                bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any)
+                bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any _1)
                 {
-                    return self.ptr->value->vAs();
+                    return self.ptr->value->vAs(_1);
                 }
 
-                bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any)
+                bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any _1)
                 {
-                    return self.obj.value->vAs();
+                    return self.obj.value->vAs(_1);
                 }
             }
 

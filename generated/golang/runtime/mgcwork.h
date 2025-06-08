@@ -14,6 +14,7 @@
 
 namespace golang::runtime
 {
+    void init();
     struct gcWork
     {
         workbuf* wbuf1;
@@ -51,7 +52,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
-    void init();
     struct workbuf* getempty();
     void putempty(struct workbuf* b);
     void putfull(struct workbuf* b);
@@ -62,7 +62,8 @@ namespace golang::runtime
     struct workbuf
     {
         sys::NotInHeap _1;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+        workbufhdr workbufhdr;
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 

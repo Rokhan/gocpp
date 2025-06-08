@@ -105,7 +105,7 @@ namespace golang::time
     bool resetTimer(runtimeTimer*, int64_t)
     /* convertBlockStmt, nil block */;
 
-    void modTimer(struct runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    void modTimer(struct runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
     /* convertBlockStmt, nil block */;
 
     // The Timer type represents a single event.
@@ -242,7 +242,7 @@ namespace golang::time
         //Go select emulation
         {
             int conditionId = -1;
-            if(gocpp::getValue<gocpp::channel<time::Time>>(c).trySend(Now())) { conditionId = 0; }
+            if(gocpp::getValue<gocpp::channel<Time>>(c).trySend(Now())) { conditionId = 0; }
             switch(conditionId)
             {
                 case 0:
@@ -284,7 +284,7 @@ namespace golang::time
 
     void goFunc(go_any arg, uintptr_t seq)
     {
-        gocpp::go([&]{ gocpp::getValue<std::function<void (void)>>(arg)(); });
+        gocpp::go([&]{ gocpp::getValue<std::function<void ()>>(arg)(); });
     }
 
 }

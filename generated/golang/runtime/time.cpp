@@ -216,7 +216,7 @@ namespace golang::runtime
     // modTimer modifies an existing timer.
     //
     //go:linkname modTimer time.modTimer
-    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
     {
         modtimer(t, when, period, f, arg, seq);
     }
@@ -441,7 +441,7 @@ namespace golang::runtime
     // modtimer modifies an existing timer.
     // This is called by the netpoll code or time.Ticker.Reset or time.Timer.Reset.
     // Reports whether the timer was modified before it was run.
-    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any, uintptr_t)> f, go_any arg, uintptr_t seq)
+    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq)
     {
         if(when <= 0)
         {

@@ -43,16 +43,18 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
-    extern std::string DevNull;
     struct File* newFile(syscall::Handle h, std::string name, std::string kind);
     struct File* newConsoleFile(syscall::Handle h, std::string name);
     struct File* NewFile(uintptr_t fd, std::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
+    extern std::string DevNull;
     std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm);
     struct gocpp::error Truncate(std::string name, int64_t size);
     struct gocpp::error Remove(std::string name);
     struct gocpp::error rename(std::string oldname, std::string newname);
     std::tuple<struct File*, struct File*, struct gocpp::error> Pipe();
+    extern sync::Once useGetTempPath2Once;
+    extern bool useGetTempPath2;
     std::string tempDir();
     struct gocpp::error Link(std::string oldname, std::string newname);
     struct gocpp::error Symlink(std::string oldname, std::string newname);
@@ -64,7 +66,7 @@ namespace golang::os
     namespace rec
     {
         uintptr_t Fd(struct File* file);
-        struct gocpp::error close(struct file* file);
+        struct gocpp::error close(os::file* file);
         std::tuple<int64_t, struct gocpp::error> seek(struct File* f, int64_t offset, int whence);
     }
 }

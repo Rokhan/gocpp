@@ -42,6 +42,7 @@ namespace golang::fmt
     struct fmt
     {
         buffer* buf;
+        fmtFlags fmtFlags;
         int wid;
         int prec;
         gocpp::array<unsigned char, 68> intbuf;

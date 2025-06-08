@@ -46,6 +46,7 @@ namespace golang::runtime
 {
     struct gTraceState
     {
+        traceSchedResourceState traceSchedResourceState;
 
         using isGoStruct = void;
 
@@ -79,6 +80,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mTraceState& value);
     struct pTraceState
     {
+        traceSchedResourceState traceSchedResourceState;
         int64_t mSyscallID;
         bool maySweep;
         bool inSweep;
@@ -97,8 +99,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
+    void traceLockInit();
+    void lockRankMayTraceFlush();
     extern gocpp::array<std::string, 15> traceBlockReasonStrings;
     extern gocpp::array<std::string, 3> traceGoStopReasonStrings;
+    bool traceEnabled();
+    bool traceShuttingDown();
     struct traceLocker
     {
         m* mp;
@@ -116,10 +122,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
-    void traceLockInit();
-    void lockRankMayTraceFlush();
-    bool traceEnabled();
-    bool traceShuttingDown();
     struct traceLocker traceAcquire();
     struct traceLocker traceAcquireEnabled();
     void traceRelease(struct traceLocker tl);

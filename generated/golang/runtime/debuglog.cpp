@@ -966,6 +966,7 @@ namespace golang::runtime
         readState::operator T()
         {
             T result;
+            result.debugLogReader = this->debugLogReader;
             result.first = this->first;
             result.lost = this->lost;
             result.nextTick = this->nextTick;
@@ -975,6 +976,7 @@ namespace golang::runtime
         template<typename T> requires gocpp::GoStruct<T>
         bool readState::operator==(const T& ref) const
         {
+            if (debugLogReader != ref.debugLogReader) return false;
             if (first != ref.first) return false;
             if (lost != ref.lost) return false;
             if (nextTick != ref.nextTick) return false;
@@ -984,7 +986,8 @@ namespace golang::runtime
         std::ostream& readState::PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << first;
+            os << "" << debugLogReader;
+            os << " " << first;
             os << " " << lost;
             os << " " << nextTick;
             os << '}';

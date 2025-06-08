@@ -19,6 +19,7 @@ namespace golang::runtime
     uintptr_t memhash16(unsafe::Pointer p, uintptr_t h);
     uintptr_t memhash128(unsafe::Pointer p, uintptr_t h);
     uintptr_t memhash_varlen(unsafe::Pointer p, uintptr_t h);
+    extern bool useAeshash;
     uintptr_t memhash(unsafe::Pointer p, uintptr_t h, uintptr_t s);
     uintptr_t memhash32(unsafe::Pointer p, uintptr_t h);
     uintptr_t memhash64(unsafe::Pointer p, uintptr_t h);
@@ -107,6 +108,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed);
+    extern gocpp::array<unsigned char, hashRandomBytes> aeskeysched;
+    extern gocpp::array<uintptr_t, 4> hashkey;
     void alginit();
     void initAlgAES();
     uint32_t readUnaligned32(unsafe::Pointer p);

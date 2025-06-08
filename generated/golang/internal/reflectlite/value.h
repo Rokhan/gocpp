@@ -18,6 +18,7 @@ namespace golang::reflectlite
     {
         abi::Type* typ_;
         unsafe::Pointer ptr;
+        golang::reflectlite::flag flag;
 
         using isGoStruct = void;
 
@@ -31,6 +32,8 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
+    go_any packEface(struct Value v);
+    struct Value unpackEface(go_any i);
     struct ValueError
     {
         std::string Method;
@@ -48,6 +51,7 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
+    std::string methodName();
     struct emptyInterface
     {
         abi::Type* typ;
@@ -65,9 +69,6 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
-    go_any packEface(struct Value v);
-    struct Value unpackEface(go_any i);
-    std::string methodName();
     struct gocpp_id_6 : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -181,6 +182,7 @@ namespace golang::reflectlite
     void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst);
     void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
     void escapes(go_any x);
+    extern gocpp_id_8 dummy;
     unsafe::Pointer noescape(unsafe::Pointer p);
 
     namespace rec

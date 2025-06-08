@@ -1262,7 +1262,7 @@ namespace golang::runtime
         }
     }
 
-    void iterate_memprof(std::function<void (bucket*, uintptr_t, uintptr_t*, uintptr_t, uintptr_t, uintptr_t)> fn)
+    void iterate_memprof(std::function<void (struct bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn)
     {
         lock(& profMemActiveLock);
         auto head = (bucket*)(rec::Load(gocpp::recv(mbuckets)));
@@ -1283,6 +1283,7 @@ namespace golang::runtime
         T result;
         result.Count = this->Count;
         result.Cycles = this->Cycles;
+        result.StackRecord = this->StackRecord;
         return result;
     }
 
@@ -1291,6 +1292,7 @@ namespace golang::runtime
     {
         if (Count != ref.Count) return false;
         if (Cycles != ref.Cycles) return false;
+        if (StackRecord != ref.StackRecord) return false;
         return true;
     }
 
@@ -1299,6 +1301,7 @@ namespace golang::runtime
         os << '{';
         os << "" << Count;
         os << " " << Cycles;
+        os << " " << StackRecord;
         os << '}';
         return os;
     }

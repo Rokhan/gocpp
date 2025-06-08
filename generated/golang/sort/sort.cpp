@@ -176,18 +176,21 @@ namespace golang::sort
     reverse::operator T()
     {
         T result;
+        result.Interface = this->Interface;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool reverse::operator==(const T& ref) const
     {
+        if (Interface != ref.Interface) return false;
         return true;
     }
 
     std::ostream& reverse::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Interface;
         os << '}';
         return os;
     }

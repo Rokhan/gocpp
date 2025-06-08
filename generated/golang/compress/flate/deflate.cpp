@@ -95,6 +95,7 @@ namespace golang::flate
     compressor::operator T()
     {
         T result;
+        result.compressionLevel = this->compressionLevel;
         result.w = this->w;
         result.bulkHasher = this->bulkHasher;
         result.fill = this->fill;
@@ -122,6 +123,7 @@ namespace golang::flate
     template<typename T> requires gocpp::GoStruct<T>
     bool compressor::operator==(const T& ref) const
     {
+        if (compressionLevel != ref.compressionLevel) return false;
         if (w != ref.w) return false;
         if (bulkHasher != ref.bulkHasher) return false;
         if (fill != ref.fill) return false;
@@ -149,7 +151,8 @@ namespace golang::flate
     std::ostream& compressor::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << w;
+        os << "" << compressionLevel;
+        os << " " << w;
         os << " " << bulkHasher;
         os << " " << fill;
         os << " " << step;

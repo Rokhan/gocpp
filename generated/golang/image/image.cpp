@@ -401,10 +401,10 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
-        s[0] = uint8_t(c->R >> 8);
-        s[1] = uint8_t(c->G >> 8);
-        s[2] = uint8_t(c->B >> 8);
-        s[3] = uint8_t(c->A >> 8);
+        s[0] = uint8_t(c.R >> 8);
+        s[1] = uint8_t(c.G >> 8);
+        s[2] = uint8_t(c.B >> 8);
+        s[3] = uint8_t(c.A >> 8);
     }
 
     void rec::SetRGBA(struct RGBA* p, int x, int y, color::RGBA c)
@@ -415,10 +415,10 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
-        s[0] = c->R;
-        s[1] = c->G;
-        s[2] = c->B;
-        s[3] = c->A;
+        s[0] = c.R;
+        s[1] = c.G;
+        s[2] = c.B;
+        s[3] = c.A;
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -567,14 +567,14 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
-        s[0] = uint8_t(c->R >> 8);
-        s[1] = uint8_t(c->R);
-        s[2] = uint8_t(c->G >> 8);
-        s[3] = uint8_t(c->G);
-        s[4] = uint8_t(c->B >> 8);
-        s[5] = uint8_t(c->B);
-        s[6] = uint8_t(c->A >> 8);
-        s[7] = uint8_t(c->A);
+        s[0] = uint8_t(c.R >> 8);
+        s[1] = uint8_t(c.R);
+        s[2] = uint8_t(c.G >> 8);
+        s[3] = uint8_t(c.G);
+        s[4] = uint8_t(c.B >> 8);
+        s[5] = uint8_t(c.B);
+        s[6] = uint8_t(c.A >> 8);
+        s[7] = uint8_t(c.A);
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -723,7 +723,7 @@ namespace golang::image
         {
             return;
         }
-        auto [r, g, b, a] = std::tuple{uint32_t(c->R), uint32_t(c->G), uint32_t(c->B), uint32_t(c->A)};
+        auto [r, g, b, a] = std::tuple{uint32_t(c.R), uint32_t(c.G), uint32_t(c.B), uint32_t(c.A)};
         if((a != 0) && (a != 0xffff))
         {
             r = (r * 0xffff) / a;
@@ -746,10 +746,10 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
-        s[0] = c->R;
-        s[1] = c->G;
-        s[2] = c->B;
-        s[3] = c->A;
+        s[0] = c.R;
+        s[1] = c.G;
+        s[2] = c.B;
+        s[3] = c.A;
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -902,7 +902,7 @@ namespace golang::image
         {
             return;
         }
-        auto [r, g, b, a] = std::tuple{uint32_t(c->R), uint32_t(c->G), uint32_t(c->B), uint32_t(c->A)};
+        auto [r, g, b, a] = std::tuple{uint32_t(c.R), uint32_t(c.G), uint32_t(c.B), uint32_t(c.A)};
         if((a != 0) && (a != 0xffff))
         {
             r = (r * 0xffff) / a;
@@ -929,14 +929,14 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
-        s[0] = uint8_t(c->R >> 8);
-        s[1] = uint8_t(c->R);
-        s[2] = uint8_t(c->G >> 8);
-        s[3] = uint8_t(c->G);
-        s[4] = uint8_t(c->B >> 8);
-        s[5] = uint8_t(c->B);
-        s[6] = uint8_t(c->A >> 8);
-        s[7] = uint8_t(c->A);
+        s[0] = uint8_t(c.R >> 8);
+        s[1] = uint8_t(c.R);
+        s[2] = uint8_t(c.G >> 8);
+        s[3] = uint8_t(c.G);
+        s[4] = uint8_t(c.B >> 8);
+        s[5] = uint8_t(c.B);
+        s[6] = uint8_t(c.A >> 8);
+        s[7] = uint8_t(c.A);
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -1081,7 +1081,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = uint8_t(c->A >> 8);
+        p->Pix[i] = uint8_t(c.A >> 8);
     }
 
     void rec::SetAlpha(struct Alpha* p, int x, int y, color::Alpha c)
@@ -1091,7 +1091,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = c->A;
+        p->Pix[i] = c.A;
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -1237,8 +1237,8 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i + 0] = uint8_t(c->A >> 8);
-        p->Pix[i + 1] = uint8_t(c->A);
+        p->Pix[i + 0] = uint8_t(c.A >> 8);
+        p->Pix[i + 1] = uint8_t(c.A);
     }
 
     void rec::SetAlpha16(struct Alpha16* p, int x, int y, color::Alpha16 c)
@@ -1248,8 +1248,8 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i + 0] = uint8_t(c->A >> 8);
-        p->Pix[i + 1] = uint8_t(c->A);
+        p->Pix[i + 0] = uint8_t(c.A >> 8);
+        p->Pix[i + 1] = uint8_t(c.A);
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -1393,7 +1393,7 @@ namespace golang::image
         {
             return;
         }
-        auto gray = (19595 * uint32_t(c->R) + 38470 * uint32_t(c->G) + 7471 * uint32_t(c->B) + (1 << 15)) >> 24;
+        auto gray = (19595 * uint32_t(c.R) + 38470 * uint32_t(c.G) + 7471 * uint32_t(c.B) + (1 << 15)) >> 24;
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         p->Pix[i] = uint8_t(gray);
     }
@@ -1405,7 +1405,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i] = c->Y;
+        p->Pix[i] = c.Y;
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -1533,7 +1533,7 @@ namespace golang::image
         {
             return;
         }
-        auto gray = (19595 * uint32_t(c->R) + 38470 * uint32_t(c->G) + 7471 * uint32_t(c->B) + (1 << 15)) >> 16;
+        auto gray = (19595 * uint32_t(c.R) + 38470 * uint32_t(c.G) + 7471 * uint32_t(c.B) + (1 << 15)) >> 16;
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         p->Pix[i + 0] = uint8_t(gray >> 8);
         p->Pix[i + 1] = uint8_t(gray);
@@ -1546,8 +1546,8 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
-        p->Pix[i + 0] = uint8_t(c->Y >> 8);
-        p->Pix[i + 1] = uint8_t(c->Y);
+        p->Pix[i + 0] = uint8_t(c.Y >> 8);
+        p->Pix[i + 1] = uint8_t(c.Y);
     }
 
     // SubImage returns an image representing the portion of the image p visible
@@ -1679,7 +1679,7 @@ namespace golang::image
         {
             return;
         }
-        auto [cc, mm, yy, kk] = color::RGBToCMYK(uint8_t(c->R >> 8), uint8_t(c->G >> 8), uint8_t(c->B >> 8));
+        auto [cc, mm, yy, kk] = color::RGBToCMYK(uint8_t(c.R >> 8), uint8_t(c.G >> 8), uint8_t(c.B >> 8));
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = cc;
@@ -1696,10 +1696,10 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
-        s[0] = c->C;
-        s[1] = c->M;
-        s[2] = c->Y;
-        s[3] = c->K;
+        s[0] = c.C;
+        s[1] = c.M;
+        s[2] = c.Y;
+        s[3] = c.K;
     }
 
     // SubImage returns an image representing the portion of the image p visible

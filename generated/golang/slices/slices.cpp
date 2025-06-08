@@ -52,7 +52,7 @@ namespace golang::slices
     // for which eq returns false.
 
     template<typename S1, typename S2, typename E1, typename E2>
-    bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq)
+    bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1 _1, E2 _2)> eq)
     {
         if(len(s1) != len(s2))
         {
@@ -106,7 +106,7 @@ namespace golang::slices
     // and +1 if len(s1) > len(s2).
 
     template<typename S1, typename S2, typename E1, typename E2>
-    int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp)
+    int CompareFunc(S1 s1, S2 s2, std::function<int (E1 _1, E2 _2)> cmp)
     {
         for(auto [i, v1] : s1)
         {
@@ -147,7 +147,7 @@ namespace golang::slices
     // or -1 if none do.
 
     template<typename S, typename E>
-    int IndexFunc(S s, std::function<bool (E)> f)
+    int IndexFunc(S s, std::function<bool (E _1)> f)
     {
         for(auto [i, gocpp_ignored] : s)
         {
@@ -171,7 +171,7 @@ namespace golang::slices
     // element e of s satisfies f(e).
 
     template<typename S, typename E>
-    bool ContainsFunc(S s, std::function<bool (E)> f)
+    bool ContainsFunc(S s, std::function<bool (E _1)> f)
     {
         return IndexFunc(s, f) >= 0;
     }
@@ -242,7 +242,7 @@ namespace golang::slices
     // DeleteFunc zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
-    S DeleteFunc(S s, std::function<bool (E)> del)
+    S DeleteFunc(S s, std::function<bool (E _1)> del)
     {
         auto i = IndexFunc(s, del);
         if(i == - 1)
@@ -364,7 +364,7 @@ namespace golang::slices
     // CompactFunc zeroes the elements between the new length and the original length.
 
     template<typename S, typename E>
-    S CompactFunc(S s, std::function<bool (E, E)> eq)
+    S CompactFunc(S s, std::function<bool (E _1, E _2)> eq)
     {
         if(len(s) < 2)
         {

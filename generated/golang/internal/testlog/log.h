@@ -83,6 +83,7 @@ namespace golang::testlog
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
+    extern atomic::Value logger;
     void SetLogger(struct Interface impl);
     struct Interface Logger();
     void Getenv(std::string name);

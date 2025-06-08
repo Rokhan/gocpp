@@ -641,6 +641,7 @@ namespace golang::syscall
     _STARTUPINFOEXW::operator T()
     {
         T result;
+        result.StartupInfo = this->StartupInfo;
         result.ProcThreadAttributeList = this->ProcThreadAttributeList;
         return result;
     }
@@ -648,6 +649,7 @@ namespace golang::syscall
     template<typename T> requires gocpp::GoStruct<T>
     bool _STARTUPINFOEXW::operator==(const T& ref) const
     {
+        if (StartupInfo != ref.StartupInfo) return false;
         if (ProcThreadAttributeList != ref.ProcThreadAttributeList) return false;
         return true;
     }
@@ -655,7 +657,8 @@ namespace golang::syscall
     std::ostream& _STARTUPINFOEXW::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << ProcThreadAttributeList;
+        os << "" << StartupInfo;
+        os << " " << ProcThreadAttributeList;
         os << '}';
         return os;
     }

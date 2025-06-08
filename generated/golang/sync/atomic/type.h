@@ -12,6 +12,7 @@
 
 namespace golang::atomic
 {
+    uint32_t b32(bool b);
     struct noCopy
     {
 
@@ -42,7 +43,6 @@ namespace golang::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
-    uint32_t b32(bool b);
     struct Bool
     {
         noCopy _1;

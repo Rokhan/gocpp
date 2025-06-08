@@ -82,18 +82,21 @@ namespace golang::runtime
     Pinner::operator T()
     {
         T result;
+        result.pinner = this->pinner;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool Pinner::operator==(const T& ref) const
     {
+        if (pinner != ref.pinner) return false;
         return true;
     }
 
     std::ostream& Pinner::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << pinner;
         os << '}';
         return os;
     }

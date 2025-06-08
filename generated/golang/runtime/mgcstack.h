@@ -19,6 +19,7 @@ namespace golang::runtime
     struct stackWorkBufHdr
     {
         sys::NotInHeap _1;
+        workbufhdr workbufhdr;
         stackWorkBuf* next;
 
         using isGoStruct = void;
@@ -36,6 +37,7 @@ namespace golang::runtime
     struct stackObjectBufHdr
     {
         sys::NotInHeap _1;
+        workbufhdr workbufhdr;
         stackObjectBuf* next;
 
         using isGoStruct = void;
@@ -50,6 +52,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBufHdr& value);
+    void init();
     struct stackObject
     {
         sys::NotInHeap _1;
@@ -95,12 +98,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
-    void init();
     std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
     struct stackWorkBuf
     {
         sys::NotInHeap _1;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+        stackWorkBufHdr stackWorkBufHdr;
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -117,7 +120,8 @@ namespace golang::runtime
     struct stackObjectBuf
     {
         sys::NotInHeap _1;
-        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
+        stackObjectBufHdr stackObjectBufHdr;
+        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 

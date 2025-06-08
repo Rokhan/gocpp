@@ -17,25 +17,25 @@ namespace golang::slices
     bool Equal(S s1, S s2);
     
     template<typename S1, typename S2, typename E1, typename E2>
-    bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1, E2)> eq);
+    bool EqualFunc(S1 s1, S2 s2, std::function<bool (E1 _1, E2 _2)> eq);
     
     template<typename S, typename E>
     int Compare(S s1, S s2);
     
     template<typename S1, typename S2, typename E1, typename E2>
-    int CompareFunc(S1 s1, S2 s2, std::function<int (E1, E2)> cmp);
+    int CompareFunc(S1 s1, S2 s2, std::function<int (E1 _1, E2 _2)> cmp);
     
     template<typename S, typename E>
     int Index(S s, E v);
     
     template<typename S, typename E>
-    int IndexFunc(S s, std::function<bool (E)> f);
+    int IndexFunc(S s, std::function<bool (E _1)> f);
     
     template<typename S, typename E>
     bool Contains(S s, E v);
     
     template<typename S, typename E>
-    bool ContainsFunc(S s, std::function<bool (E)> f);
+    bool ContainsFunc(S s, std::function<bool (E _1)> f);
     
     template<typename S, typename E>
     S Insert(S s, int i, gocpp::slice<E> v);
@@ -56,7 +56,7 @@ namespace golang::slices
     S Delete(S s, int i, int j);
     
     template<typename S, typename E>
-    S DeleteFunc(S s, std::function<bool (E)> del);
+    S DeleteFunc(S s, std::function<bool (E _1)> del);
     
     template<typename S, typename E>
     S Replace(S s, int i, int j, gocpp::slice<E> v);
@@ -80,7 +80,7 @@ namespace golang::slices
     S Compact(S s);
     
     template<typename S, typename E>
-    S CompactFunc(S s, std::function<bool (E, E)> eq);
+    S CompactFunc(S s, std::function<bool (E _1, E _2)> eq);
     
     template<typename S, typename E>
     S Grow(S s, int n);

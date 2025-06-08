@@ -25,8 +25,10 @@
 
 namespace golang::os
 {
+    int Getpagesize();
     struct File
     {
+        file* file;
 
         using isGoStruct = void;
 
@@ -40,7 +42,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    int Getpagesize();
     bool SameFile(golang::os::FileInfo fi1, golang::os::FileInfo fi2);
 
     namespace rec

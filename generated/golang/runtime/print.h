@@ -15,9 +15,11 @@
 
 namespace golang::runtime
 {
-    extern long minhexdigits;
     gocpp::slice<unsigned char> bytes(std::string s);
+    extern gocpp::array<unsigned char, 512> printBacklog;
+    extern int printBacklogIndex;
     void recordForPanic(gocpp::slice<unsigned char> b);
+    extern mutex debuglock;
     void printlock();
     void printunlock();
     void gwrite(gocpp::slice<unsigned char> b);
@@ -28,6 +30,7 @@ namespace golang::runtime
     void printcomplex(struct gocpp::complex128 c);
     void printuint(uint64_t v);
     void printint(int64_t v);
+    extern long minhexdigits;
     void printhex(uint64_t v);
     void printpointer(unsafe::Pointer p);
     void printuintptr(uintptr_t p);
@@ -35,7 +38,7 @@ namespace golang::runtime
     void printslice(gocpp::slice<unsigned char> s);
     void printeface(struct eface e);
     void printiface(struct iface i);
-    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark);
+    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark);
 
     namespace rec
     {

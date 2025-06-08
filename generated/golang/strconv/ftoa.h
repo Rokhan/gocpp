@@ -31,6 +31,12 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct floatInfo& value);
+    std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
+    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize);
+    gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize);
+    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
+    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, struct decimalSlice digs, int prec, unsigned char fmt);
+    void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt);
     struct decimalSlice
     {
         gocpp::slice<unsigned char> d;
@@ -49,18 +55,12 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimalSlice& value);
-    std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize);
-    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
-    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, struct decimalSlice digs, int prec, unsigned char fmt);
-    void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt);
     gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec, unsigned char fmt);
     gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec);
     gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
     gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
-    extern floatInfo float64info;
     extern floatInfo float32info;
+    extern floatInfo float64info;
 
     namespace rec
     {

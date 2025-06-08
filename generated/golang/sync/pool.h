@@ -16,23 +16,6 @@
 
 namespace golang::sync
 {
-    struct poolLocalInternal
-    {
-        go_any go_private;
-        poolChain shared;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     struct Pool
     {
         /* noCopy noCopy; [Known incomplete type] */
@@ -54,9 +37,28 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Pool& value);
+    struct poolLocalInternal
+    {
+        go_any go_private;
+        poolChain shared;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     uint32_t runtime_randn(uint32_t n);
+    extern gocpp::array<uint64_t, 128> poolRaceHash;
     unsafe::Pointer poolRaceAddr(go_any x);
     void poolCleanup();
+    extern Mutex allPoolsMu;
     void init();
     struct poolLocal* indexLocal(unsafe::Pointer l, int i);
     void runtime_registerPoolCleanup(std::function<void ()> cleanup);
@@ -66,7 +68,8 @@ namespace golang::sync
     uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
     struct poolLocal
     {
-        gocpp::array<unsigned char, 128 - gocpp::Sizeof<poolLocalInternal>() % 128> pad;
+        poolLocalInternal poolLocalInternal;
+        gocpp::array<unsigned char, 128 - gocpp::Sizeof<sync::poolLocalInternal>() % 128> pad;
 
         using isGoStruct = void;
 
@@ -80,6 +83,8 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
+    extern gocpp::slice<Pool*> allPools;
+    extern gocpp::slice<Pool*> oldPools;
 
     namespace rec
     {

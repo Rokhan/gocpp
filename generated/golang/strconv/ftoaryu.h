@@ -13,9 +13,9 @@
 
 namespace golang::strconv
 {
-    extern gocpp::array<uint64_t, 20> uint64pow10;
     void ryuFtoaFixed32(struct decimalSlice* d, uint32_t mant, int exp, int prec);
     void ryuFtoaFixed64(struct decimalSlice* d, uint64_t mant, int exp, int prec);
+    extern gocpp::array<uint64_t, 20> uint64pow10;
     void formatDecimal(struct decimalSlice* d, uint64_t m, bool trunc, bool roundUp, int prec);
     void ryuFtoaShortest(struct decimalSlice* d, uint64_t mant, int exp, struct floatInfo* flt);
     int mulByLog2Log10(int x);

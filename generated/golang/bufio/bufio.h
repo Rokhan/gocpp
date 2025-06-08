@@ -13,26 +13,8 @@
 
 namespace golang::bufio
 {
-    struct Writer
-    {
-        gocpp::error err;
-        gocpp::slice<unsigned char> buf;
-        int n;
-        io::Writer wr;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    extern gocpp::error errNegativeWrite;
+    extern gocpp::error ErrInvalidUnreadByte;
+    extern gocpp::error ErrInvalidUnreadRune;
     extern gocpp::error ErrBufferFull;
     extern gocpp::error ErrNegativeCount;
     struct Reader
@@ -57,8 +39,35 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
+    struct Reader* NewReaderSize(io::Reader rd, int size);
+    struct Reader* NewReader(io::Reader rd);
+    extern gocpp::error errNegativeRead;
+    extern gocpp::error errNegativeWrite;
+    struct Writer
+    {
+        gocpp::error err;
+        gocpp::slice<unsigned char> buf;
+        int n;
+        io::Writer wr;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    struct Writer* NewWriterSize(io::Writer w, int size);
+    struct Writer* NewWriter(io::Writer w);
     struct ReadWriter
     {
+        Reader* Reader;
+        Writer* Writer;
 
         using isGoStruct = void;
 
@@ -72,13 +81,6 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
-    extern gocpp::error ErrInvalidUnreadRune;
-    extern gocpp::error errNegativeRead;
-    extern gocpp::error ErrInvalidUnreadByte;
-    struct Reader* NewReaderSize(io::Reader rd, int size);
-    struct Reader* NewReader(io::Reader rd);
-    struct Writer* NewWriterSize(io::Writer w, int size);
-    struct Writer* NewWriter(io::Writer w);
     struct ReadWriter* NewReadWriter(struct Reader* r, struct Writer* w);
 
     namespace rec

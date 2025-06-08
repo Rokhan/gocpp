@@ -25,6 +25,7 @@
 
 namespace golang::os
 {
+    extern bool testingForceReadDirLstat;
     std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(std::string name);
 
     namespace rec

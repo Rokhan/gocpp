@@ -128,14 +128,14 @@ namespace golang::reflect
         return rec::FieldAlign(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    struct Method Type::TypeImpl<T, StoreT>::vMethod(int)
+    struct Method Type::TypeImpl<T, StoreT>::vMethod(int _1)
     {
-        return rec::Method(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Method(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
-    std::tuple<struct Method, bool> Type::TypeImpl<T, StoreT>::vMethodByName(std::string)
+    std::tuple<struct Method, bool> Type::TypeImpl<T, StoreT>::vMethodByName(std::string _1)
     {
-        return rec::MethodByName(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::MethodByName(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
     int Type::TypeImpl<T, StoreT>::vNumMethod()
@@ -223,7 +223,7 @@ namespace golang::reflect
         return rec::FieldByName(gocpp::PtrRecv<T, false>(value.get()), name);
     }
     template<typename T, typename StoreT>
-    std::tuple<struct StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByNameFunc(std::function<bool (std::string)> match)
+    std::tuple<struct StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByNameFunc(std::function<bool (std::string _1)> match)
     {
         return rec::FieldByNameFunc(gocpp::PtrRecv<T, false>(value.get()), match);
     }
@@ -295,24 +295,24 @@ namespace golang::reflect
             return self.obj.value->vFieldAlign();
         }
 
-        struct Method Method(const gocpp::PtrRecv<struct Type, false>& self, int)
+        struct Method Method(const gocpp::PtrRecv<struct Type, false>& self, int _1)
         {
-            return self.ptr->value->vMethod();
+            return self.ptr->value->vMethod(_1);
         }
 
-        struct Method Method(const gocpp::ObjRecv<struct Type>& self, int)
+        struct Method Method(const gocpp::ObjRecv<struct Type>& self, int _1)
         {
-            return self.obj.value->vMethod();
+            return self.obj.value->vMethod(_1);
         }
 
-        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, std::string)
+        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, std::string _1)
         {
-            return self.ptr->value->vMethodByName();
+            return self.ptr->value->vMethodByName(_1);
         }
 
-        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, std::string)
+        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, std::string _1)
         {
-            return self.obj.value->vMethodByName();
+            return self.obj.value->vMethodByName(_1);
         }
 
         int NumMethod(const gocpp::PtrRecv<struct Type, false>& self)
@@ -485,12 +485,12 @@ namespace golang::reflect
             return self.obj.value->vFieldByName(name);
         }
 
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<struct Type, false>& self, std::function<bool (std::string)> match)
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<struct Type, false>& self, std::function<bool (std::string _1)> match)
         {
             return self.ptr->value->vFieldByNameFunc(match);
         }
 
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<struct Type>& self, std::function<bool (std::string)> match)
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<struct Type>& self, std::function<bool (std::string _1)> match)
         {
             return self.obj.value->vFieldByNameFunc(match);
         }
@@ -604,18 +604,21 @@ namespace golang::reflect
     common::operator T()
     {
         T result;
+        result.Type = this->Type;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool common::operator==(const T& ref) const
     {
+        if (Type != ref.Type) return false;
         return true;
     }
 
     std::ostream& common::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Type;
         os << '}';
         return os;
     }
@@ -686,18 +689,21 @@ namespace golang::reflect
     interfaceType::operator T()
     {
         T result;
+        result.InterfaceType = this->InterfaceType;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool interfaceType::operator==(const T& ref) const
     {
+        if (InterfaceType != ref.InterfaceType) return false;
         return true;
     }
 
     std::ostream& interfaceType::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << InterfaceType;
         os << '}';
         return os;
     }
@@ -743,18 +749,21 @@ namespace golang::reflect
     mapType::operator T()
     {
         T result;
+        result.MapType = this->MapType;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool mapType::operator==(const T& ref) const
     {
+        if (MapType != ref.MapType) return false;
         return true;
     }
 
     std::ostream& mapType::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << MapType;
         os << '}';
         return os;
     }
@@ -770,18 +779,21 @@ namespace golang::reflect
     ptrType::operator T()
     {
         T result;
+        result.PtrType = this->PtrType;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool ptrType::operator==(const T& ref) const
     {
+        if (PtrType != ref.PtrType) return false;
         return true;
     }
 
     std::ostream& ptrType::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << PtrType;
         os << '}';
         return os;
     }
@@ -797,18 +809,21 @@ namespace golang::reflect
     sliceType::operator T()
     {
         T result;
+        result.SliceType = this->SliceType;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool sliceType::operator==(const T& ref) const
     {
+        if (SliceType != ref.SliceType) return false;
         return true;
     }
 
     std::ostream& sliceType::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << SliceType;
         os << '}';
         return os;
     }
@@ -825,18 +840,21 @@ namespace golang::reflect
     structType::operator T()
     {
         T result;
+        result.StructType = this->StructType;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool structType::operator==(const T& ref) const
     {
+        if (StructType != ref.StructType) return false;
         return true;
     }
 
     std::ostream& structType::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << StructType;
         os << '}';
         return os;
     }
@@ -848,7 +866,7 @@ namespace golang::reflect
 
     std::string pkgPath(abi::Name n)
     {
-        if(n->Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field"s) & (1 << 2) == 0)
+        if(n.Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field"s) & (1 << 2) == 0)
         {
             return ""s;
         }
@@ -862,7 +880,7 @@ namespace golang::reflect
         int32_t nameOff = {};
         copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"s))).make_slice(0));
         auto pkgPathName = gocpp::Init<abi::Name>([=](auto& x) {
-            x.Bytes = (unsigned char*)(resolveTypeOff(unsafe::Pointer(n->Bytes), nameOff));
+            x.Bytes = (unsigned char*)(resolveTypeOff(unsafe::Pointer(n.Bytes), nameOff));
         });
         return rec::Name(gocpp::recv(pkgPathName));
     }
@@ -995,7 +1013,7 @@ namespace golang::reflect
     // It returns a new nameOff that can be used to refer to the pointer.
     reflect::aNameOff resolveReflectName(abi::Name n)
     {
-        return aNameOff(addReflectOff(unsafe::Pointer(n->Bytes)));
+        return aNameOff(addReflectOff(unsafe::Pointer(n.Bytes)));
     }
 
     // resolveReflectType adds a *rtype to the reflection lookup map in the runtime.
@@ -1013,19 +1031,19 @@ namespace golang::reflect
         return aTextOff(addReflectOff(ptr));
     }
 
-    abi::Name rec::nameOff(struct rtype* t, golang::reflect::aNameOff off)
+    abi::Name rec::nameOff(reflect::rtype* t, golang::reflect::aNameOff off)
     {
         return gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t), int32_t(off)));
         });
     }
 
-    abi::Type* rec::typeOff(struct rtype* t, golang::reflect::aTypeOff off)
+    abi::Type* rec::typeOff(reflect::rtype* t, golang::reflect::aTypeOff off)
     {
         return (abi::Type*)(resolveTypeOff(unsafe::Pointer(t), int32_t(off)));
     }
 
-    unsafe::Pointer rec::textOff(struct rtype* t, golang::reflect::aTextOff off)
+    unsafe::Pointer rec::textOff(reflect::rtype* t, golang::reflect::aTextOff off)
     {
         return resolveTextOff(unsafe::Pointer(t), int32_t(off));
     }
@@ -1035,7 +1053,7 @@ namespace golang::reflect
         return rec::textOff(gocpp::recv(toRType(t)), off);
     }
 
-    std::string rec::String(struct rtype* t)
+    std::string rec::String(reflect::rtype* t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t->t.Str)));
         if(t->t.TFlag & abi::TFlagExtraStar != 0)
@@ -1045,12 +1063,12 @@ namespace golang::reflect
         return s;
     }
 
-    uintptr_t rec::Size(struct rtype* t)
+    uintptr_t rec::Size(reflect::rtype* t)
     {
         return rec::Size(gocpp::recv(t->t));
     }
 
-    int rec::Bits(struct rtype* t)
+    int rec::Bits(reflect::rtype* t)
     {
         if(t == nullptr)
         {
@@ -1064,22 +1082,22 @@ namespace golang::reflect
         return int(t->t.Size_) * 8;
     }
 
-    int rec::Align(struct rtype* t)
+    int rec::Align(reflect::rtype* t)
     {
         return rec::Align(gocpp::recv(t->t));
     }
 
-    int rec::FieldAlign(struct rtype* t)
+    int rec::FieldAlign(reflect::rtype* t)
     {
         return rec::FieldAlign(gocpp::recv(t->t));
     }
 
-    reflect::Kind rec::Kind(struct rtype* t)
+    reflect::Kind rec::Kind(reflect::rtype* t)
     {
         return Kind(rec::Kind(gocpp::recv(t->t)));
     }
 
-    gocpp::slice<abi::Method> rec::exportedMethods(struct rtype* t)
+    gocpp::slice<abi::Method> rec::exportedMethods(reflect::rtype* t)
     {
         auto ut = rec::uncommon(gocpp::recv(t));
         if(ut == nullptr)
@@ -1089,7 +1107,7 @@ namespace golang::reflect
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(struct rtype* t)
+    int rec::NumMethod(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Interface)
         {
@@ -1099,7 +1117,7 @@ namespace golang::reflect
         return len(rec::exportedMethods(gocpp::recv(t)));
     }
 
-    struct Method rec::Method(struct rtype* t, int i)
+    struct Method rec::Method(reflect::rtype* t, int i)
     {
         struct Method m;
         if(rec::Kind(gocpp::recv(t)) == Interface)
@@ -1133,12 +1151,12 @@ namespace golang::reflect
         m.Type = mt;
         auto tfn = rec::textOff(gocpp::recv(t), p.Tfn);
         auto fn = unsafe::Pointer(& tfn);
-        m.Func = Value {& gocpp::getValue<rtype*>(mt)->t, fn, fl};
+        m.Func = Value {& gocpp::getValue<reflect::rtype*>(mt)->t, fn, fl};
         m.Index = i;
         return m;
     }
 
-    std::tuple<struct Method, bool> rec::MethodByName(struct rtype* t, std::string name)
+    std::tuple<struct Method, bool> rec::MethodByName(reflect::rtype* t, std::string name)
     {
         struct Method m;
         bool ok;
@@ -1173,7 +1191,7 @@ namespace golang::reflect
         return {Method {}, false};
     }
 
-    std::string rec::PkgPath(struct rtype* t)
+    std::string rec::PkgPath(reflect::rtype* t)
     {
         if(t->t.TFlag & abi::TFlagNamed == 0)
         {
@@ -1192,7 +1210,7 @@ namespace golang::reflect
         return rec::PkgPath(gocpp::recv(toRType(t)));
     }
 
-    std::string rec::Name(struct rtype* t)
+    std::string rec::Name(reflect::rtype* t)
     {
         if(! rec::HasName(gocpp::recv(t->t)))
         {
@@ -1229,7 +1247,7 @@ namespace golang::reflect
         return rec::Name(gocpp::recv(toRType(t)));
     }
 
-    reflect::ChanDir rec::ChanDir(struct rtype* t)
+    reflect::ChanDir rec::ChanDir(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Chan)
         {
@@ -1239,9 +1257,9 @@ namespace golang::reflect
         return ChanDir(tt->Dir);
     }
 
-    struct rtype* toRType(abi::Type* t)
+    reflect::rtype* toRType(abi::Type* t)
     {
-        return (rtype*)(unsafe::Pointer(t));
+        return (reflect::rtype*)(unsafe::Pointer(t));
     }
 
     abi::Type* elem(abi::Type* t)
@@ -1254,12 +1272,12 @@ namespace golang::reflect
         gocpp::panic("reflect: Elem of invalid type "s + stringFor(t));
     }
 
-    struct Type rec::Elem(struct rtype* t)
+    struct Type rec::Elem(reflect::rtype* t)
     {
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    struct StructField rec::Field(struct rtype* t, int i)
+    struct StructField rec::Field(reflect::rtype* t, int i)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -1269,7 +1287,7 @@ namespace golang::reflect
         return rec::Field(gocpp::recv(tt), i);
     }
 
-    struct StructField rec::FieldByIndex(struct rtype* t, gocpp::slice<int> index)
+    struct StructField rec::FieldByIndex(reflect::rtype* t, gocpp::slice<int> index)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -1279,7 +1297,7 @@ namespace golang::reflect
         return rec::FieldByIndex(gocpp::recv(tt), index);
     }
 
-    std::tuple<struct StructField, bool> rec::FieldByName(struct rtype* t, std::string name)
+    std::tuple<struct StructField, bool> rec::FieldByName(reflect::rtype* t, std::string name)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -1289,7 +1307,7 @@ namespace golang::reflect
         return rec::FieldByName(gocpp::recv(tt), name);
     }
 
-    std::tuple<struct StructField, bool> rec::FieldByNameFunc(struct rtype* t, std::function<bool (std::string)> match)
+    std::tuple<struct StructField, bool> rec::FieldByNameFunc(reflect::rtype* t, std::function<bool (std::string _1)> match)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -1299,7 +1317,7 @@ namespace golang::reflect
         return rec::FieldByNameFunc(gocpp::recv(tt), match);
     }
 
-    struct Type rec::Key(struct rtype* t)
+    struct Type rec::Key(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Map)
         {
@@ -1309,7 +1327,7 @@ namespace golang::reflect
         return toType(tt->Key);
     }
 
-    int rec::Len(struct rtype* t)
+    int rec::Len(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
         {
@@ -1319,7 +1337,7 @@ namespace golang::reflect
         return int(tt->Len);
     }
 
-    int rec::NumField(struct rtype* t)
+    int rec::NumField(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -1329,7 +1347,7 @@ namespace golang::reflect
         return len(tt->Fields);
     }
 
-    struct Type rec::In(struct rtype* t, int i)
+    struct Type rec::In(reflect::rtype* t, int i)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -1339,7 +1357,7 @@ namespace golang::reflect
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
 
-    int rec::NumIn(struct rtype* t)
+    int rec::NumIn(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -1349,7 +1367,7 @@ namespace golang::reflect
         return rec::NumIn(gocpp::recv(tt));
     }
 
-    int rec::NumOut(struct rtype* t)
+    int rec::NumOut(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -1359,7 +1377,7 @@ namespace golang::reflect
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    struct Type rec::Out(struct rtype* t, int i)
+    struct Type rec::Out(reflect::rtype* t, int i)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -1369,7 +1387,7 @@ namespace golang::reflect
         return toType(rec::OutSlice(gocpp::recv(tt))[i]);
     }
 
-    bool rec::IsVariadic(struct rtype* t)
+    bool rec::IsVariadic(reflect::rtype* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -1682,7 +1700,7 @@ namespace golang::reflect
 
     // FieldByNameFunc returns the struct field with a name that satisfies the
     // match function and a boolean to indicate if the field was found.
-    std::tuple<struct StructField, bool> rec::FieldByNameFunc(struct structType* t, std::function<bool (std::string)> match)
+    std::tuple<struct StructField, bool> rec::FieldByNameFunc(struct structType* t, std::function<bool (std::string _1)> match)
     {
         struct StructField result;
         bool ok;
@@ -1835,10 +1853,10 @@ namespace golang::reflect
     // For example, if t represents type Foo, PointerTo(t) represents *Foo.
     struct Type PointerTo(struct Type t)
     {
-        return toRType(rec::ptrTo(gocpp::recv(gocpp::getValue<rtype*>(t))));
+        return toRType(rec::ptrTo(gocpp::recv(gocpp::getValue<reflect::rtype*>(t))));
     }
 
-    abi::Type* rec::ptrTo(struct rtype* t)
+    abi::Type* rec::ptrTo(reflect::rtype* t)
     {
         auto at = & t->t;
         if(at->PtrToThis != 0)
@@ -1888,7 +1906,7 @@ namespace golang::reflect
         return x;
     }
 
-    bool rec::Implements(struct rtype* t, struct Type u)
+    bool rec::Implements(reflect::rtype* t, struct Type u)
     {
         if(u == nullptr)
         {
@@ -1901,7 +1919,7 @@ namespace golang::reflect
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
 
-    bool rec::AssignableTo(struct rtype* t, struct Type u)
+    bool rec::AssignableTo(reflect::rtype* t, struct Type u)
     {
         if(u == nullptr)
         {
@@ -1911,7 +1929,7 @@ namespace golang::reflect
         return directlyAssignable(uu, rec::common(gocpp::recv(t))) || implements(uu, rec::common(gocpp::recv(t)));
     }
 
-    bool rec::ConvertibleTo(struct rtype* t, struct Type u)
+    bool rec::ConvertibleTo(reflect::rtype* t, struct Type u)
     {
         if(u == nullptr)
         {
@@ -1920,7 +1938,7 @@ namespace golang::reflect
         return convertOp(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t))) != nullptr;
     }
 
-    bool rec::Comparable(struct rtype* t)
+    bool rec::Comparable(reflect::rtype* t)
     {
         return t->t.Equal != nullptr;
     }
@@ -2285,6 +2303,7 @@ namespace golang::reflect
 
     struct gocpp_id_6
     {
+        mocklib::Mutex Mutex;
         sync::Map m;
 
         using isGoStruct = void;
@@ -2293,6 +2312,7 @@ namespace golang::reflect
         operator T()
         {
             T result;
+            result.Mutex = this->Mutex;
             result.m = this->m;
             return result;
         }
@@ -2300,6 +2320,7 @@ namespace golang::reflect
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
+            if (Mutex != ref.Mutex) return false;
             if (m != ref.m) return false;
             return true;
         }
@@ -2307,7 +2328,8 @@ namespace golang::reflect
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << m;
+            os << "" << Mutex;
+            os << " " << m;
             os << '}';
             return os;
         }
@@ -2334,7 +2356,7 @@ namespace golang::reflect
         auto ckey = cacheKey {Chan, typ, nullptr, uintptr_t(dir)};
         if(auto [ch, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
-            return gocpp::getValue<rtype*>(ch);
+            return gocpp::getValue<reflect::rtype*>(ch);
         }
         if(typ->Size_ >= (1 << 16))
         {
@@ -2500,7 +2522,7 @@ namespace golang::reflect
                 x.Type = TypeOf(reflect::funcType {});
             }), gocpp::Init<>([=](auto& x) {
                 x.Name = "Args"s;
-                x.Type = ArrayOf(n, TypeOf(new rtype {}));
+                x.Type = ArrayOf(n, TypeOf(new reflect::rtype {}));
             })});
             return funcTypes[n];
         }
@@ -2536,13 +2558,13 @@ namespace golang::reflect
             }
             auto o = rec::Elem(gocpp::recv(New(initFuncTypes(n))));
             auto ft = (reflect::funcType*)(unsafe::Pointer(rec::Pointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(o), 0)))))));
-            auto args = unsafe::Slice((rtype**)(unsafe::Pointer(rec::Pointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(o), 1))))))), n).make_slice(0, 0, n);
+            auto args = unsafe::Slice((reflect::rtype**)(unsafe::Pointer(rec::Pointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(o), 1))))))), n).make_slice(0, 0, n);
             *ft = *prototype;
             // Build a hash and minimally populate ft.
             uint32_t hash = {};
             for(auto [gocpp_ignored, in] : in)
             {
-                auto t = gocpp::getValue<rtype*>(in);
+                auto t = gocpp::getValue<reflect::rtype*>(in);
                 args = append(args, t);
                 hash = fnv1(hash, (unsigned char)(t->t.Hash >> 24), (unsigned char)(t->t.Hash >> 16), (unsigned char)(t->t.Hash >> 8), (unsigned char)(t->t.Hash));
             }
@@ -2553,7 +2575,7 @@ namespace golang::reflect
             hash = fnv1(hash, '.');
             for(auto [gocpp_ignored, out] : out)
             {
-                auto t = gocpp::getValue<rtype*>(out);
+                auto t = gocpp::getValue<reflect::rtype*>(out);
                 args = append(args, t);
                 hash = fnv1(hash, (unsigned char)(t->t.Hash >> 24), (unsigned char)(t->t.Hash >> 16), (unsigned char)(t->t.Hash >> 8), (unsigned char)(t->t.Hash));
             }
@@ -2567,7 +2589,7 @@ namespace golang::reflect
             }
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, t] : gocpp::getValue<abi::Type>>(ts))
+                for(auto [gocpp_ignored, t] : gocpp::getValue<gocpp::slice<abi::Type*>>(ts))
                 {
                     if(haveIdenticalUnderlyingType(& ft->Type, t, true))
                     {
@@ -2579,7 +2601,7 @@ namespace golang::reflect
             defer.push_back([=]{ rec::Unlock(gocpp::recv(funcLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, t] : gocpp::getValue<abi::Type>>(ts))
+                for(auto [gocpp_ignored, t] : gocpp::getValue<gocpp::slice<abi::Type*>>(ts))
                 {
                     if(haveIdenticalUnderlyingType(& ft->Type, t, true))
                     {
@@ -2592,7 +2614,7 @@ namespace golang::reflect
                 gocpp::slice<abi::Type*> rts = {};
                 if(auto [rti, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
                 {
-                    rts = gocpp::getValue<abi::Type>>(rti);
+                    rts = gocpp::getValue<gocpp::slice<abi::Type*>>(rti);
                 }
                 rec::Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
                 return toType(tt);
@@ -2927,7 +2949,7 @@ namespace golang::reflect
         return b;
     }
 
-    gocpp::slice<unsigned char> rec::gcSlice(struct rtype* t, uintptr_t begin, uintptr_t end)
+    gocpp::slice<unsigned char> rec::gcSlice(reflect::rtype* t, uintptr_t begin, uintptr_t end)
     {
         return (gocpp::array<unsigned char, 1 << 30>*)(unsafe::Pointer(t->t.GCData)).make_slice(begin, end, end);
     }
@@ -3014,6 +3036,7 @@ namespace golang::reflect
 
     struct gocpp_id_19
     {
+        mocklib::Mutex Mutex;
         sync::Map m;
 
         using isGoStruct = void;
@@ -3022,6 +3045,7 @@ namespace golang::reflect
         operator T()
         {
             T result;
+            result.Mutex = this->Mutex;
             result.m = this->m;
             return result;
         }
@@ -3029,6 +3053,7 @@ namespace golang::reflect
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
+            if (Mutex != ref.Mutex) return false;
             if (m != ref.m) return false;
             return true;
         }
@@ -3036,7 +3061,8 @@ namespace golang::reflect
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
-            os << "" << m;
+            os << "" << Mutex;
+            os << " " << m;
             os << '}';
             return os;
         }
@@ -3057,6 +3083,7 @@ namespace golang::reflect
     structTypeUncommon::operator T()
     {
         T result;
+        result.structType = this->structType;
         result.u = this->u;
         return result;
     }
@@ -3064,6 +3091,7 @@ namespace golang::reflect
     template<typename T> requires gocpp::GoStruct<T>
     bool structTypeUncommon::operator==(const T& ref) const
     {
+        if (structType != ref.structType) return false;
         if (u != ref.u) return false;
         return true;
     }
@@ -3071,7 +3099,8 @@ namespace golang::reflect
     std::ostream& structTypeUncommon::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << u;
+        os << "" << structType;
+        os << " " << u;
         os << '}';
         return os;
     }
@@ -3441,7 +3470,7 @@ namespace golang::reflect
                 })}));
                 typ = (structType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 0))))));
                 ut = (reflect::uncommonType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 1))))));
-                copy(gocpp::getValue<abi::Method>>(rec::Interface(gocpp::recv(rec::Slice(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
+                copy(gocpp::getValue<gocpp::slice<abi::Method>>(rec::Interface(gocpp::recv(rec::Slice(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
             }
             ut->Mcount = uint16_t(len(methods));
             ut->Xcount = ut->Mcount;
@@ -3470,7 +3499,7 @@ namespace golang::reflect
             }
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
+                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
                     if(haveIdenticalUnderlyingType(& typ->Type, t, true))
@@ -3483,7 +3512,7 @@ namespace golang::reflect
             defer.push_back([=]{ rec::Unlock(gocpp::recv(structLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
-                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<reflect::Type>>(ts))
+                for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
                     if(haveIdenticalUnderlyingType(& typ->Type, t, true))
@@ -3497,7 +3526,7 @@ namespace golang::reflect
                 gocpp::slice<Type> ts = {};
                 if(auto [ti, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
                 {
-                    ts = gocpp::getValue<gocpp::slice<reflect::Type>>(ti);
+                    ts = gocpp::getValue<gocpp::slice<Type>>(ti);
                 }
                 rec::Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
                 return t;
@@ -3737,7 +3766,7 @@ namespace golang::reflect
         array.Align_ = typ->Align_;
         array.FieldAlign_ = typ->FieldAlign_;
         array.Len = uintptr_t(length);
-        array.Slice = & (gocpp::getValue<rtype*>(SliceOf(elem))->t);
+        array.Slice = & (gocpp::getValue<reflect::rtype*>(SliceOf(elem))->t);
         //Go switch emulation
         {
             int conditionId = -1;
@@ -4104,7 +4133,7 @@ namespace golang::reflect
     template<typename T>
     struct Type TypeFor()
     {
-        return rec::Elem(gocpp::recv(TypeOf((T*)(nullptr))));
+        return rec::Elem(gocpp::recv(TypeOf((reflect::T*)(nullptr))));
     }
 
 }

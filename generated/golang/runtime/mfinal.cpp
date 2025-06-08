@@ -224,7 +224,7 @@ namespace golang::runtime
     }
 
     //go:nowritebarrier
-    void iterate_finq(std::function<void (funcval*, unsafe::Pointer, uintptr_t, golang::runtime::_type*, golang::runtime::ptrtype*)> callback)
+    void iterate_finq(std::function<void (struct funcval* _1, unsafe::Pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback)
     {
         for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
         {

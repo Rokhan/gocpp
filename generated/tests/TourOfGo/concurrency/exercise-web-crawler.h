@@ -64,6 +64,8 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
+    void Crawl(std::string url, int depth, struct Fetcher fetcher);
+    void main();
     struct fakeResult
     {
         std::string body;
@@ -81,8 +83,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    void Crawl(std::string url, int depth, struct Fetcher fetcher);
-    void main();
     extern main::fakeFetcher fetcher;
 
     namespace rec

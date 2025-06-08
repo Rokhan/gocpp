@@ -12,23 +12,6 @@
 
 namespace golang::unicode
 {
-    struct foldPair
-    {
-        uint16_t From;
-        uint16_t To;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
     struct Range16
     {
         uint16_t Lo;
@@ -95,6 +78,23 @@ namespace golang::unicode
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::rune ToLower(gocpp::rune r);
     gocpp::rune ToTitle(gocpp::rune r);
+    struct foldPair
+    {
+        uint16_t From;
+        uint16_t To;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
     gocpp::rune SimpleFold(gocpp::rune r);
     struct RangeTable
     {

@@ -17,147 +17,7 @@
 
 namespace golang::windows
 {
-    struct FILE_BASIC_INFO
-    {
-        int64_t CreationTime;
-        int64_t LastAccessTime;
-        int64_t LastWriteTime;
-        int64_t ChangedTime;
-        uint32_t FileAttributes;
-        uint32_t _1;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FILE_BASIC_INFO& value);
-    struct SecurityAttributes
-    {
-        uint16_t Length;
-        uintptr_t SecurityDescriptor;
-        bool InheritHandle;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
-    struct SERVICE_STATUS
-    {
-        uint32_t ServiceType;
-        uint32_t CurrentState;
-        uint32_t ControlsAccepted;
-        uint32_t Win32ExitCode;
-        uint32_t ServiceSpecificExitCode;
-        uint32_t CheckPoint;
-        uint32_t WaitHint;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
-    struct FILE_FULL_DIR_INFO
-    {
-        uint32_t NextEntryOffset;
-        uint32_t FileIndex;
-        syscall::Filetime CreationTime;
-        syscall::Filetime LastAccessTime;
-        syscall::Filetime LastWriteTime;
-        syscall::Filetime ChangeTime;
-        uint64_t EndOfFile;
-        uint64_t AllocationSize;
-        uint32_t FileAttributes;
-        uint32_t FileNameLength;
-        uint32_t EaSize;
-        gocpp::array<uint16_t, 1> FileName;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FILE_FULL_DIR_INFO& value);
-    struct FILE_ID_BOTH_DIR_INFO
-    {
-        uint32_t NextEntryOffset;
-        uint32_t FileIndex;
-        syscall::Filetime CreationTime;
-        syscall::Filetime LastAccessTime;
-        syscall::Filetime LastWriteTime;
-        syscall::Filetime ChangeTime;
-        uint64_t EndOfFile;
-        uint64_t AllocationSize;
-        uint32_t FileAttributes;
-        uint32_t FileNameLength;
-        uint32_t EaSize;
-        uint32_t ShortNameLength;
-        gocpp::array<uint16_t, 12> ShortName;
-        uint64_t FileID;
-        gocpp::array<uint16_t, 1> FileName;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FILE_ID_BOTH_DIR_INFO& value);
-    struct SHARE_INFO_2
-    {
-        uint16_t* Netname;
-        uint32_t Type;
-        uint16_t* Remark;
-        uint32_t Permissions;
-        uint32_t MaxUses;
-        uint32_t CurrentUses;
-        uint16_t* Path;
-        uint16_t* Passwd;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
+    std::string UTF16PtrToString(uint16_t* p);
     struct SocketAddress
     {
         syscall::RawSockaddrAny* Sockaddr;
@@ -175,53 +35,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SocketAddress& value);
-    struct WSAMsg
-    {
-        syscall::Pointer Name;
-        int32_t Namelen;
-        syscall::WSABuf* Buffers;
-        uint32_t BufferCount;
-        syscall::WSABuf Control;
-        uint32_t Flags;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct WSAMsg& value);
-    struct ModuleEntry32
-    {
-        uint32_t Size;
-        uint32_t ModuleID;
-        uint32_t ProcessID;
-        uint32_t GlblcntUsage;
-        uint32_t ProccntUsage;
-        uintptr_t ModBaseAddr;
-        uint32_t ModBaseSize;
-        syscall::Handle ModuleHandle;
-        gocpp::array<uint16_t, MAX_MODULE_NAME32 + 1> Module;
-        gocpp::array<uint16_t, syscall::MAX_PATH> ExePath;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ModuleEntry32& value);
-    extern syscall::GUID WSAID_WSARECVMSG;
     struct IpAdapterAddresses
     {
         uint32_t Length;
@@ -257,20 +70,139 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterAddresses& value);
+    struct SecurityAttributes
+    {
+        uint16_t Length;
+        uintptr_t SecurityDescriptor;
+        bool InheritHandle;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
+    struct FILE_BASIC_INFO
+    {
+        int64_t CreationTime;
+        int64_t LastAccessTime;
+        int64_t LastWriteTime;
+        int64_t ChangedTime;
+        uint32_t FileAttributes;
+        uint32_t _1;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct FILE_BASIC_INFO& value);
+    struct ModuleEntry32
+    {
+        uint32_t Size;
+        uint32_t ModuleID;
+        uint32_t ProcessID;
+        uint32_t GlblcntUsage;
+        uint32_t ProccntUsage;
+        uintptr_t ModBaseAddr;
+        uint32_t ModBaseSize;
+        syscall::Handle ModuleHandle;
+        gocpp::array<uint16_t, MAX_MODULE_NAME32 + 1> Module;
+        gocpp::array<uint16_t, syscall::MAX_PATH> ExePath;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ModuleEntry32& value);
     extern syscall::GUID WSAID_WSASENDMSG;
-    std::string UTF16PtrToString(uint16_t* p);
+    extern syscall::GUID WSAID_WSARECVMSG;
+    extern gocpp_id_0 sendRecvMsgFunc;
+    struct WSAMsg
+    {
+        syscall::Pointer Name;
+        int32_t Namelen;
+        syscall::WSABuf* Buffers;
+        uint32_t BufferCount;
+        syscall::WSABuf Control;
+        uint32_t Flags;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct WSAMsg& value);
     struct gocpp::error loadWSASendRecvMsg();
     struct gocpp::error WSASendMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error WSARecvMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error Rename(std::string oldpath, std::string newpath);
+    struct SHARE_INFO_2
+    {
+        uint16_t* Netname;
+        uint32_t Type;
+        uint16_t* Remark;
+        uint32_t Permissions;
+        uint32_t MaxUses;
+        uint32_t CurrentUses;
+        uint16_t* Path;
+        uint16_t* Passwd;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
     struct gocpp::error ErrorLoadingGetTempPath2();
-    struct IpAdapterPrefix
+    struct FILE_ID_BOTH_DIR_INFO
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterPrefix* Next;
-        SocketAddress Address;
-        uint32_t PrefixLength;
+        uint32_t NextEntryOffset;
+        uint32_t FileIndex;
+        syscall::Filetime CreationTime;
+        syscall::Filetime LastAccessTime;
+        syscall::Filetime LastWriteTime;
+        syscall::Filetime ChangeTime;
+        uint64_t EndOfFile;
+        uint64_t AllocationSize;
+        uint32_t FileAttributes;
+        uint32_t FileNameLength;
+        uint32_t EaSize;
+        uint32_t ShortNameLength;
+        gocpp::array<uint16_t, 12> ShortName;
+        uint64_t FileID;
+        gocpp::array<uint16_t, 1> FileName;
 
         using isGoStruct = void;
 
@@ -283,13 +215,21 @@ namespace golang::windows
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
-    struct IpAdapterDnsServerAdapter
+    std::ostream& operator<<(std::ostream& os, const struct FILE_ID_BOTH_DIR_INFO& value);
+    struct FILE_FULL_DIR_INFO
     {
-        uint32_t Length;
-        uint32_t Reserved;
-        IpAdapterDnsServerAdapter* Next;
-        SocketAddress Address;
+        uint32_t NextEntryOffset;
+        uint32_t FileIndex;
+        syscall::Filetime CreationTime;
+        syscall::Filetime LastAccessTime;
+        syscall::Filetime LastWriteTime;
+        syscall::Filetime ChangeTime;
+        uint64_t EndOfFile;
+        uint64_t AllocationSize;
+        uint32_t FileAttributes;
+        uint32_t FileNameLength;
+        uint32_t EaSize;
+        gocpp::array<uint16_t, 1> FileName;
 
         using isGoStruct = void;
 
@@ -302,13 +242,16 @@ namespace golang::windows
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct IpAdapterDnsServerAdapter& value);
-    struct IpAdapterMulticastAddress
+    std::ostream& operator<<(std::ostream& os, const struct FILE_FULL_DIR_INFO& value);
+    struct SERVICE_STATUS
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterMulticastAddress* Next;
-        SocketAddress Address;
+        uint32_t ServiceType;
+        uint32_t CurrentState;
+        uint32_t ControlsAccepted;
+        uint32_t Win32ExitCode;
+        uint32_t ServiceSpecificExitCode;
+        uint32_t CheckPoint;
+        uint32_t WaitHint;
 
         using isGoStruct = void;
 
@@ -321,26 +264,7 @@ namespace golang::windows
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct IpAdapterMulticastAddress& value);
-    struct IpAdapterAnycastAddress
-    {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterAnycastAddress* Next;
-        SocketAddress Address;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IpAdapterAnycastAddress& value);
+    std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
     struct IpAdapterUnicastAddress
     {
         uint32_t Length;
@@ -367,6 +291,83 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterUnicastAddress& value);
+    struct IpAdapterAnycastAddress
+    {
+        uint32_t Length;
+        uint32_t Flags;
+        IpAdapterAnycastAddress* Next;
+        SocketAddress Address;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterAnycastAddress& value);
+    struct IpAdapterMulticastAddress
+    {
+        uint32_t Length;
+        uint32_t Flags;
+        IpAdapterMulticastAddress* Next;
+        SocketAddress Address;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterMulticastAddress& value);
+    struct IpAdapterDnsServerAdapter
+    {
+        uint32_t Length;
+        uint32_t Reserved;
+        IpAdapterDnsServerAdapter* Next;
+        SocketAddress Address;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterDnsServerAdapter& value);
+    struct IpAdapterPrefix
+    {
+        uint32_t Length;
+        uint32_t Flags;
+        IpAdapterPrefix* Next;
+        SocketAddress Address;
+        uint32_t PrefixLength;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
 
     namespace rec
     {

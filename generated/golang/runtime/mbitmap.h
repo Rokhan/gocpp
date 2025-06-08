@@ -21,6 +21,10 @@
 
 namespace golang::runtime
 {
+    unsigned char* addb(unsigned char* p, uintptr_t n);
+    unsigned char* subtractb(unsigned char* p, uintptr_t n);
+    unsigned char* add1(unsigned char* p);
+    unsigned char* subtract1(unsigned char* p);
     struct markBits
     {
         uint8_t* bytep;
@@ -39,10 +43,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct markBits& value);
-    unsigned char* addb(unsigned char* p, uintptr_t n);
-    unsigned char* subtractb(unsigned char* p, uintptr_t n);
-    unsigned char* add1(unsigned char* p);
-    unsigned char* subtract1(unsigned char* p);
     struct markBits markBitsForAddr(uintptr_t p);
     struct markBits markBitsForSpan(uintptr_t base);
     void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
@@ -51,6 +51,7 @@ namespace golang::runtime
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
     void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
     uintptr_t readUintptr(unsigned char* p);
+    extern gocpp_id_0 debugPtrmask;
     struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);
     struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);

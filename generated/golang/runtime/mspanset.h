@@ -69,6 +69,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
+    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     struct atomicHeadTailIndex
     {
         atomic::Uint64 u;
@@ -101,7 +102,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
-    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     struct spanSet
     {
         /* mutex spineLock; [Known incomplete type] */
@@ -124,6 +124,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct spanSet& value);
     struct spanSetBlock
     {
+        lfnode lfnode;
         atomic::Uint32 popped;
         gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans;
 
@@ -139,6 +140,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlock& value);
+    extern spanSetBlockAlloc spanSetBlockPool;
 
     namespace rec
     {

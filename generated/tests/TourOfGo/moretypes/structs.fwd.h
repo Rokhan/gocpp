@@ -9,6 +9,7 @@ namespace golang::main
     struct Vertex;
     struct Empty;
     struct Dummy;
+    struct Dummy2;
     struct Person;
     struct gocpp_id_2;
     struct gocpp_id_3;

@@ -332,7 +332,7 @@ namespace golang::runtime
     // If mark != nil, it will be called with each printed word's address
     // and should return a character mark to appear just before that
     // word's value. It can return 0 to indicate no mark.
-    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t)> mark)
+    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark)
     {
         printlock();
         gocpp::array<unsigned char, 1> markbuf = {};

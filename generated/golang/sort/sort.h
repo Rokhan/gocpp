@@ -12,23 +12,6 @@
 
 namespace golang::sort
 {
-    struct lessSwap
-    {
-        std::function<bool (int i, int j)> Less;
-        std::function<void (int i, int j)> Swap;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct Interface : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -95,6 +78,23 @@ namespace golang::sort
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     void Sort(struct Interface data);
     unsigned int nextPowerOfTwo(int length);
+    struct lessSwap
+    {
+        std::function<bool (int i, int j)> Less;
+        std::function<void (int i, int j)> Swap;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct Interface Reverse(struct Interface data);
     bool IsSorted(struct Interface data);
     bool isNaN(double f);
@@ -107,6 +107,7 @@ namespace golang::sort
     void Stable(struct Interface data);
     struct reverse
     {
+        Interface Interface;
 
         using isGoStruct = void;
 

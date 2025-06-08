@@ -89,6 +89,7 @@ namespace golang::runtime
     spanSetBlock::operator T()
     {
         T result;
+        result.lfnode = this->lfnode;
         result.popped = this->popped;
         result.spans = this->spans;
         return result;
@@ -97,6 +98,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool spanSetBlock::operator==(const T& ref) const
     {
+        if (lfnode != ref.lfnode) return false;
         if (popped != ref.popped) return false;
         if (spans != ref.spans) return false;
         return true;
@@ -105,7 +107,8 @@ namespace golang::runtime
     std::ostream& spanSetBlock::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << popped;
+        os << "" << lfnode;
+        os << " " << popped;
         os << " " << spans;
         os << '}';
         return os;

@@ -641,6 +641,7 @@ namespace golang::runtime
     heapStatsAggregate::operator T()
     {
         T result;
+        result.heapStatsDelta = this->heapStatsDelta;
         result.inObjects = this->inObjects;
         result.numObjects = this->numObjects;
         result.totalAllocated = this->totalAllocated;
@@ -653,6 +654,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool heapStatsAggregate::operator==(const T& ref) const
     {
+        if (heapStatsDelta != ref.heapStatsDelta) return false;
         if (inObjects != ref.inObjects) return false;
         if (numObjects != ref.numObjects) return false;
         if (totalAllocated != ref.totalAllocated) return false;
@@ -665,7 +667,8 @@ namespace golang::runtime
     std::ostream& heapStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << inObjects;
+        os << "" << heapStatsDelta;
+        os << " " << inObjects;
         os << " " << numObjects;
         os << " " << totalAllocated;
         os << " " << totalFreed;
@@ -795,18 +798,21 @@ namespace golang::runtime
     cpuStatsAggregate::operator T()
     {
         T result;
+        result.cpuStats = this->cpuStats;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool cpuStatsAggregate::operator==(const T& ref) const
     {
+        if (cpuStats != ref.cpuStats) return false;
         return true;
     }
 
     std::ostream& cpuStatsAggregate::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << cpuStats;
         os << '}';
         return os;
     }

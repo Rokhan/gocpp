@@ -15,6 +15,32 @@
 
 namespace golang::runtime
 {
+    struct gocpp_id_0
+    {
+        uint32_t Size;
+        uint64_t Mallocs;
+        uint64_t Frees;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    void init();
+    void ReadMemStats(struct MemStats* m);
+    extern bool doubleCheckReadMemStats;
+    void readmemstats_m(struct MemStats* stats);
+    void readGCStats(gocpp::slice<uint64_t>* pauses);
+    void readGCStats_m(gocpp::slice<uint64_t>* pauses);
+    void flushmcache(int i);
+    void flushallmcaches();
     struct heapStatsDelta
     {
         int64_t committed;
@@ -43,24 +69,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
-    struct gocpp_id_0
-    {
-        uint32_t Size;
-        uint64_t Mallocs;
-        uint64_t Frees;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct cpuStats
     {
         int64_t gcAssistTime;
@@ -87,32 +95,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStats& value);
-    extern bool doubleCheckReadMemStats;
-    void init();
-    void ReadMemStats(struct MemStats* m);
-    void readmemstats_m(struct MemStats* stats);
-    void readGCStats(gocpp::slice<uint64_t>* pauses);
-    void readGCStats_m(gocpp::slice<uint64_t>* pauses);
-    void flushmcache(int i);
-    void flushallmcaches();
-    struct consistentHeapStats
-    {
-        gocpp::array<heapStatsDelta, 3> stats;
-        atomic::Uint32 gen;
-        mutex noPLock;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
     struct MemStats
     {
         uint64_t Alloc;
@@ -160,6 +142,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
+    struct consistentHeapStats
+    {
+        gocpp::array<heapStatsDelta, 3> stats;
+        atomic::Uint32 gen;
+        mutex noPLock;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
     struct mstats
     {
         /* consistentHeapStats heapStats; [Known incomplete type] */
@@ -192,6 +192,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mstats& value);
+    extern mstats memstats;
 
     namespace rec
     {

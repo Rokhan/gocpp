@@ -437,18 +437,21 @@ namespace golang::runtime
     sweepLocked::operator T()
     {
         T result;
+        result.mspan = this->mspan;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool sweepLocked::operator==(const T& ref) const
     {
+        if (mspan != ref.mspan) return false;
         return true;
     }
 
     std::ostream& sweepLocked::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << mspan;
         os << '}';
         return os;
     }

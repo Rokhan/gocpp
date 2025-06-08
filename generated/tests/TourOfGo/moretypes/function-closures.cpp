@@ -20,7 +20,7 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    std::function<int (int)> adder()
+    std::function<int (int _1)> adder()
     {
         auto sum = 0;
         return [=](int x) mutable -> int

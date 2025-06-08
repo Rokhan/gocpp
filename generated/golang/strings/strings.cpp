@@ -101,7 +101,7 @@ namespace golang::strings
     }
 
     // ContainsFunc reports whether any Unicode code points r within s satisfy f(r).
-    bool ContainsFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    bool ContainsFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         return IndexFunc(s, f) >= 0;
     }
@@ -487,7 +487,7 @@ namespace golang::strings
     //
     // FieldsFunc makes no guarantees about the order in which it calls f(c)
     // and assumes that f always returns the same value for a given c.
-    gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         // A span is used to record a slice of s of the form s[start:end].
         // The start index is inclusive and the end index is exclusive.
@@ -618,7 +618,7 @@ namespace golang::strings
     // Map returns a copy of the string s with all its characters modified
     // according to the mapping function. If mapping returns a negative value, the character is
     // dropped from the string with no replacement.
-    std::string Map(std::function<gocpp::rune (gocpp::rune)> mapping, std::string s)
+    std::string Map(std::function<gocpp::rune (gocpp::rune _1)> mapping, std::string s)
     {
         // The output buffer b is initialized on demand, the first
         // time a character differs.
@@ -851,21 +851,21 @@ namespace golang::strings
     // upper case using the case mapping specified by c.
     std::string ToUpperSpecial(unicode::SpecialCase c, std::string s)
     {
-        return Map(c->ToUpper, s);
+        return Map(c.ToUpper, s);
     }
 
     // ToLowerSpecial returns a copy of the string s with all Unicode letters mapped to their
     // lower case using the case mapping specified by c.
     std::string ToLowerSpecial(unicode::SpecialCase c, std::string s)
     {
-        return Map(c->ToLower, s);
+        return Map(c.ToLower, s);
     }
 
     // ToTitleSpecial returns a copy of the string s with all Unicode letters mapped to their
     // Unicode title case, giving priority to the special casing rules.
     std::string ToTitleSpecial(unicode::SpecialCase c, std::string s)
     {
-        return Map(c->ToTitle, s);
+        return Map(c.ToTitle, s);
     }
 
     // ToValidUTF8 returns a copy of the string s with each run of invalid UTF-8 byte sequences
@@ -981,7 +981,7 @@ namespace golang::strings
 
     // TrimLeftFunc returns a slice of the string s with all leading
     // Unicode code points c satisfying f(c) removed.
-    std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         auto i = indexFunc(s, f, false);
         if(i == - 1)
@@ -993,7 +993,7 @@ namespace golang::strings
 
     // TrimRightFunc returns a slice of the string s with all trailing
     // Unicode code points c satisfying f(c) removed.
-    std::string TrimRightFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    std::string TrimRightFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         auto i = lastIndexFunc(s, f, false);
         if(i >= 0 && s[i] >= utf8::RuneSelf)
@@ -1010,21 +1010,21 @@ namespace golang::strings
 
     // TrimFunc returns a slice of the string s with all leading
     // and trailing Unicode code points c satisfying f(c) removed.
-    std::string TrimFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    std::string TrimFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         return TrimRightFunc(TrimLeftFunc(s, f), f);
     }
 
     // IndexFunc returns the index into s of the first Unicode
     // code point satisfying f(c), or -1 if none do.
-    int IndexFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    int IndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         return indexFunc(s, f, true);
     }
 
     // LastIndexFunc returns the index into s of the last
     // Unicode code point satisfying f(c), or -1 if none do.
-    int LastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f)
+    int LastIndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f)
     {
         return lastIndexFunc(s, f, true);
     }
@@ -1032,7 +1032,7 @@ namespace golang::strings
     // indexFunc is the same as IndexFunc except that if
     // truth==false, the sense of the predicate function is
     // inverted.
-    int indexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth)
+    int indexFunc(std::string s, std::function<bool (gocpp::rune _1)> f, bool truth)
     {
         for(auto [i, r] : s)
         {
@@ -1047,7 +1047,7 @@ namespace golang::strings
     // lastIndexFunc is the same as LastIndexFunc except that if
     // truth==false, the sense of the predicate function is
     // inverted.
-    int lastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth)
+    int lastIndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f, bool truth)
     {
         for(auto i = len(s); i > 0; )
         {

@@ -49,8 +49,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct argset& value);
-    extern std::string cgoCheckPointerFail;
-    extern std::string cgoResultFail;
     uintptr_t syscall_cgocaller(unsafe::Pointer fn, gocpp::slice<uintptr_t> args);
     
     template<typename... Args>
@@ -64,6 +62,7 @@ namespace golang::runtime
     {
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(value, args...));
     }
+    extern uint64_t ncgocall;
     int32_t cgocall(unsafe::Pointer fn, unsafe::Pointer arg);
     void callbackUpdateSystemStack(struct m* mp, uintptr_t sp, bool signal);
     void cgocallbackg(unsafe::Pointer fn, unsafe::Pointer frame, uintptr_t ctxt);
@@ -71,7 +70,10 @@ namespace golang::runtime
     void unwindm(bool* restore);
     void badcgocallback();
     void cgounimpl();
+    extern uint64_t racecgosync;
     void cgoCheckPointer(go_any ptr, go_any arg);
+    extern std::string cgoCheckPointerFail;
+    extern std::string cgoResultFail;
     void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
     std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg);
     bool cgoIsGoPointer(unsafe::Pointer p);

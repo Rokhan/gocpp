@@ -510,6 +510,7 @@ namespace golang::runtime
     moduledata::operator T()
     {
         T result;
+        result.NotInHeap = this->NotInHeap;
         result.pcHeader = this->pcHeader;
         result.funcnametab = this->funcnametab;
         result.cutab = this->cutab;
@@ -560,6 +561,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool moduledata::operator==(const T& ref) const
     {
+        if (NotInHeap != ref.NotInHeap) return false;
         if (pcHeader != ref.pcHeader) return false;
         if (funcnametab != ref.funcnametab) return false;
         if (cutab != ref.cutab) return false;
@@ -610,7 +612,8 @@ namespace golang::runtime
     std::ostream& moduledata::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << pcHeader;
+        os << "" << NotInHeap;
+        os << " " << pcHeader;
         os << " " << funcnametab;
         os << " " << cutab;
         os << " " << filetab;
@@ -1150,6 +1153,7 @@ namespace golang::runtime
     funcInfo::operator T()
     {
         T result;
+        result._func = this->_func;
         result.datap = this->datap;
         return result;
     }
@@ -1157,6 +1161,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool funcInfo::operator==(const T& ref) const
     {
+        if (_func != ref._func) return false;
         if (datap != ref.datap) return false;
         return true;
     }
@@ -1164,7 +1169,8 @@ namespace golang::runtime
     std::ostream& funcInfo::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << datap;
+        os << "" << _func;
+        os << " " << datap;
         os << '}';
         return os;
     }

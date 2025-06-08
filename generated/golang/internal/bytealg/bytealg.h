@@ -12,6 +12,7 @@
 
 namespace golang::bytealg
 {
+    extern int MaxLen;
     
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep);

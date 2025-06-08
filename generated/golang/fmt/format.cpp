@@ -87,6 +87,7 @@ namespace golang::fmt
     {
         T result;
         result.buf = this->buf;
+        result.fmtFlags = this->fmtFlags;
         result.wid = this->wid;
         result.prec = this->prec;
         result.intbuf = this->intbuf;
@@ -97,6 +98,7 @@ namespace golang::fmt
     bool fmt::operator==(const T& ref) const
     {
         if (buf != ref.buf) return false;
+        if (fmtFlags != ref.fmtFlags) return false;
         if (wid != ref.wid) return false;
         if (prec != ref.prec) return false;
         if (intbuf != ref.intbuf) return false;
@@ -107,6 +109,7 @@ namespace golang::fmt
     {
         os << '{';
         os << "" << buf;
+        os << " " << fmtFlags;
         os << " " << wid;
         os << " " << prec;
         os << " " << intbuf;

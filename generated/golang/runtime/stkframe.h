@@ -61,6 +61,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
+    extern gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
     void stkobjinit();
 
     namespace rec

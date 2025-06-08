@@ -64,6 +64,59 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value);
+    struct dummy : gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        dummy(){}
+        dummy(dummy& i) = default;
+        dummy(const dummy& i) = default;
+        dummy& operator=(dummy& i) = default;
+        dummy& operator=(const dummy& i) = default;
+
+        template<typename T>
+        dummy(T& ref);
+
+        template<typename T>
+        dummy(const T& ref);
+
+        template<typename T>
+        dummy(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Idummy
+        {
+            virtual bool vAs(go_any _1) = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct dummyImpl : Idummy
+        {
+            explicit dummyImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            bool vAs(go_any _1) override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<Idummy> value;
+    };
+
+    namespace rec
+    {
+        bool As(const gocpp::PtrRecv<struct dummy, false>& self, go_any _1);
+        bool As(const gocpp::ObjRecv<struct dummy>& self, go_any _1);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct dummy& value);
+    void main();
     struct Vertex
     {
         double X;
@@ -81,7 +134,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    void main();
 
     namespace rec
     {

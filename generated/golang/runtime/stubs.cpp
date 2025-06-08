@@ -74,7 +74,7 @@ namespace golang::runtime
     // This must NOT be go:noescape: if fn is a stack-allocated closure,
     // fn puts g on a run queue, and g executes before fn returns, the
     // closure will be invalidated while it is still executing.
-    void mcall(std::function<void (g*)> fn)
+    void mcall(std::function<void (struct g* _1)> fn)
     /* convertBlockStmt, nil block */;
 
     // systemstack runs fn on a system stack.

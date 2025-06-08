@@ -14,6 +14,7 @@
 
 namespace golang::runtime
 {
+    extern gocpp_id_0 sig;
     bool sigsend(uint32_t s);
     uint32_t signal_recv();
     void signalWaitUntilIdle();

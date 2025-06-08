@@ -45,6 +45,7 @@
 
 namespace golang::runtime
 {
+    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr);
     struct traceSchedResourceState
     {
         gocpp::array<atomic::Uint32, 3> statusTraced;
@@ -62,7 +63,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceSchedResourceState& value);
-    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr);
 
     namespace rec
     {

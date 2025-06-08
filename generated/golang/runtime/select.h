@@ -52,6 +52,12 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct scase& value);
     extern uintptr_t chansendpc;
     extern uintptr_t chanrecvpc;
+    void selectsetpc(uintptr_t* pc);
+    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    bool selparkcommit(struct g* gp, unsafe::Pointer _1);
+    void block();
+    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     struct runtimeSelect
     {
         golang::runtime::selectDir dir;
@@ -71,12 +77,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
-    void selectsetpc(uintptr_t* pc);
-    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    bool selparkcommit(struct g* gp, unsafe::Pointer _1);
-    void block();
-    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
 
     namespace rec

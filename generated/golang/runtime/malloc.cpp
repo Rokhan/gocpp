@@ -1312,6 +1312,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
+        mutex mutex;
+        persistentAlloc persistentAlloc;
 
         using isGoStruct = void;
 
@@ -1319,18 +1321,24 @@ namespace golang::runtime
         operator T()
         {
             T result;
+            result.mutex = this->mutex;
+            result.persistentAlloc = this->persistentAlloc;
             return result;
         }
 
         template<typename T> requires gocpp::GoStruct<T>
         bool operator==(const T& ref) const
         {
+            if (mutex != ref.mutex) return false;
+            if (persistentAlloc != ref.persistentAlloc) return false;
             return true;
         }
 
         std::ostream& PrintTo(std::ostream& os) const
         {
             os << '{';
+            os << "" << mutex;
+            os << " " << persistentAlloc;
             os << '}';
             return os;
         }

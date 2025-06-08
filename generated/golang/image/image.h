@@ -15,11 +15,11 @@
 
 namespace golang::image
 {
-    struct Gray
+    struct Config
     {
-        gocpp::slice<uint8_t> Pix;
-        int Stride;
-        Rectangle Rect;
+        color::Model ColorModel;
+        int Width;
+        int Height;
 
         using isGoStruct = void;
 
@@ -32,26 +32,71 @@ namespace golang::image
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Gray& value);
-    struct Paletted
+    std::ostream& operator<<(std::ostream& os, const struct Config& value);
+    struct Image : gocpp::Interface
     {
-        gocpp::slice<uint8_t> Pix;
-        int Stride;
-        Rectangle Rect;
-        color::Palette Palette;
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
 
-        using isGoStruct = void;
+        Image(){}
+        Image(Image& i) = default;
+        Image(const Image& i) = default;
+        Image& operator=(Image& i) = default;
+        Image& operator=(const Image& i) = default;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
+        template<typename T>
+        Image(T& ref);
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
+        template<typename T>
+        Image(const T& ref);
+
+        template<typename T>
+        Image(T* ptr);
+
+        using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IImage
+        {
+            virtual color::Model vColorModel() = 0;
+            virtual struct Rectangle vBounds() = 0;
+            virtual color::Color vAt(int x, int y) = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct ImageImpl : IImage
+        {
+            explicit ImageImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            color::Model vColorModel() override;
+
+            struct Rectangle vBounds() override;
+
+            color::Color vAt(int x, int y) override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IImage> value;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
+    namespace rec
+    {
+        color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self);
+        color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self);
+
+        struct Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
+        struct Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
+
+        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
+        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Image& value);
     struct RGBA64Image : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -156,24 +201,7 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
-    struct Gray16
-    {
-        gocpp::slice<uint8_t> Pix;
-        int Stride;
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
+    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, std::string imageTypeName);
     struct RGBA
     {
         gocpp::slice<uint8_t> Pix;
@@ -192,70 +220,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
-    struct Image : gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        Image(){}
-        Image(Image& i) = default;
-        Image(const Image& i) = default;
-        Image& operator=(Image& i) = default;
-        Image& operator=(const Image& i) = default;
-
-        template<typename T>
-        Image(T& ref);
-
-        template<typename T>
-        Image(const T& ref);
-
-        template<typename T>
-        Image(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IImage
-        {
-            virtual color::Model vColorModel() = 0;
-            virtual struct Rectangle vBounds() = 0;
-            virtual color::Color vAt(int x, int y) = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct ImageImpl : IImage
-        {
-            explicit ImageImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            color::Model vColorModel() override;
-
-            struct Rectangle vBounds() override;
-
-            color::Color vAt(int x, int y) override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IImage> value;
-    };
-
-    namespace rec
-    {
-        color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self);
-        color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self);
-
-        struct Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
-        struct Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
-
-        color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
-        color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Image& value);
+    struct RGBA* NewRGBA(struct Rectangle r);
     struct RGBA64
     {
         gocpp::slice<uint8_t> Pix;
@@ -274,24 +239,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
-    struct Alpha16
-    {
-        gocpp::slice<uint8_t> Pix;
-        int Stride;
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
+    struct RGBA64* NewRGBA64(struct Rectangle r);
     struct NRGBA
     {
         gocpp::slice<uint8_t> Pix;
@@ -310,24 +258,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
-    struct CMYK
-    {
-        gocpp::slice<uint8_t> Pix;
-        int Stride;
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
+    struct NRGBA* NewNRGBA(struct Rectangle r);
     struct NRGBA64
     {
         gocpp::slice<uint8_t> Pix;
@@ -346,24 +277,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
-    struct Config
-    {
-        color::Model ColorModel;
-        int Width;
-        int Height;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Config& value);
+    struct NRGBA64* NewNRGBA64(struct Rectangle r);
     struct Alpha
     {
         gocpp::slice<uint8_t> Pix;
@@ -382,16 +296,102 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
-    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, std::string imageTypeName);
-    struct RGBA* NewRGBA(struct Rectangle r);
-    struct RGBA64* NewRGBA64(struct Rectangle r);
-    struct NRGBA* NewNRGBA(struct Rectangle r);
-    struct NRGBA64* NewNRGBA64(struct Rectangle r);
     struct Alpha* NewAlpha(struct Rectangle r);
+    struct Alpha16
+    {
+        gocpp::slice<uint8_t> Pix;
+        int Stride;
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
     struct Alpha16* NewAlpha16(struct Rectangle r);
+    struct Gray
+    {
+        gocpp::slice<uint8_t> Pix;
+        int Stride;
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Gray& value);
     struct Gray* NewGray(struct Rectangle r);
+    struct Gray16
+    {
+        gocpp::slice<uint8_t> Pix;
+        int Stride;
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
     struct Gray16* NewGray16(struct Rectangle r);
+    struct CMYK
+    {
+        gocpp::slice<uint8_t> Pix;
+        int Stride;
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
     struct CMYK* NewCMYK(struct Rectangle r);
+    struct Paletted
+    {
+        gocpp::slice<uint8_t> Pix;
+        int Stride;
+        Rectangle Rect;
+        color::Palette Palette;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     struct Paletted* NewPaletted(struct Rectangle r, color::Palette p);
 
     namespace rec

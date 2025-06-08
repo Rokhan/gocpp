@@ -357,6 +357,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.heapArenaPtrScalar = this->heapArenaPtrScalar;
         result.spans = this->spans;
         result.pageInUse = this->pageInUse;
         result.pageMarks = this->pageMarks;
@@ -370,6 +371,7 @@ namespace golang::runtime
     bool heapArena::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (heapArenaPtrScalar != ref.heapArenaPtrScalar) return false;
         if (spans != ref.spans) return false;
         if (pageInUse != ref.pageInUse) return false;
         if (pageMarks != ref.pageMarks) return false;
@@ -383,6 +385,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << heapArenaPtrScalar;
         os << " " << spans;
         os << " " << pageInUse;
         os << " " << pageMarks;

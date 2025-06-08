@@ -1058,6 +1058,7 @@ namespace golang::runtime
         result.inUse = this->inUse;
         result.lastInUse = this->lastInUse;
         result.gen = this->gen;
+        result.scavChunkFlags = this->scavChunkFlags;
         return result;
     }
 
@@ -1067,6 +1068,7 @@ namespace golang::runtime
         if (inUse != ref.inUse) return false;
         if (lastInUse != ref.lastInUse) return false;
         if (gen != ref.gen) return false;
+        if (scavChunkFlags != ref.scavChunkFlags) return false;
         return true;
     }
 
@@ -1076,6 +1078,7 @@ namespace golang::runtime
         os << "" << inUse;
         os << " " << lastInUse;
         os << " " << gen;
+        os << " " << scavChunkFlags;
         os << '}';
         return os;
     }

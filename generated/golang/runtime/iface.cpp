@@ -671,18 +671,18 @@ namespace golang::runtime
         x.Mask = 0;
     });
     //go:linkname reflect_ifaceE2I reflect.ifaceE2I
-    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
+    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst)
     {
-        *dst = iface {assertE2I(inter, e._type), e.data};
+        *dst = runtime::iface {assertE2I(inter, e._type), e.data};
     }
 
     //go:linkname reflectlite_ifaceE2I internal/reflectlite.ifaceE2I
-    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
+    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst)
     {
-        *dst = iface {assertE2I(inter, e._type), e.data};
+        *dst = runtime::iface {assertE2I(inter, e._type), e.data};
     }
 
-    void iterate_itabs(std::function<void (itab*)> fn)
+    void iterate_itabs(std::function<void (struct itab* _1)> fn)
     {
         auto t = itabTable;
         for(auto i = uintptr_t(0); i < t->size; i++)

@@ -27,9 +27,9 @@
 
 namespace golang::os
 {
-    extern bool checkWrapErr;
-    extern File* Stderr;
     extern File* Stdin;
+    extern File* Stdout;
+    extern File* Stderr;
     struct LinkError
     {
         std::string Op;
@@ -64,8 +64,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noReadFrom& value);
-    extern fs::FileInfo, gocpp::error> (std::string)> lstat;
-    extern File* Stdout;
+    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
     extern gocpp::error errWriteAtInAppendMode;
     struct noWriteTo
     {
@@ -82,7 +81,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noWriteTo& value);
-    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
     std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
     struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm);
     struct gocpp::error setStickyBit(std::string name);
@@ -90,9 +88,11 @@ namespace golang::os
     std::tuple<struct File*, struct gocpp::error> Open(std::string name);
     std::tuple<struct File*, struct gocpp::error> Create(std::string name);
     std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm);
+    extern fs::FileInfo, gocpp::error> (std::string)> lstat;
     struct gocpp::error Rename(std::string oldpath, std::string newpath);
     std::tuple<std::string, struct gocpp::error> Readlink(std::string name);
     std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err);
+    extern bool checkWrapErr;
     std::string TempDir();
     std::tuple<std::string, struct gocpp::error> UserCacheDir();
     std::tuple<std::string, struct gocpp::error> UserConfigDir();
@@ -103,6 +103,8 @@ namespace golang::os
     struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
     struct fileWithoutReadFrom
     {
+        noReadFrom noReadFrom;
+        File* File;
 
         using isGoStruct = void;
 
@@ -118,6 +120,8 @@ namespace golang::os
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
     struct fileWithoutWriteTo
     {
+        noWriteTo noWriteTo;
+        File* File;
 
         using isGoStruct = void;
 

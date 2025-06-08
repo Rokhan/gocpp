@@ -1751,7 +1751,7 @@ namespace golang::io
     {
         int64_t n;
         struct gocpp::error err;
-        auto bufp = gocpp::getValue<[]byte*>(rec::Get(gocpp::recv(blackHolePool)));
+        auto bufp = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(blackHolePool)));
         auto readSize = 0;
         for(; ; )
         {
@@ -1787,18 +1787,21 @@ namespace golang::io
     nopCloser::operator T()
     {
         T result;
+        result.Reader = this->Reader;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool nopCloser::operator==(const T& ref) const
     {
+        if (Reader != ref.Reader) return false;
         return true;
     }
 
     std::ostream& nopCloser::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Reader;
         os << '}';
         return os;
     }
@@ -1818,18 +1821,21 @@ namespace golang::io
     nopCloserWriterTo::operator T()
     {
         T result;
+        result.Reader = this->Reader;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool nopCloserWriterTo::operator==(const T& ref) const
     {
+        if (Reader != ref.Reader) return false;
         return true;
     }
 
     std::ostream& nopCloserWriterTo::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Reader;
         os << '}';
         return os;
     }

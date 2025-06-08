@@ -99,34 +99,34 @@ namespace golang::binary
     }
 
     template<typename T, typename StoreT>
-    uint16_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint16(gocpp::slice<unsigned char>)
+    uint16_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint16(gocpp::slice<unsigned char> _1)
     {
-        return rec::Uint16(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Uint16(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
-    uint32_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint32(gocpp::slice<unsigned char>)
+    uint32_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint32(gocpp::slice<unsigned char> _1)
     {
-        return rec::Uint32(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Uint32(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
-    uint64_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint64(gocpp::slice<unsigned char>)
+    uint64_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint64(gocpp::slice<unsigned char> _1)
     {
-        return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint16(gocpp::slice<unsigned char>, uint16_t)
+    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
     {
-        return rec::PutUint16(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::PutUint16(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint32(gocpp::slice<unsigned char>, uint32_t)
+    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
     {
-        return rec::PutUint32(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::PutUint32(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint64(gocpp::slice<unsigned char>, uint64_t)
+    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
     {
-        return rec::PutUint64(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::PutUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
     std::string ByteOrder::ByteOrderImpl<T, StoreT>::vString()
@@ -136,64 +136,64 @@ namespace golang::binary
 
     namespace rec
     {
-        uint16_t Uint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint16_t Uint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint16();
+            return self.ptr->value->vUint16(_1);
         }
 
-        uint16_t Uint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint16_t Uint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint16();
+            return self.obj.value->vUint16(_1);
         }
 
-        uint32_t Uint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint32_t Uint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint32();
+            return self.ptr->value->vUint32(_1);
         }
 
-        uint32_t Uint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint32_t Uint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint32();
+            return self.obj.value->vUint32(_1);
         }
 
-        uint64_t Uint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>)
+        uint64_t Uint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint64();
+            return self.ptr->value->vUint64(_1);
         }
 
-        uint64_t Uint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>)
+        uint64_t Uint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint64();
+            return self.obj.value->vUint64(_1);
         }
 
-        void PutUint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
+        void PutUint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.ptr->value->vPutUint16();
+            return self.ptr->value->vPutUint16(_1, _2);
         }
 
-        void PutUint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
+        void PutUint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.obj.value->vPutUint16();
+            return self.obj.value->vPutUint16(_1, _2);
         }
 
-        void PutUint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
+        void PutUint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.ptr->value->vPutUint32();
+            return self.ptr->value->vPutUint32(_1, _2);
         }
 
-        void PutUint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
+        void PutUint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.obj.value->vPutUint32();
+            return self.obj.value->vPutUint32(_1, _2);
         }
 
-        void PutUint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
+        void PutUint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.ptr->value->vPutUint64();
+            return self.ptr->value->vPutUint64(_1, _2);
         }
 
-        void PutUint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
+        void PutUint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.obj.value->vPutUint64();
+            return self.obj.value->vPutUint64(_1, _2);
         }
 
         std::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self)
@@ -241,19 +241,19 @@ namespace golang::binary
     }
 
     template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint16(gocpp::slice<unsigned char>, uint16_t)
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
     {
-        return rec::AppendUint16(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::AppendUint16(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint32(gocpp::slice<unsigned char>, uint32_t)
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
     {
-        return rec::AppendUint32(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::AppendUint32(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint64(gocpp::slice<unsigned char>, uint64_t)
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
     {
-        return rec::AppendUint64(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::AppendUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
     std::string AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vString()
@@ -263,34 +263,34 @@ namespace golang::binary
 
     namespace rec
     {
-        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint16_t)
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.ptr->value->vAppendUint16();
+            return self.ptr->value->vAppendUint16(_1, _2);
         }
 
-        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint16_t)
+        gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.obj.value->vAppendUint16();
+            return self.obj.value->vAppendUint16(_1, _2);
         }
 
-        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint32_t)
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.ptr->value->vAppendUint32();
+            return self.ptr->value->vAppendUint32(_1, _2);
         }
 
-        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint32_t)
+        gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.obj.value->vAppendUint32();
+            return self.obj.value->vAppendUint32(_1, _2);
         }
 
-        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char>, uint64_t)
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.ptr->value->vAppendUint64();
+            return self.ptr->value->vAppendUint64(_1, _2);
         }
 
-        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char>, uint64_t)
+        gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.obj.value->vAppendUint64();
+            return self.obj.value->vAppendUint64(_1, _2);
         }
 
         std::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self)

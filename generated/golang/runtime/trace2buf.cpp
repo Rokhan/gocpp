@@ -66,18 +66,24 @@ namespace golang::runtime
     traceWriter::operator T()
     {
         T result;
+        result.traceLocker = this->traceLocker;
+        result.traceBuf = this->traceBuf;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool traceWriter::operator==(const T& ref) const
     {
+        if (traceLocker != ref.traceLocker) return false;
+        if (traceBuf != ref.traceBuf) return false;
         return true;
     }
 
     std::ostream& traceWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << traceLocker;
+        os << " " << traceBuf;
         os << '}';
         return os;
     }
@@ -317,6 +323,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.traceBufHeader = this->traceBufHeader;
         result.arr = this->arr;
         return result;
     }
@@ -325,6 +332,7 @@ namespace golang::runtime
     bool traceBuf::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (traceBufHeader != ref.traceBufHeader) return false;
         if (arr != ref.arr) return false;
         return true;
     }
@@ -333,6 +341,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << traceBufHeader;
         os << " " << arr;
         os << '}';
         return os;

@@ -367,7 +367,7 @@ namespace golang::runtime
     // Reason explains why the goroutine has been parked. It is displayed in stack
     // traces and heap dumps. Reasons should be unique and descriptive. Do not
     // re-use reasons, add new ones.
-    void gopark(std::function<bool (g*, unsafe::Pointer)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
+    void gopark(std::function<bool (struct g* _1, unsafe::Pointer _2)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
     {
         if(reason != waitReasonSleep)
         {
@@ -502,12 +502,12 @@ namespace golang::runtime
     }
 
     // called from assembly.
-    void badmcall(std::function<void (g*)> fn)
+    void badmcall(std::function<void (struct g* _1)> fn)
     {
         go_throw("runtime: mcall called on m->g0 stack"s);
     }
 
-    void badmcall2(std::function<void (g*)> fn)
+    void badmcall2(std::function<void (struct g* _1)> fn)
     {
         go_throw("runtime: mcall function returned"s);
     }
@@ -1885,7 +1885,7 @@ namespace golang::runtime
     //
     // The caller must hold worldsema. fn must not refer to any
     // part of the current goroutine's stack, since the GC may move it.
-    void forEachP(golang::runtime::waitReason reason, std::function<void (p*)> fn)
+    void forEachP(golang::runtime::waitReason reason, std::function<void (struct p* _1)> fn)
     {
         systemstack([=]() mutable -> void
         {
@@ -1905,7 +1905,7 @@ namespace golang::runtime
     // to the systemstack. Due to these restrictions, prefer forEachP when possible.
     //
     //go:systemstack
-    void forEachPInternal(std::function<void (p*)> fn)
+    void forEachPInternal(std::function<void (struct p* _1)> fn)
     {
         auto mp = acquirem();
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
@@ -6295,7 +6295,7 @@ namespace golang::runtime
     //
     // TODO(prattmic): Additional targeted updates may improve the above cases.
     // e.g., updating the mask when stealing a timer.
-    void updateTimerPMask(struct p* pp)
+    void updateTimerPMask(runtime::p* pp)
     {
         if(rec::Load(gocpp::recv(pp->numTimers)) > 0)
         {
@@ -6320,7 +6320,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    int64_t pidleput(struct p* pp, int64_t now)
+    int64_t pidleput(runtime::p* pp, int64_t now)
     {
         assertLockHeld(& sched.lock);
         if(! runqempty(pp))
@@ -6350,7 +6350,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    std::tuple<struct p*, int64_t> pidleget(int64_t now)
+    std::tuple<runtime::p*, int64_t> pidleget(int64_t now)
     {
         assertLockHeld(& sched.lock);
         auto pp = rec::ptr(gocpp::recv(sched.pidle));
@@ -6379,7 +6379,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    std::tuple<struct p*, int64_t> pidlegetSpinning(int64_t now)
+    std::tuple<runtime::p*, int64_t> pidlegetSpinning(int64_t now)
     {
         assertLockHeld(& sched.lock);
         auto [pp, now] = pidleget(now);
@@ -6393,7 +6393,7 @@ namespace golang::runtime
 
     // runqempty reports whether pp has no Gs on its local run queue.
     // It never returns true spuriously.
-    bool runqempty(struct p* pp)
+    bool runqempty(runtime::p* pp)
     {
         for(; ; )
         {
@@ -6421,7 +6421,7 @@ namespace golang::runtime
     // If next is true, runqput puts g in the pp.runnext slot.
     // If the run queue is full, runnext puts g on the global queue.
     // Executed only by the owner P.
-    void runqput(struct p* pp, struct g* gp, bool next)
+    void runqput(runtime::p* pp, struct g* gp, bool next)
     {
         if(randomizeScheduler && next && randn(2) == 0)
         {
@@ -6459,7 +6459,7 @@ namespace golang::runtime
 
     // Put g and a batch of work from local runnable queue on global queue.
     // Executed only by the owner P.
-    bool runqputslow(struct p* pp, struct g* gp, uint32_t h, uint32_t t)
+    bool runqputslow(runtime::p* pp, struct g* gp, uint32_t h, uint32_t t)
     {
         gocpp::array<g*, len(pp->runq) / 2 + 1> batch = {};
         auto n = t - h;
@@ -6502,7 +6502,7 @@ namespace golang::runtime
     // If the queue is full, they are put on the global queue; in that case
     // this will temporarily acquire the scheduler lock.
     // Executed only by the owner P.
-    void runqputbatch(struct p* pp, struct gQueue* q, int qsize)
+    void runqputbatch(runtime::p* pp, struct gQueue* q, int qsize)
     {
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
@@ -6540,7 +6540,7 @@ namespace golang::runtime
     // If inheritTime is true, gp should inherit the remaining time in the
     // current time slice. Otherwise, it should start a new time slice.
     // Executed only by the owner P.
-    std::tuple<struct g*, bool> runqget(struct p* pp)
+    std::tuple<struct g*, bool> runqget(runtime::p* pp)
     {
         struct g* gp;
         bool inheritTime;
@@ -6567,7 +6567,7 @@ namespace golang::runtime
 
     // runqdrain drains the local runnable queue of pp and returns all goroutines in it.
     // Executed only by the owner P.
-    std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp)
+    std::tuple<struct gQueue, uint32_t> runqdrain(runtime::p* pp)
     {
         struct gQueue drainQ;
         uint32_t n;
@@ -6606,7 +6606,7 @@ namespace golang::runtime
     // Batch is a ring buffer starting at batchHead.
     // Returns number of grabbed goroutines.
     // Can be executed by any P.
-    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
+    uint32_t runqgrab(runtime::p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
     {
         for(; ; )
         {
@@ -6660,7 +6660,7 @@ namespace golang::runtime
     // Steal half of elements from local runnable queue of p2
     // and put onto local runnable queue of p.
     // Returns one of the stolen elements (or nil if failed).
-    struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG)
+    struct g* runqsteal(runtime::p* pp, runtime::p* p2, bool stealRunNextG)
     {
         auto t = pp->runqtail;
         auto n = runqgrab(p2, & pp->runq, t, stealRunNextG);

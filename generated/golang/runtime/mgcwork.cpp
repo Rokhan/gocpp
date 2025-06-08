@@ -407,6 +407,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.workbufhdr = this->workbufhdr;
         result.obj = this->obj;
         return result;
     }
@@ -415,6 +416,7 @@ namespace golang::runtime
     bool workbuf::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (workbufhdr != ref.workbufhdr) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -423,6 +425,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << workbufhdr;
         os << " " << obj;
         os << '}';
         return os;

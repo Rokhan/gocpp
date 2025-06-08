@@ -33,8 +33,8 @@ namespace golang::bytes
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
     extern gocpp::error ErrTooLarge;
     extern gocpp::error errNegativeRead;
-    extern gocpp::error errUnreadByte;
     gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
+    extern gocpp::error errUnreadByte;
     struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
     struct Buffer* NewBufferString(std::string s);
 

@@ -126,7 +126,7 @@ namespace golang::os
                 kind = "pipe"s;
             }
         }
-        auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
+        auto f = new File {gocpp::InitPtr<os::file>([=](auto& x) {
             x.pfd = gocpp::Init<poll::FD>([=](auto& x) {
                 x.Sysfd = h;
                 x.IsStream = true;
@@ -212,7 +212,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    struct gocpp::error rec::close(struct file* file)
+    struct gocpp::error rec::close(os::file* file)
     {
         if(file == nullptr)
         {

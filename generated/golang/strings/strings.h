@@ -13,13 +13,12 @@
 
 namespace golang::strings
 {
-    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<std::string> explode(std::string s, int n);
     int Count(std::string s, std::string substr);
     bool Contains(std::string s, std::string substr);
     bool ContainsAny(std::string s, std::string chars);
     bool ContainsRune(std::string s, gocpp::rune r);
-    bool ContainsFunc(std::string s, std::function<bool (gocpp::rune)> f);
+    bool ContainsFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
     int LastIndex(std::string s, std::string substr);
     int IndexByte(std::string s, unsigned char c);
     int IndexRune(std::string s, gocpp::rune r);
@@ -31,12 +30,13 @@ namespace golang::strings
     gocpp::slice<std::string> SplitAfterN(std::string s, std::string sep, int n);
     gocpp::slice<std::string> Split(std::string s, std::string sep);
     gocpp::slice<std::string> SplitAfter(std::string s, std::string sep);
+    extern gocpp::array<uint8_t, 256> asciiSpace;
     gocpp::slice<std::string> Fields(std::string s);
-    gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune)> f);
+    gocpp::slice<std::string> FieldsFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
     std::string Join(gocpp::slice<std::string> elems, std::string sep);
     bool HasPrefix(std::string s, std::string prefix);
     bool HasSuffix(std::string s, std::string suffix);
-    std::string Map(std::function<gocpp::rune (gocpp::rune)> mapping, std::string s);
+    std::string Map(std::function<gocpp::rune (gocpp::rune _1)> mapping, std::string s);
     std::string Repeat(std::string s, int count);
     std::string ToUpper(std::string s);
     std::string ToLower(std::string s);
@@ -47,13 +47,13 @@ namespace golang::strings
     std::string ToValidUTF8(std::string s, std::string replacement);
     bool isSeparator(gocpp::rune r);
     std::string Title(std::string s);
-    std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune)> f);
-    std::string TrimRightFunc(std::string s, std::function<bool (gocpp::rune)> f);
-    std::string TrimFunc(std::string s, std::function<bool (gocpp::rune)> f);
-    int IndexFunc(std::string s, std::function<bool (gocpp::rune)> f);
-    int LastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f);
-    int indexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
-    int lastIndexFunc(std::string s, std::function<bool (gocpp::rune)> f, bool truth);
+    std::string TrimLeftFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
+    std::string TrimRightFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
+    std::string TrimFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
+    int IndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
+    int LastIndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f);
+    int indexFunc(std::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
+    int lastIndexFunc(std::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
     std::tuple<strings::asciiSet, bool> makeASCIISet(std::string chars);
     std::string Trim(std::string s, std::string cutset);
     std::string TrimLeft(std::string s, std::string cutset);

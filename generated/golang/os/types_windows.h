@@ -30,6 +30,7 @@ namespace golang::os
         uint32_t FileSizeLow;
         uint32_t ReparseTag;
         uint32_t filetype;
+        mocklib::Mutex Mutex;
         std::string path;
         uint32_t vol;
         uint32_t idxhi;

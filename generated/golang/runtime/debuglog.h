@@ -14,6 +14,7 @@
 
 namespace golang::runtime
 {
+    struct dlogger* dlog();
     struct debugLogBuf
     {
         sys::NotInHeap _1;
@@ -51,7 +52,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogReader& value);
-    struct dlogger* dlog();
     void printDebugLog();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
     struct debugLogWriter
@@ -95,6 +95,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
+    extern dlogger* allDloggers;
 
     namespace rec
     {

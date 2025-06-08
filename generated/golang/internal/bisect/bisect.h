@@ -13,58 +13,7 @@
 
 namespace golang::bisect
 {
-    struct Writer : gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        Writer(){}
-        Writer(Writer& i) = default;
-        Writer(const Writer& i) = default;
-        Writer& operator=(Writer& i) = default;
-        Writer& operator=(const Writer& i) = default;
-
-        template<typename T>
-        Writer(T& ref);
-
-        template<typename T>
-        Writer(const T& ref);
-
-        template<typename T>
-        Writer(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IWriter
-        {
-            virtual std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char>) = 0;
-        };
-
-        template<typename T, typename StoreT>
-        struct WriterImpl : IWriter
-        {
-            explicit WriterImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char>) override;
-
-            StoreT value;
-        };
-
-        std::shared_ptr<IWriter> value;
-    };
-
-    namespace rec
-    {
-        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char>);
-        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char>);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern);
     struct atomicPointerDedup
     {
         unsafe::Pointer p;
@@ -99,43 +48,60 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    struct dedup
-    {
-        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
-        mocklib::Mutex mu;
-        gocpp::map<uint64_t, bool> m;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
-    struct parseError
-    {
-        std::string text;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct parseError& value);
-    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern);
     struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line);
     gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
+    struct Writer : gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Writer(){}
+        Writer(Writer& i) = default;
+        Writer(const Writer& i) = default;
+        Writer& operator=(Writer& i) = default;
+        Writer& operator=(const Writer& i) = default;
+
+        template<typename T>
+        Writer(T& ref);
+
+        template<typename T>
+        Writer(const T& ref);
+
+        template<typename T>
+        Writer(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IWriter
+        {
+            virtual std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> _1) = 0;
+        };
+
+        template<typename T, typename StoreT>
+        struct WriterImpl : IWriter
+        {
+            explicit WriterImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> _1) override;
+
+            StoreT value;
+        };
+
+        std::shared_ptr<IWriter> value;
+    };
+
+    namespace rec
+    {
+        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1);
+        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
     struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
     std::string Marker(uint64_t id);
@@ -154,10 +120,44 @@ namespace golang::bisect
     {
         return Hash(gocpp::ToSlice<go_any>(value, data...));
     }
+    struct parseError
+    {
+        std::string text;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct parseError& value);
     uint64_t fnv(uint64_t h, unsigned char x);
     uint64_t fnvString(uint64_t h, std::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
+    struct dedup
+    {
+        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
+        mocklib::Mutex mu;
+        gocpp::map<uint64_t, bool> m;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
     struct Matcher
     {
         bool verbose;

@@ -12,6 +12,7 @@
 
 namespace golang::syscall
 {
+    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
     struct UserInfo10
     {
         uint16_t* Name;
@@ -46,6 +47,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
+    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
+    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
     struct SIDAndAttributes
     {
         SID* Sid;
@@ -79,9 +82,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
-    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize);
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s);
-    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account);
     std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
     struct Tokenuser
     {

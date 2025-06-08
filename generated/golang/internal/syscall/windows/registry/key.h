@@ -13,6 +13,9 @@
 
 namespace golang::registry
 {
+    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, std::string path, uint32_t access);
+    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, std::string path, uint32_t access);
+    struct gocpp::error DeleteKey(golang::registry::Key k, std::string path);
     struct KeyInfo
     {
         uint32_t SubKeyCount;
@@ -34,9 +37,6 @@ namespace golang::registry
     };
 
     std::ostream& operator<<(std::ostream& os, const struct KeyInfo& value);
-    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, std::string path, uint32_t access);
-    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, std::string path, uint32_t access);
-    struct gocpp::error DeleteKey(golang::registry::Key k, std::string path);
 
     namespace rec
     {

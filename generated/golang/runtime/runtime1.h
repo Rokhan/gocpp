@@ -33,6 +33,20 @@
 
 namespace golang::runtime
 {
+    extern uint32_t traceback_cache;
+    extern uint32_t traceback_env;
+    std::tuple<int32_t, bool, bool> gotraceback();
+    extern int32_t argc;
+    extern unsigned char** argv;
+    unsigned char* argv_index(unsigned char** argv, int32_t i);
+    void args(int32_t c, unsigned char** v);
+    void goargs();
+    void goenvs_unix();
+    gocpp::slice<std::string> environ();
+    extern uint64_t test_z64;
+    extern uint64_t test_x64;
+    void testAtomic64();
+    void check();
     struct dbgVar
     {
         std::string name;
@@ -52,15 +66,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
-    extern uint32_t traceback_cache;
-    std::tuple<int32_t, bool, bool> gotraceback();
-    unsigned char* argv_index(unsigned char** argv, int32_t i);
-    void args(int32_t c, unsigned char** v);
-    void goargs();
-    void goenvs_unix();
-    gocpp::slice<std::string> environ();
-    void testAtomic64();
-    void check();
+    extern gocpp_id_0 debug;
     void parsedebugvars();
     void reparsedebugvars(std::string env);
     void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen);

@@ -14,6 +14,7 @@
 
 namespace golang::runtime
 {
+    bool isEmpty(uint8_t x);
     struct hmap
     {
         int count;
@@ -102,26 +103,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hiter& value);
-    struct evacDst
-    {
-        bmap* b;
-        int i;
-        unsafe::Pointer k;
-        unsafe::Pointer e;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct evacDst& value);
-    bool isEmpty(uint8_t x);
     uintptr_t bucketShift(uint8_t b);
     uintptr_t bucketMask(uint8_t b);
     uint8_t tophash(uintptr_t hash);
@@ -145,6 +126,25 @@ namespace golang::runtime
     bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B);
     void growWork(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
     bool bucketEvacuated(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
+    struct evacDst
+    {
+        bmap* b;
+        int i;
+        unsafe::Pointer k;
+        unsafe::Pointer e;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct evacDst& value);
     void evacuate(golang::runtime::maptype* t, struct hmap* h, uintptr_t oldbucket);
     void advanceEvacuationMark(struct hmap* h, golang::runtime::maptype* t, uintptr_t newbit);
     struct hmap* reflect_makemap(golang::runtime::maptype* t, int cap);
@@ -161,6 +161,7 @@ namespace golang::runtime
     int reflect_maplen(struct hmap* h);
     void reflect_mapclear(golang::runtime::maptype* t, struct hmap* h);
     int reflectlite_maplen(struct hmap* h);
+    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
     void mapinitnoop();
     go_any mapclone(go_any m);
     std::tuple<struct bmap*, int> moveToBmap(golang::runtime::maptype* t, struct hmap* h, struct bmap* dst, int pos, struct bmap* src);

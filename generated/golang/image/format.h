@@ -23,8 +23,8 @@ namespace golang::image
     {
         std::string name;
         std::string magic;
-        std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode;
-        std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig;
+        std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode;
+        std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig;
 
         using isGoStruct = void;
 
@@ -38,6 +38,9 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct format& value);
+    extern mocklib::Mutex formatsMu;
+    extern atomic::Value atomicFormats;
+    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
     struct reader : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -64,7 +67,7 @@ namespace golang::image
 
         struct Ireader
         {
-            virtual std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int) = 0;
+            virtual std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int _1) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -75,7 +78,7 @@ namespace golang::image
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int) override;
+            std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int _1) override;
 
             StoreT value;
         };
@@ -85,12 +88,11 @@ namespace golang::image
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader)> decodeConfig);
     struct reader asReader(io::Reader r);
     bool match(std::string magic, gocpp::slice<unsigned char> b);
     struct format sniff(struct reader r);

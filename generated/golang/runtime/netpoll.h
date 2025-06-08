@@ -83,6 +83,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
+    extern mutex netpollInitLock;
+    extern atomic::Uint32 netpollInited;
+    extern atomic::Uint32 netpollWaiters;
     void poll_runtime_pollServerInit();
     void netpollGenericInit();
     bool netpollinited();
@@ -106,6 +109,7 @@ namespace golang::runtime
     void netpollWriteDeadline(go_any arg, uintptr_t seq);
     bool netpollAnyWaiters();
     void netpollAdjustWaiters(int32_t delta);
+    extern pollCache pollcache;
     extern go_any pdEface;
     extern runtime::_type* pdType;
 

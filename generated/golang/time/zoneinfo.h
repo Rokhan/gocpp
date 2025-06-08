@@ -53,7 +53,13 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
-    extern gocpp::error errLocation;
+    extern sync::Once localOnce;
+    extern sync::Once unnamedFixedZonesOnce;
+    struct Location* FixedZone(std::string name, int offset);
+    struct Location* fixedZone(std::string name, int offset);
+    std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
+    std::tuple<std::string, std::string, bool> tzsetName(std::string s);
+    std::tuple<int, std::string, bool> tzsetOffset(std::string s);
     struct rule
     {
         golang::time::ruleKind kind;
@@ -74,14 +80,12 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
-    struct Location* FixedZone(std::string name, int offset);
-    struct Location* fixedZone(std::string name, int offset);
-    std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
-    std::tuple<std::string, std::string, bool> tzsetName(std::string s);
-    std::tuple<int, std::string, bool> tzsetOffset(std::string s);
     std::tuple<struct rule, std::string, bool> tzsetRule(std::string s);
     std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max);
     int tzruleTime(int year, struct rule r, int off);
+    extern gocpp::error errLocation;
+    extern std::string* zoneinfo;
+    extern sync::Once zoneinfoOnce;
     std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name);
     bool containsDotDot(std::string s);
     struct Location
@@ -92,7 +96,7 @@ namespace golang::time
         std::string extend;
         int64_t cacheStart;
         int64_t cacheEnd;
-        /* zone* cacheZone; [Known incomplete type] */
+        /* time::zone* cacheZone; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -106,9 +110,11 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
-    extern Location* Local;
     extern Location utcLoc;
+    extern Location localLoc;
+    extern gocpp::slice<Location*> unnamedFixedZones;
     extern Location* UTC;
+    extern Location* Local;
 
     namespace rec
     {

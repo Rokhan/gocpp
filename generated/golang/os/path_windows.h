@@ -17,6 +17,7 @@ namespace golang::os
     std::string volumeName(std::string path);
     std::string fromSlash(std::string path);
     std::string dirname(std::string path);
+    extern bool canUseLongPaths;
     std::string fixLongPath(std::string path);
 
     namespace rec

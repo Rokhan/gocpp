@@ -120,7 +120,7 @@ namespace golang::bytes
     }
 
     // ContainsFunc reports whether any of the UTF-8-encoded code points r within b satisfy f(r).
-    bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune)> f)
+    bool ContainsFunc(gocpp::slice<unsigned char> b, std::function<bool (gocpp::rune _1)> f)
     {
         return IndexFunc(b, f) >= 0;
     }
@@ -583,7 +583,7 @@ namespace golang::bytes
     //
     // FieldsFunc makes no guarantees about the order in which it calls f(c)
     // and assumes that f always returns the same value for a given c.
-    gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune)> f)
+    gocpp::slice<gocpp::slice<unsigned char>> FieldsFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune _1)> f)
     {
         // A span is used to record a slice of s of the form s[start:end].
         // The start index is inclusive and the end index is exclusive.
@@ -873,21 +873,21 @@ namespace golang::bytes
     // upper case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToUpperSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c->ToUpper, s);
+        return Map(c.ToUpper, s);
     }
 
     // ToLowerSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
     // lower case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToLowerSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c->ToLower, s);
+        return Map(c.ToLower, s);
     }
 
     // ToTitleSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
     // title case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToTitleSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c->ToTitle, s);
+        return Map(c.ToTitle, s);
     }
 
     // ToValidUTF8 treats s as UTF-8-encoded bytes and returns a copy with each run of bytes

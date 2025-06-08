@@ -18,6 +18,7 @@ namespace golang::syscall
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s);
     unsigned char* StringBytePtr(std::string s);
     std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s);
+    extern uintptr_t _zero;
     int Getpagesize();
     void Exit(int code);
     void runtimeSetenv(std::string k, std::string v);

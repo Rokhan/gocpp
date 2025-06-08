@@ -185,22 +185,22 @@ namespace golang::runtime
     }
 
     std::string godebugDefault;
-    atomic::Pointer<std::function<void (std::string, std::string)>> godebugUpdate;
+    atomic::Pointer<std::function<void (std::string _1, std::string _2)>> godebugUpdate;
     atomic::Pointer<std::string> godebugEnv;
-    atomic::Pointer<std::function<std::function<void ()> (std::string)>> godebugNewIncNonDefault;
+    atomic::Pointer<std::function<std::function<void ()> (std::string _1)>> godebugNewIncNonDefault;
     //go:linkname godebug_setUpdate internal/godebug.setUpdate
-    void godebug_setUpdate(std::function<void (std::string, std::string)> update)
+    void godebug_setUpdate(std::function<void (std::string _1, std::string _2)> update)
     {
-        auto p = new(gocpp::Tag<std::function<void (std::string, std::string)>>());
+        auto p = new(gocpp::Tag<std::function<void (std::string _1, std::string _2)>>());
         *p = update;
         rec::Store(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
     }
 
     //go:linkname godebug_setNewIncNonDefault internal/godebug.setNewIncNonDefault
-    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (std::string)> newIncNonDefault)
+    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault)
     {
-        auto p = new(gocpp::Tag<std::function<std::function<void ()> (std::string)>>());
+        auto p = new(gocpp::Tag<std::function<std::function<void ()> (std::string _1)>>());
         *p = newIncNonDefault;
         rec::Store(gocpp::recv(godebugNewIncNonDefault), p);
     }

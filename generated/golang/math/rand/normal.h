@@ -13,10 +13,10 @@
 
 namespace golang::rand
 {
+    uint32_t absInt32(int32_t i);
     extern gocpp::array<uint32_t, 128> kn;
     extern gocpp::array<float, 128> wn;
     extern gocpp::array<float, 128> fn;
-    uint32_t absInt32(int32_t i);
 
     namespace rec
     {

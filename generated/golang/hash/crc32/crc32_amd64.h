@@ -17,11 +17,14 @@ namespace golang::crc32
     uint32_t castagnoliSSE42(uint32_t crc, gocpp::slice<unsigned char> p);
     std::tuple<uint32_t, uint32_t, uint32_t> castagnoliSSE42Triple(uint32_t crcA, uint32_t crcB, uint32_t crcC, gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> c, uint32_t rounds);
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p);
+    extern crc32::sse42Table* castagnoliSSE42TableK1;
+    extern crc32::sse42Table* castagnoliSSE42TableK2;
     bool archAvailableCastagnoli();
     void archInitCastagnoli();
     uint32_t castagnoliShift(golang::crc32::sse42Table* table, uint32_t crc);
     uint32_t archUpdateCastagnoli(uint32_t crc, gocpp::slice<unsigned char> p);
     bool archAvailableIEEE();
+    extern slicing8Table* archIeeeTable8;
     void archInitIEEE();
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p);
 

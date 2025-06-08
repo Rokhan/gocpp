@@ -14,6 +14,7 @@
 
 namespace golang::runtime
 {
+    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
     struct offAddr
     {
         uintptr_t a;
@@ -46,7 +47,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
-    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
     struct addrRange
     {
         /* offAddr base; [Known incomplete type] */

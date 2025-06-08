@@ -152,6 +152,7 @@ namespace golang::runtime
     mutex::operator T()
     {
         T result;
+        result.lockRankStruct = this->lockRankStruct;
         result.key = this->key;
         return result;
     }
@@ -159,6 +160,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool mutex::operator==(const T& ref) const
     {
+        if (lockRankStruct != ref.lockRankStruct) return false;
         if (key != ref.key) return false;
         return true;
     }
@@ -166,7 +168,8 @@ namespace golang::runtime
     std::ostream& mutex::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << key;
+        os << "" << lockRankStruct;
+        os << " " << key;
         os << '}';
         return os;
     }
@@ -363,7 +366,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    runtime::guintptr rec::guintptr(struct g* gp)
+    runtime::guintptr rec::guintptr(runtime::g* gp)
     {
         return guintptr(unsafe::Pointer(gp));
     }
@@ -373,7 +376,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setGNoWB(struct g** gp, struct g* go_new)
+    void setGNoWB(runtime::g** gp, runtime::g* go_new)
     {
         rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
     }
@@ -416,7 +419,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setMNoWB(struct m** mp, struct m* go_new)
+    void setMNoWB(runtime::m** mp, runtime::m* go_new)
     {
         rec::set(gocpp::recv((runtime::muintptr*)(unsafe::Pointer(mp))), go_new);
     }
@@ -919,6 +922,8 @@ namespace golang::runtime
         result.preemptGen = this->preemptGen;
         result.signalPending = this->signalPending;
         result.pcvalueCache = this->pcvalueCache;
+        result.dlogPerM = this->dlogPerM;
+        result.mOS = this->mOS;
         result.chacha8 = this->chacha8;
         result.cheaprand = this->cheaprand;
         result.locksHeldLen = this->locksHeldLen;
@@ -992,6 +997,8 @@ namespace golang::runtime
         if (preemptGen != ref.preemptGen) return false;
         if (signalPending != ref.signalPending) return false;
         if (pcvalueCache != ref.pcvalueCache) return false;
+        if (dlogPerM != ref.dlogPerM) return false;
+        if (mOS != ref.mOS) return false;
         if (chacha8 != ref.chacha8) return false;
         if (cheaprand != ref.cheaprand) return false;
         if (locksHeldLen != ref.locksHeldLen) return false;
@@ -1065,6 +1072,8 @@ namespace golang::runtime
         os << " " << preemptGen;
         os << " " << signalPending;
         os << " " << pcvalueCache;
+        os << " " << dlogPerM;
+        os << " " << mOS;
         os << " " << chacha8;
         os << " " << cheaprand;
         os << " " << locksHeldLen;
@@ -1083,6 +1092,7 @@ namespace golang::runtime
     gocpp_id_0::operator T()
     {
         T result;
+        result.gList = this->gList;
         result.n = this->n;
         return result;
     }
@@ -1090,6 +1100,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool gocpp_id_0::operator==(const T& ref) const
     {
+        if (gList != ref.gList) return false;
         if (n != ref.n) return false;
         return true;
     }
@@ -1097,7 +1108,8 @@ namespace golang::runtime
     std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << n;
+        os << "" << gList;
+        os << " " << n;
         os << '}';
         return os;
     }
@@ -1551,6 +1563,7 @@ namespace golang::runtime
     _func::operator T()
     {
         T result;
+        result.NotInHeap = this->NotInHeap;
         result.entryOff = this->entryOff;
         result.nameOff = this->nameOff;
         result.args = this->args;
@@ -1571,6 +1584,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool _func::operator==(const T& ref) const
     {
+        if (NotInHeap != ref.NotInHeap) return false;
         if (entryOff != ref.entryOff) return false;
         if (nameOff != ref.nameOff) return false;
         if (args != ref.args) return false;
@@ -1591,7 +1605,8 @@ namespace golang::runtime
     std::ostream& _func::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << entryOff;
+        os << "" << NotInHeap;
+        os << " " << entryOff;
         os << " " << nameOff;
         os << " " << args;
         os << " " << deferreturn;
@@ -2061,14 +2076,14 @@ namespace golang::runtime
     // as they are not an external api.
     // Set on startup in asm_{386,amd64}.s
     // set by cmd/link on arm systems
-    m* allm;
+    runtime::m* allm;
     int32_t gomaxprocs;
     int32_t ncpu;
     forcegcstate forcegc;
     schedt sched;
     int32_t newprocs;
     mutex allpLock;
-    gocpp::slice<p*> allp;
+    gocpp::slice<runtime::p*> allp;
     pMask idlepMask;
     pMask timerpMask;
     runtime::lfstack gcBgMarkWorkerPool;

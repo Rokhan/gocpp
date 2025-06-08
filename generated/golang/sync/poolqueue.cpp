@@ -283,6 +283,7 @@ namespace golang::sync
     poolChainElt::operator T()
     {
         T result;
+        result.poolDequeue = this->poolDequeue;
         result.next = this->next;
         result.prev = this->prev;
         return result;
@@ -291,6 +292,7 @@ namespace golang::sync
     template<typename T> requires gocpp::GoStruct<T>
     bool poolChainElt::operator==(const T& ref) const
     {
+        if (poolDequeue != ref.poolDequeue) return false;
         if (next != ref.next) return false;
         if (prev != ref.prev) return false;
         return true;
@@ -299,7 +301,8 @@ namespace golang::sync
     std::ostream& poolChainElt::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << next;
+        os << "" << poolDequeue;
+        os << " " << next;
         os << " " << prev;
         os << '}';
         return os;

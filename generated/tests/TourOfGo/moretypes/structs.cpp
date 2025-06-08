@@ -109,6 +109,41 @@ namespace golang::main
 
     
     template<typename T> requires gocpp::GoStruct<T>
+    Dummy2::operator T()
+    {
+        T result;
+        result.Dummy = this->Dummy;
+        result.Vertex = this->Vertex;
+        result.i = this->i;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Dummy2::operator==(const T& ref) const
+    {
+        if (Dummy != ref.Dummy) return false;
+        if (Vertex != ref.Vertex) return false;
+        if (i != ref.i) return false;
+        return true;
+    }
+
+    std::ostream& Dummy2::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Dummy;
+        os << " " << Vertex;
+        os << " " << i;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Dummy2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
     {
         T result;
@@ -397,6 +432,8 @@ namespace golang::main
         mocklib::Println(p1);
         p1 = nullptr;
         mocklib::Println(p1);
+        auto dd = Dummy2 {d, Vertex {}, 3};
+        mocklib::Println(dd);
     }
 
 }

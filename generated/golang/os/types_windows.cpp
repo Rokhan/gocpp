@@ -54,6 +54,7 @@ namespace golang::os
         result.FileSizeLow = this->FileSizeLow;
         result.ReparseTag = this->ReparseTag;
         result.filetype = this->filetype;
+        result.Mutex = this->Mutex;
         result.path = this->path;
         result.vol = this->vol;
         result.idxhi = this->idxhi;
@@ -74,6 +75,7 @@ namespace golang::os
         if (FileSizeLow != ref.FileSizeLow) return false;
         if (ReparseTag != ref.ReparseTag) return false;
         if (filetype != ref.filetype) return false;
+        if (Mutex != ref.Mutex) return false;
         if (path != ref.path) return false;
         if (vol != ref.vol) return false;
         if (idxhi != ref.idxhi) return false;
@@ -94,6 +96,7 @@ namespace golang::os
         os << " " << FileSizeLow;
         os << " " << ReparseTag;
         os << " " << filetype;
+        os << " " << Mutex;
         os << " " << path;
         os << " " << vol;
         os << " " << idxhi;

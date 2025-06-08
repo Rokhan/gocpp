@@ -103,7 +103,7 @@ namespace golang::poll
 
     // RawControl invokes the user-defined function f for a non-IO
     // operation.
-    struct gocpp::error rec::RawControl(struct FD* fd, std::function<void (uintptr_t)> f)
+    struct gocpp::error rec::RawControl(struct FD* fd, std::function<void (uintptr_t _1)> f)
     {
         gocpp::Defer defer;
         try

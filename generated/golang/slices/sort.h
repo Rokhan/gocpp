@@ -44,7 +44,7 @@ namespace golang::slices
     std::tuple<int, bool> BinarySearch(S x, E target);
     
     template<typename S, typename T, typename E>
-    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E, T)> cmp);
+    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E _1, T _2)> cmp);
     unsigned int nextPowerOfTwo(int length);
     
     template<typename T>

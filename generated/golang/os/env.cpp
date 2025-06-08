@@ -24,7 +24,7 @@ namespace golang::os
 
     // Expand replaces ${var} or $var in the string based on the mapping function.
     // For example, os.ExpandEnv(s) is equivalent to os.Expand(s, os.Getenv).
-    std::string Expand(std::string s, std::function<std::string (std::string)> mapping)
+    std::string Expand(std::string s, std::function<std::string (std::string _1)> mapping)
     {
         gocpp::slice<unsigned char> buf = {};
         auto i = 0;

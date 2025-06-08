@@ -1009,18 +1009,24 @@ namespace golang::bufio
     ReadWriter::operator T()
     {
         T result;
+        result.Reader = this->Reader;
+        result.Writer = this->Writer;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool ReadWriter::operator==(const T& ref) const
     {
+        if (Reader != ref.Reader) return false;
+        if (Writer != ref.Writer) return false;
         return true;
     }
 
     std::ostream& ReadWriter::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << Reader;
+        os << " " << Writer;
         os << '}';
         return os;
     }

@@ -42,6 +42,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
     int countSub(uint32_t x, uint32_t y);
     struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
+    extern gocpp::array<unsafe::Pointer, 1> overflowTag;
 
     namespace rec
     {

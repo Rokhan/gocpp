@@ -161,9 +161,9 @@ namespace golang::fs
         return rec::Stat(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> File::FileImpl<T, StoreT>::vRead(gocpp::slice<unsigned char>)
+    std::tuple<int, struct gocpp::error> File::FileImpl<T, StoreT>::vRead(gocpp::slice<unsigned char> _1)
     {
-        return rec::Read(gocpp::PtrRecv<T, false>(value.get()));
+        return rec::Read(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
     template<typename T, typename StoreT>
     struct gocpp::error File::FileImpl<T, StoreT>::vClose()
@@ -183,14 +183,14 @@ namespace golang::fs
             return self.obj.value->vStat();
         }
 
-        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vRead();
+            return self.ptr->value->vRead(_1);
         }
 
-        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char>)
+        std::tuple<int, struct gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vRead();
+            return self.obj.value->vRead(_1);
         }
 
         struct gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self)

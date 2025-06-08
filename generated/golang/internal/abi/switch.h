@@ -49,6 +49,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
+    bool UseInterfaceSwitchCache(std::string goarch);
     struct TypeAssert
     {
         TypeAssertCache* Cache;
@@ -84,7 +85,6 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCacheEntry& value);
-    bool UseInterfaceSwitchCache(std::string goarch);
     struct InterfaceSwitchCache
     {
         uintptr_t Mask;

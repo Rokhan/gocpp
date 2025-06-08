@@ -13,21 +13,6 @@
 
 namespace golang::reflectlite
 {
-    struct rtype
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct Type : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -140,6 +125,22 @@ namespace golang::reflectlite
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
+    struct rtype
+    {
+        abi::Type* Type;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct name
     {
         unsigned char* bytes;
@@ -159,7 +160,7 @@ namespace golang::reflectlite
     std::string pkgPath(abi::Name n);
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    struct rtype toRType(abi::Type* t);
+    reflectlite::rtype toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
     struct Type TypeOf(go_any i);
@@ -171,10 +172,11 @@ namespace golang::reflectlite
     bool ifaceIndir(abi::Type* t);
     struct mapType
     {
+        rtype rtype;
         abi::Type* Key;
         abi::Type* Elem;
         abi::Type* Bucket;
-        std::function<uintptr_t (unsafe::Pointer, uintptr_t)> Hasher;
+        std::function<uintptr_t (unsafe::Pointer _1, uintptr_t _2)> Hasher;
         uint8_t KeySize;
         uint8_t ValueSize;
         uint16_t BucketSize;
@@ -202,26 +204,26 @@ namespace golang::reflectlite
         std::tuple<int, int> readVarint(struct name n, int off);
         std::string name(struct name n);
         std::string tag(struct name n);
-        abi::Name nameOff(struct rtype t, golang::reflectlite::nameOff off);
-        abi::Type* typeOff(struct rtype t, golang::reflectlite::typeOff off);
-        reflectlite::uncommonType* uncommon(struct rtype t);
-        std::string String(struct rtype t);
-        abi::Type* common(struct rtype t);
-        gocpp::slice<abi::Method> exportedMethods(struct rtype t);
-        int NumMethod(struct rtype t);
-        std::string PkgPath(struct rtype t);
-        std::string Name(struct rtype t);
-        struct Type Elem(struct rtype t);
-        struct Type In(struct rtype t, int i);
-        struct Type Key(struct rtype t);
-        int Len(struct rtype t);
-        int NumField(struct rtype t);
-        int NumIn(struct rtype t);
-        int NumOut(struct rtype t);
-        struct Type Out(struct rtype t, int i);
-        bool Implements(struct rtype t, struct Type u);
-        bool AssignableTo(struct rtype t, struct Type u);
-        bool Comparable(struct rtype t);
+        abi::Name nameOff(reflectlite::rtype t, golang::reflectlite::nameOff off);
+        abi::Type* typeOff(reflectlite::rtype t, golang::reflectlite::typeOff off);
+        reflectlite::uncommonType* uncommon(reflectlite::rtype t);
+        std::string String(reflectlite::rtype t);
+        abi::Type* common(reflectlite::rtype t);
+        gocpp::slice<abi::Method> exportedMethods(reflectlite::rtype t);
+        int NumMethod(reflectlite::rtype t);
+        std::string PkgPath(reflectlite::rtype t);
+        std::string Name(reflectlite::rtype t);
+        struct Type Elem(reflectlite::rtype t);
+        struct Type In(reflectlite::rtype t, int i);
+        struct Type Key(reflectlite::rtype t);
+        int Len(reflectlite::rtype t);
+        int NumField(reflectlite::rtype t);
+        int NumIn(reflectlite::rtype t);
+        int NumOut(reflectlite::rtype t);
+        struct Type Out(reflectlite::rtype t, int i);
+        bool Implements(reflectlite::rtype t, struct Type u);
+        bool AssignableTo(reflectlite::rtype t, struct Type u);
+        bool Comparable(reflectlite::rtype t);
     }
 }
 

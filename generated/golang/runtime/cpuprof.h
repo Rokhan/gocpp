@@ -42,6 +42,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> CPUProfile();
     int64_t runtime_pprof_runtime_cyclesPerSecond();
     std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> runtime_pprof_readProfile();
+    extern cpuProfile cpuprof;
 
     namespace rec
     {

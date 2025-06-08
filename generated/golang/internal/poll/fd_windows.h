@@ -18,6 +18,11 @@
 
 namespace golang::poll
 {
+    extern gocpp::error initErr;
+    extern uint64_t ioSync;
+    extern bool useSetFileCompletionNotificationModes;
+    void checkSetFileCompletionNotificationModes();
+    void init();
     struct operation
     {
         syscall::Overlapped o;
@@ -47,10 +52,8 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct operation& value);
-    extern std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole;
-    void checkSetFileCompletionNotificationModes();
-    void init();
     std::tuple<int, struct gocpp::error> execIO(struct operation* o, std::function<struct gocpp::error (struct operation* o)> submit);
+    extern std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole;
     int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
     int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
@@ -87,6 +90,7 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FD& value);
+    extern std::function<void (std::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
 
     namespace rec
     {
@@ -118,8 +122,8 @@ namespace golang::poll
         struct gocpp::error Fchdir(struct FD* fd);
         std::tuple<uint32_t, struct gocpp::error> GetFileType(struct FD* fd);
         struct gocpp::error GetFileInformationByHandle(struct FD* fd, syscall::ByHandleFileInformation* data);
-        struct gocpp::error RawRead(struct FD* fd, std::function<bool (uintptr_t)> f);
-        struct gocpp::error RawWrite(struct FD* fd, std::function<bool (uintptr_t)> f);
+        struct gocpp::error RawRead(struct FD* fd, std::function<bool (uintptr_t _1)> f);
+        struct gocpp::error RawWrite(struct FD* fd, std::function<bool (uintptr_t _1)> f);
         std::tuple<int, int, int, syscall::Sockaddr, struct gocpp::error> ReadMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags);
         std::tuple<int, int, int, struct gocpp::error> ReadMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4);
         std::tuple<int, int, int, struct gocpp::error> ReadMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6);

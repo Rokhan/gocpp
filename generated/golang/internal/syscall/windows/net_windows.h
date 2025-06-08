@@ -14,6 +14,8 @@
 
 namespace golang::windows
 {
+    struct gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine);
+    struct gocpp::error WSASendtoInet6(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet6* to, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct TCP_INITIAL_RTO_PARAMETERS
     {
         uint16_t Rtt;
@@ -32,8 +34,6 @@ namespace golang::windows
 
     std::ostream& operator<<(std::ostream& os, const struct TCP_INITIAL_RTO_PARAMETERS& value);
     extern std::function<bool (void)> Support_TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS;
-    struct gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine);
-    struct gocpp::error WSASendtoInet6(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet6* to, syscall::Overlapped* overlapped, unsigned char* croutine);
     void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber);
 
     namespace rec

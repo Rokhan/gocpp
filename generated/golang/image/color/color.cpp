@@ -515,7 +515,7 @@ namespace golang::color
     }
 
     // ModelFunc returns a [Model] that invokes f to implement the conversion.
-    struct Model ModelFunc(std::function<struct Color (Color)> f)
+    struct Model ModelFunc(std::function<struct Color (struct Color _1)> f)
     {
         return new modelFunc {f};
     }

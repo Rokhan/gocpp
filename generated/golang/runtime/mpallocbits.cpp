@@ -464,6 +464,7 @@ namespace golang::runtime
     pallocData::operator T()
     {
         T result;
+        result.pallocBits = this->pallocBits;
         result.scavenged = this->scavenged;
         return result;
     }
@@ -471,6 +472,7 @@ namespace golang::runtime
     template<typename T> requires gocpp::GoStruct<T>
     bool pallocData::operator==(const T& ref) const
     {
+        if (pallocBits != ref.pallocBits) return false;
         if (scavenged != ref.scavenged) return false;
         return true;
     }
@@ -478,7 +480,8 @@ namespace golang::runtime
     std::ostream& pallocData::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << scavenged;
+        os << "" << pallocBits;
+        os << " " << scavenged;
         os << '}';
         return os;
     }

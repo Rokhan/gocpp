@@ -27,7 +27,7 @@ namespace golang::poll
         struct gocpp::error Shutdown(struct FD* fd, int how);
         struct gocpp::error Fchown(struct FD* fd, int uid, int gid);
         struct gocpp::error Ftruncate(struct FD* fd, int64_t size);
-        struct gocpp::error RawControl(struct FD* fd, std::function<void (uintptr_t)> f);
+        struct gocpp::error RawControl(struct FD* fd, std::function<void (uintptr_t _1)> f);
     }
 }
 

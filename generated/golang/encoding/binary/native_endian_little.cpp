@@ -25,18 +25,21 @@ namespace golang::binary
     nativeEndian::operator T()
     {
         T result;
+        result.littleEndian = this->littleEndian;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
     bool nativeEndian::operator==(const T& ref) const
     {
+        if (littleEndian != ref.littleEndian) return false;
         return true;
     }
 
     std::ostream& nativeEndian::PrintTo(std::ostream& os) const
     {
         os << '{';
+        os << "" << littleEndian;
         os << '}';
         return os;
     }

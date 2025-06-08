@@ -34,6 +34,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.stackWorkBufHdr = this->stackWorkBufHdr;
         result.obj = this->obj;
         return result;
     }
@@ -42,6 +43,7 @@ namespace golang::runtime
     bool stackWorkBuf::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (stackWorkBufHdr != ref.stackWorkBufHdr) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -50,6 +52,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << stackWorkBufHdr;
         os << " " << obj;
         os << '}';
         return os;
@@ -67,6 +70,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.workbufhdr = this->workbufhdr;
         result.next = this->next;
         return result;
     }
@@ -75,6 +79,7 @@ namespace golang::runtime
     bool stackWorkBufHdr::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (workbufhdr != ref.workbufhdr) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -83,6 +88,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << workbufhdr;
         os << " " << next;
         os << '}';
         return os;
@@ -101,6 +107,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.stackObjectBufHdr = this->stackObjectBufHdr;
         result.obj = this->obj;
         return result;
     }
@@ -109,6 +116,7 @@ namespace golang::runtime
     bool stackObjectBuf::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (stackObjectBufHdr != ref.stackObjectBufHdr) return false;
         if (obj != ref.obj) return false;
         return true;
     }
@@ -117,6 +125,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << stackObjectBufHdr;
         os << " " << obj;
         os << '}';
         return os;
@@ -133,6 +142,7 @@ namespace golang::runtime
     {
         T result;
         result._1 = this->_1;
+        result.workbufhdr = this->workbufhdr;
         result.next = this->next;
         return result;
     }
@@ -141,6 +151,7 @@ namespace golang::runtime
     bool stackObjectBufHdr::operator==(const T& ref) const
     {
         if (_1 != ref._1) return false;
+        if (workbufhdr != ref.workbufhdr) return false;
         if (next != ref.next) return false;
         return true;
     }
@@ -149,6 +160,7 @@ namespace golang::runtime
     {
         os << '{';
         os << "" << _1;
+        os << " " << workbufhdr;
         os << " " << next;
         os << '}';
         return os;

@@ -41,6 +41,7 @@ namespace golang::reflect
     makeFuncImpl::operator T()
     {
         T result;
+        result.makeFuncCtxt = this->makeFuncCtxt;
         result.ftyp = this->ftyp;
         result.fn = this->fn;
         return result;
@@ -49,6 +50,7 @@ namespace golang::reflect
     template<typename T> requires gocpp::GoStruct<T>
     bool makeFuncImpl::operator==(const T& ref) const
     {
+        if (makeFuncCtxt != ref.makeFuncCtxt) return false;
         if (ftyp != ref.ftyp) return false;
         if (fn != ref.fn) return false;
         return true;
@@ -57,7 +59,8 @@ namespace golang::reflect
     std::ostream& makeFuncImpl::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << ftyp;
+        os << "" << makeFuncCtxt;
+        os << " " << ftyp;
         os << " " << fn;
         os << '}';
         return os;
@@ -128,6 +131,7 @@ namespace golang::reflect
     methodValue::operator T()
     {
         T result;
+        result.makeFuncCtxt = this->makeFuncCtxt;
         result.method = this->method;
         result.rcvr = this->rcvr;
         return result;
@@ -136,6 +140,7 @@ namespace golang::reflect
     template<typename T> requires gocpp::GoStruct<T>
     bool methodValue::operator==(const T& ref) const
     {
+        if (makeFuncCtxt != ref.makeFuncCtxt) return false;
         if (method != ref.method) return false;
         if (rcvr != ref.rcvr) return false;
         return true;
@@ -144,7 +149,8 @@ namespace golang::reflect
     std::ostream& methodValue::PrintTo(std::ostream& os) const
     {
         os << '{';
-        os << "" << method;
+        os << "" << makeFuncCtxt;
+        os << " " << method;
         os << " " << rcvr;
         os << '}';
         return os;

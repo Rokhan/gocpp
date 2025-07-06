@@ -1303,7 +1303,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			cv.hasMain = true
 		}
 
-		blockPlaces := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
+		blockPlaces := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
 		cv.printOrKeepPlaces(blockPlaces, &outPlaces, nil)
 		fmt.Fprintf(cv.cpp.out, "\n")
 
@@ -1341,11 +1341,12 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 	cv.cpp.indent++
 
 	cppOut := cv.withCppBuffer(func() {
-		if env.isFunc {
-			for i := range env.outNames {
-				fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), env.outNames[i])
-			}
+
+		for i, tbdName := range env.toBeDeclared {
+			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), tbdName)
+			*env.varNames = append(*env.varNames, tbdName)
 		}
+		env.toBeDeclared = nil
 
 		for _, stmt := range block.List {
 			stmtOutiles, _ := cv.convertStmt(stmt, env)
@@ -1557,8 +1558,12 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.ForStmt:
 		env.startVarScope()
-		cv.WritterExprPrintf(cppOut, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond), cv.inlineStmt(s.Post, env))
-		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+		initExpr, needScope := cv.inlineStmt(s.Init, env)
+		postExpr, needScope := cv.inlineStmt(s.Post, env)
+		cv.AddOptionalScope(cppOut, needScope, func() {
+			cv.WritterExprPrintf(cppOut, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond), postExpr)
+			outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+		})
 
 	case *ast.BranchStmt:
 		if s.Label == nil {
@@ -1618,7 +1623,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	case *ast.IfStmt:
 		if s.Init != nil {
 			env.startVarScope()
-			cv.WritterExprPrintf(cppOut, "%sif(%s; %s)\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env), cv.convertExpr(s.Cond))
+			initExpr, needScope := cv.inlineStmt(s.Init, env)
+			cv.AddOptionalScope(cppOut, needScope, func() {
+				cv.WritterExprPrintf(cppOut, "%sif(%s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond))
+			})
 		} else {
 			cv.WritterExprPrintf(cppOut, "%sif(%s)\n", cv.cpp.Indent(), cv.convertExpr(s.Cond))
 		}
@@ -1630,7 +1638,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			elseOutPlace, isFallthrough := cv.convertStmt(s.Else, env)
 			outPlaces = append(outPlaces, elseOutPlace...)
 			if isFallthrough {
-				// Shouldn't happen correctly go file
+				// Shouldn't happen in correct go file
 				cv.Panicf("convertStmt, fallthrough not managed in ast.IfStmt, input: %v", cv.Position(s.Else))
 			}
 		}
@@ -1642,7 +1650,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		if s.Init != nil {
 			env.startVarScope()
-			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
+			initExpr, needScope := cv.inlineStmt(s.Init, env)
+			cv.AddOptionalScope(cppOut, needScope, func() {
+				cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
+			})
 		}
 
 		inputVarName := ""
@@ -1660,7 +1671,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		if s.Init != nil {
 			env.startVarScope()
-			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.inlineStmt(s.Init, env))
+			initExpr, needScope := cv.inlineStmt(s.Init, env)
+			cv.AddOptionalScope(cppOut, needScope, func() {
+				cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
+			})
 		}
 
 		var switchExpr cppExpr
@@ -1763,6 +1777,18 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	outPlaces = append(outPlaces, *cppOut.defs...)
 
 	return
+}
+
+func (cv *cppConverter) AddOptionalScope(buff *cppExprWritter[*bufio.Writer], needScope bool, scopeGen func()) {
+	if needScope {
+		cv.WritterExprPrintf(buff, "%s{\n", cv.cpp.Indent())
+		cv.cpp.indent++
+	}
+	scopeGen()
+	if needScope {
+		cv.cpp.indent--
+		cv.WritterExprPrintf(buff, "%s}\n", cv.cpp.Indent())
+	}
 }
 
 type switchEnvName struct {
@@ -1901,13 +1927,13 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
 	panic("convertSelectCaseStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr) {
+func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr, needScope bool) {
 	switch s := stmt.(type) {
 	case nil:
 		return
 
 	case *ast.SendStmt:
-		return ExprPrintf("%s.send(%s)", cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
+		return ExprPrintf("%s.send(%s)", cv.convertExpr(s.Chan), cv.convertExpr(s.Value)), false
 
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
@@ -1925,14 +1951,14 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 		}
 
 	case *ast.ExprStmt:
-		return cv.convertExpr(s.X)
+		return cv.convertExpr(s.X), false
 
 	case *ast.IncDecStmt:
 		switch s.Tok {
 		case token.INC:
-			return ExprPrintf("%s++", cv.convertExpr(s.X))
+			return ExprPrintf("%s++", cv.convertExpr(s.X)), false
 		case token.DEC:
-			return ExprPrintf("%s--", cv.convertExpr(s.X))
+			return ExprPrintf("%s--", cv.convertExpr(s.X)), false
 		default:
 			cv.Panicf("inlineStmt, unmanaged type [%v]", reflect.TypeOf(s.Tok))
 		}
@@ -1943,14 +1969,31 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr)
 		case 0:
 			cv.Panicf("inlineStmt, unmanaged multiple assignements: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		case 1:
-			return assignStmts[0]
+			return assignStmts[0], false
 		default:
+			// Maybe we should find a way to create a new temporary variable and put the declaration inside the scope
+			// instead of creating a scope outside the whole expression that contains an inlined statement.
+			// Something like this:
+			//   if (auto& tmpvar = <expr>; <condition>) {
+			//       type1 var1 = std::get<0>(tmpvar);
+			//       type2 var2 = std::get<1>(tmpvar);
+			//       ...
+			//   }
+			//
+			// Instead of this:
+			//   {
+			//       type1 var1;
+			//       type2 var2;
+			//       if(std::tie(var1, var2) = <expr>; <condition>) {
+			//       	...
+			//       }
+			//   }
 			result = assignStmts[nbStmts-1]
 			for i := 0; i < nbStmts-1; i++ {
 				result.defs = append(result.defs, assignStmts[i].defs...)
-				result.defs = append(result.defs, inlineStr(assignStmts[i].str, s))
+				result.defs = append(result.defs, inlineStrf(s, "%s;", assignStmts[i].str)...)
 			}
-			return
+			return result, true
 		}
 
 	default:
@@ -2412,7 +2455,6 @@ func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	case "std::string":
 		cppType.canFwd = false
 	case "gocpp::complex128":
-		cppType.isStruct = true
 	}
 }
 
@@ -3372,7 +3414,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
 
-			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes), true))
+			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
 		})
 		return expr
 

@@ -365,6 +365,8 @@ type stmtEnv struct {
 	outNames []string
 	outTypes []outType
 	varNames *[]string // maybe use map for perfs
+
+	toBeDeclared []string // list of variables to be declared at start of scope
 }
 
 func (env *stmtEnv) startVarScope() {
@@ -372,9 +374,9 @@ func (env *stmtEnv) startVarScope() {
 	env.varNames = &[]string{}
 }
 
-func makeStmtEnv(outNames []string, outTypes []outType) stmtEnv {
-	varNames := outNames
-	return stmtEnv{outNames, outTypes, &varNames}
+func makeStmtEnv(outNames []string, outTypes []outType, paramNames []string) stmtEnv {
+	varNames := append(append([]string{}, outNames...), paramNames...)
+	return stmtEnv{outNames, outTypes, &varNames, outNames}
 }
 
 type blockEnv struct {

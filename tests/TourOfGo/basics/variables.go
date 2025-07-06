@@ -56,6 +56,7 @@ func main() {
 	ii, s = funcVar3(3)
 	fmt.Println(ii, s)
 	withNamedResults()
+	inlineAssign(99)
 }
 
 func withNamedResults() (i int, s string) {
@@ -70,6 +71,39 @@ func withNamedResults() (i int, s string) {
 	}
 	fmt.Println("withNamedResults:", i, s)
 	return
+}
+
+func inlineAssign(i int) {
+	if i, ok1 := 1, true; ok1 {
+		fmt.Println("inlineAssign:", i)
+	}
+	fmt.Println("inlineAssign:", i)
+
+	if i, ok2 := 2, true; ok2 {
+		fmt.Println("inlineAssign:", i)
+	}
+	fmt.Println("inlineAssign:", i)
+
+	if i, ok2 := 22, true; ok2 {
+		fmt.Println("inlineAssign:", i)
+	}
+
+	{
+		if i, ok1 := 3, true; ok1 {
+			fmt.Println("inlineAssign:", i)
+		}
+		fmt.Println("inlineAssign:", i)
+	}
+	fmt.Println("inlineAssign:", i)
+
+	{
+		i := 66
+		if i, ok1 := 4, true; ok1 {
+			fmt.Println("inlineAssign:", i)
+		}
+		fmt.Println("inlineAssign:", i)
+	}
+	fmt.Println("inlineAssign:", i)
 }
 
 func dummy_vars() {

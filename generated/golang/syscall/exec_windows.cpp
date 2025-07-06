@@ -227,7 +227,8 @@ namespace golang::syscall
     {
         std::string path;
         struct gocpp::error err;
-        auto [p, err] = UTF16PtrFromString(name);
+        uint16_t* p;
+        std::tie(p, err) = UTF16PtrFromString(name);
         if(err != nullptr)
         {
             return {""s, err};
@@ -257,7 +258,8 @@ namespace golang::syscall
     {
         std::string name;
         struct gocpp::error err;
-        auto [ndir, err] = FullPath(dir);
+        std::string ndir;
+        std::tie(ndir, err) = FullPath(dir);
         if(err != nullptr)
         {
             return {""s, err};
@@ -472,7 +474,8 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
-            auto [argv0p, err] = UTF16PtrFromString(argv0);
+            uint16_t* argv0p;
+            std::tie(argv0p, err) = UTF16PtrFromString(argv0);
             if(err != nullptr)
             {
                 return {0, 0, err};

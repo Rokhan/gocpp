@@ -461,7 +461,9 @@ namespace golang::time
             neg = s[0] == '-';
             s = s.make_slice(1);
         }
-        auto [q, rem, err] = leadingInt(s);
+        uint64_t q;
+        bytes rem;
+        std::tie(q, rem, err) = leadingInt(s);
         x = int(q);
         if(err != nullptr || len(rem) > 0)
         {

@@ -95,7 +95,8 @@ namespace golang::os
         {
             return syscall::Getwd();
         }
-        auto [dot, err] = statNolog("."s);
+        fs::FileInfo dot;
+        std::tie(dot, err) = statNolog("."s);
         if(err != nullptr)
         {
             return {""s, err};

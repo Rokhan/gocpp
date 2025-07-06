@@ -23,6 +23,7 @@ namespace golang::main
     extern std::function<std::tuple<int, std::string> (int)> funcVar3;
     void main();
     std::tuple<int, std::string> withNamedResults();
+    void inlineAssign(int i);
     void dummy_vars();
     void dummy_funcs();
     void go_do();

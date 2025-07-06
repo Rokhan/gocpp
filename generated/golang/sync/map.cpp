@@ -177,7 +177,8 @@ namespace golang::sync
         go_any value;
         bool ok;
         auto read = rec::loadReadOnly(gocpp::recv(m));
-        auto [e, ok] = read.m[key];
+        entry* e;
+        std::tie(e, ok) = read.m[key];
         if(! ok && read.amended)
         {
             rec::Lock(gocpp::recv(m->mu));

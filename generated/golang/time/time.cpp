@@ -517,7 +517,8 @@ namespace golang::time
             d = - 3;
         }
         abs += uint64_t(d) * secondsPerDay;
-        auto [year, gocpp_id_32, gocpp_id_33, yday] = absDate(abs, false);
+        int yday;
+        std::tie(year, gocpp_id_32, gocpp_id_33, yday) = absDate(abs, false);
         return {year, yday / 7 + 1};
     }
 

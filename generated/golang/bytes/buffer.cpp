@@ -475,7 +475,8 @@ namespace golang::bytes
             b->lastRead = opReadRune1;
             return {gocpp::rune(c), 1, nullptr};
         }
-        auto [r, n] = utf8::DecodeRune(b->buf.make_slice(b->off));
+        int n;
+        std::tie(r, n) = utf8::DecodeRune(b->buf.make_slice(b->off));
         b->off += n;
         b->lastRead = readOp(n);
         return {r, n, nullptr};
@@ -529,7 +530,8 @@ namespace golang::bytes
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
-        auto [slice, err] = rec::readSlice(gocpp::recv(b), delim);
+        gocpp::slice<unsigned char> slice;
+        std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
         line = append(line, slice);
         return {line, err};
     }
@@ -562,7 +564,8 @@ namespace golang::bytes
     {
         std::string line;
         struct gocpp::error err;
-        auto [slice, err] = rec::readSlice(gocpp::recv(b), delim);
+        gocpp::slice<unsigned char> slice;
+        std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
         return {std::string(slice), err};
     }
 

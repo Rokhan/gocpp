@@ -3163,7 +3163,8 @@ namespace golang::runtime
             }
             rec::removeIdleMarkWorker(gocpp::recv(gcController));
         }
-        auto [gp, otherReady] = beforeIdle(now, pollUntil);
+        bool otherReady;
+        std::tie(gp, otherReady) = beforeIdle(now, pollUntil);
         if(gp != nullptr)
         {
             auto trace = traceAcquire();

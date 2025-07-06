@@ -274,7 +274,8 @@ namespace golang::syscall
         {
             return {InvalidHandle, ERROR_FILE_NOT_FOUND};
         }
-        auto [pathp, err] = UTF16PtrFromString(path);
+        uint16_t* pathp;
+        std::tie(pathp, err) = UTF16PtrFromString(path);
         if(err != nullptr)
         {
             return {InvalidHandle, err};
@@ -563,7 +564,8 @@ namespace golang::syscall
     struct gocpp::error Chdir(std::string path)
     {
         struct gocpp::error err;
-        auto [pathp, err] = UTF16PtrFromString(path);
+        uint16_t* pathp;
+        std::tie(pathp, err) = UTF16PtrFromString(path);
         if(err != nullptr)
         {
             return err;
@@ -574,7 +576,8 @@ namespace golang::syscall
     struct gocpp::error Mkdir(std::string path, uint32_t mode)
     {
         struct gocpp::error err;
-        auto [pathp, err] = UTF16PtrFromString(path);
+        uint16_t* pathp;
+        std::tie(pathp, err) = UTF16PtrFromString(path);
         if(err != nullptr)
         {
             return err;
@@ -585,7 +588,8 @@ namespace golang::syscall
     struct gocpp::error Rmdir(std::string path)
     {
         struct gocpp::error err;
-        auto [pathp, err] = UTF16PtrFromString(path);
+        uint16_t* pathp;
+        std::tie(pathp, err) = UTF16PtrFromString(path);
         if(err != nullptr)
         {
             return err;
@@ -596,7 +600,8 @@ namespace golang::syscall
     struct gocpp::error Unlink(std::string path)
     {
         struct gocpp::error err;
-        auto [pathp, err] = UTF16PtrFromString(path);
+        uint16_t* pathp;
+        std::tie(pathp, err) = UTF16PtrFromString(path);
         if(err != nullptr)
         {
             return err;
@@ -607,7 +612,8 @@ namespace golang::syscall
     struct gocpp::error Rename(std::string oldpath, std::string newpath)
     {
         struct gocpp::error err;
-        auto [from, err] = UTF16PtrFromString(oldpath);
+        uint16_t* from;
+        std::tie(from, err) = UTF16PtrFromString(oldpath);
         if(err != nullptr)
         {
             return err;
@@ -1274,7 +1280,9 @@ namespace golang::syscall
     struct gocpp::error Bind(golang::syscall::Handle fd, struct Sockaddr sa)
     {
         struct gocpp::error err;
-        auto [ptr, n, err] = rec::sockaddr(gocpp::recv(sa));
+        unsafe::Pointer ptr;
+        int32_t n;
+        std::tie(ptr, n, err) = rec::sockaddr(gocpp::recv(sa));
         if(err != nullptr)
         {
             return err;
@@ -1285,7 +1293,9 @@ namespace golang::syscall
     struct gocpp::error Connect(golang::syscall::Handle fd, struct Sockaddr sa)
     {
         struct gocpp::error err;
-        auto [ptr, n, err] = rec::sockaddr(gocpp::recv(sa));
+        unsafe::Pointer ptr;
+        int32_t n;
+        std::tie(ptr, n, err) = rec::sockaddr(gocpp::recv(sa));
         if(err != nullptr)
         {
             return err;
@@ -1362,7 +1372,9 @@ namespace golang::syscall
     struct gocpp::error wsaSendtoInet4(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet4* to, struct Overlapped* overlapped, unsigned char* croutine)
     {
         struct gocpp::error err;
-        auto [rsa, len, err] = rec::sockaddr(gocpp::recv(to));
+        unsafe::Pointer rsa;
+        int32_t len;
+        std::tie(rsa, len, err) = rec::sockaddr(gocpp::recv(to));
         if(err != nullptr)
         {
             return err;
@@ -1385,7 +1397,9 @@ namespace golang::syscall
     struct gocpp::error wsaSendtoInet6(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct SockaddrInet6* to, struct Overlapped* overlapped, unsigned char* croutine)
     {
         struct gocpp::error err;
-        auto [rsa, len, err] = rec::sockaddr(gocpp::recv(to));
+        unsafe::Pointer rsa;
+        int32_t len;
+        std::tie(rsa, len, err) = rec::sockaddr(gocpp::recv(to));
         if(err != nullptr)
         {
             return err;
@@ -1975,7 +1989,8 @@ namespace golang::syscall
     {
         struct gocpp::error err;
         gocpp::array<uint16_t, MAX_PATH + 1> buf = {};
-        auto [path, err] = fdpath(fd, buf.make_slice(0));
+        gocpp::slice<uint16_t> path;
+        std::tie(path, err) = fdpath(fd, buf.make_slice(0));
         if(err != nullptr)
         {
             return err;
@@ -2085,7 +2100,8 @@ namespace golang::syscall
         {
             int n;
             struct gocpp::error err;
-            auto [fd, err] = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
+            Handle fd;
+            std::tie(fd, err) = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
             if(err != nullptr)
             {
                 return {- 1, err};

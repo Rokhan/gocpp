@@ -199,7 +199,8 @@ namespace golang::syscall
     {
         struct Proc* proc;
         struct gocpp::error err;
-        auto [namep, err] = BytePtrFromString(name);
+        unsigned char* namep;
+        std::tie(namep, err) = BytePtrFromString(name);
         if(err != nullptr)
         {
             return {nullptr, err};

@@ -69,6 +69,7 @@ namespace golang::main
         std::tie(ii, s) = funcVar3(3);
         mocklib::Println(ii, s);
         withNamedResults();
+        inlineAssign(99);
     }
 
     std::tuple<int, std::string> withNamedResults()
@@ -86,6 +87,41 @@ namespace golang::main
         }
         mocklib::Println("withNamedResults:"s, i, s);
         return {i, s};
+    }
+
+    void inlineAssign(int i)
+    {
+        if(auto [i, ok1] = std::tuple{1, true}; ok1)
+        {
+            mocklib::Println("inlineAssign:"s, i);
+        }
+        mocklib::Println("inlineAssign:"s, i);
+        if(auto [i, ok2] = std::tuple{2, true}; ok2)
+        {
+            mocklib::Println("inlineAssign:"s, i);
+        }
+        mocklib::Println("inlineAssign:"s, i);
+        if(auto [i, ok2] = std::tuple{22, true}; ok2)
+        {
+            mocklib::Println("inlineAssign:"s, i);
+        }
+        {
+            if(auto [i, ok1] = std::tuple{3, true}; ok1)
+            {
+                mocklib::Println("inlineAssign:"s, i);
+            }
+            mocklib::Println("inlineAssign:"s, i);
+        }
+        mocklib::Println("inlineAssign:"s, i);
+        {
+            auto i = 66;
+            if(auto [i, ok1] = std::tuple{4, true}; ok1)
+            {
+                mocklib::Println("inlineAssign:"s, i);
+            }
+            mocklib::Println("inlineAssign:"s, i);
+        }
+        mocklib::Println("inlineAssign:"s, i);
     }
 
     void dummy_vars()

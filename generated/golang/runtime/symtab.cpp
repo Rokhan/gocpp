@@ -1113,7 +1113,8 @@ namespace golang::runtime
             auto fi = (funcinl*)(unsafe::Pointer(fn));
             return {fi->file, int(fi->line)};
         }
-        auto [file, line32] = funcline1(rec::funcInfo(gocpp::recv(f)), pc, false);
+        int32_t line32;
+        std::tie(file, line32) = funcline1(rec::funcInfo(gocpp::recv(f)), pc, false);
         return {file, int(line32)};
     }
 

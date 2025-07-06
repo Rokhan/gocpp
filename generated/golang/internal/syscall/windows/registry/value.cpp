@@ -50,7 +50,8 @@ namespace golang::registry
         int n;
         uint32_t valtype;
         struct gocpp::error err;
-        auto [pname, err] = syscall::UTF16PtrFromString(name);
+        uint16_t* pname;
+        std::tie(pname, err) = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
             return {0, 0, err};
@@ -74,7 +75,8 @@ namespace golang::registry
         gocpp::slice<unsigned char> date;
         uint32_t valtype;
         struct gocpp::error err;
-        auto [p, err] = syscall::UTF16PtrFromString(name);
+        uint16_t* p;
+        std::tie(p, err) = syscall::UTF16PtrFromString(name);
         if(err != nullptr)
         {
             return {nullptr, 0, err};

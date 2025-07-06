@@ -3070,7 +3070,8 @@ namespace golang::reflect
         {
             p = unsafe::Pointer(& val.ptr);
         }
-        auto [selected, ok] = chanrecv(rec::pointer(gocpp::recv(v)), nb, p);
+        bool selected;
+        std::tie(selected, ok) = chanrecv(rec::pointer(gocpp::recv(v)), nb, p);
         if(! selected)
         {
             val = Value {};

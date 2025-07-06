@@ -225,7 +225,8 @@ namespace golang::runtime
     {
         std::string file;
         int line;
-        auto [file, line32] = funcline1(u->f, uf.pc, false);
+        int32_t line32;
+        std::tie(file, line32) = funcline1(u->f, uf.pc, false);
         return {file, int(line32)};
     }
 

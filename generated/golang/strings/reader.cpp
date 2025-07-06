@@ -227,7 +227,8 @@ namespace golang::strings
             return {0, nullptr};
         }
         auto s = r->s.make_slice(r->i);
-        auto [m, err] = io::WriteString(w, s);
+        int m;
+        std::tie(m, err) = io::WriteString(w, s);
         if(m > len(s))
         {
             gocpp::panic("strings.Reader.WriteTo: invalid WriteString count"s);

@@ -172,7 +172,8 @@ namespace golang::os
         {
             return {0, err};
         }
-        auto [n, e] = rec::read(gocpp::recv(f), b);
+        gocpp::error e;
+        std::tie(n, e) = rec::read(gocpp::recv(f), b);
         return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
     }
 
@@ -220,7 +221,9 @@ namespace golang::os
         {
             return {0, err};
         }
-        auto [n, handled, e] = rec::readFrom(gocpp::recv(f), r);
+        bool handled;
+        gocpp::error e;
+        std::tie(n, handled, e) = rec::readFrom(gocpp::recv(f), r);
         if(! handled)
         {
             return genericReadFrom(f, r);
@@ -316,7 +319,8 @@ namespace golang::os
         {
             return {0, err};
         }
-        auto [n, e] = rec::write(gocpp::recv(f), b);
+        gocpp::error e;
+        std::tie(n, e) = rec::write(gocpp::recv(f), b);
         if(n < 0)
         {
             n = 0;
@@ -383,7 +387,9 @@ namespace golang::os
         {
             return {0, err};
         }
-        auto [n, handled, e] = rec::writeTo(gocpp::recv(f), w);
+        bool handled;
+        gocpp::error e;
+        std::tie(n, handled, e) = rec::writeTo(gocpp::recv(f), w);
         if(handled)
         {
             return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};

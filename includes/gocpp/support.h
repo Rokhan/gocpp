@@ -703,6 +703,9 @@ namespace gocpp
     template <typename T>
     ObjRecv<T> recv(const T& t) { return ObjRecv<T>(t); }
 
+    template <typename T, typename E>
+    ObjRecv<T> recv(const result_or_error<T, E>& t) { return ObjRecv<T>(t); }
+
     template <typename T>
     PtrRecv<T> recv(T& t) { return PtrRecv<T>(&t); }
 
@@ -922,6 +925,15 @@ namespace gocpp
         //     return array_base<T>::begin() + mEnd;
         // }
 
+        operator std::string() const requires std::is_same<T, unsigned char>::value
+        {
+            if(!this->mArray)
+            {
+                return std::string();
+            }
+            return std::string(this->mArray->begin(), this->mArray->end());
+        }
+
         typename store_type::const_reference operator[](size_t i) const
         {
             return array_base<T>::operator[](i + mStart);
@@ -938,6 +950,15 @@ namespace gocpp
         {
             input = append(input, value);
             return append(input, moreValues...);
+        }
+
+        friend inline slice<T> append(slice<T> src1, slice<T> src2)
+        {
+            for (auto &&elt : src2)
+            {
+                src1 = append(src1, elt);
+            }
+            return src1;
         }
 
         friend inline slice<T> append(slice<T> input, T value)

@@ -122,7 +122,7 @@ namespace golang::safefilepath
         {
             return true;
         }
-        if(auto [p, gocpp_id_1] = syscall::FullPath(name); len(p) >= 4 && p.make_slice(0, 4) == "\\\\.\\"s)
+        if(auto [p, gocpp_id_0] = syscall::FullPath(name); len(p) >= 4 && p.make_slice(0, 4) == "\\\\.\\"s)
         {
             return true;
         }

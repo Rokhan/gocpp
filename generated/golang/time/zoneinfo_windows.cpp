@@ -274,7 +274,7 @@ namespace golang::time
     void initLocal()
     {
         syscall::Timezoneinformation i = {};
-        if(auto [gocpp_id_3, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
+        if(auto [gocpp_id_2, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
         {
             localLoc.name = "UTC"s;
             return;

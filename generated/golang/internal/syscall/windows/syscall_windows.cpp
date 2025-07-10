@@ -659,7 +659,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_2, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(flags), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
+        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(flags), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
         if(r1 == socket_error)
         {
             if(e1 != 0)
@@ -681,7 +681,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_4, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(unsafe::Pointer(bytesReceived)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0);
+        auto [r1, gocpp_id_2, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(unsafe::Pointer(bytesReceived)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0);
         if(r1 == socket_error)
         {
             if(e1 != 0)

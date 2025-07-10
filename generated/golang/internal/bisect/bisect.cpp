@@ -594,7 +594,7 @@ namespace golang::bisect
         b = AppendMarker(b, h);
         b = appendFileLine(b, file, line);
         b = append(b, '\n');
-        auto [gocpp_id_1, err] = rec::Write(gocpp::recv(w), b);
+        auto [gocpp_id_0, err] = rec::Write(gocpp::recv(w), b);
         return err;
     }
 
@@ -745,7 +745,7 @@ namespace golang::bisect
         gocpp::array<unsigned char, 50> buf = {};
         auto b = AppendMarker(buf.make_slice(0, 0), h);
         b = append(b, '\n');
-        auto [gocpp_id_3, err] = rec::Write(gocpp::recv(w), b);
+        auto [gocpp_id_1, err] = rec::Write(gocpp::recv(w), b);
         return err;
     }
 
@@ -774,7 +774,7 @@ namespace golang::bisect
         }
         buf = append(buf, prefix);
         buf = append(buf, '\n');
-        auto [gocpp_id_5, err] = rec::Write(gocpp::recv(w), buf);
+        auto [gocpp_id_2, err] = rec::Write(gocpp::recv(w), buf);
         return err;
     }
 
@@ -917,26 +917,26 @@ namespace golang::bisect
         {
             //Go type switch emulation
             {
-                const auto& gocpp_id_6 = gocpp::type_info(v);
+                const auto& gocpp_id_3 = gocpp::type_info(v);
                 int conditionId = -1;
-                if(gocpp_id_6 == typeid(std::string)) { conditionId = 0; }
-                else if(gocpp_id_6 == typeid(unsigned char)) { conditionId = 1; }
-                else if(gocpp_id_6 == typeid(int)) { conditionId = 2; }
-                else if(gocpp_id_6 == typeid(unsigned int)) { conditionId = 3; }
-                else if(gocpp_id_6 == typeid(int32_t)) { conditionId = 4; }
-                else if(gocpp_id_6 == typeid(uint32_t)) { conditionId = 5; }
-                else if(gocpp_id_6 == typeid(int64_t)) { conditionId = 6; }
-                else if(gocpp_id_6 == typeid(uint64_t)) { conditionId = 7; }
-                else if(gocpp_id_6 == typeid(uintptr_t)) { conditionId = 8; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<std::string>)) { conditionId = 9; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<unsigned char>)) { conditionId = 10; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<int>)) { conditionId = 11; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<unsigned int>)) { conditionId = 12; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<int32_t>)) { conditionId = 13; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<uint32_t>)) { conditionId = 14; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<int64_t>)) { conditionId = 15; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<uint64_t>)) { conditionId = 16; }
-                else if(gocpp_id_6 == typeid(gocpp::slice<uintptr_t>)) { conditionId = 17; }
+                if(gocpp_id_3 == typeid(std::string)) { conditionId = 0; }
+                else if(gocpp_id_3 == typeid(unsigned char)) { conditionId = 1; }
+                else if(gocpp_id_3 == typeid(int)) { conditionId = 2; }
+                else if(gocpp_id_3 == typeid(unsigned int)) { conditionId = 3; }
+                else if(gocpp_id_3 == typeid(int32_t)) { conditionId = 4; }
+                else if(gocpp_id_3 == typeid(uint32_t)) { conditionId = 5; }
+                else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 6; }
+                else if(gocpp_id_3 == typeid(uint64_t)) { conditionId = 7; }
+                else if(gocpp_id_3 == typeid(uintptr_t)) { conditionId = 8; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<std::string>)) { conditionId = 9; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<unsigned char>)) { conditionId = 10; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<int>)) { conditionId = 11; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<unsigned int>)) { conditionId = 12; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<int32_t>)) { conditionId = 13; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<uint32_t>)) { conditionId = 14; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<int64_t>)) { conditionId = 15; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<uint64_t>)) { conditionId = 16; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<uintptr_t>)) { conditionId = 17; }
                 switch(conditionId)
                 {
                     default:

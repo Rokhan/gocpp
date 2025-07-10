@@ -135,7 +135,7 @@ namespace golang::main
     template<typename T>
     bool RemoveOne(gocpp::channel<T> dummy)
     {
-        auto [gocpp_id_1, ok] = dummy.recv();
+        auto [gocpp_id_0, ok] = dummy.recv();
         return ok;
     }
 

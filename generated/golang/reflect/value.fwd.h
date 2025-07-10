@@ -15,7 +15,7 @@ namespace golang::reflect
     struct SliceHeader;
     using SelectDir = int;
     struct SelectCase;
-    struct gocpp_id_11;
+    struct gocpp_id_7;
     const reflect::flag flagKindMask = (1 << flagKindWidth) - 1;
     const reflect::flag flagStickyRO = 1 << 5;
     const reflect::flag flagEmbedRO = 1 << 6;

@@ -541,7 +541,7 @@ namespace golang::runtime
     }
 
 
-    struct gocpp_id_5
+    struct gocpp_id_4
         {
 
             using isGoStruct = void;
@@ -567,7 +567,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
         {
             return value.PrintTo(os);
         }
@@ -588,11 +588,11 @@ namespace golang::runtime
     bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen)
     {
         auto tp = _typePair {t, v};
-        if(auto [gocpp_id_4, ok] = seen[tp]; ok)
+        if(auto [gocpp_id_3, ok] = seen[tp]; ok)
         {
             return true;
         }
-        seen[tp] = gocpp_id_5 {};
+        seen[tp] = gocpp_id_4 {};
         if(t == v)
         {
             return true;

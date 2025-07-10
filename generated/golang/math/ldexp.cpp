@@ -57,7 +57,8 @@ namespace golang::math
                     break;
             }
         }
-        auto [frac, e] = normalize(frac);
+        auto [frac_tmp, e] = normalize(frac);
+        auto& frac = frac_tmp;
         exp += e;
         auto x = Float64bits(frac);
         exp += int(x >> shift) & mask - bias;

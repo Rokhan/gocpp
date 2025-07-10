@@ -175,7 +175,7 @@ namespace golang::os
     std::string Getenv(std::string key)
     {
         testlog::Getenv(key);
-        auto [v, gocpp_id_1] = syscall::Getenv(key);
+        auto [v, gocpp_id_0] = syscall::Getenv(key);
         return v;
     }
 

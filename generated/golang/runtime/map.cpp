@@ -1247,7 +1247,7 @@ namespace golang::runtime
         {
             *h->extra = mapextra {};
         }
-        auto [gocpp_id_2, nextOverflow] = makeBucketArray(t, h->B, h->buckets);
+        auto [gocpp_id_1, nextOverflow] = makeBucketArray(t, h->B, h->buckets);
         if(nextOverflow != nullptr)
         {
             h->extra->nextOverflow = nextOverflow;

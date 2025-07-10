@@ -1905,7 +1905,7 @@ namespace golang::image
             {
                 continue;
             }
-            auto [gocpp_id_3, gocpp_id_4, gocpp_id_5, a] = rec::RGBA(gocpp::recv(c));
+            auto [gocpp_id_0, gocpp_id_1, gocpp_id_2, a] = rec::RGBA(gocpp::recv(c));
             if(a != 0xffff)
             {
                 return false;

@@ -577,7 +577,7 @@ namespace golang::runtime
         uintptr_t i;
         if(inheap(uintptr_t(p)))
         {
-            auto [b, span, gocpp_id_1] = findObject(uintptr_t(p), 0, 0);
+            auto [b, span, gocpp_id_0] = findObject(uintptr_t(p), 0, 0);
             base = b;
             if(base == 0)
             {

@@ -906,7 +906,7 @@ namespace golang::bytes
                 b = append(b, c);
                 continue;
             }
-            auto [gocpp_id_2, wid] = utf8::DecodeRune(s.make_slice(i));
+            auto [gocpp_id_1, wid] = utf8::DecodeRune(s.make_slice(i));
             if(wid == 1)
             {
                 i++;
@@ -1001,7 +1001,7 @@ namespace golang::bytes
         auto i = lastIndexFunc(s, f, false);
         if(i >= 0 && s[i] >= utf8::RuneSelf)
         {
-            auto [gocpp_id_4, wid] = utf8::DecodeRune(s.make_slice(i));
+            auto [gocpp_id_2, wid] = utf8::DecodeRune(s.make_slice(i));
             i += wid;
         }
         else
@@ -1388,7 +1388,7 @@ namespace golang::bytes
             {
                 if(i > 0)
                 {
-                    auto [gocpp_id_6, wid] = utf8::DecodeRune(s.make_slice(start));
+                    auto [gocpp_id_3, wid] = utf8::DecodeRune(s.make_slice(start));
                     j += wid;
                 }
             }

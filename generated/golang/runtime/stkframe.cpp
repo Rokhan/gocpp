@@ -132,7 +132,7 @@ namespace golang::runtime
         {
             return uintptr_t(frame->fn.args);
         }
-        auto [argMap, gocpp_id_1] = rec::argMapInternal(gocpp::recv(frame));
+        auto [argMap, gocpp_id_0] = rec::argMapInternal(gocpp::recv(frame));
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
 
@@ -279,7 +279,8 @@ namespace golang::runtime
         std::tie(args, isReflect) = rec::argMapInternal(gocpp::recv(frame));
         if(args.n > 0 && args.bytedata == nullptr)
         {
-            auto stackmap = (stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
+            auto stackmap_tmp = (stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
+            auto& stackmap = stackmap_tmp;
             if(stackmap == nullptr || stackmap->n <= 0)
             {
                 print("runtime: frame "s, funcname(f), " untyped args "s, hex(frame->argp), "+"s, hex(args.n * goarch::PtrSize), "\n"s);

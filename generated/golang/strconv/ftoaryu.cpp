@@ -277,9 +277,12 @@ namespace golang::strconv
         }
         auto extra = (unsigned int)(- e2);
         auto extraMask = uint64_t((1 << extra) - 1);
-        auto [dl, fracl] = std::tuple{dl >> extra, dl & extraMask};
-        auto [dc, fracc] = std::tuple{dc >> extra, dc & extraMask};
-        auto [du, fracu] = std::tuple{du >> extra, du & extraMask};
+        auto [dl_tmp, fracl] = std::tuple{dl >> extra, dl & extraMask};
+        auto& dl = dl_tmp;
+        auto [dc_tmp, fracc] = std::tuple{dc >> extra, dc & extraMask};
+        auto& dc = dc_tmp;
+        auto [du_tmp, fracu] = std::tuple{du >> extra, du & extraMask};
+        auto& du = du_tmp;
         auto uok = ! du0 || fracu > 0;
         if(du0 && fracu == 0)
         {
@@ -550,7 +553,7 @@ namespace golang::strconv
         {
             return {uint32_t(x / 1e9), uint32_t(x % 1e9)};
         }
-        auto [hi, gocpp_id_5] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
+        auto [hi, gocpp_id_4] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
         auto q = hi >> 28;
         return {uint32_t(q), uint32_t(x - q * 1e9)};
     }

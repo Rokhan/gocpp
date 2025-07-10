@@ -511,18 +511,21 @@ namespace golang::runtime
                 }
                 continue;
             }
-            if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
             {
-                npages = s->npages;
-                if(rec::sweep(gocpp::recv(s), false))
+                auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
+                if(auto& s = s_tmp; ok)
                 {
-                    rec::Add(gocpp::recv(mheap_.reclaimCredit), npages);
+                    npages = s->npages;
+                    if(rec::sweep(gocpp::recv(s), false))
+                    {
+                        rec::Add(gocpp::recv(mheap_.reclaimCredit), npages);
+                    }
+                    else
+                    {
+                        npages = 0;
+                    }
+                    break;
                 }
-                else
-                {
-                    npages = 0;
-                }
-                break;
             }
         }
         rec::end(gocpp::recv(sweep.active), sl);
@@ -571,11 +574,14 @@ namespace golang::runtime
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
         {
-            if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
             {
-                rec::sweep(gocpp::recv(s), false);
-                rec::end(gocpp::recv(sweep.active), sl);
-                return;
+                auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
+                if(auto& s = s_tmp; ok)
+                {
+                    rec::sweep(gocpp::recv(s), false);
+                    rec::end(gocpp::recv(sweep.active), sl);
+                    return;
+                }
             }
             rec::end(gocpp::recv(sweep.active), sl);
         }
@@ -826,7 +832,8 @@ namespace golang::runtime
                 {
                     systemstack([=]() mutable -> void
                     {
-                        auto s = spanOf(uintptr_t(unsafe::Pointer(s->largeType)));
+                        auto s_tmp = spanOf(uintptr_t(unsafe::Pointer(s->largeType)));
+                        auto& s = s_tmp;
                         rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
                     });
                     *(uintptr_t*)(unsafe::Pointer(& s->largeType)) = 0;

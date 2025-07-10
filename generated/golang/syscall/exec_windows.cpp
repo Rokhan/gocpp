@@ -507,7 +507,7 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
-            auto [p, gocpp_id_1] = GetCurrentProcess();
+            auto [p, gocpp_id_0] = GetCurrentProcess();
             auto parentProcess = p;
             if(sys->ParentProcess != 0)
             {

@@ -101,7 +101,7 @@ namespace golang::reflect
         auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
-        auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_0, gocpp_id_1, abid] = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([=](auto& x) {
             x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
                 x.fn = code;
@@ -179,7 +179,7 @@ namespace golang::reflect
         auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
-        auto [gocpp_id_6, gocpp_id_7, abid] = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([=](auto& x) {
             x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
                 x.fn = code;

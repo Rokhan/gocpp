@@ -196,7 +196,7 @@ namespace golang::png
         {
             return FormatError("bad IHDR length"s);
         }
-        if(auto [gocpp_id_1, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 13)); err != nullptr)
+        if(auto [gocpp_id_0, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 13)); err != nullptr)
         {
             return err;
         }
@@ -543,7 +543,7 @@ namespace golang::png
             {
                 return {0, err};
             }
-            if(auto [gocpp_id_3, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
+            if(auto [gocpp_id_1, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
             {
                 return {0, err};
             }
@@ -776,7 +776,7 @@ namespace golang::png
         auto pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         for(auto y = 0; y < height; y++)
         {
-            auto [gocpp_id_5, err] = io::ReadFull(r, cr);
+            auto [gocpp_id_2, err] = io::ReadFull(r, cr);
             if(err != nullptr)
             {
                 if(err == io::go_EOF || err == io::ErrUnexpectedEOF)
@@ -1173,17 +1173,17 @@ namespace golang::png
         int bytesPerPixel = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_6 = gocpp::type_info(dst);
+            const auto& gocpp_id_3 = gocpp::type_info(dst);
             int conditionId = -1;
-            if(gocpp_id_6 == typeid(image::Alpha*)) { conditionId = 0; }
-            else if(gocpp_id_6 == typeid(image::Alpha16*)) { conditionId = 1; }
-            else if(gocpp_id_6 == typeid(image::Gray*)) { conditionId = 2; }
-            else if(gocpp_id_6 == typeid(image::Gray16*)) { conditionId = 3; }
-            else if(gocpp_id_6 == typeid(image::NRGBA*)) { conditionId = 4; }
-            else if(gocpp_id_6 == typeid(image::NRGBA64*)) { conditionId = 5; }
-            else if(gocpp_id_6 == typeid(image::Paletted*)) { conditionId = 6; }
-            else if(gocpp_id_6 == typeid(image::RGBA*)) { conditionId = 7; }
-            else if(gocpp_id_6 == typeid(image::RGBA64*)) { conditionId = 8; }
+            if(gocpp_id_3 == typeid(image::Alpha*)) { conditionId = 0; }
+            else if(gocpp_id_3 == typeid(image::Alpha16*)) { conditionId = 1; }
+            else if(gocpp_id_3 == typeid(image::Gray*)) { conditionId = 2; }
+            else if(gocpp_id_3 == typeid(image::Gray16*)) { conditionId = 3; }
+            else if(gocpp_id_3 == typeid(image::NRGBA*)) { conditionId = 4; }
+            else if(gocpp_id_3 == typeid(image::NRGBA64*)) { conditionId = 5; }
+            else if(gocpp_id_3 == typeid(image::Paletted*)) { conditionId = 6; }
+            else if(gocpp_id_3 == typeid(image::RGBA*)) { conditionId = 7; }
+            else if(gocpp_id_3 == typeid(image::RGBA64*)) { conditionId = 8; }
             switch(conditionId)
             {
                 case 0:
@@ -1301,7 +1301,7 @@ namespace golang::png
 
     struct gocpp::error rec::parseChunk(struct decoder* d, bool configOnly)
     {
-        if(auto [gocpp_id_8, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
+        if(auto [gocpp_id_4, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
             return err;
         }
@@ -1407,7 +1407,7 @@ namespace golang::png
 
     struct gocpp::error rec::verifyChecksum(struct decoder* d)
     {
-        if(auto [gocpp_id_10, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
+        if(auto [gocpp_id_5, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
             return err;
         }
@@ -1420,7 +1420,7 @@ namespace golang::png
 
     struct gocpp::error rec::checkHeader(struct decoder* d)
     {
-        auto [gocpp_id_12, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
+        auto [gocpp_id_6, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)
         {
             return err;

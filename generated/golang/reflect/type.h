@@ -447,7 +447,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cacheKey& value);
-    extern gocpp_id_6 funcLookupCache;
+    extern gocpp_id_3 funcLookupCache;
     struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t);
     struct Type MapOf(struct Type key, struct Type elem);
     extern mocklib::Mutex funcTypesMutex;
@@ -462,7 +462,7 @@ namespace golang::reflect
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);
     gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ);
     struct Type SliceOf(struct Type t);
-    extern gocpp_id_19 structLookupCache;
+    extern gocpp_id_10 structLookupCache;
     bool isLetter(gocpp::rune ch);
     bool isValidFieldName(std::string fieldName);
     struct Type StructOf(gocpp::slice<StructField> fields);

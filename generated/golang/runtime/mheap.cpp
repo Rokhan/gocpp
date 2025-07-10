@@ -1063,16 +1063,19 @@ namespace golang::runtime
                     if(inUseUnmarked & (1 << j) != 0)
                     {
                         auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
-                        if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
                         {
-                            auto npages = s->npages;
-                            unlock(& h->lock);
-                            if(rec::sweep(gocpp::recv(s), false))
+                            auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
+                            if(auto& s = s_tmp; ok)
                             {
-                                nFreed += npages;
+                                auto npages = s->npages;
+                                unlock(& h->lock);
+                                if(rec::sweep(gocpp::recv(s), false))
+                                {
+                                    nFreed += npages;
+                                }
+                                lock(& h->lock);
+                                inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
                             }
-                            lock(& h->lock);
-                            inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
                         }
                     }
                 }
@@ -2076,7 +2079,7 @@ namespace golang::runtime
         {
             if(gcphase != _GCoff)
             {
-                auto [base, span, gocpp_id_6] = findObject(uintptr_t(p), 0, 0);
+                auto [base, span, gocpp_id_5] = findObject(uintptr_t(p), 0, 0);
                 auto mp = acquirem();
                 auto gcw = & rec::ptr(gocpp::recv(mp->p))->gcw;
                 if(! rec::noscan(gocpp::recv(span->spanclass)))
@@ -2449,7 +2452,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_7
+    struct gocpp_id_6
     {
         mutex lock;
         gcBitsArena* free;
@@ -2495,13 +2498,13 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_7 gcBitsArenas;
+    gocpp_id_6 gcBitsArenas;
     // tryAlloc allocates from b or returns nil if b does not have enough room.
     // This is safe to call concurrently.
     struct gcBits* rec::tryAlloc(struct gcBitsArena* b, uintptr_t bytes)

@@ -268,7 +268,8 @@ namespace golang::runtime
                 auto tname = rec::nameOff(gocpp::recv(rtyp), t->Name);
                 if(rec::typeOff(gocpp::recv(rtyp), t->Mtyp) == itype && rec::Name(gocpp::recv(tname)) == iname)
                 {
-                    auto pkgPath = pkgPath(tname);
+                    auto pkgPath_tmp = pkgPath(tname);
+                    auto& pkgPath = pkgPath_tmp;
                     if(pkgPath == ""s)
                     {
                         pkgPath = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rtyp), x->PkgPath)));

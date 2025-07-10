@@ -523,7 +523,7 @@ namespace golang::runtime
     // only for tests
     uintptr_t* pinnerGetPinCounter(unsafe::Pointer addr)
     {
-        auto [gocpp_id_1, span, objIndex] = findObject(uintptr_t(addr), 0, 0);
+        auto [gocpp_id_0, span, objIndex] = findObject(uintptr_t(addr), 0, 0);
         auto offset = objIndex * span->elemsize;
         auto [t, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)

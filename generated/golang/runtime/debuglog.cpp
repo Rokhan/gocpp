@@ -874,10 +874,11 @@ namespace golang::runtime
                 case 8:
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
-                    auto str = gocpp::Init<stringStruct>([=](auto& x) {
+                    auto str_tmp = gocpp::Init<stringStruct>([=](auto& x) {
                         x.str = unsafe::Pointer(ptr);
                         x.len = len;
                     });
+                    auto& str = str_tmp;
                     auto s = *(std::string*)(unsafe::Pointer(& str));
                     print(s);
                     break;
@@ -1047,7 +1048,7 @@ namespace golang::runtime
                 print(" <<\n"s);
                 s->first = false;
             }
-            auto [end, gocpp_id_2, nano, p] = rec::header(gocpp::recv(s));
+            auto [end, gocpp_id_1, nano, p] = rec::header(gocpp::recv(s));
             auto oldEnd = s->end;
             s->end = end;
             print("["s);

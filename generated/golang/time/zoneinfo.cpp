@@ -449,7 +449,7 @@ namespace golang::time
         {
             return {""s, 0, 0, 0, false, false};
         }
-        auto [year, gocpp_id_2, gocpp_id_3, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
+        auto [year, gocpp_id_0, gocpp_id_1, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
         auto ysec = int64_t(yday * secondsPerDay) + sec % secondsPerDay;
         auto d = daysSinceEpoch(year);
         auto abs = int64_t(d * secondsPerDay);
@@ -727,8 +727,8 @@ namespace golang::time
             return {r, s, true};
         }
         int offset;
-        std::string s;
-        std::tie(offset, s, ok) = tzsetOffset(s.make_slice(1));
+        std::tie(offset, s_tmp, ok) = tzsetOffset(s.make_slice(1));
+        auto& s = s_tmp;
         if(! ok)
         {
             return {rule {}, ""s, false};
@@ -851,7 +851,7 @@ namespace golang::time
             auto zone = & l->zone[i];
             if(zone->name == name)
             {
-                auto [nam, offset, gocpp_id_7, gocpp_id_8, gocpp_id_9] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
+                auto [nam, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(l), unix - int64_t(zone->offset));
                 if(nam == zone->name)
                 {
                     return {offset, true};
@@ -903,7 +903,7 @@ namespace golang::time
         }
         rec::Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void
         {
-            auto [env, gocpp_id_11] = syscall::Getenv("ZONEINFO"s);
+            auto [env, gocpp_id_5] = syscall::Getenv("ZONEINFO"s);
             zoneinfo = & env;
         });
         gocpp::error firstErr = {};

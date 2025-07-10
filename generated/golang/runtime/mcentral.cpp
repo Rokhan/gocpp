@@ -164,11 +164,14 @@ namespace golang::runtime
                 {
                     break;
                 }
-                if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
                 {
-                    rec::sweep(gocpp::recv(s), true);
-                    rec::end(gocpp::recv(sweep.active), sl);
-                    goto havespan;
+                    auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
+                    if(auto& s = s_tmp; ok)
+                    {
+                        rec::sweep(gocpp::recv(s), true);
+                        rec::end(gocpp::recv(sweep.active), sl);
+                        goto havespan;
+                    }
                 }
             }
             for(; spanBudget >= 0; spanBudget--)
@@ -178,17 +181,20 @@ namespace golang::runtime
                 {
                     break;
                 }
-                if(auto [s, ok] = rec::tryAcquire(gocpp::recv(sl), s); ok)
                 {
-                    rec::sweep(gocpp::recv(s), true);
-                    auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
-                    if(freeIndex != s.nelems)
+                    auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
+                    if(auto& s = s_tmp; ok)
                     {
-                        s.freeindex = freeIndex;
-                        rec::end(gocpp::recv(sweep.active), sl);
-                        goto havespan;
+                        rec::sweep(gocpp::recv(s), true);
+                        auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
+                        if(freeIndex != s.nelems)
+                        {
+                            s.freeindex = freeIndex;
+                            rec::end(gocpp::recv(sweep.active), sl);
+                            goto havespan;
+                        }
+                        rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s.mspan);
                     }
-                    rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s.mspan);
                 }
             }
             rec::end(gocpp::recv(sweep.active), sl);

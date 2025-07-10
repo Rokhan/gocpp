@@ -89,7 +89,7 @@ namespace golang::runtime
     // lfstack.push. This only needs to be called when node is allocated.
     void lfnodeValidate(struct lfnode* node)
     {
-        if(auto [base, gocpp_id_2, gocpp_id_3] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)
+        if(auto [base, gocpp_id_0, gocpp_id_1] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)
         {
             go_throw("lfstack node allocated from the heap"s);
         }

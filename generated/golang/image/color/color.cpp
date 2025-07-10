@@ -565,7 +565,7 @@ namespace golang::color
     Model Gray16Model = ModelFunc(gray16Model);
     struct Color rgbaModel(struct Color c)
     {
-        if(auto [gocpp_id_1, ok] = gocpp::getValue<RGBA>(c); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<RGBA>(c); ok)
         {
             return c;
         }
@@ -575,7 +575,7 @@ namespace golang::color
 
     struct Color rgba64Model(struct Color c)
     {
-        if(auto [gocpp_id_3, ok] = gocpp::getValue<RGBA64>(c); ok)
+        if(auto [gocpp_id_1, ok] = gocpp::getValue<RGBA64>(c); ok)
         {
             return c;
         }
@@ -585,7 +585,7 @@ namespace golang::color
 
     struct Color nrgbaModel(struct Color c)
     {
-        if(auto [gocpp_id_5, ok] = gocpp::getValue<NRGBA>(c); ok)
+        if(auto [gocpp_id_2, ok] = gocpp::getValue<NRGBA>(c); ok)
         {
             return c;
         }
@@ -606,7 +606,7 @@ namespace golang::color
 
     struct Color nrgba64Model(struct Color c)
     {
-        if(auto [gocpp_id_7, ok] = gocpp::getValue<NRGBA64>(c); ok)
+        if(auto [gocpp_id_3, ok] = gocpp::getValue<NRGBA64>(c); ok)
         {
             return c;
         }
@@ -627,42 +627,42 @@ namespace golang::color
 
     struct Color alphaModel(struct Color c)
     {
-        if(auto [gocpp_id_9, ok] = gocpp::getValue<Alpha>(c); ok)
+        if(auto [gocpp_id_4, ok] = gocpp::getValue<Alpha>(c); ok)
         {
             return c;
         }
-        auto [gocpp_id_13, gocpp_id_14, gocpp_id_15, a] = rec::RGBA(gocpp::recv(c));
+        auto [gocpp_id_5, gocpp_id_6, gocpp_id_7, a] = rec::RGBA(gocpp::recv(c));
         return Alpha {uint8_t(a >> 8)};
     }
 
     struct Color alpha16Model(struct Color c)
     {
-        if(auto [gocpp_id_17, ok] = gocpp::getValue<Alpha16>(c); ok)
+        if(auto [gocpp_id_8, ok] = gocpp::getValue<Alpha16>(c); ok)
         {
             return c;
         }
-        auto [gocpp_id_21, gocpp_id_22, gocpp_id_23, a] = rec::RGBA(gocpp::recv(c));
+        auto [gocpp_id_9, gocpp_id_10, gocpp_id_11, a] = rec::RGBA(gocpp::recv(c));
         return Alpha16 {uint16_t(a)};
     }
 
     struct Color grayModel(struct Color c)
     {
-        if(auto [gocpp_id_25, ok] = gocpp::getValue<Gray>(c); ok)
+        if(auto [gocpp_id_12, ok] = gocpp::getValue<Gray>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_27] = rec::RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_13] = rec::RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
         return Gray {uint8_t(y)};
     }
 
     struct Color gray16Model(struct Color c)
     {
-        if(auto [gocpp_id_29, ok] = gocpp::getValue<Gray16>(c); ok)
+        if(auto [gocpp_id_14, ok] = gocpp::getValue<Gray16>(c); ok)
         {
             return c;
         }
-        auto [r, g, b, gocpp_id_31] = rec::RGBA(gocpp::recv(c));
+        auto [r, g, b, gocpp_id_15] = rec::RGBA(gocpp::recv(c));
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
         return Gray16 {uint16_t(y)};
     }

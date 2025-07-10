@@ -967,7 +967,7 @@ namespace golang::runtime
         {
             s->freeHWM = offAddr {addr};
         }
-        auto [searchAddr, gocpp_id_2] = rec::Load(gocpp::recv(s->searchAddrForce));
+        auto [searchAddr, gocpp_id_1] = rec::Load(gocpp::recv(s->searchAddrForce));
         if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), offAddr {addr}))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrForce), addr);
@@ -982,7 +982,7 @@ namespace golang::runtime
     void rec::nextGen(struct scavengeIndex* s)
     {
         s->gen++;
-        auto [searchAddr, gocpp_id_4] = rec::Load(gocpp::recv(s->searchAddrBg));
+        auto [searchAddr, gocpp_id_2] = rec::Load(gocpp::recv(s->searchAddrBg));
         if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), s->freeHWM))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrBg), rec::addr(gocpp::recv(s->freeHWM)));

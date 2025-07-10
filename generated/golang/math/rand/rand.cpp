@@ -227,7 +227,7 @@ namespace golang::rand
     // to generate other random values.
     struct Rand* New(struct Source src)
     {
-        auto [s64, gocpp_id_1] = gocpp::getValue<Source64>(src);
+        auto [s64, gocpp_id_0] = gocpp::getValue<Source64>(src);
         return gocpp::InitPtr<Rand>([=](auto& x) {
             x.src = src;
             x.s64 = s64;
@@ -435,10 +435,10 @@ namespace golang::rand
         struct gocpp::error err;
         //Go type switch emulation
         {
-            const auto& gocpp_id_2 = gocpp::type_info(r->src);
+            const auto& gocpp_id_1 = gocpp::type_info(r->src);
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(lockedSource*)) { conditionId = 0; }
-            else if(gocpp_id_2 == typeid(runtimeSource*)) { conditionId = 1; }
+            if(gocpp_id_1 == typeid(lockedSource*)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(runtimeSource*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -464,7 +464,7 @@ namespace golang::rand
         struct gocpp::error err;
         auto pos = *readPos;
         auto val = *readVal;
-        auto [rng, gocpp_id_4] = gocpp::getValue<rngSource*>(src);
+        auto [rng, gocpp_id_2] = gocpp::getValue<rngSource*>(src);
         for(n = 0; n < len(p); n++)
         {
             if(pos == 0)
@@ -605,7 +605,7 @@ namespace golang::rand
         auto orig = rec::Load(gocpp::recv(globalRandGenerator));
         if(orig != nullptr)
         {
-            if(auto [gocpp_id_6, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
+            if(auto [gocpp_id_3, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
             {
                 rec::Seed(gocpp::recv(orig), seed);
                 return;

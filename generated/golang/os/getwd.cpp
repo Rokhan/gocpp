@@ -167,7 +167,7 @@ namespace golang::os
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
-                    auto [d, gocpp_id_2] = lstatNolog(parent + "/"s + name);
+                    auto [d, gocpp_id_1] = lstatNolog(parent + "/"s + name);
                     if(SameFile(d, dot))
                     {
                         dir = "/"s + name + dir;

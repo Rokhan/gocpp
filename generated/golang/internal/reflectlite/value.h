@@ -69,39 +69,39 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
-    struct gocpp_id_6 : gocpp::Interface
+    struct gocpp_id_3 : gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_6(){}
-        gocpp_id_6(gocpp_id_6& i) = default;
-        gocpp_id_6(const gocpp_id_6& i) = default;
-        gocpp_id_6& operator=(gocpp_id_6& i) = default;
-        gocpp_id_6& operator=(const gocpp_id_6& i) = default;
+        gocpp_id_3(){}
+        gocpp_id_3(gocpp_id_3& i) = default;
+        gocpp_id_3(const gocpp_id_3& i) = default;
+        gocpp_id_3& operator=(gocpp_id_3& i) = default;
+        gocpp_id_3& operator=(const gocpp_id_3& i) = default;
 
         template<typename T>
-        gocpp_id_6(T& ref);
+        gocpp_id_3(T& ref);
 
         template<typename T>
-        gocpp_id_6(const T& ref);
+        gocpp_id_3(const T& ref);
 
         template<typename T>
-        gocpp_id_6(T* ptr);
+        gocpp_id_3(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_6
+        struct Igocpp_id_3
         {
             virtual void vM() = 0;
         };
 
         template<typename T, typename StoreT>
-        struct gocpp_id_6Impl : Igocpp_id_6
+        struct gocpp_id_3Impl : Igocpp_id_3
         {
-            explicit gocpp_id_6Impl(T* ptr)
+            explicit gocpp_id_3Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -111,50 +111,50 @@ namespace golang::reflectlite
             StoreT value;
         };
 
-        std::shared_ptr<Igocpp_id_6> value;
+        std::shared_ptr<Igocpp_id_3> value;
     };
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<struct gocpp_id_6, false>& self);
-        void M(const gocpp::ObjRecv<struct gocpp_id_6>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_id_3, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_id_3>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     go_any valueInterface(struct Value v);
-    struct gocpp_id_7 : gocpp::Interface
+    struct gocpp_id_4 : gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_7(){}
-        gocpp_id_7(gocpp_id_7& i) = default;
-        gocpp_id_7(const gocpp_id_7& i) = default;
-        gocpp_id_7& operator=(gocpp_id_7& i) = default;
-        gocpp_id_7& operator=(const gocpp_id_7& i) = default;
+        gocpp_id_4(){}
+        gocpp_id_4(gocpp_id_4& i) = default;
+        gocpp_id_4(const gocpp_id_4& i) = default;
+        gocpp_id_4& operator=(gocpp_id_4& i) = default;
+        gocpp_id_4& operator=(const gocpp_id_4& i) = default;
 
         template<typename T>
-        gocpp_id_7(T& ref);
+        gocpp_id_4(T& ref);
 
         template<typename T>
-        gocpp_id_7(const T& ref);
+        gocpp_id_4(const T& ref);
 
         template<typename T>
-        gocpp_id_7(T* ptr);
+        gocpp_id_4(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_7
+        struct Igocpp_id_4
         {
             virtual void vM() = 0;
         };
 
         template<typename T, typename StoreT>
-        struct gocpp_id_7Impl : Igocpp_id_7
+        struct gocpp_id_4Impl : Igocpp_id_4
         {
-            explicit gocpp_id_7Impl(T* ptr)
+            explicit gocpp_id_4Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -164,16 +164,16 @@ namespace golang::reflectlite
             StoreT value;
         };
 
-        std::shared_ptr<Igocpp_id_7> value;
+        std::shared_ptr<Igocpp_id_4> value;
     };
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<struct gocpp_id_7, false>& self);
-        void M(const gocpp::ObjRecv<struct gocpp_id_7>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_id_4>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     int chanlen(unsafe::Pointer);
     int maplen(unsafe::Pointer);
     unsafe::Pointer unsafe_New(abi::Type*);
@@ -182,7 +182,7 @@ namespace golang::reflectlite
     void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst);
     void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
     void escapes(go_any x);
-    extern gocpp_id_8 dummy;
+    extern gocpp_id_5 dummy;
     unsafe::Pointer noescape(unsafe::Pointer p);
 
     namespace rec

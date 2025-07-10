@@ -84,7 +84,7 @@ namespace golang::image
     void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
     {
         rec::Lock(gocpp::recv(formatsMu));
-        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
         rec::Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
         rec::Unlock(gocpp::recv(formatsMu));
     }
@@ -168,7 +168,7 @@ namespace golang::image
     // sniff determines the format of r's data.
     struct format sniff(struct reader r)
     {
-        auto [formats, gocpp_id_3] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
         for(auto [gocpp_ignored, f] : formats)
         {
             auto [b, err] = rec::Peek(gocpp::recv(r), len(f.magic));

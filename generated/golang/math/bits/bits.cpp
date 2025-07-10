@@ -639,7 +639,7 @@ namespace golang::bits
     // on a quotient overflow.
     uint64_t Rem64(uint64_t hi, uint64_t lo, uint64_t y)
     {
-        auto [gocpp_id_1, rem] = Div64(hi % y, lo, y);
+        auto [gocpp_id_0, rem] = Div64(hi % y, lo, y);
         return rem;
     }
 

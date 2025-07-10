@@ -181,7 +181,7 @@ namespace golang::runtime
         if(p->summary[len(p->summary) - 1][ci] != 0)
         {
             chunk = rec::chunkOf(gocpp::recv(p), ci);
-            auto [j, gocpp_id_1] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
+            auto [j, gocpp_id_0] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
             if(j == ~ (unsigned int)(0))
             {
                 go_throw("bad summary data"s);
@@ -194,7 +194,7 @@ namespace golang::runtime
         }
         else
         {
-            auto [addr, gocpp_id_3] = rec::find(gocpp::recv(p), 1);
+            auto [addr, gocpp_id_1] = rec::find(gocpp::recv(p), 1);
             if(addr == 0)
             {
                 p->searchAddr = maxSearchAddr();

@@ -683,7 +683,7 @@ namespace golang::runtime
     // heapGoal returns the current heap goal.
     uint64_t rec::heapGoal(struct gcControllerState* c)
     {
-        auto [goal, gocpp_id_1] = rec::heapGoalInternal(gocpp::recv(c));
+        auto [goal, gocpp_id_0] = rec::heapGoalInternal(gocpp::recv(c));
         return goal;
     }
 

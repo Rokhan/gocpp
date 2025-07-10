@@ -205,7 +205,7 @@ namespace golang::sync
             race::ReleaseMerge(poolRaceAddr(x));
             race::Disable();
         }
-        auto [l, gocpp_id_1] = rec::pin(gocpp::recv(p));
+        auto [l, gocpp_id_0] = rec::pin(gocpp::recv(p));
         if(l->go_private == nullptr)
         {
             l->go_private = x;
@@ -240,7 +240,7 @@ namespace golang::sync
         l->go_private = nullptr;
         if(x == nullptr)
         {
-            std::tie(x, gocpp_id_2) = rec::popHead(gocpp::recv(l->shared));
+            std::tie(x, gocpp_id_1) = rec::popHead(gocpp::recv(l->shared));
             if(x == nullptr)
             {
                 x = rec::getSlow(gocpp::recv(p), pid);
@@ -269,7 +269,7 @@ namespace golang::sync
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i + 1) % int(size));
-            if(auto [x, gocpp_id_4] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_2] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
             {
                 return x;
             }
@@ -289,7 +289,7 @@ namespace golang::sync
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i) % int(size));
-            if(auto [x, gocpp_id_6] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_3] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
             {
                 return x;
             }

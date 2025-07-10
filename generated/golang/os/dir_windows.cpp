@@ -191,7 +191,7 @@ namespace golang::os
                     {
                         break;
                     }
-                    if(auto [s, gocpp_id_1] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
+                    if(auto [s, gocpp_id_0] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "readdir"s;

@@ -99,7 +99,7 @@ namespace golang::zlib
     // Writes may be buffered and not flushed until Close.
     struct Writer* NewWriter(io::Writer w)
     {
-        auto [z, gocpp_id_1] = NewWriterLevelDict(w, DefaultCompression, nullptr);
+        auto [z, gocpp_id_0] = NewWriterLevelDict(w, DefaultCompression, nullptr);
         return z;
     }
 
@@ -205,14 +205,14 @@ namespace golang::zlib
             z->scratch[1] |= 1 << 5;
         }
         z->scratch[1] += uint8_t(31 - rec::Uint16(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 2)) % 31);
-        if(std::tie(gocpp_id_2, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
+        if(std::tie(gocpp_id_1, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 2)); err != nullptr)
         {
             return err;
         }
         if(z->dict != nullptr)
         {
             rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), adler32::Checksum(z->dict));
-            if(std::tie(gocpp_id_3, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
+            if(std::tie(gocpp_id_2, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
                 return err;
             }
@@ -292,7 +292,7 @@ namespace golang::zlib
         }
         auto checksum = rec::Sum32(gocpp::recv(z->digest));
         rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), checksum);
-        std::tie(gocpp_id_4, z->err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
+        std::tie(gocpp_id_3, z->err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
         return z->err;
     }
 

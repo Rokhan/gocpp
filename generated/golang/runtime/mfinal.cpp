@@ -503,7 +503,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: first argument was allocated into an arena"s);
         }
-        auto [base, span, gocpp_id_1] = findObject(uintptr_t(e->data), 0, 0);
+        auto [base, span, gocpp_id_0] = findObject(uintptr_t(e->data), 0, 0);
         if(base == 0)
         {
             if(isGoPointerWithoutSpan(e->data))

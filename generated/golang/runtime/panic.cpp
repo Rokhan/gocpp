@@ -1435,7 +1435,8 @@ namespace golang::runtime
     {
         if(gp->sig != 0)
         {
-            auto signame = signame(gp->sig);
+            auto signame_tmp = signame(gp->sig);
+            auto& signame = signame_tmp;
             if(signame != ""s)
             {
                 print("[signal "s, signame);

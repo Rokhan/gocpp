@@ -226,7 +226,7 @@ namespace golang::reflectlite
     // assumed to be two stack frames above.
     std::string methodName()
     {
-        auto [pc, gocpp_id_3, gocpp_id_4, gocpp_id_5] = runtime::Caller(2);
+        auto [pc, gocpp_id_0, gocpp_id_1, gocpp_id_2] = runtime::Caller(2);
         auto f = runtime::FuncForPC(pc);
         if(f == nullptr)
         {
@@ -313,48 +313,48 @@ namespace golang::reflectlite
 
     
                         template<typename T>
-                        gocpp_id_6::gocpp_id_6(T& ref)
+                        gocpp_id_3::gocpp_id_3(T& ref)
                         {
-                            value.reset(new gocpp_id_6Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            value.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_6::gocpp_id_6(const T& ref)
+                        gocpp_id_3::gocpp_id_3(const T& ref)
                         {
-                            value.reset(new gocpp_id_6Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            value.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_6::gocpp_id_6(T* ptr)
+                        gocpp_id_3::gocpp_id_3(T* ptr)
                         {
-                            value.reset(new gocpp_id_6Impl<T, gocpp::ptr<T>>(ptr));
+                            value.reset(new gocpp_id_3Impl<T, gocpp::ptr<T>>(ptr));
                         }
 
-                        std::ostream& gocpp_id_6::PrintTo(std::ostream& os) const
+                        std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
                         {
                             return os;
                         }
 
                         template<typename T, typename StoreT>
-                        void gocpp_id_6::gocpp_id_6Impl<T, StoreT>::vM()
+                        void gocpp_id_3::gocpp_id_3Impl<T, StoreT>::vM()
                         {
                             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
 
                         namespace rec
                         {
-                            void M(const gocpp::PtrRecv<struct gocpp_id_6, false>& self)
+                            void M(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
                             {
                                 return self.ptr->value->vM();
                             }
 
-                            void M(const gocpp::ObjRecv<struct gocpp_id_6>& self)
+                            void M(const gocpp::ObjRecv<struct gocpp_id_3>& self)
                             {
                                 return self.obj.value->vM();
                             }
                         }
 
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
+                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
                         {
                             return value.PrintTo(os);
                         }
@@ -383,7 +383,7 @@ namespace golang::reflectlite
                     }
                     else
                     {
-                        eface = (go_any)(*(gocpp_id_6*)(v.ptr));
+                        eface = (go_any)(*(gocpp_id_3*)(v.ptr));
                     }
                     auto x = unpackEface(eface);
                     if(x.flag != 0)
@@ -415,48 +415,48 @@ namespace golang::reflectlite
 
     
             template<typename T>
-            gocpp_id_7::gocpp_id_7(T& ref)
+            gocpp_id_4::gocpp_id_4(T& ref)
             {
-                value.reset(new gocpp_id_7Impl<T, std::unique_ptr<T>>(new T(ref)));
+                value.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_7::gocpp_id_7(const T& ref)
+            gocpp_id_4::gocpp_id_4(const T& ref)
             {
-                value.reset(new gocpp_id_7Impl<T, std::unique_ptr<T>>(new T(ref)));
+                value.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_7::gocpp_id_7(T* ptr)
+            gocpp_id_4::gocpp_id_4(T* ptr)
             {
-                value.reset(new gocpp_id_7Impl<T, gocpp::ptr<T>>(ptr));
+                value.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_7::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename StoreT>
-            void gocpp_id_7::gocpp_id_7Impl<T, StoreT>::vM()
+            void gocpp_id_4::gocpp_id_4Impl<T, StoreT>::vM()
             {
                 return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }
 
             namespace rec
             {
-                void M(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
+                void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self)
                 {
                     return self.ptr->value->vM();
                 }
 
-                void M(const gocpp::ObjRecv<struct gocpp_id_7>& self)
+                void M(const gocpp::ObjRecv<struct gocpp_id_4>& self)
                 {
                     return self.obj.value->vM();
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
             {
                 return value.PrintTo(os);
             }
@@ -474,7 +474,7 @@ namespace golang::reflectlite
             {
                 return *(go_any*)(v.ptr);
             }
-            return *(gocpp_id_7*)(v.ptr);
+            return *(gocpp_id_4*)(v.ptr);
         }
         return packEface(v);
     }
@@ -718,7 +718,7 @@ namespace golang::reflectlite
         }
     }
 
-    struct gocpp_id_8
+    struct gocpp_id_5
     {
         bool b;
         go_any x;
@@ -752,13 +752,13 @@ namespace golang::reflectlite
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_8 dummy;
+    gocpp_id_5 dummy;
     //go:nosplit
     unsafe::Pointer noescape(unsafe::Pointer p)
     {

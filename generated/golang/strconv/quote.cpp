@@ -544,7 +544,7 @@ namespace golang::strconv
     // If s does not start with a valid quoted string, QuotedPrefix returns an error.
     std::tuple<std::string, struct gocpp::error> QuotedPrefix(std::string s)
     {
-        auto [out, gocpp_id_1, err] = unquote(s, false);
+        auto [out, gocpp_id_0, err] = unquote(s, false);
         return {out, err};
     }
 

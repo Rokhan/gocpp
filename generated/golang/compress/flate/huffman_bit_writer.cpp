@@ -634,7 +634,8 @@ namespace golang::flate
                 continue;
             }
             auto length = rec::length(gocpp::recv(t));
-            auto lengthCode = lengthCode(length);
+            auto lengthCode_tmp = lengthCode(length);
+            auto& lengthCode = lengthCode_tmp;
             rec::writeCode(gocpp::recv(w), leCodes[lengthCode + lengthCodesStart]);
             auto extraLengthBits = (unsigned int)(lengthExtraBits[lengthCode]);
             if(extraLengthBits > 0)
@@ -643,7 +644,8 @@ namespace golang::flate
                 rec::writeBits(gocpp::recv(w), extraLength, extraLengthBits);
             }
             auto offset = rec::offset(gocpp::recv(t));
-            auto offsetCode = offsetCode(offset);
+            auto offsetCode_tmp = offsetCode(offset);
+            auto& offsetCode = offsetCode_tmp;
             rec::writeCode(gocpp::recv(w), oeCodes[offsetCode]);
             auto extraOffsetBits = (unsigned int)(offsetExtraBits[offsetCode]);
             if(extraOffsetBits > 0)

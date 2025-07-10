@@ -1017,11 +1017,12 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
-        auto libcall = gocpp::Init<libcall>([=](auto& x) {
+        auto libcall_tmp = gocpp::Init<libcall>([=](auto& x) {
             x.fn = uintptr_t(unsafe::Pointer(fn));
             x.n = uintptr_t(n);
             x.args = args;
         });
+        auto& libcall = libcall_tmp;
         asmstdcall_trampoline(noescape(unsafe::Pointer(& libcall)));
         return libcall.r1;
     }

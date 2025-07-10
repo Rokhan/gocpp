@@ -622,11 +622,14 @@ namespace golang::bufio
             n += m;
             return {n, err};
         }
-        if(auto [w, ok] = gocpp::getValue<io::ReaderFrom>(w); ok)
         {
-            auto [m, err] = rec::ReadFrom(gocpp::recv(w), b->rd);
-            n += m;
-            return {n, err};
+            auto [w_tmp, ok] = gocpp::getValue<io::ReaderFrom>(w);
+            if(auto& w = w_tmp; ok)
+            {
+                auto [m, err] = rec::ReadFrom(gocpp::recv(w), b->rd);
+                n += m;
+                return {n, err};
+            }
         }
         if(b->w - b->r < len(b->buf))
         {

@@ -1298,7 +1298,7 @@ namespace golang::runtime
                 return mask;
             }
         }
-        if(auto [base, s, gocpp_id_1] = findObject(uintptr_t(p), 0, 0); base != 0)
+        if(auto [base, s, gocpp_id_0] = findObject(uintptr_t(p), 0, 0); base != 0)
         {
             if(rec::noscan(gocpp::recv(s->spanclass)))
             {
@@ -1386,7 +1386,7 @@ namespace golang::runtime
             }
             if(found)
             {
-                auto [locals, gocpp_id_4, gocpp_id_5] = rec::getStackMap(gocpp::recv(u.frame), false);
+                auto [locals, gocpp_id_1, gocpp_id_2] = rec::getStackMap(gocpp::recv(u.frame), false);
                 if(locals.n == 0)
                 {
                     return mask;

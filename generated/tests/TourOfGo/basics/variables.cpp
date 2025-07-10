@@ -26,6 +26,38 @@ namespace golang::main
     int ii = 3;
     int jj = 4;
     int kk = 5;
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    pos::operator T()
+    {
+        T result;
+        result.x = this->x;
+        result.y = this->y;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool pos::operator==(const T& ref) const
+    {
+        if (x != ref.x) return false;
+        if (y != ref.y) return false;
+        return true;
+    }
+
+    std::ostream& pos::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << x;
+        os << " " << y;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct pos& value)
+    {
+        return value.PrintTo(os);
+    }
+
     std::function<void (void)> funcVar1 = []() mutable -> void
     {
         mocklib::Println("funcVar"s);
@@ -78,12 +110,20 @@ namespace golang::main
         std::string s;
         i = 3;
         s = "hello"s;
+        auto p = gocpp::Init<pos>([=](auto& x) {
+            x.x = 1;
+            x.y = 2;
+        });
         {
             auto j = i;
-            auto i = 10;
+            auto i_tmp = 10 + i;
+            auto& i = i_tmp;
+            auto x = p.x;
+            auto p_tmp = p.y;
+            auto& p = p_tmp;
             auto k = i;
             auto s = "world"s;
-            mocklib::Println("withNamedResults:"s, i, s, j, k);
+            mocklib::Println("withNamedResults:"s, i, s, j, k, x, p);
         }
         mocklib::Println("withNamedResults:"s, i, s);
         return {i, s};

@@ -9,7 +9,7 @@ namespace golang::runtime
     struct gocpp_id_0;
     struct gocpp_id_1;
     struct _typePair;
-    struct gocpp_id_5;
+    struct gocpp_id_4;
 }
 #include "golang/internal/abi/type.fwd.h"
 

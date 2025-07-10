@@ -825,7 +825,7 @@ namespace golang::poll
             {
                 return {n, nullptr, err};
             }
-            auto [sa, gocpp_id_1] = rec::Sockaddr(gocpp::recv(o->rsa));
+            auto [sa, gocpp_id_0] = rec::Sockaddr(gocpp::recv(o->rsa));
             return {n, sa, nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -1300,7 +1300,7 @@ namespace golang::poll
     {
         auto o = & fd->wop;
         o->sa = ra;
-        auto [gocpp_id_3, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
+        auto [gocpp_id_1, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
         {
             return ConnectExFunc(o->fd->Sysfd, o->sa, nullptr, 0, nullptr, & o->o);
         });
@@ -1311,7 +1311,7 @@ namespace golang::poll
     {
         o->handle = s;
         o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
-        auto [gocpp_id_5, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
+        auto [gocpp_id_2, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
         {
             return AcceptFunc(o->fd->Sysfd, o->handle, (unsigned char*)(unsafe::Pointer(& rawsa[0])), 0, uint32_t(o->rsan), uint32_t(o->rsan), & o->qty, & o->o);
         });
@@ -1529,7 +1529,7 @@ namespace golang::poll
                 {
                     o->flags |= windows::MSG_PEEK;
                 }
-                auto [gocpp_id_7, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
+                auto [gocpp_id_3, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
                 {
                     return syscall::WSARecv(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, & o->o, nullptr);
                 });
@@ -1618,10 +1618,10 @@ namespace golang::poll
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_8 = gocpp::type_info(sa);
+            const auto& gocpp_id_4 = gocpp::type_info(sa);
             int conditionId = -1;
-            if(gocpp_id_8 == typeid(syscall::SockaddrInet4*)) { conditionId = 0; }
-            else if(gocpp_id_8 == typeid(syscall::SockaddrInet6*)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(syscall::SockaddrInet4*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(syscall::SockaddrInet6*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:

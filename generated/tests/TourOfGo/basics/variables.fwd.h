@@ -3,3 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::main
+{
+    struct pos;
+}

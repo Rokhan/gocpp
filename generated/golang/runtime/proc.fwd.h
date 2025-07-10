@@ -10,8 +10,8 @@ namespace golang::runtime
     const long freezeStopWait = 0x7fffffff;
     using stwReason = uint8_t;
     struct worldStop;
-    struct gocpp_id_2;
-    struct gocpp_id_18;
+    struct gocpp_id_1;
+    struct gocpp_id_11;
     struct sysmontick;
     const int forcePreemptNS = 10 * 1000 * 1000;
     using pMask = gocpp::slice<uint32_t>;

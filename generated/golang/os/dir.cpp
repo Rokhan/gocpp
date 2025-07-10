@@ -59,7 +59,7 @@ namespace golang::os
         {
             return {nullptr, ErrInvalid};
         }
-        auto [gocpp_id_2, gocpp_id_3, infos, err] = rec::readdir(gocpp::recv(f), n, readdirFileInfo);
+        auto [gocpp_id_0, gocpp_id_1, infos, err] = rec::readdir(gocpp::recv(f), n, readdirFileInfo);
         if(infos == nullptr)
         {
             infos = gocpp::slice<os::FileInfo> {};
@@ -90,7 +90,7 @@ namespace golang::os
         {
             return {nullptr, ErrInvalid};
         }
-        std::tie(names, gocpp_id_4, gocpp_id_5, err) = rec::readdir(gocpp::recv(f), n, readdirName);
+        std::tie(names, gocpp_id_2, gocpp_id_3, err) = rec::readdir(gocpp::recv(f), n, readdirName);
         if(names == nullptr)
         {
             names = gocpp::slice<std::string> {};
@@ -116,7 +116,7 @@ namespace golang::os
         {
             return {nullptr, ErrInvalid};
         }
-        auto [gocpp_id_8, dirents, gocpp_id_9, err] = rec::readdir(gocpp::recv(f), n, readdirDirEntry);
+        auto [gocpp_id_4, dirents, gocpp_id_5, err] = rec::readdir(gocpp::recv(f), n, readdirDirEntry);
         if(dirents == nullptr)
         {
             dirents = gocpp::slice<os::DirEntry> {};

@@ -822,7 +822,7 @@ namespace golang::runtime
                 return n;
             }
             auto u2 = u;
-            auto [remaining, gocpp_id_1] = traceback2(& u, showRuntime, maxInt, 0);
+            auto [remaining, gocpp_id_0] = traceback2(& u, showRuntime, maxInt, 0);
             auto elide = remaining - lastN - tracebackOuterFrames;
             if(elide > 0)
             {
@@ -879,7 +879,7 @@ namespace golang::runtime
             return {true, false};
         };
         auto gp = rec::ptr(gocpp::recv(u->g));
-        auto [level, gocpp_id_4, gocpp_id_5] = gotraceback();
+        auto [level, gocpp_id_1, gocpp_id_2] = gotraceback();
         gocpp::array<uintptr_t, 32> cgoBuf = {};
         for(; rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
@@ -1054,7 +1054,7 @@ namespace golang::runtime
     // be printed during a traceback.
     bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID)
     {
-        auto [level, gocpp_id_8, gocpp_id_9] = gotraceback();
+        auto [level, gocpp_id_3, gocpp_id_4] = gotraceback();
         if(level > 1)
         {
             return true;
@@ -1099,7 +1099,7 @@ namespace golang::runtime
     });
     void goroutineheader(struct g* gp)
     {
-        auto [level, gocpp_id_12, gocpp_id_13] = gotraceback();
+        auto [level, gocpp_id_5, gocpp_id_6] = gotraceback();
         auto gpstatus = readgstatus(gp);
         auto isScan = gpstatus & _Gscan != 0;
         gpstatus &^= _Gscan;
@@ -1154,7 +1154,7 @@ namespace golang::runtime
 
     void tracebackothers(struct g* me)
     {
-        auto [level, gocpp_id_16, gocpp_id_17] = gotraceback();
+        auto [level, gocpp_id_7, gocpp_id_8] = gotraceback();
         auto curgp = getg()->m->curg;
         if(curgp != nullptr && curgp != me)
         {

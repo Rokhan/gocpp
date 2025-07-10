@@ -326,7 +326,7 @@ namespace golang::runtime
         {
             return {pc, file, line, ok};
         }
-        auto [frame, gocpp_id_1] = rec::Next(gocpp::recv(CallersFrames(rpc)));
+        auto [frame, gocpp_id_0] = rec::Next(gocpp::recv(CallersFrames(rpc)));
         return {frame.PC, frame.File, frame.Line, frame.PC != 0};
     }
 

@@ -890,7 +890,8 @@ namespace golang::reflect
                                 intFromReg(& regArgs, st.ireg, st.size, offset);
                                 break;
                             case 1:
-                                auto s = add(s, st.offset, "precomputed value offset"s);
+                                auto s_tmp = add(s, st.offset, "precomputed value offset"s);
+                                auto& s = s_tmp;
                                 *((unsafe::Pointer*)(s)) = regArgs.Ptrs[st.ireg];
                                 break;
                             case 2:
@@ -940,7 +941,7 @@ namespace golang::reflect
         }
         auto ftyp = ctxt->ftyp;
         auto f = ctxt->fn;
-        auto [gocpp_id_3, gocpp_id_4, abid] = funcLayout(ftyp, nullptr);
+        auto [gocpp_id_1, gocpp_id_2, abid] = funcLayout(ftyp, nullptr);
         auto ptr = frame;
         auto in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), 0, int(ftyp->InCount));
         for(auto [i, typ] : rec::InSlice(gocpp::recv(ftyp)))
@@ -1215,7 +1216,7 @@ namespace golang::reflect
     {
         auto rcvr = ctxt->rcvr;
         auto [rcvrType, valueFuncType, methodFn] = methodReceiver("call"s, rcvr, ctxt->method);
-        auto [gocpp_id_7, gocpp_id_8, valueABI] = funcLayout(valueFuncType, nullptr);
+        auto [gocpp_id_3, gocpp_id_4, valueABI] = funcLayout(valueFuncType, nullptr);
         auto [valueFrame, valueRegs] = std::tuple{frame, regs};
         auto [methodFrameType, methodFramePool, methodABI] = funcLayout(valueFuncType, rcvrType);
         auto methodFrame = gocpp::getValue<unsafe::Pointer>(rec::Get(gocpp::recv(methodFramePool)));
@@ -1503,48 +1504,48 @@ namespace golang::reflect
 
     
                         template<typename T>
-                        gocpp_id_9::gocpp_id_9(T& ref)
+                        gocpp_id_5::gocpp_id_5(T& ref)
                         {
-                            value.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            value.reset(new gocpp_id_5Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_9::gocpp_id_9(const T& ref)
+                        gocpp_id_5::gocpp_id_5(const T& ref)
                         {
-                            value.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            value.reset(new gocpp_id_5Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_9::gocpp_id_9(T* ptr)
+                        gocpp_id_5::gocpp_id_5(T* ptr)
                         {
-                            value.reset(new gocpp_id_9Impl<T, gocpp::ptr<T>>(ptr));
+                            value.reset(new gocpp_id_5Impl<T, gocpp::ptr<T>>(ptr));
                         }
 
-                        std::ostream& gocpp_id_9::PrintTo(std::ostream& os) const
+                        std::ostream& gocpp_id_5::PrintTo(std::ostream& os) const
                         {
                             return os;
                         }
 
                         template<typename T, typename StoreT>
-                        void gocpp_id_9::gocpp_id_9Impl<T, StoreT>::vM()
+                        void gocpp_id_5::gocpp_id_5Impl<T, StoreT>::vM()
                         {
                             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
 
                         namespace rec
                         {
-                            void M(const gocpp::PtrRecv<struct gocpp_id_9, false>& self)
+                            void M(const gocpp::PtrRecv<struct gocpp_id_5, false>& self)
                             {
                                 return self.ptr->value->vM();
                             }
 
-                            void M(const gocpp::ObjRecv<struct gocpp_id_9>& self)
+                            void M(const gocpp::ObjRecv<struct gocpp_id_5>& self)
                             {
                                 return self.obj.value->vM();
                             }
                         }
 
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
                         {
                             return value.PrintTo(os);
                         }
@@ -1573,7 +1574,7 @@ namespace golang::reflect
                     }
                     else
                     {
-                        eface = (go_any)(*(gocpp_id_9*)(v.ptr));
+                        eface = (go_any)(*(gocpp_id_5*)(v.ptr));
                     }
                     auto x = unpackEface(eface);
                     if(x.flag != 0)
@@ -1913,48 +1914,48 @@ namespace golang::reflect
 
     
             template<typename T>
-            gocpp_id_10::gocpp_id_10(T& ref)
+            gocpp_id_6::gocpp_id_6(T& ref)
             {
-                value.reset(new gocpp_id_10Impl<T, std::unique_ptr<T>>(new T(ref)));
+                value.reset(new gocpp_id_6Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_10::gocpp_id_10(const T& ref)
+            gocpp_id_6::gocpp_id_6(const T& ref)
             {
-                value.reset(new gocpp_id_10Impl<T, std::unique_ptr<T>>(new T(ref)));
+                value.reset(new gocpp_id_6Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_10::gocpp_id_10(T* ptr)
+            gocpp_id_6::gocpp_id_6(T* ptr)
             {
-                value.reset(new gocpp_id_10Impl<T, gocpp::ptr<T>>(ptr));
+                value.reset(new gocpp_id_6Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_10::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_id_6::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename StoreT>
-            void gocpp_id_10::gocpp_id_10Impl<T, StoreT>::vM()
+            void gocpp_id_6::gocpp_id_6Impl<T, StoreT>::vM()
             {
                 return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }
 
             namespace rec
             {
-                void M(const gocpp::PtrRecv<struct gocpp_id_10, false>& self)
+                void M(const gocpp::PtrRecv<struct gocpp_id_6, false>& self)
                 {
                     return self.ptr->value->vM();
                 }
 
-                void M(const gocpp::ObjRecv<struct gocpp_id_10>& self)
+                void M(const gocpp::ObjRecv<struct gocpp_id_6>& self)
                 {
                     return self.obj.value->vM();
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_10& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
             {
                 return value.PrintTo(os);
             }
@@ -1980,7 +1981,7 @@ namespace golang::reflect
             {
                 return *(go_any*)(v.ptr);
             }
-            return *(gocpp_id_10*)(v.ptr);
+            return *(gocpp_id_6*)(v.ptr);
         }
         return packEface(v);
     }
@@ -5523,7 +5524,7 @@ namespace golang::reflect
         }
     }
 
-    struct gocpp_id_11
+    struct gocpp_id_7
     {
         bool b;
         go_any x;
@@ -5557,13 +5558,13 @@ namespace golang::reflect
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_11 dummy;
+    gocpp_id_7 dummy;
     // Dummy annotation marking that the content of value x
     // escapes (i.e. modeling roughly heap=*x),
     // for use in cases where the reflect code is so clever that

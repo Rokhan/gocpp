@@ -417,7 +417,7 @@ namespace golang::runtime
         print("\n"s);
         g0->m->throwing = throwTypeRuntime;
         rec::set(gocpp::recv(g0->m->caughtsig), gp);
-        auto [level, gocpp_id_1, docrash] = gotraceback();
+        auto [level, gocpp_id_0, docrash] = gotraceback();
         if(level > 0)
         {
             tracebacktrap(rec::ip(gocpp::recv(r)), rec::sp(gocpp::recv(r)), rec::lr(gocpp::recv(r)), gp);

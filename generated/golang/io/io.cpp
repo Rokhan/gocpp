@@ -1690,9 +1690,12 @@ namespace golang::io
         std::tie(n, err) = rec::Read(gocpp::recv(t->r), p);
         if(n > 0)
         {
-            if(auto [n, err] = rec::Write(gocpp::recv(t->w), p.make_slice(0, n)); err != nullptr)
             {
-                return {n, err};
+                auto [n_tmp, err] = rec::Write(gocpp::recv(t->w), p.make_slice(0, n));
+                if(auto& n = n_tmp; err != nullptr)
+                {
+                    return {n, err};
+                }
             }
         }
         return {n, err};
@@ -1775,7 +1778,7 @@ namespace golang::io
     // by forwarding calls to r.
     struct ReadCloser NopCloser(struct Reader r)
     {
-        if(auto [gocpp_id_1, ok] = gocpp::getValue<WriterTo>(r); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<WriterTo>(r); ok)
         {
             return nopCloserWriterTo {r};
         }

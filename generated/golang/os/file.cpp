@@ -1087,7 +1087,8 @@ namespace golang::os
         {
             return {""s, ErrInvalid};
         }
-        auto [name, err] = safefilepath::FromFS(name);
+        auto [name_tmp, err] = safefilepath::FromFS(name);
+        auto& name = name_tmp;
         if(err != nullptr)
         {
             return {""s, ErrInvalid};

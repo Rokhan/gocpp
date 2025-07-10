@@ -362,7 +362,7 @@ namespace golang::time
             x.name = name;
             x.extend = extend;
         });
-        auto [sec, gocpp_id_2, gocpp_id_3] = now();
+        auto [sec, gocpp_id_0, gocpp_id_1] = now();
         for(auto [i, gocpp_ignored] : tx)
         {
             if(tx[i].when <= sec && (i + 1 == len(tx) || sec < tx[i + 1].when))

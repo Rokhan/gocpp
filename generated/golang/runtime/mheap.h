@@ -439,7 +439,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mheap& value);
-    extern gocpp_id_7 gcBitsArenas;
+    extern gocpp_id_6 gcBitsArenas;
     extern mheap mheap_;
 
     namespace rec

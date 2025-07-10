@@ -187,7 +187,7 @@ namespace golang::runtime
     extern rwmutex execLock;
     extern std::string failthreadcreate;
     extern std::string failallocatestack;
-    extern gocpp_id_2 newmHandoff;
+    extern gocpp_id_1 newmHandoff;
     void newm(std::function<void ()> fn, struct p* pp, int64_t id);
     void newm1(struct m* mp);
     void startTemplateThread();
@@ -261,7 +261,7 @@ namespace golang::runtime
     void badunlockosthread();
     int32_t gcount();
     int32_t mcount();
-    extern gocpp_id_18 prof;
+    extern gocpp_id_11 prof;
     void _System();
     void _ExternalCode();
     void _LostExternalCode();

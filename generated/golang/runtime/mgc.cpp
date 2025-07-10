@@ -625,7 +625,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    auto [trigger, gocpp_id_5] = rec::trigger(gocpp::recv(gcController));
+                    auto [trigger, gocpp_id_4] = rec::trigger(gocpp::recv(gcController));
                     return rec::Load(gocpp::recv(gcController.heapLive)) >= trigger;
                     break;
                 case 1:
@@ -895,7 +895,7 @@ namespace golang::runtime
         memstats.lastHeapInUse = rec::load(gocpp::recv(gcController.heapInUse));
         systemstack(gcControllerCommit);
         auto now = nanotime();
-        auto [sec, nsec, gocpp_id_7] = time_now();
+        auto [sec, nsec, gocpp_id_5] = time_now();
         auto unixNow = sec * 1e9 + int64_t(nsec);
         work.pauseNS += now - stw.start;
         work.tEnd = now;
@@ -1534,7 +1534,7 @@ namespace golang::runtime
         {
             return "stack"s;
         }
-        if(auto [base, gocpp_id_10, gocpp_id_11] = findObject(p2, 0, 0); base != 0)
+        if(auto [base, gocpp_id_6, gocpp_id_7] = findObject(p2, 0, 0); base != 0)
         {
             return "heap"s;
         }

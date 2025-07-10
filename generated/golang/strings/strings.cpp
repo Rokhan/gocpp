@@ -46,7 +46,7 @@ namespace golang::strings
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), n);
         for(auto i = 0; i < n - 1; i++)
         {
-            auto [gocpp_id_1, size] = utf8::DecodeRuneInString(s);
+            auto [gocpp_id_0, size] = utf8::DecodeRuneInString(s);
             a[i] = s.make_slice(0, size);
             s = s.make_slice(size);
         }
@@ -879,7 +879,7 @@ namespace golang::strings
             {
                 continue;
             }
-            auto [gocpp_id_3, wid] = utf8::DecodeRuneInString(s.make_slice(i));
+            auto [gocpp_id_1, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             if(wid == 1)
             {
                 rec::Grow(gocpp::recv(b), len(s) + len(replacement));
@@ -903,7 +903,7 @@ namespace golang::strings
                 rec::WriteByte(gocpp::recv(b), c);
                 continue;
             }
-            auto [gocpp_id_5, wid] = utf8::DecodeRuneInString(s.make_slice(i));
+            auto [gocpp_id_2, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             if(wid == 1)
             {
                 i++;
@@ -998,7 +998,7 @@ namespace golang::strings
         auto i = lastIndexFunc(s, f, false);
         if(i >= 0 && s[i] >= utf8::RuneSelf)
         {
-            auto [gocpp_id_7, wid] = utf8::DecodeRuneInString(s.make_slice(i));
+            auto [gocpp_id_3, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             i += wid;
         }
         else
@@ -1321,7 +1321,7 @@ namespace golang::strings
             {
                 if(i > 0)
                 {
-                    auto [gocpp_id_9, wid] = utf8::DecodeRuneInString(s.make_slice(start));
+                    auto [gocpp_id_4, wid] = utf8::DecodeRuneInString(s.make_slice(start));
                     j += wid;
                 }
             }

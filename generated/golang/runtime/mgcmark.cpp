@@ -1286,9 +1286,12 @@ namespace golang::runtime
             auto obj = *(uintptr_t*)(unsafe::Pointer(addr));
             if(obj != 0 && obj - b >= n)
             {
-                if(auto [obj, span, objIndex] = findObject(obj, b, addr - b); obj != 0)
                 {
-                    greyobject(obj, b, addr - b, span, gcw, objIndex);
+                    auto [obj_tmp, span, objIndex] = findObject(obj, b, addr - b);
+                    if(auto& obj = obj_tmp; obj != 0)
+                    {
+                        greyobject(obj, b, addr - b, span, gcw, objIndex);
+                    }
                 }
             }
         }
@@ -1537,7 +1540,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto [gocpp_id_1, span, objIndex] = findObject(c->tiny, 0, 0);
+            auto [gocpp_id_0, span, objIndex] = findObject(c->tiny, 0, 0);
             auto gcw = & p->gcw;
             greyobject(c->tiny, 0, 0, span, gcw, objIndex);
         }

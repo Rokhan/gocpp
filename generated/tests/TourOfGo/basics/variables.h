@@ -18,6 +18,23 @@ namespace golang::main
     extern int ii;
     extern int jj;
     extern int kk;
+    struct pos
+    {
+        int x;
+        int y;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pos& value);
     extern std::function<void (void)> funcVar1;
     extern std::function<int (int)> funcVar2;
     extern std::function<std::tuple<int, std::string> (int)> funcVar3;

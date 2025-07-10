@@ -1430,28 +1430,51 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		case 1:
 			varName := cv.convertExpr(stmt.Lhs[0])
 			*env.varNames = append(*env.varNames, varName.str)
-			return []cppExpr{ExprPrintf("auto %s = %s", varName, cv.convertAssignRightExprs(stmt.Rhs))}
+
+			if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
+				return []cppExpr{
+					ExprPrintf("auto %s_tmp = %s", varName, cv.convertAssignRightExprs(stmt.Rhs)),
+					ExprPrintf("auto& %s = %s_tmp", varName, varName),
+				}
+			} else {
+				return []cppExpr{ExprPrintf("auto %s = %s", varName, cv.convertAssignRightExprs(stmt.Rhs))}
+			}
 		default:
 			var decl []cppExpr
 			var allNew = true
 			var exprList = cv.convertExprList(stmt.Lhs)
 			var toDeclare []string
+			var leftVarList []string
+			tmpNames := map[string]string{}
 			// first step, just check if there is already declared names
 			for _, varName := range exprList {
 				if varName.str == "_" {
 					varName.str = cv.GenerateId()
 				}
 				if !slices.Contains(*env.varNames, varName.str) {
-					toDeclare = append(toDeclare, varName.str)
-					*env.varNames = append(*env.varNames, varName.str)
+					if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
+						toDeclare = append(toDeclare, varName.str+"_tmp")
+						leftVarList = append(leftVarList, varName.str+"_tmp")
+						*env.varNames = append(*env.varNames, varName.str+"_tmp")
+						tmpNames[varName.str] = varName.str + "_tmp"
+					} else {
+						toDeclare = append(toDeclare, varName.str)
+						leftVarList = append(leftVarList, varName.str)
+						*env.varNames = append(*env.varNames, varName.str)
+					}
 				} else {
+					leftVarList = append(leftVarList, varName.str)
 					allNew = false
 				}
 			}
 
 			if allNew {
 				// Not necessary, the default case would work, but output looks better
-				return []cppExpr{ExprPrintf("auto [%s] = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
+				result := []cppExpr{ExprPrintf("auto [%s] = %s", strings.Join(toDeclare, ", "), cv.convertAssignRightExprs(stmt.Rhs))}
+				for name, tmpName := range tmpNames {
+					result = append(result, ExprPrintf("auto& %s = %s", name, tmpName))
+				}
+				return result
 			}
 
 			// The 2-step loop on exprList is done to not call "cv.convertExprCppType"
@@ -1467,7 +1490,11 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 					*env.varNames = append(*env.varNames, varName.str)
 				}
 			}
-			return append(decl, ExprPrintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs)))
+			result := append(decl, ExprPrintf("std::tie(%s) = %s", strings.Join(leftVarList, ", "), cv.convertAssignRightExprs(stmt.Rhs)))
+			for name, tmpName := range tmpNames {
+				result = append(result, ExprPrintf("auto& %s = %s", name, tmpName))
+			}
+			return result
 		}
 	case token.ASSIGN:
 		switch len(stmt.Lhs) {
@@ -1558,8 +1585,9 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.ForStmt:
 		env.startVarScope()
-		initExpr, needScope := cv.inlineStmt(s.Init, env)
-		postExpr, needScope := cv.inlineStmt(s.Post, env)
+		initExpr, initNeedScope := cv.inlineStmt(s.Init, env)
+		postExpr, postNeedScope := cv.inlineStmt(s.Post, env)
+		needScope := initNeedScope || postNeedScope
 		cv.AddOptionalScope(cppOut, needScope, func() {
 			cv.WritterExprPrintf(cppOut, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond), postExpr)
 			outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
@@ -1621,10 +1649,14 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 
 	case *ast.IfStmt:
+		needScope := false
+
 		if s.Init != nil {
-			env.startVarScope()
-			initExpr, needScope := cv.inlineStmt(s.Init, env)
-			cv.AddOptionalScope(cppOut, needScope, func() {
+			env.localVarScope(func() {
+				var initExpr cppExpr
+				initExpr, needScope = cv.inlineStmt(s.Init, env)
+
+				cv.StartOptionalScope(cppOut, needScope)
 				cv.WritterExprPrintf(cppOut, "%sif(%s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond))
 			})
 		} else {
@@ -1642,6 +1674,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 				cv.Panicf("convertStmt, fallthrough not managed in ast.IfStmt, input: %v", cv.Position(s.Else))
 			}
 		}
+		cv.EndOptionalScope(cppOut, needScope)
 
 	case *ast.SwitchStmt:
 		cv.WritterExprPrintf(cppOut, "%s//Go switch emulation\n", cv.cpp.Indent())
@@ -1650,10 +1683,8 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		if s.Init != nil {
 			env.startVarScope()
-			initExpr, needScope := cv.inlineStmt(s.Init, env)
-			cv.AddOptionalScope(cppOut, needScope, func() {
-				cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
-			})
+			initExpr, _ := cv.inlineStmt(s.Init, env)
+			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
 		}
 
 		inputVarName := ""
@@ -1671,10 +1702,8 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		if s.Init != nil {
 			env.startVarScope()
-			initExpr, needScope := cv.inlineStmt(s.Init, env)
-			cv.AddOptionalScope(cppOut, needScope, func() {
-				cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
-			})
+			initExpr, _ := cv.inlineStmt(s.Init, env)
+			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
 		}
 
 		var switchExpr cppExpr
@@ -1780,11 +1809,19 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 }
 
 func (cv *cppConverter) AddOptionalScope(buff *cppExprWritter[*bufio.Writer], needScope bool, scopeGen func()) {
+	cv.StartOptionalScope(buff, needScope)
+	scopeGen()
+	cv.EndOptionalScope(buff, needScope)
+}
+
+func (cv *cppConverter) StartOptionalScope(buff *cppExprWritter[*bufio.Writer], needScope bool) {
 	if needScope {
 		cv.WritterExprPrintf(buff, "%s{\n", cv.cpp.Indent())
 		cv.cpp.indent++
 	}
-	scopeGen()
+}
+
+func (cv *cppConverter) EndOptionalScope(buff *cppExprWritter[*bufio.Writer], needScope bool) {
 	if needScope {
 		cv.cpp.indent--
 		cv.WritterExprPrintf(buff, "%s}\n", cv.cpp.Indent())
@@ -2147,29 +2184,53 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 
 					case len(values) == len(s.Names):
 						for i := range s.Names {
-							name := GetCppName(s.Names[i].Name)
-							result = append(result, inlineStrf(s, "auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
+							goName := s.Names[i].Name
+							name := GetCppName(goName)
+							if isIdentifierUsed(goName, values[i]) {
+								result = append(result, inlineStrf(s, "auto %s_tmp = %s%s", name, cv.convertExpr(values[i]), end)...)
+								result = append(result, inlineStrf(s, "auto& %s = %s_tmp%s", name, name, end)...)
+							} else {
+								result = append(result, inlineStrf(s, "auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
+							}
 						}
 
 					case len(values) == 1:
 						names := []string{}
+						tmpNames := map[string]string{}
 						for i := range s.Names {
-							names = append(names, GetCppName(s.Names[i].Name))
+							goName := s.Names[i].Name
+							if isIdentifierUsed(goName, values[0]) {
+								cppName := GetCppName(goName)
+								names = append(names, cppName+"_tmp")
+								tmpNames[cppName] = cppName + "_tmp"
+							} else {
+								names = append(names, GetCppName(goName))
+							}
 						}
 						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
+						for name, tmpName := range tmpNames {
+							result = append(result, inlineStrf(s, "auto& %s = %s%s", name, tmpName, end)...)
+						}
 
 					default:
 						cv.Panicf("convertSpecs, mismatch declaration length. variable: %v, names:%v, input: %v", reflect.TypeOf(s), s.Names, cv.Position(s))
 					}
 				} else {
 					for i := range s.Names {
-						name := GetCppName(s.Names[i].Name)
+						goName := s.Names[i].Name
+						name := GetCppName(goName)
 						t := cv.convertTypeExpr(s.Type, ctContext{})
 						if len(values) == 0 {
 							result = append(result, inlineStrf(s, "%s %s = {}%s", t, name, end)...)
 						} else {
 							Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-							result = append(result, inlineStrf(s, "%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+
+							if isIdentifierUsed(goName, values[i]) {
+								result = append(result, inlineStrf(s, "%s %s_tmp = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+								result = append(result, inlineStrf(s, "%s& %s = %s_tmp%s", t, name, name, end)...)
+							} else {
+								result = append(result, inlineStrf(s, "%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+							}
 						}
 					}
 				}

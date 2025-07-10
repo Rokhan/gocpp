@@ -374,6 +374,14 @@ func (env *stmtEnv) startVarScope() {
 	env.varNames = &[]string{}
 }
 
+func (env *stmtEnv) localVarScope(todo func()) {
+	//clear already declared var names at start of scope
+	outVarNames := env.varNames
+	env.varNames = &[]string{}
+	todo()
+	env.varNames = outVarNames
+}
+
 func makeStmtEnv(outNames []string, outTypes []outType, paramNames []string) stmtEnv {
 	varNames := append(append([]string{}, outNames...), paramNames...)
 	return stmtEnv{outNames, outTypes, &varNames, outNames}
@@ -822,6 +830,35 @@ func getAllIdentifiers(expr ast.Expr) map[*ast.Ident]bool {
 	gi := &GetIdentfiers{map[*ast.Ident]bool{}}
 	ast.Walk(gi, expr)
 	return gi.idents
+}
+
+type UseIdentfier struct {
+	identifier string
+	used       bool
+}
+
+func (visitor *UseIdentfier) Visit(node ast.Node) ast.Visitor {
+	switch n := node.(type) {
+	case *ast.Ident:
+		if n.Name == visitor.identifier {
+			visitor.used = true
+			return nil
+		}
+	case *ast.SelectorExpr:
+		// ignore field names
+		ast.Walk(visitor, n.X)
+		return nil
+
+	case nil:
+		return nil
+	}
+	return visitor
+}
+
+func isIdentifierUsed(identifier string, expr ast.Expr) bool {
+	gi := &UseIdentfier{identifier, false}
+	ast.Walk(gi, expr)
+	return gi.used
 }
 
 type set[T comparable] map[T]bool

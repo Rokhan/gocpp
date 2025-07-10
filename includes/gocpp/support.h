@@ -954,7 +954,7 @@ namespace gocpp
 
         friend inline slice<T> append(slice<T> src1, slice<T> src2)
         {
-            for (auto &&elt : src2)
+            for (auto&& [index, elt] : src2)
             {
                 src1 = append(src1, elt);
             }

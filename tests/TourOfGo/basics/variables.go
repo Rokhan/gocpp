@@ -8,6 +8,10 @@ import "fmt"
 var c, python, java bool
 var ii, jj, kk int = 3, 4, 5
 
+type pos struct {
+	x, y int
+}
+
 var funcVar1 = func() {
 	fmt.Println("funcVar")
 }
@@ -62,12 +66,15 @@ func main() {
 func withNamedResults() (i int, s string) {
 	i = 3
 	s = "hello"
+	p := pos{x: 1, y: 2}
 	{
 		j := i
-		i := 10 // TODO i := 10 + i
+		i := 10 + i
+		x := p.x
+		p := p.y
 		k := i
 		s := "world"
-		fmt.Println("withNamedResults:", i, s, j, k)
+		fmt.Println("withNamedResults:", i, s, j, k, x, p)
 	}
 	fmt.Println("withNamedResults:", i, s)
 	return

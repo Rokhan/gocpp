@@ -84,6 +84,14 @@ namespace golang
             std::string Error(struct MyError* e);
         }
     }
+    namespace hex
+    {
+        using InvalidByteError = unsigned char;
+        namespace rec
+        {
+            std::string Error(const InvalidByteError& e);
+        }
+    }
 }
 
 namespace mocklib
@@ -542,6 +550,10 @@ namespace gocpp
         // Temporary mock, we lose the original type
         template<typename T> requires IsPtrError<T>
         error(const T* t) : optional(Error(t)) {}
+
+        // Temporary mock, we lose the original type
+        // Why the "requires IsRefError<T>" constraint does not work here ? 
+        error(golang::hex::InvalidByteError t) : optional(golang::hex::rec::Error(t)) {}
 
         error& operator=(const std::string& msg)
         {

@@ -80,6 +80,34 @@ func Zero[T comparable]() T {
 	return zero
 }
 
+// from slices/slices.go
+func Grow[S ~[]E, E any](s S, n int) S {
+	if n < 0 {
+		panic("cannot be negative")
+	}
+	if n -= cap(s) - len(s); n > 0 {
+		s = append(s[:cap(s)], make([]E, n)...)[:len(s)]
+	}
+	return s
+}
+
+// from sync/atomic/type.go, simplified
+type Pointer[T any] struct{}
+
+// from sync/map.go, simplified
+type entry struct {
+	p Pointer[any]
+}
+
+func (x *Pointer[T]) Store(val *T) {}
+
+// from sync/map.go, simplified
+func newEntry(i any) *entry {
+	e := &entry{}
+	e.p.Store(&i)
+	return e
+}
+
 func main() {
 	h1, h2 := HashStr("toto")
 	fmt.Printf("Hash: %v, %v\n", h1, h2)
@@ -94,4 +122,13 @@ func main() {
 	fmt.Printf("Zero: %v\n", Zero[int]())
 
 	fmt.Printf("Unused: %v\n", UnusedGenericParameter[float64]())
+	fmt.Printf("OneOrDefault: %v\n", OneOrDefault(map[int]string{1: "toto"}))
+
+	w1 := Wrapper[int]{value: 42}
+	w2 := Wrapper[string]{value: "hello"}
+	fmt.Printf("Wrapper: %v, %v\n", w1.Get(), w2.Get())
+
+	s1 := []int{1, 2, 3}
+	s2 := Grow(s1, 10)
+	fmt.Printf("Grow: %v, %v\n", s1, s2)
 }

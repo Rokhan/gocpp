@@ -244,7 +244,7 @@
 | $(ImportDir)/math/pow.go | ✔️ ([cpp](generated/golang/math/pow.cpp), [h](generated/golang/math/pow.h))| ✔️ |
 | $(ImportDir)/math/rand/exp.go | ✔️ ([cpp](generated/golang/math/rand/exp.cpp), [h](generated/golang/math/rand/exp.h))| ✔️ |
 | $(ImportDir)/math/rand/normal.go | ✔️ ([cpp](generated/golang/math/rand/normal.cpp), [h](generated/golang/math/rand/normal.h))| ✔️ |
-| $(ImportDir)/math/rand/rand.go | ✔️ ([cpp](generated/golang/math/rand/rand.cpp), [h](generated/golang/math/rand/rand.h))| ❌ |
+| $(ImportDir)/math/rand/rand.go | ✔️ ([cpp](generated/golang/math/rand/rand.cpp), [h](generated/golang/math/rand/rand.h))| ✔️ |
 | $(ImportDir)/math/rand/rng.go | ✔️ ([cpp](generated/golang/math/rand/rng.cpp), [h](generated/golang/math/rand/rng.h))| ✔️ |
 | $(ImportDir)/math/signbit.go | ✔️ ([cpp](generated/golang/math/signbit.cpp), [h](generated/golang/math/signbit.h))| ✔️ |
 | $(ImportDir)/math/sqrt.go | ✔️ ([cpp](generated/golang/math/sqrt.cpp), [h](generated/golang/math/sqrt.h))| ❌ |

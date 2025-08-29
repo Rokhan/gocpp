@@ -199,7 +199,7 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
 	fmt.Fprintf(out, "{\n")
 
-	fmt.Fprintf(out, "    namespace rec\n")
+	fmt.Fprintf(out, "    namespace %s\n", recNs)
 	fmt.Fprintf(out, "    {\n")
 	fmt.Fprintf(out, "        using namespace mocklib::%s;\n", recNs)
 	for _, elt := range toSortedList(receiversElts) {
@@ -388,6 +388,50 @@ func (cv *cppConverter) isAmbiguousName(name string) bool {
 		}
 	}
 	return false
+}
+
+// Get the cpp type parameters from an expression
+func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
+	goTypes := cv.GetExprTypeParameters(expr)
+	cppTypes := convertGoToCppTypes(goTypes, cv.Position(expr))
+	cppTypes = cv.convertNamespaces(cppTypes)
+	return cppTypes
+}
+
+// Get the type parameters from an expression
+func (cv *cppConverter) GetExprTypeParameters(expr ast.Expr) []types.Type {
+	goType := cv.convertExprToType(expr)
+	return cv.GetTypeParameters(goType, expr)
+}
+
+func (cv *cppConverter) GetTypeParameters(goType types.Type, expr ast.Expr) []types.Type {
+	if goType == nil {
+		return nil
+	}
+
+	switch t := goType.(type) {
+	case *types.Named:
+		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
+			var result []types.Type
+			for i := 0; i < t.TypeArgs().Len(); i++ {
+				result = append(result, t.TypeArgs().At(i))
+			}
+			return result
+		}
+
+	case *types.Pointer:
+		return cv.GetTypeParameters(t.Elem(), expr)
+
+	case *types.Interface:
+	case *types.Struct:
+		// No type parameters in interface & struct definitions
+		return nil
+
+	default:
+		cv.Panicf("GetExprTypeParameters, unimplemented case: type=%v, expr=%s, position=%s", reflect.TypeOf(goType), types.ExprString(expr), cv.Position(expr))
+	}
+
+	return nil
 }
 
 func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
@@ -639,7 +683,7 @@ func (cv *cppConverter) getFullReceiverName(rec ast.SelectorExpr) *string {
 	}
 	var pkgName = pkg.Name()
 	if pkgName != cv.namespace {
-		return Ptr(GetCppFunc(fmt.Sprintf("%s::rec::%s", pkgName, rec.Sel.Name)))
+		return Ptr(GetCppFunc(fmt.Sprintf("%s::%s::%s", pkgName, recNs, rec.Sel.Name)))
 	}
 	return nil
 }
@@ -1244,7 +1288,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			appendStrf = appendHeaderStrf
 		} else {
 			appendStrf = appendHeaderEndStrf
-			prefix = "rec::"
+			prefix = recNs + "::"
 		}
 
 		if cv.ignoreKnownError(name, knownNameConflicts) {
@@ -2541,7 +2585,7 @@ type ctContext struct {
 	namespace          string
 }
 
-// Maybe merge this function with "convertExprType" in future ?
+// Maybe merge this function with "convertExprToType" in future ?
 // Maybe merge this function with "convertExprCppType" in future ?
 func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	if node == nil {
@@ -3193,7 +3237,7 @@ func withFileBuffer(action action, file *outFile) string {
 }
 
 // Maybe merge this function with "convertExpr" in future ?
-// Maybe merge this function with "convertExprType" in future ?
+// Maybe merge this function with "convertExprToType" in future ?
 // Maybe merge this function with "convertTypeExpr" in future ?
 func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	if node == nil {
@@ -3242,11 +3286,11 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		}
 
 		// case *ast.BinaryExpr, *ast.Ident:
-		// 	return convertGoToCppType(cv.convertExprType(n))
+		// 	return convertGoToCppType(cv.convertExprToType(n))
 
 		// case *ast.IndexExpr:
-		// 	objType := convertExprType(n.X)
-		// 	indexType := convertExprType(n.Index)
+		// 	objType := convertExprToType(n.X)
+		// 	indexType := convertExprToType(n.Index)
 		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 
 	case *ast.CompositeLit, *ast.InterfaceType, *ast.StructType:
@@ -3260,9 +3304,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		typeStr := convertGoToCppType(exprType, cv.Position(node))
 		// Probably this steps should only be done for named types
 		// Move code to 'GetCppGoType' ?
-		typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
-		typeStr = strings.ReplaceAll(typeStr, ".", "::")
-		typeStr, _ = Last(strings.Split(typeStr, "/"))
+		typeStr = cv.convertNamespace(typeStr)
 		cppType := mkCppType(typeStr, nil)
 
 		switch typeStr {
@@ -3277,6 +3319,24 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) apply(slice []string, f func(string) string) []string {
+	for i, v := range slice {
+		slice[i] = f(v)
+	}
+	return slice
+}
+
+func (cv *cppConverter) convertNamespaces(typeStrs []string) []string {
+	return cv.apply(typeStrs, cv.convertNamespace)
+}
+
+func (cv *cppConverter) convertNamespace(typeStr string) string {
+	typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
+	typeStr = strings.ReplaceAll(typeStr, ".", "::")
+	typeStr, _ = Last(strings.Split(typeStr, "/"))
+	return typeStr
 }
 
 func (cv *cppConverter) convertExprToType(node ast.Expr) types.Type {
@@ -3303,8 +3363,8 @@ func (cv *cppConverter) convertExprToType(node ast.Expr) types.Type {
 		}
 	}
 
-	cv.Panicf("convertExprType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
-	panic("convertExprType, bug, unreacheable code reached !")
+	cv.Panicf("convertExprToType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
+	panic("convertExprToType, bug, unreacheable code reached !")
 }
 
 // TODO, check if we really need all this methods/function
@@ -3349,9 +3409,24 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results()), GetCppGoType(subType.Params()))
 		}
 
+	case *types.Interface:
+		if subType.NumMethods() == 0 {
+			return "gocpp::go_any"
+		} else {
+			panic(fmt.Sprintf("Unmanaged interface in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
+		}
+
 	default:
 		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
 	}
+}
+
+func convertGoToCppTypes(goType []types.Type, position token.Position) []string {
+	res := []string{}
+	for _, subType := range goType {
+		res = append(res, convertGoToCppType(subType, position))
+	}
+	return res
 }
 
 func getArrayLen(goType types.Type, position token.Position) int64 {
@@ -3530,7 +3605,13 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 					cv.BuffExprPrintf(buf, "%v(", funcName)
 				}
 			} else {
-				cv.BuffExprPrintf(buf, "%s::%v(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
+				generics := cv.GetCppTypeParameters(fun.X)
+				if len(generics) > 0 {
+					genericsStr := strings.Join(generics, ", ")
+					cv.BuffExprPrintf(buf, "%s::%v<%s>(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), genericsStr, cv.convertExpr(fun.X))
+				} else {
+					cv.BuffExprPrintf(buf, "%s::%v(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
+				}
 				*buf.defs = append(*buf.defs, receiver(fun))
 				sep = ", "
 			}
@@ -3617,7 +3698,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	default:
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
-	panic("convertExprType, bug, unreacheable code reached !")
+	panic("convertExprImpl, bug, unreacheable code reached !")
 }
 
 func (cv *cppConverter) getCaptureExpr() string {

@@ -31,6 +31,7 @@ type cppConverterSharedData struct {
 	exeDate          time.Time
 	verbose          bool
 	strictMode       bool
+	tryRecover       bool
 	alwaysRegenerate bool
 	ignoreDeps       bool
 
@@ -3858,7 +3859,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		var cv *cppConverter = new(cppConverter)
 		cv.parentCv = parentCv
 		cv.logPrefix = parentCv.logPrefix + "##> "
-		cv.tryRecover = !shared.strictMode
+		cv.tryRecover = shared.tryRecover
 		cv.shared = parentCv.shared
 		cv.genMakeFile = parentCv.genMakeFile
 		cv.binOutDir = parentCv.binOutDir
@@ -3941,6 +3942,7 @@ func main() {
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
 	strictMode := flag.Bool("strictMode", true, "panic on every error")
+	tryRecover := flag.Bool("tryRecover", false, "try to recover on error (only if strictMode is false)")
 	ignoreDeps := flag.Bool("ignoreDependencies", false, "only generate target file")
 	verbose := flag.Bool("verbose", false, "verbose logs")
 	alwaysRegenerate := flag.Bool("alwaysRegenerate", false, "force to always generate, even if more recent")
@@ -3951,6 +3953,11 @@ func main() {
 	exePath, _ := os.Executable()
 	fileInfo, _ := os.Stat(exePath)
 
+	// Check incompatible options
+	if *tryRecover && *strictMode {
+		panic("Cannot use --tryRecover and --strictMode at the same time")
+	}
+
 	shared := buildSharedData()
 	shared.globalSubDir = "golang/" // TODO, remove '/' and use JoinPath when using it
 	shared.fileSet = fset
@@ -3959,6 +3966,7 @@ func main() {
 	shared.exeDate = fileInfo.ModTime()
 	shared.verbose = *verbose
 	shared.strictMode = *strictMode
+	shared.tryRecover = *tryRecover
 	shared.alwaysRegenerate = *alwaysRegenerate
 	shared.ignoreDeps = *ignoreDeps
 
@@ -3976,6 +3984,7 @@ func main() {
 		cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
 	}
 	cv.srcBaseName = strings.TrimSuffix(cv.inputName, ".go")
+	// Never try to recover in main file
 	cv.tryRecover = false
 
 	cv.InitAndParse()

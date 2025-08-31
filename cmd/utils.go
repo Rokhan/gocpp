@@ -436,17 +436,24 @@ func addIndentation(input string, indent string) string {
 	return strings.Join(lines, "\n")
 }
 
-func buildOutType(outTypes []outType) string {
+func buildOutType(outTypes []outType, typeParams map[string][]string) string {
 	var resultType string
 	switch len(outTypes) {
 	case 0:
 		resultType = "void"
 	case 1:
 		resultType = GetCppOutType(outTypes[0])
+		if deps, ok := typeParams[resultType]; ok && len(deps) != 0 {
+			resultType = fmt.Sprintf("%s<%s>", resultType, strings.Join(deps, ", "))
+		}
 	default:
 		var types []string
 		for _, outType := range outTypes {
-			types = append(types, GetCppOutType(outType))
+			cppOutType := GetCppOutType(outType)
+			if deps, ok := typeParams[cppOutType]; ok && len(deps) != 0 {
+				cppOutType = fmt.Sprintf("%s<%s>", cppOutType, strings.Join(deps, ", "))
+			}
+			types = append(types, cppOutType)
 		}
 		resultType = fmt.Sprintf("std::tuple<%s>", strings.Join(types, ", "))
 	}
@@ -800,15 +807,40 @@ func (buff *cppExprBuffer) Expr() cppExpr {
 	return cppExpr{buff.buff.String(), *buff.defs, nil}
 }
 
-func mkTemplateDec(templatePrms []string) string {
-	return fmt.Sprintf("template<typename %s>", strings.Join(templatePrms, ", typename "))
+func mkTemplateParameter(name string, deps []string) string {
+	if len(deps) == 0 {
+		return fmt.Sprintf("typename %s", name)
+	} else {
+		// We don't really need deps names, just the number of parameters
+		for i, _ := range deps {
+			deps[i] = "typename"
+		}
+		return fmt.Sprintf("template<%s> class  %s", strings.Join(deps, ", "), name)
+	}
 }
 
-func mkVariadicTemplateDec(templatePrms []string, variadicPrm string) string {
+func mkTemplateParameters(templatePrms map[string][]string) []string {
+	var templatePrmsStr []string
+	for name, deps := range templatePrms {
+		templatePrmsStr = append(templatePrmsStr, mkTemplateParameter(name, deps))
+	}
+	slices.SortFunc(templatePrmsStr, func(x, y string) int {
+		return strings.Compare(x, y)
+	})
+	return templatePrmsStr
+}
+
+func mkTemplateDec(templatePrms map[string][]string) string {
+	templatePrmsStr := mkTemplateParameters(templatePrms)
+	return fmt.Sprintf("template<%s>", strings.Join(templatePrmsStr, ", "))
+}
+
+func mkVariadicTemplateDec(templatePrms map[string][]string, variadicPrm string) string {
 	if len(templatePrms) == 0 {
 		return fmt.Sprintf("template<typename... %s>", variadicPrm)
 	} else {
-		return fmt.Sprintf("template<typename %s, typename... %s>", strings.Join(templatePrms, ", typename "), variadicPrm)
+		templatePrmsStr := mkTemplateParameters(templatePrms)
+		return fmt.Sprintf("template<%s, typename... %s>", strings.Join(templatePrmsStr, ", "), variadicPrm)
 	}
 }
 
@@ -883,6 +915,18 @@ func (target set[T]) append(src map[T]bool) {
 func (target set[T]) has(value T) bool {
 	v, ok := target[value]
 	return ok && v
+}
+
+func (target set[T]) toSlice() []T {
+	return maps.Keys(target)
+}
+
+func makeSet[T comparable](elts ...T) set[T] {
+	s := set[T]{}
+	for _, elt := range elts {
+		s.add(elt)
+	}
+	return s
 }
 
 func toSortedList(nsSet set[string]) []string {

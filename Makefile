@@ -190,6 +190,9 @@ clean:
 soft-clean:
 	touch cmd/main.go
 
+keep-generated:
+	touch $$(find $(OUTDIR) -type f -name '*.cpp' -o -name '*.h')
+
 unix2dos:
 	unix2dos -q $$(find generated -type f -name "*.cpp" -o -name "*.h")
 

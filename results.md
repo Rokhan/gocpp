@@ -192,7 +192,7 @@
 | $(ImportDir)/internal/goexperiment/exp_heapminimum512kib_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.cpp), [h](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.h))| ✔️ |
 | $(ImportDir)/internal/goos/zgoos_windows.go | ✔️ ([cpp](generated/golang/internal/goos/zgoos_windows.cpp), [h](generated/golang/internal/goos/zgoos_windows.h))| ✔️ |
 | $(ImportDir)/internal/itoa/itoa.go | ✔️ ([cpp](generated/golang/internal/itoa/itoa.cpp), [h](generated/golang/internal/itoa/itoa.h))| ❌ |
-| $(ImportDir)/internal/poll/errno_windows.go | ✔️ ([cpp](generated/golang/internal/poll/errno_windows.cpp), [h](generated/golang/internal/poll/errno_windows.h))| ❌ |
+| $(ImportDir)/internal/poll/errno_windows.go | ✔️ ([cpp](generated/golang/internal/poll/errno_windows.cpp), [h](generated/golang/internal/poll/errno_windows.h))| ✔️ |
 | $(ImportDir)/internal/poll/fd.go | ✔️ ([cpp](generated/golang/internal/poll/fd.cpp), [h](generated/golang/internal/poll/fd.h))| ✔️ |
 | $(ImportDir)/internal/poll/fd_fsync_windows.go | ✔️ ([cpp](generated/golang/internal/poll/fd_fsync_windows.cpp), [h](generated/golang/internal/poll/fd_fsync_windows.h))| ❌ |
 | $(ImportDir)/internal/poll/fd_mutex.go | ✔️ ([cpp](generated/golang/internal/poll/fd_mutex.cpp), [h](generated/golang/internal/poll/fd_mutex.h))| ❌ |
@@ -211,7 +211,7 @@
 | $(ImportDir)/internal/syscall/windows/registry/key.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/key.cpp), [h](generated/golang/internal/syscall/windows/registry/key.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/registry/syscall.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/syscall.cpp), [h](generated/golang/internal/syscall/windows/registry/syscall.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/registry/value.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/value.cpp), [h](generated/golang/internal/syscall/windows/registry/value.h))| ❌ |
-| $(ImportDir)/internal/syscall/windows/registry/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/registry/zsyscall_windows.h))| ❌ |
+| $(ImportDir)/internal/syscall/windows/registry/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/registry/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/registry/zsyscall_windows.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/reparse_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/reparse_windows.cpp), [h](generated/golang/internal/syscall/windows/reparse_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/security_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/security_windows.cpp), [h](generated/golang/internal/syscall/windows/security_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/symlink_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/symlink_windows.cpp), [h](generated/golang/internal/syscall/windows/symlink_windows.h))| ✔️ |
@@ -413,7 +413,7 @@
 | $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))| ✔️ |
 | $(ImportDir)/sort/slice.go | ✔️ ([cpp](generated/golang/sort/slice.cpp), [h](generated/golang/sort/slice.h))| ✔️ |
 | $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))| ❌ |
-| $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))| ❌ |
+| $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))| ✔️ |
 | $(ImportDir)/sort/zsortfunc.go | ✔️ ([cpp](generated/golang/sort/zsortfunc.cpp), [h](generated/golang/sort/zsortfunc.h))| ❌ |
 | $(ImportDir)/sort/zsortinterface.go | ✔️ ([cpp](generated/golang/sort/zsortinterface.cpp), [h](generated/golang/sort/zsortinterface.h))| ✔️ |
 | $(ImportDir)/strconv/atoi.go | ✔️ ([cpp](generated/golang/strconv/atoi.cpp), [h](generated/golang/strconv/atoi.h))| ❌ |
@@ -447,13 +447,13 @@
 | $(ImportDir)/syscall/msan0.go | ✔️ ([cpp](generated/golang/syscall/msan0.cpp), [h](generated/golang/syscall/msan0.h))| ❌ |
 | $(ImportDir)/syscall/net.go | ✔️ ([cpp](generated/golang/syscall/net.cpp), [h](generated/golang/syscall/net.h))| ✔️ |
 | $(ImportDir)/syscall/security_windows.go | ✔️ ([cpp](generated/golang/syscall/security_windows.cpp), [h](generated/golang/syscall/security_windows.h))| ❌ |
-| $(ImportDir)/syscall/syscall.go | ✔️ ([cpp](generated/golang/syscall/syscall.cpp), [h](generated/golang/syscall/syscall.h))| ❌ |
+| $(ImportDir)/syscall/syscall.go | ✔️ ([cpp](generated/golang/syscall/syscall.cpp), [h](generated/golang/syscall/syscall.h))| ✔️ |
 | $(ImportDir)/syscall/syscall_windows.go | ✔️ ([cpp](generated/golang/syscall/syscall_windows.cpp), [h](generated/golang/syscall/syscall_windows.h))| ❌ |
 | $(ImportDir)/syscall/types_windows.go | ✔️ ([cpp](generated/golang/syscall/types_windows.cpp), [h](generated/golang/syscall/types_windows.h))| ❌ |
 | $(ImportDir)/syscall/types_windows_amd64.go | ✔️ ([cpp](generated/golang/syscall/types_windows_amd64.cpp), [h](generated/golang/syscall/types_windows_amd64.h))| ❌ |
 | $(ImportDir)/syscall/wtf8_windows.go | ✔️ ([cpp](generated/golang/syscall/wtf8_windows.cpp), [h](generated/golang/syscall/wtf8_windows.h))| ❌ |
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))| ✔️ |
-| $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))| ❌ |
+| $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))| ✔️ |
 | $(ImportDir)/time/format.go | ✔️ ([cpp](generated/golang/time/format.cpp), [h](generated/golang/time/format.h))| ❌ |
 | $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))| ❌ |
 | $(ImportDir)/time/sleep.go | ✔️ ([cpp](generated/golang/time/sleep.cpp), [h](generated/golang/time/sleep.h))| ❌ |

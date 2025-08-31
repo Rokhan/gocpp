@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -410,6 +411,9 @@ func (cv *cppConverter) GetTypeParameters(goType types.Type, expr ast.Expr) []ty
 	}
 
 	switch t := goType.(type) {
+	case *types.Basic:
+		return nil
+
 	case *types.Named:
 		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
 			var result []types.Type
@@ -419,13 +423,41 @@ func (cv *cppConverter) GetTypeParameters(goType types.Type, expr ast.Expr) []ty
 			return result
 		}
 
-	case *types.Pointer:
+	case *types.Array:
 		return cv.GetTypeParameters(t.Elem(), expr)
 
 	case *types.Interface:
-	case *types.Struct:
-		// No type parameters in interface & struct definitions
 		return nil
+
+	case *types.Map:
+		var result []types.Type
+		result = append(result, cv.GetTypeParameters(t.Key(), expr)...)
+		result = append(result, cv.GetTypeParameters(t.Elem(), expr)...)
+		return result
+
+	case *types.Pointer:
+		return cv.GetTypeParameters(t.Elem(), expr)
+
+	case *types.Slice:
+		return cv.GetTypeParameters(t.Elem(), expr)
+
+	case *types.Struct:
+		return nil
+
+	case *types.TypeParam:
+		return []types.Type{t}
+
+	case *types.Union:
+		// For a union, collect type parameters from all terms
+		var result []types.Type
+		for i := 0; i < t.Len(); i++ {
+			term := t.Term(i)
+			params := cv.GetTypeParameters(term.Type(), expr)
+			if params != nil {
+				result = append(result, params...)
+			}
+		}
+		return result
 
 	default:
 		cv.Panicf("GetExprTypeParameters, unimplemented case: type=%v, expr=%s, position=%s", reflect.TypeOf(goType), types.ExprString(expr), cv.Position(expr))
@@ -1251,33 +1283,51 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		params.setIsRecv()
 		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
-		resultType := buildOutType(outTypes)
 
 		cv.declareVars(params)
-		typenames := []string{}
+		usedTypeParams := []string{}
 		for _, param := range params {
 			for _, place := range param.Type.defs {
 				cv.printOrKeepPlace(place, &outPlaces, nil)
 			}
-			typenames = append(typenames, param.Type.typenames...)
+			usedTypeParams = append(usedTypeParams, param.Type.typenames...)
 		}
 
 		for _, outType := range outTypes {
-			typenames = append(typenames, outType.typenames...)
+			usedTypeParams = append(usedTypeParams, outType.typenames...)
 		}
 
-		// Is it really necessary to get typenames from outTypes and params ?
-		// The following code should give us all what we need
+		usedTypeParams = deduplicate(usedTypeParams)
+
+		typeParams := map[string][]string{}
 		if d.Type.TypeParams != nil {
 			for _, tp := range d.Type.TypeParams.List {
 				for _, name := range tp.Names {
-					typenames = append(typenames, GetCppName(name.Name))
+					cppName := GetCppName(name.Name)
+					typeParams[cppName] = cv.GetCppTypeParameters(tp.Type)
 				}
 			}
 		}
 
-		// Deduplicate but keep initial ordering
-		typenames = deduplicate(typenames)
+		if len(typeParams) == 0 {
+			for _, name := range usedTypeParams {
+				typeParams[name] = nil
+			}
+		}
+
+		// Update params to add template parameters
+		for i, param := range params {
+			if deps, ok := typeParams[param.Type.str]; ok && len(deps) != 0 {
+				params[i].Type.str = fmt.Sprintf("%s<%s>", param.Type.str, strings.Join(deps, ", "))
+			}
+		}
+
+		resultType := buildOutType(outTypes, typeParams)
+
+		// Debug info about type dependencies
+		// for name, deps := range typeParams {
+		// 	fmt.Fprintf(cv.cpp.out, "%s// typeDeps, %s depends on %s\n", cv.cpp.Indent(), name, deps)
+		// }
 
 		name := GetCppName(d.Name.Name)
 
@@ -1294,9 +1344,9 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		if cv.ignoreKnownError(name, knownNameConflicts) {
 			appendStrf(&funcDef, "/* %s %s(%s); [Ignored, known name conflict] */ \n", resultType, name, params)
 		} else {
-			if len(typenames) != 0 {
+			if len(typeParams) != 0 {
 				appendStrf(&funcDef, "\n")
-				appendStrf(&funcDef, "%s\n", mkTemplateDec(typenames))
+				appendStrf(&funcDef, "%s\n", mkTemplateDec(typeParams))
 			}
 			appendStrf(&funcDef, "%s %s(%s);\n", resultType, name, params)
 		}
@@ -1319,7 +1369,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, mkCppType("Args...", nil), false})
 
 			appendStrf(&funcDef, "\n")
-			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
+			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams1)
 			appendStrf(&funcDef, "{\n")
 			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams1)
@@ -1330,7 +1380,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			callParams2 := strings.Join(strs2, ", ")
 			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, nil, mkCppType("Args...", nil), false})
 			appendStrf(&funcDef, "\n")
-			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typenames, "Args"))
+			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
 			appendStrf(&funcDef, "{\n")
 			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams2)
@@ -1340,8 +1390,8 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 		cv.printOrKeepPlaces(funcDef, &outPlaces, nil)
 
-		if len(typenames) != 0 {
-			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typenames))
+		if len(typeParams) != 0 {
+			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typeParams))
 		}
 		fmt.Fprintf(cv.cpp.out, "%s%s %s%s(%s)\n", cv.cpp.Indent(), resultType, prefix, name, params)
 		if name == "main" {
@@ -2334,11 +2384,12 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	}
 
 	templateDec := ""
-	templatePrms := []string{}
+	templatePrms := map[string][]string{}
 	if node.TypeParams != nil {
 		for _, field := range node.TypeParams.List {
 			for _, name := range field.Names {
-				templatePrms = append(templatePrms, name.Name)
+				cppName := GetCppName(name.Name)
+				templatePrms[cppName] = cv.GetCppTypeParameters(field.Type)
 			}
 		}
 
@@ -2736,7 +2787,7 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string,
 	case *ast.FuncType:
 		params := cv.readFieldsCtx(n.Params, ctx)
 		_, outTypes := cv.getResultInfos(n)
-		resultType := buildOutType(outTypes)
+		resultType := buildOutType(outTypes, nil)
 		return resultType, params
 
 	default:
@@ -2774,7 +2825,7 @@ func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) c
 	ctx.ensureHasTypeName = false
 	params := cv.readFieldsCtx(node.Params, ctx)
 	_, outTypes := cv.getResultInfos(node)
-	resultType := buildOutType(outTypes)
+	resultType := buildOutType(outTypes, nil)
 	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), params.getDefs())
 }
 
@@ -2841,13 +2892,13 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
-func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms []string, param genStructParam) (cppStruct string, places []place) {
+func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
 	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
-		templatePrmList = fmt.Sprintf("<%s>", strings.Join(templatePrms, ", "))
+		templatePrmList = fmt.Sprintf("<%s>", strings.Join(maps.Keys(templatePrms), ", "))
 	}
 
 	for _, param := range fields {
@@ -2888,7 +2939,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
-	excludedNames := append(templatePrms, param.name)
+	excludedNames := append(maps.Keys(templatePrms), param.name)
 	newTemplateParamName := getAnotherTemplateParamName(excludedNames)
 
 	// Not needed for now, we want to keep struct an aggregate type.
@@ -2995,7 +3046,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	return buf.String(), places
 }
 
-func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms []string) {
+func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms map[string][]string) {
 	if len(templatePrms) != 0 {
 		fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
 	}
@@ -3027,13 +3078,13 @@ func getAnotherTemplateParamName(excludedNames []string) string {
 	}
 }
 
-func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms []string, param genStructParam) string {
+func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) string {
 	buf := new(bytes.Buffer)
 	methods := cv.readMethods(node.Methods, ctContext{ensureHasBlankName: true})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
-		templatePrmList = fmt.Sprintf("<%s>", strings.Join(templatePrms, ", "))
+		templatePrmList = fmt.Sprintf("<%s>", strings.Join(maps.Keys(templatePrms), ", "))
 	}
 
 	data := cv.computeGenStructData(param, templatePrmList)
@@ -3543,7 +3594,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		expr.str = cv.withCppBuffer(func() {
 			params := cv.readFields(n.Type.Params)
 			outNames, outTypes := cv.getResultInfos(n.Type)
-			resultType := buildOutType(outTypes)
+			resultType := buildOutType(outTypes, nil)
 
 			cv.declareVars(params)
 

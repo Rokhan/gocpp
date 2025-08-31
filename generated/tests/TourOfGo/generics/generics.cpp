@@ -117,7 +117,7 @@ namespace golang::main
     }
 
 
-    template<typename U, typename T>
+    template<typename T, typename U>
     U OneOrDefault(gocpp::map<T, U> dummy)
     {
         U zero = {};
@@ -154,6 +154,97 @@ namespace golang::main
         return zero;
     }
 
+    // from slices/slices.go
+
+    template<template<typename> class  S, typename E>
+    S<E> Grow(S<E> s, int n)
+    {
+        if(n < 0)
+        {
+            gocpp::panic("cannot be negative"s);
+        }
+        if(n -= cap(s) - len(s); n > 0)
+        {
+            s = append(s.make_slice(0, cap(s)), gocpp::make(gocpp::Tag<gocpp::slice<E>>(), n)).make_slice(0, len(s));
+        }
+        return s;
+    }
+
+    // from sync/atomic/type.go, simplified
+    
+    template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    Pointer<T>::operator U()
+    {
+        U result;
+        return result;
+    }
+
+    template<typename T>
+    template<typename U> requires gocpp::GoStruct<U>
+    bool Pointer<T>::operator==(const U& ref) const
+    {
+        return true;
+    }
+
+    template<typename T>
+    std::ostream& Pointer<T>::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    // from sync/map.go, simplified
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    entry::operator T()
+    {
+        T result;
+        result.p = this->p;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool entry::operator==(const T& ref) const
+    {
+        if (p != ref.p) return false;
+        return true;
+    }
+
+    std::ostream& entry::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << p;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct entry& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    template<typename T>
+    void rec::Store(golang::main::Pointer<T>* x, T* val)
+    {
+    }
+
+    // from sync/map.go, simplified
+    struct entry* newEntry(go_any i)
+    {
+        auto e = new entry {};
+        rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
+        return e;
+    }
+
     void main()
     {
         auto [h1, h2] = HashStr("toto"s);
@@ -165,6 +256,17 @@ namespace golang::main
         mocklib::Printf("o1: %v, o2:%v\n"s, o1, o2);
         mocklib::Printf("Zero: %v\n"s, Zero<int>());
         mocklib::Printf("Unused: %v\n"s, UnusedGenericParameter<double>());
+        mocklib::Printf("OneOrDefault: %v\n"s, OneOrDefault(gocpp::map<int, std::string> {{ 1, "toto"s }}));
+        auto w1 = gocpp::Init<main::Wrapper<int>>([=](auto& x) {
+            x.value = 42;
+        });
+        auto w2 = gocpp::Init<main::Wrapper<std::string>>([=](auto& x) {
+            x.value = "hello"s;
+        });
+        mocklib::Printf("Wrapper: %v, %v\n"s, rec::Get<int>(gocpp::recv(w1)), rec::Get<std::string>(gocpp::recv(w2)));
+        auto s1 = gocpp::slice<int> {1, 2, 3};
+        auto s2 = Grow(s1, 10);
+        mocklib::Printf("Grow: %v, %v\n"s, s1, s2);
     }
 
 }

@@ -565,12 +565,12 @@ namespace golang::runtime
     void switchToCrashStack(std::function<void ()> fn)
     {
         auto me = getg();
-        if(rec::CompareAndSwapNoWB(gocpp::recv(crashingG), nullptr, me))
+        if(rec::CompareAndSwapNoWB<g>(gocpp::recv(crashingG), nullptr, me))
         {
             switchToCrashStack0(fn);
             abort();
         }
-        if(rec::Load(gocpp::recv(crashingG)) == me)
+        if(rec::Load<g>(gocpp::recv(crashingG)) == me)
         {
             writeErrStr("fatal: recursive switchToCrashStack\n"s);
             abort();

@@ -193,7 +193,7 @@ namespace golang::runtime
     {
         auto p = new(gocpp::Tag<std::function<void (std::string _1, std::string _2)>>());
         *p = update;
-        rec::Store(gocpp::recv(godebugUpdate), p);
+        rec::Store<std::function<void (std::string, std::string)>>(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
     }
 
@@ -202,7 +202,7 @@ namespace golang::runtime
     {
         auto p = new(gocpp::Tag<std::function<std::function<void ()> (std::string _1)>>());
         *p = newIncNonDefault;
-        rec::Store(gocpp::recv(godebugNewIncNonDefault), p);
+        rec::Store<std::function<func() (std::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
     }
 
     // A godebugInc provides access to internal/godebug's IncNonDefault function
@@ -242,10 +242,10 @@ namespace golang::runtime
 
     void rec::IncNonDefault(struct godebugInc* g)
     {
-        auto inc = rec::Load(gocpp::recv(g->inc));
+        auto inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
         if(inc == nullptr)
         {
-            auto newInc = rec::Load(gocpp::recv(godebugNewIncNonDefault));
+            auto newInc = rec::Load<std::function<func() (std::string)>>(gocpp::recv(godebugNewIncNonDefault));
             if(newInc == nullptr)
             {
                 return;
@@ -256,9 +256,9 @@ namespace golang::runtime
             {
                 racereleasemerge(unsafe::Pointer(& g->inc));
             }
-            if(! rec::CompareAndSwap(gocpp::recv(g->inc), nullptr, inc))
+            if(! rec::CompareAndSwap<std::function<void (void)>>(gocpp::recv(g->inc), nullptr, inc))
             {
-                inc = rec::Load(gocpp::recv(g->inc));
+                inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
             }
         }
         if(raceenabled)
@@ -270,9 +270,9 @@ namespace golang::runtime
 
     void godebugNotify(bool envChanged)
     {
-        auto update = rec::Load(gocpp::recv(godebugUpdate));
+        auto update = rec::Load<std::function<void (std::string, std::string)>>(gocpp::recv(godebugUpdate));
         std::string env = {};
-        if(auto p = rec::Load(gocpp::recv(godebugEnv)); p != nullptr)
+        if(auto p = rec::Load<std::string>(gocpp::recv(godebugEnv)); p != nullptr)
         {
             env = *p;
         }
@@ -294,7 +294,7 @@ namespace golang::runtime
         {
             auto p = new(string);
             *p = value;
-            rec::Store(gocpp::recv(godebugEnv), p);
+            rec::Store<std::string>(gocpp::recv(godebugEnv), p);
             godebugNotify(true);
         }
     }
@@ -305,7 +305,7 @@ namespace golang::runtime
         unsetenv_c(key);
         if(key == "GODEBUG"s)
         {
-            rec::Store(gocpp::recv(godebugEnv), nullptr);
+            rec::Store<std::string>(gocpp::recv(godebugEnv), nullptr);
             godebugNotify(true);
         }
     }

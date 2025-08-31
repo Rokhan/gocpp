@@ -26,8 +26,8 @@ namespace golang::slices
     // Sort sorts a slice of any ordered type in ascending order.
     // When sorting floating-point numbers, NaNs are ordered before other values.
 
-    template<typename S, typename E>
-    void Sort(S x)
+    template<template<typename> class  S, typename E>
+    void Sort(S<E> x)
     {
         auto n = len(x);
         pdqsortOrdered(x, 0, n, bits::Len((unsigned int)(n)));
@@ -41,8 +41,8 @@ namespace golang::slices
     // SortFunc requires that cmp is a strict weak ordering.
     // See https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings.
 
-    template<typename S, typename E>
-    void SortFunc(S x, std::function<int (E a, E b)> cmp)
+    template<template<typename> class  S, typename E>
+    void SortFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
         auto n = len(x);
         pdqsortCmpFunc(x, 0, n, bits::Len((unsigned int)(n)), cmp);
@@ -51,16 +51,16 @@ namespace golang::slices
     // SortStableFunc sorts the slice x while keeping the original order of equal
     // elements, using cmp to compare elements in the same way as [SortFunc].
 
-    template<typename S, typename E>
-    void SortStableFunc(S x, std::function<int (E a, E b)> cmp)
+    template<template<typename> class  S, typename E>
+    void SortStableFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
         stableCmpFunc(x, len(x), cmp);
     }
 
     // IsSorted reports whether x is sorted in ascending order.
 
-    template<typename S, typename E>
-    bool IsSorted(S x)
+    template<template<typename> class  S, typename E>
+    bool IsSorted(S<E> x)
     {
         for(auto i = len(x) - 1; i > 0; i--)
         {
@@ -75,8 +75,8 @@ namespace golang::slices
     // IsSortedFunc reports whether x is sorted in ascending order, with cmp as the
     // comparison function as defined by [SortFunc].
 
-    template<typename S, typename E>
-    bool IsSortedFunc(S x, std::function<int (E a, E b)> cmp)
+    template<template<typename> class  S, typename E>
+    bool IsSortedFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
         for(auto i = len(x) - 1; i > 0; i--)
         {
@@ -92,8 +92,8 @@ namespace golang::slices
     // For floating-point numbers, Min propagates NaNs (any NaN value in x
     // forces the output to be NaN).
 
-    template<typename S, typename E>
-    E Min(S x)
+    template<template<typename> class  S, typename E>
+    E Min(S<E> x)
     {
         if(len(x) < 1)
         {
@@ -111,8 +111,8 @@ namespace golang::slices
     // It panics if x is empty. If there is more than one minimal element
     // according to the cmp function, MinFunc returns the first one.
 
-    template<typename S, typename E>
-    E MinFunc(S x, std::function<int (E a, E b)> cmp)
+    template<template<typename> class  S, typename E>
+    E MinFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)
         {
@@ -133,8 +133,8 @@ namespace golang::slices
     // For floating-point E, Max propagates NaNs (any NaN value in x
     // forces the output to be NaN).
 
-    template<typename S, typename E>
-    E Max(S x)
+    template<template<typename> class  S, typename E>
+    E Max(S<E> x)
     {
         if(len(x) < 1)
         {
@@ -152,8 +152,8 @@ namespace golang::slices
     // It panics if x is empty. If there is more than one maximal element
     // according to the cmp function, MaxFunc returns the first one.
 
-    template<typename S, typename E>
-    E MaxFunc(S x, std::function<int (E a, E b)> cmp)
+    template<template<typename> class  S, typename E>
+    E MaxFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
         if(len(x) < 1)
         {
@@ -175,8 +175,8 @@ namespace golang::slices
     // sort order; it also returns a bool saying whether the target is really found
     // in the slice. The slice must be sorted in increasing order.
 
-    template<typename S, typename E>
-    std::tuple<int, bool> BinarySearch(S x, E target)
+    template<template<typename> class  S, typename E>
+    std::tuple<int, bool> BinarySearch(S<E> x, E target)
     {
         auto n = len(x);
         auto [i, j] = std::tuple{0, n};
@@ -203,8 +203,8 @@ namespace golang::slices
     // cmp must implement the same ordering as the slice, such that if
     // cmp(a, t) < 0 and cmp(b, t) >= 0, then a must precede b in the slice.
 
-    template<typename S, typename T, typename E>
-    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E _1, T _2)> cmp)
+    template<template<typename> class  S, typename E, typename T>
+    std::tuple<int, bool> BinarySearchFunc(S<E> x, T target, std::function<int (E _1, T _2)> cmp)
     {
         auto n = len(x);
         auto [i, j] = std::tuple{0, n};

@@ -262,7 +262,7 @@ namespace golang::godebug
                 gocpp::panic("godebug: Value of name not listed in godebugs.All: "s + s->name);
             }
         });
-        auto v = *rec::Load(gocpp::recv(s->value));
+        auto v = *rec::Load<value>(gocpp::recv(s->value));
         if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & go_stderr))
         {
             return ""s;
@@ -279,7 +279,7 @@ namespace golang::godebug
         }
         auto s = new(setting);
         s->info = godebugs::Lookup(name);
-        rec::Store(gocpp::recv(s->value), & empty);
+        rec::Store<value>(gocpp::recv(s->value), & empty);
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
         {
             return gocpp::getValue<setting*>(v);
@@ -351,7 +351,7 @@ namespace golang::godebug
             {
                 if(! did[gocpp::getValue<std::string>(name)])
                 {
-                    rec::Store(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
+                    rec::Store<value>(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
                 }
                 return true;
             });
@@ -396,7 +396,7 @@ namespace golang::godebug
                                 break;
                             }
                         }
-                        rec::Store(gocpp::recv(lookup(name)->value), v);
+                        rec::Store<value>(gocpp::recv(lookup(name)->value), v);
                     }
                 }
                 eq = - 1;

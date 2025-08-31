@@ -64,7 +64,7 @@ namespace golang::main
         return Dummy1(dummy, gocpp::ToSlice<T>(value, vals...));
     }
     
-    template<typename U, typename T>
+    template<typename T, typename U>
     U OneOrDefault(gocpp::map<T, U> dummy);
     
     template<typename T>
@@ -75,6 +75,43 @@ namespace golang::main
     
     template<typename T>
     T Zero();
+    
+    template<template<typename> class  S, typename E>
+    S<E> Grow(S<E> s, int n);
+    template<typename T> 
+    struct Pointer
+    {
+
+        using isGoStruct = void;
+
+        template<typename U> requires gocpp::GoStruct<U>
+        operator U();
+
+        template<typename U> requires gocpp::GoStruct<U>
+        bool operator==(const U& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
+    struct entry
+    {
+        golang::main::Pointer<go_any> p;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct entry& value);
+    struct entry* newEntry(go_any i);
     void main();
 
     namespace rec
@@ -82,6 +119,9 @@ namespace golang::main
         
         template<typename T>
         T Get(golang::main::Wrapper<T>* p);
+        
+        template<typename T>
+        void Store(golang::main::Pointer<T>* x, T* val);
     }
 }
 

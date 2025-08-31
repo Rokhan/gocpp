@@ -13,38 +13,38 @@
 namespace golang::slices
 {
     
-    template<typename S, typename E>
-    void Sort(S x);
+    template<template<typename> class  S, typename E>
+    void Sort(S<E> x);
     
-    template<typename S, typename E>
-    void SortFunc(S x, std::function<int (E a, E b)> cmp);
+    template<template<typename> class  S, typename E>
+    void SortFunc(S<E> x, std::function<int (E a, E b)> cmp);
     
-    template<typename S, typename E>
-    void SortStableFunc(S x, std::function<int (E a, E b)> cmp);
+    template<template<typename> class  S, typename E>
+    void SortStableFunc(S<E> x, std::function<int (E a, E b)> cmp);
     
-    template<typename S, typename E>
-    bool IsSorted(S x);
+    template<template<typename> class  S, typename E>
+    bool IsSorted(S<E> x);
     
-    template<typename S, typename E>
-    bool IsSortedFunc(S x, std::function<int (E a, E b)> cmp);
+    template<template<typename> class  S, typename E>
+    bool IsSortedFunc(S<E> x, std::function<int (E a, E b)> cmp);
     
-    template<typename S, typename E>
-    E Min(S x);
+    template<template<typename> class  S, typename E>
+    E Min(S<E> x);
     
-    template<typename S, typename E>
-    E MinFunc(S x, std::function<int (E a, E b)> cmp);
+    template<template<typename> class  S, typename E>
+    E MinFunc(S<E> x, std::function<int (E a, E b)> cmp);
     
-    template<typename S, typename E>
-    E Max(S x);
+    template<template<typename> class  S, typename E>
+    E Max(S<E> x);
     
-    template<typename S, typename E>
-    E MaxFunc(S x, std::function<int (E a, E b)> cmp);
+    template<template<typename> class  S, typename E>
+    E MaxFunc(S<E> x, std::function<int (E a, E b)> cmp);
     
-    template<typename S, typename E>
-    std::tuple<int, bool> BinarySearch(S x, E target);
+    template<template<typename> class  S, typename E>
+    std::tuple<int, bool> BinarySearch(S<E> x, E target);
     
-    template<typename S, typename T, typename E>
-    std::tuple<int, bool> BinarySearchFunc(S x, T target, std::function<int (E _1, T _2)> cmp);
+    template<template<typename> class  S, typename E, typename T>
+    std::tuple<int, bool> BinarySearchFunc(S<E> x, T target, std::function<int (E _1, T _2)> cmp);
     unsigned int nextPowerOfTwo(int length);
     
     template<typename T>

@@ -498,7 +498,7 @@ namespace golang::rand
     // functions.
     struct Rand* globalRand()
     {
-        if(auto r = rec::Load(gocpp::recv(globalRandGenerator)); r != nullptr)
+        if(auto r = rec::Load<Rand>(gocpp::recv(globalRandGenerator)); r != nullptr)
         {
             return r;
         }
@@ -517,9 +517,9 @@ namespace golang::rand
                 x.s64 = new runtimeSource {};
             });
         }
-        if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), nullptr, r))
+        if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), nullptr, r))
         {
-            return rec::Load(gocpp::recv(globalRandGenerator));
+            return rec::Load<Rand>(gocpp::recv(globalRandGenerator));
         }
         return r;
     }
@@ -602,7 +602,7 @@ namespace golang::rand
     // obtain a local random generator.
     void Seed(int64_t seed)
     {
-        auto orig = rec::Load(gocpp::recv(globalRandGenerator));
+        auto orig = rec::Load<Rand>(gocpp::recv(globalRandGenerator));
         if(orig != nullptr)
         {
             if(auto [gocpp_id_3, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
@@ -613,7 +613,7 @@ namespace golang::rand
         }
         auto r = New(new(lockedSource));
         rec::Seed(gocpp::recv(r), seed);
-        if(! rec::CompareAndSwap(gocpp::recv(globalRandGenerator), orig, r))
+        if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), orig, r))
         {
             Seed(seed);
         }

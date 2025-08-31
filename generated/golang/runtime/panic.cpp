@@ -564,12 +564,12 @@ namespace golang::runtime
         d1->fn = fn;
         for(; ; )
         {
-            d1->link = rec::Load(gocpp::recv(head));
+            d1->link = rec::Load<_defer>(gocpp::recv(head));
             if(d1->link == badDefer())
             {
                 go_throw("defer after range func returned"s);
             }
-            if(rec::CompareAndSwap(gocpp::recv(head), d1->link, d1))
+            if(rec::CompareAndSwap<_defer>(gocpp::recv(head), d1->link, d1))
             {
                 break;
             }
@@ -591,8 +591,8 @@ namespace golang::runtime
         auto d0 = d;
         for(; ; )
         {
-            d = rec::Load(gocpp::recv(head));
-            if(rec::CompareAndSwap(gocpp::recv(head), d, badDefer()))
+            d = rec::Load<_defer>(gocpp::recv(head));
+            if(rec::CompareAndSwap<_defer>(gocpp::recv(head), d, badDefer()))
             {
                 break;
             }

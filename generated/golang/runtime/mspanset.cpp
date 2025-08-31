@@ -130,7 +130,7 @@ namespace golang::runtime
         retry:
         if(top < spineLen)
         {
-            block = rec::Load(gocpp::recv(rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), top)));
+            block = rec::Load<spanSetBlock>(gocpp::recv(rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), top)));
         }
         else
         {
@@ -159,7 +159,7 @@ namespace golang::runtime
                 b->spineCap = newCap;
             }
             block = rec::alloc(gocpp::recv(spanSetBlockPool));
-            rec::StoreNoWB(gocpp::recv(rec::lookup(gocpp::recv(spine), top)), block);
+            rec::StoreNoWB<spanSetBlock>(gocpp::recv(rec::lookup(gocpp::recv(spine), top)), block);
             rec::Store(gocpp::recv(b->spineLen), spineLen + 1);
             unlock(& b->spineLock);
         }
@@ -205,7 +205,7 @@ namespace golang::runtime
         }
         auto [top, bottom] = std::tuple{head / spanSetBlockEntries, head % spanSetBlockEntries};
         auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
-        auto block = rec::Load(gocpp::recv(blockp));
+        auto block = rec::Load<spanSetBlock>(gocpp::recv(blockp));
         auto s = rec::Load(gocpp::recv(block->spans[bottom]));
         for(; s == nullptr; )
         {
@@ -214,7 +214,7 @@ namespace golang::runtime
         rec::StoreNoWB(gocpp::recv(block->spans[bottom]), nullptr);
         if(rec::Add(gocpp::recv(block->popped), 1) == spanSetBlockEntries)
         {
-            rec::StoreNoWB(gocpp::recv(blockp), nullptr);
+            rec::StoreNoWB<spanSetBlock>(gocpp::recv(blockp), nullptr);
             rec::free(gocpp::recv(spanSetBlockPool), block);
         }
         return s;
@@ -239,7 +239,7 @@ namespace golang::runtime
         if(uintptr_t(top) < rec::Load(gocpp::recv(b->spineLen)))
         {
             auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
-            auto block = rec::Load(gocpp::recv(blockp));
+            auto block = rec::Load<spanSetBlock>(gocpp::recv(blockp));
             if(block != nullptr)
             {
                 if(rec::Load(gocpp::recv(block->popped)) == 0)
@@ -250,7 +250,7 @@ namespace golang::runtime
                 {
                     go_throw("fully empty unfreed span set block found in reset"s);
                 }
-                rec::StoreNoWB(gocpp::recv(blockp), nullptr);
+                rec::StoreNoWB<spanSetBlock>(gocpp::recv(blockp), nullptr);
                 rec::free(gocpp::recv(spanSetBlockPool), block);
             }
         }

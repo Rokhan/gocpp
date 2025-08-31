@@ -560,7 +560,7 @@ namespace golang::runtime
                 {
                     go_throw("trace: non-empty full trace buffer for next generation"s);
                 }
-                if(trace.reading != nullptr || rec::Load(gocpp::recv(trace.reader)) != nullptr)
+                if(trace.reading != nullptr || rec::Load<g>(gocpp::recv(trace.reader)) != nullptr)
                 {
                     go_throw("trace: reading after shutdown"s);
                 }
@@ -641,7 +641,7 @@ namespace golang::runtime
         {
             gopark([=](struct g* gp, unsafe::Pointer _1) mutable -> bool
             {
-                if(! rec::CompareAndSwapNoWB(gocpp::recv(trace.reader), nullptr, gp))
+                if(! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), nullptr, gp))
                 {
                     return false;
                 }
@@ -687,7 +687,7 @@ namespace golang::runtime
                 }(); });
             }
             lock(& trace.lock);
-            if(rec::Load(gocpp::recv(trace.reader)) != nullptr)
+            if(rec::Load<g>(gocpp::recv(trace.reader)) != nullptr)
             {
                 unlock(& trace.lock);
                 println("runtime: ReadTrace called from multiple goroutines simultaneously"s);
@@ -764,7 +764,7 @@ namespace golang::runtime
     struct g* traceReader()
     {
         auto gp = traceReaderAvailable();
-        if(gp == nullptr || ! rec::CompareAndSwapNoWB(gocpp::recv(trace.reader), gp, nullptr))
+        if(gp == nullptr || ! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), gp, nullptr))
         {
             return nullptr;
         }
@@ -778,7 +778,7 @@ namespace golang::runtime
     {
         if(rec::Load(gocpp::recv(trace.flushedGen)) == rec::Load(gocpp::recv(trace.readerGen)) || rec::Load(gocpp::recv(trace.workAvailable)) || rec::Load(gocpp::recv(trace.shutdown)))
         {
-            return rec::Load(gocpp::recv(trace.reader));
+            return rec::Load<g>(gocpp::recv(trace.reader));
         }
         return nullptr;
     }

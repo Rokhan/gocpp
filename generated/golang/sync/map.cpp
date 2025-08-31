@@ -156,13 +156,13 @@ namespace golang::sync
     struct entry* newEntry(go_any i)
     {
         auto e = new entry {};
-        rec::Store(gocpp::recv(e->p), & i);
+        rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
         return e;
     }
 
     struct readOnly rec::loadReadOnly(struct Map* m)
     {
-        if(auto p = rec::Load(gocpp::recv(m->read)); p != nullptr)
+        if(auto p = rec::Load<readOnly>(gocpp::recv(m->read)); p != nullptr)
         {
             return *p;
         }
@@ -202,7 +202,7 @@ namespace golang::sync
     {
         go_any value;
         bool ok;
-        auto p = rec::Load(gocpp::recv(e->p));
+        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         if(p == nullptr || p == expunged)
         {
             return {nullptr, false};
@@ -224,7 +224,7 @@ namespace golang::sync
     // the entry unchanged.
     bool rec::tryCompareAndSwap(struct entry* e, go_any old, go_any go_new)
     {
-        auto p = rec::Load(gocpp::recv(e->p));
+        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         if(p == nullptr || p == expunged || *p != old)
         {
             return false;
@@ -232,11 +232,11 @@ namespace golang::sync
         auto nc = go_new;
         for(; ; )
         {
-            if(rec::CompareAndSwap(gocpp::recv(e->p), p, & nc))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, & nc))
             {
                 return true;
             }
-            p = rec::Load(gocpp::recv(e->p));
+            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
             if(p == nullptr || p == expunged || *p != old)
             {
                 return false;
@@ -251,7 +251,7 @@ namespace golang::sync
     bool rec::unexpungeLocked(struct entry* e)
     {
         bool wasExpunged;
-        return rec::CompareAndSwap(gocpp::recv(e->p), expunged, nullptr);
+        return rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), expunged, nullptr);
     }
 
     // swapLocked unconditionally swaps a value into the entry.
@@ -259,7 +259,7 @@ namespace golang::sync
     // The entry must be known not to be expunged.
     go_any* rec::swapLocked(struct entry* e, go_any* i)
     {
-        return rec::Swap(gocpp::recv(e->p), i);
+        return rec::Swap<gocpp::go_any>(gocpp::recv(e->p), i);
     }
 
     // LoadOrStore returns the existing value for the key if present.
@@ -299,7 +299,7 @@ namespace golang::sync
             if(! read.amended)
             {
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -321,7 +321,7 @@ namespace golang::sync
         go_any actual;
         bool loaded;
         bool ok;
-        auto p = rec::Load(gocpp::recv(e->p));
+        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         if(p == expunged)
         {
             return {nullptr, false, false};
@@ -333,11 +333,11 @@ namespace golang::sync
         auto ic = i;
         for(; ; )
         {
-            if(rec::CompareAndSwap(gocpp::recv(e->p), nullptr, & ic))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), nullptr, & ic))
             {
                 return {i, false, true};
             }
-            p = rec::Load(gocpp::recv(e->p));
+            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
             if(p == expunged)
             {
                 return {nullptr, false, false};
@@ -389,12 +389,12 @@ namespace golang::sync
         bool ok;
         for(; ; )
         {
-            auto p = rec::Load(gocpp::recv(e->p));
+            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
             if(p == nullptr || p == expunged)
             {
                 return {nullptr, false};
             }
-            if(rec::CompareAndSwap(gocpp::recv(e->p), p, nullptr))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, nullptr))
             {
                 return {*p, true};
             }
@@ -409,12 +409,12 @@ namespace golang::sync
     {
         for(; ; )
         {
-            auto p = rec::Load(gocpp::recv(e->p));
+            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
             if(p == expunged)
             {
                 return {nullptr, false};
             }
-            if(rec::CompareAndSwap(gocpp::recv(e->p), p, i))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, i))
             {
                 return {p, true};
             }
@@ -467,7 +467,7 @@ namespace golang::sync
             if(! read.amended)
             {
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -542,12 +542,12 @@ namespace golang::sync
         }
         for(; ok; )
         {
-            auto p = rec::Load(gocpp::recv(e->p));
+            auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
             if(p == nullptr || p == expunged || *p != old)
             {
                 return false;
             }
-            if(rec::CompareAndSwap(gocpp::recv(e->p), p, nullptr))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), p, nullptr))
             {
                 return true;
             }
@@ -579,7 +579,7 @@ namespace golang::sync
                     x.m = m->dirty;
                 });
                 auto copyRead = read;
-                rec::Store(gocpp::recv(m->read), & copyRead);
+                rec::Store<readOnly>(gocpp::recv(m->read), & copyRead);
                 m->dirty = nullptr;
                 m->misses = 0;
             }
@@ -606,7 +606,7 @@ namespace golang::sync
         {
             return;
         }
-        rec::Store(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
             x.m = m->dirty;
         }));
         m->dirty = nullptr;
@@ -633,14 +633,14 @@ namespace golang::sync
     bool rec::tryExpungeLocked(struct entry* e)
     {
         bool isExpunged;
-        auto p = rec::Load(gocpp::recv(e->p));
+        auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         for(; p == nullptr; )
         {
-            if(rec::CompareAndSwap(gocpp::recv(e->p), nullptr, expunged))
+            if(rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), nullptr, expunged))
             {
                 return true;
             }
-            p = rec::Load(gocpp::recv(e->p));
+            p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         }
         return p == expunged;
     }

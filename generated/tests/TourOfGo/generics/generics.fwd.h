@@ -8,4 +8,6 @@ namespace golang::main
 {
     const long PrimeRK = 16777619;
     template<typename T> struct Wrapper;
+    template<typename T> struct Pointer;
+    struct entry;
 }

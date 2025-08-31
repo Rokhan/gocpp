@@ -704,7 +704,7 @@ namespace golang::runtime
         auto godebug = gogetenv("GODEBUG"s);
         auto p = new(string);
         *p = godebug;
-        rec::Store(gocpp::recv(godebugEnv), p);
+        rec::Store<std::string>(gocpp::recv(godebugEnv), p);
         for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->def != 0)

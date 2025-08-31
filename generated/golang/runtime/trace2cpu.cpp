@@ -76,8 +76,8 @@ namespace golang::runtime
         }
         trace.cpuLogRead[0] = newProfBuf(3, profBufWordCount, profBufTagCount);
         trace.cpuLogRead[1] = newProfBuf(3, profBufWordCount, profBufTagCount);
-        rec::Store(gocpp::recv(trace.cpuLogWrite[0]), trace.cpuLogRead[0]);
-        rec::Store(gocpp::recv(trace.cpuLogWrite[1]), trace.cpuLogRead[1]);
+        rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[0]), trace.cpuLogRead[0]);
+        rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[1]), trace.cpuLogRead[1]);
     }
 
     struct gocpp_id_0
@@ -187,8 +187,8 @@ namespace golang::runtime
         {
             go_throw("traceStopReadCPU called with trace enabled"s);
         }
-        rec::Store(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
-        rec::Store(gocpp::recv(trace.cpuLogWrite[1]), nullptr);
+        rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
+        rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[1]), nullptr);
         rec::close(gocpp::recv(trace.cpuLogRead[0]));
         rec::close(gocpp::recv(trace.cpuLogRead[1]));
         rec::wake(gocpp::recv(trace.cpuSleep));
@@ -345,7 +345,7 @@ namespace golang::runtime
         {
             osyield();
         }
-        if(auto log = rec::Load(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
+        if(auto log = rec::Load<profBuf>(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
         {
             rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0), stk);
         }

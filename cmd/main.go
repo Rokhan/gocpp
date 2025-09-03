@@ -2612,6 +2612,7 @@ func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	case "std::string":
 		cppType.canFwd = false
 	case "gocpp::complex128":
+		cppType.isStruct = true
 	}
 }
 

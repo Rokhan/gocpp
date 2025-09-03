@@ -909,8 +909,8 @@ namespace gocpp
                 panic("slice: capacity > size");
             }
 
-            this->mArray = std::make_shared<store_type>(a.begin() + low, a.begin() + high);
-            this->mArray.reserve(capacity);
+            this->mArray = std::make_shared<store_type>(a.mArray->begin() + low, a.mArray->begin() + high);
+            this->mArray->reserve(capacity);
             mStart = 0;
             mEnd = high - low;
         }        
@@ -1183,7 +1183,7 @@ namespace gocpp
             return {};
         }
 
-        return slice(*this, low, this->size());
+        return slice(*this, low, std::min<int>(this->size(), this->mEnd));
     }
 
     // FIXME: golang permit to access all element between size and capacity    

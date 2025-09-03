@@ -3729,7 +3729,11 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 	case *ast.SliceExpr:
 		if n.Slice3 {
-			return ExprPrintf("%s.make_slice(%s, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+			if n.Low == nil {
+				return ExprPrintf("%s.make_slice(0, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+			} else {
+				return ExprPrintf("%s.make_slice(%s, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+			}
 		} else if n.Low == nil && n.High == nil {
 			return ExprPrintf("%s.make_slice(0)", cv.convertExpr(n.X))
 		} else if n.Low == nil {

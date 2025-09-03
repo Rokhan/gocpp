@@ -16,4 +16,10 @@ func main() {
 
 	s = s[1:]
 	fmt.Println(s)
+
+	s = s[:]
+	fmt.Println(s)
+
+	s = s[:0:0]
+	fmt.Println(s)
 }

@@ -1391,7 +1391,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.printOrKeepPlaces(funcDef, &outPlaces, nil)
 
 		if len(typeParams) != 0 {
-			fmt.Fprintf(cv.cpp.out, "\n%s%s\n", cv.cpp.Indent(), mkTemplateDec(typeParams))
+			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), mkTemplateDec(typeParams))
 		}
 		fmt.Fprintf(cv.cpp.out, "%s%s %s%s(%s)\n", cv.cpp.Indent(), resultType, prefix, name, params)
 		if name == "main" {
